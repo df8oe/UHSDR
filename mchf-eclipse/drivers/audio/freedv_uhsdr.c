@@ -238,30 +238,59 @@ typedef struct {
     int32_t count;
 } flex_buffer;
 
-static char freedv_rx_buffer[freedv_rx_buffer_max+1]; // we need to be able store the '\0' as well.
-static const char fdv_rx_empty_line[freedv_rx_buffer_max+1] = "                                             ";
-static int fdv_rx_txt_idx= 0;
-static bool fdv_rx_txt_update = false;
+static char ui_txt_msg_buffer[ui_txt_msg_buffer_max+1]; // we need to be able store the '\0' as well.
+static const char fdv_rx_empty_line[ui_txt_msg_buffer_max+1] = "                                             ";
+static int ui_txt_msg_idx= 0;
+static bool ui_txt_msg_update = false;
 
+
+void UiDriver_TextMsgClear()
+{
+    UiLcdHy28_PrintText(5,92, fdv_rx_empty_line,Yellow,Black,4);
+    ui_txt_msg_idx = 0;
+    ui_txt_msg_update = true;
+}
 void fdv_clear_display()
 {
     UiLcdHy28_PrintText(5,116,"            ",Yellow,Black,4);
     UiLcdHy28_PrintText(5,104,"            ",Yellow,Black,4);
-    UiLcdHy28_PrintText(5,92, fdv_rx_empty_line,Yellow,Black,4);
-    fdv_rx_txt_idx = 0;
-    fdv_rx_txt_update = true;
+    UiDriver_TextMsgClear();
 }
 
 
-void fdv_print_txt_msg()
+void UiDriver_TextMsgDisplay()
 {
-    if (fdv_rx_txt_update == true)
+    if (ui_txt_msg_update == true)
     {
-        fdv_rx_txt_update = false;
-        const char* txt_ptr = fdv_rx_txt_idx == 0? fdv_rx_empty_line:freedv_rx_buffer;
+        ui_txt_msg_update = false;
+        const char* txt_ptr = ui_txt_msg_idx == 0? fdv_rx_empty_line:ui_txt_msg_buffer;
         UiLcdHy28_PrintText(5,92,txt_ptr,Yellow,Black,4);
     }
 }
+
+void UiDriver_TextMsgPutChar(char ch)
+{
+    if (ch=='\n' || ch == '\r')
+    {
+        ui_txt_msg_idx=0;
+    }
+    else if (ui_txt_msg_idx < (ui_txt_msg_buffer_max))
+    {
+        ui_txt_msg_buffer[ui_txt_msg_idx]=ch; //fill from left to right
+        ui_txt_msg_idx++;
+    }
+    else
+    {
+        for (int shift_count = 0;shift_count < (ui_txt_msg_buffer_max-1);shift_count++)
+        {
+            ui_txt_msg_buffer[shift_count]=ui_txt_msg_buffer[shift_count+1];
+        }
+        ui_txt_msg_buffer[ui_txt_msg_buffer_max-1]=ch;
+    }
+    ui_txt_msg_buffer[ui_txt_msg_idx] = '\0'; // this is the end of the string
+    ui_txt_msg_update = true;
+}
+
 
 void fdv_print_ber()
 {
@@ -484,7 +513,7 @@ void FreeDV_mcHF_HandleFreeDV()
         // MchfBoard_GreenLed(LED_STATE_ON);
         fdv_print_ber();
         fdv_print_SNR();
-        fdv_print_txt_msg();
+        UiDriver_TextMsgDisplay();
     }
     // END Freedv Test DL2FW
 }
@@ -508,29 +537,9 @@ char my_get_next_tx_char(void *callback_state) {
     return c;
 }
 
+
 void my_put_next_rx_char(void *callback_state, char ch) {
-
-
-
-    if (ch=='\n' || ch == '\r')
-    {
-        fdv_rx_txt_idx=0;
-    }
-    else if (fdv_rx_txt_idx < (freedv_rx_buffer_max))
-    {
-        freedv_rx_buffer[fdv_rx_txt_idx]=ch; //fill from left to right
-        fdv_rx_txt_idx++;
-    }
-    else
-    {
-        for (int shift_count = 0;shift_count < (freedv_rx_buffer_max-1);shift_count++)
-        {
-            freedv_rx_buffer[shift_count]=freedv_rx_buffer[shift_count+1];
-        }
-        freedv_rx_buffer[freedv_rx_buffer_max-1]=ch;
-    }
-    freedv_rx_buffer[fdv_rx_txt_idx] = '\0'; // this is the end of the string
-    fdv_rx_txt_update = true;
+    UiDriver_TextMsgPutChar(ch);
 }
 
 // FreeDV txt test - will be out of here

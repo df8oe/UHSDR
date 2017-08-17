@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-08-08T10:00:02  by "./ui_menu_structure_graph.py"
+#  generated at  2017-08-15T21:09:08  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-08T10:00:02  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-15T21:09:08  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -347,6 +347,11 @@
              shape = record
              ];
         
+        "CONFIG_CAT_PTT_RTS" [
+             label = "CONFIG_CAT_PTT_RTS | PTT via virtual RTS"
+             shape = record
+             ];
+        
         "CONFIG_XVTR_OFFSET_MULT" [
              label = "CONFIG_XVTR_OFFSET_MULT | XVTR Offs/Mult"
              shape = record
@@ -364,6 +369,36 @@
         
         "CONFIG_BAND_BUTTON_SWAP" [
              label = "CONFIG_BAND_BUTTON_SWAP | Band+/- Button Swap"
+             shape = record
+             ];
+        
+        "CONFIG_RTC_START" [
+             label = "CONFIG_RTC_START | RTC Start"
+             shape = record
+             ];
+        
+        "CONFIG_RTC_HOUR" [
+             label = "CONFIG_RTC_HOUR | RTC Hour"
+             shape = record
+             ];
+        
+        "CONFIG_RTC_MIN" [
+             label = "CONFIG_RTC_MIN | RTC Min"
+             shape = record
+             ];
+        
+        "CONFIG_RTC_SEC" [
+             label = "CONFIG_RTC_SEC | RTC Seconds"
+             shape = record
+             ];
+        
+        "CONFIG_RTC_RESET" [
+             label = "CONFIG_RTC_RESET | RTC Reset"
+             shape = record
+             ];
+        
+        "CONFIG_RTC_CALIB" [
+             label = "CONFIG_RTC_CALIB | RTC Calibration"
              shape = record
              ];
         
@@ -409,36 +444,6 @@
         
         "CONFIG_I2C2_SPEED" [
              label = "CONFIG_I2C2_SPEED | I2C2 Bus Speed"
-             shape = record
-             ];
-        
-        "CONFIG_RTC_START" [
-             label = "CONFIG_RTC_START | RTC Start"
-             shape = record
-             ];
-        
-        "CONFIG_RTC_HOUR" [
-             label = "CONFIG_RTC_HOUR | RTC Hour"
-             shape = record
-             ];
-        
-        "CONFIG_RTC_MIN" [
-             label = "CONFIG_RTC_MIN | RTC Min"
-             shape = record
-             ];
-        
-        "CONFIG_RTC_SEC" [
-             label = "CONFIG_RTC_SEC | RTC Seconds"
-             shape = record
-             ];
-        
-        "CONFIG_RTC_RESET" [
-             label = "CONFIG_RTC_RESET | RTC Reset"
-             shape = record
-             ];
-        
-        "CONFIG_RTC_CALIB" [
-             label = "CONFIG_RTC_CALIB | RTC Calibration"
              shape = record
              ];
         
@@ -1173,7 +1178,12 @@
              ];
         
         "MENU_DEBUG_NEW_NB" [
-             label = "MENU_DEBUG_NEW_NB | new Noiseblanker"
+             label = "MENU_DEBUG_NEW_NB | New Noiseblanker"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_RTTY_DECODE" [
+             label = "MENU_DEBUG_RTTY_DECODE | Rtty Decoder (exp)"
              shape = record
              ];
         
@@ -1271,6 +1281,8 @@
             
             MENU_CONF -> CONFIG_CAT_XLAT
             
+            MENU_CONF -> CONFIG_CAT_PTT_RTS
+            
             MENU_CONF -> CONFIG_XVTR_OFFSET_MULT
             
             MENU_CONF -> CONFIG_XVTR_FREQUENCY_OFFSET
@@ -1278,6 +1290,18 @@
             MENU_CONF -> CONFIG_STEP_SIZE_BUTTON_SWAP
             
             MENU_CONF -> CONFIG_BAND_BUTTON_SWAP
+            
+            MENU_CONF -> CONFIG_RTC_START
+            
+            MENU_CONF -> CONFIG_RTC_HOUR
+            
+            MENU_CONF -> CONFIG_RTC_MIN
+            
+            MENU_CONF -> CONFIG_RTC_SEC
+            
+            MENU_CONF -> CONFIG_RTC_RESET
+            
+            MENU_CONF -> CONFIG_RTC_CALIB
             
             MENU_CONF -> CONFIG_TOUCHSCREEN_MIRROR
             
@@ -1296,18 +1320,6 @@
             MENU_CONF -> CONFIG_I2C1_SPEED
             
             MENU_CONF -> CONFIG_I2C2_SPEED
-            
-            MENU_CONF -> CONFIG_RTC_START
-            
-            MENU_CONF -> CONFIG_RTC_HOUR
-            
-            MENU_CONF -> CONFIG_RTC_MIN
-            
-            MENU_CONF -> CONFIG_RTC_SEC
-            
-            MENU_CONF -> CONFIG_RTC_RESET
-            
-            MENU_CONF -> CONFIG_RTC_CALIB
             
             MENU_CONF -> CONFIG_IQ_AUTO_CORRECTION
             
@@ -1718,6 +1730,8 @@
             MENU_DEBUG -> MENU_DEBUG_CLONEIN
             
             MENU_DEBUG -> MENU_DEBUG_NEW_NB
+            
+            MENU_DEBUG -> MENU_DEBUG_RTTY_DECODE
             
         }  ## END subgraph MENU_HALL_OF_FAME
     

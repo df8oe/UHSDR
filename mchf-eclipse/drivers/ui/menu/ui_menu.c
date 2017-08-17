@@ -1733,7 +1733,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_rx_delay,
                                               0,
                                               CW_RX_DELAY_MAX,
-                                              CW_RX_DELAY_DEFAULT,
+                                              CW_TX2RX_DELAY_DEFAULT,
                                               1
                                              );
 
@@ -3520,6 +3520,38 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 #endif
     case MENU_DEBUG_NEW_NB:
         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
+        break;
+
+#ifdef USE_RTTY_PROCESSOR
+    case MENU_DEBUG_RTTY_DECODE:
+//        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_rtty_decode,0,options,&clr);
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.enable_rtty_decode,
+                0,
+                2,
+                0,
+                1);
+        if (var_change)
+        {
+            RttyDecoder_Init();
+        }
+
+        switch(ts.enable_rtty_decode)
+        {
+        case 0:
+            txt_ptr = "     OFF";
+            break;
+        case 1:
+            txt_ptr = "HamRadio";
+            break;
+        case 2:
+            txt_ptr = "     DWD";
+            break;
+        }
+        break;
+#endif
+
+    case CONFIG_CAT_PTT_RTS:
+        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_ptt_rts,0,options,&clr);
         break;
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";

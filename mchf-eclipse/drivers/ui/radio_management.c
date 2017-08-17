@@ -625,11 +625,13 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             {
                 // Assure that TX->RX timer gets reset at the end of an element
                 // TR->RX audio un-muting timer and Audio/AGC De-Glitching handler
+#if 0
                 if (ts.tx_audio_source == TX_AUDIO_MIC && (ts.dmod_mode != DEMOD_CW))
                 {
-                    ts.audio_spkr_unmute_delay_count = SSB_RX_DELAY;  // set time delay in SSB mode with MIC
-                    ts.audio_processor_input_mute_counter = SSB_RX_DELAY;
+                    ts.audio_spkr_unmute_delay_count = VOICE_TX2RX_DELAY_DEFAULT;  // set time delay in SSB mode with MIC
+                    ts.audio_processor_input_mute_counter = VOICE_TX2RX_DELAY_DEFAULT;
                 }
+#endif
 
             }
             else
@@ -933,8 +935,6 @@ uint8_t RadioManagement_GetBand(ulong freq)
     return band_scan;       // return with the band
 }
 
-const int ptt_break_time = 15;
-
 uint32_t RadioManagement_SSB_AutoSideBand(uint32_t freq) {
     uint32_t retval;
 
@@ -954,14 +954,17 @@ uint32_t RadioManagement_SSB_AutoSideBand(uint32_t freq) {
 }
 
 
+const int32_t ptt_debounce_time = 3; // n*10ms, delay for debouncing manually started TX (using the PTT button / input line)
+
+#define PTT_BREAK_IDLE (-1)
 void RadioManagement_HandlePttOnOff()
 {
-    static uint32_t ptt_break_timer = ptt_break_time;
+    static int64_t ptt_break_timer = PTT_BREAK_IDLE;
 
-    // Not when tuning
+    // not when tuning, in this case we are TXing already anyway until tune is being stopped
     if(ts.tune == false)
     {
-        // PTT on
+        // we are asked to start TX
         if(ts.ptt_req)
         {
             if(ts.txrx_mode == TRX_MODE_RX && (RadioManagement_IsTxDisabled() == false || ts.dmod_mode == DEMOD_CW))
@@ -978,24 +981,35 @@ void RadioManagement_HandlePttOnOff()
         {
             // When CAT driver "pressed" PTT skip auto return to RX
 
-            // PTT off for all non-CW modes
             if(ts.dmod_mode != DEMOD_CW || ts.tx_stop_req == true)
             {
-                // PTT flag on ?
+                // If we are in TX and ...
                 if(ts.txrx_mode == TRX_MODE_TX)
                 {
-                    // PTT line released ?
+                    // ... the PTT line is released ...
                     if(mchf_ptt_dah_line_pressed() == false)
                     {
-                        ptt_break_timer--;
+                        // ... we start the break timer if not started already!
+                        if (ptt_break_timer == PTT_BREAK_IDLE)
+                        {
+                            ptt_break_timer = ts.sysclock + ptt_debounce_time;
+                        }
                     }
-                    if(ptt_break_timer == 0 || ts.tx_stop_req == true) {
-                        // Back to RX
-                        RadioManagement_SwitchTxRx(TRX_MODE_RX,false);              // PTT
-                        ptt_break_timer = ptt_break_time;
+                    else
+                    {
+                        // ... but if not released we stop the break timer
+                        ptt_break_timer = PTT_BREAK_IDLE;
+                    }
+
+                    // ... if break time is over or we are forced to leave TX immediately ...
+                    if((ptt_break_timer < ts.sysclock && ptt_break_timer != PTT_BREAK_IDLE) || ts.tx_stop_req == true) {
+                        // ... go back to RX and ...
+                        RadioManagement_SwitchTxRx(TRX_MODE_RX,false);
+                        // ... stop the timer
+                        ptt_break_timer = PTT_BREAK_IDLE;
                     }
                 }
-                // if we are here the stop request has been processed
+                // if we are here a stop request has been processed completely
                 ts.tx_stop_req = false;
             }
         }

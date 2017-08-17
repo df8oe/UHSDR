@@ -83,7 +83,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_SPECTRUM_CENTRE_LINE_COLOUR,&ts.spectrum_centre_line_colour,SPEC_COLOUR_GRID_DEFAULT, 0, SPEC_MAX_COLOUR},
     { ConfigEntry_UInt8, EEPROM_SPECTRUM_SCALE_COLOUR,&ts.spectrum_freqscale_colour,SPEC_COLOUR_SCALE_DEFAULT, 0, SPEC_MAX_COLOUR},
     { ConfigEntry_UInt8, EEPROM_PADDLE_REVERSE,&ts.cw_paddle_reverse,0,0,1},
-    { ConfigEntry_UInt8, EEPROM_CW_RX_DELAY,&ts.cw_rx_delay,CW_RX_DELAY_DEFAULT,0,CW_RX_DELAY_MAX},
+    { ConfigEntry_UInt8, EEPROM_CW_RX_DELAY,&ts.cw_rx_delay,CW_TX2RX_DELAY_DEFAULT,0,CW_RX_DELAY_MAX},
     { ConfigEntry_UInt8, EEPROM_MAX_VOLUME,&ts.rx_gain[RX_AUDIO_SPKR].max,MAX_VOLUME_DEFAULT,MAX_VOLUME_MIN,MAX_VOLUME_MAX},
     { ConfigEntry_UInt8, EEPROM_PA_BIAS,&ts.pa_bias,PA_BIAS_DEFAULT,0,PA_BIAS_MAX},
     { ConfigEntry_UInt8, EEPROM_PA_CW_BIAS,&ts.pa_cw_bias,PA_BIAS_DEFAULT,0,PA_BIAS_MAX},

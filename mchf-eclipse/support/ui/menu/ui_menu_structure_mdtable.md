@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-08-08T10:00:06  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-08-15T21:09:11  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-08-08T10:00:06  by "./ui_menu_structure_mdtable.py"
+generated at  2017-08-15T21:09:11  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -79,10 +79,17 @@ generated at  2017-08-08T10:00:06  by "./ui_menu_structure_mdtable.py"
 | **Beep Volume**               (                         CONFIG_BEEP_VOLUME) | Set beep volume.                               | 
 | **CAT Running In Sandbox**    (                      CONFIG_CAT_IN_SANDBOX) | If On, frequency Changes made via CAT will not automatically switch bands and affect the manually selected frequencies. | 
 | **CAT-DIQ-FREQ-XLAT**         (                            CONFIG_CAT_XLAT) | Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If ON, it reports the displayed frequency. If OFF, it reports the center frequency, which is more useful with SDR programs. | 
+| **PTT via virtual RTS**       (                         CONFIG_CAT_PTT_RTS) | The virtual serial port signal RTS can be used to switch to TX. Use with care, many CAT-able programs also set RTS to aktiv and make the TRX go to TX mode. | 
 | **XVTR Offs/Mult**            (                    CONFIG_XVTR_OFFSET_MULT) | When connecting to a transverter, set this to 1 and set the XVERTER Offset to the LO Frequency of it. The mcHF frequency is multiplied by this factor before the offset is added, so anything but 1 will result in each Hz in the mcHF being displayed as 2 to 10 Hz change on display. | 
 | **XVTR Offset**               (               CONFIG_XVTR_FREQUENCY_OFFSET) | When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz | 
 | **Step Button Swap**          (               CONFIG_STEP_SIZE_BUTTON_SWAP) | If ON, Step- behaves like Step+ and vice versa. | 
 | **Band+/- Button Swap**       (                    CONFIG_BAND_BUTTON_SWAP) | If ON, Band- behaves like Band+ and vice versa. | 
+| **RTC Start**                 (                           CONFIG_RTC_START) | Start using the RTC and use the modified button layout. Will reboot your mcHF. Please use only if you completed the RTC mod otherwise you will need to disconnect battery and power and reboot to get a working mcHF. This menu is only visible if Backup RAM (VBat) was detected. | 
+| **RTC Hour**                  (                            CONFIG_RTC_HOUR) | Sets the Real Time Clock Hour. Needs HW Modifications. | 
+| **RTC Min**                   (                             CONFIG_RTC_MIN) | Sets the Real Time Clock Minutes. Needs HW Modifications. | 
+| **RTC Seconds**               (                             CONFIG_RTC_SEC) | Sets the Real Time Clock Seconds. Needs HW Modifications. | 
+| **RTC Reset**                 (                           CONFIG_RTC_RESET) | Full Reset of STM32 RTC. Can be used to simulate first start with RTC mod completed | 
+| **RTC Calibration**           (                           CONFIG_RTC_CALIB) | Sets the Real Time Clock Frequency calibration value in ppm. 1s/day deviation equals 11.57 ppm deviation | 
 | **Touchscreen**               (                  CONFIG_TOUCHSCREEN_MIRROR) | Some touchscreens have the touch coordinates reversed or x and y flipped. Select regarding your touchscreen. | 
 | **Voltmeter Cal.**            (               CONFIG_VOLTMETER_CALIBRATION) | Adjusts the displayed value of the voltmeter.  | 
 | **Low Voltage Threshold**     (                 CONFIG_LOW_POWER_THRESHOLD) | Voltage threshold for voltage warning colors and auto shutdown. | 
@@ -92,12 +99,6 @@ generated at  2017-08-08T10:00:06  by "./ui_menu_structure_mdtable.py"
 | **SWR/PWR Meter FWD/REV Swap** (                  CONFIG_FWD_REV_SENSE_SWAP) | Exchange the assignment of the Power/SWR FWD and REV measurement ADC. Use if your power meter does not show anything during TX. | 
 | **I2C1 Bus Speed**            (                          CONFIG_I2C1_SPEED) | Sets speed of the I2C1 bus (Si570 oscillator and MCP9801 temperature sensor). Higher speeds provide quicker RX/TX switching but may also cause tuning issues (red digits). Be careful with speeds above 200 kHz. | 
 | **I2C2 Bus Speed**            (                          CONFIG_I2C2_SPEED) | Sets speed of the I2C2 bus (Audio Codec and I2C EEPROM). Higher speeds provide quicker RX/TX switching, configuration save and power off. Speeds above 200 kHz are not recommended for unmodified mcHF. Many modified mcHF seem to run with 300kHz without problems. | 
-| **RTC Start**                 (                           CONFIG_RTC_START) | Start using the RTC and use the modified button layout. Will reboot your mcHF. Please use only if you completed the RTC mod otherwise you will need to disconnect battery and power and reboot to get a working mcHF. This menu is only visible if Backup RAM (VBat) was detected. | 
-| **RTC Hour**                  (                            CONFIG_RTC_HOUR) | Sets the Real Time Clock Hour. Needs HW Modifications. | 
-| **RTC Min**                   (                             CONFIG_RTC_MIN) | Sets the Real Time Clock Minutes. Needs HW Modifications. | 
-| **RTC Seconds**               (                             CONFIG_RTC_SEC) | Sets the Real Time Clock Seconds. Needs HW Modifications. | 
-| **RTC Reset**                 (                           CONFIG_RTC_RESET) | Full Reset of STM32 RTC. Can be used to simulate first start with RTC mod completed | 
-| **RTC Calibration**           (                           CONFIG_RTC_CALIB) | Sets the Real Time Clock Frequency calibration value in ppm. 1s/day deviation equals 11.57 ppm deviation | 
 | **RX IQ Auto Correction**     (                  CONFIG_IQ_AUTO_CORRECTION) | Receive IQ phase and amplitude imbalance can be automatically adjusted by the mcHF. Switch ON/OFF here. If OFF, it takes the following menu values for compensating the imbalance. The automatic algorithm achieves up to 60dB mirror rejection. See Wiki Adjustments and Calibration. | 
 | **RX IQ Balance (80m)**       (                  CONFIG_80M_RX_IQ_GAIN_BAL) | IQ Balance Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
 | **RX IQ Phase   (80m)**       (                 CONFIG_80M_RX_IQ_PHASE_BAL) | IQ Phase Adjust for all receive if frequency translation is NOT OFF. Requires USB/LSB/CW mode to be changeable.See Wiki Adjustments and Calibration. | 
@@ -275,7 +276,8 @@ generated at  2017-08-08T10:00:06  by "./ui_menu_structure_mdtable.py"
 | **TX Audio via USB**          (                        MENU_DEBUG_TX_AUDIO) | If enabled, send generated audio to PC during TX. | 
 | **FT817 Clone Transmit**      (                        MENU_DEBUG_CLONEOUT) | Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP). | 
 | **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 
-| **new Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | toggle new noiseblanker for testing purposes   | 
+| **New Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | New noiseblanker for testing purposes          | 
+| **Rtty Decoder (exp)**        (                     MENU_DEBUG_RTTY_DECODE) | Enable Rtty Decoder (45.45 Baud, 170 Hz shift, 2 stopbits). 1Khz Center frequency. | 
 
 
 [//]: # ( EOFILE                                                                       )
