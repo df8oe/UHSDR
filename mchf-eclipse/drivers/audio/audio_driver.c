@@ -5003,7 +5003,7 @@ static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSamp
 #endif
 
 
-static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_t * const dst, uint16_t blockSize)
+static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_t * const dst, AudioSample_t * const audioDst, uint16_t blockSize)
 {
     // we copy volatile variables which are used multiple times to local consts to let the compiler do its optimization magic
     // since we are in an interrupt, no one will change these anyway
@@ -5193,6 +5193,18 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
             ts.audio_dac_muting_buffer_count--;
         }
     }
+
+#ifdef UI_BRD_OVI40
+    // we code the sidetone to the audio codec, since we have one for audio and one for iq
+    if (dmod_mode == DEMOD_CW && audioDst != dst)
+    {
+        for (uint16_t idx = 0; idx < blockSize; idx++)
+        {
+            audioDst[idx].r = audioDst[idx].l = dst[idx].l;
+        }
+    }
+#endif
+
     switch (ts.stream_tx_audio)
     {
     case STREAM_TX_AUDIO_OFF:
@@ -5239,7 +5251,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
 #ifdef USE_24_BITS
 void AudioDriver_I2SCallback(int32_t *src, int32_t *dst, int16_t size, uint16_t ht)
 #else
-void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t ht)
+void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int16_t size)
 #endif
 {
     static bool to_rx = false;	// used as a flag to clear the RX buffer
@@ -5306,12 +5318,12 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t size, uint16_t 
         {
             // muted input should not modify the ALC so we simply restore it after processing
             float alc_holder = ads.alc_val;
-            AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+            AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst, (AudioSample_t*)audioDst,size/2);
             ads.alc_val = alc_holder;
         }
         else
         {
-            AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+            AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst, (AudioSample_t*)audioDst, size/2);
         }
 
         to_rx = true;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
