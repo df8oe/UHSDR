@@ -3524,28 +3524,16 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
 #ifdef USE_RTTY_PROCESSOR
     case MENU_DEBUG_RTTY_DECODE:
-//        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_rtty_decode,0,options,&clr);
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.enable_rtty_decode,
-                0,
-                2,
-                0,
-                1);
+        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.enable_rtty_decode,0,options,&clr);
         if (var_change)
         {
             RttyDecoder_Init();
-        }
-
-        switch(ts.enable_rtty_decode)
-        {
-        case 0:
-            txt_ptr = "     OFF";
-            break;
-        case 1:
-            txt_ptr = "HamRadio";
-            break;
-        case 2:
-            txt_ptr = "     DWD";
-            break;
+            if (ts.enable_rtty_decode)
+            {
+                // TODO: Factor this out into a Ui function for (de-)activating Rtty mode
+                ts.enc_one_mode = ENC_ONE_MODE_RTTY_SPEED;
+                ts.enc_two_mode = ENC_TWO_MODE_RTTY_SHIFT;
+            }
         }
         break;
 #endif

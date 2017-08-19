@@ -52,6 +52,8 @@
 #include "radio_management.h"
 #include "soft_tcxo.h"
 
+#include "rtty.h"
+
 static void 	UiDriver_PublicsInit();
 
 static void 	UiDriver_ProcessKeyboard();
@@ -138,6 +140,10 @@ static void UiDriver_HandleBandButtons(uint16_t button);
 static void UiDriver_KeyTestScreen();
 
 static bool UiDriver_SaveConfiguration();
+
+static void UiDriver_DisplayRttySpeed(bool encoder_active);
+static void UiDriver_DisplayRttyShift(bool encoder_active);
+
 
 // Tuning steps
 const ulong tune_steps[T_STEP_MAX_STEPS] =
@@ -3006,8 +3012,9 @@ enum TRX_States_t
 
 static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
 {
-    static uchar enc_one_mode = ENC_ONE_MODE_AUDIO_GAIN;  // stores modes of encoder when we enter TX
-    static uchar enc_three_mode = ENC_THREE_MODE_CW_SPEED;    // stores modes of encoder when we enter TX
+    static uchar enc_one_mode =     ENC_ONE_MODE_AUDIO_GAIN;  // stores modes of encoder when we enter TX
+    static uchar enc_two_mode =     ENC_TWO_MODE_RF_GAIN;    // stores modes of encoder when we enter TX
+    static uchar enc_three_mode =   ENC_THREE_MODE_CW_SPEED;    // stores modes of encoder when we enter TX
 
 
     {
@@ -3021,10 +3028,27 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
             {
                 // change display related to encoder one to TX mode (e.g. Sidetone gain or Compression level)
                 enc_one_mode = ts.enc_one_mode;
-                ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
+                enc_two_mode = ts.enc_two_mode;
                 enc_three_mode = ts.enc_thr_mode;
-                ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
 
+                // we reconfigure the encoders according to the currently selected mode
+                // for now this is only relevant for CW
+                if (ts.dmod_mode == DEMOD_CW)
+                {
+                    ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
+                    ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
+                }
+                else // for all other modes we activate the compressor setting and input gain control
+                {
+                    ts.enc_one_mode = ENC_ONE_MODE_CMP_LEVEL;
+                    ts.enc_thr_mode = ENC_THREE_MODE_INPUT_CTRL;
+                }
+                // FXIME: this is a little hack: If the RTTY DECODER IS ON, ENABLE RTTY CTRL
+                if (ts.enable_rtty_decode)
+                {
+                    ts.enc_two_mode = ENC_TWO_MODE_RTTY_SHIFT;
+                    ts.enc_one_mode = ENC_ONE_MODE_RTTY_SPEED;
+                }
             }
 
             // force redisplay of Encoder boxes and values
@@ -3038,6 +3062,7 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
             if((ts.flags1 & FLAGS1_TX_AUTOSWITCH_UI_DISABLE) == false)                // If auto-switch on TX/RX is enabled
             {
                 ts.enc_one_mode = enc_one_mode;
+                ts.enc_two_mode = enc_two_mode;
                 ts.enc_thr_mode = enc_three_mode;
             }
 
@@ -3516,10 +3541,7 @@ static bool UiDriver_CheckFrequencyEncoder()
 //*----------------------------------------------------------------------------
 static void UiDriver_CheckEncoderOne()
 {
-    int 	pot_diff;
-
-    pot_diff = UiDriverEncoderRead(ENC1);
-
+    int32_t pot_diff = UiDriverEncoderRead(ENC1);
 
     if (pot_diff)
     {
@@ -3529,29 +3551,27 @@ static void UiDriver_CheckEncoderOne()
         // Take appropriate action
         switch(ts.enc_one_mode)
         {
+        case ENC_ONE_MODE_RTTY_SPEED:
+            // Convert to Audio Gain incr/decr
+            rtty_ctrl_config.speed_idx = change_and_limit_int(rtty_ctrl_config.speed_idx,pot_diff_step,0,RTTY_SPEED_NUM-1);
+            RttyDecoder_Init();
+            UiDriver_DisplayRttySpeed(true);
+            break;
         // Update audio volume
         case ENC_ONE_MODE_AUDIO_GAIN:
             ts.rx_gain[RX_AUDIO_SPKR].value = change_and_limit_uint(ts.rx_gain[RX_AUDIO_SPKR].value,pot_diff_step,0,ts.rx_gain[RX_AUDIO_SPKR].max);
             UiDriver_DisplayAfGain(1);
             break;
-            // Sidetone gain or compression level
         case ENC_ONE_MODE_ST_GAIN:
-            if(ts.dmod_mode == DEMOD_CW)	 	// In CW mode - adjust sidetone gain
-            {
-                // Convert to Audio Gain incr/decr
-                ts.cw_sidetone_gain = change_and_limit_uint(ts.cw_sidetone_gain,pot_diff_step,0,SIDETONE_MAX_GAIN);
-                Codec_TxSidetoneSetgain(ts.txrx_mode);
-                UiDriver_DisplaySidetoneGain(true);
-            }
-            else	 		// In voice mode - adjust audio compression level
-            {
-                // Convert to Audio Gain incr/decr
-                ts.tx_comp_level = change_and_limit_int(ts.tx_comp_level,pot_diff_step,TX_AUDIO_COMPRESSION_MIN,TX_AUDIO_COMPRESSION_MAX);
-                AudioManagement_CalcTxCompLevel();		// calculate values for selection compression level
-                UiDriver_DisplayCmpLevel(1);	// update on-screen display
-            }
+            ts.cw_sidetone_gain = change_and_limit_uint(ts.cw_sidetone_gain,pot_diff_step,0,SIDETONE_MAX_GAIN);
+            Codec_TxSidetoneSetgain(ts.txrx_mode);
+            UiDriver_DisplaySidetoneGain(true);
             break;
-
+        case ENC_ONE_MODE_CMP_LEVEL:
+            ts.tx_comp_level = change_and_limit_int(ts.tx_comp_level,pot_diff_step,TX_AUDIO_COMPRESSION_MIN,TX_AUDIO_COMPRESSION_MAX);
+            AudioManagement_CalcTxCompLevel();		// calculate values for selection compression level
+            UiDriver_DisplayCmpLevel(true);	// update on-screen display
+            break;
         default:
             break;
         }
@@ -3567,69 +3587,11 @@ static void UiDriver_CheckEncoderOne()
 //*----------------------------------------------------------------------------
 static void UiDriver_CheckEncoderTwo()
 {
-    //char 	temp[10];
-    float32_t MAX_FREQ = 5000.0;
-    int 	pot_diff;
-
-
-
-    if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
-    {
-        MAX_FREQ = 10000.0;
-    }
-    else if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
-    {
-        MAX_FREQ = 5000.0;
-    }
-
-    pot_diff = UiDriverEncoderRead(ENC2);
-
-
-    // +++++++++++++++++++++++++++++++++++
-    float32_t	enc_multiplier;
-    static float 	enc_speed_avg = 0.0;  //keeps the averaged encoder speed
-    int		delta_t, enc_speed;
+    int32_t pot_diff = UiDriverEncoderRead(ENC2);
 
     if (pot_diff != 0)
     {
-        delta_t = ts.audio_int_counter;  // get ticker difference since last enc. change
-        ts.audio_int_counter = 0;		 //reset tick counter
-
         UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
-
-        if (delta_t > 300)
-        {
-            enc_speed_avg = 0;    //when leaving speedy turning set avg_speed to 0
-        }
-
-        enc_speed = div(4000,delta_t).quot*pot_diff;  // app. 4000 tics per second -> calc. enc. speed.
-
-        if (enc_speed > 500)
-        {
-            enc_speed = 500;    //limit calculated enc. speed
-        }
-        if (enc_speed < -500)
-        {
-            enc_speed = -500;
-        }
-
-        enc_speed_avg = 0.1*enc_speed + 0.9*enc_speed_avg; // averaging to smooth encoder speed
-
-        enc_multiplier = 1; //set standard speed
-
-        if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
-        {
-            enc_multiplier = 10;    // turning medium speed -> increase speed by 10
-        }
-        if ((enc_speed_avg > 150) || (enc_speed_avg < (-150)))
-        {
-            enc_multiplier = 30;    //turning fast speed -> increase speed by 100
-        }
-        if ((enc_speed_avg > 300) || (enc_speed_avg < (-300)))
-        {
-            enc_multiplier = 100;    //turning fast speed -> increase speed by 100
-        }
-
 
         if(ts.menu_mode)
         {
@@ -3638,12 +3600,74 @@ static void UiDriver_CheckEncoderTwo()
         else
         {
             int8_t pot_diff_step = pot_diff < 0?-1:1;
+
+
             if(ts.txrx_mode == TRX_MODE_RX)
             {
-                //
-                // Take appropriate action
+
+                // dynamic encoder speed , used for notch and peak
+                static float    enc_speed_avg = 0.0;  //keeps the averaged encoder speed
+                int     delta_t, enc_speed;
+                float32_t   enc_multiplier;
+
+                delta_t = ts.audio_int_counter;  // get ticker difference since last enc. change
+                ts.audio_int_counter = 0;        //reset tick counter
+
+                if (delta_t > 300)
+                {
+                    enc_speed_avg = 0;    //when leaving speedy turning set avg_speed to 0
+                }
+
+                enc_speed = div(4000,delta_t).quot*pot_diff;  // app. 4000 tics per second -> calc. enc. speed.
+
+                if (enc_speed > 500)
+                {
+                    enc_speed = 500;    //limit calculated enc. speed
+                }
+                if (enc_speed < -500)
+                {
+                    enc_speed = -500;
+                }
+
+                enc_speed_avg = 0.1*enc_speed + 0.9*enc_speed_avg; // averaging to smooth encoder speed
+
+                enc_multiplier = 1; //set standard speed
+
+                if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
+                {
+                    enc_multiplier = 10;    // turning medium speed -> increase speed by 10
+                }
+                if ((enc_speed_avg > 150) || (enc_speed_avg < (-150)))
+                {
+                    enc_multiplier = 30;    //turning fast speed -> increase speed by 100
+                }
+                if ((enc_speed_avg > 300) || (enc_speed_avg < (-300)))
+                {
+                    enc_multiplier = 100;    //turning fast speed -> increase speed by 100
+                }
+
+
+                // used for notch and peak
+                float32_t MAX_FREQ = 5000.0;
+
+                if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
+                {
+                    MAX_FREQ = 10000.0;
+                }
+                else if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
+                {
+                    MAX_FREQ = 5000.0;
+                }
+
+
+
                 switch(ts.enc_two_mode)
                 {
+                case ENC_TWO_MODE_RTTY_SHIFT:
+                    rtty_ctrl_config.shift_idx = change_and_limit_int(rtty_ctrl_config.shift_idx,pot_diff_step,0,RTTY_SHIFT_NUM-1);
+                    RttyDecoder_Init();
+                    UiDriver_DisplayRttyShift(1);
+                    break;
                 case ENC_TWO_MODE_RF_GAIN:
                     if(ts.dmod_mode != DEMOD_FM)	 	// is this *NOT* FM?  Change RF gain
                     {
@@ -3706,6 +3730,7 @@ static void UiDriver_CheckEncoderTwo()
                         {
                             ts.notch_frequency = ts.notch_frequency + 5.0 * enc_multiplier;
                         }
+
                         if(ts.notch_frequency > MAX_FREQ)
                         {
                             ts.notch_frequency = MAX_FREQ;
@@ -3833,7 +3858,7 @@ static void UiDriver_CheckEncoderThree()
             case ENC_THREE_MODE_RIT:
                 if(ts.txrx_mode == TRX_MODE_RX)
                 {
-                    int16_t old_rit_value =ts.rit_value;
+                    int16_t old_rit_value = ts.rit_value;
                     ts.rit_value = change_and_limit_int(ts.rit_value,pot_diff_step,MIN_RIT_VALUE,MAX_RIT_VALUE);
 
                     ts.dial_moved = ts.rit_value != old_rit_value;
@@ -3846,16 +3871,14 @@ static void UiDriver_CheckEncoderThree()
                 break;
                 // Keyer speed
             case ENC_THREE_MODE_CW_SPEED:
-                if(ts.dmod_mode == DEMOD_CW)	 		// in CW mode, adjust keyer speed
+                // Convert to Audio Gain incr/decr
+                ts.cw_keyer_speed = change_and_limit_int(ts.cw_keyer_speed,pot_diff_step,CW_KEYER_SPEED_MIN,CW_KEYER_SPEED_MAX);
+                CwGen_SetSpeed();
+                UiDriver_DisplayKeyerSpeed(1);
+                break;
+            case ENC_THREE_MODE_INPUT_CTRL:
+                // in voice mode, adjust audio input gain
                 {
-                    // Convert to Audio Gain incr/decr
-                    ts.cw_keyer_speed = change_and_limit_int(ts.cw_keyer_speed,pot_diff_step,CW_KEYER_SPEED_MIN,CW_KEYER_SPEED_MAX);
-                    CwGen_SetSpeed();
-                    UiDriver_DisplayKeyerSpeed(1);
-                }
-                else	 	// in voice mode, adjust audio gain
-                {
-
                     uint16_t gain_max = ts.tx_audio_source == TX_AUDIO_MIC?MIC_GAIN_MAX:LINE_GAIN_MAX;
                     uint16_t gain_min = ts.tx_audio_source == TX_AUDIO_MIC?MIC_GAIN_MIN:LINE_GAIN_MIN;
 
@@ -3881,48 +3904,79 @@ static void UiDriver_ChangeEncoderOneMode()
 
     if(ts.menu_mode == false)	// changes only when not in menu mode
     {
+        ts.enc_one_mode++;
+        // only switch to rtty shift adjustment, if rtty enabled!
+        if(ts.enc_one_mode == ENC_ONE_MODE_RTTY_SPEED && ts.enable_rtty_decode == false)
+        {
             ts.enc_one_mode++;
-            if(ts.enc_one_mode >= ENC_ONE_NUM_MODES)
-            {
-                ts.enc_one_mode = ENC_ONE_MODE_AUDIO_GAIN;
-            }
+        }
+
+        // only switch to STG, if CW enabled!
+        if(ts.enc_one_mode == ENC_ONE_MODE_ST_GAIN && ts.dmod_mode != DEMOD_CW)
+        {
+            // not CW, skip this mode
+            ts.enc_one_mode++;
+        }
+
+        // only switch to CMP, if CW is not enabled!
+        if(ts.enc_one_mode == ENC_ONE_MODE_CMP_LEVEL && ts.dmod_mode == DEMOD_CW)
+        {
+            // not CW, skip this mode
+            ts.enc_one_mode++;
+        }
+
+        if(ts.enc_one_mode >= ENC_ONE_NUM_MODES)
+        {
+            ts.enc_one_mode = ENC_ONE_MODE_AUDIO_GAIN;
+        }
     }
     UiDriver_DisplayEncoderOneMode();
 }
 
 static void UiDriver_DisplayEncoderOneMode()
 {
-    uint8_t box_active[2] = { 0, 0 };
-
-    switch(ts.enc_one_mode)
-    {
-    case ENC_ONE_MODE_AUDIO_GAIN:
-        box_active[0] = 1;
-        break;
-    case ENC_ONE_MODE_ST_GAIN:
-        box_active[1] = 1;
-        break;
-    }
-
     // upper box
-    UiDriver_DisplayAfGain(box_active[0]);
+    UiDriver_DisplayAfGain(ts.enc_one_mode == ENC_ONE_MODE_AUDIO_GAIN);
 
     // lower box
-    if(ts.dmod_mode == DEMOD_CW)
+    switch(ts.enc_one_mode)
     {
-        UiDriver_DisplaySidetoneGain(box_active[1]);
-    }
-    else
-    {
-        UiDriver_DisplayCmpLevel(box_active[1]);
+    case ENC_ONE_MODE_RTTY_SPEED:
+        UiDriver_DisplayRttySpeed(1);
+        break;
+    case ENC_ONE_MODE_ST_GAIN:
+        UiDriver_DisplaySidetoneGain(1);
+        break;
+    case ENC_ONE_MODE_CMP_LEVEL:
+        UiDriver_DisplayCmpLevel(1);
+        break;
+    default:
+        // what to display if lower box is not active
+        if (ts.enable_rtty_decode)
+        {
+            UiDriver_DisplayRttySpeed(0);
+        }
+        else if(ts.dmod_mode == DEMOD_CW)
+        {
+            UiDriver_DisplaySidetoneGain(0);
+        }
+        else
+        {
+            UiDriver_DisplayCmpLevel(0);
+        }
     }
 }
-
 static void UiDriver_ChangeEncoderTwoMode()
 {
     if(ts.menu_mode == false )	// changes only when not in menu mode
     {
         ts.enc_two_mode++;
+
+        // only switch to rtty shift adjustment, if rtty enabled!
+        if(ts.enc_two_mode == ENC_TWO_MODE_RTTY_SHIFT && ts.enable_rtty_decode == false)
+        {
+            ts.enc_two_mode++;
+        }
 
         // only switch to notch frequency adjustment, if notch enabled!
         if(ts.enc_two_mode == ENC_TWO_MODE_NOTCH_F && is_dsp_mnotch() == false)
@@ -3948,18 +4002,18 @@ static void UiDriver_ChangeEncoderTwoMode()
 static void UiDriver_DisplayEncoderTwoMode()
 {
 
-    uint8_t inactive_mult = ts.menu_mode?0:1;
+    uint8_t inactive = ts.menu_mode?0:1;
     // we use this to disable all active displays once in menu mode
     switch(ts.enc_two_mode)
     {
     case ENC_TWO_MODE_RF_GAIN:
-        UiDriver_DisplayRfGain(1*inactive_mult);
+        UiDriver_DisplayRfGain(inactive);
         UiDriver_DisplayNoiseBlanker(0);
         UiDriver_DisplayDSPMode(0);
         break;
     case ENC_TWO_MODE_SIG_PROC:
         UiDriver_DisplayRfGain(0);
-        UiDriver_DisplayNoiseBlanker(1*inactive_mult);
+        UiDriver_DisplayNoiseBlanker(inactive);
         UiDriver_DisplayDSPMode(0);
         break;
     case ENC_TWO_MODE_PEAK_F:
@@ -3967,15 +4021,20 @@ static void UiDriver_DisplayEncoderTwoMode()
     case ENC_TWO_MODE_NR:
         UiDriver_DisplayRfGain(0);
         UiDriver_DisplayNoiseBlanker(0);
-        UiDriver_DisplayDSPMode(1*inactive_mult);
+        UiDriver_DisplayDSPMode(inactive);
         break;
     case ENC_TWO_MODE_BASS_GAIN:
         UiDriver_DisplayDSPMode(0);
-        UiDriver_DisplayTone(1*inactive_mult);
+        UiDriver_DisplayTone(inactive);
         break;
     case ENC_TWO_MODE_TREBLE_GAIN:
         UiDriver_DisplayDSPMode(0);
-        UiDriver_DisplayTone(1*inactive_mult);
+        UiDriver_DisplayTone(inactive);
+        break;
+    case ENC_TWO_MODE_RTTY_SHIFT:
+        UiDriver_DisplayRfGain(0);
+        UiDriver_DisplayDSPMode(0);
+        UiDriver_DisplayRttyShift(1);
         break;
     default:
         UiDriver_DisplayRfGain(0);
@@ -3991,7 +4050,14 @@ static void UiDriver_ChangeEncoderThreeMode()
     if(ts.menu_mode == false)	// changes only when not in menu mode
     {
         ts.enc_thr_mode++;
-        if(ts.enc_thr_mode >= ENC_THREE_MAX_MODE)
+
+         if (ts.dmod_mode != DEMOD_CW  && ts.enc_thr_mode == ENC_THREE_MODE_CW_SPEED)
+        {
+            ts.enc_thr_mode++;
+            // skip CW_SPEED if not in CW
+        }
+
+        if(ts.enc_thr_mode >= ENC_THREE_NUM_MODES)
         {
             ts.enc_thr_mode = ENC_THREE_MODE_RIT;
         }
@@ -4001,30 +4067,30 @@ static void UiDriver_ChangeEncoderThreeMode()
 
 static void UiDriver_DisplayEncoderThreeMode()
 {
-    uint8_t box_active[2] = { 0, 0 };
-    // default: all boxes inactive
-
-    switch(ts.enc_thr_mode)
-    {
-    case ENC_THREE_MODE_RIT:
-        box_active[0] = 1;
-        break;
-    case ENC_THREE_MODE_CW_SPEED:
-        box_active[1] = 1;
-        break;
-    }
-
     // upper box
-    UiDriver_DisplayRit(box_active[0]);
+    UiDriver_DisplayRit(ts.enc_thr_mode == ENC_THREE_MODE_RIT);
 
     // lower box
-    if(ts.dmod_mode == DEMOD_CW)
+    switch(ts.enc_thr_mode)
     {
-        UiDriver_DisplayKeyerSpeed(box_active[1]);
-    }
-    else
-    {
-        UiDriver_DisplayLineInModeAndGain(box_active[1]);
+    case ENC_THREE_MODE_CW_SPEED:
+        UiDriver_DisplayKeyerSpeed(1);
+        break;
+    case ENC_THREE_MODE_INPUT_CTRL:
+        UiDriver_DisplayLineInModeAndGain(1);
+        break;
+    default:
+        // this defines what is shown if the lower box is not actively selected
+        if (ts.dmod_mode == DEMOD_CW)
+        {
+            UiDriver_DisplayKeyerSpeed(0);
+        }
+        else
+        {
+            UiDriver_DisplayLineInModeAndGain(0);
+        }
+        break;
+
     }
 }
 
@@ -4252,21 +4318,11 @@ static void UiDriver_DisplayPowerLevel()
     UiLcdHy28_PrintTextCentered((POS_PW_IND_X),(POS_PW_IND_Y),POS_DEMOD_MODE_MASK_W,txt,color,Blue,0);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverChangeKeyerSpeed
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void UiDriver_DisplayKeyerSpeed(bool encoder_active)
 {
-    ushort 	color = encoder_active?White:Grey;
+    uint16_t 	color = encoder_active?White:Grey;
     const char* txt;
     char  txt_buf[5];
-
-    if(encoder_active)
-        color = White;
 
     txt = "WPM";
     snprintf(txt_buf,5,"%3d",ts.cw_keyer_speed);
@@ -4274,14 +4330,19 @@ static void UiDriver_DisplayKeyerSpeed(bool encoder_active)
     UiDriver_EncoderDisplay(1,2,txt, encoder_active, txt_buf, color);
 }
 
+static void UiDriver_DisplayRttySpeed(bool encoder_active)
+{
+    uint16_t  color = encoder_active?White:Grey;
+    UiDriver_EncoderDisplay(1,0,"BD", encoder_active, rtty_speeds[rtty_ctrl_config.speed_idx].label, color);
+}
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverChangeAudioGain
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+static void UiDriver_DisplayRttyShift(bool encoder_active)
+{
+    uint16_t  color = encoder_active?White:Grey;
+    UiDriver_EncoderDisplay(1,1,"SFT", encoder_active, rtty_shifts[rtty_ctrl_config.shift_idx].label, color);
+}
+
+
 static void UiDriver_DisplayLineInModeAndGain(bool encoder_active)
 {
     ushort 	color = encoder_active?White:Grey;
@@ -4326,13 +4387,6 @@ static void UiDriver_DisplayLineInModeAndGain(bool encoder_active)
     UiDriver_EncoderDisplay(1,2,txt, encoder_active, txt_buf, color);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverChangeRfGain
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void UiDriver_DisplayRfGain(bool encoder_active)
 {
     uint32_t color = encoder_active?White:Grey;

@@ -433,10 +433,13 @@
 		<Unit filename="..\mchf-eclipse\drivers\audio\filters\iq_tx_filter.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\audio\freedv_test_data.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\freedv_uhsdr.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\audio\freedv_test_data.c">
+		<Unit filename="..\mchf-eclipse\drivers\audio\rtty.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\softdds\dds_table.c">
