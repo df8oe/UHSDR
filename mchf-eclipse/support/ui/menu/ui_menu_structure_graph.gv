@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-08-19T14:31:35  by "./ui_menu_structure_graph.py"
+#  generated at  2017-08-19T19:24:48  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-19T14:31:35  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-19T19:24:48  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1067,6 +1067,11 @@
              shape = record
              ];
         
+        "MENU_DIGITAL_MODE_SELECT" [
+             label = "MENU_DIGITAL_MODE_SELECT | Digital Mode"
+             shape = record
+             ];
+        
         "INFO_DISPLAY" [
              label = "INFO_DISPLAY | Display"
              shape = record
@@ -1642,6 +1647,8 @@
             MENU_MEN2TOUCH -> MENU_SPECTRUM_MAGNIFY
             
             MENU_MEN2TOUCH -> MENU_RESTART_CODEC
+            
+            MENU_MEN2TOUCH -> MENU_DIGITAL_MODE_SELECT
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
