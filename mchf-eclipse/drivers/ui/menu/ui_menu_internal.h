@@ -234,6 +234,7 @@ enum
     CONFIG_RTC_RESET,
     CONFIG_RTC_CALIB,
     MENU_DYNAMICTUNE,
+    MENU_DIGITAL_MODE_SELECT,
     MAX_RADIO_CONFIG_ITEM   // Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
 

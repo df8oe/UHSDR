@@ -77,7 +77,7 @@ static void 	UiDriver_InitFrequency();
 static void     UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
 static bool 	UiDriver_IsButtonPressed(ulong button_num);
 static void		UiDriver_TimeScheduler();				// Also handles audio gain and switching of audio on return from TX back to RX
-static void 	UiDriver_ChangeToNextDemodMode(bool include_disabled_modes);
+static void 	UiDriver_ChangeToNextDemodMode(bool select_alternative_mode);
 static void 	UiDriver_ChangeBand(uchar is_up);
 static bool 	UiDriver_CheckFrequencyEncoder();
 
@@ -457,7 +457,7 @@ static void UiDriver_LcdBlankingStealthSwitch()
 }
 
 
-void UiDriver_HandleSwitchToNextDspMode()
+static void UiDriver_HandleSwitchToNextDspMode()
 {
     if(ts.dmod_mode != DEMOD_FM)	  // allow selection/change of DSP only if NOT in FM
     {
@@ -519,6 +519,39 @@ void UiDriver_HandleSwitchToNextDspMode()
         AudioDriver_SetRxAudioProcessing(ts.dmod_mode, true);        // update DSP/filter settings
         UiDriver_DisplayEncoderTwoMode();         // DSP control is mapped to column 2
     }
+}
+
+// TODO: most of this belongs to radio management, not UI
+static void UiDriver_ToggleDigitalMode()
+{
+    if (ts.digital_mode != DigitalMode_None)
+    {
+        // a valid digital mode is set but may not be active yet
+        if (ts.dmod_mode != DEMOD_DIGI)
+        {
+            if (RadioManagement_IsApplicableDemodMode(DEMOD_DIGI))
+            {
+                // this will switch to the corresponding sideband if we come from
+                // SSB, otherwise the automatically selected default (AUTO LSB/USB ON) or the previously used
+                // will be the selected one.
+                if (is_ssb(ts.dmod_mode))
+                {
+                    ts.digi_lsb = RadioManagement_LSBActive(ts.dmod_mode);
+                }
+                RadioManagement_SetDemodMode(DEMOD_DIGI);
+            }
+        }
+    }
+    else
+    {
+        if (ts.dmod_mode == DEMOD_DIGI)
+        {
+            // we are in digital mode but the current digital mode is in fact
+            // None, i.e. we are going analog now
+            RadioManagement_SetDemodMode(ts.digi_lsb?DEMOD_LSB:DEMOD_USB);
+        }
+    }
+    UiDriver_UpdateDisplayAfterParamChange();
 }
 
 /*
@@ -689,39 +722,11 @@ void UiDriver_HandleTouchScreen()
         }
         if(UiDriver_CheckTouchCoordinates(0,7,10,13))			// toggle digital modes
         {
-            incr_wrap_uint8(&ts.digital_mode,0,1);
+            incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_RTTY);
             // We limit the reachable modes to the ones truly available
             // which is FreeDV1 for now
-
-            if (ts.digital_mode>0)
-            {
-                if (ts.dmod_mode != DEMOD_DIGI)
-                {
-                    if (RadioManagement_IsApplicableDemodMode(DEMOD_DIGI))
-                    {
-                        // this will switch to the corresponding sideband if we come from
-                        // SSB, otherwise the automatically selected default (AUTO LSB/USB ON) or the previously used
-                        // will be the selected one.
-                        if (is_ssb(ts.dmod_mode))
-                        {
-                            ts.digi_lsb = RadioManagement_LSBActive(ts.dmod_mode);
-                        }
-                        RadioManagement_SetDemodMode(DEMOD_DIGI);
-                    }
-                }
-                ts.dvmode = true;
-            }
-            else
-            {
-                ts.dvmode = false;
-                if (ts.dmod_mode == DEMOD_DIGI)
-                {
-                    RadioManagement_SetDemodMode(ts.digi_lsb?DEMOD_LSB:DEMOD_USB);
-                }
-            }
-            RadioManagement_ChangeCodec(ts.digital_mode,ts.dvmode);
-            UiDriver_UpdateDisplayAfterParamChange();
-        }
+            UiDriver_ToggleDigitalMode();
+         }
 
         if(UiDriver_CheckTouchCoordinates(26,35,39,46))			// dynamic tuning activation
         {
@@ -1322,7 +1327,7 @@ static void UiDriver_ProcessKeyboard()
             case BUTTON_G1_PRESSED:	// Press-and-hold button G1 - Change operational mode, but include "disabled" modes
                 if(ts.txrx_mode == TRX_MODE_RX)	 	// allow mode changes only in RX
                 {
-                    UiDriver_ChangeToNextDemodMode(1);		// go to next mode, including disabled modes
+                    UiDriver_ChangeToNextDemodMode(1);		// go to next alternative mode
                 }
                 break;
             case BUTTON_G2_PRESSED:		// Press and hold of BUTTON_G2 - turn DSP off/on
@@ -1775,7 +1780,14 @@ void UiDriver_ShowMode()
         txt = ts.cw_lsb?"CW-L":"CW-U";
         break;
     case DEMOD_DIGI:
-            txt = ts.digi_lsb?"DI-L":"DI-U";
+            switch(ts.digital_mode)
+            {
+            case DigitalMode_RTTY:
+                txt = ts.digi_lsb?"RT-L":"RT-U";
+                break;
+            default:
+                txt = ts.digi_lsb?"DI-L":"DI-U";
+            }
             break;
     default:
         break;
@@ -1945,8 +1957,6 @@ static void UiDriver_DisplayBand(uchar band)
     // if Band = "Gen" AND frequency inside one of the broadcast bands, print name of the band
 }
 
-// TODO: Move out to RF HAL
-// TODO: Move out to RF HAL
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverInitMainFreqDisplay
 //* Object              :
@@ -3043,12 +3053,6 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
                     ts.enc_one_mode = ENC_ONE_MODE_CMP_LEVEL;
                     ts.enc_thr_mode = ENC_THREE_MODE_INPUT_CTRL;
                 }
-                // FXIME: this is a little hack: If the RTTY DECODER IS ON, ENABLE RTTY CTRL
-                if (ts.enable_rtty_decode)
-                {
-                    ts.enc_two_mode = ENC_TWO_MODE_RTTY_SHIFT;
-                    ts.enc_one_mode = ENC_ONE_MODE_RTTY_SPEED;
-                }
             }
 
             // force redisplay of Encoder boxes and values
@@ -3292,10 +3296,17 @@ static void UiDriver_TimeScheduler()
 //* Functions called    :
 //*----------------------------------------------------------------------------
 
-static void UiDriver_ChangeToNextDemodMode(bool include_disabled_modes)
+static void UiDriver_ChangeToNextDemodMode(bool select_alternative_mode)
 {
     ulong loc_mode = ts.dmod_mode;	// copy to local, so IRQ is not affected
-    loc_mode = RadioManagement_NextDemodMode(loc_mode, include_disabled_modes);
+    if (select_alternative_mode)
+    {
+        loc_mode = RadioManagement_NextAlternativeDemodMode(loc_mode);
+    }
+    else
+    {
+        loc_mode = RadioManagement_NextNormalDemodMode(loc_mode);
+    }
     RadioManagement_SetDemodMode(loc_mode);
     UiDriver_UpdateDisplayAfterParamChange();
 }
@@ -3906,7 +3917,7 @@ static void UiDriver_ChangeEncoderOneMode()
     {
         ts.enc_one_mode++;
         // only switch to rtty shift adjustment, if rtty enabled!
-        if(ts.enc_one_mode == ENC_ONE_MODE_RTTY_SPEED && ts.enable_rtty_decode == false)
+        if(ts.enc_one_mode == ENC_ONE_MODE_RTTY_SPEED && !(ts.digital_mode == DigitalMode_RTTY && ts.dmod_mode == DEMOD_DIGI))
         {
             ts.enc_one_mode++;
         }
@@ -3952,7 +3963,7 @@ static void UiDriver_DisplayEncoderOneMode()
         break;
     default:
         // what to display if lower box is not active
-        if (ts.enable_rtty_decode)
+        if (ts.digital_mode == DigitalMode_RTTY && ts.dmod_mode == DEMOD_DIGI)
         {
             UiDriver_DisplayRttySpeed(0);
         }
@@ -3973,7 +3984,7 @@ static void UiDriver_ChangeEncoderTwoMode()
         ts.enc_two_mode++;
 
         // only switch to rtty shift adjustment, if rtty enabled!
-        if(ts.enc_two_mode == ENC_TWO_MODE_RTTY_SHIFT && ts.enable_rtty_decode == false)
+        if(ts.enc_two_mode == ENC_TWO_MODE_RTTY_SHIFT && !(ts.digital_mode == DigitalMode_RTTY && ts.dmod_mode == DEMOD_DIGI))
         {
             ts.enc_two_mode++;
         }
@@ -4227,47 +4238,6 @@ static void UiDriver_DisplayDSPMode(bool encoder_active)
 
     UiDriver_LeftBoxDisplay(0,txt[0],encoder_active,txt[1],clr,clr_val,txt_is_value);
 }
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverChangeDigitalMode
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-typedef struct DigitalModeDescriptor_s
-{
-    const char* label;
-    const uint32_t enabled;
-} DigitalModeDescriptor;
-
-
-typedef enum
-{
-    Digital = 0,
-    FreeDV1,
-    FreeDV2,
-    BPSK31,
-    RTTY,
-    SSTV,
-    WSPR_A,
-    WSPR_P,
-    DigitalModeNum
-} DigitalModes;
-// The following descriptor table has to be in the order of the enum above
-// This table is stored in flash (due to const) and cannot be written to
-// for operational data per mode [r/w], use a different table with order of modes
-const DigitalModeDescriptor digimodes[DigitalModeNum] =
-{
-    { "DIGITAL", true },
-    { "FreeDV", true },
-    { "FREEDV2", false },
-    { "BPSK 31", false },
-    { "RTTY", false },
-    { "SSTV", false },
-    { "WSPR A", false },
-    { "WSPR P", false },
-};
 
 static void UiDriver_DisplayDigitalMode()
 {
@@ -4283,13 +4253,7 @@ static void UiDriver_DisplayDigitalMode()
 
     fdv_clear_display();
 }
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverChangePowerLevel
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
 static void UiDriver_DisplayPowerLevel()
 {
     ushort color = White;
@@ -5992,7 +5956,7 @@ void UiDriver_MainHandler()
     CatDriver_HandleProtocol();
     // START CALLED AS OFTEN AS POSSIBLE
 #ifdef USE_FREEDV
-    if (ts.dvmode == true)
+    if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_FreeDV)
     {
         FreeDV_mcHF_HandleFreeDV();
     }
