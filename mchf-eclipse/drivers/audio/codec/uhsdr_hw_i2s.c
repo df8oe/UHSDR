@@ -86,8 +86,8 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
         dst = (audio_data_t*)&audio_buf[CODEC_IQ_IDX].out[offset];
     }
 
-    // Handle half
-    AudioDriver_I2SCallback(src, dst, sz, which);
+    // Handle
+    AudioDriver_I2SCallback(src, dst, (audio_data_t*)&audio_buf[CODEC_ANA_IDX].out[offset], sz);
 
 #ifdef EXEC_PROFILING
     // Profiling pin (low level)
