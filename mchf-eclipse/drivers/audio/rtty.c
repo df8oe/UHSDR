@@ -189,22 +189,6 @@ static rtty_lpf_config_t rtty_lp_12khz_50 =
         .coeffs = { -0.9636529842, 1.9629800894 }
 };
 
-static const rtty_mode_config_t  ham170 =
-{
-    .speed = 45.45,
-    .stopbits = RTTY_STOP_2,
-    .shift = 170,
-    .samplerate = 12000.0
-};
-
-static const rtty_mode_config_t  dwd450 =
-{
-    .speed = 50.0,
-    .stopbits = RTTY_STOP_1_5,
-    .shift = 450,
-    .samplerate = 12000.0
-};
-
 static rtty_mode_config_t  rtty_mode_current_config;
 
 

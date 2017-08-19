@@ -154,6 +154,30 @@ typedef enum {
     CW_OFFSET_SHIFT
 } cw_dial_t;
 
+typedef enum
+{
+    DigitalMode_None = 0,
+    DigitalMode_FreeDV,
+    DigitalMode_RTTY,
+    DigitalMode_FreeDV2,
+    DigitalMode_BPSK31,
+    DigitalMode_SSTV,
+    DigitalMode_WSPR_A,
+    DigitalMode_WSPR_P,
+    DigitalMode_Num_Modes
+} digital_modes_t;
+
+typedef struct
+{
+    const char* label;
+    const uint32_t enabled;
+} digital_mode_desc_t;
+
+// The following descriptor table has to be in the order of the enum digital_modes_t in  radio_management.h
+// This table is stored in flash (due to const) and cannot be written to
+// for operational data per mode [r/w], use a different table with order of modes
+extern const digital_mode_desc_t digimodes[DigitalMode_Num_Modes];
+
 
 typedef struct
 {
@@ -186,7 +210,10 @@ void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec);
 bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8_t txrx_mode);
 void RadioManagement_HandlePttOnOff();
 void RadioManagement_MuteTemporarilyRxAudio();
-uint32_t RadioManagement_NextDemodMode(uint32_t loc_mode, bool alternate_mode);
+
+uint32_t RadioManagement_NextNormalDemodMode(uint32_t loc_mode);
+uint32_t RadioManagement_NextAlternativeDemodMode(uint32_t loc_mode);
+
 Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq);
 bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode);
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode);

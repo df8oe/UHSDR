@@ -3522,22 +3522,27 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
         break;
 
-#ifdef USE_RTTY_PROCESSOR
-    case MENU_DEBUG_RTTY_DECODE:
-        var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &ts.enable_rtty_decode,0,options,&clr);
+    case MENU_DIGITAL_MODE_SELECT:
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.digital_mode,0,DigitalMode_RTTY,0,1);
         if (var_change)
         {
-            RttyDecoder_Init();
-            if (ts.enable_rtty_decode)
+            // TODO: Factor this out into a Ui function for (de-)activating Rtty mode
+            if (RadioManagement_IsApplicableDemodMode(DEMOD_DIGI))
             {
-                // TODO: Factor this out into a Ui function for (de-)activating Rtty mode
-                ts.enc_one_mode = ENC_ONE_MODE_RTTY_SPEED;
-                ts.enc_two_mode = ENC_TWO_MODE_RTTY_SHIFT;
+                RadioManagement_SetDemodMode(DEMOD_DIGI);
+                switch(ts.digital_mode)
+                {
+                case DigitalMode_RTTY:
+                    ts.enc_one_mode = ENC_ONE_MODE_RTTY_SPEED;
+                    ts.enc_two_mode = ENC_TWO_MODE_RTTY_SHIFT;
+                    break;
+                }
+                UiDriver_UpdateDisplayAfterParamChange();
             }
         }
+        txt_ptr = digimodes[ts.digital_mode].label;
+        clr = digimodes[ts.digital_mode].enabled?White:Red;
         break;
-#endif
-
     case CONFIG_CAT_PTT_RTS:
         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_ptt_rts,0,options,&clr);
         break;

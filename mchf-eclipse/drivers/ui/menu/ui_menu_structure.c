@@ -341,7 +341,7 @@ const MenuDescriptor men2touchGroup[] =
     { MENU_MEN2TOUCH, MENU_ITEM, MENU_SPECTRUM_MODE, NULL, "Spectrum Type", UiMenuDesc("Select if you want a scope-like or a waterfall-like (actually a fountain) display") },
     { MENU_MEN2TOUCH, MENU_ITEM, MENU_SPECTRUM_MAGNIFY, NULL, "Spectrum Magnify", UiMenuDesc("Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting.") },
     { MENU_MEN2TOUCH, MENU_ITEM, MENU_RESTART_CODEC, NULL, "Restart Codec", UiMenuDesc("Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help.") },
-
+    { MENU_MEN2TOUCH, MENU_ITEM, MENU_DIGITAL_MODE_SELECT, NULL, "Digital Mode", UiMenuDesc("Select the active digital mode (FreeDV,RTTY, ...).") },
     { MENU_MEN2TOUCH, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 

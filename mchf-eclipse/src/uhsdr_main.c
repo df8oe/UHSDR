@@ -237,7 +237,7 @@ void TransceiverStateInit(void)
     //
     ts.dsp_active		= 0;					// TRUE if DSP noise reduction is to be enabled
     //    ts.dsp_active		= 0;					// if this line is enabled win peaks issue is present when starting mcHF with activated NB
-    ts.digital_mode		= 0;					// digital modes OFF by default
+    ts.digital_mode		= DigitalMode_None;					// digital modes OFF by default
     ts.dsp_active_toggle	= 0xff;					// used to hold the button G2 "toggle" setting.
     ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
     ts.dsp_nr_strength	= 0;					// "Strength" of DSP noise reduction (0 = weak)
@@ -285,7 +285,7 @@ void TransceiverStateInit(void)
 #endif
     ts.spectrum_size	= SPECTRUM_SIZE_DEFAULT;		// adjustment for waterfall size
     ts.fft_window_type = FFT_WINDOW_DEFAULT;			// FFT Windowing type
-    ts.dvmode = 0;							// disable "DV" mode RX/TX functions by default
+    ts.dvmode = false;							        // disable "DV" mode RX/TX functions by default
 
     ts.txrx_switch_audio_muting_timing = 0;					// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
     ts.audio_dac_muting_timer = 0;					// timer used for muting TX audio when keying PTT to suppress "click" or "thump"

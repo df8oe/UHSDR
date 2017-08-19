@@ -49,16 +49,16 @@ typedef struct
 
 static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM] =
 {
-    // scaling factors for the various dB/division settings
-    { 0,                        "Waterfall      " }, // just a small trick, the scope will never use scaling index 0
-    { DB_SCALING_5,             "SC(5dB/div)    " },
-    { DB_SCALING_7,             "SC(7.5dB/div)  " },
-    { DB_SCALING_10,            "SC(10dB/div)   " },
-    { DB_SCALING_15,            "SC(15dB/div)   " },
-    { DB_SCALING_20,            "SC(20dB/div)   " },
-    { DB_SCALING_S1,            "SC(1S-Unit/div)" },
-    { DB_SCALING_S2,            "SC(2S-Unit/div)" },
-    { DB_SCALING_S3,            "SC(3S-Unit/div)" }
+        // scaling factors for the various dB/division settings
+        { 0,                        "Waterfall      " }, // just a small trick, the scope will never use scaling index 0
+        { DB_SCALING_5,             "SC(5dB/div)    " },
+        { DB_SCALING_7,             "SC(7.5dB/div)  " },
+        { DB_SCALING_10,            "SC(10dB/div)   " },
+        { DB_SCALING_15,            "SC(15dB/div)   " },
+        { DB_SCALING_20,            "SC(20dB/div)   " },
+        { DB_SCALING_S1,            "SC(1S-Unit/div)" },
+        { DB_SCALING_S2,            "SC(2S-Unit/div)" },
+        { DB_SCALING_S3,            "SC(3S-Unit/div)" }
 };
 
 
@@ -73,6 +73,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
     static uint8_t old_dmod_mode = 0xFF;
     static uint8_t old_iq_freq_mode = 0xFF;
     static uint16_t old_cw_sidetone_freq = 0;
+    static uint8_t old_digital_mode = 0xFF;
 
     static bool force_update = true;
 
@@ -97,22 +98,44 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
             sd.rx_carrier_pos = SPECTRUM_WIDTH/2 -0.5;                                // line is always in center in "magnify" mode
         }
     }
-    if (ts.cw_lsb != old_cw_lsb || ts.cw_sidetone_freq != old_cw_sidetone_freq || ts.dmod_mode != old_dmod_mode || force_update)
+    if (ts.cw_lsb != old_cw_lsb || ts.cw_sidetone_freq != old_cw_sidetone_freq || ts.dmod_mode != old_dmod_mode || ts.digital_mode != old_digital_mode || force_update)
     {
         old_cw_lsb = ts.cw_lsb;
         old_cw_sidetone_freq = ts.cw_sidetone_freq;
         old_dmod_mode = ts.dmod_mode;
+        old_digital_mode = ts.digital_mode;
 
         float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())/TUNE_MULT))/sd.pixel_per_hz;
         // FIXME: DOES NOT WORK PROPERLY IN SPLIT MODE
-        sd.tx_carrier_offset =
-                tx_vfo_offset +
-                (
-                        ts.dmod_mode == DEMOD_CW ?
-                                (ts.cw_lsb?-1.0:1.0)*((float32_t)ts.cw_sidetone_freq / sd.pixel_per_hz)
-                                :
-                                0.0
-                );
+        float32_t mode_offset;
+        switch(ts.dmod_mode)
+        {
+        case DEMOD_CW:
+            mode_offset =(ts.cw_lsb?-1.0:1.0)*((float32_t)ts.cw_sidetone_freq / sd.pixel_per_hz);
+            break;
+        case DEMOD_DIGI:
+        {
+            float mode_center;
+            switch(ts.digital_mode)
+            {
+            case DigitalMode_FreeDV:
+                mode_center = 1500.0;
+                break;
+            case DigitalMode_RTTY:
+                mode_center = 915.0;
+                break;
+            default:
+                mode_center = 0;
+            }
+            mode_offset = (ts.digi_lsb?-1.0:1.0)*(mode_center / sd.pixel_per_hz);
+        }
+        break;
+        default:
+            mode_offset = 0;
+        }
+
+        sd.tx_carrier_offset = tx_vfo_offset + mode_offset;
+
         sd.tx_carrier_pos = sd.rx_carrier_pos + sd.tx_carrier_offset;
     }
 }
@@ -841,7 +864,7 @@ static void UiSpectrum_RedrawSpectrum()
             // build right half of spectrum data
             sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = UiSpectrum_ScaleFFT(sd.FFT_AVGData[i - SPEC_BUFF_LEN/2], &min1);
             // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
-             // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
+            // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
         }
 
         // Adjust the sliding window so that the lowest signal is always black
