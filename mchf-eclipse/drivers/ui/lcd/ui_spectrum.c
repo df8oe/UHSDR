@@ -20,6 +20,8 @@
 #include "ui_menu.h"
 #include "waterfall_colours.h"
 #include "radio_management.h"
+#include "rtty.h"
+
 // ------------------------------------------------
 // Spectrum display public
 SpectrumDisplay  __MCHF_SPECIALMEM       sd;
@@ -66,6 +68,8 @@ static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM] =
 static void     UiSpectrum_DrawFrequencyBar();
 static void		UiSpectrum_CalculateDBm();
 
+// FIXME: This is partially application logic and should be moved to UI and/or radio management
+// instead of monitoring change, changes should trigger update of spectrum configuration (from pull to push)
 static void UiSpectrum_UpdateSpectrumPixelParameters()
 {
     static uint16_t old_magnify = 0xFF;
@@ -80,7 +84,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
     if (sd.magnify != old_magnify || force_update)
     {
         old_magnify = sd.magnify;
-        sd.pixel_per_hz = IQ_SAMPLE_RATE_F/((1 << old_magnify) * SPECTRUM_WIDTH);     // magnify mode is on
+        sd.pixel_per_hz = IQ_SAMPLE_RATE_F/((1 << sd.magnify) * SPECTRUM_WIDTH);     // magnify mode is on
         force_update = true;
     }
 
@@ -106,37 +110,52 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
         old_digital_mode = ts.digital_mode;
 
         float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())/TUNE_MULT))/sd.pixel_per_hz;
+
         // FIXME: DOES NOT WORK PROPERLY IN SPLIT MODE
-        float32_t mode_offset;
+        float32_t mode_marker_offset[SPECTRUM_MAX_MARKER];
         switch(ts.dmod_mode)
         {
         case DEMOD_CW:
-            mode_offset =(ts.cw_lsb?-1.0:1.0)*((float32_t)ts.cw_sidetone_freq / sd.pixel_per_hz);
+            mode_marker_offset[0] =(ts.cw_lsb?-1.0:1.0)*((float32_t)ts.cw_sidetone_freq / sd.pixel_per_hz);
+            sd.marker_num = 1;
             break;
         case DEMOD_DIGI:
         {
-            float mode_center;
+            float32_t mode_marker[SPECTRUM_MAX_MARKER];
             switch(ts.digital_mode)
             {
             case DigitalMode_FreeDV:
-                mode_center = 1500.0;
+            	// 1500 +/- 625Hz
+                mode_marker[0] = 875;
+                mode_marker[0] = 2125;
+                sd.marker_num = 2;
                 break;
             case DigitalMode_RTTY:
-                mode_center = 915.0;
+                mode_marker[0] = 915; // Mark Frequency
+                mode_marker[1] = mode_marker[0] + rtty_shifts[rtty_ctrl_config.shift_idx].value;
+                sd.marker_num = 2;
                 break;
             default:
-                mode_center = 0;
+                mode_marker[0] = 0;
+                sd.marker_num = 1;
             }
-            mode_offset = (ts.digi_lsb?-1.0:1.0)*(mode_center / sd.pixel_per_hz);
+
+            for (uint16_t idx; idx < sd.marker_num; idx++)
+            {
+                mode_marker_offset[idx] = (ts.digi_lsb?-1.0:1.0)*(mode_marker[idx] / sd.pixel_per_hz);
+            }
         }
         break;
         default:
-            mode_offset = 0;
+            mode_marker_offset[0] = 0;
+            sd.marker_num = 1;
         }
 
-        sd.tx_carrier_offset = tx_vfo_offset + mode_offset;
-
-        sd.tx_carrier_pos = sd.rx_carrier_pos + sd.tx_carrier_offset;
+        for (uint16_t idx; idx < sd.marker_num; idx++)
+        {
+            sd.marker_offset[idx] = tx_vfo_offset + mode_marker_offset[idx];
+            sd.marker_pos[idx] = sd.rx_carrier_pos + sd.marker_offset[idx];
+        }
     }
 }
 
@@ -455,73 +474,77 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     const bool is_scope_light = (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) != 0;
     const uint16_t spec_height_limit = sd.scope_size - 7;
     const uint16_t spec_top_y = sd.scope_ystart + sd.scope_size;
-    const uint16_t tx_carrier_line_pos = SPECTRUM_START_X + sd.tx_carrier_pos;
-
-
 
     uint32_t clr_scope;
     UiMenu_MapColors(ts.scope_trace_colour, NULL, &clr_scope);
 
+    uint16_t marker_line_pos[SPECTRUM_MAX_MARKER];
 
-    // this is the tx carrier line, we redraw only if line changes place around,
-    // init code must take care to reset prev position to 0xffff in order to get initialization done after clean start
-
-    if (tx_carrier_line_pos != sd.tx_carrier_line_pos_prev)
+    for (uint16_t idx = 0; idx < sd.marker_num; idx++)
     {
-        if (sd.tx_carrier_line_pos_prev < SPECTRUM_START_X + SPECTRUM_WIDTH)
-        {
-            // delete old line if previously inside screen limits
+        marker_line_pos[idx] = SPECTRUM_START_X + sd.marker_pos[idx];
 
-            if(is_scope_light)
+        // this is the tx carrier line, we redraw only if line changes place around,
+        // init code must take care to reset prev position to 0xffff in order to get initialization done after clean start
+
+        if (marker_line_pos[idx] != sd.marker_line_pos_prev[idx])
+        {
+            if (sd.marker_line_pos_prev[idx] < SPECTRUM_START_X + SPECTRUM_WIDTH)
             {
-                UiLcdHy28_DrawStraightLine( sd.tx_carrier_line_pos_prev,
+                // delete old line if previously inside screen limits
+
+                if(is_scope_light)
+                {
+                    UiLcdHy28_DrawStraightLine( sd.marker_line_pos_prev[idx],
+                            spec_top_y - spec_height_limit,
+                            spec_height_limit,
+                            LCD_DIR_VERTICAL,
+                            Black);
+                }
+                else
+                {
+                    UiSpectrum_ScopeStandard_UpdateVerticalDataLine(
+                            sd.marker_line_pos_prev[idx],
+                            spec_top_y - spec_height_limit /* old = max pos */ ,
+                            spec_top_y /* new = min pos */,
+                            clr_scope,
+                            false);
+
+                    // we erase the memory for this location, so that it is fully redrawn
+                    if (sd.marker_line_pos_prev[idx] < SPECTRUM_START_X + SPECTRUM_WIDTH)
+                    {
+                        old_pos[sd.marker_line_pos_prev[idx] - SPECTRUM_START_X] = spec_top_y;
+                    }
+                }
+            }
+
+            if (marker_line_pos[idx] < SPECTRUM_START_X + SPECTRUM_WIDTH)
+            {
+
+                // draw new line if inside screen limits
+
+                UiLcdHy28_DrawStraightLine( marker_line_pos[idx],
                         spec_top_y - spec_height_limit,
                         spec_height_limit,
                         LCD_DIR_VERTICAL,
-                        Black);
-            }
-            else
-            {
-                UiSpectrum_ScopeStandard_UpdateVerticalDataLine(
-                        sd.tx_carrier_line_pos_prev,
-                        spec_top_y - spec_height_limit /* old = max pos */ ,
-                        spec_top_y /* new = min pos */,
-                        clr_scope,
-                        false);
+                        sd.scope_centre_grid_colour_active);
 
-                // we erase the memory for this location, so that it is fully redrawn
-                if (sd.tx_carrier_line_pos_prev < SPECTRUM_START_X + SPECTRUM_WIDTH)
+                if (is_scope_light == false)
                 {
-                    old_pos[sd.tx_carrier_line_pos_prev - SPECTRUM_START_X] = spec_top_y;
+                    // we erase the memory for this location, so that it is fully redrawn
+                    if (marker_line_pos[idx] < SPECTRUM_START_X + SPECTRUM_WIDTH)
+                    {
+                        old_pos[marker_line_pos[idx] - SPECTRUM_START_X] = spec_top_y;
+                    }
                 }
             }
+
+            // done, remember where line has been drawn
+            sd.marker_line_pos_prev[idx] = marker_line_pos[idx];
         }
-
-        if (tx_carrier_line_pos < SPECTRUM_START_X + SPECTRUM_WIDTH)
-        {
-
-            // draw new line if inside screen limits
-
-            UiLcdHy28_DrawStraightLine( tx_carrier_line_pos,
-                    spec_top_y - spec_height_limit,
-                    spec_height_limit,
-                    LCD_DIR_VERTICAL,
-                    sd.scope_centre_grid_colour_active);
-
-            if (is_scope_light == false)
-            {
-                // we erase the memory for this location, so that it is fully redrawn
-                if (tx_carrier_line_pos < SPECTRUM_START_X + SPECTRUM_WIDTH)
-                {
-                    old_pos[tx_carrier_line_pos - SPECTRUM_START_X] = spec_top_y;
-                }
-            }
-        }
-
-        // done, remember where line has been drawn
-        sd.tx_carrier_line_pos_prev = tx_carrier_line_pos;
     }
 
+    uint16_t marker_lines_togo = sd.marker_num;
     for(uint16_t x = SPECTRUM_START_X, idx = 0; idx < SPECTRUM_WIDTH; x++, idx++)
     {
         // averaged FFT data scaled to height and (if necessary) limited here to current max height
@@ -555,7 +578,18 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
             // x position is not on vertical center line (the one that indicates the tx carrier frequency)
             // we draw a line if y_new_pos and the last drawn pixel (y_old_pos) are more than 1 pixel apart in the vertical axis
             // makes the spectrum display look more complete . . .
-            uint16_t clr_bg =  x != tx_carrier_line_pos ? Black: sd.scope_centre_grid_colour_active;
+            uint16_t clr_bg = Black;
+
+            // TODO: we  could find out the lowest marker_line and do not process search before that line
+            for (uint16_t marker_idx = 0; marker_lines_togo > 0 && marker_idx < sd.marker_num; marker_idx++)
+            {
+                if (x == marker_line_pos[marker_idx])
+                {
+                    clr_bg = sd.scope_centre_grid_colour_active;
+                    marker_lines_togo--; // once we marked all, skip further tests;
+                    break;
+                }
+            }
             UiSpectrum_DrawLine(x, y_old_pos_prev, y_old_pos, clr_bg);
             UiSpectrum_DrawLine(x, y_new_pos_prev, y_new_pos, clr_scope);
 
@@ -566,9 +600,16 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
         }
         else
         {
+
+            bool is_marker_line = false;
+            for (uint16_t idx = 0; !(is_marker_line) && idx < sd.marker_num; idx++)
+            {
+                is_marker_line =  x == marker_line_pos[idx];
+            }
+
             // we just draw our vertical line in a optimized fashion here
             // handles also the grid (re)drawing if necessary
-            UiSpectrum_ScopeStandard_UpdateVerticalDataLine(x, y_old_pos, y_new_pos, clr_scope, x == tx_carrier_line_pos);
+            UiSpectrum_ScopeStandard_UpdateVerticalDataLine(x, y_old_pos, y_new_pos, clr_scope, is_marker_line);
         }
     }
 }
@@ -680,7 +721,10 @@ static void UiSpectrum_InitSpectrumDisplayData()
 
     sd.wfall_contrast = (float)ts.waterfall.contrast / 100.0;		// calculate scaling for contrast
 
-    sd.tx_carrier_line_pos_prev = 0xffff; // off screen
+    for (uint16_t marker_idx = 0; marker_idx < SPECTRUM_MAX_MARKER; marker_idx++)
+    {
+        sd.marker_line_pos_prev[marker_idx] = 0xffff; // off screen
+    }
     // Ready
     sd.enabled		= 1;
 }
@@ -708,7 +752,11 @@ static void UiSpectrum_DrawWaterfall()
     UiSpectrum_UpdateSpectrumPixelParameters(); // before accessing pixel parameters, request update according to configuration
 
 
-    const uint16_t tx_line_pixel_pos = sd.tx_carrier_pos;
+    uint16_t marker_line_pixel_pos[SPECTRUM_MAX_MARKER];
+    for (uint16_t idx = 0; idx < sd.marker_num; idx++)
+    {
+        marker_line_pixel_pos[idx] = sd.marker_pos[idx];
+    }
 
     // After the above manipulation, clip the result to make sure that it is within the range of the palette table
     for(uint16_t i = 0; i < SPEC_BUFF_LEN; i++)
@@ -721,10 +769,13 @@ static void UiSpectrum_DrawWaterfall()
         sd.waterfall[sd.wfall_line][i] = sd.FFT_Samples[i]; // save the manipulated value in the circular waterfall buffer
     }
 
-    // Place center line marker on screen:  Location [64] (the 65th) of the palette is reserved is a special color reserved for this
-    if (tx_line_pixel_pos < SPECTRUM_WIDTH)
+    for (uint16_t idx = 0; idx < sd.marker_num; idx ++)
     {
-        sd.waterfall[sd.wfall_line][tx_line_pixel_pos] = NUMBER_WATERFALL_COLOURS;
+        // Place center line marker on screen:  Location [64] (the 65th) of the palette is reserved is a special color reserved for this
+        if (marker_line_pixel_pos[idx] < SPECTRUM_WIDTH)
+        {
+            sd.waterfall[sd.wfall_line][marker_line_pixel_pos[idx]] = NUMBER_WATERFALL_COLOURS;
+        }
     }
 
     sd.wfall_line++;        // bump to the next line in the circular buffer for next go-around

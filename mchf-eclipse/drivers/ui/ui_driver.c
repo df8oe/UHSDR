@@ -441,6 +441,37 @@ static void   UiDriver_LcdBlankingProcessTimer()
     }
 }
 
+#define LEFTBOX_ROW_H  (14+12+2)
+#define LEFTBOX_ROW_2ND_OFF  (13)
+static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool encoder_active,
+                            const char* text, uint32_t color, uint32_t clr_val, bool text_is_value)
+{
+
+    uint32_t label_color = encoder_active?Black:color;
+
+    // max visibility of active element
+    uint32_t bg_color = encoder_active?Orange:Blue;
+    uint32_t brdr_color = encoder_active?Orange:Blue;
+
+
+    UiLcdHy28_DrawEmptyRect(POS_LEFTBOXES_IND_X, POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H), LEFTBOX_ROW_H - 2, LEFTBOX_WIDTH - 2, brdr_color);
+    UiLcdHy28_PrintTextCentered(POS_LEFTBOXES_IND_X + 1, POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1,LEFTBOX_WIDTH - 3, label,
+                        label_color, bg_color, 0);
+
+    // this causes flicker, but I am too lazy to fix that now
+    UiLcdHy28_DrawFullRect(POS_LEFTBOXES_IND_X + 1, POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1 + 12, LEFTBOX_ROW_H - 4 - 11, LEFTBOX_WIDTH - 3, text_is_value?Black:bg_color);
+    if (text_is_value)
+    {
+        UiLcdHy28_PrintTextRight((POS_LEFTBOXES_IND_X + LEFTBOX_WIDTH - 4), (POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1 + LEFTBOX_ROW_2ND_OFF), text,
+                clr_val, text_is_value?Black:bg_color, 0);
+    }
+    else
+    {
+        UiLcdHy28_PrintTextCentered((POS_LEFTBOXES_IND_X + 1), (POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1 + LEFTBOX_ROW_2ND_OFF),LEFTBOX_WIDTH - 3, text,
+                color, bg_color, 0);
+    }
+}
+
 static void UiDriver_LcdBlankingStealthSwitch()
 {
 	if(ts.lcd_backlight_blanking & LCD_BLANKING_ENABLE)
@@ -454,6 +485,25 @@ static void UiDriver_LcdBlankingStealthSwitch()
 	}
 }
 
+void UiDriver_DisplayFilter()
+{
+    const char* filter_ptr;
+    uint32_t font_clr= filter_path_change?Black:White;
+
+    const char *filter_names[2];
+
+    AudioFilter_GetNamesOfFilterPath(ts.filter_path,filter_names);
+    if (filter_names[1] != NULL)
+    {
+        filter_ptr = filter_names[1];
+    }
+    else
+    {
+        filter_ptr = " ";
+    }
+
+    UiDriver_LeftBoxDisplay(1,filter_names[0],filter_path_change,filter_ptr,font_clr, font_clr,false);
+}
 
 static void UiDriver_HandleSwitchToNextDspMode()
 {
@@ -949,36 +999,6 @@ void UiDriver_EncoderDisplay(const uint8_t row, const uint8_t column, const char
                              color, Black, 0);
 }
 
-#define LEFTBOX_ROW_H  (14+12+2)
-#define LEFTBOX_ROW_2ND_OFF  (13)
-static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool encoder_active,
-                            const char* text, uint32_t color, uint32_t clr_val, bool text_is_value)
-{
-
-    uint32_t label_color = encoder_active?Black:color;
-
-    // max visibility of active element
-    uint32_t bg_color = encoder_active?Orange:Blue;
-    uint32_t brdr_color = encoder_active?Orange:Blue;
-
-
-    UiLcdHy28_DrawEmptyRect(POS_LEFTBOXES_IND_X, POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H), LEFTBOX_ROW_H - 2, LEFTBOX_WIDTH - 2, brdr_color);
-    UiLcdHy28_PrintTextCentered(POS_LEFTBOXES_IND_X + 1, POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1,LEFTBOX_WIDTH - 3, label,
-                        label_color, bg_color, 0);
-
-    // this causes flicker, but I am too lazy to fix that now
-    UiLcdHy28_DrawFullRect(POS_LEFTBOXES_IND_X + 1, POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1 + 12, LEFTBOX_ROW_H - 4 - 11, LEFTBOX_WIDTH - 3, text_is_value?Black:bg_color);
-    if (text_is_value)
-    {
-        UiLcdHy28_PrintTextRight((POS_LEFTBOXES_IND_X + LEFTBOX_WIDTH - 4), (POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1 + LEFTBOX_ROW_2ND_OFF), text,
-                clr_val, text_is_value?Black:bg_color, 0);
-    }
-    else
-    {
-        UiLcdHy28_PrintTextCentered((POS_LEFTBOXES_IND_X + 1), (POS_LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H) + 1 + LEFTBOX_ROW_2ND_OFF),LEFTBOX_WIDTH - 3, text,
-                color, bg_color, 0);
-    }
-}
 
 static void UiDriver_FButton_F1MenuExit()
 {
@@ -4594,26 +4614,6 @@ static void UiDriver_DisplayPowerLevel()
     }
     // Draw top line
     UiLcdHy28_PrintTextCentered((POS_PW_IND_X),(POS_PW_IND_Y),POS_DEMOD_MODE_MASK_W,txt,color,Blue,0);
-}
-
-void UiDriver_DisplayFilter()
-{
-    const char* filter_ptr;
-    uint32_t font_clr= filter_path_change?Black:White;
-
-    const char *filter_names[2];
-
-    AudioFilter_GetNamesOfFilterPath(ts.filter_path,filter_names);
-    if (filter_names[1] != NULL)
-    {
-        filter_ptr = filter_names[1];
-    }
-    else
-    {
-        filter_ptr = " ";
-    }
-
-    UiDriver_LeftBoxDisplay(1,filter_names[0],filter_path_change,filter_ptr,font_clr, font_clr,false);
 }
 
 static void UiDriver_HandleSMeter()
