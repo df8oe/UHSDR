@@ -273,8 +273,8 @@ void 	UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mod
 void    UiDriver_FrequencyUpdateLOandDisplay(bool full_update);
 void    UiDriver_RefreshEncoderDisplay();
 void    UiDriver_FButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) ;
-void 	UiDriver_ShowStep();
-void 	UiDriver_ShowMode(void);
+void 	UiDriver_DisplayFreqStepSize();
+void 	UiDriver_DisplayDemodMode(void);
 void	UiDriver_LcdBlankingStartTimer(void);
 void    UiDriver_SpectrumZoomChangeLevel();
 
@@ -283,6 +283,7 @@ void UiDriver_DebugInfo_DisplayEnable(bool enable);
 
 void UiDriver_ChangeTuningStep(uchar is_up);
 void UiDriver_UpdateDisplayAfterParamChange();
+void UiDriver_SetDemodMode(uint8_t new_mode);
 
 void UiDriver_StartUpScreenInit();
 void UiDriver_StartUpScreenFinish();
