@@ -254,12 +254,12 @@ li pre {
 }
 
 table {
-  width: 100%;
+  width: 60%;
   border-collapse: collapse;
 }
 
 th, td {
-  text-align: left;
+  text-align: center;
   padding: 5px 10px;
   border-bottom: 1px solid #aaa;
 }
