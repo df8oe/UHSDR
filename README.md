@@ -30,7 +30,7 @@ accessed at GitHub startup page (see link a few lines down).
 If you want to see the recent progress of the project, have a look [at
 the commits here](https://github.com/df8oe/mchf-github/commits/active-devel).
 
-You can find descriptions of menus and operating hints at [our WIKI] (https://github.com/df8oe/UHSDR/wiki/)
+You can find descriptions of menus and operating hints at [our WIKI](https://github.com/df8oe/UHSDR/wiki/)
 All this is bundled in [startup page](https://df8oe.github.io/UHSDR/).
 
 Have fun - Open-Source opens possibilities!
