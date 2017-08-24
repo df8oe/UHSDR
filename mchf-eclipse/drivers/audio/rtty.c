@@ -258,7 +258,6 @@ static float32_t decayavg(float32_t average, float32_t input, int weight)
 // this function returns the bit value of the current sample
 static int RttyDecoder_demodulator(float32_t sample) {
 
-
 	float32_t space_mag = RttyDecoder_bandPassFreq(sample, rttyDecoderData.bpfSpaceConfig, &rttyDecoderData.bpfSpaceData);
     float32_t mark_mag = RttyDecoder_bandPassFreq(sample, rttyDecoderData.bpfMarkConfig, &rttyDecoderData.bpfMarkData);
 
@@ -268,7 +267,7 @@ static int RttyDecoder_demodulator(float32_t sample) {
     mark_mag *= mark_mag;
 
     if(ts.digital_mode == DigitalMode_RTTY_NEW)
-    {
+    {   // RTTY decoding with ATC = automatic threshold correction
 		float32_t helper = space_mag;
 		space_mag = mark_mag;
 		mark_mag = helper;
@@ -276,34 +275,34 @@ static int RttyDecoder_demodulator(float32_t sample) {
 		static float32_t space_env = 0.0;
 	    static float32_t mark_noise = 0.0;
 	    static float32_t space_noise = 0.0;
-	    // experiment to implement an ATC (Automatic threshold correction)
-		// taken from FlDigi, GNU GPLv2 or later
+	    // experiment to implement an ATC (Automatic threshold correction), DD4WH, 2017_08_24
+		// everything taken from FlDigi, licensed by GNU GPLv2 or later
 		// calculate envelope of the mark and space signals
 		// uses fast attack and slow decay
 		mark_env = decayavg (mark_env, mark_mag,
 				(mark_mag > mark_env) ? rttyDecoderData.oneBitSampleCount / 4 : rttyDecoderData.oneBitSampleCount * 16);
 		space_env = decayavg (space_env, space_mag,
 				(space_mag > space_env) ? rttyDecoderData.oneBitSampleCount / 4 : rttyDecoderData.oneBitSampleCount * 16);
-
+        // calculate the noise on the mark and space signals
 		mark_noise = decayavg (mark_noise, mark_mag,
 				(mark_mag < mark_noise) ? rttyDecoderData.oneBitSampleCount / 4 : rttyDecoderData.oneBitSampleCount * 48);
 		space_noise = decayavg (space_noise, space_mag,
 				(space_mag < space_noise) ? rttyDecoderData.oneBitSampleCount / 4 : rttyDecoderData.oneBitSampleCount * 48);
-
+        // the noise floor is the lower signal of space and mark noise
 		float32_t noise_floor = (space_noise < mark_noise) ? space_noise : mark_noise;
 
 		// Linear ATC, section 3 of www.w7ay.net/site/Technical/ATC
-//		v1 = space_mag - mark_mag - 0.5 * (space_env - mark_env);
+		//		v1 = space_mag - mark_mag - 0.5 * (space_env - mark_env);
 
-
-
-		// clipped if clipped decoder selected
+		// Compensating for the noise floor by using clipping
 					float32_t mclipped = 0.0, sclipped = 0.0;
 					mclipped = mark_mag > mark_env ? mark_env : mark_mag;
 					sclipped = space_mag > space_env ? space_env : space_mag;
 					if (mclipped < noise_floor) mclipped = noise_floor;
 					if (sclipped < noise_floor) sclipped = noise_floor;
 
+		// we could add options for mark-only or space-only decoding
+		// however, the current implementation with ATC already works quite well with mark-only/space-only
 /*					switch (progdefaults.rtty_cwi) {
 						case 1 : // mark only decode
 							space_env = sclipped = noise_floor;
@@ -313,10 +312,8 @@ static int RttyDecoder_demodulator(float32_t sample) {
 						default : ;
 		}
 */
-					// Clipped ATC (Section 4)
 
-
-		// Optimal ATC (Section 5)
+		// Optimal ATC (Section 6 of of www.w7ay.net/site/Technical/ATC)
 		v1  = (mclipped - noise_floor) * (mark_env - noise_floor) -
 							(sclipped - noise_floor) * (space_env - noise_floor) - 0.25 * (
 							(mark_env - noise_floor) * (mark_env - noise_floor) -
@@ -328,7 +325,7 @@ static int RttyDecoder_demodulator(float32_t sample) {
 		return (v1 > 0)?0:1;
     }
     else
-    {
+    {   // RTTY without ATC, which works very well too!
 		// inverting line 1
 		mark_mag *= -1;
 
