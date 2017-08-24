@@ -268,7 +268,9 @@ static int RttyDecoder_demodulator(float32_t sample) {
 
     if(ts.digital_mode == DigitalMode_RTTY_NEW)
     {   // RTTY decoding with ATC = automatic threshold correction
-		float32_t helper = space_mag;
+		// FIXME: space & mark seem to be swapped in the following code
+    	// dirty fix
+    	float32_t helper = space_mag;
 		space_mag = mark_mag;
 		mark_mag = helper;
     	static float32_t mark_env = 0.0;
@@ -299,8 +301,14 @@ static int RttyDecoder_demodulator(float32_t sample) {
 					float32_t mclipped = 0.0, sclipped = 0.0;
 					mclipped = mark_mag > mark_env ? mark_env : mark_mag;
 					sclipped = space_mag > space_env ? space_env : space_mag;
-					if (mclipped < noise_floor) mclipped = noise_floor;
-					if (sclipped < noise_floor) sclipped = noise_floor;
+					if (mclipped < noise_floor)
+						{
+						    mclipped = noise_floor;
+						}
+					if (sclipped < noise_floor)
+						{
+						    sclipped = noise_floor;
+						}
 
 		// we could add options for mark-only or space-only decoding
 		// however, the current implementation with ATC already works quite well with mark-only/space-only
@@ -316,8 +324,8 @@ static int RttyDecoder_demodulator(float32_t sample) {
 
 		// Optimal ATC (Section 6 of of www.w7ay.net/site/Technical/ATC)
 		v1  = (mclipped - noise_floor) * (mark_env - noise_floor) -
-							(sclipped - noise_floor) * (space_env - noise_floor) - 0.25 * (
-							(mark_env - noise_floor) * (mark_env - noise_floor) -
+							(sclipped - noise_floor) * (space_env - noise_floor) -
+					0.25 *  ((mark_env - noise_floor) * (mark_env - noise_floor) -
 		                    (space_env - noise_floor) * (space_env - noise_floor));
 
 		v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
