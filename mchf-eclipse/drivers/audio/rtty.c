@@ -331,7 +331,6 @@ static int RttyDecoder_demodulator(float32_t sample) {
 		v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
 
 		// MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
-		return (v1 > 0)?0:1;
     }
     else
     {   // RTTY without ATC, which works very well too!
@@ -344,9 +343,9 @@ static int RttyDecoder_demodulator(float32_t sample) {
 		// lowpass filtering the summed line
 			v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
 		// MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
-		return (v1 > 0)?0:1;
     }
 
+    return (v1 > 0)?0:1;
 }
 
 // this function returns true once at the half of a bit with the bit's value
