@@ -241,7 +241,7 @@ void RttyDecoder_Init()
 }
 
 static float32_t decayavg(float32_t average, float32_t input, int weight)
-{
+{ // adapted from https://github.com/ukhas/dl-fldigi/blob/master/src/include/misc.h
 	float32_t retval;
 	if (weight <= 1)
     {
@@ -277,6 +277,7 @@ static int RttyDecoder_demodulator(float32_t sample) {
 	    static float32_t space_noise = 0.0;
 	    // experiment to implement an ATC (Automatic threshold correction), DD4WH, 2017_08_24
 		// everything taken from FlDigi, licensed by GNU GPLv2 or later
+	    // https://github.com/ukhas/dl-fldigi/blob/master/src/cw_rtty/rtty.cxx
 		// calculate envelope of the mark and space signals
 		// uses fast attack and slow decay
 		mark_env = decayavg (mark_env, mark_mag,
