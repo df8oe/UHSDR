@@ -159,7 +159,6 @@ typedef enum
     DigitalMode_None = 0,
     DigitalMode_FreeDV,
     DigitalMode_RTTY,
-	DigitalMode_RTTY_NEW,
     DigitalMode_FreeDV2,
     DigitalMode_BPSK31,
     DigitalMode_SSTV,

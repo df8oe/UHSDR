@@ -131,7 +131,6 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
                 sd.marker_num = 2;
                 break;
             case DigitalMode_RTTY:
-            case DigitalMode_RTTY_NEW:
                 mode_marker[0] = 915; // Mark Frequency
                 mode_marker[1] = mode_marker[0] + rtty_shifts[rtty_ctrl_config.shift_idx].value;
                 sd.marker_num = 2;

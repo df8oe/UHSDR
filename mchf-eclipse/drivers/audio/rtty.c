@@ -266,7 +266,7 @@ static int RttyDecoder_demodulator(float32_t sample) {
     space_mag *= space_mag;
     mark_mag *= mark_mag;
 
-    if(ts.digital_mode == DigitalMode_RTTY_NEW)
+    if(ts.rtty_atc_enable)
     {   // RTTY decoding with ATC = automatic threshold correction
 		// FIXME: space & mark seem to be swapped in the following code
     	// dirty fix
@@ -341,7 +341,7 @@ static int RttyDecoder_demodulator(float32_t sample) {
 		v1 = mark_mag + space_mag;
 
 		// lowpass filtering the summed line
-			v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
+		v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
 		// MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
     }
 
