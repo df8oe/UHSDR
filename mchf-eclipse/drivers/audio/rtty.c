@@ -21,6 +21,7 @@
 #include "ui_configuration.h"
 #include "ui_driver.h"
 #include "rtty.h"
+#include "radio_management.h"
 
 // RTTY Experiment based on code from the DSP Tutorial at http://dp.nonoo.hu/projects/ham-dsp-tutorial/18-rtty-decoder-using-iir-filters/
 // Used with permission from Norbert Varga, HA2NON under GPLv3 license
@@ -239,25 +240,112 @@ void RttyDecoder_Init()
     }
 }
 
+static float32_t decayavg(float32_t average, float32_t input, int weight)
+{ // adapted from https://github.com/ukhas/dl-fldigi/blob/master/src/include/misc.h
+	float32_t retval;
+	if (weight <= 1)
+    {
+        retval = input;
+	}
+	else
+   	{
+        retval = ( ( input - average ) / (float32_t)weight ) + average ;
+    }
+	return retval;
+}
+
+
 // this function returns the bit value of the current sample
 static int RttyDecoder_demodulator(float32_t sample) {
-    float32_t line0 = RttyDecoder_bandPassFreq(sample, rttyDecoderData.bpfSpaceConfig, &rttyDecoderData.bpfSpaceData);
-    float32_t line1 = RttyDecoder_bandPassFreq(sample, rttyDecoderData.bpfMarkConfig, &rttyDecoderData.bpfMarkData);
+
+	float32_t space_mag = RttyDecoder_bandPassFreq(sample, rttyDecoderData.bpfSpaceConfig, &rttyDecoderData.bpfSpaceData);
+    float32_t mark_mag = RttyDecoder_bandPassFreq(sample, rttyDecoderData.bpfMarkConfig, &rttyDecoderData.bpfMarkData);
+
+    float32_t v1 = 0.0;
     // calculating the RMS of the two lines (squaring them)
-    line0 *= line0;
-    line1 *= line1;
+    space_mag *= space_mag;
+    mark_mag *= mark_mag;
 
-    // inverting line 1
-    line1 *= -1;
+    if(ts.digital_mode == DigitalMode_RTTY_NEW)
+    {   // RTTY decoding with ATC = automatic threshold correction
+		// FIXME: space & mark seem to be swapped in the following code
+    	// dirty fix
+    	float32_t helper = space_mag;
+		space_mag = mark_mag;
+		mark_mag = helper;
+    	static float32_t mark_env = 0.0;
+		static float32_t space_env = 0.0;
+	    static float32_t mark_noise = 0.0;
+	    static float32_t space_noise = 0.0;
+	    // experiment to implement an ATC (Automatic threshold correction), DD4WH, 2017_08_24
+		// everything taken from FlDigi, licensed by GNU GPLv2 or later
+	    // https://github.com/ukhas/dl-fldigi/blob/master/src/cw_rtty/rtty.cxx
+		// calculate envelope of the mark and space signals
+		// uses fast attack and slow decay
+		mark_env = decayavg (mark_env, mark_mag,
+				(mark_mag > mark_env) ? rttyDecoderData.oneBitSampleCount / 4 : rttyDecoderData.oneBitSampleCount * 16);
+		space_env = decayavg (space_env, space_mag,
+				(space_mag > space_env) ? rttyDecoderData.oneBitSampleCount / 4 : rttyDecoderData.oneBitSampleCount * 16);
+        // calculate the noise on the mark and space signals
+		mark_noise = decayavg (mark_noise, mark_mag,
+				(mark_mag < mark_noise) ? rttyDecoderData.oneBitSampleCount / 4 : rttyDecoderData.oneBitSampleCount * 48);
+		space_noise = decayavg (space_noise, space_mag,
+				(space_mag < space_noise) ? rttyDecoderData.oneBitSampleCount / 4 : rttyDecoderData.oneBitSampleCount * 48);
+        // the noise floor is the lower signal of space and mark noise
+		float32_t noise_floor = (space_noise < mark_noise) ? space_noise : mark_noise;
 
-    // summing the two lines
-    line0 += line1;
+		// Linear ATC, section 3 of www.w7ay.net/site/Technical/ATC
+		//		v1 = space_mag - mark_mag - 0.5 * (space_env - mark_env);
 
-    // lowpass filtering the summed line
-    line0 = RttyDecoder_lowPass(line0, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
+		// Compensating for the noise floor by using clipping
+					float32_t mclipped = 0.0, sclipped = 0.0;
+					mclipped = mark_mag > mark_env ? mark_env : mark_mag;
+					sclipped = space_mag > space_env ? space_env : space_mag;
+					if (mclipped < noise_floor)
+						{
+						    mclipped = noise_floor;
+						}
+					if (sclipped < noise_floor)
+						{
+						    sclipped = noise_floor;
+						}
 
-    // MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
-    return (line0 > 0)?0:1;
+		// we could add options for mark-only or space-only decoding
+		// however, the current implementation with ATC already works quite well with mark-only/space-only
+/*					switch (progdefaults.rtty_cwi) {
+						case 1 : // mark only decode
+							space_env = sclipped = noise_floor;
+							break;
+						case 2: // space only decode
+							mark_env = mclipped = noise_floor;
+						default : ;
+		}
+*/
+
+		// Optimal ATC (Section 6 of of www.w7ay.net/site/Technical/ATC)
+		v1  = (mclipped - noise_floor) * (mark_env - noise_floor) -
+							(sclipped - noise_floor) * (space_env - noise_floor) -
+					0.25 *  ((mark_env - noise_floor) * (mark_env - noise_floor) -
+		                    (space_env - noise_floor) * (space_env - noise_floor));
+
+		v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
+
+		// MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
+    }
+    else
+    {   // RTTY without ATC, which works very well too!
+		// inverting line 1
+		mark_mag *= -1;
+
+		// summing the two lines
+		v1 = mark_mag + space_mag;
+
+		// lowpass filtering the summed line
+			v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
+		// MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
+    }
+
+    return (v1 > 0)?0:1;
 }
 
 // this function returns true once at the half of a bit with the bit's value

@@ -106,6 +106,7 @@ const digital_mode_desc_t digimodes[DigitalMode_Num_Modes] =
     { "DIGITAL" , true },
     { "FreeDV"  , true },
     { "RTTY"    , true },
+	{ "RTTYATC" , true },
     { "FREEDV2" , false },
     { "PSK"     , false },
     { "SSTV"    , false },
