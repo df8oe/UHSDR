@@ -1720,7 +1720,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             float freq[2] = { ts.cw_sidetone_freq, 0.0 };
 
-            softdds_setfreq_dbl(freq,ts.samp_rate,0);
+            softdds_configRunIQ(freq,ts.samp_rate,0);
             UiDriver_FrequencyUpdateLOandDisplay(false);
         }
         snprintf(options,32, "  %uHz", (uint)ts.cw_sidetone_freq);

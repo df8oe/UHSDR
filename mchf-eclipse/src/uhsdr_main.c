@@ -373,7 +373,7 @@ void MiscInit(void)
 {
     // Init Soft DDS
     float freq[2] = { 0.0, 0.0 };
-    softdds_setfreq_dbl(freq,ts.samp_rate,0);
+    softdds_configRunIQ(freq,ts.samp_rate,0);
 }
 
 /*
