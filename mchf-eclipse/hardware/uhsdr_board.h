@@ -942,6 +942,7 @@ typedef struct TransceiverState
     bool vbat_present; // we detected a working vbat mod
     bool codec_present; // we detected a working codec
 	bool new_nb; // new noise blanker
+	bool rtty_atc_enable; // is ATC enabled for RTTY decoding? (for testing!)
 
 	uint8_t enable_rtty_decode; // new rtty encoder (experimental)
 	bool enable_ptt_rts; // disable/enable ptt via virtual serial port rts

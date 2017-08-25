@@ -770,7 +770,7 @@ void UiDriver_HandleTouchScreen()
         }
         if(UiDriver_CheckTouchCoordinates(0,7,10,13))			// toggle digital modes
         {
-            incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_RTTY_NEW);
+            incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_RTTY);
             // We limit the reachable modes to the ones truly available
             // which is FreeDV1 for now
             UiDriver_ToggleDigitalMode();
@@ -1792,7 +1792,6 @@ void UiDriver_DisplayDemodMode()
         switch(ts.digital_mode)
         {
         case DigitalMode_RTTY:
-        case DigitalMode_RTTY_NEW:
             txt = ts.digi_lsb?"RT-L":"RT-U";
             break;
         default:
@@ -3334,7 +3333,6 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
         switch(ts.digital_mode)
         {
         case DigitalMode_RTTY:
-        case DigitalMode_RTTY_NEW:
             if (ts.enc_one_mode != ENC_ONE_MODE_AUDIO_GAIN)
             {
                 ts.enc_one_mode = ENC_ONE_MODE_RTTY_SPEED;
@@ -3984,7 +3982,7 @@ static bool UiDriver_IsApplicableEncoderOneMode(uint8_t mode)
     {
     case ENC_ONE_MODE_RTTY_SPEED:
         // only switch to rtty adjustment, if rtty enabled!
-        retval = (ts.digital_mode == DigitalMode_RTTY || ts.digital_mode == DigitalMode_RTTY_NEW) && ts.dmod_mode == DEMOD_DIGI;
+        retval = ts.digital_mode == DigitalMode_RTTY && ts.dmod_mode == DEMOD_DIGI;
         break;
     case ENC_ONE_MODE_ST_GAIN:
         retval = ts.dmod_mode == DEMOD_CW;
@@ -4016,7 +4014,7 @@ static void UiDriver_DisplayEncoderOneMode()
         break;
     default:
         // what to display if lower box is not active
-        if ((ts.digital_mode == DigitalMode_RTTY || ts.digital_mode == DigitalMode_RTTY_NEW) && ts.dmod_mode == DEMOD_DIGI)
+        if (ts.digital_mode == DigitalMode_RTTY && ts.dmod_mode == DEMOD_DIGI)
         {
             UiDriver_DisplayRttySpeed(0);
         }
@@ -4038,7 +4036,7 @@ static bool UiDriver_IsApplicableEncoderTwoMode(uint8_t mode)
     {
     case ENC_TWO_MODE_RTTY_SHIFT:
         // only switch to rtty adjustment, if rtty enabled!
-        retval = (ts.digital_mode == DigitalMode_RTTY || ts.digital_mode == DigitalMode_RTTY_NEW) && ts.dmod_mode == DEMOD_DIGI;
+        retval = ts.digital_mode == DigitalMode_RTTY && ts.dmod_mode == DEMOD_DIGI;
         break;
     case ENC_TWO_MODE_NOTCH_F:
         retval = is_dsp_mnotch();

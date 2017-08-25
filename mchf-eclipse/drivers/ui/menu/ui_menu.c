@@ -3516,9 +3516,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             clr = Green;
         }
         break;
-    case MENU_DEBUG_NEW_NB:
-        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
-        break;
+     case MENU_DEBUG_NEW_NB:
+         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
+         break;
+
+     case MENU_DEBUG_RTTY_ATC:
+         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.rtty_atc_enable,0,options,&clr);
+         break;
 
     case MENU_DIGITAL_MODE_SELECT:
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.digital_mode,0,DigitalMode_RTTY,0,1);
