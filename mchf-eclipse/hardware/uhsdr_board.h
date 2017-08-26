@@ -26,6 +26,16 @@
 
 #define USE_RTTY_PROCESSOR
 
+// #define USE_USBHOST
+
+#ifdef USE_USBHOST
+// define additional USBHOST related "switches" only here!
+	// #define USE_USBDRIVE
+	// #define USE_USBKEYBOARD
+#endif
+
+
+
 #define USE_FREEDV //uncomment to use freedv instead of SNAP function
 // #define DEBUG_FREEDV
 // hardware specific switches

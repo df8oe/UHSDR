@@ -79,20 +79,23 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id);
 /* init function */				        
 void MX_USB_HOST_Init(void)
 {
-  /* Init Host Library,Add Supported Class and Start the library*/
-  USBH_Init(&hUsbHostHS, USBH_UserProcess, HOST_HS);
+	/* Init Host Library,Add Supported Class and Start the library*/
+	USBH_Init(&hUsbHostHS, USBH_UserProcess, HOST_HS);
 #if 0
-  USBH_RegisterClass(&hUsbHostHS, USBH_AUDIO_CLASS);
+	USBH_RegisterClass(&hUsbHostHS, USBH_AUDIO_CLASS);
 
-  USBH_RegisterClass(&hUsbHostHS, USBH_CDC_CLASS);
+	USBH_RegisterClass(&hUsbHostHS, USBH_CDC_CLASS);
 #endif
-  USBH_RegisterClass(&hUsbHostHS, USBH_MSC_CLASS);
+#if defined(USE_USBDRIVE) || defined(BOOTLOADER_BUILD)
+	USBH_RegisterClass(&hUsbHostHS, USBH_MSC_CLASS);
+#endif
+#if defined(USE_USBKEYBOARD)
+	USBH_RegisterClass(&hUsbHostHS, USBH_HID_CLASS);
+#endif
 #if 0
-  USBH_RegisterClass(&hUsbHostHS, USBH_HID_CLASS);
-
-  USBH_RegisterClass(&hUsbHostHS, USBH_MTP_CLASS);
+	USBH_RegisterClass(&hUsbHostHS, USBH_MTP_CLASS);
 #endif
-  USBH_Start(&hUsbHostHS);
+	USBH_Start(&hUsbHostHS);
 }
 
 /*

@@ -170,6 +170,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_DISPLAY_DBM,&ts.display_dbm,0,0,2},
     { ConfigEntry_Int32_16, EEPROM_DBM_CALIBRATE,&ts.dbm_constant,0,-100,100},
     { ConfigEntry_UInt8, EEPROM_S_METER,&ts.s_meter,0,0,2},
+    { ConfigEntry_UInt8, EEPROM_DIGI_MODE_CONF,&ts.digital_mode,0,0,DigitalMode_Num_Modes-1},
 	{ ConfigEntry_Int32_16, EEPROM_BASS_GAIN,&ts.bass_gain,2,-20,20},
     { ConfigEntry_Int32_16, EEPROM_TREBLE_GAIN,&ts.treble_gain,0,-20,20},
     { ConfigEntry_UInt8, EEPROM_TX_FILTER,&ts.tx_filter,0,0,TX_FILTER_BASS},
