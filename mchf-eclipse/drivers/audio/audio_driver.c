@@ -28,7 +28,6 @@
 
 #include "audio_driver.h"
 #include "audio_management.h"
-#include "dds_table.h"
 #include "radio_management.h"
 #include "usbd_audio_if.h"
 #include "ui_spectrum.h"
@@ -440,7 +439,7 @@ extern __IO	KeypadState				ks;
 // ATTENTION: These data structures have been placed in CCM Memory (64k)
 // IF THE SIZE OF  THE DATA STRUCTURE GROWS IT WILL QUICKLY BE OUT OF SPACE IN CCM
 // Be careful! Check mchf-eclipse.map for current allocation
-__IO AudioDriverState   __MCHF_SPECIALMEM ads;
+AudioDriverState   __MCHF_SPECIALMEM ads;
 AudioDriverBuffer  __MCHF_SPECIALMEM adb;
 LMSData            __MCHF_SPECIALMEM lmsData;
 
@@ -3599,9 +3598,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
 
-
-    static int beep_idx = 0;
-
     float post_agc_gain_scaling;
 
 #ifdef alternate_NR
@@ -4049,9 +4045,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         if((ts.beep_active) && (ads.beep.step))         // is beep active?
         {
             // Yes - Calculate next sample
-
-            beep_idx    =  softdds_step(&ads.beep); // shift accumulator to index sine table
-            adb.b_buffer[i] += (float32_t)(DDS_TABLE[beep_idx] * ads.beep_loudness_factor); // load indexed sine wave value, adding it to audio, scaling the amplitude and putting it on "b" - speaker (ONLY)
+            // shift accumulator to index sine table
+            adb.b_buffer[i] += (float32_t)softdds_nextSample(&ads.beep) * ads.beep_loudness_factor; // load indexed sine wave value, adding it to audio, scaling the amplitude and putting it on "b" - speaker (ONLY)
         }
         else                    // beep not active - force reset of accumulator to start at zero to minimize "click" caused by an abrupt voltage transition at startup
         {
@@ -4267,7 +4262,7 @@ static void AudioDriver_TxAudioBufferFill(AudioSample_t * const src, int16_t blo
 
     if(ts.tune)     // TUNE mode?  If so, generate tone so we can adjust TX IQ phase and gain
     {
-        softdds_runf(adb.a_buffer, adb.a_buffer,blockSize);     // load audio buffer with the tone - DDS produces quadrature channels, but we need only one
+        softdds_runIQ(adb.a_buffer, adb.a_buffer,blockSize);     // load audio buffer with the tone - DDS produces quadrature channels, but we need only one
     }
     else
     {
@@ -4315,10 +4310,43 @@ static void AudioDriver_TxAudioBufferFill(AudioSample_t * const src, int16_t blo
             }
         }
 
-        arm_scale_f32(adb.a_buffer, gain_calc, adb.a_buffer, blockSize);  // apply gain
+        if (gain_calc != 1.0)
+        {
+        	arm_scale_f32(adb.a_buffer, gain_calc, adb.a_buffer, blockSize);  // apply gain
+        }
 
         ads.peak_audio = AudioDriver_absmax(adb.a_buffer, blockSize);
     }
+}
+
+/**
+ * takes audio samples in adb.a_buffer and produces SSB in adb.i_buffer/adb.q_buffer
+ * audio samples should filtered before passed in here if necessary
+ */
+
+static void AudioDriver_TxProcessorModulatorSSB(AudioSample_t * const dst, const uint16_t blockSize, const uint8_t iq_freq_mode, const bool is_lsb)
+{
+    // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
+    // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
+    // + 0 deg to I data
+    arm_fir_f32(&FIR_I_TX, adb.a_buffer, adb.i_buffer,blockSize);
+    // - 90 deg to Q data
+    arm_fir_f32(&FIR_Q_TX, adb.a_buffer, adb.q_buffer, blockSize);
+
+    if(iq_freq_mode)
+    {
+        // is transmit frequency conversion to be done?
+        // LSB && (-6kHz || -12kHz) --> true, else false
+        // USB && (+6kHz || +12kHz) --> true, else false
+        bool swap = is_lsb == true && (iq_freq_mode == FREQ_IQ_CONV_M6KHZ || iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
+        swap = swap || ((is_lsb == false) && (iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
+
+        AudioDriver_FreqConversion(adb.i_buffer, adb.q_buffer, blockSize, swap);
+    }
+
+    // apply I/Q amplitude & phase adjustments
+    AudioDriver_TxIqProcessingFinal(SSB_GAIN_COMP, is_lsb, dst, blockSize);
+
 }
 
 /***
@@ -4616,6 +4644,16 @@ static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSamp
 }
 #endif
 
+static void AudioDriver_TxProcessorRtty(AudioSample_t * const dst, uint16_t blockSize)
+{
+	for (uint16_t idx =0; idx < blockSize; idx++)
+	{
+		adb.a_buffer[idx] = Rtty_Modulator_GenSample();
+	}
+    AudioDriver_TxFilterAudio(true,false, adb.a_buffer, adb.a_buffer, blockSize);
+    AudioDriver_TxProcessorModulatorSSB(dst, blockSize, ts.iq_freq_mode, ts.digi_lsb);
+
+}
 
 static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_t * const dst, AudioSample_t * const audioDst, uint16_t blockSize)
 {
@@ -4657,19 +4695,29 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
     }
     else if (ts.dvmode == true)
     {
+    	switch(ts.digital_mode)
+    	{
 #ifdef USE_FREEDV
-        if (ts.digital_mode == DigitalMode_FreeDV)
+    	case DigitalMode_FreeDV:
         {
             AudioDriver_TxProcessorDigital(src,dst,blockSize);
             signal_active = true;
         }
+        break;
 #endif
+    	case DigitalMode_RTTY:
+    	{
+            AudioDriver_TxProcessorRtty(dst,blockSize);
+            signal_active = true;
+    	}
+    	break;
+    	}
     }
     else if(dmod_mode == DEMOD_CW)
     {
         if (tune)
         {
-            softdds_runf(adb.i_buffer, adb.q_buffer, blockSize);      // generate tone/modulation for TUNE
+            softdds_runIQ(adb.i_buffer, adb.q_buffer, blockSize);      // generate tone/modulation for TUNE
             // Equalize based on band and simultaneously apply I/Q gain & phase adjustments
             signal_active = true;
         }
@@ -4705,27 +4753,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
             // Do the TX ALC and speech compression/processing
             AudioDriver_TxCompressor(adb.a_buffer, blockSize, SSB_ALC_GAIN_CORRECTION);
 
-            // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
-            // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
-            // + 0 deg to I data
-            arm_fir_f32(&FIR_I_TX, adb.a_buffer, adb.i_buffer,blockSize);
-            // - 90 deg to Q data
-            arm_fir_f32(&FIR_Q_TX, adb.a_buffer, adb.q_buffer, blockSize);
-
-
-            if(iq_freq_mode)
-            {
-                // is transmit frequency conversion to be done?
-                // LSB && (-6kHz || -12kHz) --> true, else false
-                // USB && (+6kHz || +12kHz) --> true, else false
-                bool swap = dmod_mode == DEMOD_LSB && (iq_freq_mode == FREQ_IQ_CONV_M6KHZ || iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
-                swap = swap || ((dmod_mode == DEMOD_USB) && (iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
-
-                AudioDriver_FreqConversion(adb.i_buffer, adb.q_buffer, blockSize, swap);
-            }
-
-            // apply I/Q amplitude & phase adjustments
-            AudioDriver_TxIqProcessingFinal(SSB_GAIN_COMP, dmod_mode == DEMOD_LSB, dst, blockSize);
+            AudioDriver_TxProcessorModulatorSSB(dst, blockSize, iq_freq_mode, dmod_mode == DEMOD_LSB);
             signal_active = true;
         }
     }

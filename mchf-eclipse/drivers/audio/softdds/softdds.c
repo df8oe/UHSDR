@@ -22,13 +22,10 @@
 
 
 
-// Software DDS public
-__IO 	SoftDds	softdds;
-
 // Two Tone Dds
-__IO    SoftDds dbldds[2];
+soft_dds_t dbldds[2];
 
-uint32_t softdds_stepForSampleRate(float freq,ulong samp_rate)
+uint32_t softdds_stepForSampleRate(float32_t freq, uint32_t samp_rate)
 {
     uint64_t freq64_shifted = freq * DDS_TBL_SIZE;
     freq64_shifted <<= DDS_ACC_SHIFT;
@@ -39,11 +36,11 @@ uint32_t softdds_stepForSampleRate(float freq,ulong samp_rate)
 /**
  * Initialize softdds for given frequency and sample rate
  */
-void softdds_setfreq(__IO SoftDds* softdds_p, float freq,ulong samp_rate,uchar smooth)
+void softdds_setFreqDDS(soft_dds_t* softdds_p, float32_t freq, uint32_t samp_rate,uint8_t smooth)
 {
     // Reset accumulator, if need smooth tone
     // transition, do not reset it (e.g. wspr)
-    if(!smooth)
+    if(smooth == false)
     {
         softdds_p->acc = 0;
     }
@@ -56,10 +53,10 @@ void softdds_setfreq(__IO SoftDds* softdds_p, float freq,ulong samp_rate,uchar s
  * Initialize softdds for given frequency and sample rate
  */
 
-void softdds_setfreq_dbl(float freq[2],ulong samp_rate,uchar smooth)
+void softdds_configRunIQ(float freq[2],uint32_t samp_rate,uint8_t smooth)
 {
-    softdds_setfreq(&dbldds[0],freq[0],samp_rate,smooth);
-    softdds_setfreq(&dbldds[1],freq[1],samp_rate,smooth);
+    softdds_setFreqDDS(&dbldds[0],freq[0],samp_rate,smooth);
+    softdds_setFreqDDS(&dbldds[1],freq[1],samp_rate,smooth);
   }
 
 
@@ -75,39 +72,24 @@ static inline uint32_t softdds_phase_shift90(uint32_t k)
 }
 
 
-
-/*
- * Generates the sinus frequencies as IQ data stream
- * min/max value is +/-2^15-1
- * Frequency needs to be configured using softdds_setfreq
- */
-void softdds_runf(float *i_buff,float *q_buff,ushort size)
+void softdds_genIQSingleTone(soft_dds_t* dds, float32_t *i_buff,float32_t *q_buff,uint16_t size)
 {
-    ulong 	i,k;
+	for(uint16_t i = 0; i < size; i++)
+	{
+		// Calculate next sample
+		uint32_t k    = softdds_nextSampleIndex(dds);
 
-    if (dbldds[1].step>0.0)
-    {
-        softdds_runf_dbl(i_buff,q_buff,size);
-    }
-    else
-    {
-        for(i = 0; i < size; i++)
-        {
-            // Calculate next sample
-            k    = softdds_step(&dbldds[0]);
+		// Load I value (sin)
+		*i_buff = DDS_TABLE[k];
 
-            // Load I value (sin)
-            *i_buff = DDS_TABLE[k];
+		// -90 degrees shift (cos)
+		// Load Q value
+		*q_buff = DDS_TABLE[softdds_phase_shift90(k)];
 
-            // -90 degrees shift (cos)
-            // Load Q value
-            *q_buff = DDS_TABLE[softdds_phase_shift90(k)];
-
-            // Next ptr
-            i_buff++;
-            q_buff++;
-        }
-    }
+		// Next ptr
+		i_buff++;
+		q_buff++;
+	}
 }
 
 /*
@@ -115,15 +97,15 @@ void softdds_runf(float *i_buff,float *q_buff,ushort size)
  * min/max value is +/-2^15-1
  * Frequencies need to be configured using softdds_setfreq_dbl
  */
-void softdds_runf_dbl(float *i_buff,float *q_buff,ushort size)
+void softdds_genIQTwoTone(soft_dds_t* ddsA, soft_dds_t* ddsB, float *i_buff,float *q_buff,ushort size)
 {
     ulong   i,k[2];
 
     for(i = 0; i < size; i++)
     {
         // Calculate next sample
-        k[0]    = softdds_step(&dbldds[0]);
-        k[1]    = softdds_step(&dbldds[1]);
+        k[0]    = softdds_nextSampleIndex(ddsA);
+        k[1]    = softdds_nextSampleIndex(ddsB);
 
         // Load I value 0.5*(sin(a)+sin(b))
         *i_buff = ((int32_t)DDS_TABLE[k[0]] + (int32_t)DDS_TABLE[k[1]])/2;
@@ -135,3 +117,21 @@ void softdds_runf_dbl(float *i_buff,float *q_buff,ushort size)
         q_buff++;
     }
 }
+
+/*
+ * Generates the sinus frequencies as IQ data stream
+ * min/max value is +/-2^15-1
+ * Frequency needs to be configured using softdds_setfreq
+ */
+void softdds_runIQ(float32_t *i_buff,float32_t *q_buff,uint16_t size)
+{
+    if (dbldds[1].step>0.0)
+    {
+        softdds_genIQTwoTone(&dbldds[0], &dbldds[1], i_buff, q_buff,size);
+    }
+    else
+    {
+    	softdds_genIQSingleTone(&dbldds[0],i_buff,q_buff,size);
+    }
+}
+

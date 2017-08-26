@@ -453,7 +453,7 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
     else
     {
 
-        softdds_runf(i_buffer,q_buffer,blockSize);
+        softdds_runIQ(i_buffer,q_buffer,blockSize);
 
         // ----------------------------------------------------------------
         // Raising slope
@@ -617,7 +617,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
         break;
         case CW_KEY_DOWN:
         {
-            softdds_runf(i_buffer,q_buffer,blockSize);
+            softdds_runIQ(i_buffer,q_buffer,blockSize);
             ps.key_timer--;
 
             // Smooth start of element - initial
@@ -638,7 +638,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
             }
             else
             {
-                softdds_runf(i_buffer,q_buffer,blockSize);
+                softdds_runIQ(i_buffer,q_buffer,blockSize);
                 ps.key_timer--;
 
                 // Smooth start of element - continue

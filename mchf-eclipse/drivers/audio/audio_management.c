@@ -318,11 +318,11 @@ void AudioManagement_LoadBeepFreq()
 
     if(ts.flags2 & FLAGS2_KEY_BEEP_ENABLE)      // is beep enabled?
     {
-        softdds_setfreq(&ads.beep, ts.beep_frequency,ts.samp_rate,false);
+        softdds_setFreqDDS(&ads.beep, ts.beep_frequency,ts.samp_rate,false);
     }
     else
     {
-        softdds_setfreq(&ads.beep, 0,ts.samp_rate,true); // not enabled - zero out frequency word
+        softdds_setFreqDDS(&ads.beep, 0,ts.samp_rate,true); // not enabled - zero out frequency word
     }
 
     calc = (float)ts.beep_loudness;     // range 0-20
@@ -365,5 +365,5 @@ void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
         }
     }
 
-    softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
+    softdds_configRunIQ(tonefreq,ts.samp_rate,0);
 }
