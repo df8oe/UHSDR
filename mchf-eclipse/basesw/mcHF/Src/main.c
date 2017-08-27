@@ -129,11 +129,12 @@ int main(void)
   MX_TIM8_Init();
   MX_USB_DEVICE_Init();
 #endif
-#ifdef BOOTLOADER_BUILD
+#if defined(USE_USBHOST) || defined(BOOTLOADER_BUILD)
   MX_USB_HOST_Init();
+#if defined(USE_USBDRIVE) || defined(BOOTLOADER_BUILD)
   MX_FATFS_Init();
+#endif  // MX_FSMC_Init();
 #endif
-  // MX_FSMC_Init();
 #ifndef BOOTLOADER_BUILD
   MX_TIM4_Init();
 #endif

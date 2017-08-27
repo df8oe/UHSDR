@@ -4646,12 +4646,19 @@ static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSamp
 
 static void AudioDriver_TxProcessorRtty(AudioSample_t * const dst, uint16_t blockSize)
 {
+
 	for (uint16_t idx =0; idx < blockSize; idx++)
 	{
 		adb.a_buffer[idx] = Rtty_Modulator_GenSample();
 	}
     AudioDriver_TxFilterAudio(true,false, adb.a_buffer, adb.a_buffer, blockSize);
     AudioDriver_TxProcessorModulatorSSB(dst, blockSize, ts.iq_freq_mode, ts.digi_lsb);
+
+    // remove noise if no CW is keyed
+    memset(adb.a_buffer,0,sizeof(adb.a_buffer[0])*blockSize);
+
+	CwGen_Process(adb.a_buffer, adb.a_buffer, blockSize);
+	// we just misuse adb.a_buffer, and generate a CW side tone
 
 }
 
@@ -4841,12 +4848,23 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
 
 #ifdef UI_BRD_OVI40
     // we code the sidetone to the audio codec, since we have one for audio and one for iq
-    if (dmod_mode == DEMOD_CW && audioDst != dst)
+    if (audioDst != dst)
     {
-        for (uint16_t idx = 0; idx < blockSize; idx++)
-        {
-            audioDst[idx].r = audioDst[idx].l = dst[idx].l;
-        }
+    	if (dmod_mode == DEMOD_CW)
+    	{
+    		for (uint16_t idx = 0; idx < blockSize; idx++)
+    		{
+    			audioDst[idx].r = audioDst[idx].l = dst[idx].l;
+    		}
+    	} else if (dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_RTTY)
+    	{
+    		for (uint16_t idx = 0; idx < blockSize; idx++)
+    		{
+    			// we simulate the effect of the SSB tx iq processing to get a similar audio volume
+    			// as the CW sidetone
+    			audioDst[idx].r = audioDst[idx].l = adb.a_buffer[idx] * ts.tx_power_factor;
+    		}
+    	}
     }
 #endif
 

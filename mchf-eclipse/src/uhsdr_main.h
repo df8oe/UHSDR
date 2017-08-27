@@ -16,6 +16,7 @@
 #ifndef _MCHF_MAIN_H
 #define _MCHF_MAIN_H
 
+#include "uhsdr_board.h"
 
 #ifdef __cplusplus
 extern "C" {

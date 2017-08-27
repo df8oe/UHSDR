@@ -554,8 +554,8 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 
 #define EEPROM_LOW_POWER_CONFIG          387
 #define EEPROM_CW_KEYER_WEIGHT           388
-
-#define EEPROM_FIRST_UNUSED 				389		// change this if new value ids are introduced
+#define EEPROM_DIGI_MODE_CONF			 389
+#define EEPROM_FIRST_UNUSED 				390		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

@@ -701,7 +701,7 @@ static int Rtty_TxBufferRemove(uint8_t* c_ptr)
 }
 
 /* no room left in the buffer returns 0 */
-int Rtty_TxBufferAddData(uint8_t c)
+int Rtty_TxBufferPutChar(uint8_t c)
 {
 	int ret = 0;
     int32_t next_head = (rtty_tx_head + 1) % RTTY_TX_BUFFER_SIZE;
@@ -716,11 +716,12 @@ int Rtty_TxBufferAddData(uint8_t c)
     return ret;
 }
 
+#if 0
 static void Rtty_TxBufferReset()
 {
     rtty_tx_tail = rtty_tx_head;
 }
-
+#endif
 
 
 #define USE_RTTY_MSK
@@ -812,10 +813,12 @@ int16_t Rtty_Modulator_GenSample()
 			{
 				// IDLE
 				Rtty_Modulator_Code2Bits(RTTY_LETTER_CODE);
+#if 0
 				for (uint8_t idx = 0; idx < sizeof(rtty_test_string); idx++)
 				{
-					Rtty_TxBufferAddData(rtty_test_string[idx]);
+					Rtty_TxBufferPutChar(rtty_test_string[idx]);
 				}
+#endif
 			}
 		}
 		rtty_tx.char_bit_idx--;
@@ -892,8 +895,7 @@ int16_t Rtty_Modulator_GenSample()
 
 	rtty_tx.last_value = current_value;
 
-	// hack -> send out mark with lower energy to see if timing is okay
-	return current_value/32;
+	return current_value;
 }
 
 #endif

@@ -7,7 +7,7 @@
 #include "audio_driver.h"
 #include "softdds.h"
 #include "fm_subaudible_tone_table.h"
-
+#include "radio_management.h"
 //
 //
 //*----------------------------------------------------------------------------
@@ -353,6 +353,12 @@ void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
     case DEMOD_CW:
         tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.cw_sidetone_freq;
         break;
+    case DEMOD_DIGI:
+    	if (ts.digital_mode == DigitalMode_RTTY)
+    	{
+    		tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.cw_sidetone_freq;
+    	}
+    	break;
     default:
         tonefreq[0] = tune_mode?SSB_TUNE_FREQ:0.0;
 

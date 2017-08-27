@@ -912,7 +912,7 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
 
     AudioDriver_SetRxAudioProcessing(new_mode, false);
     AudioDriver_TxFilterInit(new_mode);
-    AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
+    AudioManagement_SetSidetoneForDemodMode(new_mode,false);
 
 
     // Finally update public flag
@@ -998,7 +998,7 @@ void RadioManagement_HandlePttOnOff()
         {
             // When CAT driver "pressed" PTT skip auto return to RX
 
-            if(ts.dmod_mode != DEMOD_CW || ts.tx_stop_req == true)
+            if(!(ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_RTTY)) || ts.tx_stop_req == true)
             {
                 // If we are in TX and ...
                 if(ts.txrx_mode == TRX_MODE_TX)

@@ -34,6 +34,7 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_it.h"
+#include "uhsdr_board.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -288,6 +289,7 @@ void OTG_FS_IRQHandler(void)
   /* USER CODE END OTG_FS_IRQn 1 */
 }
 #endif
+#if defined(USE_USBHOST) || defined(BOOTLOADER_BUILD)
 /**
 * @brief This function handles USB On The Go HS global interrupt.
 */
@@ -301,8 +303,7 @@ void OTG_HS_IRQHandler(void)
 
   /* USER CODE END OTG_HS_IRQn 1 */
 }
-
 /* USER CODE BEGIN 1 */
-
+#endif
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

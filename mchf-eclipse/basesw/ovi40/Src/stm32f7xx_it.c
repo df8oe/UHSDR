@@ -34,6 +34,7 @@
 #include "stm32f7xx_hal.h"
 #include "stm32f7xx.h"
 #include "stm32f7xx_it.h"
+#include "uhsdr_board.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -271,6 +272,7 @@ void DMA2_Stream6_IRQHandler(void)
   /* USER CODE END DMA2_Stream6_IRQn 1 */
 }
 
+#if defined(USE_USBHOST) || defined(BOOTLOADER_BUILD)
 /**
 * @brief This function handles USB On The Go HS global interrupt.
 */
@@ -285,6 +287,7 @@ void OTG_HS_IRQHandler(void)
   /* USER CODE END OTG_HS_IRQn 1 */
 }
 
+#endif
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
