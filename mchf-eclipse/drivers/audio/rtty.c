@@ -24,6 +24,7 @@
 #include "radio_management.h"
 
 
+
 // bits 0-4 -> baudot, bit 5 1 == LETTER, 0 == NUMBER/FIGURE
 const uint8_t Ascii2Baudot[128] =
 {

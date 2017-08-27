@@ -967,6 +967,7 @@ typedef struct TransceiverState
 	bool rtty_atc_enable; // is ATC enabled for RTTY decoding? (for testing!)
 
 	uint8_t enable_rtty_decode; // new rtty encoder (experimental)
+	bool cw_decoder_enable;
 	bool enable_ptt_rts; // disable/enable ptt via virtual serial port rts
 
 	keyer_mode_t keyer_mode; // disable/enable keyer mode for F1-F5 buttons
