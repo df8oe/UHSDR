@@ -893,7 +893,7 @@ void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
     float	CW_omega;
     CW_k = (int) (0.5 + ((CW_DECODE_BLOCK_SIZE * CW_Goertzel_target_freq) / CW_Goertzel_sampling_freq));
     CW_omega = (2.0 * PI * CW_k) / CW_DECODE_BLOCK_SIZE;
-    CW_Goertzel_sine = sinf(CW_omega);
+    //CW_Goertzel_sine = sinf(CW_omega);
     CW_Goertzel_cosine = cosf(CW_omega);
     CW_Goertzel_coeff = 2.0 * CW_Goertzel_cosine;
 
@@ -1847,7 +1847,7 @@ typedef struct {
                 unsigned overload    :  1; // Overload flag
                } bflags;
 
-               volatile int16_t 	CW_vol = 0;
+               volatile int16_t 	CW_vol = 0; // FIXME
                volatile float32_t   CW_agcvol       = 1.0;            // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
                volatile int16_t     peakFrq      = 700;            // Audio peak tone frequency in Hz
                volatile int16_t     thresh       = 10;              // Audio threshold level (0 - 40)
@@ -1873,9 +1873,9 @@ typedef struct {
 
                bflags                b;                            // Various Operational state flags
 
-               double                pulse_avg;                    // CW timing variables - pulse_avg is a composite value
-               double                dot_avg, dash_avg;            // Dot and Dash Space averages
-               double                symspace_avg, cwspace_avg;    // Intra symbol Space and Character-Word Space
+               float32_t                pulse_avg;                    // CW timing variables - pulse_avg is a composite value
+               float32_t                dot_avg, dash_avg;            // Dot and Dash Space averages
+               float32_t                symspace_avg, cwspace_avg;    // Intra symbol Space and Character-Word Space
                int32_t               w_space;                      // Last word space time
                float32_t raw_signal_buffer[CW_DECODE_BLOCK_SIZE];
 
@@ -1917,7 +1917,7 @@ static void CW_Decode_exe(void)
                    if (CW_agcvol > 1.0) CW_agcvol = 1.0;                 // Cap max at 1.0
                    siglevel= CW_agcvol * CW_vol * pklvl;
 
-                 siglevel = magnitudeSquared;
+                 siglevel = magnitudeSquared; // FIXME
                //    4.) signal averaging/smoothing
 
                    static int16_t avg_win[CW_SIGAVERAGE];             // Sliding window buffer for signal averaging, if used
@@ -1973,10 +1973,10 @@ static void CW_Decode_exe(void)
                    //----------------
                    // Count signal state timer upwards based on which sampling rate is in effect
                    sig_timer = sig_timer + timer_stepsize;
-                   if (sig_timer>=344*CW_TIMEOUT) sig_timer = 344*CW_TIMEOUT; // Impose a MAXTIME second boundary for overflow time
+                   if (sig_timer>=63*CW_TIMEOUT) sig_timer = 63*CW_TIMEOUT; // Impose a MAXTIME second boundary for overflow time
 
-                 sig_incount = sig_lastrx;                         // Current Incount pointer
-                 cur_time    = sig_timer;
+   //              sig_incount = sig_lastrx;                         // Current Incount pointer
+   //              cur_time    = sig_timer;
 
                  //    7.) CW Decode
                      CW_Decode();                                      // Do all the heavy lifting
@@ -1984,7 +1984,7 @@ static void CW_Decode_exe(void)
                      //-----------------------------------
                       // Word time. Formula based on the word "PARIS"
                       spdcalc = 10.0*dot_avg + 4.0*dash_avg + 9.0*symspace_avg + 5.0*cwspace_avg;
-                      spdcalc = spdcalc*1000.0/344.0;                 // Convert to Milliseconds per Word
+                      spdcalc = spdcalc*1000.0/62.5;                 // Convert to Milliseconds per Word
                       spd = (0.5 + 60000.0 / spdcalc);                // Convert to Words per Minute (WPM)
                       lcdStatusPrint(spd);                            // Print status information on LCD
 
@@ -2846,7 +2846,7 @@ void CW_Decode(void)
 
   //-----------------------------------
   // Process the works once initialized - or if timeout
-  if ((b.initialized == TRUE) || (cur_time >= 344*CW_TIMEOUT)) // 344 equals one second
+  if ((b.initialized == TRUE) || (cur_time >= 63*CW_TIMEOUT)) // 344 equals one second
   {
     received = DataRecognitionFunc();               // True if new character received
     if (received && (data_len > 0))                 // also make sure it is not a spike
