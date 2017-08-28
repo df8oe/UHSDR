@@ -75,4 +75,9 @@ void RttyDecoder_Init();
 void RttyDecoder_ProcessSample(float32_t sample);
 int16_t Rtty_Modulator_GenSample();
 
+int DigiModes_TxBufferPutChar(uint8_t c);
+uint8_t DigiModes_TxBufferHasData();
+int DigiModes_TxBufferRemove(uint8_t* c_ptr);
+void DigiModes_TxBufferReset();
+
 #endif

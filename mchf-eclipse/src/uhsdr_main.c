@@ -65,14 +65,14 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
     	if (mchf_ptt_dah_line_pressed() && ts.dmod_mode != DEMOD_SAM)
     	{  // was PTT line low? Not in a RX Only Mode?
     		ts.ptt_req = true;     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
-    		if(ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_RTTY))
+    		if(ts.dmod_mode == DEMOD_CW || is_demod_rtty())
     		{
     			CwGen_DahIRQ();     // Yes - go to CW state machine
     		}
     	}
     	break;
     case PADDLE_DIT:
-        if((ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_RTTY)) && mchf_dit_line_pressed())
+        if((ts.dmod_mode == DEMOD_CW || is_demod_rtty()) && mchf_dit_line_pressed())
         {
             ts.ptt_req = true;
             CwGen_DitIRQ();

@@ -244,6 +244,10 @@ inline void RadioManagement_ToggleVfoMem()
     ts.vfo_mem_flag = ! ts.vfo_mem_flag;
 }
 
+inline bool is_demod_rtty()
+{
+	return ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_RTTY;
+}
 
 
 #endif /* DRIVERS_UI_RADIO_MANAGEMENT_H_ */

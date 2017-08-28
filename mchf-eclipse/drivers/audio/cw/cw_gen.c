@@ -92,15 +92,116 @@ typedef struct PaddleState
 } PaddleState;
 
 // Public paddle state
-volatile PaddleState  ps;
+PaddleState  ps;
 
 static bool   CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static bool   CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static void   CwGen_TestFirstPaddle();
 
-#define CW_CHAR_CODES   47
-const int cw_char_codes[] = {0, 2, 3, 10, 11, 14, 15, 42, 43, 46, 47, 58, 59, 62, 63, 170, 171, 174, 186, 190, 191, 234, 235, 238, 239, 250, 251, 682, 683, 687, 703, 767, 938, 939, 942, 1002, 1018, 1022, 1023, 2810, 2990, 3003, 3054, 3070, 3755, 4015, 4074};
-const char cw_char_chars[] = {' ', 'E', 'T', 'I', 'A', 'N', 'M', 'S', 'U', 'R', 'W', 'D', 'K', 'G', 'O', 'H', 'V', 'F', 'L', 'P', 'J', 'B', 'X', 'C', 'Y', 'Z', 'Q', '5', '4', '3', '2', '1', '6', '=', '/', '7', '8', '9', '0', '?', '"', '.', '@', '\'', '-', ',', ':'};
+// The vertical listing permits easier direct comparison of code vs. character in
+// editors by placing both in vertically split window
+const int cw_char_codes[] =
+{
+		0,    // 		-> ' '
+		2,    // . 		-> 'E'
+		3,    // - 		-> 'T'
+		10,   // .. 	-> 'I'
+		11,   // .- 	-> 'A'
+		14,   // -. 	-> 'N'
+		15,   // -- 	-> 'M'
+		42,   // ...	-> 'S'
+		43,   // ..-	-> 'U'
+		46,   // .-.	-> 'R'
+		47,   // .--	-> 'W'
+		58,	  // -..	-> 'D'
+		59,   // -.-	-> 'K'
+		62,   // --.	-> 'G'
+		63,   // ---	-> 'O'
+		170,  // ....	-> 'H'
+		171,  // ...-	-> 'V'
+		174,  // ..-.	-> 'F'
+		186,  // .-..	-> 'L'
+		190,  // .--.	-> 'P'
+		191,  // .---	-> 'J'
+		234,  // -...	-> 'B'
+		235,  // -..-	-> 'X'
+		238,  // -.-.	-> 'C'
+		239,  // -.--	-> 'Y'
+		250,  // --..	-> 'Z'
+		251,  // --.-	-> 'Q'
+		682,  // .....	-> '5'
+		683,  // ....-	-> '4'
+		687,  // ...--	-> '3'
+		703,  // ..---  -> '2'
+		767,  // .----  -> '1'
+		938,  // -....  -> '6'
+		939,  // -...-  -> '='
+		942,  // -..-.  -> '/'
+		1002, // --...  -> '7'
+		1018, // ---..  -> '8'
+		1022, // ----.  -> '9'
+		1023, // -----  -> '0'
+		2810, // ..--.. -> '?'
+		2990, // .-..-. -> '_' / '"'
+		3003, // .-.-.- -> '.'
+		3054, // .--.-. -> '@'
+		3070, // .----. -> '\''
+		3755, // -....- -> '-'
+		4015, // --..-- -> ','
+		4074  // ---... -> ':'
+};
+
+#define CW_CHAR_CODES (sizeof(cw_char_codes)/sizeof(*cw_char_codes))
+const char cw_char_chars[CW_CHAR_CODES] =
+{
+		' ',
+		'E',
+		'T',
+		'I',
+		'A',
+		'N',
+		'M',
+		'S',
+		'U',
+		'R',
+		'W',
+		'D',
+		'K',
+		'G',
+		'O',
+		'H',
+		'V',
+		'F',
+		'L',
+		'P',
+		'J',
+		'B',
+		'X',
+		'C',
+		'Y',
+		'Z',
+		'Q',
+		'5',
+		'4',
+		'3',
+		'2',
+		'1',
+		'6',
+		'=',
+		'/',
+		'7',
+		'8',
+		'9',
+		'0',
+		'?',
+		'"',
+		'.',
+		'@',
+		'\'',
+		'-',
+		',',
+		':'
+};
 
 // Blackman-Harris function to keep CW signal bandwidth narrow
 #define CW_SMOOTH_TBL_SIZE  128
@@ -522,26 +623,31 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 }
 
 // FIXME: HACK RTTY
-extern int Rtty_TxBufferPutChar(uint8_t c);
 #include "radio_management.h"
+// FIXME: will need to be changed to  "digimodes.h" later
+#include "rtty.h"
+
 void CwGen_AddChar(ulong code)
 {
-	char result = '+';
+	char result = '*';
 	// need to use a character which is both in morse and rtty
 
 	for (int i = 0; i<CW_CHAR_CODES; i++)
 	{
 		if (cw_char_codes[i] == code) {
 			result = cw_char_chars[i];
+
+			// FIXME: HACK HACK FOR RTTY TX TESTING
+			// We can use the same buffer for all digimodes
+			if (ts.txrx_mode == TRX_MODE_TX && is_demod_rtty())
+			{
+				DigiModes_TxBufferPutChar(result);
+			}
+
 			break;
 		}
 	}
 
-	// FIXME: HACK HACK FOR RTTY TX TESTING
-	if (ts.txrx_mode == TRX_MODE_TX && ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_RTTY)
-	{
-		Rtty_TxBufferPutChar(result);
-	}
 	// HACK END
 	UiDriver_TextMsgPutChar(result);
 }
@@ -571,7 +677,8 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 			}
 			else
 			{
-				if (ps.port_state & CW_END_PROC) {
+				if (ps.port_state & CW_END_PROC)
+				{
 					CwGen_AddChar(ps.cw_char);
 					ps.cw_char = 0;
 					ps.port_state &= ~CW_END_PROC;
@@ -689,7 +796,8 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 			ps.key_timer--;
 			if(ps.key_timer == 0)
 			{
-				if(ps.cw_char > 5000) {
+				if(ps.cw_char > 5000)
+				{
 					CwGen_AddChar(-1);
 					ps.cw_char = 0;
 					ps.port_state &= ~CW_END_PROC;

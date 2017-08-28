@@ -154,6 +154,10 @@ basesw/ovi40/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_pipes.c \
 basesw/ovi40/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc.c \
 basesw/ovi40/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_bot.c \
 basesw/ovi40/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_scsi.c \
+basesw/ovi40/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Src/usbh_hid.c \
+basesw/ovi40/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Src/usbh_hid_keybd.c \
+basesw/ovi40/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Src/usbh_hid_mouse.c \
+basesw/ovi40/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Src/usbh_hid_parser.c \
 basesw/ovi40/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c \
 basesw/ovi40/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c \
 basesw/ovi40/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c \

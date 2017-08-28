@@ -3982,7 +3982,7 @@ static bool UiDriver_IsApplicableEncoderOneMode(uint8_t mode)
 	{
 	case ENC_ONE_MODE_RTTY_SPEED:
 		// only switch to rtty adjustment, if rtty enabled!
-		retval = ts.digital_mode == DigitalMode_RTTY && ts.dmod_mode == DEMOD_DIGI;
+		retval = is_demod_rtty();
 		break;
 	case ENC_ONE_MODE_ST_GAIN:
 		retval = ts.dmod_mode == DEMOD_CW;
@@ -4014,7 +4014,7 @@ static void UiDriver_DisplayEncoderOneMode()
 		break;
 	default:
 		// what to display if lower box is not active
-		if (ts.digital_mode == DigitalMode_RTTY && ts.dmod_mode == DEMOD_DIGI)
+		if (is_demod_rtty())
 		{
 			UiDriver_DisplayRttySpeed(0);
 		}
@@ -4036,7 +4036,7 @@ static bool UiDriver_IsApplicableEncoderTwoMode(uint8_t mode)
 	{
 	case ENC_TWO_MODE_RTTY_SHIFT:
 		// only switch to rtty adjustment, if rtty enabled!
-		retval = ts.digital_mode == DigitalMode_RTTY && ts.dmod_mode == DEMOD_DIGI;
+		retval = is_demod_rtty();
 		break;
 	case ENC_TWO_MODE_NOTCH_F:
 		retval = is_dsp_mnotch();
@@ -5952,9 +5952,10 @@ void UiDriver_MainHandler()
 		{
 
 			c = USBH_HID_GetASCIICode(k_pinfo);
-
-			UiDriver_TextMsgPutChar(c);
-
+			if (c != '\0')
+			{
+				UiDriver_TextMsgPutChar(c);
+			}
 		}
 
 	}

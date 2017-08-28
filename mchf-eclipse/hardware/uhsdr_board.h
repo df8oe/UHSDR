@@ -26,12 +26,12 @@
 
 #define USE_RTTY_PROCESSOR
 
-// #define USE_USBHOST
+#define USE_USBHOST
 
 #ifdef USE_USBHOST
 // define additional USBHOST related "switches" only here!
 	// #define USE_USBDRIVE
-	// #define USE_USBKEYBOARD
+	#define USE_USBKEYBOARD
 #endif
 
 
