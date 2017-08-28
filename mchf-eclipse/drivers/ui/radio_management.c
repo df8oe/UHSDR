@@ -998,7 +998,7 @@ void RadioManagement_HandlePttOnOff()
         {
             // When CAT driver "pressed" PTT skip auto return to RX
 
-            if(!(ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_RTTY)) || ts.tx_stop_req == true)
+            if(!(ts.dmod_mode == DEMOD_CW || is_demod_rtty()) || ts.tx_stop_req == true)
             {
                 // If we are in TX and ...
                 if(ts.txrx_mode == TRX_MODE_TX)

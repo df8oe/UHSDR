@@ -674,26 +674,26 @@ rtty_tx_encoder_state_t  rtty_tx =
 
 };
 
-#define RTTY_TX_BUFFER_SIZE  128
+#define DIGIMODES_TX_BUFFER_SIZE  128
 
-static __IO uint8_t rtty_tx_buffer[RTTY_TX_BUFFER_SIZE];
-static __IO int32_t rtty_tx_head = 0;
-static __IO int32_t rtty_tx_tail = 0;
+static __IO uint8_t digimodes_tx_buffer[DIGIMODES_TX_BUFFER_SIZE];
+static __IO int32_t digimodes_tx_buffer_head = 0;
+static __IO int32_t digimodes_tx_tail = 0;
 
-static uint8_t Rtty_TxBufferHasData()
+uint8_t DigiModes_TxBufferHasData()
 {
-    int32_t len = rtty_tx_head - rtty_tx_tail;
-    return len < 0?len+RTTY_TX_BUFFER_SIZE:len;
+    int32_t len = digimodes_tx_buffer_head - digimodes_tx_tail;
+    return len < 0?len+DIGIMODES_TX_BUFFER_SIZE:len;
 }
 
-static int Rtty_TxBufferRemove(uint8_t* c_ptr)
+int DigiModes_TxBufferRemove(uint8_t* c_ptr)
 {
 	int ret = 0;
 
-    if (rtty_tx_head != rtty_tx_tail)
+    if (digimodes_tx_buffer_head != digimodes_tx_tail)
     {
-        int c = rtty_tx_buffer[rtty_tx_tail];
-        rtty_tx_tail = (rtty_tx_tail + 1) % RTTY_TX_BUFFER_SIZE;
+        int c = digimodes_tx_buffer[digimodes_tx_tail];
+        digimodes_tx_tail = (digimodes_tx_tail + 1) % DIGIMODES_TX_BUFFER_SIZE;
         *c_ptr = (uint8_t)c;
         ret++;
     }
@@ -701,27 +701,25 @@ static int Rtty_TxBufferRemove(uint8_t* c_ptr)
 }
 
 /* no room left in the buffer returns 0 */
-int Rtty_TxBufferPutChar(uint8_t c)
+int DigiModes_TxBufferPutChar(uint8_t c)
 {
 	int ret = 0;
-    int32_t next_head = (rtty_tx_head + 1) % RTTY_TX_BUFFER_SIZE;
+    int32_t next_head = (digimodes_tx_buffer_head + 1) % DIGIMODES_TX_BUFFER_SIZE;
 
-    if (next_head != rtty_tx_tail)
+    if (next_head != digimodes_tx_tail)
     {
         /* there is room */
-        rtty_tx_buffer[rtty_tx_head] = c;
-        rtty_tx_head = next_head;
+        digimodes_tx_buffer[digimodes_tx_buffer_head] = c;
+        digimodes_tx_buffer_head = next_head;
         ret ++;
     }
     return ret;
 }
 
-#if 0
-static void Rtty_TxBufferReset()
+void DigiModes_TxBufferReset()
 {
-    rtty_tx_tail = rtty_tx_head;
+    digimodes_tx_tail = digimodes_tx_buffer_head;
 }
-#endif
 
 
 #define USE_RTTY_MSK
@@ -797,10 +795,10 @@ int16_t Rtty_Modulator_GenSample()
 			// load the character and add the stop bits;
 
 			bool bitsFilled = false;
-			while (Rtty_TxBufferHasData() && bitsFilled == false)
+			while (DigiModes_TxBufferHasData() && bitsFilled == false)
 			{
 				uint8_t current_ascii;
-				Rtty_TxBufferRemove(&current_ascii);
+				DigiModes_TxBufferRemove(&current_ascii);
 				uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
 				if (current_baudot > 0)
 				{ // we have valid baudot code
@@ -816,7 +814,7 @@ int16_t Rtty_Modulator_GenSample()
 #if 0
 				for (uint8_t idx = 0; idx < sizeof(rtty_test_string); idx++)
 				{
-					Rtty_TxBufferPutChar(rtty_test_string[idx]);
+					DigiModes_TxBufferPutChar(rtty_test_string[idx]);
 				}
 #endif
 			}

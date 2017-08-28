@@ -3962,7 +3962,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
 
 #ifdef USE_RTTY_PROCESSOR
-                if (ts.dvmode == true && ts.digital_mode == DigitalMode_RTTY && blockSizeDecim == 8) // only works when decimation rate is 4 --> sample rate == 12ksps
+                if (is_demod_rtty() && blockSizeDecim == 8) // only works when decimation rate is 4 --> sample rate == 12ksps
                 {
                     AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSizeDecim);
                 }
@@ -4856,7 +4856,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
     		{
     			audioDst[idx].r = audioDst[idx].l = dst[idx].l;
     		}
-    	} else if (dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_RTTY)
+    	} else if (is_demod_rtty())
     	{
     		for (uint16_t idx = 0; idx < blockSize; idx++)
     		{
