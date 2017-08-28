@@ -5940,24 +5940,31 @@ void UiDriver_MainHandler()
 	if(USBH_HID_GetDeviceType(&hUsbHostHS) == HID_KEYBOARD)
 	{
 
-		// hid_demo.keyboard_state = HID_KEYBOARD_IDLE;
-		// hid_demo.state = HID_DEMO_KEYBOARD;
-		//HID_KeyboardMenuProcess();
-
 		HID_KEYBD_Info_TypeDef *k_pinfo;
-		char c;
+		char kbdChar;
 		k_pinfo = USBH_HID_GetKeybdInfo(&hUsbHostHS);
 
 		if(k_pinfo != NULL)
 		{
-
-			c = USBH_HID_GetASCIICode(k_pinfo);
-			if (c != '\0')
+			kbdChar = USBH_HID_GetASCIICode(k_pinfo);
+			switch(k_pinfo->keys[0])
 			{
-				UiDriver_TextMsgPutChar(c);
+			case KEY_F1:
+				ts.ptt_req = true;
+				break;
+			case KEY_F2:
+				ts.tx_stop_req = true;
+				break;
+			}
+			if (kbdChar != '\0')
+			{
+				if (is_demod_rtty())
+				{
+					DigiModes_TxBufferPutChar(kbdChar);
+				}
+				UiDriver_TextMsgPutChar(kbdChar);
 			}
 		}
-
 	}
 #endif
 #endif

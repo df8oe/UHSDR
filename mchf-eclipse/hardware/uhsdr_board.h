@@ -328,13 +328,12 @@ typedef enum {
     ENC_THREE_NUM_MODES
 } EncoderThreeModes;
 
-//
-//
+
 #define CW_KEYER_MODE_IAM_B				0
-#define CW_MODE_IAM_A				1
-#define CW_MODE_STRAIGHT			2
-#define CW_MODE_ULTIMATE			3
-#define CW_KEYER_MAX_MODE					3
+#define CW_KEYER_MODE_IAM_A				1
+#define CW_KEYER_MODE_STRAIGHT			2
+#define CW_KEYER_MODE_ULTIMATE			3
+#define CW_KEYER_MAX_MODE				3
 
 // PA power level setting enumeration
 typedef enum
