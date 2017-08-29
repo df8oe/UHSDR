@@ -157,8 +157,8 @@ const uint8_t Ascii2Baudot[128] =
 		0,
 };
 
-#define RTTY_SYMBOL_CODE (0b011011)
-#define RTTY_LETTER_CODE (0b111111)
+#define RTTY_SYMBOL_CODE (0b11011)
+#define RTTY_LETTER_CODE (0b11111)
 
 // RTTY Experiment based on code from the DSP Tutorial at http://dp.nonoo.hu/projects/ham-dsp-tutorial/18-rtty-decoder-using-iir-filters/
 // Used with permission from Norbert Varga, HA2NON under GPLv3 license
@@ -723,7 +723,9 @@ void DigiModes_TxBufferReset()
 
 
 #define USE_RTTY_MSK
-#define RTTY_CODE_MODE 0b100000
+#define RTTY_CODE_MODE_MASK (0b100000)
+#define RTTY_CODE_MODE_LETTER (RTTY_CODE_MODE_MASK)
+#define RTTY_CODE_MODE_SYMBOL (0)
 
 static void Rtty_BaudotAdd(uint8_t bits)
 {
@@ -753,7 +755,7 @@ void Rtty_Modulator_Code2Bits(uint8_t baudot_info)
 	rtty_tx.char_bits = 0;
 	rtty_tx.char_bit_idx = 0;
 
-	if (baudot_info & RTTY_CODE_MODE)
+	if ((baudot_info & RTTY_CODE_MODE_MASK) == RTTY_CODE_MODE_LETTER)
 	{
 		if(rtty_tx.char_mode != RTTY_MODE_LETTERS)
 		{
@@ -769,7 +771,7 @@ void Rtty_Modulator_Code2Bits(uint8_t baudot_info)
 			Rtty_BaudotAdd(RTTY_SYMBOL_CODE);
 		}
 	}
-	Rtty_BaudotAdd(baudot_info & ~RTTY_CODE_MODE);
+	Rtty_BaudotAdd(baudot_info & ~RTTY_CODE_MODE_MASK);
 }
 
 // MUST BE CALLED BEFORE WE START RTTY TX, i.e. in RX Mode !!!
@@ -810,7 +812,8 @@ int16_t Rtty_Modulator_GenSample()
 			if (bitsFilled == false)
 			{
 				// IDLE
-				Rtty_Modulator_Code2Bits(RTTY_LETTER_CODE);
+				Rtty_Modulator_Code2Bits(RTTY_LETTER_CODE | RTTY_CODE_MODE_LETTER);
+				// we ensure that we will switch back to letter mode by making the switch symbol a letter
 #if 0
 				for (uint8_t idx = 0; idx < sizeof(rtty_test_string); idx++)
 				{
