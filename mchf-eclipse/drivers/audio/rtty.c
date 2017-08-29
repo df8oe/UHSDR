@@ -157,8 +157,8 @@ const uint8_t Ascii2Baudot[128] =
 		0,
 };
 
-#define RTTY_SYMBOL_CODE (0b11011)
-#define RTTY_LETTER_CODE (0b11111)
+#define RTTY_SYMBOL_CODE (0b011011)
+#define RTTY_LETTER_CODE (0b111111)
 
 // RTTY Experiment based on code from the DSP Tutorial at http://dp.nonoo.hu/projects/ham-dsp-tutorial/18-rtty-decoder-using-iir-filters/
 // Used with permission from Norbert Varga, HA2NON under GPLv3 license

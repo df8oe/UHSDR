@@ -384,7 +384,7 @@ void CwGen_Init(void)
 	case CW_KEYER_MODE_IAM_B:
 		ps.port_state = CW_IAMBIC_B;
 		break;
-	case CW_MODE_IAM_A:
+	case CW_KEYER_MODE_IAM_A:
 		ps.port_state = CW_IAMBIC_A;
 		break;
 	default:
@@ -514,13 +514,13 @@ bool CwGen_Process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 	bool retval;
 
 
-	if(ts.cw_keyer_mode == CW_MODE_STRAIGHT || CatDriver_CatPttActive())
+	if(ts.cw_keyer_mode == CW_KEYER_MODE_STRAIGHT || CatDriver_CatPttActive())
 	{
 		// we make sure the remaining code will see the "right" keyer mode
 		// since we are running in an interrupt, none will change that outside
 		// and we can safely restore after we're done
 		uint8_t keyer_mode = ts.cw_keyer_mode;
-		ts.cw_keyer_mode = CW_MODE_STRAIGHT;
+		ts.cw_keyer_mode = CW_KEYER_MODE_STRAIGHT;
 		retval = CwGen_ProcessStraightKey(i_buffer,q_buffer,blockSize);
 		ts.cw_keyer_mode = keyer_mode;
 	}
@@ -805,7 +805,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 					ps.port_state |= CW_END_PROC;
 				}
 
-				if (ts.cw_keyer_mode == CW_MODE_IAM_A || ts.cw_keyer_mode == CW_KEYER_MODE_IAM_B)
+				if (ts.cw_keyer_mode == CW_KEYER_MODE_IAM_A || ts.cw_keyer_mode == CW_KEYER_MODE_IAM_B)
 				{
 					if (ps.port_state & CW_DIT_PROC)
 					{
@@ -850,7 +850,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 
 static void CwGen_TestFirstPaddle()
 {
-	if(ts.cw_keyer_mode == CW_MODE_ULTIMATE)
+	if(ts.cw_keyer_mode == CW_KEYER_MODE_ULTIMATE)
 	{
 		if(!CwGen_DitRequested() && CwGen_DahRequested())
 		{
@@ -870,7 +870,7 @@ static void CwGen_TestFirstPaddle()
  */
 void CwGen_DahIRQ(void)
 {
-	if(ts.cw_keyer_mode == CW_MODE_STRAIGHT)
+	if(ts.cw_keyer_mode == CW_KEYER_MODE_STRAIGHT)
 	{
 		// Reset publics, but only when previous is sent
 		if(ps.key_timer == 0)
@@ -892,7 +892,7 @@ void CwGen_DahIRQ(void)
 void CwGen_DitIRQ(void)
 {
 	// CW mode handler - no dit interrupt in straight key mode
-	if(ts.cw_keyer_mode != CW_MODE_STRAIGHT)
+	if(ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
 	{
 		CwGen_TestFirstPaddle();
 	}

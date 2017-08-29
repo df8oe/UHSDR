@@ -1641,7 +1641,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case MENU_KEYER_MODE:   // Keyer mode
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_keyer_mode,
                                               0,
-                                              CW_MODE_ULTIMATE,
+                                              CW_KEYER_MODE_ULTIMATE,
                                               CW_KEYER_MODE_IAM_B,
                                               1
                                              );
@@ -1651,13 +1651,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         case CW_KEYER_MODE_IAM_B:
             txt_ptr = "IAM_B";
             break;
-        case CW_MODE_IAM_A:
+        case CW_KEYER_MODE_IAM_A:
             txt_ptr = "IAM_A";
             break;
-        case CW_MODE_STRAIGHT:
+        case CW_KEYER_MODE_STRAIGHT:
             txt_ptr = "STR_K";
             break;
-        case CW_MODE_ULTIMATE:
+        case CW_KEYER_MODE_ULTIMATE:
             txt_ptr = "ULTIM";
             break;
         }

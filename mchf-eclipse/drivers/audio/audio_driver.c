@@ -4657,8 +4657,11 @@ static void AudioDriver_TxProcessorRtty(AudioSample_t * const dst, uint16_t bloc
     // remove noise if no CW is keyed
     memset(adb.a_buffer,0,sizeof(adb.a_buffer[0])*blockSize);
 
-	CwGen_Process(adb.a_buffer, adb.a_buffer, blockSize);
-	// we just misuse adb.a_buffer, and generate a CW side tone
+    if (ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+    {
+    	CwGen_Process(adb.a_buffer, adb.a_buffer, blockSize);
+    	// we just misuse adb.a_buffer, and generate a CW side tone
+    }
 
 }
 
