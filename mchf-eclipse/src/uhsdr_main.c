@@ -345,6 +345,8 @@ void TransceiverStateInit(void)
     ts.i2c_speed[I2C_BUS_2] = I2C2_SPEED_DEFAULT; // Codec, EEPROM
 
     ts.rtty_atc_enable = true;
+    ts.keyer_mode = false;
+    ts.buffered_tx = false;
 }
 
 void MiscInit(void)
