@@ -1641,7 +1641,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case MENU_KEYER_MODE:   // Keyer mode
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_keyer_mode,
                                               0,
-                                              CW_MODE_ULTIMATE,
+                                              CW_KEYER_MODE_ULTIMATE,
                                               CW_KEYER_MODE_IAM_B,
                                               1
                                              );
@@ -1651,13 +1651,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         case CW_KEYER_MODE_IAM_B:
             txt_ptr = "IAM_B";
             break;
-        case CW_MODE_IAM_A:
+        case CW_KEYER_MODE_IAM_A:
             txt_ptr = "IAM_A";
             break;
-        case CW_MODE_STRAIGHT:
+        case CW_KEYER_MODE_STRAIGHT:
             txt_ptr = "STR_K";
             break;
-        case CW_MODE_ULTIMATE:
+        case CW_KEYER_MODE_ULTIMATE:
             txt_ptr = "ULTIM";
             break;
         }
@@ -1720,7 +1720,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             float freq[2] = { ts.cw_sidetone_freq, 0.0 };
 
-            softdds_setfreq_dbl(freq,ts.samp_rate,0);
+            softdds_configRunIQ(freq,ts.samp_rate,0);
             UiDriver_FrequencyUpdateLOandDisplay(false);
         }
         snprintf(options,32, "  %uHz", (uint)ts.cw_sidetone_freq);
@@ -1760,7 +1760,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                     ts.cw_offset_mode = RadioManagement_CWModeEntryToConfigValue(&new_mode);
 
                     ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
-                    UiDriver_ShowMode();
+                    UiDriver_DisplayDemodMode();
                     UiDriver_FrequencyUpdateLOandDisplay(true); // update frequency display and local oscillator
                 }
 
@@ -1798,7 +1798,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             ts.cw_offset_mode = RadioManagement_CWModeEntryToConfigValue(&new_mode);
 
             ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
-            UiDriver_ShowMode();
+            UiDriver_DisplayDemodMode();
             UiDriver_FrequencyUpdateLOandDisplay(true); // update frequency display and local oscillator
                 }
 
@@ -2366,7 +2366,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.freq_step_config,0,options,&clr, FREQ_STEP_SHOW_MARKER);
         if(var_change)          // something changed?
         {
-            UiDriver_ShowStep();  // update screen
+            UiDriver_DisplayFreqStepSize();  // update screen
         }
         break;
     case CONFIG_STEP_SIZE_BUTTON_SWAP:  // Step size button swap on/off
@@ -2376,7 +2376,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_DYN_TUNE_ENABLE);
         if(var_change)
         {
-            UiDriver_ShowStep();
+            UiDriver_DisplayFreqStepSize();
         }
         break;
     case CONFIG_BAND_BUTTON_SWAP:   // Swap position of Band+ and Band- buttons
@@ -3494,7 +3494,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             UiDriver_DebugInfo_DisplayEnable(ts.show_debug_info);
         }
         break;
-#ifdef USE_USB
      case MENU_DEBUG_CLONEOUT:
         txt_ptr = " Do it!";
         clr = White;
@@ -3517,39 +3516,27 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             clr = Green;
         }
         break;
-#endif
-    case MENU_DEBUG_NEW_NB:
-        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
-        break;
+     case MENU_DEBUG_NEW_NB:
+         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
+         break;
 
-#ifdef USE_RTTY_PROCESSOR
-    case MENU_DEBUG_RTTY_DECODE:
-//        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_rtty_decode,0,options,&clr);
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.enable_rtty_decode,
-                0,
-                2,
-                0,
-                1);
+     case MENU_DEBUG_RTTY_ATC:
+         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.rtty_atc_enable,0,options,&clr);
+         break;
+
+    case MENU_DIGITAL_MODE_SELECT:
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.digital_mode,0,DigitalMode_RTTY,0,1);
         if (var_change)
         {
-            RttyDecoder_Init();
+            // TODO: Factor this out into a Ui function for (de-)activating Rtty mode
+            if (RadioManagement_IsApplicableDemodMode(DEMOD_DIGI))
+            {
+                UiDriver_SetDemodMode(DEMOD_DIGI);
+            }
         }
-
-        switch(ts.enable_rtty_decode)
-        {
-        case 0:
-            txt_ptr = "     OFF";
-            break;
-        case 1:
-            txt_ptr = "HamRadio";
-            break;
-        case 2:
-            txt_ptr = "     DWD";
-            break;
-        }
+        txt_ptr = digimodes[ts.digital_mode].label;
+        clr = digimodes[ts.digital_mode].enabled?White:Red;
         break;
-#endif
-
     case CONFIG_CAT_PTT_RTS:
         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_ptt_rts,0,options,&clr);
         break;

@@ -53,27 +53,6 @@
 //
 
 #include "misc/TestCPlusPlusInterface.h"
-// ----------------------------------------------------
-// Create a time reference incremented by 1 mS and 10mS
-//__IO uint32_t LocalTime_1MS  = 0;
-//__IO uint32_t LocalTime_10MS = 0;
-//__IO uint32_t LocalTime_Over = 0;
-// ----------------------------------------------------
-
-// USB Host
-//extern USB_OTG_CORE_HANDLE          USB_OTG_Core_dev;
-
-// TIM5 publics
-//extern __IO uint32_t PeriodValue;
-//extern __IO uint32_t CaptureNumber;
-//uint16_t tmpCC4[2] = {0, 0};
-//
-
-
-// System tick if needed
-__IO uint32_t TimingDelay = 0;
-
-uchar wd_init_enabled = 0;
 
 void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
 {
@@ -83,22 +62,19 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
         break;
     case PADDLE_DAH:
         // Call handler
-        if(ts.dmod_mode == DEMOD_CW && mchf_ptt_dah_line_pressed())
-        {   // was DAH line low?
-            CwGen_DahIRQ();     // Yes - go to CW state machine
-        }
-        // PTT activate
-        else if(ts.dmod_mode != DEMOD_SAM)
-        {
-            if(mchf_ptt_dah_line_pressed())
-            {   // was PTT line low?
-                ts.ptt_req = 1;     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
-            }
-        }
-        break;
+    	if (mchf_ptt_dah_line_pressed() && ts.dmod_mode != DEMOD_SAM)
+    	{  // was PTT line low? Not in a RX Only Mode?
+    		ts.ptt_req = true;     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
+    		if(ts.dmod_mode == DEMOD_CW || is_demod_rtty())
+    		{
+    			CwGen_DahIRQ();     // Yes - go to CW state machine
+    		}
+    	}
+    	break;
     case PADDLE_DIT:
-        if(ts.dmod_mode == DEMOD_CW && mchf_dit_line_pressed())
+        if((ts.dmod_mode == DEMOD_CW || is_demod_rtty()) && mchf_dit_line_pressed())
         {
+            ts.ptt_req = true;
             CwGen_DitIRQ();
         }
         break;
@@ -237,7 +213,7 @@ void TransceiverStateInit(void)
     //
     ts.dsp_active		= 0;					// TRUE if DSP noise reduction is to be enabled
     //    ts.dsp_active		= 0;					// if this line is enabled win peaks issue is present when starting mcHF with activated NB
-    ts.digital_mode		= 0;					// digital modes OFF by default
+    ts.digital_mode		= DigitalMode_None;					// digital modes OFF by default
     ts.dsp_active_toggle	= 0xff;					// used to hold the button G2 "toggle" setting.
     ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
     ts.dsp_nr_strength	= 0;					// "Strength" of DSP noise reduction (0 = weak)
@@ -285,7 +261,7 @@ void TransceiverStateInit(void)
 #endif
     ts.spectrum_size	= SPECTRUM_SIZE_DEFAULT;		// adjustment for waterfall size
     ts.fft_window_type = FFT_WINDOW_DEFAULT;			// FFT Windowing type
-    ts.dvmode = 0;							// disable "DV" mode RX/TX functions by default
+    ts.dvmode = false;							        // disable "DV" mode RX/TX functions by default
 
     ts.txrx_switch_audio_muting_timing = 0;					// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
     ts.audio_dac_muting_timer = 0;					// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
@@ -367,42 +343,17 @@ void TransceiverStateInit(void)
 
     ts.i2c_speed[I2C_BUS_1] = I2C1_SPEED_DEFAULT; // Si570, MCP9801
     ts.i2c_speed[I2C_BUS_2] = I2C2_SPEED_DEFAULT; // Codec, EEPROM
+
+    ts.rtty_atc_enable = true;
 }
 
 void MiscInit(void)
 {
     // Init Soft DDS
     float freq[2] = { 0.0, 0.0 };
-    softdds_setfreq_dbl(freq,ts.samp_rate,0);
+    softdds_configRunIQ(freq,ts.samp_rate,0);
 }
 
-/*
-static void wd_reset(void)
-{
-	// Init WD
-	if(!wd_init_enabled)
-	{
-		// Start watchdog
-		WWDG_Enable(WD_REFRESH_COUNTER);
-
-		// Reset
-		wd_init_enabled = 1;
-		TimingDelay 	= 0;
-
-		return;
-	}
-
-	// 40mS flag for WD reset
-	if(TimingDelay > 40)
-	{
-		TimingDelay = 0;
-		//GREEN_LED_PIO->ODR ^= RED_LED;
-
-		// Update WWDG counter
-		WWDG_SetCounter(WD_REFRESH_COUNTER);
-	}
-}
- */
 // #include "Trace.h"
 #if 0
 void timeTest1()
@@ -516,6 +467,14 @@ int mchfMain(void)
 
     UiDriver_StartUpScreenFinish(2000);
     MchfBoard_RedLed(LED_STATE_OFF);
+
+    // TODO: We need to set the digital mode once to make it active
+    // if we just loaded the mode from EEPROM since we do not active ts.dvmode
+    if (ts.dmod_mode == DEMOD_DIGI)
+    {
+    	UiDriver_SetDemodMode(ts.dmod_mode);
+    }
+
     // Transceiver main loop
     for(;;)
     {

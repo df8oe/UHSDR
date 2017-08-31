@@ -4,7 +4,7 @@ This document describes some points about the contribution process for mcHF firm
 
 The maintainer of this GitHub is DF8OE.
 
-The project is free for non-commercial use and is being developed within an open community. Maintainer merges pull-requests, fixes critical bugs and manages releases. Participation is appreciated.
+The project is licensed under GPLv3 and is being developed within an open community. Maintainer merges pull-requests, fixes critical bugs and manages releases. Participation is appreciated.
 
 ### Getting Started
 
@@ -36,6 +36,103 @@ If you found an error, mistype or any other flawback in the project, please repo
 
 ### Features
 It you've got an idea about a new feature, it's most likely that you have do implement it on your own. If you cannot implement the feature, but it is very important, you can add a task in issues and tag it with "REQUEST:". Feature requests are discussed and may be realized shortly, later or never - there is no guarantee that requests will be accepted.<br><br>
+
+### Coding Style Guide
+The intention of these guidelines is to get easy to read, robust and maintainable code. In open source, other individuals should be able to read AND understand your code.
+No one will be happy with all rules, but as long as the rules are usable, please consider following them. If you think the rules are not good, create a GitHub Issue and start the discussion.
+
+  * __Code Formatting__: Leave aside all your personal preferences and follow the style used in most UHSDR files. 
+    Some files come directly from external sources, we don't reformat these.
+  *__Indention/Parentheses__: We use 4 spaces indent, no tabs. This allows all to see a proper indention no matter what tab size is configured in the editor. Parentheses are _always_ on a separate line, and are aligned with the statement above. If you are not following this strictly, at some point a automated code formatter will do it for you but this creates unnecessary "GitHub noise", so if possible stick to this rule. 
+
+```C
+ 	bool foo(int in)
+	{ 
+		bool retval = 0;
+		if (in = 0)
+		{
+			retval = 1;
+		}
+		return retval;
+	}
+```    
+  * __No warnings__: Compiler should not issue any warning when it compiles UHSDR code.  	
+  * __Single Return__: A function has only one *return* statement. Use a designated return value variable (retval) if necessary.
+```C
+	bool foo(int in)
+	{ 
+	
+		if (in = 0)
+		{
+			return in;
+		}
+		else
+		{
+			return in*2;
+		}
+	}
+```
+ 	We use
+```C
+ 	bool foo(int in)
+	{ 
+		bool retval;
+		if (in = 0)
+		{
+			retval = in;
+		}
+		else
+		{
+			retval = in*2;
+		}
+		return retval;
+	}
+```
+ 	
+  * __Single Line Conditional statements__: please, always use parentheses. C is not Python and indention is easily broken, makes code very hard to debug. 
+   
+```C
+	if 
+		a = 3;
+	else
+		b = 2;
+```
+	
+  We use
+  
+```C
+	if 
+	{
+		a = 3;
+	}
+	else
+	{
+		b = 2;
+	}
+```
+	
+  * __Pointer Type Casting__: should be avoided or commented on: Do not remove type warnings just by using a cast operator! Identify the root cause. Most cases there will be a coding problem. If such a pointer cast is necessary, please provide a comment.  
+```C
+	void foo_with_float_pointer(float32_t* fp)
+	{
+		fp = sqrtf(*fp);
+	}
+
+    void bar_wrong(int32_t* value_p)
+	{
+	    // NOT WORKING CORRECTLY, BUT COMPILER WILL NOT COMPLAIN
+	    foo_with_float_pointer((float32_t*)value_p);
+	}
+	
+	void bar_correct(int32_t* value_p)
+	{
+	    // CORRECT
+	    float32_t value_float = *value_p; 
+	    foo_with_float_pointer(value_float);
+	    *value_p = value_float; 
+	}
+```
+	
 
 ### WIKI
 To keep slowly changing documents up-2-date it will be great if you help to set up such documents in the WIKI area. They are quick-&-easy access to newcomers and will pleasure building and reduce questions which repeat frequently. The following documents can be accessed in the WIKI area:

@@ -18,6 +18,7 @@
 
 #include "profiling.h"
 #include "ui_lcd_hy28.h"
+#include "radio_management.h"
 
 #ifdef debug_alternate_NR
 
@@ -340,7 +341,7 @@ void FreeDV_mcHF_HandleFreeDV()
         fdv_iq_buffer_reset();
     }
     //will later be inside RX
-    if (ts.digital_mode == 1) {  // if we are in freedv1-mode and ...
+    if (ts.digital_mode == DigitalMode_FreeDV) {  // if we are in freedv1-mode and ...
         if ((ts.txrx_mode == TRX_MODE_TX) && fdv_audio_has_data() && fdv_iq_has_room())
         {           // ...and if we are transmitting and samples from dv_tx_processor are ready
 

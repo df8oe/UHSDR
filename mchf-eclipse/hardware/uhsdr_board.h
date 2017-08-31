@@ -26,6 +26,16 @@
 
 #define USE_RTTY_PROCESSOR
 
+#define USE_USBHOST
+
+#ifdef USE_USBHOST
+// define additional USBHOST related "switches" only here!
+	// #define USE_USBDRIVE
+	#define USE_USBKEYBOARD
+#endif
+
+
+
 #define USE_FREEDV //uncomment to use freedv instead of SNAP function
 // #define DEBUG_FREEDV
 // hardware specific switches
@@ -291,13 +301,16 @@ struct mchf_waterfall
 // encoder one
 typedef enum {
     ENC_ONE_MODE_AUDIO_GAIN	 = 0,
+    ENC_ONE_MODE_RTTY_SPEED,
     ENC_ONE_MODE_ST_GAIN,
+    ENC_ONE_MODE_CMP_LEVEL,
     ENC_ONE_NUM_MODES
 } EncoderOneModes;
 //
 // encoder two
 typedef enum {
     ENC_TWO_MODE_RF_GAIN =		0,
+    ENC_TWO_MODE_RTTY_SHIFT,
     ENC_TWO_MODE_SIG_PROC,
     ENC_TWO_MODE_NR,
     ENC_TWO_MODE_NOTCH_F,
@@ -311,16 +324,16 @@ typedef enum {
 typedef enum {
     ENC_THREE_MODE_RIT =			0,
     ENC_THREE_MODE_CW_SPEED,
-    ENC_THREE_MAX_MODE
+    ENC_THREE_MODE_INPUT_CTRL,
+    ENC_THREE_NUM_MODES
 } EncoderThreeModes;
 
-//
-//
+
 #define CW_KEYER_MODE_IAM_B				0
-#define CW_MODE_IAM_A				1
-#define CW_MODE_STRAIGHT			2
-#define CW_MODE_ULTIMATE			3
-#define CW_KEYER_MAX_MODE					3
+#define CW_KEYER_MODE_IAM_A				1
+#define CW_KEYER_MODE_STRAIGHT			2
+#define CW_KEYER_MODE_ULTIMATE			3
+#define CW_KEYER_MAX_MODE				3
 
 // PA power level setting enumeration
 typedef enum
@@ -938,6 +951,7 @@ typedef struct TransceiverState
     bool vbat_present; // we detected a working vbat mod
     bool codec_present; // we detected a working codec
 	bool new_nb; // new noise blanker
+	bool rtty_atc_enable; // is ATC enabled for RTTY decoding? (for testing!)
 
 	uint8_t enable_rtty_decode; // new rtty encoder (experimental)
 	bool enable_ptt_rts; // disable/enable ptt via virtual serial port rts

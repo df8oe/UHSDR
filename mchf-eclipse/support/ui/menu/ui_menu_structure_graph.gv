@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-08-15T21:09:08  by "./ui_menu_structure_graph.py"
+#  generated at  2017-08-25T07:13:59  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-15T21:09:08  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-08-25T07:13:59  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1067,6 +1067,11 @@
              shape = record
              ];
         
+        "MENU_DIGITAL_MODE_SELECT" [
+             label = "MENU_DIGITAL_MODE_SELECT | Digital Mode"
+             shape = record
+             ];
+        
         "INFO_DISPLAY" [
              label = "INFO_DISPLAY | Display"
              shape = record
@@ -1182,8 +1187,8 @@
              shape = record
              ];
         
-        "MENU_DEBUG_RTTY_DECODE" [
-             label = "MENU_DEBUG_RTTY_DECODE | Rtty Decoder (exp)"
+        "MENU_DEBUG_RTTY_ATC" [
+             label = "MENU_DEBUG_RTTY_ATC | RTTY ATC enable"
              shape = record
              ];
         
@@ -1643,6 +1648,8 @@
             
             MENU_MEN2TOUCH -> MENU_RESTART_CODEC
             
+            MENU_MEN2TOUCH -> MENU_DIGITAL_MODE_SELECT
+            
         }  ## END subgraph MENU_HALL_OF_FAME
     
         #  -  -  -  -
@@ -1731,7 +1738,7 @@
             
             MENU_DEBUG -> MENU_DEBUG_NEW_NB
             
-            MENU_DEBUG -> MENU_DEBUG_RTTY_DECODE
+            MENU_DEBUG -> MENU_DEBUG_RTTY_ATC
             
         }  ## END subgraph MENU_HALL_OF_FAME
     

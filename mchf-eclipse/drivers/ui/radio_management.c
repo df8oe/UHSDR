@@ -97,6 +97,23 @@ const BandInfo bandInfo[] =
     { 0, 0, 0, "Gen" } // Generic Band
 };
 
+
+// The following descriptor table has to be in the order of the enum digital_modes_t in  radio_management.h
+// This table is stored in flash (due to const) and cannot be written to
+// for operational data per mode [r/w], use a different table with order of modes
+const digital_mode_desc_t digimodes[DigitalMode_Num_Modes] =
+{
+    { "DIGITAL" , true },
+    { "FreeDV"  , true },
+    { "RTTY"    , true },
+    { "FREEDV2" , false },
+    { "PSK"     , false },
+    { "SSTV"    , false },
+    { "WSPR A"  , false },
+    { "WSPR P"  , false },
+};
+
+
 /**
  * @brief returns the "real" frequency translation mode for a given transceiver state. This may differ from the configured one due to modulation demands
  *
@@ -252,7 +269,7 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
     // Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
     // In CW TX mode we do not use frequency translation, this permits to use the generated I or Q channel as audio sidetone
 
-    if(!((ts.dmod_mode == DEMOD_CW || (ts.dvmode == true)) && (txrx_mode == TRX_MODE_TX)))
+    if(!((ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_FreeDV)) && (txrx_mode == TRX_MODE_TX)))
     {
         tune_freq += AudioDriver_GetTranslateFreq();        // magnitude of shift is quadrupled at actual Si570 operating frequency
     }
@@ -875,9 +892,9 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
 
     if (new_mode == DEMOD_DIGI)
     {
-        if (ts.digital_mode == 0)
+        if (ts.digital_mode == DigitalMode_None)
         {
-            ts.digital_mode = 1;
+            ts.digital_mode = DigitalMode_FreeDV;
             // TODOD: more clever selection of initial DV Mode, if none was previously selected
         }
         RadioManagement_ChangeCodec(ts.digital_mode,1);
@@ -895,7 +912,7 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
 
     AudioDriver_SetRxAudioProcessing(new_mode, false);
     AudioDriver_TxFilterInit(new_mode);
-    AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
+    AudioManagement_SetSidetoneForDemodMode(new_mode,false);
 
 
     // Finally update public flag
@@ -981,7 +998,7 @@ void RadioManagement_HandlePttOnOff()
         {
             // When CAT driver "pressed" PTT skip auto return to RX
 
-            if(ts.dmod_mode != DEMOD_CW || ts.tx_stop_req == true)
+            if(!(ts.dmod_mode == DEMOD_CW || is_demod_rtty()) || ts.tx_stop_req == true)
             {
                 // If we are in TX and ...
                 if(ts.txrx_mode == TRX_MODE_TX)
@@ -1060,61 +1077,68 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
     return retval;
 }
 
-
-uint32_t RadioManagement_NextDemodMode(uint32_t loc_mode, bool alternate_mode)
+/**
+ * @brief finds next related alternative modes for a given mode (e.g. for USB it returns  LSB)
+ * @returns next mode OR same mode if none found.
+ */
+uint32_t RadioManagement_NextAlternativeDemodMode(uint32_t loc_mode)
 {
-   uint32_t retval = loc_mode;
-   // default is to simply return the original mode
+    uint32_t retval = loc_mode;
+    // default is to simply return the original mode
+    switch(loc_mode)
+    {
+    case DEMOD_USB:
+        retval = DEMOD_LSB;
+        break;
+    case DEMOD_LSB:
+        retval = DEMOD_USB;
+        break;
+    case DEMOD_CW:
+        // FIXME: get rid of ts.cw_lsb
+        // better use it generally to indicate selected side band (also in SSB)
+        ts.cw_lsb = !ts.cw_lsb;
+        break;
+    case DEMOD_AM:
+        retval = DEMOD_SAM;
+        break;
+    case DEMOD_SAM:
+        ads.sam_sideband ++;
+        if (ads.sam_sideband > SAM_SIDEBAND_MAX)
+        {
+            ads.sam_sideband = SAM_SIDEBAND_BOTH;
+            retval = DEMOD_AM;
+        }
+        break;
+    case DEMOD_DIGI:
+        ts.digi_lsb = !ts.digi_lsb;
+        break;
+    case DEMOD_FM:
+        // toggle between narrow and wide fm
+        RadioManagement_FmDevSet5khz( !RadioManagement_FmDevIs5khz() );
+    }
+    // if there is no explicit alternative mode
+    // we return the original mode.
+    return retval;
+}
 
-    if(alternate_mode == true)
-    {
-            switch(loc_mode)
-            {
-            case DEMOD_USB:
-                retval = DEMOD_LSB;
-                break;
-            case DEMOD_LSB:
-                retval = DEMOD_USB;
-                break;
-            case DEMOD_CW:
-                // FIXME: get rid of ts.cw_lsb
-                // better use it generally to indicate selected side band (also in SSB)
-                ts.cw_lsb = !ts.cw_lsb;
-                break;
-            case DEMOD_AM:
-                   retval = DEMOD_SAM;
-                break;
-            case DEMOD_SAM:
-                ads.sam_sideband ++;
-                if (ads.sam_sideband > SAM_SIDEBAND_MAX)
-                {
-                    ads.sam_sideband = SAM_SIDEBAND_BOTH;
-                    retval = DEMOD_AM;
-                }
-                break;
-            case DEMOD_DIGI:
-                ts.digi_lsb = !ts.digi_lsb;
-                break;
-            case DEMOD_FM:
-                // toggle between narrow and wide fm
-                RadioManagement_FmDevSet5khz( !RadioManagement_FmDevIs5khz() );
-            }
-            // if there is no explicit alternative mode
-            // we return the original mode.
-    }
-    else
-    {
-        do {
-            retval++;
-            if (retval > DEMOD_MAX_MODE)
-            {
-                retval = 0;
-                // wrap around;
-            }
-        }    while (RadioManagement_IsApplicableDemodMode(retval) == false && retval != loc_mode);
-        // if we loop around to the initial mode, there is no other option than the original mode
-        // so we return it, otherwise we provide the new mode.
-    }
+/**
+ * @brief find the next "different" demodulation mode which is enabled.
+ * @returns new mode, or current mode if no other mode is available
+ */
+uint32_t RadioManagement_NextNormalDemodMode(uint32_t loc_mode)
+{
+    uint32_t retval = loc_mode;
+    // default is to simply return the original mode
+    do {
+        retval++;
+        if (retval > DEMOD_MAX_MODE)
+        {
+            retval = 0;
+            // wrap around;
+        }
+    }    while (RadioManagement_IsApplicableDemodMode(retval) == false && retval != loc_mode);
+    // if we loop around to the initial mode, there is no other option than the original mode
+    // so we return it, otherwise we provide the new mode.
 
     return retval;
 }
@@ -1430,3 +1454,4 @@ void RadioManagement_FmDevSet5khz(bool is5khz)
         ts.flags2 &= ~FLAGS2_FM_MODE_DEVIATION_5KHZ;
     }
 }
+

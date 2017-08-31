@@ -12,9 +12,10 @@
 **  Licence:		GNU GPLv3                                                      **
 ************************************************************************************/
 
+#include "uhsdr_types.h"
 #include "dds_table.h"
 
-const short DDS_TABLE[DDS_TBL_SIZE] =
+const int16_t DDS_TABLE[DDS_TBL_SIZE] =
 {
 
     // 1024 points

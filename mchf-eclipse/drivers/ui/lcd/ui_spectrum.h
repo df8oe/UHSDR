@@ -184,7 +184,7 @@ enum
 // Dark grey colour used for spectrum scope grid
 #define Grid                RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD)      // COL_SPECTRUM_GRAD = 0x40
 
-
+#define SPECTRUM_MAX_MARKER 3
 // Spectrum display
 typedef struct SpectrumDisplay
 {
@@ -235,10 +235,12 @@ typedef struct SpectrumDisplay
 
     float32_t pixel_per_hz;        // how many Hertz is one pixel in the spectrum
     float32_t rx_carrier_pos;      // where is the current receiving frequency carrier (in pixels)
-    float32_t tx_carrier_offset;   // how is the current transmitting frequency carrier offset from rx carrier (in pixels)
-    float32_t tx_carrier_pos;      // where is the current transmitting frequency carrier (in pixels)
+    float32_t marker_offset[SPECTRUM_MAX_MARKER];   // how is the current transmitting frequency carrier offset from rx carrier (in pixels)
 
-    uint16_t tx_carrier_line_pos_prev; // previous x-axis location of carrier line in screen coordinates, 0xffff indicates off screen
+    float32_t marker_pos[SPECTRUM_MAX_MARKER];      // where is the current transmitting frequency carrier (in pixels)
+    uint16_t  marker_line_pos_prev[SPECTRUM_MAX_MARKER]; // previous x-axis location of carrier line in screen coordinates, 0xffff indicates off screen
+    uint16_t  marker_num; // how many marker lines we have right now
+    uint16_t  marker_num_prev; // how many marker lines we had last time
 
     uint32_t   scope_centre_grid_colour_active;    // active colour of the spectrum scope center grid line
     uint32_t   scope_grid_colour_active;   // active color of spectrum scope grid;

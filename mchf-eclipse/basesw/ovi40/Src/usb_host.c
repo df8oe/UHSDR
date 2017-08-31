@@ -47,6 +47,8 @@
 #include "usb_host.h"
 #include "usbh_core.h"
 #include "usbh_msc.h"
+#include "usbh_hid.h"
+#include "uhsdr_board.h"
 
 /* USB Host Core handle declaration */
 USBH_HandleTypeDef hUsbHostHS;
@@ -77,8 +79,12 @@ void MX_USB_HOST_Init(void)
   /* Init Host Library,Add Supported Class and Start the library*/
   USBH_Init(&hUsbHostHS, USBH_UserProcess, HOST_HS);
 
+#if defined(USE_USBDRIVE) || defined(BOOTLOADER_BUILD)
   USBH_RegisterClass(&hUsbHostHS, USBH_MSC_CLASS);
-
+#endif
+#if defined(USE_USBKEYBOARD) && !defined(BOOTLOADER_BUILD)
+  USBH_RegisterClass(&hUsbHostHS, USBH_HID_CLASS);
+#endif
   USBH_Start(&hUsbHostHS);
 }
 

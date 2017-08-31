@@ -225,8 +225,8 @@ enum
     MENU_DEBUG_CLONEOUT,
     MENU_DEBUG_CLONEIN,
     MENU_DEBUG_NEW_NB,
-    MENU_DEBUG_RTTY_DECODE,
-    //
+	MENU_DEBUG_RTTY_ATC,
+
     CONFIG_RTC_START,
     CONFIG_RTC_HOUR,
     CONFIG_RTC_MIN,
@@ -234,6 +234,7 @@ enum
     CONFIG_RTC_RESET,
     CONFIG_RTC_CALIB,
     MENU_DYNAMICTUNE,
+    MENU_DIGITAL_MODE_SELECT,
     MAX_RADIO_CONFIG_ITEM   // Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
 

@@ -7,7 +7,7 @@
 #include "audio_driver.h"
 #include "softdds.h"
 #include "fm_subaudible_tone_table.h"
-
+#include "radio_management.h"
 //
 //
 //*----------------------------------------------------------------------------
@@ -318,11 +318,11 @@ void AudioManagement_LoadBeepFreq()
 
     if(ts.flags2 & FLAGS2_KEY_BEEP_ENABLE)      // is beep enabled?
     {
-        softdds_setfreq(&ads.beep, ts.beep_frequency,ts.samp_rate,false);
+        softdds_setFreqDDS(&ads.beep, ts.beep_frequency,ts.samp_rate,false);
     }
     else
     {
-        softdds_setfreq(&ads.beep, 0,ts.samp_rate,true); // not enabled - zero out frequency word
+        softdds_setFreqDDS(&ads.beep, 0,ts.samp_rate,true); // not enabled - zero out frequency word
     }
 
     calc = (float)ts.beep_loudness;     // range 0-20
@@ -353,6 +353,12 @@ void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
     case DEMOD_CW:
         tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.cw_sidetone_freq;
         break;
+    case DEMOD_DIGI:
+    	if (ts.digital_mode == DigitalMode_RTTY)
+    	{
+    		tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.cw_sidetone_freq;
+    	}
+    	break;
     default:
         tonefreq[0] = tune_mode?SSB_TUNE_FREQ:0.0;
 
@@ -365,5 +371,5 @@ void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
         }
     }
 
-    softdds_setfreq_dbl(tonefreq,ts.samp_rate,0);
+    softdds_configRunIQ(tonefreq,ts.samp_rate,0);
 }

@@ -15,6 +15,7 @@
 // Common
 #include "uhsdr_board.h"
 #include "audio_driver.h"
+#include "radio_management.h"
 
 #include <stdio.h>
 
@@ -347,7 +348,7 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
     }
     else		// It is transmit
     {
-        if((ts.dmod_mode == DEMOD_CW) || (ts.tune && !ts.iq_freq_mode))
+        if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || (ts.tune && !ts.iq_freq_mode))
         // Turn sidetone on for CW or TUNE mode without freq translation
         {
             Codec_TxSidetoneSetgain(txrx_mode);	// set sidetone level

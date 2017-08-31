@@ -27,6 +27,6 @@
 
 #define DDS_TBL_SIZE		1024
 
-extern const short DDS_TABLE[DDS_TBL_SIZE];
+extern const int16_t DDS_TABLE[DDS_TBL_SIZE];
 
 #endif
