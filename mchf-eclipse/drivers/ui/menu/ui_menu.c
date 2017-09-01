@@ -2391,7 +2391,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             // FIXME: Call "abstract" function to update status of tune,
             // do not redraw menu button here directly
-            UiDriver_FButtonLabel(5,"TUNE",ts.tx_disable?Grey1:White);
+            UiDriver_DrawFButtonLabel(5,"TUNE",ts.tx_disable?Grey1:White);
         }
     }
         break;
