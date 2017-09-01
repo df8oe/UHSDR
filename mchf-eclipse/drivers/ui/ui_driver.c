@@ -834,10 +834,18 @@ static void UiDriver_DisplayFButton_F1MenuExit()
 {
 	char* cap;
 	uint32_t color;
-	if (ts.keyer_mode)
+	if (ts.keyer_mode.active)
 	{
-		cap = "BTN1";
-		color = White;
+		if (ts.keyer_mode.button_recording == KEYER_BUTTON_1)
+		{
+			cap = "REC";
+			color = Red;
+		}
+		else
+		{
+			cap = "BTN1";
+			color = White;
+		}
 	}
 	else
 	{
@@ -869,10 +877,18 @@ static void UiDriver_DisplayFButton_F2SnapMeter()
 {
 	const char* cap;
 	uint32_t color;
-	if (ts.keyer_mode)
+	if (ts.keyer_mode.active)
 	{
-		cap = "BTN2";
-		color = White;
+		if (ts.keyer_mode.button_recording == KEYER_BUTTON_2)
+		{
+			cap = "REC";
+			color = Red;
+		}
+		else
+		{
+			cap = "BTN2";
+			color = White;
+		}
 	}
 	else
 	{
@@ -894,10 +910,19 @@ static void UiDriver_FButton_F3MemSplit()
 	const char* cap;
 	uint32_t color;
 
-	if (ts.keyer_mode)
+	if (ts.keyer_mode.active)
 	{
-		cap = "BTN3";
-		color = White;
+		if (ts.keyer_mode.button_recording == KEYER_BUTTON_3)
+		{
+			cap = "REC";
+			color = Red;
+		}
+		else
+		{
+			cap = "BTN3";
+			color = White;
+		}
+
 	}
 	else
 	{
@@ -920,7 +945,7 @@ static void UiDriver_FButton_F3MemSplit()
 static inline void UiDriver_FButton_F4ActiveVFO()
 {
 	const char* cap;
-	if (ts.keyer_mode)
+	if (ts.keyer_mode.active)
 	{
 		cap = "DEL";
 	}
@@ -936,7 +961,7 @@ static inline void UiDriver_FButton_F5Tune()
 	const char* cap;
 	uint32_t color;
 	color = RadioManagement_IsTxDisabled() ? Grey1 : (ts.tune ? Red : White);
-	if (ts.keyer_mode)
+	if (ts.keyer_mode.active)
 	{
 		if (ts.buffered_tx)
 		{
@@ -5670,6 +5695,81 @@ static void UiAction_ToggleTuneMode()
 	UiDriver_FButton_F5Tune();
 }
 
+static void UiAction_PlayKeyerBtnN(int n)
+{
+	uint8_t *pmacro;
+	uint16_t c = 0;
+
+	if (ts.keyer_mode.button_recording == KEYER_BUTTON_NONE)
+	{
+		pmacro = (uint8_t *)ts.keyer_mode.macro[n];
+		while (*pmacro != '\0') //TODO not implemented - printing on the screen for debugging
+		{
+			UiDriver_TextMsgPutChar(*pmacro++);
+		}
+		UiDriver_TextMsgPutChar('>');
+	}
+	else if (ts.keyer_mode.button_recording == n)
+	{
+		ts.cw_text_entry = false;
+		pmacro = (uint8_t *)ts.keyer_mode.macro[n];
+		c = 0;
+		while (DigiModes_TxBufferHasData())
+		{
+			if (++c > KEYER_MACRO_LEN - 1) {
+				break;
+			}
+			DigiModes_TxBufferRemove(pmacro++);
+		}
+		*pmacro = '\0';
+		UiDriver_TextMsgPutChar('<');
+		ts.keyer_mode.button_recording = KEYER_BUTTON_NONE;
+	}
+	UiDriver_CreateFunctionButtons(false);
+}
+
+static void UiAction_PlayKeyerBtn1()
+{
+	UiAction_PlayKeyerBtnN(KEYER_BUTTON_1);
+}
+
+static void UiAction_PlayKeyerBtn2()
+{
+	UiAction_PlayKeyerBtnN(KEYER_BUTTON_2);
+}
+
+static void UiAction_PlayKeyerBtn3()
+{
+	UiAction_PlayKeyerBtnN(KEYER_BUTTON_3);
+}
+
+static void UiAction_RecordKeyerBtnN(int n)
+{
+	if (ts.keyer_mode.button_recording == KEYER_BUTTON_NONE && ts.txrx_mode == TRX_MODE_RX && !ts.cw_text_entry)
+	{
+		ts.cw_text_entry = true;
+		ts.keyer_mode.button_recording = n;
+		DigiModes_TxBufferReset();
+		UiDriver_TextMsgPutChar(':');
+		UiDriver_CreateFunctionButtons(false);
+	}
+}
+
+static void UiAction_RecordKeyerBtn1()
+{
+	UiAction_RecordKeyerBtnN(KEYER_BUTTON_1);
+}
+
+static void UiAction_RecordKeyerBtn2()
+{
+	UiAction_RecordKeyerBtnN(KEYER_BUTTON_2);
+}
+
+static void UiAction_RecordKeyerBtn3()
+{
+	UiAction_RecordKeyerBtnN(KEYER_BUTTON_3);
+}
+
 static void UiAction_ToggleBufferedTXMode()
 {
 	ts.buffered_tx = ! ts.buffered_tx;
@@ -5736,7 +5836,7 @@ static void UiAction_ToggleMenuMode()
 
 static void UiAction_ToggleKeyerMode()
 {
-	ts.keyer_mode = !ts.keyer_mode;
+	ts.keyer_mode.active = !ts.keyer_mode.active;
 	UiDriver_CreateFunctionButtons(false);
 }
 
@@ -5917,9 +6017,9 @@ static const keyaction_descr_t keyactions_menu[] =
 
 static const keyaction_descr_t keyactions_keyer[] =
 {
-		{ BUTTON_F1_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
-		{ BUTTON_F2_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
-		{ BUTTON_F3_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
+		{ BUTTON_F1_PRESSED, 	UiAction_PlayKeyerBtn1, 		UiAction_RecordKeyerBtn1 },
+		{ BUTTON_F2_PRESSED, 	UiAction_PlayKeyerBtn2, 		UiAction_RecordKeyerBtn2 },
+		{ BUTTON_F3_PRESSED, 	UiAction_PlayKeyerBtn3, 		UiAction_RecordKeyerBtn3 },
 		{ BUTTON_F4_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
 		{ BUTTON_F5_PRESSED, 	KEYACTION_NOP,		UiAction_ToggleBufferedTXMode },
 };
@@ -5940,7 +6040,7 @@ static void UiDriver_HandleKeyboard()
 		AudioManagement_KeyBeep();  // make keyboard beep, if enabled
 
 		bool keyIsProcessed = false;
-		if (ts.keyer_mode == true)
+		if (ts.keyer_mode.active == true)
 		{
 			keyIsProcessed = UiDriver_ProcessKeyActions(&key_sets[2]);
 		}

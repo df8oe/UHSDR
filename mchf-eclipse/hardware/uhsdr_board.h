@@ -477,6 +477,18 @@ typedef struct {
 }
 iq_balance_data_t;
 
+#define KEYER_BUTTONS 3
+#define KEYER_BUTTON_NONE 0
+#define KEYER_BUTTON_1 1
+#define KEYER_BUTTON_2 2
+#define KEYER_BUTTON_3 3
+#define KEYER_MACRO_LEN 200
+typedef struct {
+	bool active;
+	uint8_t button_recording;
+	uint8_t macro[KEYER_BUTTONS][KEYER_MACRO_LEN];
+}
+keyer_mode_t;
 
 //
 // Bands tuning values - WORKING registers - used "live" during transceiver operation
@@ -636,6 +648,7 @@ typedef struct TransceiverState
     uint8_t	cw_keyer_mode;
     uint8_t	cw_keyer_speed;
     uint8_t	cw_paddle_reverse;
+    bool cw_text_entry;
 
     uint8_t cw_keyer_weight;   // cw dit/pause ratio 100 = 1.00 -> dit == pause == dah / 3
 #define CW_KEYER_WEIGHT_DEFAULT (100)
@@ -956,7 +969,7 @@ typedef struct TransceiverState
 	uint8_t enable_rtty_decode; // new rtty encoder (experimental)
 	bool enable_ptt_rts; // disable/enable ptt via virtual serial port rts
 
-	bool keyer_mode; // disable/enable keyer mode for F1-F5 buttons
+	keyer_mode_t keyer_mode; // disable/enable keyer mode for F1-F5 buttons
 	bool buffered_tx; // disable/enable buffered sending for CW and digital modes
 } TransceiverState;
 //
