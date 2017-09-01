@@ -5693,7 +5693,7 @@ static void UiAction_ToggleMenuMode()
 	{
 		if(ts.menu_mode == false)	 	// go into menu mode if NOT already in menu mode and not to halt on startup
 		{
-			ts.menu_mode = 1;
+			ts.menu_mode = true;
 			ts.encoder3state = filter_path_change;
 			filter_path_change = false;			// deactivate while in menu mode
 			UiDriver_DisplayFilter();
@@ -5713,18 +5713,18 @@ static void UiAction_ToggleMenuMode()
 			UiMenu_RenderMenu(MENU_RENDER_ONLY);	// Draw the menu the first time
 			UiMenu_RenderMenu(MENU_PROCESS_VALUE_CHANGE);	// Do update of the first menu item
 		}
-	}
-	else	 	// already in menu mode - we now exit
-	{
-		ts.menu_mode = 0;
-		filter_path_change = ts.encoder3state;
-		UiDriver_DisplayFilter();
-		UiSpectrum_Init();			// init spectrum scope
+		else	 	// already in menu mode - we now exit
+		{
+			ts.menu_mode = false;
+			filter_path_change = ts.encoder3state;
+			UiDriver_DisplayFilter();
+			UiSpectrum_Init();			// init spectrum scope
 
-		// Restore encoder displays to previous modes
-		UiDriver_RefreshEncoderDisplay();
-		UiDriver_DisplayFilter();	// update bandwidth display
-		UiDriver_CreateFunctionButtons(false);
+			// Restore encoder displays to previous modes
+			UiDriver_RefreshEncoderDisplay();
+			UiDriver_DisplayFilter();	// update bandwidth display
+			UiDriver_CreateFunctionButtons(false);
+		}
 	}
 }
 
