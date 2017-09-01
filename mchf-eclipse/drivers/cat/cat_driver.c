@@ -551,7 +551,7 @@ bool CatDriver_Ft817_EEPROM_RW_Func(bool readEEPROM, uint16_t addr, uint8_t* dat
             )
             {
                 // we have to switch active vfo
-                UiDriver_ToggleVfoAB();
+                UiAction_ToggleVfoAB();
                 retval = true;
             }
             break;
@@ -1170,7 +1170,7 @@ static void CatDriver_HandleCommands()
             bc = 1;
             break;
         case FT817_TOGGLE_VFO:
-            UiDriver_ToggleVfoAB();
+            UiAction_ToggleVfoAB();
             resp[0] = 0;
             bc = 1;
             break;

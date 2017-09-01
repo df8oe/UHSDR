@@ -272,7 +272,7 @@ void 	UiDriver_CreateTemperatureDisplay();
 void 	UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode);
 void    UiDriver_FrequencyUpdateLOandDisplay(bool full_update);
 void    UiDriver_RefreshEncoderDisplay();
-void    UiDriver_FButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) ;
+void    UiDriver_DrawFButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) ;
 void 	UiDriver_DisplayFreqStepSize();
 void 	UiDriver_DisplayDemodMode(void);
 void	UiDriver_LcdBlankingStartTimer(void);
@@ -289,7 +289,7 @@ void UiDriver_StartUpScreenInit();
 void UiDriver_StartUpScreenFinish();
 
 void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
-void UiDriver_ToggleVfoAB();
+void UiAction_ToggleVfoAB();
 void UiDriver_SetSplitMode(bool mode_active);
 
 

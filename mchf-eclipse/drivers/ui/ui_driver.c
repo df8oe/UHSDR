@@ -54,15 +54,7 @@
 
 #include "rtty.h"
 
-static void 	UiDriver_PublicsInit();
-
-static void 	UiDriver_ProcessKeyboard();
-static void 	UiDriver_PressHoldStep(uchar is_up);
-static void 	UiDriver_ProcessFunctionKeyClick(ulong id);
-
-static void 	UiDriver_CreateDesktop();
 static void     UiDriver_CreateMainFreqDisplay();
-static void 	UiDriver_CreateFunctionButtons(bool full_repaint);
 
 static void     UiDriver_CreateMeters();
 static void     UiDriver_DeleteSMeter();
@@ -80,14 +72,6 @@ static void		UiDriver_TimeScheduler();				// Also handles audio gain and switchi
 static void 	UiDriver_ChangeToNextDemodMode(bool select_alternative_mode);
 static void 	UiDriver_ChangeBand(uchar is_up);
 static bool 	UiDriver_CheckFrequencyEncoder();
-
-
-static void 	UiDriver_CheckEncoderOne();
-static void 	UiDriver_CheckEncoderTwo();
-static void 	UiDriver_CheckEncoderThree();
-static void 	UiDriver_ChangeEncoderOneMode();
-static void 	UiDriver_ChangeEncoderTwoMode();
-static void 	UiDriver_ChangeEncoderThreeMode();
 
 static void     UiDriver_DisplayBand(uchar band);
 static uchar    UiDriver_DisplayBandForFreq(ulong freq);
@@ -141,6 +125,14 @@ static bool UiDriver_SaveConfiguration();
 
 static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
+
+typedef struct
+{
+	uint8_t x_left;
+	uint8_t x_right;
+	uint8_t y_down;
+	uint8_t y_up;
+} touchscreen_region_t;
 
 
 // Tuning steps
@@ -257,11 +249,10 @@ uchar drv_state = 0;
 
 bool filter_path_change = false;
 
-
 // check if touched point is within rectangle of valid action
-inline bool UiDriver_CheckTouchCoordinates(uint8_t x_left, uint8_t x_right, uint8_t y_down, uint8_t y_up)
+static bool UiDriver_CheckTouchRegion(const touchscreen_region_t* tr_p)
 {
-	return (ts.tp->x <= x_right && ts.tp->x >= x_left && ts.tp->y >= y_down && ts.tp->y <= y_up);
+	return (ts.tp->x <= tr_p->x_right && ts.tp->x >= tr_p->x_left && ts.tp->y >= tr_p->y_down && ts.tp->y <= tr_p->y_up);
 }
 
 
@@ -385,20 +376,91 @@ void UiDriver_ShowDebugText(const char* text)
 	UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y+24,text,White,Black,0);
 }
 
-static void UiDriver_ToggleWaterfallScopeDisplay()
+typedef struct
 {
-	if(is_waterfallmode())
+	touchscreen_region_t region;
+	void (*function)();
+} touchaction_descr_t;
+
+
+#define KEYACTION_NOP    (NULL)				// This action for the pressed key is treated as being executed, but it is a no-operation
+#define KEYACTION_PASS ((void(*)())-1)		// This action for the pressed key is treated as not present, i.e. we do not report the key event has been processed
+
+typedef struct
+{
+	const touchaction_descr_t* actions;
+	int32_t size;
+} touchaction_list_descr_t;
+
+typedef struct
+{
+	uint32_t key_code;
+	// use KEYACTION_NONE and KEYACTION_PASS to handled nop and pass for further processing,
+	// see comments for these constants
+	void (*press_func)(); // executed if short press of key is detected
+	void (*hold_func)();  // executed if press and hold of key is detected
+} keyaction_descr_t;
+
+typedef struct
+{
+	const keyaction_descr_t* actions;
+	int32_t size;
+} keyaction_list_descr_t;
+
+
+/*
+ * @brief find the matching region in a list of region and associated function
+ * @returns: true, if a match for the touch coordinates region was found.
+ */
+bool UiDriver_ProcessTouchActions(const touchaction_list_descr_t* tld)
+{
+	bool retval = false;
+	if (tld != NULL)
 	{
-		// is the waterfall mode active?
-		ts.flags1 &=  ~FLAGS1_WFALL_SCOPE_TOGGLE;     // yes, turn it off
+		for (uint32_t idx = 0; idx < tld->size; idx++)
+		{
+			if (UiDriver_CheckTouchRegion(&tld->actions[idx].region))
+			{
+				if (tld->actions[idx].function != NULL)
+				{
+					(*tld->actions[idx].function)();
+				}
+				retval = true;
+				break;
+			}
+		}
 	}
-	else
-	{
-		// waterfall mode was turned off
-		ts.flags1 |=  FLAGS1_WFALL_SCOPE_TOGGLE;          // turn it on
-	}
-	UiSpectrum_Init();   // init spectrum display
+	return retval;
 }
+
+/*
+ * @brief find the matching keycode in a list of keycodes and associated functions
+ * @returns: true, if a match for the keycode was found and a function (which can be a "no operation") has been executed.
+ */
+
+bool UiDriver_ProcessKeyActions(const keyaction_list_descr_t* kld)
+{
+	bool retval = false;
+	if (kld != NULL)
+	{
+		for (uint32_t idx = 0; idx < kld->size; idx++)
+		{
+			if (kld->actions[idx].key_code == ks.button_id)
+			{
+				void (*func_ptr)() =  ks.press_hold == true ? kld->actions[idx].hold_func:kld->actions[idx].press_func;
+				if (func_ptr != KEYACTION_NOP && func_ptr != KEYACTION_PASS)
+				{
+					(*func_ptr)();
+				}
+				retval = func_ptr != KEYACTION_PASS;
+				break;
+			}
+		}
+	}
+
+	return retval;
+}
+
 //
 //
 //*----------------------------------------------------------------------------
@@ -505,70 +567,6 @@ void UiDriver_DisplayFilter()
 	UiDriver_LeftBoxDisplay(1,filter_names[0],filter_path_change,filter_ptr,font_clr, font_clr,false);
 }
 
-static void UiDriver_HandleSwitchToNextDspMode()
-{
-	if(ts.dmod_mode != DEMOD_FM)	  // allow selection/change of DSP only if NOT in FM
-	{
-		//
-		// I think we should alter this to use a counter
-		// What do we want to switch here:
-		// NR ON/OFF		ts.dsp_active |= DSP_NR_ENABLE;	 // 	ts.dsp_active &= ~DSP_NR_ENABLE;
-		// NOTCH ON/OFF		ts.dsp_active |= DSP_NOTCH_ENABLE; // 	ts.dsp_active &= ~DSP_NOTCH_ENABLE;
-		// Manual Notch		ts.dsp_active |= DSP_MNOTCH_ENABLE
-		// BASS				ts.bass // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
-		// TREBLE			ts.treble // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
-
-		ts.dsp_mode ++; // switch mode
-		// 0 = everything OFF, 1 = NR, 2 = automatic NOTCH, 3 = NR + NOTCH, 4 = manual NOTCH, 5 = BASS adjustment, 6 = TREBLE adjustment
-		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
-		//
-		// prevent certain modes to prevent CPU crash
-		//
-		// prevent NR AND NOTCH, when in CW
-		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
-		// prevent NOTCH, when in CW
-		if (ts.dsp_mode == DSP_SWITCH_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
-		// prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
-		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ )) ts.dsp_mode++;
-
-		switch (ts.dsp_mode)
-		{
-
-		case DSP_SWITCH_OFF: // switch off everything
-			ts.dsp_active =  (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-			break;
-		case DSP_SWITCH_NR:
-			ts.dsp_active =  DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_NR;
-			break;
-		case DSP_SWITCH_NOTCH:
-			ts.dsp_active =  DSP_NOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-			break;
-		case DSP_SWITCH_NR_AND_NOTCH:
-			ts.dsp_active =  DSP_NOTCH_ENABLE | DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_NR;
-			break;
-		case DSP_SWITCH_NOTCH_MANUAL:
-			ts.dsp_active =  DSP_MNOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MPEAK_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
-			break;
-		case DSP_SWITCH_PEAK_FILTER:
-			ts.dsp_active =  DSP_MPEAK_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_PEAK_F;
-			break;
-		default:
-			break;
-		}
-
-		ts.dsp_active_toggle = ts.dsp_active;  // save update in "toggle" variable
-		// reset DSP NR coefficients
-		AudioDriver_SetRxAudioProcessing(ts.dmod_mode, true);        // update DSP/filter settings
-		UiDriver_DisplayEncoderTwoMode();         // DSP control is mapped to column 2
-	}
-}
-
 // TODO: most of this belongs to radio management, not UI
 static void UiDriver_ToggleDigitalMode()
 {
@@ -656,161 +654,8 @@ void UiDriver_SpectrumZoomChangeLevel()
 	}
 }
 
-void UiDriver_HandleTouchScreen()
-{
-	if (ts.show_debug_info)					// show coordinates for coding purposes
-	{
-		char text[10];
-		snprintf(text,10,"%02d%s%02d%s",ts.tp->x," : ",ts.tp->y,"  ");
-		UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,text,White,Black,0);
-	}
-	if(!ts.menu_mode)						// normal operational screen
-	{
-		if(UiDriver_CheckTouchCoordinates(19,60,48,60))			// S-Meter
-		{
-			incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
-			UiDriver_DeleteSMeter();
-			UiDriver_CreateMeters();	// redraw meter
-		}
-		if(UiDriver_CheckTouchCoordinates(10,28,27,31))			// wf/scope bar left part
-		{
-			UiDriver_ToggleWaterfallScopeDisplay();
-		}
-		if(UiDriver_CheckTouchCoordinates(29,33,26,32))			// wf/scope bar magnify down
-		{
-			ts.menu_var_changed = 1;
-			decr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
 
-			UiDriver_SpectrumZoomChangeLevel();
-		}
-		if(UiDriver_CheckTouchCoordinates(52,60,26,32))			// wf/scope bar magnify up
-		{
-			ts.menu_var_changed = 1;
-			incr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
 
-			UiDriver_SpectrumZoomChangeLevel();
-
-		}
-		if(UiDriver_CheckTouchCoordinates(43,60,00,04))			// TUNE button
-		{
-			df.tune_new = floor(df.tune_new / (TUNE_MULT*1000)) * (TUNE_MULT*1000);	// set last three digits to "0"
-			UiDriver_FrequencyUpdateLOandDisplay(true);
-		}
-		if(UiDriver_CheckTouchCoordinates(16,24,40,44))			// Mode box
-		{
-			if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	 	// do NOT allow mode change in TUNE mode or transmit mode
-			{
-				UiDriver_ChangeToNextDemodMode(0);
-			}
-		}
-		if(UiDriver_CheckTouchCoordinates(16,24,45,48))			// TX power box
-		{
-			UiDriver_HandlePowerLevelChange(ts.power_level+1);
-		}
-		if(UiDriver_CheckTouchCoordinates(10,16,44,50))			// Audio in box
-		{
-			if(ts.dmod_mode != DEMOD_CW)
-			{
-				incr_wrap_uint8(&ts.tx_audio_source,0,TX_AUDIO_MAX_ITEMS);
-
-				UiDriver_DisplayEncoderThreeMode();
-			}
-		}
-		if(UiDriver_CheckTouchCoordinates(48,52,35,37))			// left part band display
-		{
-			UiDriver_HandleBandButtons(BUTTON_BNDM);
-		}
-		if(UiDriver_CheckTouchCoordinates(53,60,35,37))			// right part band display
-		{
-			UiDriver_HandleBandButtons(BUTTON_BNDP);
-		}
-		if(UiDriver_CheckTouchCoordinates(00,07,21,30))			// DSP box
-		{
-			Codec_RestartI2S();
-		}
-		if(UiDriver_CheckTouchCoordinates(8,60,11,19) && !ts.frequency_lock)// wf/scope frequency dial lower half spectrum/scope
-		{
-			int step = 2000;				// adjust to 500Hz
-
-			if(sd.magnify == 3)
-			{
-				step = 400;					// adjust to 100Hz
-			}
-			if(sd.magnify > 3)
-			{
-				step = 200;					// adjust to 50Hz
-			}
-			if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
-				step = 20000;				// adjust to 5KHz
-			uchar line = 29;				// x-position of rx frequency in middle position
-			if(sd.magnify == 0)					// x-position differs in translated modes if not magnified
-			{
-				switch(ts.iq_freq_mode)
-				{
-				case FREQ_IQ_CONV_P6KHZ:
-					line = 25;
-					break;
-				case FREQ_IQ_CONV_M6KHZ:
-					line = 35;
-					break;
-				case FREQ_IQ_CONV_P12KHZ:
-					line = 19;
-					break;
-				case FREQ_IQ_CONV_M12KHZ:
-					line = 43;
-					break;
-				default:
-					line = 29;
-				}
-			}
-
-			uint32_t tunediff = ((1000)/(1 << sd.magnify))*(ts.tp->x-line)*TUNE_MULT;
-			df.tune_new = lround((df.tune_new + tunediff)/step) * step;
-			UiDriver_FrequencyUpdateLOandDisplay(true);
-		}
-		if(UiDriver_CheckTouchCoordinates(0,7,10,13))			// toggle digital modes
-		{
-			incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_RTTY);
-			// We limit the reachable modes to the ones truly available
-			// which is FreeDV1 for now
-			UiDriver_ToggleDigitalMode();
-		}
-
-		if(UiDriver_CheckTouchCoordinates(26,35,39,46))			// dynamic tuning activation
-		{
-			if (!(ts.flags1 & FLAGS1_DYN_TUNE_ENABLE))			// is it off??
-			{
-				ts.flags1 |= FLAGS1_DYN_TUNE_ENABLE;	// then turn it on
-			}
-			else
-			{
-				ts.flags1 &= ~FLAGS1_DYN_TUNE_ENABLE;	// then turn it off
-			}
-
-			UiDriver_DisplayFreqStepSize();
-		}
-	}
-	else								// menu screen functions
-	{
-		if(UiDriver_CheckTouchCoordinates(54,57,55,57))			// enable tp coordinates show S-meter "dB"
-		{
-			UiDriver_DebugInfo_DisplayEnable(!ts.show_debug_info);
-		}
-		if(UiDriver_CheckTouchCoordinates(46,49,55,57))  			// rf bands mod S-meter "40"
-		{
-			ts.rfmod_present = !ts.rfmod_present;
-		}
-		if(UiDriver_CheckTouchCoordinates(50,53,55,57))  			// vhf/uhf bands mod S-meter "60"
-		{
-			ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
-		}
-		if(ts.menu_mode)  					// refresh menu
-		{
-			UiMenu_RenderMenu(MENU_RENDER_ONLY);
-		}
-	}
-	ts.tp->state = TP_DATASETS_PROCESSED;							// set statemachine to data fetched
-}
 
 void UiDriver_HandlePowerLevelChange(uint8_t power_level)
 {
@@ -825,13 +670,11 @@ void UiDriver_HandlePowerLevelChange(uint8_t power_level)
 	}
 }
 
-
-
-static const int BAND_DOWN = 0;
-static const int BAND_UP = 1;
-
 void UiDriver_HandleBandButtons(uint16_t button)
 {
+
+	static const int BAND_DOWN = 0;
+	static const int BAND_UP = 1;
 
 	bool buttondirSwap = (ts.flags1 & FLAGS1_SWAP_BAND_BTN)?true:false;
 	uint8_t dir;
@@ -850,14 +693,49 @@ void UiDriver_HandleBandButtons(uint16_t button)
 }
 
 
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_driver_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+static void UiDriver_PublicsInit()
+{
+	// Button state structure init state
+	ks.button_id			= BUTTON_NONE;
+	ks.button_pressed		= 0;
+	ks.button_released		= 0;
+	ks.button_processed		= 0;
+	ks.debounce_time		= 0;
+
+
+	// Auto button blink state
+	//abst.blink_flag 		= 0;
+	//abst.blink_skip 		= 0;
+
+	// SWR meter init
+	swrm.p_curr				= 0;
+	swrm.fwd_calc			= 0;
+	swrm.rev_calc			= 0;
+	swrm.fwd_pwr			= 0;
+	swrm.rev_pwr			= 0;
+	swrm.fwd_dbm			= 0;
+	swrm.rev_dbm			= 0;
+	swrm.vswr			 	= 0;
+	swrm.sensor_null		= SENSOR_NULL_DEFAULT;
+	{
+		int idx;
+		for (idx = 0; idx < COUPLING_MAX; idx++)
+		{
+			swrm.coupling_calc[idx]    = SWR_COUPLING_DEFAULT;
+		}
+	}
+	swrm.pwr_meter_disp		= 0;	// Display of numerical FWD/REV power metering off by default
+	swrm.pwr_meter_was_disp = 0;	// Used to indicate if FWD/REV numerical power metering WAS displayed
+
+	// Power supply meter
+	pwmt.p_curr				= 0;
+	pwmt.pwr_aver 			= 0;
+	pwmt.undervoltage_detected = false;
+
+}
+
+
+
 void UiDriver_Init()
 {
 	// Driver publics init
@@ -923,56 +801,8 @@ void UiDriver_Init()
 	ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
 	ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_DELAY_TIME;
 }
-/*
- * @brief enables/disables tune mode. Checks if tuning can be enabled based on frequency.
- * I.e. it is not possible to tune on an unsupported frequency
- * @param tune  true if tune is to be enabled
- * @returns true if has been enabled, false if tune is disabled now
- */
 
-static void UiDriver_PublicsInit()
-{
-	// Button state structure init state
-	ks.button_id			= BUTTON_NONE;
-	ks.button_pressed		= 0;
-	ks.button_released		= 0;
-	ks.button_processed		= 0;
-	ks.debounce_time		= 0;
-
-
-	// Auto button blink state
-	//abst.blink_flag 		= 0;
-	//abst.blink_skip 		= 0;
-
-	// SWR meter init
-	swrm.p_curr				= 0;
-	swrm.fwd_calc			= 0;
-	swrm.rev_calc			= 0;
-	swrm.fwd_pwr			= 0;
-	swrm.rev_pwr			= 0;
-	swrm.fwd_dbm			= 0;
-	swrm.rev_dbm			= 0;
-	swrm.vswr			 	= 0;
-	swrm.sensor_null		= SENSOR_NULL_DEFAULT;
-	{
-		int idx;
-		for (idx = 0; idx < COUPLING_MAX; idx++)
-		{
-			swrm.coupling_calc[idx]    = SWR_COUPLING_DEFAULT;
-		}
-	}
-	swrm.pwr_meter_disp		= 0;	// Display of numerical FWD/REV power metering off by default
-	swrm.pwr_meter_was_disp = 0;	// Used to indicate if FWD/REV numerical power metering WAS displayed
-
-	// Power supply meter
-	pwmt.p_curr				= 0;
-	pwmt.pwr_aver 			= 0;
-	pwmt.undervoltage_detected = false;
-
-}
-
-
-void UiDriver_FButtonLabel(uint8_t button_num, const char* label, uint32_t label_color)
+void UiDriver_DrawFButtonLabel(uint8_t button_num, const char* label, uint32_t label_color)
 {
 	UiLcdHy28_PrintTextCentered(POS_BOTTOM_BAR_F1_X + (button_num - 1)*64, POS_BOTTOM_BAR_F1_Y, 56, label,
 			label_color, Black, 0);
@@ -1000,48 +830,52 @@ void UiDriver_EncoderDisplay(const uint8_t row, const uint8_t column, const char
 }
 
 
-static void UiDriver_FButton_F1MenuExit()
+static void UiDriver_DisplayFButton_F1MenuExit()
 {
-	char* label;
+	char* cap;
 	uint32_t color;
-
-	if (ts.keyer_mode) {
-		label = "BTN1";
+	if (ts.keyer_mode)
+	{
+		cap = "BTN1";
 		color = White;
-	} else {
-		if(!ts.menu_var_changed)
+	}
+	else
+	{
+		if (!ts.menu_var_changed)
 		{
+
 			if (ts.menu_mode)
 			{
-				label = "EXIT";
+				cap = "EXIT";
 				color = Yellow;
 			}
 			else
 			{
-				label = "MENU";
+				cap = "MENU";
 				color = White;
 			}
 		}
 		else
 		{
-			label = ts.menu_mode?"EXIT *":"MENU *";
+			cap = ts.menu_mode?"EXIT *":"MENU *";
 			color = Orange;
 		}
 	}
-	UiDriver_FButtonLabel(1,label,color);
+	UiDriver_DrawFButtonLabel(1, cap, color);
 }
 
 
-static void UiDriver_FButton_F2SnapMeter()
+static void UiDriver_DisplayFButton_F2SnapMeter()
 {
 	const char* cap;
 	uint32_t color;
-
-	if (ts.keyer_mode) {
+	if (ts.keyer_mode)
+	{
 		cap = "BTN2";
 		color = White;
-	} else {
-
+	}
+	else
+	{
 #ifdef SNAP
 		cap = "SNAP";
 		color = White;    // yes - indicate with color
@@ -1050,7 +884,7 @@ static void UiDriver_FButton_F2SnapMeter()
 		cap = "METER";
 #endif
 	}
-	UiDriver_FButtonLabel(2,cap,color);
+	UiDriver_DrawFButtonLabel(2,cap,color);
 }
 
 
@@ -1060,48 +894,64 @@ static void UiDriver_FButton_F3MemSplit()
 	const char* cap;
 	uint32_t color;
 
-	if (ts.keyer_mode) {
+	if (ts.keyer_mode)
+	{
 		cap = "BTN3";
 		color = White;
-	} else {
-		if(ts.vfo_mem_flag)            // is it in VFO mode now?
+	}
+	else
+	{
+		if (ts.vfo_mem_flag)            // is it in VFO mode now?
 		{
 			cap = "MEM";
 			color = White;    // yes - indicate with color
 		}
 		else
 		{
-			color = is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
+			color = is_splitmode() ?
+					SPLIT_ACTIVE_COLOUR : SPLIT_INACTIVE_COLOUR;
 			cap = "SPLIT";
 		}
 	}
-	UiDriver_FButtonLabel(3,cap,color);
+	UiDriver_DrawFButtonLabel(3, cap, color);
 }
 
 
-static inline void UiDriver_FButton_F4ActiveVFO() {
-	if (ts.keyer_mode) {
-		UiDriver_FButtonLabel(4,"DEL",White);
-	} else {
-		UiDriver_FButtonLabel(4,is_vfo_b()?"VFO B":"VFO A",White);
+static inline void UiDriver_FButton_F4ActiveVFO()
+{
+	const char* cap;
+	if (ts.keyer_mode)
+	{
+		cap = "DEL";
 	}
+	else
+	{
+		cap = is_vfo_b() ? "VFO B" : "VFO A";
+	}
+	UiDriver_DrawFButtonLabel(4, cap, White);
 }
 
 static inline void UiDriver_FButton_F5Tune()
 {
-	uint32_t color;
 	const char* cap;
-	color = RadioManagement_IsTxDisabled() ? Grey1:(ts.tune?Red:White);
-	if (ts.keyer_mode) {
-		if (ts.buffered_tx) {
+	uint32_t color;
+	color = RadioManagement_IsTxDisabled() ? Grey1 : (ts.tune ? Red : White);
+	if (ts.keyer_mode)
+	{
+		if (ts.buffered_tx)
+		{
 			cap = "UNBUF";
-		} else {
+		}
+		else
+		{
 			cap = "TX/RX";
 		}
-	} else {
+	}
+	else
+	{
 		cap = "TUNE";
 	}
-	UiDriver_FButtonLabel(5,cap,color);
+	UiDriver_DrawFButtonLabel(5, cap, color);
 }
 
 
@@ -1139,7 +989,7 @@ void UiDriver_DisplaySplitFreqLabels()
 			0);  // Place identifying marker for TX frequency
 }
 
-void UiDriver_CopyVfoAB()
+void UiAction_CopyVfoAB()
 {
 	// not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
 	__IO VfoReg* vfo_store;
@@ -1165,7 +1015,7 @@ void UiDriver_CopyVfoAB()
 	}
 }
 
-void UiDriver_ToggleVfoAB()
+void UiAction_ToggleVfoAB()
 {
 
 	uint32_t old_dmod_mode = ts.dmod_mode;
@@ -1174,7 +1024,6 @@ void UiDriver_ToggleVfoAB()
 
 	UiDriver_FButton_F4ActiveVFO();
 
-	//
 	// do frequency/display update
 	if(is_splitmode())      // in SPLIT mode?
 	{
@@ -1206,359 +1055,9 @@ void UiDriver_SetSplitMode(bool mode_active)
 	UiDriver_FrequencyUpdateLOandDisplay(true);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverProcessKeyboard
-//* Object              : process hardcoded buttons click and hold
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriver_ProcessKeyboard()
-{
-	if(ks.button_processed)
-	{
-		UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
-		//
-		//printf("button process: %02x, debounce time: %d\n\r",ks.button_id,ks.debounce_time);
-		//
-		AudioManagement_KeyBeep();  // make keyboard beep, if enabled
-		// Is it click or hold ?
-		if(!ks.press_hold)
-		{
-			switch(ks.button_id)
-			{
-			//
-			case TOUCHSCREEN_ACTIVE:				// touchscreen functions
-				if(is_touchscreen_pressed())
-				{
-					UiDriver_HandleTouchScreen();
-				}
-				break;
-			case BUTTON_G1_PRESSED:	// BUTTON_G1 - Change operational mode
-				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	 	// do NOT allow mode change in TUNE mode or transmit mode
-				{
-					UiDriver_ChangeToNextDemodMode(0);
-				}
-				break;
-			case BUTTON_G2_PRESSED:		// BUTTON_G2
-				UiDriver_HandleSwitchToNextDspMode();
-				break;
-			case BUTTON_G3_PRESSED:		// BUTTON_G3 - Change power setting
-				UiDriver_HandlePowerLevelChange(ts.power_level+1);
-				break;
-			case BUTTON_G4_PRESSED:		 		// BUTTON_G4 - Change filter bandwidth
-			{
-				if(!ts.tune)
-				{
-					if (filter_path_change == true)
-					{
-						filter_path_change = false;
-					}
-					else
-					{
-						AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
-						// we store the new filter in the current active filter location
-						AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
-						// we activate it (in fact the last used one, which is the newly selected one);
-					}
-					// Change filter
-					UiDriver_UpdateDisplayAfterParamChange();		// re-init for change of filter including display updates
-					UiDriver_DisplayEncoderThreeMode();
-				}
-				break;
-			}
-			case BUTTON_M1_PRESSED:		// BUTTON_M1
-				UiDriver_ChangeEncoderOneMode();
-				break;
-			case BUTTON_M2_PRESSED:		// BUTTON_M2
-				UiDriver_ChangeEncoderTwoMode();
-				break;
-			case BUTTON_M3_PRESSED:		// BUTTON_M3
-				UiDriver_ChangeEncoderThreeMode();
-				break;
-			case BUTTON_STEPM_PRESSED:		// BUTTON_STEPM
-				UiDriver_ChangeTuningStep(ts.freq_step_config & FREQ_STEP_SWAP_BTN? true: false);
-				break;
-			case BUTTON_STEPP_PRESSED:		// BUTTON_STEPP
-				UiDriver_ChangeTuningStep(ts.freq_step_config & FREQ_STEP_SWAP_BTN? false: true);
-				break;
-			case BUTTON_BNDM_PRESSED:		// BUTTON_BNDM
-				UiDriver_HandleBandButtons(BUTTON_BNDM);
-				break;
-			case BUTTON_BNDP_PRESSED:	// BUTTON_BNDP
-				UiDriver_HandleBandButtons(BUTTON_BNDP);
-				break;
-			case BUTTON_POWER_PRESSED:
-				incr_wrap_uint8(&ts.lcd_backlight_brightness,0,3);
-				break;
-			default:
-				UiDriver_ProcessFunctionKeyClick(ks.button_id);
-				break;
-			}
-		}
-		else
-		{
-			// *******************************************************************************
-			// Process press-and-hold of button(s).  Note that this can accommodate multiple buttons at once.
-			// *******************************************************************************
-			//
-			switch(ks.button_id)
-			{
-			case BUTTON_F1_PRESSED:	// Press-and-hold button F1:  Write settings to EEPROM
-				if(ts.keyer_mode) {
-					// NOT IMPLEMENTED: Record macro for BTN1
-				} else {
-					if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode
-					{
-						UiSpectrum_Clear();
-						UiDriver_SaveConfiguration();
-						HAL_Delay(3000);
-
-						ts.menu_var_changed = 0;                    // clear "EEPROM SAVE IS NECESSARY" indicators
-						UiDriver_FButton_F1MenuExit();
-
-						if(ts.menu_mode)
-						{
-							UiMenu_RenderMenu(MENU_RENDER_ONLY);    // update menu display, was destroyed by message
-						}
-						else
-						{
-							UiSpectrum_Init();          // not in menu mode, redraw spectrum scope
-						}
-					}
-				}
-				break;
-			case BUTTON_F2_PRESSED:	// Press-and-hold button F2
-				// Move to the BEGINNING of the current menu structure
-				if(ts.menu_mode)	 		// Are we in menu mode?
-				{
-					UiMenu_RenderFirstScreen();
-				}
-				else
-				{
-					if(ts.keyer_mode) {
-						// NOT IMPLEMENTED: Record macro for BTN2
-					} else {
-						// Not in MENU mode - select the METER mode
-						incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
-
-						UiDriver_DeleteSMeter();
-						UiDriver_CreateMeters();	// redraw meter
-					}
-				}
-				break;
-			case BUTTON_F3_PRESSED:	// Press-and-hold button F3
-				//
-				// Move to the END of the current menu structure
-				if(ts.menu_mode) 		// are we in menu mode?
-				{
-					UiMenu_RenderLastScreen();
-				}
-				else	 			// not in menu mode - toggle between VFO/SPLIT and Memory mode
-				{
-					if(ts.keyer_mode) {
-						// NOT IMPLEMENTED: Record macro for BTN3
-					} else {
-						RadioManagement_ToggleVfoMem();
-						UiDriver_FButton_F3MemSplit();
-					}
-				}
-				break;
-			case BUTTON_F4_PRESSED:	// Press-and-hold button F4
-				if(!ts.menu_mode)
-				{
-					if(ts.keyer_mode) {
-						// NOT IMPLEMENTED: Delete whole buffer
-					} else {
-						UiDriver_CopyVfoAB();
-					}
-				}
-				break;
-			case BUTTON_F5_PRESSED:								// Button F5 was pressed-and-held - Toggle TX Disable
-				if(ts.keyer_mode) {
-					ts.buffered_tx = ! ts.buffered_tx;
-					UiDriver_FButton_F5Tune();
-				} else {
-					if(ts.txrx_mode == TRX_MODE_RX)			// do NOT allow mode change in TUNE mode or transmit mode
-					{
-						if( RadioManagement_IsTxDisabledBy(TX_DISABLE_USER) == false)
-						{
-							ts.tx_disable |= TX_DISABLE_USER;
-						}
-						else
-						{
-							ts.tx_disable &= ~TX_DISABLE_USER;
-						}
-						UiDriver_FButton_F5Tune();
-					}
-				}
-				break;
-			case BUTTON_G1_PRESSED:	// Press-and-hold button G1 - Change operational mode, but include "disabled" modes
-				if(ts.txrx_mode == TRX_MODE_RX)	 	// allow mode changes only in RX
-				{
-					UiDriver_ChangeToNextDemodMode(1);		// go to next alternative mode
-				}
-				break;
-			case BUTTON_G2_PRESSED:		// Press and hold of BUTTON_G2 - turn DSP off/on
-				if(ts.dmod_mode != DEMOD_FM)	 		// do not allow change of mode when in FM
-				{
-					if(is_dsp_nr()|| is_dsp_notch() || is_dsp_mnotch() || is_dsp_mpeak())	 			// is any DSP function active?
-					{
-						ts.dsp_active_toggle = ts.dsp_active;	// save setting for future toggling
-
-						ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE |DSP_MNOTCH_ENABLE | DSP_MPEAK_ENABLE);				// turn off NR and notch
-
-						ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-					}
-					else	 		// neither notch or NR was active
-					{
-						if(ts.dsp_active_toggle != 0xff)	 	// has this holder been used before?
-						{
-							ts.dsp_active = ts.dsp_active_toggle;	// yes - load value
-						}
-					}
-					AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);	// update DSP settings
-					UiDriver_DisplayEncoderTwoMode();
-				}
-				break;
-			case BUTTON_G3_PRESSED:		 	// Press-and-hold button G3
-			{
-				UiDriver_UpdateDisplayAfterParamChange();
-				// formerly generate "reference" for sidetone frequency
-				break;
-			}
-			case BUTTON_G4_PRESSED:		 	// Press-and-hold button G4 - Change filter bandwidth, allowing disabled filters, or do tone burst if in FM transmit
-			{
-				if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	  // only allow in receive mode and when NOT in FM
-				{
-					// incr_wrap_uint8(&ts.filter_id,AUDIO_MIN_FILTER,AUDIO_MAX_FILTER-1);
-					// ts.filter_path = AudioFilter_NextApplicableFilterPath(ALL_APPLICABLE_PATHS,ts.dmod_mode,ts.filter_path>0?ts.filter_path-1:0)+1;
-					filter_path_change = true;
-					UiDriver_DisplayFilter();
-					UiDriver_DisplayEncoderThreeMode();
-					// UiInitRxParms();            // update rx internals accordingly including the necessary display updates
-				}
-				else if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode == DEMOD_FM))
-				{
-					if(ts.fm_tone_burst_mode != FM_TONE_BURST_OFF)	 	// is tone burst mode enabled?
-					{
-						ads.fm_tone_burst_active = 1;					// activate the tone burst
-						ts.fm_tone_burst_timing = ts.sysclock + FM_TONE_BURST_DURATION;	// set the duration/timing of the tone burst
-					}
-				}
-				break;
-			}
-			case BUTTON_M1_PRESSED: // Switch between normal and keyer mode F1-F5 buttons
-				if (!ts.menu_mode) {
-					ts.keyer_mode = ! ts.keyer_mode;
-					UiDriver_FButton_F1MenuExit();
-					UiDriver_FButton_F2SnapMeter();
-					UiDriver_FButton_F3MemSplit();
-					UiDriver_FButton_F4ActiveVFO();
-					UiDriver_FButton_F5Tune();
-				}
-				break;
-			case BUTTON_M2_PRESSED:	// Press-and-hold button M2:  Switch display between DSP "strength" setting and NB (noise blanker) mode
-				ts.dsp_active ^= DSP_NB_ENABLE;	// toggle whether or not DSP or NB is to be displayed
-				UiDriver_DisplayEncoderTwoMode();
-				break;
-			case BUTTON_M3_PRESSED:	// Press-and-hold button M3:  Switch display between MIC and Line-In mode
-				if(ts.dmod_mode != DEMOD_CW)
-				{
-					incr_wrap_uint8(&ts.tx_audio_source,0,TX_AUDIO_MAX_ITEMS);
-
-					UiDriver_DisplayEncoderThreeMode();
-				}
-				break;
-			case BUTTON_POWER_PRESSED:
-				if(UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED))	 	// was button BAND- pressed at the same time?
-				{
-					UiDriver_LcdBlankingStealthSwitch();
-				}
-				else
-				{
-					// ONLY the POWER button was pressed
-					if(ts.txrx_mode == TRX_MODE_RX)  		// only allow power-off in RX mode
-					{
-						UiDriver_PowerDownCleanup(true);
-					}
-				}
-				break;
-			case BUTTON_BNDM_PRESSED:			// BAND- button pressed-and-held?
-				if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	 	// and POWER button pressed-and-held at the same time?
-				{
-					UiDriver_LcdBlankingStealthSwitch();
-				}
-				else if(UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))	 	// and BAND-UP pressed at the same time?
-				{
-					if(!ts.menu_mode)	 			// do not do this in menu mode!
-					{
-						UiDriver_ToggleWaterfallScopeDisplay();
-					}
-				}
-				break;
-			case BUTTON_BNDP_PRESSED:			// BAND+ button pressed-and-held?
-				if(UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED))	 	// and BAND-DOWN pressed at the same time?
-				{
-					if(!ts.menu_mode)	 		// do not do this if in menu mode!
-					{
-						UiDriver_ToggleWaterfallScopeDisplay();
-					}
-				}
-				if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	 	// and POWER button pressed-and-held at the same time?
-				{
-					UiDriver_PowerDownCleanup(false); // do not save the configuration
-				}
-				break;
-			case BUTTON_STEPM_PRESSED:
-				if(UiDriver_IsButtonPressed(BUTTON_STEPP_PRESSED))	 	// was button STEP+ pressed at the same time?
-				{
-					ts.frequency_lock = !ts.frequency_lock;
-					// update frequency display
-					UiDriver_FrequencyUpdateLOandDisplay(true);
-				}
-				else
-				{
-					if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))	  // button swap NOT enabled
-					{
-						UiDriver_PressHoldStep(0);	// decrease step size
-					}
-					else  		// button swap enabled
-					{
-						UiDriver_PressHoldStep(1);	// increase step size
-					}
-				}
-				//
-				break;
-			case BUTTON_STEPP_PRESSED:
-				if(UiDriver_IsButtonPressed(BUTTON_STEPM_PRESSED))	 	// was button STEP- pressed at the same time?
-				{
-					ts.frequency_lock = !ts.frequency_lock;
-					// update frequency display
-					UiDriver_FrequencyUpdateLOandDisplay(true);
-				}
-				else
-				{
-					if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))  	// button swap NOT enabled
-					{
-						UiDriver_PressHoldStep(1);	// increase step size
-					}
-					else  		// button swap enabled
-					{
-						UiDriver_PressHoldStep(0);	// decrease step size
-					}
-				}
-				break;
-			default:
-				break;
-			}
-		}
-		// Reset flag, allow other buttons to be checked
-		ks.button_processed = 0;
-		ks.debounce_time	= 0;
-	}
-}
-
+/**
+ * @brief: process hardcoded buttons click and hold
+ */
 void UiDriver_RefreshEncoderDisplay()
 {
 	UiDriver_DisplayEncoderOneMode();
@@ -1644,162 +1143,6 @@ static void UiDriver_PressHoldStep(uchar is_up)
 	//
 	UiDriver_DisplayFreqStepSize();		// update display
 }
-
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverProcessFunctionKeyClick
-//* Object              : process function buttons click
-//* Object              : based on current demod mode
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriver_ProcessFunctionKeyClick(ulong id)
-{
-	//printf("button: %02x\n\r",id);
-
-	// --------------------------------------------
-	// F1 process
-	if(id == BUTTON_F1_PRESSED)
-	{
-		if (ts.keyer_mode) {
-			// NOT IMPLEMENTED: Play macro BTN1
-		} else {
-			if(!ts.mem_disp)	 			// allow only if NOT in memory display mode
-			{
-				if(ts.menu_mode == false)	 	// go into menu mode if NOT already in menu mode and not to halt on startup
-				{
-					ts.menu_mode = 1;
-					ts.encoder3state = filter_path_change;
-					filter_path_change = false;			// deactivate while in menu mode
-					UiDriver_DisplayFilter();
-					UiSpectrum_Clear();
-					UiDriver_FButton_F1MenuExit();
-					UiDriver_FButtonLabel(2,"PREV",Yellow);
-					UiDriver_FButtonLabel(3,"NEXT",Yellow);
-					UiDriver_FButtonLabel(4,"DEFLT",Yellow);
-					//
-					//
-					// Grey out adjustments and put encoders in known states
-					//
-					UiDriver_RefreshEncoderDisplay();
-
-					ts.menu_var = 0;
-					//
-					UiMenu_RenderMenu(MENU_RENDER_ONLY);	// Draw the menu the first time
-					UiMenu_RenderMenu(MENU_PROCESS_VALUE_CHANGE);	// Do update of the first menu item
-				}
-				else	 	// already in menu mode - we now exit
-				{
-					ts.menu_mode = 0;
-					filter_path_change = ts.encoder3state;
-					UiDriver_DisplayFilter();
-					UiSpectrum_Init();			// init spectrum scope
-					//
-					// Restore encoder displays to previous modes
-					UiDriver_RefreshEncoderDisplay();
-					UiDriver_DisplayFilter();	// update bandwidth display
-
-					UiDriver_CreateFunctionButtons(false);
-
-				}
-			}
-		}
-	}
-
-	// --------------------------------------------
-	// F2 process
-	if(id == BUTTON_F2_PRESSED)
-	{
-		if (ts.keyer_mode) {
-			// NOT IMPLEMENTED: Play macro BTN2
-		} else {
-
-		//
-		// If in MENU mode, this restores the DEFAULT setting
-		//
-			if(ts.menu_mode)	 		// Button F2 restores default setting of selected item
-			{
-				UiMenu_RenderPrevScreen();
-			}
-			else
-			{
-#ifdef USE_SNAP
-				sc.snap = 1;
-#else
-			// Not in MENU mode - select the METER mode
-				decr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
-
-				UiDriver_DeleteSMeter();
-				UiDriver_CreateMeters();    // redraw meter
-#endif
-
-			}
-		}
-	}
-
-	// --------------------------------------------
-	// F3 process
-	if(id == BUTTON_F3_PRESSED)
-	{
-		if(ts.menu_mode)	 		// Previous screen
-		{
-			UiMenu_RenderNextScreen();
-		}
-		else	 	// NOT menu mode
-		{
-			if(!ts.vfo_mem_flag)	 		// update screen if in VFO (not memory) mode
-			{
-				UiDriver_SetSplitMode(!is_splitmode());
-			}
-			else	 		// in memory mode
-			{
-				UiSpectrum_Clear();		// always clear displayclear display
-				if(!ts.mem_disp)	 	// are we NOT in memory display mode at this moment?
-				{
-					ts.mem_disp = 1;	// we are not - turn it on
-				}
-				else	 				// we are in memory display mode
-				{
-					ts.mem_disp = 0;	// turn it off
-					UiSpectrum_Init();			// init spectrum scope
-				}
-			}
-		}
-	}
-
-	// --------------------------------------------
-	// F4 process
-	if(id == BUTTON_F4_PRESSED)
-	{
-
-		if (ts.menu_mode)
-		{
-			UiMenu_RenderMenu(MENU_PROCESS_VALUE_SETDEFAULT);
-		}
-		else	 	// NOT menu mode
-		{
-			if (ts.keyer_mode) {
-				// NOT IMPLEMENTED: Delete last character from the buffer
-			} else {
-				UiDriver_ToggleVfoAB();
-			}
-		}
-	}
-
-	// --------------------------------------------
-	// F5 process
-	if(id == BUTTON_F5_PRESSED)
-	{
-		if (ts.keyer_mode) {
-			// NOT IMPLEMENTED: Switch TX/RX modes when in buffered tx mode
-		} else {
-			ts.tune = RadioManagement_Tune(!ts.tune);
-			UiDriver_DisplayPowerLevel();           // tuning may change power level temporarily
-			UiDriver_FButton_F5Tune();
-		}
-	}
-}
-
 
 void UiDriver_DisplayDemodMode()
 {
@@ -2064,9 +1407,44 @@ static void UiDriver_CreateMainFreqDisplay()
 }
 
 //*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCreateDesktop
-//* Object              :
+//* Function Name       : UiDriverCreateFunctionButtons
+//* Object              : function keys based on decoder mode
 //* Input Parameters    :
+//* Output Parameters   :
+//* Functions called    :
+//*----------------------------------------------------------------------------
+static void UiDriver_CreateFunctionButtons(bool full_repaint)
+{
+	// Create bottom bar
+	if(full_repaint)
+	{
+		for (int i = 0; i < 5; i++)
+		{
+			UiLcdHy28_DrawBottomButton((POS_BOTTOM_BAR_X + (POS_BOTTOM_BAR_BUTTON_W+1)*i),(POS_BOTTOM_BAR_Y - 4),POS_BOTTOM_BAR_BUTTON_H,POS_BOTTOM_BAR_BUTTON_W,Grey);
+		}
+	}
+
+	// Button F1
+	UiDriver_DisplayFButton_F1MenuExit();
+
+	// Button F2
+	UiDriver_DisplayFButton_F2SnapMeter();
+
+	// Button F3
+	UiDriver_FButton_F3MemSplit();
+
+	// Button F4
+	UiDriver_FButton_F4ActiveVFO();
+
+	// Button F5
+	UiDriver_FButton_F5Tune();
+}
+
+//
+//*----------------------------------------------------------------------------
+//* Function Name       : UiDriverDrawSMeter
+//* Object              : draw the part of the S meter
+//* Input Parameters    : uchar color
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
@@ -2113,48 +1491,7 @@ static void UiDriver_CreateDesktop()
 	UiLcdHy28_BacklightEnable(true);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCreateFunctionButtons
-//* Object              : function keys based on decoder mode
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void UiDriver_CreateFunctionButtons(bool full_repaint)
-{
-	// Create bottom bar
-	if(full_repaint)
-	{
-		for (int i = 0; i < 5; i++)
-		{
-			UiLcdHy28_DrawBottomButton((POS_BOTTOM_BAR_X + (POS_BOTTOM_BAR_BUTTON_W+1)*i),(POS_BOTTOM_BAR_Y - 4),POS_BOTTOM_BAR_BUTTON_H,POS_BOTTOM_BAR_BUTTON_W,Grey);
-		}
-	}
 
-	// Button F1
-	UiDriver_FButton_F1MenuExit();
-
-	// Button F2
-	UiDriver_FButton_F2SnapMeter();
-
-	// Button F3
-	UiDriver_FButton_F3MemSplit();
-
-	// Button F4
-	UiDriver_FButton_F4ActiveVFO();
-
-	// Button F5
-	UiDriver_FButton_F5Tune();
-}
-
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverDrawSMeter
-//* Object              : draw the part of the S meter
-//* Input Parameters    : uchar color
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void UiDriver_DrawSMeter(ushort color)
 {
 	uchar 	i,v_s;
@@ -3100,6 +2437,7 @@ void UiDriver_KeyboardProcessOldClicks()
 }
 
 
+
 enum TRX_States_t
 {
 	TRX_STATE_TX_TO_RX,
@@ -3230,10 +2568,10 @@ static void UiDriver_TimeScheduler()
 		}
 
 		if(audio_spkr_delayed_unmute_active  && ts.audio_spkr_unmute_delay_count == 0)	 	// did timer hit zero
-				{
+		{
 			audio_spkr_delayed_unmute_active = false;
 			audio_spkr_volume_update_request = true;
-				}
+		}
 
 
 
@@ -3826,7 +3164,7 @@ static void UiDriver_CheckEncoderTwo()
 					break;
 				case ENC_TWO_MODE_RF_GAIN:
 					if(ts.dmod_mode != DEMOD_FM)	 	// is this *NOT* FM?  Change RF gain
-							{
+					{
 						if(!ts.agc_wdsp)
 						{
 							// Convert to Audio Gain incr/decr
@@ -3838,7 +3176,7 @@ static void UiDriver_CheckEncoderTwo()
 							ts.agc_wdsp_thresh = change_and_limit_int(ts.agc_wdsp_thresh,pot_diff_step,-20,120);
 							AudioDriver_SetupAGC();
 						}
-							}
+					}
 					else	 		// it is FM - change squelch setting
 					{
 						ts.fm_sql_threshold = change_and_limit_uint(ts.fm_sql_threshold,pot_diff_step,0,FM_SQUELCH_MAX);
@@ -5941,6 +5279,679 @@ void UiDriver_StartUpScreenFinish()
 	UiDriver_UpdateDisplayAfterParamChange();
 }
 
+// UiAction_... are typically small functions to execute a specific ui function initiate by a key press or touch event
+// they take no argument and return nothing. If possible, try to keep the function atomic and independent from the
+// key or touch region it is assigned to. I.e. it is better not to implement 2 functions based on menu mode or not here
+// this logic should done separately so that the resulting action is reusable in different activation scenarios (touch or key or even CAT)
+// If execution of an action is not applicable all the times it is necessary to check if the function should check that
+// by itself and become a "No operation" or even issues a message, or if this is to be implicitly handled by the use of the
+// function only in certain modes of operation through the modes tables.
+
+// TODO: Make Atomic
+static void UiAction_ChangeLowerMeterDownOrSnap()
+{
+#ifdef USE_SNAP
+	sc.snap = 1;
+#else
+	// Not in MENU mode - select the METER mode
+	decr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
+	UiDriver_DeleteSMeter();
+	UiDriver_CreateMeters();    // redraw meter
+#endif
+}
+
+static void UiAction_ChangeLowerMeterUp()
+{
+	incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
+	UiDriver_DeleteSMeter();
+	UiDriver_CreateMeters();	// redraw meter
+}
+
+static void UiAction_ChangeToNextDspMode()
+{
+	if(ts.dmod_mode != DEMOD_FM)	  // allow selection/change of DSP only if NOT in FM
+	{
+		//
+		// I think we should alter this to use a counter
+		// What do we want to switch here:
+		// NR ON/OFF		ts.dsp_active |= DSP_NR_ENABLE;	 // 	ts.dsp_active &= ~DSP_NR_ENABLE;
+		// NOTCH ON/OFF		ts.dsp_active |= DSP_NOTCH_ENABLE; // 	ts.dsp_active &= ~DSP_NOTCH_ENABLE;
+		// Manual Notch		ts.dsp_active |= DSP_MNOTCH_ENABLE
+		// BASS				ts.bass // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
+		// TREBLE			ts.treble // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
+
+		ts.dsp_mode ++; // switch mode
+		// 0 = everything OFF, 1 = NR, 2 = automatic NOTCH, 3 = NR + NOTCH, 4 = manual NOTCH, 5 = BASS adjustment, 6 = TREBLE adjustment
+		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
+		//
+		// prevent certain modes to prevent CPU crash
+		//
+		// prevent NR AND NOTCH, when in CW
+		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
+		// prevent NOTCH, when in CW
+		if (ts.dsp_mode == DSP_SWITCH_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
+		// prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
+		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ )) ts.dsp_mode++;
+
+		switch (ts.dsp_mode)
+		{
+
+		case DSP_SWITCH_OFF: // switch off everything
+			ts.dsp_active =  (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+			break;
+		case DSP_SWITCH_NR:
+			ts.dsp_active =  DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+			ts.enc_two_mode = ENC_TWO_MODE_NR;
+			break;
+		case DSP_SWITCH_NOTCH:
+			ts.dsp_active =  DSP_NOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+			break;
+		case DSP_SWITCH_NR_AND_NOTCH:
+			ts.dsp_active =  DSP_NOTCH_ENABLE | DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+			ts.enc_two_mode = ENC_TWO_MODE_NR;
+			break;
+		case DSP_SWITCH_NOTCH_MANUAL:
+			ts.dsp_active =  DSP_MNOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MPEAK_ENABLE));
+			ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
+			break;
+		case DSP_SWITCH_PEAK_FILTER:
+			ts.dsp_active =  DSP_MPEAK_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE));
+			ts.enc_two_mode = ENC_TWO_MODE_PEAK_F;
+			break;
+		default:
+			break;
+		}
+
+		ts.dsp_active_toggle = ts.dsp_active;  // save update in "toggle" variable
+		// reset DSP NR coefficients
+		AudioDriver_SetRxAudioProcessing(ts.dmod_mode, true);        // update DSP/filter settings
+		UiDriver_DisplayEncoderTwoMode();         // DSP control is mapped to column 2
+	}
+}
+
+
+static void UiAction_ChangeSpectrumZoomLevelDown()
+{
+	ts.menu_var_changed = 1;
+	decr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
+
+	UiDriver_SpectrumZoomChangeLevel();
+}
+
+static void UiAction_ChangeSpectrumZoomLevelUp()
+{
+	ts.menu_var_changed = 1;
+	incr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
+	UiDriver_SpectrumZoomChangeLevel();
+}
+
+static void UiAction_ChangeFrequencyToNextKhz()
+{
+	df.tune_new = floor(df.tune_new / (TUNE_MULT*1000)) * (TUNE_MULT*1000);	// set last three digits to "0"
+	UiDriver_FrequencyUpdateLOandDisplay(true);
+}
+
+static void UiAction_ToggleWaterfallScopeDisplay()
+{
+	if(is_waterfallmode())
+	{
+		// is the waterfall mode active?
+		ts.flags1 &=  ~FLAGS1_WFALL_SCOPE_TOGGLE;     // yes, turn it off
+	}
+	else
+	{
+		// waterfall mode was turned off
+		ts.flags1 |=  FLAGS1_WFALL_SCOPE_TOGGLE;          // turn it on
+	}
+	UiSpectrum_Init();   // init spectrum display
+}
+
+static void UiAction_ChangeDemodMode()
+{
+	if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	 	// do NOT allow mode change in TUNE mode or transmit mode
+	{
+		UiDriver_ChangeToNextDemodMode(0);
+	}
+}
+static void UiAction_ChangeDemodModeToAlternativeMode()
+{
+	if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	 	// do NOT allow mode change in TUNE mode or transmit mode
+	{
+		UiDriver_ChangeToNextDemodMode(1);
+	}
+}
+
+static void UiAction_ChangePowerLevel()
+{
+	UiDriver_HandlePowerLevelChange(ts.power_level+1);
+}
+
+static void UiAction_ChangeAudioSource()
+{
+	if(ts.dmod_mode != DEMOD_CW)
+	{
+		incr_wrap_uint8(&ts.tx_audio_source,0,TX_AUDIO_MAX_ITEMS);
+
+		UiDriver_DisplayEncoderThreeMode();
+	}
+}
+
+// TODO: Decide if we really want to switch
+// order like for the normal buttons
+static void UiAction_ChangeBandDownOrUp()
+{
+	UiDriver_HandleBandButtons(BUTTON_BNDM);
+}
+
+static void UiAction_ChangeBandUpOrDown()
+{
+	UiDriver_HandleBandButtons(BUTTON_BNDP);
+}
+
+static void UiAction_SaveConfigurationToMemory()
+{
+	if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode
+	{
+		UiSpectrum_Clear();
+		UiDriver_SaveConfiguration();
+		HAL_Delay(3000);
+
+		ts.menu_var_changed = 0;                    // clear "EEPROM SAVE IS NECESSARY" indicators
+		UiDriver_DisplayFButton_F1MenuExit();
+
+		if(ts.menu_mode)
+		{
+			UiMenu_RenderMenu(MENU_RENDER_ONLY);    // update menu display, was destroyed by message
+		}
+		else
+		{
+			UiSpectrum_Init();          // not in menu mode, redraw spectrum scope
+		}
+	}
+}
+
+static void UiAction_ChangeFrequencyByTouch()
+{
+	if (ts.frequency_lock == false)
+	{
+		int step = 2000;				// adjust to 500Hz
+
+		if(sd.magnify == 3)
+		{
+			step = 400;					// adjust to 100Hz
+		}
+		if(sd.magnify > 3)
+		{
+			step = 200;					// adjust to 50Hz
+		}
+		if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
+		{
+			step = 20000;				// adjust to 5KHz
+		}
+
+		uint16_t line = 29;				// x-position of rx frequency in middle position
+		if(sd.magnify == 0)					// x-position differs in translated modes if not magnified
+		{
+			switch(ts.iq_freq_mode)
+			{
+			case FREQ_IQ_CONV_P6KHZ:
+				line = 25;
+				break;
+			case FREQ_IQ_CONV_M6KHZ:
+				line = 35;
+				break;
+			case FREQ_IQ_CONV_P12KHZ:
+				line = 19;
+				break;
+			case FREQ_IQ_CONV_M12KHZ:
+				line = 43;
+				break;
+			default:
+				line = 29;
+			}
+		}
+
+		uint32_t tunediff = ((1000)/(1 << sd.magnify))*(ts.tp->x-line)*TUNE_MULT;
+		df.tune_new = lround((df.tune_new + tunediff)/step) * step;
+		UiDriver_FrequencyUpdateLOandDisplay(true);
+	}
+}
+
+static void UiAction_ChangeDigitalMode()
+{
+	incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_RTTY);
+	// We limit the reachable modes to the ones truly available
+	// which is FreeDV1 and RTTY for now
+	UiDriver_ToggleDigitalMode();
+}
+
+static void UiAction_ChangeDynamicTuning()
+{
+	if (!(ts.flags1 & FLAGS1_DYN_TUNE_ENABLE))			// is it off??
+	{
+		ts.flags1 |= FLAGS1_DYN_TUNE_ENABLE;	// then turn it on
+	}
+	else
+	{
+		ts.flags1 &= ~FLAGS1_DYN_TUNE_ENABLE;	// then turn it off
+	}
+
+	UiDriver_DisplayFreqStepSize();
+}
+
+static void UiAction_ChangeDebugInfoDisplay()
+{
+	UiDriver_DebugInfo_DisplayEnable(!ts.show_debug_info);
+}
+
+static void UiAction_ChangeRfModPresence()
+{
+	ts.rfmod_present = !ts.rfmod_present;
+}
+
+static void UiAction_ChangeVhfUhfModPresence()
+{
+	ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
+}
+
+static void UiAction_ChangeFilterBW()
+{
+	if(!ts.tune)
+	{
+		if (filter_path_change == true)
+		{
+			filter_path_change = false;
+		}
+		else
+		{
+			AudioFilter_NextApplicableFilterPath(PATH_USE_RULES,AudioFilter_GetFilterModeFromDemodMode(ts.dmod_mode),ts.filter_path);
+			// we store the new filter in the current active filter location
+			AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+			// we activate it (in fact the last used one, which is the newly selected one);
+		}
+		// Change filter
+		UiDriver_UpdateDisplayAfterParamChange();		// re-init for change of filter including display updates
+		UiDriver_DisplayEncoderThreeMode();
+	}
+}
+
+static void UiAction_ChangeTuningStepDownOrUp()
+{
+	UiDriver_ChangeTuningStep(ts.freq_step_config & FREQ_STEP_SWAP_BTN? true: false);
+}
+
+static void UiAction_ChangeTuningStepUpOrDown()
+{
+	UiDriver_ChangeTuningStep(ts.freq_step_config & FREQ_STEP_SWAP_BTN? false: true);
+}
+
+static void UiAction_ChangeBacklightBrightness()
+{
+	incr_wrap_uint8(&ts.lcd_backlight_brightness,0,3);
+}
+
+static void UiAction_ToggleTxDisable()
+{
+	if(ts.txrx_mode == TRX_MODE_RX)			// do NOT allow mode change in TUNE mode or transmit mode
+	{
+		if( RadioManagement_IsTxDisabledBy(TX_DISABLE_USER) == false)
+		{
+			ts.tx_disable |= TX_DISABLE_USER;
+		}
+		else
+		{
+			ts.tx_disable &= ~TX_DISABLE_USER;
+		}
+		UiDriver_FButton_F5Tune();
+	}
+}
+
+static void UiAction_ToggleVfoMem()
+{
+	RadioManagement_ToggleVfoMem();
+	UiDriver_FButton_F3MemSplit();
+}
+
+static void UiAction_ToggleDspEnable()
+{
+	if(ts.dmod_mode != DEMOD_FM)	 		// do not allow change of mode when in FM
+	{
+		if(is_dsp_nr()|| is_dsp_notch() || is_dsp_mnotch() || is_dsp_mpeak())	 			// is any DSP function active?
+		{
+			ts.dsp_active_toggle = ts.dsp_active;	// save setting for future toggling
+
+			ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE |DSP_MNOTCH_ENABLE | DSP_MPEAK_ENABLE);				// turn off NR and notch
+
+			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+		}
+		else	 		// neither notch or NR was active
+		{
+			if(ts.dsp_active_toggle != 0xff)	 	// has this holder been used before?
+			{
+				ts.dsp_active = ts.dsp_active_toggle;	// yes - load value
+			}
+		}
+		AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);	// update DSP settings
+		UiDriver_DisplayEncoderTwoMode();
+	}
+}
+
+// TODO: Split into separate actions and a composition
+static void UiAction_ChangeRxFilterOrFmToneBurst()
+{
+	if((!ts.tune) && (ts.txrx_mode == TRX_MODE_RX))	  // only allow in receive mode and when NOT in FM
+	{
+		filter_path_change = true;
+		UiDriver_DisplayFilter();
+		UiDriver_DisplayEncoderThreeMode();
+	}
+	else if((ts.txrx_mode == TRX_MODE_TX) && (ts.dmod_mode == DEMOD_FM))
+	{
+		if(ts.fm_tone_burst_mode != FM_TONE_BURST_OFF)	 	// is tone burst mode enabled?
+		{
+			ads.fm_tone_burst_active = 1;					// activate the tone burst
+			ts.fm_tone_burst_timing = ts.sysclock + FM_TONE_BURST_DURATION;	// set the duration/timing of the tone burst
+		}
+	}
+}
+
+static void UiAction_ToggleNoiseblanker()
+{
+	ts.dsp_active ^= DSP_NB_ENABLE;	// toggle whether or not DSP or NB is to be displayed
+	UiDriver_DisplayEncoderTwoMode();
+}
+
+static void UiAction_ToggleTuneMode()
+{
+	ts.tune = RadioManagement_Tune(!ts.tune);
+	UiDriver_DisplayPowerLevel();           // tuning may change power level temporarily
+	UiDriver_FButton_F5Tune();
+}
+
+static void UiAction_ToggleSplitModeOrToggleMemMode()
+{
+	if(!ts.vfo_mem_flag)	 		// update screen if in VFO (not memory) mode
+	{
+		UiDriver_SetSplitMode(!is_splitmode());
+	}
+	else	 		// in memory mode
+	{
+		UiSpectrum_Clear();		// always clear display
+		ts.mem_disp = !ts.mem_disp;
+		if (ts.mem_disp == 0 )
+		{
+			UiSpectrum_Init();	// init spectrum scope
+		}
+	}
+}
+
+static void UiAction_ToggleMenuMode()
+{
+	if(!ts.mem_disp)	 			// allow only if NOT in memory display mode
+	{
+		if(ts.menu_mode == false)	 	// go into menu mode if NOT already in menu mode and not to halt on startup
+		{
+			ts.menu_mode = 1;
+			ts.encoder3state = filter_path_change;
+			filter_path_change = false;			// deactivate while in menu mode
+			UiDriver_DisplayFilter();
+			UiSpectrum_Clear();
+			UiDriver_DisplayFButton_F1MenuExit();
+			UiDriver_DrawFButtonLabel(2,"PREV",Yellow);
+			UiDriver_DrawFButtonLabel(3,"NEXT",Yellow);
+			UiDriver_DrawFButtonLabel(4,"DEFLT",Yellow);
+			//
+			//
+			// Grey out adjustments and put encoders in known states
+			//
+			UiDriver_RefreshEncoderDisplay();
+
+			ts.menu_var = 0;
+			//
+			UiMenu_RenderMenu(MENU_RENDER_ONLY);	// Draw the menu the first time
+			UiMenu_RenderMenu(MENU_PROCESS_VALUE_CHANGE);	// Do update of the first menu item
+		}
+	}
+	else	 	// already in menu mode - we now exit
+	{
+		ts.menu_mode = 0;
+		filter_path_change = ts.encoder3state;
+		UiDriver_DisplayFilter();
+		UiSpectrum_Init();			// init spectrum scope
+
+		// Restore encoder displays to previous modes
+		UiDriver_RefreshEncoderDisplay();
+		UiDriver_DisplayFilter();	// update bandwidth display
+		UiDriver_CreateFunctionButtons(false);
+	}
+}
+
+static void UiAction_ToggleKeyerMode()
+{
+	ts.keyer_mode = !ts.keyer_mode;
+	UiDriver_CreateFunctionButtons(false);
+}
+
+static void UiAction_BandMinusHold()
+{
+	if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	 	// and POWER button pressed-and-held at the same time?
+	{
+		UiDriver_LcdBlankingStealthSwitch();
+	}
+	else if(UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))	 	// and BAND-UP pressed at the same time?
+	{
+		if(!ts.menu_mode)	 			// do not do this in menu mode!
+		{
+			UiAction_ToggleWaterfallScopeDisplay();
+		}
+	}
+}
+
+static void UiAction_BandPlusHold()
+{
+	if(UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED))	 	// and BAND-DOWN pressed at the same time?
+	{
+		if(!ts.menu_mode)	 		// do not do this if in menu mode!
+		{
+			UiAction_ToggleWaterfallScopeDisplay();
+		}
+	}
+	if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	 	// and POWER button pressed-and-held at the same time?
+	{
+		UiDriver_PowerDownCleanup(false); // do not save the configuration
+	}
+}
+
+static void UiAction_PowerHold()
+{
+	if(UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED))	 	// was button BAND- pressed at the same time?
+	{
+		UiDriver_LcdBlankingStealthSwitch();
+	}
+	else
+	{
+		// ONLY the POWER button was pressed
+		if(ts.txrx_mode == TRX_MODE_RX)  		// only allow power-off in RX mode
+		{
+			UiDriver_PowerDownCleanup(true);
+		}
+	}
+}
+
+static void UiAction_StepMinusHold()
+{
+	if(UiDriver_IsButtonPressed(BUTTON_STEPP_PRESSED))	 	// was button STEP+ pressed at the same time?
+	{
+		ts.frequency_lock = !ts.frequency_lock;
+		// update frequency display
+		UiDriver_FrequencyUpdateLOandDisplay(true);
+	}
+	else
+	{
+		if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))	  // button swap NOT enabled
+		{
+			UiDriver_PressHoldStep(0);	// decrease step size
+		}
+		else  		// button swap enabled
+		{
+			UiDriver_PressHoldStep(1);	// increase step size
+		}
+	}
+}
+
+static void UiAction_MenuSetDefaultValue()
+{
+	UiMenu_RenderMenu(MENU_PROCESS_VALUE_SETDEFAULT);
+}
+
+static void UiAction_StepPlusHold()
+{
+	if(UiDriver_IsButtonPressed(BUTTON_STEPM_PRESSED))	 	// was button STEP- pressed at the same time?
+	{
+		ts.frequency_lock = !ts.frequency_lock;
+		// update frequency display
+		UiDriver_FrequencyUpdateLOandDisplay(true);
+	}
+	else
+	{
+		if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))  	// button swap NOT enabled
+		{
+			UiDriver_PressHoldStep(1);	// increase step size
+		}
+		else  		// button swap enabled
+		{
+			UiDriver_PressHoldStep(0);	// decrease step size
+		}
+	}
+}
+// these maps control the touch regions to function mapping in a specific mode
+// this is the normal mode, available when not in menu mode
+static const touchaction_descr_t touchactions_normal[] =
+{
+		{ { 19,60,48,60 }, UiAction_ChangeLowerMeterUp },  // Lower Meter: Meter Toggle
+		{ { 10,28,27,31 }, UiAction_ToggleWaterfallScopeDisplay }, // Spectrum Bar Left Part: WaterfallScope Toggle
+		{ { 29,33,26,32 }, UiAction_ChangeSpectrumZoomLevelDown }, // Spectrum Bar Middle Part: Decrease Zoom Level
+		{ { 52,60,26,32 }, UiAction_ChangeSpectrumZoomLevelUp }, // Spectrum Bar Right Part: Increase Zoom Level
+		{ { 43,60,00,04 }, UiAction_ChangeFrequencyToNextKhz }, // Tune button:Set last 3 digits to zero
+		{ { 16,24,40,44 }, UiAction_ChangeDemodMode }, // Demod Mode Box: mode switch
+		{ { 16,24,45,48 }, UiAction_ChangePowerLevel }, // Power Box: TX Power Increase
+		{ { 10,16,44,50 }, UiAction_ChangeAudioSource }, // Audio In Box: Switch Source
+		{ { 48,52,35,37 }, UiAction_ChangeBandDownOrUp }, // Left Part Band Display: Band down
+		{ { 53,60,35,37 }, UiAction_ChangeBandUpOrDown }, // Right Part Band Display: Band up
+		{ { 00,07,21,30 }, Codec_RestartI2S }, // DSP Box: Restart I2S
+		{ { 8,60,11,19  }, UiAction_ChangeFrequencyByTouch }, // Scope Draw Area: Tune to Touch
+		{ { 0,7,10,13   }, UiAction_ChangeDigitalMode }, // Digital Mode Box: Switch Digi Mode
+		{ { 26,35,39,46 }, UiAction_ChangeDynamicTuning }, // Step Box: Dynamic Tuning Toggle
+};
+
+// this is the map for menu mode, right now only used for debugging/experimental purposes
+static const touchaction_descr_t touchactions_menu[] =
+{
+		{ { 54,57,55,57 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
+		{ { 46,49,55,57 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
+		{ { 50,53,55,57 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
+};
+
+static const touchaction_list_descr_t touch_regions[] =
+{
+		// ATTENATION: the size calculation only works for true arrays, not for pointers!
+		{ touchactions_normal, sizeof(touchactions_normal)/sizeof(*touchactions_normal) },
+		{ touchactions_menu, sizeof(touchactions_menu)/sizeof(*touchactions_menu) },
+};
+
+static void UiDriver_HandleTouchScreen()
+{
+	if(is_touchscreen_pressed())
+	{
+		if (ts.show_debug_info)					// show coordinates for coding purposes
+		{
+			char text[10];
+			snprintf(text,10,"%02d%s%02d%s",ts.tp->x," : ",ts.tp->y,"  ");
+			UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,text,White,Black,0);
+		}
+
+		uint32_t touchaction_idx = ts.menu_mode == true?1:0;
+
+		UiDriver_ProcessTouchActions(&touch_regions[touchaction_idx]);
+
+		ts.tp->state = TP_DATASETS_PROCESSED;							// set statemachine to data fetched
+	}
+}
+
+static const keyaction_descr_t keyactions_normal[] =
+{
+		{ TOUCHSCREEN_ACTIVE, 	UiDriver_HandleTouchScreen },
+		{ BUTTON_F1_PRESSED, 	UiAction_ToggleMenuMode, 					UiAction_SaveConfigurationToMemory },
+		{ BUTTON_F2_PRESSED, 	UiAction_ChangeLowerMeterDownOrSnap, 		UiAction_ChangeLowerMeterUp },
+		{ BUTTON_F3_PRESSED, 	UiAction_ToggleSplitModeOrToggleMemMode, 	UiAction_ToggleVfoMem },
+		{ BUTTON_F4_PRESSED, 	UiAction_ToggleVfoAB, 						UiAction_CopyVfoAB },
+		{ BUTTON_F5_PRESSED, 	UiAction_ToggleTuneMode,					UiAction_ToggleTxDisable },
+		{ BUTTON_G1_PRESSED, 	UiAction_ChangeDemodMode,					UiAction_ChangeDemodModeToAlternativeMode },
+		{ BUTTON_G2_PRESSED, 	UiAction_ChangeToNextDspMode,				UiAction_ToggleDspEnable },
+		{ BUTTON_G3_PRESSED, 	UiAction_ChangePowerLevel,					KEYACTION_NOP },
+		{ BUTTON_G4_PRESSED, 	UiAction_ChangeFilterBW,					UiAction_ChangeRxFilterOrFmToneBurst },
+		{ BUTTON_M1_PRESSED, 	UiDriver_ChangeEncoderOneMode,				UiAction_ToggleKeyerMode },
+		{ BUTTON_M2_PRESSED, 	UiDriver_ChangeEncoderTwoMode,				UiAction_ToggleNoiseblanker },
+		{ BUTTON_M3_PRESSED, 	UiDriver_ChangeEncoderThreeMode,			UiAction_ChangeAudioSource },
+		{ BUTTON_STEPM_PRESSED, UiAction_ChangeTuningStepDownOrUp,			UiAction_StepMinusHold },
+		{ BUTTON_STEPP_PRESSED, UiAction_ChangeTuningStepUpOrDown,			UiAction_StepPlusHold },
+		{ BUTTON_BNDM_PRESSED, 	UiAction_ChangeBandDownOrUp,				UiAction_BandMinusHold },
+		{ BUTTON_BNDP_PRESSED,  UiAction_ChangeBandUpOrDown,				UiAction_BandPlusHold },
+		{ BUTTON_POWER_PRESSED, UiAction_ChangeBacklightBrightness,			UiAction_PowerHold },
+};
+
+static const keyaction_descr_t keyactions_menu[] =
+{
+		{ BUTTON_F2_PRESSED, 	(void(*)())UiMenu_RenderPrevScreen, 		UiMenu_RenderFirstScreen },
+		{ BUTTON_F3_PRESSED, 	(void(*)())UiMenu_RenderNextScreen, 		UiMenu_RenderLastScreen },
+		{ BUTTON_F4_PRESSED, 	UiAction_MenuSetDefaultValue,				KEYACTION_NOP },
+};
+
+static const keyaction_descr_t keyactions_keyer[] =
+{
+		{ BUTTON_F1_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
+		{ BUTTON_F2_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
+		{ BUTTON_F3_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
+		{ BUTTON_F4_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
+		{ BUTTON_F5_PRESSED, 	KEYACTION_NOP,		KEYACTION_NOP },
+};
+
+static const keyaction_list_descr_t key_sets[] =
+{
+		// ATTENATION: the size calculation only works for true arrays, not for pointers!
+		{ keyactions_normal, sizeof(keyactions_normal)/sizeof(*keyactions_normal) },
+		{ keyactions_menu, sizeof(keyactions_menu)/sizeof(*keyactions_menu) },
+		{ keyactions_keyer, sizeof(keyactions_keyer)/sizeof(*keyactions_keyer) },
+};
+
+static void UiDriver_HandleKeyboard()
+{
+	if(ks.button_processed)
+	{
+		UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
+		AudioManagement_KeyBeep();  // make keyboard beep, if enabled
+
+		bool keyIsProcessed = false;
+		if (ts.keyer_mode == true)
+		{
+			keyIsProcessed = UiDriver_ProcessKeyActions(&key_sets[2]);
+		}
+		if (ts.menu_mode == true)
+		{
+			keyIsProcessed = UiDriver_ProcessKeyActions(&key_sets[1]);
+		}
+		if (keyIsProcessed == false)
+		{
+			keyIsProcessed = UiDriver_ProcessKeyActions(&key_sets[0]);
+		}
+		// Reset flag, allow other buttons to be checked
+		ks.button_processed = 0;
+		ks.debounce_time	= 0;
+	}
+}
+
 
 typedef enum {
 	SCTimer_ENCODER_KEYS =0, // 10ms
@@ -5998,9 +6009,9 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 
 
 #ifdef USE_USBHOST
-	#include "usb_host.h"
-	#include "usbh_core.h"
-	#include "usbh_hid_keybd.h"
+#include "usb_host.h"
+#include "usbh_core.h"
+#include "usbh_hid_keybd.h"
 extern USBH_HandleTypeDef hUsbHostHS;
 #endif
 
@@ -6131,22 +6142,22 @@ void UiDriver_MainHandler()
 			{
 				UiDriver_HandleLoTemperature();
 #if 1
-ProfilingTimedEvent* pe_ptr = profileTimedEventGet(ProfileAudioInterrupt);
+				ProfilingTimedEvent* pe_ptr = profileTimedEventGet(ProfileAudioInterrupt);
 
-// Percent audio interrupt load  = Num of cycles per audio interrupt  / ((max num of cycles between two interrupts ) / 100 )
-                		//
-						// Num of cycles per audio interrupt = cycles for all counted interrupts / number of interrupts
-// Max num of cycles between two interrupts / 100 = HCLK frequency / Interruptfrequenz -> e.g. 168000000 / 1500 / 100 = 1120
-// FIXME: Need to figure out which clock is being used, 168000000 in mcHF, I40 UI = 168.000.000 or 216.000.000 or something else...
+				// Percent audio interrupt load  = Num of cycles per audio interrupt  / ((max num of cycles between two interrupts ) / 100 )
+				//
+				// Num of cycles per audio interrupt = cycles for all counted interrupts / number of interrupts
+				// Max num of cycles between two interrupts / 100 = HCLK frequency / Interruptfrequenz -> e.g. 168000000 / 1500 / 100 = 1120
+				// FIXME: Need to figure out which clock is being used, 168000000 in mcHF, I40 UI = 168.000.000 or 216.000.000 or something else...
 
-uint32_t load =  pe_ptr->duration / (pe_ptr->count * (1120));
-profileTimedEventReset(ProfileAudioInterrupt);
-char str[20];
-snprintf(str,20,"L%3u%%",(unsigned int)load);
-if(ts.show_debug_info)
-{
-	UiLcdHy28_PrintText(280,POS_LOADANDDEBUG,str,White,Black,5);
-}
+				uint32_t load =  pe_ptr->duration / (pe_ptr->count * (1120));
+				profileTimedEventReset(ProfileAudioInterrupt);
+				char str[20];
+				snprintf(str,20,"L%3u%%",(unsigned int)load);
+				if(ts.show_debug_info)
+				{
+					UiLcdHy28_PrintText(280,POS_LOADANDDEBUG,str,White,Black,5);
+				}
 #endif
 			}
 			if (UiDriver_TimerExpireAndRewind(SCTimer_RTC,now,100))
@@ -6185,7 +6196,7 @@ if(ts.show_debug_info)
 			}
 			break;
 		case STATE_PROCESS_KEYBOARD:
-			UiDriver_ProcessKeyboard();
+			UiDriver_HandleKeyboard();
 			break;
 		case STATE_DISPLAY_SAM_CARRIER:
 			if (UiDriver_TimerExpireAndRewind(SCTimer_RTC,now,25))
