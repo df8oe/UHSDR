@@ -1004,23 +1004,29 @@ static void UiDriver_FButton_F1MenuExit()
 {
 	char* label;
 	uint32_t color;
-	if(!ts.menu_var_changed)
-	{
-		if (ts.menu_mode)
+
+	if (ts.keyer_mode) {
+		label = "BTN1";
+		color = White;
+	} else {
+		if(!ts.menu_var_changed)
 		{
-			label = "EXIT";
-			color = Yellow;
+			if (ts.menu_mode)
+			{
+				label = "EXIT";
+				color = Yellow;
+			}
+			else
+			{
+				label = "MENU";
+				color = White;
+			}
 		}
 		else
 		{
-			label = "MENU";
-			color = White;
+			label = ts.menu_mode?"EXIT *":"MENU *";
+			color = Orange;
 		}
-	}
-	else
-	{
-		label = ts.menu_mode?"EXIT *":"MENU *";
-		color = Orange;
 	}
 	UiDriver_FButtonLabel(1,label,color);
 }
@@ -1031,13 +1037,19 @@ static void UiDriver_FButton_F2SnapMeter()
 	const char* cap;
 	uint32_t color;
 
+	if (ts.keyer_mode) {
+		cap = "BTN2";
+		color = White;
+	} else {
+
 #ifdef SNAP
-	cap = "SNAP";
-	color = White;    // yes - indicate with color
+		cap = "SNAP";
+		color = White;    // yes - indicate with color
 #else
-	color = White;
-	cap = "METER";
+		color = White;
+		cap = "METER";
 #endif
+	}
 	UiDriver_FButtonLabel(2,cap,color);
 }
 
@@ -1048,29 +1060,48 @@ static void UiDriver_FButton_F3MemSplit()
 	const char* cap;
 	uint32_t color;
 
-	if(ts.vfo_mem_flag)            // is it in VFO mode now?
-	{
-		cap = "MEM";
-		color = White;    // yes - indicate with color
-	}
-	else
-	{
-		color = is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
-		cap = "SPLIT";
+	if (ts.keyer_mode) {
+		cap = "BTN3";
+		color = White;
+	} else {
+		if(ts.vfo_mem_flag)            // is it in VFO mode now?
+		{
+			cap = "MEM";
+			color = White;    // yes - indicate with color
+		}
+		else
+		{
+			color = is_splitmode()?SPLIT_ACTIVE_COLOUR:SPLIT_INACTIVE_COLOUR;
+			cap = "SPLIT";
+		}
 	}
 	UiDriver_FButtonLabel(3,cap,color);
 }
 
 
 static inline void UiDriver_FButton_F4ActiveVFO() {
-	UiDriver_FButtonLabel(4,is_vfo_b()?"VFO B":"VFO A",White);
+	if (ts.keyer_mode) {
+		UiDriver_FButtonLabel(4,"DEL",White);
+	} else {
+		UiDriver_FButtonLabel(4,is_vfo_b()?"VFO B":"VFO A",White);
+	}
 }
 
 static inline void UiDriver_FButton_F5Tune()
 {
 	uint32_t color;
+	const char* cap;
 	color = RadioManagement_IsTxDisabled() ? Grey1:(ts.tune?Red:White);
-	UiDriver_FButtonLabel(5,"TUNE",color);
+	if (ts.keyer_mode) {
+		if (ts.buffered_tx) {
+			cap = "UNBUF";
+		} else {
+			cap = "TX/RX";
+		}
+	} else {
+		cap = "TUNE";
+	}
+	UiDriver_FButtonLabel(5,cap,color);
 }
 
 
@@ -1274,22 +1305,26 @@ static void UiDriver_ProcessKeyboard()
 			switch(ks.button_id)
 			{
 			case BUTTON_F1_PRESSED:	// Press-and-hold button F1:  Write settings to EEPROM
-				if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode
-				{
-					UiSpectrum_Clear();
-					UiDriver_SaveConfiguration();
-					HAL_Delay(3000);
-
-					ts.menu_var_changed = 0;                    // clear "EEPROM SAVE IS NECESSARY" indicators
-					UiDriver_FButton_F1MenuExit();
-
-					if(ts.menu_mode)
+				if(ts.keyer_mode) {
+					// NOT IMPLEMENTED: Record macro for BTN1
+				} else {
+					if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode
 					{
-						UiMenu_RenderMenu(MENU_RENDER_ONLY);    // update menu display, was destroyed by message
-					}
-					else
-					{
-						UiSpectrum_Init();          // not in menu mode, redraw spectrum scope
+						UiSpectrum_Clear();
+						UiDriver_SaveConfiguration();
+						HAL_Delay(3000);
+
+						ts.menu_var_changed = 0;                    // clear "EEPROM SAVE IS NECESSARY" indicators
+						UiDriver_FButton_F1MenuExit();
+
+						if(ts.menu_mode)
+						{
+							UiMenu_RenderMenu(MENU_RENDER_ONLY);    // update menu display, was destroyed by message
+						}
+						else
+						{
+							UiSpectrum_Init();          // not in menu mode, redraw spectrum scope
+						}
 					}
 				}
 				break;
@@ -1301,11 +1336,15 @@ static void UiDriver_ProcessKeyboard()
 				}
 				else
 				{
-					// Not in MENU mode - select the METER mode
-					incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
+					if(ts.keyer_mode) {
+						// NOT IMPLEMENTED: Record macro for BTN2
+					} else {
+						// Not in MENU mode - select the METER mode
+						incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
 
-					UiDriver_DeleteSMeter();
-					UiDriver_CreateMeters();	// redraw meter
+						UiDriver_DeleteSMeter();
+						UiDriver_CreateMeters();	// redraw meter
+					}
 				}
 				break;
 			case BUTTON_F3_PRESSED:	// Press-and-hold button F3
@@ -1317,29 +1356,41 @@ static void UiDriver_ProcessKeyboard()
 				}
 				else	 			// not in menu mode - toggle between VFO/SPLIT and Memory mode
 				{
-					RadioManagement_ToggleVfoMem();
-					UiDriver_FButton_F3MemSplit();
-
+					if(ts.keyer_mode) {
+						// NOT IMPLEMENTED: Record macro for BTN3
+					} else {
+						RadioManagement_ToggleVfoMem();
+						UiDriver_FButton_F3MemSplit();
+					}
 				}
 				break;
 			case BUTTON_F4_PRESSED:	// Press-and-hold button F4
 				if(!ts.menu_mode)
 				{
-					UiDriver_CopyVfoAB();
+					if(ts.keyer_mode) {
+						// NOT IMPLEMENTED: Delete whole buffer
+					} else {
+						UiDriver_CopyVfoAB();
+					}
 				}
 				break;
 			case BUTTON_F5_PRESSED:								// Button F5 was pressed-and-held - Toggle TX Disable
-				if(ts.txrx_mode == TRX_MODE_RX)			// do NOT allow mode change in TUNE mode or transmit mode
-				{
-					if( RadioManagement_IsTxDisabledBy(TX_DISABLE_USER) == false)
-					{
-						ts.tx_disable |= TX_DISABLE_USER;
-					}
-					else
-					{
-						ts.tx_disable &= ~TX_DISABLE_USER;
-					}
+				if(ts.keyer_mode) {
+					ts.buffered_tx = ! ts.buffered_tx;
 					UiDriver_FButton_F5Tune();
+				} else {
+					if(ts.txrx_mode == TRX_MODE_RX)			// do NOT allow mode change in TUNE mode or transmit mode
+					{
+						if( RadioManagement_IsTxDisabledBy(TX_DISABLE_USER) == false)
+						{
+							ts.tx_disable |= TX_DISABLE_USER;
+						}
+						else
+						{
+							ts.tx_disable &= ~TX_DISABLE_USER;
+						}
+						UiDriver_FButton_F5Tune();
+					}
 				}
 				break;
 			case BUTTON_G1_PRESSED:	// Press-and-hold button G1 - Change operational mode, but include "disabled" modes
@@ -1397,6 +1448,16 @@ static void UiDriver_ProcessKeyboard()
 				}
 				break;
 			}
+			case BUTTON_M1_PRESSED: // Switch between normal and keyer mode F1-F5 buttons
+				if (!ts.menu_mode) {
+					ts.keyer_mode = ! ts.keyer_mode;
+					UiDriver_FButton_F1MenuExit();
+					UiDriver_FButton_F2SnapMeter();
+					UiDriver_FButton_F3MemSplit();
+					UiDriver_FButton_F4ActiveVFO();
+					UiDriver_FButton_F5Tune();
+				}
+				break;
 			case BUTTON_M2_PRESSED:	// Press-and-hold button M2:  Switch display between DSP "strength" setting and NB (noise blanker) mode
 				ts.dsp_active ^= DSP_NB_ENABLE;	// toggle whether or not DSP or NB is to be displayed
 				UiDriver_DisplayEncoderTwoMode();
@@ -1600,43 +1661,47 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
 	// F1 process
 	if(id == BUTTON_F1_PRESSED)
 	{
-		if(!ts.mem_disp)	 			// allow only if NOT in memory display mode
-		{
-			if(ts.menu_mode == false)	 	// go into menu mode if NOT already in menu mode and not to halt on startup
+		if (ts.keyer_mode) {
+			// NOT IMPLEMENTED: Play macro BTN1
+		} else {
+			if(!ts.mem_disp)	 			// allow only if NOT in memory display mode
 			{
-				ts.menu_mode = 1;
-				ts.encoder3state = filter_path_change;
-				filter_path_change = false;			// deactivate while in menu mode
-				UiDriver_DisplayFilter();
-				UiSpectrum_Clear();
-				UiDriver_FButton_F1MenuExit();
-				UiDriver_FButtonLabel(2,"PREV",Yellow);
-				UiDriver_FButtonLabel(3,"NEXT",Yellow);
-				UiDriver_FButtonLabel(4,"DEFLT",Yellow);
-				//
-				//
-				// Grey out adjustments and put encoders in known states
-				//
-				UiDriver_RefreshEncoderDisplay();
+				if(ts.menu_mode == false)	 	// go into menu mode if NOT already in menu mode and not to halt on startup
+				{
+					ts.menu_mode = 1;
+					ts.encoder3state = filter_path_change;
+					filter_path_change = false;			// deactivate while in menu mode
+					UiDriver_DisplayFilter();
+					UiSpectrum_Clear();
+					UiDriver_FButton_F1MenuExit();
+					UiDriver_FButtonLabel(2,"PREV",Yellow);
+					UiDriver_FButtonLabel(3,"NEXT",Yellow);
+					UiDriver_FButtonLabel(4,"DEFLT",Yellow);
+					//
+					//
+					// Grey out adjustments and put encoders in known states
+					//
+					UiDriver_RefreshEncoderDisplay();
 
-				ts.menu_var = 0;
-				//
-				UiMenu_RenderMenu(MENU_RENDER_ONLY);	// Draw the menu the first time
-				UiMenu_RenderMenu(MENU_PROCESS_VALUE_CHANGE);	// Do update of the first menu item
-			}
-			else	 	// already in menu mode - we now exit
-			{
-				ts.menu_mode = 0;
-				filter_path_change = ts.encoder3state;
-				UiDriver_DisplayFilter();
-				UiSpectrum_Init();			// init spectrum scope
-				//
-				// Restore encoder displays to previous modes
-				UiDriver_RefreshEncoderDisplay();
-				UiDriver_DisplayFilter();	// update bandwidth display
+					ts.menu_var = 0;
+					//
+					UiMenu_RenderMenu(MENU_RENDER_ONLY);	// Draw the menu the first time
+					UiMenu_RenderMenu(MENU_PROCESS_VALUE_CHANGE);	// Do update of the first menu item
+				}
+				else	 	// already in menu mode - we now exit
+				{
+					ts.menu_mode = 0;
+					filter_path_change = ts.encoder3state;
+					UiDriver_DisplayFilter();
+					UiSpectrum_Init();			// init spectrum scope
+					//
+					// Restore encoder displays to previous modes
+					UiDriver_RefreshEncoderDisplay();
+					UiDriver_DisplayFilter();	// update bandwidth display
 
-				UiDriver_CreateFunctionButtons(false);
+					UiDriver_CreateFunctionButtons(false);
 
+				}
 			}
 		}
 	}
@@ -1645,24 +1710,30 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
 	// F2 process
 	if(id == BUTTON_F2_PRESSED)
 	{
+		if (ts.keyer_mode) {
+			// NOT IMPLEMENTED: Play macro BTN2
+		} else {
+
 		//
 		// If in MENU mode, this restores the DEFAULT setting
 		//
-		if(ts.menu_mode)	 		// Button F2 restores default setting of selected item
-		{
-			UiMenu_RenderPrevScreen();
-		}
-		else
-		{
+			if(ts.menu_mode)	 		// Button F2 restores default setting of selected item
+			{
+				UiMenu_RenderPrevScreen();
+			}
+			else
+			{
 #ifdef USE_SNAP
-			sc.snap = 1;
+				sc.snap = 1;
 #else
 			// Not in MENU mode - select the METER mode
-			decr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
+				decr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
 
-			UiDriver_DeleteSMeter();
-			UiDriver_CreateMeters();    // redraw meter
+				UiDriver_DeleteSMeter();
+				UiDriver_CreateMeters();    // redraw meter
 #endif
+
+			}
 		}
 	}
 
@@ -1707,7 +1778,11 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
 		}
 		else	 	// NOT menu mode
 		{
-			UiDriver_ToggleVfoAB();
+			if (ts.keyer_mode) {
+				// NOT IMPLEMENTED: Delete last character from the buffer
+			} else {
+				UiDriver_ToggleVfoAB();
+			}
 		}
 	}
 
@@ -1715,9 +1790,13 @@ static void UiDriver_ProcessFunctionKeyClick(ulong id)
 	// F5 process
 	if(id == BUTTON_F5_PRESSED)
 	{
-		ts.tune = RadioManagement_Tune(!ts.tune);
-		UiDriver_DisplayPowerLevel();           // tuning may change power level temporarily
-		UiDriver_FButton_F5Tune();
+		if (ts.keyer_mode) {
+			// NOT IMPLEMENTED: Switch TX/RX modes when in buffered tx mode
+		} else {
+			ts.tune = RadioManagement_Tune(!ts.tune);
+			UiDriver_DisplayPowerLevel();           // tuning may change power level temporarily
+			UiDriver_FButton_F5Tune();
+		}
 	}
 }
 

@@ -955,6 +955,9 @@ typedef struct TransceiverState
 
 	uint8_t enable_rtty_decode; // new rtty encoder (experimental)
 	bool enable_ptt_rts; // disable/enable ptt via virtual serial port rts
+
+	bool keyer_mode; // disable/enable keyer mode for F1-F5 buttons
+	bool buffered_tx; // disable/enable buffered sending for CW and digital modes
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
