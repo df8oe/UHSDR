@@ -940,11 +940,11 @@ static inline void UiDriver_FButton_F5Tune()
 	{
 		if (ts.buffered_tx)
 		{
-			cap = "UNBUF";
+			cap = "TX/RX";
 		}
 		else
 		{
-			cap = "TX/RX";
+			cap = "UNBUF";
 		}
 	}
 	else
@@ -5670,6 +5670,12 @@ static void UiAction_ToggleTuneMode()
 	UiDriver_FButton_F5Tune();
 }
 
+static void UiAction_ToggleBufferedTXMode()
+{
+	ts.buffered_tx = ! ts.buffered_tx;
+	UiDriver_FButton_F5Tune();
+}
+
 static void UiAction_ToggleSplitModeOrToggleMemMode()
 {
 	if(!ts.vfo_mem_flag)	 		// update screen if in VFO (not memory) mode
@@ -5915,7 +5921,7 @@ static const keyaction_descr_t keyactions_keyer[] =
 		{ BUTTON_F2_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
 		{ BUTTON_F3_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
 		{ BUTTON_F4_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
-		{ BUTTON_F5_PRESSED, 	KEYACTION_NOP,		KEYACTION_NOP },
+		{ BUTTON_F5_PRESSED, 	KEYACTION_NOP,		UiAction_ToggleBufferedTXMode },
 };
 
 static const keyaction_list_descr_t key_sets[] =
