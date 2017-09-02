@@ -5962,7 +5962,7 @@ static const touchaction_descr_t touchactions_menu[] =
 
 static const touchaction_list_descr_t touch_regions[] =
 {
-		// ATTENATION: the size calculation only works for true arrays, not for pointers!
+		// ATTENTION: the size calculation only works for true arrays, not for pointers!
 		{ touchactions_normal, sizeof(touchactions_normal)/sizeof(*touchactions_normal) },
 		{ touchactions_menu, sizeof(touchactions_menu)/sizeof(*touchactions_menu) },
 };
@@ -6026,7 +6026,7 @@ static const keyaction_descr_t keyactions_keyer[] =
 
 static const keyaction_list_descr_t key_sets[] =
 {
-		// ATTENATION: the size calculation only works for true arrays, not for pointers!
+		// ATTENTION: the size calculation only works for true arrays, not for pointers!
 		{ keyactions_normal, sizeof(keyactions_normal)/sizeof(*keyactions_normal) },
 		{ keyactions_menu, sizeof(keyactions_menu)/sizeof(*keyactions_menu) },
 		{ keyactions_keyer, sizeof(keyactions_keyer)/sizeof(*keyactions_keyer) },
@@ -6044,7 +6044,7 @@ static void UiDriver_HandleKeyboard()
 		{
 			keyIsProcessed = UiDriver_ProcessKeyActions(&key_sets[2]);
 		}
-		if (ts.menu_mode == true)
+		if (keyIsProcessed == false && ts.menu_mode == true)
 		{
 			keyIsProcessed = UiDriver_ProcessKeyActions(&key_sets[1]);
 		}
