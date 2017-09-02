@@ -65,14 +65,14 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
     	if (mchf_ptt_dah_line_pressed() && ts.dmod_mode != DEMOD_SAM)
     	{  // was PTT line low? Not in a RX Only Mode?
     		ts.ptt_req = true;     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
-    		if(ts.dmod_mode == DEMOD_CW || is_demod_rtty())
+    		if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry)
     		{
     			CwGen_DahIRQ();     // Yes - go to CW state machine
     		}
     	}
     	break;
     case PADDLE_DIT:
-        if((ts.dmod_mode == DEMOD_CW || is_demod_rtty()) && mchf_dit_line_pressed())
+        if((ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry) && mchf_dit_line_pressed())
         {
             ts.ptt_req = true;
             CwGen_DitIRQ();
@@ -345,8 +345,14 @@ void TransceiverStateInit(void)
     ts.i2c_speed[I2C_BUS_2] = I2C2_SPEED_DEFAULT; // Codec, EEPROM
 
     ts.rtty_atc_enable = true;
-    ts.keyer_mode = false;
+    ts.keyer_mode.active = false;
+    ts.keyer_mode.button_recording = KEYER_BUTTON_NONE;
+    for (int idx = 0; idx<KEYER_BUTTONS; idx++)
+    {
+    	ts.keyer_mode.macro[idx][0] = '\0';
+    }
     ts.buffered_tx = false;
+    ts.cw_text_entry = false;
 }
 
 void MiscInit(void)

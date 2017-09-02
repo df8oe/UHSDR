@@ -639,7 +639,7 @@ void CwGen_AddChar(ulong code)
 
 			// FIXME: HACK HACK FOR RTTY TX TESTING
 			// We can use the same buffer for all digimodes
-			if (ts.txrx_mode == TRX_MODE_TX && is_demod_rtty())
+			if (ts.txrx_mode == TRX_MODE_TX && is_demod_rtty() || ts.cw_text_entry) // Can rtty rely just on cw_text_entry here?
 			{
 				DigiModes_TxBufferPutChar(result);
 			}

@@ -4723,7 +4723,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
     	break;
     	}
     }
-    else if(dmod_mode == DEMOD_CW)
+    else if(dmod_mode == DEMOD_CW || ts.cw_text_entry)
     {
         if (tune)
         {

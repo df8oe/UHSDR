@@ -541,9 +541,9 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         // this code handles the ts.tx_disable
         // even if ts.tx_disble is set in CW and only in CW we still switch to TX
         // but leave the PA disabled. This is for support of CW training right with the mcHF.
-        if (RadioManagement_IsTxDisabled())
+        if (RadioManagement_IsTxDisabled() || ts.cw_text_entry)
         {
-            if (tx_ok == true && ts.dmod_mode == DEMOD_CW)
+            if ((tx_ok == true && ts.dmod_mode == DEMOD_CW) || ts.cw_text_entry)
             {
                 tx_pa_disabled = true;
             }
@@ -984,7 +984,7 @@ void RadioManagement_HandlePttOnOff()
         // we are asked to start TX
         if(ts.ptt_req)
         {
-            if(ts.txrx_mode == TRX_MODE_RX && (RadioManagement_IsTxDisabled() == false || ts.dmod_mode == DEMOD_CW))
+            if(ts.txrx_mode == TRX_MODE_RX && (RadioManagement_IsTxDisabled() == false || ts.dmod_mode == DEMOD_CW)) // FIXME cw_text_entry situation is not correctly processed
             {
                 RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
             }
