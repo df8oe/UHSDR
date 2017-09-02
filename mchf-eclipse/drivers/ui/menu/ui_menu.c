@@ -3534,7 +3534,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 UiDriver_SetDemodMode(DEMOD_DIGI);
             }
         }
-        txt_ptr = digimodes[ts.digital_mode].label;
+        snprintf(options,32,"     %s",digimodes[ts.digital_mode].label);
         clr = digimodes[ts.digital_mode].enabled?White:Red;
         break;
     case CONFIG_CAT_PTT_RTS:
