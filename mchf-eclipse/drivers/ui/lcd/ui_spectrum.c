@@ -112,6 +112,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
         float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())/TUNE_MULT))/sd.pixel_per_hz;
 
         // FIXME: DOES NOT WORK PROPERLY IN SPLIT MODE
+        sd.marker_num_prev = sd.marker_num;
         float32_t mode_marker_offset[SPECTRUM_MAX_MARKER];
         switch(ts.dmod_mode)
         {
@@ -156,6 +157,12 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
             sd.marker_offset[idx] = tx_vfo_offset + mode_marker_offset[idx];
             sd.marker_pos[idx] = sd.rx_carrier_pos + sd.marker_offset[idx];
         }
+        for (uint16_t idx = sd.marker_num; idx < SPECTRUM_MAX_MARKER; idx++)
+        {
+        	sd.marker_offset[idx] = 0;
+        	sd.marker_pos[idx] = SPECTRUM_WIDTH; // this is an invalid position out of screen
+        }
+
     }
 }
 
@@ -480,7 +487,9 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 
     uint16_t marker_line_pos[SPECTRUM_MAX_MARKER];
 
-    for (uint16_t idx = 0; idx < sd.marker_num; idx++)
+    uint16_t marker_num = sd.marker_num > sd.marker_num_prev ? sd.marker_num : sd.marker_num_prev;
+
+    for (uint16_t idx = 0; idx < SPECTRUM_MAX_MARKER; idx++)
     {
         marker_line_pos[idx] = SPECTRUM_START_X + sd.marker_pos[idx];
 
