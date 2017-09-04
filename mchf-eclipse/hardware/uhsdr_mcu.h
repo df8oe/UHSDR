@@ -41,4 +41,9 @@ inline mchf_cpu_t MchfHW_Cpu()
     return retval;
 }
 
+#define STM32_GetRevision()     (*(uint16_t *) (UID_BASE + 2))
+#define STM32_GetSignature()    ((*(uint16_t *) (DBGMCU_BASE)) & 0x0FFF)
+#define STM32_GetFlashSize()    (*(uint16_t *) (FLASHSIZE_BASE))
+#define STM32_UUID ((uint32_t *)UID_BASE)
+
 #endif

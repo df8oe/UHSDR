@@ -4927,7 +4927,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
 
     if(ts.show_debug_info)
     {
-        MchfBoard_GreenLed(LED_STATE_ON);
+        Board_GreenLed(LED_STATE_ON);
     }
 
     if((ts.txrx_mode == TRX_MODE_RX))
@@ -5030,6 +5030,6 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
 
     if(ts.show_debug_info)
     {
-        MchfBoard_GreenLed(LED_STATE_OFF);
+        Board_GreenLed(LED_STATE_OFF);
     }
 }

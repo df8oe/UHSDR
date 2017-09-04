@@ -291,7 +291,7 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
  */
 void RadioManagement_DisablePaBias()
 {
-    MchfBoard_SetPaBiasValue(0);
+    Board_SetPaBiasValue(0);
 }
 
 /**
@@ -319,7 +319,7 @@ void RadioManagement_SetPaBias()
     {
         calc_var = 255;
     }
-    MchfBoard_SetPaBiasValue(calc_var);
+    Board_SetPaBiasValue(calc_var);
 }
 
 
@@ -595,9 +595,9 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             // with ts.tx_disabled on nothing will be transmitted but you can hear the sidetone
             if (tx_pa_disabled == false)
             {
-                MchfBoard_RedLed(LED_STATE_ON); // TX
-                MchfBoard_GreenLed(LED_STATE_OFF);
-                MchfBoard_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
+                Board_RedLed(LED_STATE_ON); // TX
+                Board_GreenLed(LED_STATE_OFF);
+                Board_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
             }
         }
 
@@ -626,9 +626,9 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
                 // this can take up to 1.2ms (time for processing two audio buffer dma requests
             }
 
-            MchfBoard_EnableTXSignalPath(false); // switch antenna to input and codec output to lineout
-            MchfBoard_RedLed(LED_STATE_OFF);      // TX led off
-            MchfBoard_GreenLed(LED_STATE_ON);      // TX led off
+            Board_EnableTXSignalPath(false); // switch antenna to input and codec output to lineout
+            Board_RedLed(LED_STATE_OFF);      // TX led off
+            Board_GreenLed(LED_STATE_ON);      // TX led off
             ts.audio_dac_muting_flag = false; // unmute audio output
             CwGen_PrepareTx();
             // make sure the keyer is set correctly for next round
@@ -729,17 +729,17 @@ void RadioManagement_ChangeBandFilter(uchar band)
     case BAND_MODE_630:
     case BAND_MODE_160:
     case BAND_MODE_80:
-        MchfBoard_SelectLpfBpf(0);
+        Board_SelectLpfBpf(0);
         break;
 
     case BAND_MODE_60:
     case BAND_MODE_40:
-        MchfBoard_SelectLpfBpf(1);
+        Board_SelectLpfBpf(1);
         break;
 
     case BAND_MODE_30:
     case BAND_MODE_20:
-        MchfBoard_SelectLpfBpf(2);
+        Board_SelectLpfBpf(2);
         break;
 
     case BAND_MODE_17:
@@ -748,7 +748,7 @@ void RadioManagement_ChangeBandFilter(uchar band)
     case BAND_MODE_10:
     case BAND_MODE_6:
     case BAND_MODE_4:
-        MchfBoard_SelectLpfBpf(3);
+        Board_SelectLpfBpf(3);
         break;
 
     default:
@@ -1004,7 +1004,7 @@ void RadioManagement_HandlePttOnOff()
                 if(ts.txrx_mode == TRX_MODE_TX)
                 {
                     // ... the PTT line is released ...
-                    if(mchf_ptt_dah_line_pressed() == false)
+                    if(Board_PttDahLinePressed() == false)
                     {
                         // ... we start the break timer if not started already!
                         if (ptt_break_timer == PTT_BREAK_IDLE)

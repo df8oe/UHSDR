@@ -529,65 +529,6 @@ static void Si570_CalcSufHelper()
 }
 
 
-void Si570_Init()
-{
-    os.base_reg = 13;	// first test with regs 13+ for 7ppm SI570
-    uchar dummy;
-
-    // test for hardware address of SI570
-    os.si570_address = (0x55 << 1);
-    if(mchf_hw_i2c1_ReadRegister(os.si570_address, (os.base_reg), &dummy) != 0)
-    {
-        os.si570_address = (0x50 << 1);
-    }
-
-    // make sure everything is cleared and in initial state
-    Si570_ResetConfiguration();
-    Si570_CalcSufHelper();
-
-    if(os.fout > 39.2 && os.fout < 39.3)
-    {
-        // its a 20 or 50 ppm device, use regs 7+
-        os.base_reg = 7;
-        Si570_CalcSufHelper();
-    }
-
-    // all known startup frequencies
-    static const float suf_table[] =
-    {
-            10,
-            10.356,
-            14.05,
-            14.1,
-            15,
-            16.0915,
-            22.5792,
-            34.285,
-            56.32,
-            63,
-            76.8,
-            100,
-            122,
-            125,
-            156.25,
-            0
-    };
-    // test if startup frequency is known
-    int i;
-    for (i = 0; suf_table[i] != 0; i++)
-    {
-        float test = os.fout - suf_table[i];
-        if (test < 0)
-        {
-            test = -test;
-        }
-        if (test < 0.2)
-        {
-            os.fout = suf_table[i];
-            break;
-        }
-    }
-}
 
 float   Si570_GetStartupFrequency()
 {
@@ -691,6 +632,69 @@ uint8_t Si570_ResetConfiguration()
     return retval;
 }
 
+void Si570_Init()
+{
+    os.base_reg = 13;	// first test with regs 13+ for 7ppm SI570
+    uchar dummy;
+
+    // test for hardware address of SI570
+    os.si570_address = (0x55 << 1);
+    if(mchf_hw_i2c1_ReadRegister(os.si570_address, (os.base_reg), &dummy) != 0)
+    {
+        os.si570_address = (0x50 << 1);
+    }
+
+    // make sure everything is cleared and in initial state
+    Si570_ResetConfiguration();
+    Si570_CalcSufHelper();
+
+    if(os.fout > 39.2 && os.fout < 39.3)
+    {
+        // its a 20 or 50 ppm device, use regs 7+
+        os.base_reg = 7;
+        Si570_CalcSufHelper();
+    }
+
+    // all known startup frequencies
+    static const float suf_table[] =
+    {
+            10,
+            10.356,
+            14.05,
+            14.1,
+            15,
+            16.0915,
+            22.5792,
+            34.285,
+            56.32,
+            63,
+            76.8,
+            100,
+            122,
+            125,
+            156.25,
+            0
+    };
+    // test if startup frequency is known
+    for (int i = 0; suf_table[i] != 0; i++)
+    {
+        float test = os.fout - suf_table[i];
+        if (test < 0)
+        {
+            test = -test;
+        }
+        if (test < 0.2)
+        {
+            os.fout = suf_table[i];
+            break;
+        }
+    }
+
+    // we wait a little and then reset again
+    HAL_Delay(40);
+    Si570_ResetConfiguration();
+}
+
 /**
  * @brief prepares all necessary information for the next frequency change
  * @param freq frequency in Hz to which the LO should be tuned. This is the true LO frequency, i.e. four times the center frequency of the IQ signal
@@ -731,6 +735,10 @@ Si570_ResultCodes Si570_PrepareNextFrequency(ulong freq, int temp_factor)
     return retval;
 }
 
+/*
+ * @brief configures the MCP9801 external temperature sensor for monitoring Si570 temperature
+ * @returns 0 if detected and working, 1 if not detected on I2C, 2 for other errors
+ */
 uint8_t Si570_InitExternalTempSensor()
 {
     uint8_t config, retval = 0;

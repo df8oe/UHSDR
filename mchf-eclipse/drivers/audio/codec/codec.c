@@ -241,7 +241,7 @@ void Codec_RestartI2S()
 {
     // Reg 09: Active Control
     Codec_WriteRegister(CODEC_IQ_I2C, W8731_ACTIVE_CNTR,0x0000);
-    non_os_delay();
+    non_os_delay(); // we can't use HAL_Delay here, since our audio interrupt has higher priority which stops the ticks.
     // Reg 09: Active Control
     Codec_WriteRegister(CODEC_IQ_I2C, W8731_ACTIVE_CNTR,0x0001);
 }
@@ -258,7 +258,7 @@ void Codec_SwitchMicTxRxMode(uint8_t txrx_mode)
         // Set up microphone gain and adjust mic boost accordingly
         // Reg 04: Analog Audio Path Control (DAC sel, ADC Mic, Mic on)
 
-        non_os_delay();
+        // non_os_delay();
 
         if(ts.tx_gain[TX_AUDIO_MIC] > 50)	 		// actively adjust microphone gain and microphone boost
         {
@@ -280,40 +280,48 @@ void Codec_SwitchMicTxRxMode(uint8_t txrx_mode)
     }
 }
 
+static bool is_microphone_active()
+{
+	return ts.tx_audio_source == TX_AUDIO_MIC && (ts.dmod_mode != DEMOD_CW && is_demod_rtty() == false);
+}
+
 /**
  * @brief sets certain settings in preparation for smooth TX switching, call before actual switch function is called
  * @param current_txrx_mode the current mode, not the future mode (this is assumed to be TRX_MODE_TX)
  */
 void Codec_PrepareTx(uint8_t current_txrx_mode)
 {
-    // if(ts.dmod_mode != DEMOD_CW)                    // are we in a voice mode?
-    // FIXME: Remove commented out "if" above, if the CW guys accept that this works as wanted.
-    // Turns out that this code below adds about 60!ms of delay. CW guys don't like that.
-    {
-        Codec_LineInGainAdj(0); // yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
+	Codec_LineInGainAdj(0); // yes - momentarily mute LINE IN audio if in LINE IN mode until we have switched to TX
 
-        if(ts.tx_audio_source == TX_AUDIO_MIC)  // we are in MIC IN mode
-        {
-            ts.tx_mic_gain_mult = 0;        // momentarily set the mic gain to zero while we go to TX
-            Codec_WriteRegister(CODEC_ANA_I2C, W8731_ANLG_AU_PATH_CNTR,W8731_ANLG_AU_PATH_CNTR_DACSEL|W8731_ANLG_AU_PATH_CNTR_INSEL_LINE|W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
-            // Mute the microphone with the CODEC (this does so without a CLICK) and  remain/switch line in on
-            Codec_WriteRegister(CODEC_ANA_I2C, W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_ALL_ON);
-            // now we power on all amps including the mic preamp and bias
-        }
+	bool uses_mic_input = is_microphone_active();
 
-        // Is translate mode active and we have NOT already muted the audio output?
-        if((ts.iq_freq_mode) && (current_txrx_mode == TRX_MODE_RX))
-        {
-            Codec_VolumeSpkr(0);
-            Codec_VolumeLineOut(TRX_MODE_TX);    // yes - mute the audio codec to suppress an approx. 6 kHz chirp when going in to TX mode
-        }
+	if (uses_mic_input)  // we are in MIC IN mode
+	{
+		ts.tx_mic_gain_mult = 0; // momentarily set the mic gain to zero while we go to TX
+		Codec_WriteRegister(CODEC_ANA_I2C, W8731_ANLG_AU_PATH_CNTR,
+				W8731_ANLG_AU_PATH_CNTR_DACSEL
+						| W8731_ANLG_AU_PATH_CNTR_INSEL_LINE
+						| W8731_ANLG_AU_PATH_CNTR_MUTEMIC);
+		// Mute the microphone with the CODEC (this does so without a CLICK) and  remain/switch line in on
+		Codec_WriteRegister(CODEC_ANA_I2C, W8731_POWER_DOWN_CNTR,
+				W8731_POWER_DOWN_CNTR_MCHF_ALL_ON);
+		// now we power on all amps including the mic preamp and bias
+	}
 
-        // FIXME: Validate if we can remove this nasty delay or at least reduce it, 40ms are very long indeed.
-        if(ts.dmod_mode != DEMOD_CW)
-        {
-            non_os_delay();     // pause an instant because the codec chip has its own delay before tasks complete!
-        }
-    }
+	// Is translate mode active and we have NOT already muted the audio output?
+	if ((ts.iq_freq_mode) && (current_txrx_mode == TRX_MODE_RX))
+	{
+		Codec_VolumeSpkr(0);
+		Codec_VolumeLineOut(TRX_MODE_TX); // yes - mute the audio codec to suppress an approx. 6 kHz chirp when going in to TX mode
+	}
+
+
+	if (uses_mic_input)
+	{
+		HAL_Delay(10);
+		// pause an instant because the codec chip has its own delay before tasks complete when we use the microphone input!
+		// otherwise audible noise will be transmitted
+	}
 }
 
 
@@ -362,7 +370,6 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
 
             if(ts.tx_audio_source == TX_AUDIO_MIC)
             {
-
                 // now enabled the analog path according to gain settings
                 // with or without boost
                 Codec_SwitchMicTxRxMode(txrx_mode);

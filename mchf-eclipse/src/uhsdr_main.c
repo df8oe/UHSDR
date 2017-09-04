@@ -62,7 +62,7 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
         break;
     case PADDLE_DAH:
         // Call handler
-    	if (mchf_ptt_dah_line_pressed() && ts.dmod_mode != DEMOD_SAM)
+    	if (Board_PttDahLinePressed() && ts.dmod_mode != DEMOD_SAM)
     	{  // was PTT line low? Not in a RX Only Mode?
     		ts.ptt_req = true;     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
     		if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry)
@@ -72,7 +72,7 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
     	}
     	break;
     case PADDLE_DIT:
-        if((ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry) && mchf_dit_line_pressed())
+        if((ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry) && Board_DitLinePressed())
         {
             ts.ptt_req = true;
             CwGen_DitIRQ();
@@ -369,7 +369,7 @@ void timeTest1()
     static uint32_t time = 0;
     if (time != RTC->TR)
     {
-        MchfBoard_RedLed(LED_STATE_TOGGLE);
+        Board_RedLed(LED_STATE_TOGGLE);
         time = RTC->TR;
     }
 }
@@ -395,24 +395,24 @@ int mchfMain(void)
     // Set default transceiver state
     TransceiverStateInit();
 
-     mchf_board_detect_ramsize();
+     Board_RamSizeDetection();
 
 #ifdef TESTCPLUSPLUS
     test_call_cpp();
 #endif
 
     // HW init
-    mchf_board_init_minimal();
+    Board_InitMinimal();
     // Show logo & HW Info
     UiDriver_StartUpScreenInit(2000);
 
     if (ts.display != DISPLAY_NONE)
     {
         // TODO: Better indication of non-detected display
-        MchfBoard_GreenLed(LED_STATE_ON);
+        Board_GreenLed(LED_STATE_ON);
     }
 
-    mchf_board_init_full();
+    Board_InitFull();
 
     // MchfRtc_FullReset();
     ConfigStorage_Init();
@@ -474,7 +474,7 @@ int mchfMain(void)
 #endif
 
     UiDriver_StartUpScreenFinish(2000);
-    MchfBoard_RedLed(LED_STATE_OFF);
+    Board_RedLed(LED_STATE_OFF);
 
     // TODO: We need to set the digital mode once to make it active
     // if we just loaded the mode from EEPROM since we do not active ts.dvmode

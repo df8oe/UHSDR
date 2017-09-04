@@ -794,7 +794,7 @@ void UiDriver_Init()
 	df.step_new 		= df.tuning_step;
 
 	// Extra HW init
-	mchf_board_post_init();
+	Board_PostInit();
 
 
 	UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
@@ -1035,7 +1035,7 @@ void UiAction_CopyVfoAB()
 	{
 		UiSpectrum_Clear();          // clear display under spectrum scope
 		UiLcdHy28_PrintText(80,160,is_vfo_b()?"VFO B -> VFO A":"VFO A -> VFO B",Cyan,Black,1);
-		non_os_delay_multi(18);
+		HAL_Delay(3000);
 		UiSpectrum_Init();           // init spectrum scope
 	}
 }
@@ -4424,7 +4424,7 @@ static bool UiDriver_HandleVoltage()
 			{
 				retval = true;
 				pwmt.undervoltage_detected = false;
-				MchfBoard_GreenLed(LED_STATE_ON);
+				Board_GreenLed(LED_STATE_ON);
 			}
 			ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_DELAY_TIME;
 		}
@@ -4970,14 +4970,14 @@ static void UiDriver_KeyTestScreen()
 
 			if(p_o_state == 1)
 			{
-				mchf_powerdown();
+				Board_Powerdown();
 				// never reached
 			}
 			if(rb_state == 1)
 			{
 				if(j != BUTTON_BNDM_PRESSED)
 				{
-					mchf_reboot();
+					Board_Reboot();
 				}
 			}
 		}
@@ -5040,8 +5040,7 @@ static bool UiDriver_TouchscreenCalibration()
 		{
 			UiLcdHy28_LcdClear(Black);							// clear the screen
 			UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
-			for(i = 0; i < 100; i++)
-				non_os_delay();
+			HAL_Delay(3000);
 			retval = false;
 		}
 		else
@@ -5059,7 +5058,7 @@ static bool UiDriver_TouchscreenCalibration()
 
 			while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
 			{
-				non_os_delay();
+				HAL_Delay(40);
 			}
 			UiLcdHy28_TouchscreenReadCoordinates();
 			ts.tp->state = TP_DATASETS_NONE;
@@ -5116,7 +5115,7 @@ static bool UiDriver_TouchscreenCalibration()
 			//    sprintf(txt_buf,"correction is  : %d/%d", *x_corr, *y_corr);
 			//    UiLcdHy28_PrintText(10,55,txt_buf,clr_fg,clr_bg,0);
 
-			non_os_delay_multi(10);
+			HAL_Delay(4000);
 			retval = true;
 			ts.menu_var_changed = true;
 		}
@@ -5139,7 +5138,7 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
 	{
 		while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
 		{
-			non_os_delay();
+			HAL_Delay(40);
 		}
 
 		if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
@@ -5164,7 +5163,7 @@ void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
 	}
 	while(datavalid < 3);
 
-	non_os_delay_multi(10);
+	HAL_Delay(4000);
 }
 
 static uint16_t startUpScreen_nextLineY;
@@ -6226,7 +6225,7 @@ void UiDriver_MainHandler()
 			UiDriver_HandleTXMeters();
 			break;
 		case STATE_HANDLE_POWERSUPPLY:
-			MchfBoard_HandlePowerDown();
+			Board_HandlePowerDown();
 
 			if (UiDriver_TimerExpireAndRewind(SCTimer_VOLTAGE,now,8))
 			{
@@ -6237,7 +6236,7 @@ void UiDriver_MainHandler()
 
 				if (pwmt.undervoltage_detected == true) {
 					if (UiDriver_TimerExpireAndRewind(SCTimer_LEDBLINK, now, 64)) {
-						MchfBoard_GreenLed(LED_STATE_TOGGLE);
+						Board_GreenLed(LED_STATE_TOGGLE);
 					}
 				}
 				UiDriver_TextMsgDisplay();

@@ -339,7 +339,7 @@ static void mchf_board_band_cntr_init(void)
     BAND2_PIO->BSRR = BAND2;
 }
 
-void mchf_board_touchscreen_init()
+void Board_TouchscreenInit()
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -358,7 +358,7 @@ void mchf_board_touchscreen_init()
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
 
-void mchf_board_init_minimal()
+void Board_InitMinimal()
 {
     // Enable clock on all ports
     __GPIOA_CLK_ENABLE();
@@ -369,7 +369,7 @@ void mchf_board_init_minimal()
 
     // LED init
     mchf_board_led_init();
-    MchfBoard_RedLed(LED_STATE_ON);
+    Board_RedLed(LED_STATE_ON);
     // Power up hardware
     mchf_board_power_down_init();
 
@@ -379,7 +379,7 @@ void mchf_board_init_minimal()
 
     // Touchscreen SPI Control Signals Init
     // TODO: Move to CubeMX Config
-    mchf_board_touchscreen_init();
+    Board_TouchscreenInit();
 
     // I2C init
     mchf_hw_i2c1_init();
@@ -399,7 +399,7 @@ void mchf_board_init_minimal()
     UiLcdHy28_Init();
 }
 
-void mchf_board_init_full()
+void Board_InitFull()
 {
 
 #ifdef STM32F4
@@ -443,7 +443,7 @@ void mchf_board_init_full()
 /*
  * @brief  handle final power-off and delay
  */
-void MchfBoard_HandlePowerDown() {
+void Board_HandlePowerDown() {
     static ulong    powerdown_delay = 0;
 
     if(ts.powering_down)        // are we powering down?
@@ -451,7 +451,7 @@ void MchfBoard_HandlePowerDown() {
         powerdown_delay++;      // yes - do the powerdown delay
         if(powerdown_delay > POWERDOWN_DELAY_COUNT)     // is it time to power down
         {
-            mchf_powerdown();
+            Board_Powerdown();
             // never reached
         }
     }
@@ -460,7 +460,7 @@ void MchfBoard_HandlePowerDown() {
  * @brief kills power hold immediately and waits for user to release power button
  * @returns never returns
  */
-void mchf_powerdown()
+void Board_Powerdown()
 {
     // we set this to input and add a pullup config
     // this seems to be more reliably handling power down
@@ -487,7 +487,7 @@ void mchf_powerdown()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void mchf_board_post_init(void)
+void Board_PostInit(void)
 {
     // Set system tick interrupt
     // Currently used for UI driver processing only
@@ -507,7 +507,7 @@ void mchf_board_post_init(void)
         MchfRtc_SetPpm(ts.rtc_calib);
     }
 }
-void mchf_reboot()
+void Board_Reboot()
 {
     ///Si570_ResetConfiguration();       // restore SI570 to factory default
     *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
@@ -581,7 +581,7 @@ __attribute__ ((noinline)) bool is_ram_at(volatile uint32_t* where) {
     return retval;
 }
 
-unsigned int mchf_board_get_ramsize() {
+unsigned int Board_RamSizeGet() {
     uint32_t retval = 0;
     // we enable the bus fault
     // we now get bus faults if we access not  available  memory
@@ -610,13 +610,13 @@ unsigned int mchf_board_get_ramsize() {
  * what you are doing!
  * USE WITH CARE!
  */
-void mchf_board_detect_ramsize() {
+void Board_RamSizeDetection() {
     // we enable the bus fault
     // we now get bus faults if we access not  available  memory
     // instead of hard faults
     // this will run our very special bus fault handler in case no memory
     // is at the defined location
-    ts.ramsize = mchf_board_get_ramsize();
+    ts.ramsize = Board_RamSizeGet();
 }
 
 
@@ -625,6 +625,8 @@ static void MchfBoard_BandFilterPulseRelays()
 {
     // FIXME: Replace non_os_delay with HAL_Delay
     GPIO_ResetBits(BAND2_PIO, BAND2);
+    // TODO: Check if we can go down to 10ms as per datasheet
+    // HAL_Delay(20);
     non_os_delay();
     GPIO_SetBits(BAND2_PIO, BAND2);
 }
@@ -633,7 +635,7 @@ static void MchfBoard_BandFilterPulseRelays()
  * @brief switches one of the four LPF&BPF groups into the RX/TX signal path
  * @param group 0: 80m, 1: 40m, 2: 20m , 3:10m
  */
-void MchfBoard_SelectLpfBpf(uint8_t group)
+void Board_SelectLpfBpf(uint8_t group)
 {
     // -------------------------------------------
     //   BAND       BAND0       BAND1       BAND2
