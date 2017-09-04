@@ -4681,6 +4681,11 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
     bool external_tx_mute = ts.audio_dac_muting_flag || ts.audio_dac_muting_buffer_count > 0;
 
     bool signal_active = false; // unless this is set to true, zero output will be generated
+    bool cw_signal_active = false;
+    if (ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT && ts.cw_text_entry) // FIXME to be simplified when straight mode reworked to call always when cw_text_entry is active
+    {
+    	cw_signal_active = CwGen_Process(adb.i_buffer, adb.q_buffer, blockSize);
+    }
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
@@ -4736,7 +4741,12 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
             // Generate CW tone if necessary
             if (external_tx_mute == false)
             {
-                signal_active = CwGen_Process(adb.i_buffer, adb.q_buffer, blockSize);
+                if (ts.cw_keyer_mode == CW_KEYER_MODE_STRAIGHT || !ts.cw_text_entry) // FIXME to delete straight mode check when straight mode reworked
+                {
+                	cw_signal_active = CwGen_Process(adb.i_buffer, adb.q_buffer, blockSize);
+                }
+
+                signal_active = cw_signal_active;
             }
         }
 
@@ -4959,6 +4969,10 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
         else
         {
             AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
+            if (ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT && (ts.cw_text_entry || ts.dmod_mode == DEMOD_CW)) // FIXME to call always when straight mode reworked
+            {
+            	CwGen_Process(adb.i_buffer, adb.q_buffer, size/2);
+            }
         }
 
         to_tx = true;		// Set flag to indicate that we WERE receiving when we go back to transmit mode

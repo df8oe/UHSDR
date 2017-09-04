@@ -94,6 +94,10 @@ typedef struct PaddleState
 // Public paddle state
 PaddleState  ps;
 
+inline bool   CwGen_TimersActive() {
+	return ps.space_timer > 0 || ps.break_timer > 0 || ps.key_timer > 0;
+}
+
 static bool   CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static bool   CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static void   CwGen_TestFirstPaddle();
@@ -371,7 +375,7 @@ void CwGen_Init(void)
 
 	CwGen_SetSpeed();
 
-	if (ts.txrx_mode != TRX_MODE_TX  ||  ts.dmod_mode != DEMOD_CW)
+	if (ts.txrx_mode != TRX_MODE_TX  ||  ts.dmod_mode != DEMOD_CW) //FIXME No point doing this check as the function is called during board init, the rest of initialization would fail anyway if called anywhere else
 	{
 		// do not change if currently in CW transmit
 		ps.cw_state         = CW_IDLE;
@@ -393,6 +397,7 @@ void CwGen_Init(void)
 
 	ps.cw_char = 0;
 	ps.space_timer = 0;
+
 }
 
 /**
@@ -552,7 +557,7 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 		{
 			ts.tx_stop_req = true;
 		}
-		else
+		else if (ps.break_timer > 0)
 		{
 			ps.break_timer--;
 		}
@@ -639,7 +644,7 @@ void CwGen_AddChar(ulong code)
 
 			// FIXME: HACK HACK FOR RTTY TX TESTING
 			// We can use the same buffer for all digimodes
-			if (ts.txrx_mode == TRX_MODE_TX && is_demod_rtty() || ts.cw_text_entry) // Can rtty rely just on cw_text_entry here?
+			if ((ts.txrx_mode == TRX_MODE_TX && is_demod_rtty()) || ts.cw_text_entry) // Can rtty rely just on cw_text_entry here?
 			{
 				DigiModes_TxBufferPutChar(result);
 			}
@@ -650,10 +655,12 @@ void CwGen_AddChar(ulong code)
 
 	// HACK END
 	UiDriver_TextMsgPutChar(result);
+	ps.cw_char = 0;
 }
 
 static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
+	bool timers_active_start = CwGen_TimersActive();
 	uint32_t retval = false;
 
 	bool rerunStateMachine = false;
@@ -680,26 +687,30 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 				if (ps.port_state & CW_END_PROC)
 				{
 					CwGen_AddChar(ps.cw_char);
-					ps.cw_char = 0;
 					ps.port_state &= ~CW_END_PROC;
 					ps.space_timer = ps.space_time;
 				}
 
-				if(ps.break_timer == 0)
+				if(ps.break_timer > 0)
 				{
-					ts.tx_stop_req = true;
-				}
-				else
-				{
-					ps.break_timer--;
+					if (--ps.break_timer == 0)
+					{
+						ts.tx_stop_req = true;
+					}
 				}
 
-				if (ps.space_timer == 0)
+				if (ps.space_timer > 0)
 				{
-					CwGen_AddChar(0);
+					if (--ps.space_timer == 0)
+					{
+						CwGen_AddChar(0);
+					}
 				}
-				ps.space_timer--;
 
+				if (!CwGen_TimersActive() && timers_active_start)
+				{
+					CwGen_PrepareTx();
+				}
 				retval = false;
 			}
 		}
@@ -799,7 +810,6 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 				if(ps.cw_char > 5000)
 				{
 					CwGen_AddChar(-1);
-					ps.cw_char = 0;
 					ps.port_state &= ~CW_END_PROC;
 				} else {
 					ps.port_state |= CW_END_PROC;
@@ -902,7 +912,8 @@ void CwGen_PrepareTx()
 {
 	CwGen_SetSpeed();
 	ps.key_timer        = 0;
-	ps.cw_state = CW_IDLE;
-	ps.cw_char = 0;
-	ps.break_timer = 0;
+//	ps.cw_state = CW_IDLE;
+//	ps.cw_char = 0;
+//	ps.break_timer = 0;
+//	ps.space_timer = 0;
 }
