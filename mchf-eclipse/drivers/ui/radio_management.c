@@ -630,8 +630,8 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             Board_RedLed(LED_STATE_OFF);      // TX led off
             Board_GreenLed(LED_STATE_ON);      // TX led off
             ts.audio_dac_muting_flag = false; // unmute audio output
-            CwGen_PrepareTx();
-            // make sure the keyer is set correctly for next round
+            //CwGen_PrepareTx(); // make sure the keyer is set correctly for next round
+            // commented out as resetting now part of cw_gen state machine
         }
 
         if (ts.txrx_mode != txrx_mode_final)
@@ -984,7 +984,7 @@ void RadioManagement_HandlePttOnOff()
         // we are asked to start TX
         if(ts.ptt_req)
         {
-            if(ts.txrx_mode == TRX_MODE_RX && (RadioManagement_IsTxDisabled() == false || ts.dmod_mode == DEMOD_CW)) // FIXME cw_text_entry situation is not correctly processed
+            if(ts.txrx_mode == TRX_MODE_RX && (RadioManagement_IsTxDisabled() == false || ts.dmod_mode == DEMOD_CW || ts.cw_text_entry)) // FIXME cw_text_entry situation is not correctly processed
             {
                 RadioManagement_SwitchTxRx(TRX_MODE_TX,false);
             }
@@ -998,7 +998,7 @@ void RadioManagement_HandlePttOnOff()
         {
             // When CAT driver "pressed" PTT skip auto return to RX
 
-            if(!(ts.dmod_mode == DEMOD_CW || is_demod_rtty()) || ts.tx_stop_req == true)
+            if(!(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry) || ts.tx_stop_req == true)
             {
                 // If we are in TX and ...
                 if(ts.txrx_mode == TRX_MODE_TX)
