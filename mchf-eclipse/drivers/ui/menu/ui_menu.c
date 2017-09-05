@@ -2347,7 +2347,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
                 UiMenu_DisplayValue("Working",Red,pos);
                 ConfigStorage_CopyFlash2Serial();
-                mchf_reboot();
+                Board_Reboot();
             }
         }
         break;
@@ -3273,9 +3273,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 // clear EEPROM
                 UiMenu_DisplayValue("Working",Red,pos);
                 SerialEEPROM_Clear_Signature();
-                Si570_ResetConfiguration();     // restore SI570 to factory default
-                *(__IO uint32_t*)(SRAM2_BASE) = 0x55;
-                NVIC_SystemReset();         // restart mcHF
+                Board_Reboot();
             }
         }
         break;
@@ -3468,7 +3466,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         if(var>=1)
         {
             MchfRtc_Start();
-            mchf_reboot();
+            Board_Reboot();
             // TODO: we will not reach this but in future we may switch the keyboard dynamically...
             txt_ptr = " Done!";
             clr = Green;

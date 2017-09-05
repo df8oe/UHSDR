@@ -1018,29 +1018,6 @@ do {							\
     __asm__ __volatile__ ("nop\n\t":::"memory");	\
 } while (0)
 
-/**
- * @brief Introduces about 400ms of delay (load dependent, since interrupt eats some of the time.
- */
-// TODO: Measure raw time for this loop
-#define non_os_delay_a()						\
-do {							\
-  register unsigned int i;				\
-  for (i = 0; i < 10000000; ++i)				\
-    __asm__ __volatile__ ("nop\n\t":::"memory");	\
-} while (0)
-
-/**
- * @brief Introduces about (count * 400ms) of delay (load dependent, since interrupt eats some of the time.
- */
-// TODO: Measure raw time for this loop
-#define non_os_delay_multi(count)                        \
-{ int idx; for (idx = 0; idx < count; idx++) {                            \
-  register unsigned int i;              \
-  for (i = 0; i < 10000000; ++i)                \
-    __asm__ __volatile__ ("nop\n\t":::"memory");    \
-} }
-
-
 
 // ------------------------------------------------------------------
 // Exports
@@ -1050,7 +1027,7 @@ typedef enum {
     LED_STATE_TOGGLE = 2
 } ledstate_t;
 
-inline void MchfBoard_GreenLed(ledstate_t state)
+inline void Board_GreenLed(ledstate_t state)
 {
     switch(state)
     {
@@ -1066,7 +1043,7 @@ inline void MchfBoard_GreenLed(ledstate_t state)
     }
 }
 
-inline void MchfBoard_RedLed(ledstate_t state)
+inline void Board_RedLed(ledstate_t state)
 {
     switch(state)
     {
@@ -1083,7 +1060,7 @@ inline void MchfBoard_RedLed(ledstate_t state)
 }
 
 #ifdef UI_BRD_OVI40
-inline void MchfBoard_BlueLed(ledstate_t state)
+inline void Board_BlueLed(ledstate_t state)
 {
     switch(state)
     {
@@ -1103,7 +1080,7 @@ inline void MchfBoard_BlueLed(ledstate_t state)
  * @brief sets the hw ptt line and by this switches the mcHF board signal path between rx and tx configuration
  * @param tx_enable true == TX Paths, false == RX Paths
  */
-inline void MchfBoard_EnableTXSignalPath(bool tx_enable)
+inline void Board_EnableTXSignalPath(bool tx_enable)
 {
     // to make switching as noiseless as possible, make sure the codec lineout is muted/produces zero output before switching
     if (tx_enable)
@@ -1133,7 +1110,7 @@ inline void MchfBoard_EnableTXSignalPath(bool tx_enable)
 /**
  * @brief set PA bias at the LM2931CDG (U18) using DAC Channel 2
  */
-inline void MchfBoard_SetPaBiasValue(uint16_t bias)
+inline void Board_SetPaBiasValue(uint16_t bias)
 {
     // Set DAC Channel 1 DHR12L register
     // DAC_SetChannel2Data(DAC_Align_8b_R,bias);
@@ -1141,34 +1118,34 @@ inline void MchfBoard_SetPaBiasValue(uint16_t bias)
 
 }
 
-void MchfBoard_HandlePowerDown();
+void Board_HandlePowerDown();
 
-void MchfBoard_SelectLpfBpf(uint8_t group);
+void Board_SelectLpfBpf(uint8_t group);
 
-void mchf_board_init_minimal();
-void mchf_board_init_full();
-void mchf_board_post_init();
-void mchf_reboot();
-void mchf_powerdown();
+void Board_InitMinimal();
+void Board_InitFull();
+void Board_PostInit();
+void Board_Reboot();
+void Board_Powerdown();
 
 
 /**
  * Is the hardware contact named DAH pressed
  */
-inline bool mchf_ptt_dah_line_pressed() {
+inline bool Board_PttDahLinePressed() {
     return  !HAL_GPIO_ReadPin(PADDLE_DAH_PIO,PADDLE_DAH);
 }
 
 /**
  * Is the hardware contact named DIT pressed
  */
-inline bool mchf_dit_line_pressed() {
+inline bool Board_DitLinePressed() {
     return  !HAL_GPIO_ReadPin(PADDLE_DIT_PIO,PADDLE_DIT);
 }
 
-unsigned int mchf_board_get_ramsize();
-void mchf_board_detect_ramsize();
-void mchf_board_touchscreen_init();
+unsigned int Board_RamSizeGet();
+void Board_RamSizeDetection();
+void Board_TouchscreenInit();
 
 // in main.c
 void CriticalError(ulong error);
@@ -1193,12 +1170,4 @@ inline bool is_waterfallmode()
 {
     return (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) != 0;
 }
-
-
-#define STM32_GetRevision()     (*(uint16_t *) (UID_BASE + 2))
-#define STM32_GetSignature()    ((*(uint16_t *) (DBGMCU_BASE)) & 0x0FFF)
-#define STM32_GetFlashSize()    (*(uint16_t *) (FLASHSIZE_BASE))
-#define STM32_UUID ((uint32_t *)UID_BASE)
-
-
 #endif

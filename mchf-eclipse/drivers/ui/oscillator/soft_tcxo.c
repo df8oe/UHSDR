@@ -147,9 +147,6 @@ void SoftTcxo_Init()
 
     // Temp sensor setup
     lo.sensor_present = Si570_InitExternalTempSensor() == 0;
-
-    // Read SI570 settings
-    Si570_ResetConfiguration();
 }
 
 

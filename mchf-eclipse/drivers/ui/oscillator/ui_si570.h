@@ -26,27 +26,31 @@ typedef enum
 
 } Si570_ResultCodes;
 
-// -------------------------------------------------------------------------------------
-// Exports
-// ------------------
 
-
-
-Si570_ResultCodes Si570_ChangeToNextFrequency();
-bool Si570_IsNextStepLarge();
+// normal operations interface
 Si570_ResultCodes Si570_PrepareNextFrequency(ulong freq, int temp_factor);
-void Si570_SetPPM(float32_t ppm);
+Si570_ResultCodes Si570_ChangeToNextFrequency();
+bool              Si570_IsNextStepLarge();
 
 
-
-uchar   Si570_ResetConfiguration();
+// startup handling
 void 	Si570_Init();
-float   Si570_GetStartupFrequency();
-uint8_t Si570_GetI2CAddress();
 
-uchar   Si570_InitExternalTempSensor();
-uchar   Si570_ReadExternalTempSensor(int32_t *temp);
+// presence information
+bool    Si570_IsPresent();
 
-bool   Si570_IsPresent();
+// startup/runtime reconfiguration
+void    Si570_SetPPM(float32_t ppm);
+
+
+// non-critical device information reading
+float32_t   Si570_GetStartupFrequency();
+uint8_t     Si570_GetI2CAddress();
+
+
+// temperature sensor for SoftTcxo
+uint8_t   Si570_InitExternalTempSensor();
+uint8_t   Si570_ReadExternalTempSensor(int32_t *temp);
+
 
 #endif

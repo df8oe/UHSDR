@@ -466,11 +466,11 @@ static bool CwGen_DitRequested()
 	bool retval;
 	if(ts.cw_paddle_reverse)      // Paddles ARE reversed
 	{
-		retval =  mchf_ptt_dah_line_pressed();
+		retval =  Board_PttDahLinePressed();
 	}
 	else        // Paddles NOT reversed
 	{
-		retval =  mchf_dit_line_pressed();
+		retval =  Board_DitLinePressed();
 	}
 	return retval;
 }
@@ -483,11 +483,11 @@ static bool CwGen_DahRequested()
 	bool retval;
 	if(!ts.cw_paddle_reverse)      // Paddles NOT reversed
 	{
-		retval =  mchf_ptt_dah_line_pressed();
+		retval =  Board_PttDahLinePressed();
 	}
 	else        // Paddles ARE reversed
 	{
-		retval =  mchf_dit_line_pressed();
+		retval =  Board_DitLinePressed();
 	}
 	return retval;
 }
@@ -609,7 +609,7 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 				(ps.key_timer == 2)
 				&&
 				(
-						(mchf_ptt_dah_line_pressed() == false)
+						(Board_PttDahLinePressed() == false)
 						&&
 						(cat_ptt_active == false || CatDriver_CWKeyPressed() == false)
 				)
@@ -668,7 +668,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 		case CW_IDLE:
 		{
 			// at least one paddle is still or has been recently pressed
-			if( mchf_dit_line_pressed() || mchf_ptt_dah_line_pressed()	||
+			if( Board_DitLinePressed() || Board_PttDahLinePressed()	||
 					(ps.port_state & (CW_DAH_L|CW_DIT_L)))
 			{
 				CwGen_CheckKeyerState();
