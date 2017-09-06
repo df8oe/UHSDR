@@ -103,7 +103,7 @@ Both firmware and bootloader can be updated using the DFU Upload method. You wil
 1. Turn the TRX off
 1. Press and hold Band+
 1. Press and hold Power
-1. After two seconds you can release the Band+ button but keep the Power button pressed permanently. You will see the LCD white backlight, which stays on. You will not see any LED flashing etc. All communication is only through the USB bus. 
+1. After two seconds you can release the Band+ button but keep the Power button pressed permanently. Now maybe you will see the LCD white backlight, which stays on - That is depending on the charge of LCD you have fitted and on the method you are driving it (SPI or parallel). Regardless if it stays at text or goes white - bothe is ok. You will not see any LED flashing etc. All communication is only through the USB bus. 
 1. Your PC should now recognize a new USB device "STM BOOTLOADER", manufacturer is "STMicroelectronics"
 1. Keep the power button pressed until the very end of the instructions given below. 
 
