@@ -15,36 +15,21 @@
 #define CW_DECODE_BLOCK_SIZE 32
 typedef struct
 {
-	float32_t coeff;
-	float32_t Q1;
-	float32_t Q2;
-	float32_t sine;
-	float32_t cosine;
 	float32_t sampling_freq;
 	float32_t target_freq;
-} cw_goertzel_t;
+} cw_config_t;
 
-static cw_goertzel_t CW_Goertzel =
+Goertzel cw_goertzel;
+
+static cw_config_t CW_Config =
 { .sampling_freq = 12000.0, .target_freq = 700.0 };
 
 static void CW_Decode(void);
 
 void CwDecode_FilterInit()
 {
-
 	// set Goertzel parameters for CW decoding
-	////////////////////////////////////
-	// The basic goertzel calculation //
-	////////////////////////////////////
-	int CW_k;
-	float CW_omega;
-	CW_k = (int) (0.5
-			+ ((CW_DECODE_BLOCK_SIZE * CW_Goertzel.target_freq)
-					/ CW_Goertzel.sampling_freq));
-	CW_omega = (2.0 * PI * CW_k) / CW_DECODE_BLOCK_SIZE;
-	//CW_Goertzel.sine = sinf(CW_omega);
-	CW_Goertzel.cosine = cosf(CW_omega);
-	CW_Goertzel.coeff = 2.0 * CW_Goertzel.cosine;
+	AudioFilter_CalcGoertzel(&cw_goertzel, CW_Config.target_freq, CW_DECODE_BLOCK_SIZE, 1.0, CW_Config.sampling_freq);
 }
 
 // for experimental CW decoder
@@ -112,15 +97,15 @@ volatile static bool cw_state;                         // Current decoded signal
 volatile static sigbuf sig[CW_SIG_BUFSIZE]; // A circular buffer of decoded input levels and durations, input from
 // SignalSampler().  Used by CW Decode functions
 volatile static int32_t sig_lastrx = 0; // Circular buffer in pointer, updated by SignalSampler
-int32_t sig_incount = 0; // Circular buffer in pointer, copy of sig_lastrx, used by CW Decode functions
-int32_t sig_outcount = 0; // Circular buffer out pointer, used by CW Decode functions
+static int32_t sig_incount = 0; // Circular buffer in pointer, copy of sig_lastrx, used by CW Decode functions
+static int32_t sig_outcount = 0; // Circular buffer out pointer, used by CW Decode functions
 volatile static int32_t sig_timer = 0; // Elapsed time of current signal state, in units of the
 // FFT conversion time. approx 2.9ms for FFT256 with no averaging
 // or 11.6ms for FFT1024 with no averaging.  Updated by SignalSampler.
 volatile static int32_t timer_stepsize = 1; // Step size of signal timer depends on FFT conversion time, FFT1024=4
-int32_t cur_time;                     // copy of sig_timer
-int32_t cur_outcount = 0; // Basically same as sig_outcount, for Error Correction functionality
-int32_t last_outcount = 0; // sig_outcount for previous character, used for Error Correction func
+static int32_t cur_time;                     // copy of sig_timer
+static int32_t cur_outcount = 0; // Basically same as sig_outcount, for Error Correction functionality
+static int32_t last_outcount = 0; // sig_outcount for previous character, used for Error Correction func
 
 static sigbuf data[CW_DATA_BUFSIZE]; // Buffer containing decoded dot/dash and time information
 // for assembly into a character
@@ -135,6 +120,7 @@ static float32_t dot_avg, dash_avg;            // Dot and Dash Space averages
 static float32_t symspace_avg, cwspace_avg; // Intra symbol Space and Character-Word Space
 static int32_t w_space;                      // Last word space time
 static float32_t raw_signal_buffer[CW_DECODE_BLOCK_SIZE];
+
 
 static void CW_Decode_exe(void)
 {
@@ -153,21 +139,11 @@ static void CW_Decode_exe(void)
 	// these are already in raw_signal_buffer
 
 	//    2.) calculate Goertzel
-	// Goertzel func, copied from OZ1JHM's code
 	for (uint16_t index = 0; index < CW_DECODE_BLOCK_SIZE; index++)
 	{
-		float32_t Q0;
-		Q0 = CW_Goertzel.coeff * CW_Goertzel.Q1 - CW_Goertzel.Q2
-				+ raw_signal_buffer[index];
-		CW_Goertzel.Q2 = CW_Goertzel.Q1;
-		CW_Goertzel.Q1 = Q0;
+		AudioFilter_GoertzelInput(&cw_goertzel, raw_signal_buffer[index]);
 	}
-	float32_t magnitude = (CW_Goertzel.Q1 * CW_Goertzel.Q1)
-			+ (CW_Goertzel.Q2 * CW_Goertzel.Q2)
-			- CW_Goertzel.Q1 * CW_Goertzel.Q2 * CW_Goertzel.coeff; // we do only need the real part //
-	float32_t magnitudeSquared = sqrtf(magnitude); // I dont think we need this . . . !?
-	CW_Goertzel.Q2 = 0;
-	CW_Goertzel.Q1 = 0;
+	float32_t magnitudeSquared = AudioFilter_GoertzelEnergy(&cw_goertzel); // I dont think we need this . . . !?
 
 	// I am not sure whether we would need an AGC here, because the audio chain already has an AGC
 	//    3.) AGC

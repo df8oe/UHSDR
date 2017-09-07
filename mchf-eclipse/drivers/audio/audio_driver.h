@@ -115,14 +115,6 @@ typedef struct
     float32_t               M_c2;
 } AudioDriverBuffer;
 
-typedef struct {
-    float                   a;
-    float                   b;
-    float                   sin;
-    float                   cos;
-    float                   r;
-} Goertzel;
-
 // Audio driver publics
 typedef struct AudioDriverState
 {

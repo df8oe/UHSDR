@@ -1231,6 +1231,32 @@ void AudioFilter_SetDefaultMemories()
     ts.filter_path_mem[FILTER_MODE_FM][3] = 3;
 }
 
+void AudioFilter_CalcGoertzel(Goertzel* g, float32_t freq, const uint32_t size, const float goertzel_coeff, float32_t samplerate)
+{
+    g->a = (0.5 + (freq * goertzel_coeff) * size/samplerate);
+    g->b = (2*PI*g->a)/size;
+    g->sin = sin(g->b);
+    g->cos = cos(g->b);
+    g->r = 2 * g->cos;
+}
+
+void AudioFilter_GoertzelInput(Goertzel* goertzel, float32_t in)
+{
+	goertzel->buf[0] = goertzel->r * goertzel->buf[1] - goertzel->buf[2]	+ in;
+	goertzel->buf[2] = goertzel->buf[1];
+	goertzel->buf[1] = goertzel->buf[0];
+}
+
+float32_t AudioFilter_GoertzelEnergy(Goertzel* goertzel)
+{
+	float32_t a = (goertzel->buf[1] - (goertzel->buf[2] * goertzel->cos));// calculate energy at frequency
+	float32_t b = (goertzel->buf[2] * goertzel->sin);
+	goertzel->buf[0] = 0;
+	goertzel->buf[1] = 0;
+	goertzel->buf[2] = 0;
+	return sqrtf(a * a + b * b);
+}
+
 
 
 

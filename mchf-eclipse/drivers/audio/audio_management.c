@@ -257,17 +257,6 @@ void AudioManagement_CalcSubaudibleGenFreq(void)
     ads.fm_subaudible_tone_word = (ulong)(ads.fm_subaudible_tone_gen_freq * FM_SUBAUDIBLE_TONE_WORD_CALC_FACTOR);   // calculate tone word
 }
 
-static void AudioManagement_CalcGoertzel(volatile Goertzel* gv, const uint32_t size, const float goertzel_coeff)
-{
-    // FIXME: Move the Goertzel data structures out of the volatile AudioDriverState ads or make ads no longer volatile
-    Goertzel *g = (Goertzel*)gv;
-    g->a = (0.5 + (ads.fm_subaudible_tone_det_freq * goertzel_coeff) * FM_SUBAUDIBLE_GOERTZEL_WINDOW * (size/2)/IQ_SAMPLE_RATE);
-    g->b = (2*PI*g->a)/(FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2);
-    g->sin = sin(g->b);
-    g->cos = cos(g->b);
-    g->r = 2 * g->cos;
-}
-
 /**
  * @brief Calculate frequency word for subaudible tone, call after change of detection frequency  [KA7OEI October, 2015]
  */
@@ -278,9 +267,9 @@ void AudioManagement_CalcSubaudibleDetFreq(void)
     ads.fm_subaudible_tone_det_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select];       // look up tone frequency (in Hz)
 
     // Calculate Goertzel terms for tone detector(s)
-    AudioManagement_CalcGoertzel(&ads.fm_goertzel[FM_HIGH],size,FM_GOERTZEL_HIGH);
-    AudioManagement_CalcGoertzel(&ads.fm_goertzel[FM_LOW],size,FM_GOERTZEL_LOW);
-    AudioManagement_CalcGoertzel(&ads.fm_goertzel[FM_CTR],size,1.0);
+    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_HIGH], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2,FM_GOERTZEL_HIGH, IQ_SAMPLE_RATE);
+    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_LOW], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2,FM_GOERTZEL_LOW, IQ_SAMPLE_RATE);
+    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_CTR], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2,1.0, IQ_SAMPLE_RATE);
 }
 
 //
