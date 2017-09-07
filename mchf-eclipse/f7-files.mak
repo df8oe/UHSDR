@@ -116,6 +116,7 @@ drivers/audio/filters/iq_rx_filter.c \
 drivers/audio/filters/iq_rx_filter_am.c \
 drivers/audio/filters/iq_tx_filter.c \
 drivers/audio/cw/cw_gen.c \
+drivers/audio/cw/cw_decoder.c \
 drivers/audio/codec/codec.c \
 drivers/audio/codec/uhsdr_hw_i2s.c \
 drivers/audio/audio_driver.c \
