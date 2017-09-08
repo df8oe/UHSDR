@@ -1235,8 +1235,8 @@ void AudioFilter_CalcGoertzel(Goertzel* g, float32_t freq, const uint32_t size, 
 {
     g->a = (0.5 + (freq * goertzel_coeff) * size/samplerate);
     g->b = (2*PI*g->a)/size;
-    g->sin = sin(g->b);
-    g->cos = cos(g->b);
+    g->sin = sinf(g->b);
+    g->cos = cosf(g->b);
     g->r = 2 * g->cos;
 }
 
