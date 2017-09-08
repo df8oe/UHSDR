@@ -3621,19 +3621,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     arm_iir_lattice_f32(&IIR_PreFilter, adb.a_buffer, adb.a_buffer, blockSizeDecim);
                 }
 
-
-                //
-                // This is the right place for the SNB
-                // Spectral Noise Blanker
-                //
-                // we try to implement the SNB from the WDSP lib
-                // by Warren Pratt
-                //
-                // I have no idea whether it will be possible to implement it, because of processor load and very complex implementation issues
-                // DD4WH Feb, 22nd, 2017
-
-                //            exec_SNB(blockSizeDecim);
-
                 // now process the samples and perform the receiver AGC function
                 if(ts.agc_wdsp)
                 {

@@ -204,7 +204,7 @@ void     AudioFilter_SetDefaultMemories();
 
 typedef struct
 {
-	float32_t a;
+	int a;
 	float32_t b;
 	float32_t sin;
 	float32_t cos;
