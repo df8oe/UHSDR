@@ -70,7 +70,7 @@ SWRMeter                    swrm;
 
 // ------------------------------------------------
 // Frequency public
-__IO DialFrequency               df;
+DialFrequency               df;
 
 
 #define BandInfoGenerate(BAND,SUFFIX,NAME) { TX_POWER_FACTOR_##BAND##_DEFAULT, BAND_FREQ_##BAND , BAND_SIZE_##BAND , NAME }

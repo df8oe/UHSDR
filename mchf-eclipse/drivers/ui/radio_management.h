@@ -46,7 +46,7 @@ typedef struct DialFrequency
 
 // ------------------------------------------------
 // Frequency public
-extern __IO DialFrequency               df;
+extern DialFrequency               df;
 
 
 inline uint8_t RadioManagement_TcxoGetMode()
