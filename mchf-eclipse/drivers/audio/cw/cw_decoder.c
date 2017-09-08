@@ -44,7 +44,7 @@ void CwDecode_FilterInit()
 
 //-----------------------------------------------------------------------------
 // Selection of all sorts of post-filtering, including noise/spike/dropout cancel
-#define CW_SIGAVERAGE         2  // N = 1, 2, 3... Probably a better method than FFTAVERAGE.  Also works
+#define CW_SIGAVERAGE         4  // N = 1, 2, 3... Probably a better method than FFTAVERAGE.  Also works
 // with FFT1024.  Averages (smoothes) signal from N number of samples,
 //  but does not slow down sampling rate.  Fights drops and spikes.
 
@@ -97,7 +97,7 @@ typedef struct
 volatile static float32_t CW_vol = 2.0; // FIXME
 volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
 //volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
-volatile static float32_t thresh = 10e-12; //0.01; // 10;              // Audio threshold level (0 - 40)
+volatile static float32_t thresh = 15000.0; //0.01; // 10;              // Audio threshold level (0 - 40)
 
 volatile static bool cw_state;                         // Current decoded signal state
 volatile static sigbuf sig[CW_SIG_BUFSIZE]; // A circular buffer of decoded input levels and durations, input from
@@ -140,7 +140,7 @@ static void CW_Decode_exe(void)
 //                 static int16_t  oldthresh;                        // Used to trigger refresh of threshold in FFT Waterfall on LCD
 
 	//	static int16_t siglevel;                         // FFT signal level
-	static float32_t siglevel;                         // signal level from Goertzel calculation
+	float32_t siglevel;                         // signal level from Goertzel calculation
 	//	int16_t lvl = 0;                              // Multiuse variable
 	float32_t lvl = 0;                              // Multiuse variable
 	//	int16_t pklvl;                            // Used for AGC calculations
@@ -177,6 +177,7 @@ static void CW_Decode_exe(void)
 		siglevel = magnitudeSquared;
 	}
 	//    4.) signal averaging/smoothing
+	// better use exponential averager here !?
 
 	//	static int16_t avg_win[CW_SIGAVERAGE]; // Sliding window buffer for signal averaging, if used
 	static float32_t avg_win[CW_SIGAVERAGE]; // Sliding window buffer for signal averaging, if used
@@ -208,9 +209,15 @@ static void CW_Decode_exe(void)
 	else if (newstate != cw_state) change = TRUE;
 #else                                           // No noise canceling
 	if (siglevel >= thresh)
+	{
 		cw_state = TRUE;
+        Board_RedLed(LED_STATE_ON);
+	}
 	else
+	{
 		cw_state = FALSE;
+        Board_RedLed(LED_STATE_OFF);
+	}
 #endif
 
 	//    6.) fill into circular buffer
@@ -233,7 +240,7 @@ static void CW_Decode_exe(void)
 	//----------------
 	// Count signal state timer upwards based on which sampling rate is in effect
 	sig_timer = sig_timer + timer_stepsize;
-	if (sig_timer >= ONE_SECOND * CW_TIMEOUT)
+	if (sig_timer > ONE_SECOND * CW_TIMEOUT)
 	{
 		sig_timer = ONE_SECOND * CW_TIMEOUT; // Impose a MAXTIME second boundary for overflow time
 	}
@@ -1211,7 +1218,7 @@ void CW_Decode(void)
 
 	//-----------------------------------
 	// Process the works once initialized - or if timeout
-	if ((b.initialized == TRUE) || (cur_time >= ONE_SECOND * CW_TIMEOUT)) // 344 equals one second
+	if ((b.initialized == TRUE) || (cur_time >= ONE_SECOND * CW_TIMEOUT)) //
 	{
 		received = DataRecognitionFunc();      // True if new character received
 		if (received && (data_len > 0))      // also make sure it is not a spike
@@ -1229,8 +1236,8 @@ void CW_Decode(void)
 //        Serial.println();
 //        Serial.println(code);
 				// If Error Correction function cannot resolve, then reinitialize speed
-				if (!ErrorCorrectionFunc())
-					b.initialized = FALSE;
+//				if (!ErrorCorrectionFunc())
+//					b.initialized = FALSE;
 			}
 		}
 	}
