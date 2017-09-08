@@ -1692,7 +1692,7 @@ return true;
 #endif
 
 /*******************************************************************************************************************
- *  AGC WDSP TEST
+ *  AGC WDSP
  *  code taken from wdsp lib by Warren Pratt
  *  http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
  *  the AGC code is licensed under the GPL license
@@ -1703,56 +1703,56 @@ return true;
 //#define MAX_TAU_ATTACK      (0.01)
 //#define RB_SIZE       (int) (MAX_SAMPLE_RATE * MAX_N_TAU * MAX_TAU_ATTACK + 1)
 //int8_t AGC_mode = 2;
-int pmode = 1; // if 0, calculate magnitude by max(|I|, |Q|), if 1, calculate sqrtf(I*I+Q*Q)
-float32_t out_sample[2];
-float32_t abs_out_sample;
-float32_t tau_attack;
-float32_t tau_decay;
-int n_tau;
-float32_t max_gain;
-float32_t var_gain;
-float32_t fixed_gain = 1.0;
-float32_t max_input;
-float32_t out_targ;
-float32_t tau_fast_backaverage;
-float32_t tau_fast_decay;
-float32_t pop_ratio;
+int AGC_WDSP_pmode = 1; // if 0, calculate magnitude by max(|I|, |Q|), if 1, calculate sqrtf(I*I+Q*Q)
+float32_t AGC_WDSP_out_sample[2];
+float32_t AGC_WDSP_abs_out_sample;
+float32_t AGC_WDSP_tau_attack;
+float32_t AGC_WDSP_tau_decay;
+int AGC_WDSP_n_tau;
+float32_t AGC_WDSP_max_gain;
+float32_t AGC_WDSP_var_gain;
+float32_t AGC_WDSP_fixed_gain = 1.0;
+float32_t AGC_WDSP_max_input;
+float32_t AGC_WDSP_out_targ;
+float32_t AGC_WDSP_tau_fast_backaverage;
+float32_t AGC_WDSP_tau_fast_decay;
+float32_t AGC_WDSP_pop_ratio;
 //uint8_t hang_enable;
-float32_t tau_hang_backmult;
-float32_t hangtime;
-float32_t hang_thresh;
-float32_t tau_hang_decay;
-float32_t ring[96];
-float32_t abs_ring[96];
+float32_t AGC_WDSP_tau_hang_backmult;
+float32_t AGC_WDSP_hangtime;
+float32_t AGC_WDSP_hang_thresh;
+float32_t AGC_WDSP_tau_hang_decay;
+float32_t AGC_WDSP_ring[96];
+float32_t AGC_WDSP_abs_ring[96];
 //assign constants
-int ring_buffsize = 96;
+int AGC_WDSP_ring_buffsize = 96;
 //do one-time initialization
-int out_index = -1;
-float32_t ring_max = 0.0;
-float32_t volts = 0.0;
-float32_t save_volts = 0.0;
-float32_t fast_backaverage = 0.0;
-float32_t hang_backaverage = 0.0;
-int hang_counter = 0;
-uint8_t decay_type = 0;
-uint8_t state = 0;
-int attack_buffsize;
-uint32_t in_index;
-float32_t attack_mult;
-float32_t decay_mult;
-float32_t fast_decay_mult;
-float32_t fast_backmult;
-float32_t onemfast_backmult;
-float32_t out_target;
-float32_t min_volts;
-float32_t inv_out_target;
-float32_t tmp;
-float32_t slope_constant;
-float32_t inv_max_input;
-float32_t hang_level;
-float32_t hang_backmult;
-float32_t onemhang_backmult;
-float32_t hang_decay_mult;
+int AGC_WDSP_out_index = -1;
+float32_t AGC_WDSP_ring_max = 0.0;
+float32_t AGC_WDSP_volts = 0.0;
+float32_t AGC_WDSP_save_volts = 0.0;
+float32_t AGC_WDSP_fast_backaverage = 0.0;
+float32_t AGC_WDSP_hang_backaverage = 0.0;
+int AGC_WDSP_hang_counter = 0;
+uint8_t AGC_WDSP_decay_type = 0;
+uint8_t AGC_WDSP_state = 0;
+int AGC_WDSP_attack_buffsize;
+uint32_t AGC_WDSP_in_index;
+float32_t AGC_WDSP_attack_mult;
+float32_t AGC_WDSP_decay_mult;
+float32_t AGC_WDSP_fast_decay_mult;
+float32_t AGC_WDSP_fast_backmult;
+float32_t AGC_WDSP_onemfast_backmult;
+float32_t AGC_WDSP_out_target;
+float32_t AGC_WDSP_min_volts;
+float32_t AGC_WDSP_inv_out_target;
+float32_t AGC_WDSP_tmp;
+float32_t AGC_WDSP_slope_constant;
+float32_t AGC_WDSP_inv_max_input;
+float32_t AGC_WDSP_hang_level;
+float32_t AGC_WDSP_hang_backmult;
+float32_t AGC_WDSP_onemhang_backmult;
+float32_t AGC_WDSP_hang_decay_mult;
 
 // RTTY Experiment based on code from the DSP Tutorial at http://dp.nonoo.hu/projects/ham-dsp-tutorial/18-rtty-decoder-using-iir-filters/
 // Used with permission from Norbert Varga, HA2NON under GPLv3 license
@@ -1796,26 +1796,26 @@ void AudioDriver_SetupAGC()
     0.250,                      // hang_thresh
     0.100);                     // tau_hang_decay
      */
-    tau_attack = 0.001;               // tau_attack
+    AGC_WDSP_tau_attack = 0.001;               // tau_attack
     //    tau_decay = ts.agc_wdsp_tau_decay / 1000.0; // 0.250;                // tau_decay
-    n_tau = 4;                        // n_tau
+    AGC_WDSP_n_tau = 4;                        // n_tau
 
     //    max_gain = 1000.0; // 1000.0; determines the AGC threshold = knee level
     //  max_gain is powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
     //    fixed_gain = ads.agc_rf_gain; //0.7; // if AGC == OFF, this gain is used
-    max_input = (float32_t)ADC_CLIP_WARN_THRESHOLD * 2.0; // which is 8192 at the moment
+    AGC_WDSP_max_input = (float32_t)ADC_CLIP_WARN_THRESHOLD * 2.0; // which is 8192 at the moment
     //32767.0; // maximum value of 16-bit audio //  1.0; //
-    out_targ = (float32_t)ADC_CLIP_WARN_THRESHOLD; // 4096, tweaked, so that volume when switching between the two AGCs remains equal
+    AGC_WDSP_out_targ = (float32_t)ADC_CLIP_WARN_THRESHOLD; // 4096, tweaked, so that volume when switching between the two AGCs remains equal
     //12000.0; // target value of audio after AGC
     //    var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
-    var_gain = powf (10.0, (float32_t)ts.agc_wdsp_slope / 200.0); // 10 * 10^(slope / 20)
-    tau_fast_backaverage = 0.250;    // tau_fast_backaverage
-    tau_fast_decay = 0.005;          // tau_fast_decay
-    pop_ratio = 5.0;                 // pop_ratio
+    AGC_WDSP_var_gain = powf (10.0, (float32_t)ts.agc_wdsp_slope / 200.0); // 10 * 10^(slope / 20)
+    AGC_WDSP_tau_fast_backaverage = 0.250;    // tau_fast_backaverage
+    AGC_WDSP_tau_fast_decay = 0.005;          // tau_fast_decay
+    AGC_WDSP_pop_ratio = 5.0;                 // pop_ratio
     //    hang_enable = 0;                 // hang_enable
-    tau_hang_backmult = 0.500;       // tau_hang_backmult
+    AGC_WDSP_tau_hang_backmult = 0.500;       // tau_hang_backmult
     //    hangtime = 0.250;                // hangtime
-    hangtime = (float32_t)ts.agc_wdsp_hang_time / 1000.0;
+    AGC_WDSP_hangtime = (float32_t)ts.agc_wdsp_hang_time / 1000.0;
     //    hang_thresh = 0.250;             // hang_thresh
 
     //    tau_hang_decay = 0.100;          // tau_hang_decay
@@ -1828,35 +1828,35 @@ void AudioDriver_SetupAGC()
         case 5: //agcOFF
             break;
         case 1: //agcLONG
-            hangtime = 2.000;
+            AGC_WDSP_hangtime = 2.000;
             //      ts.agc_wdsp_tau_decay = 2000;
             //      hang_thresh = 1.0;
             //      ts.agc_wdsp_hang_enable = 1;
             break;
         case 2: //agcSLOW
-            hangtime = 1.000;
+            AGC_WDSP_hangtime = 1.000;
             //      hang_thresh = 1.0;
             //      ts.agc_wdsp_tau_decay = 500;
             //      ts.agc_wdsp_hang_enable = 1;
             break;
         case 3: //agcMED
             //      hang_thresh = 1.0;
-            hangtime = 0.250;
+            AGC_WDSP_hangtime = 0.250;
             //      ts.agc_wdsp_tau_decay = 250;
             break;
         case 4: //agcFAST
             //      hang_thresh = 1.0;
-            hangtime = 0.100;
+            AGC_WDSP_hangtime = 0.100;
             //      ts.agc_wdsp_tau_decay = 50;
             break;
         case 0: //agcFrank --> very long
             //      ts.agc_wdsp_hang_enable = 0;
             //      hang_thresh = 0.300; // from which level on should hang be enabled
-            hangtime = 3.000; // hang time, if enabled
-            tau_hang_backmult = 0.500; // time constant exponential averager
+            AGC_WDSP_hangtime = 3.000; // hang time, if enabled
+            AGC_WDSP_tau_hang_backmult = 0.500; // time constant exponential averager
             //      ts.agc_wdsp_tau_decay = 4000; // time constant decay long
-            tau_fast_decay = 0.05;          // tau_fast_decay
-            tau_fast_backaverage = 0.250; // time constant exponential averager
+            AGC_WDSP_tau_fast_decay = 0.05;          // tau_fast_decay
+            AGC_WDSP_tau_fast_backaverage = 0.250; // time constant exponential averager
             break;
         default:
             break;
@@ -1866,51 +1866,51 @@ void AudioDriver_SetupAGC()
     //  float32_t noise_offset = 10.0 * log10f(fhigh - rxa[channel].nbp0.p->flow)
     //          * size / rate);
     //  max_gain = out_target / var_gain * powf (10.0, (thresh + noise_offset) / 20.0));
-    tau_hang_decay = (float32_t)ts.agc_wdsp_tau_hang_decay / 1000.0;
-    tau_decay = (float32_t)ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode] / 1000.0;
-    max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
-    fixed_gain = max_gain / 10.0;
-    attack_buffsize = (int)ceil(sample_rate * n_tau * tau_attack); // 48
-    in_index = attack_buffsize + out_index;
-    attack_mult = 1.0 - expf(-1.0 / (sample_rate * tau_attack));
-    decay_mult = 1.0 - expf(-1.0 / (sample_rate * tau_decay));
-    fast_decay_mult = 1.0 - expf(-1.0 / (sample_rate * tau_fast_decay));
-    fast_backmult = 1.0 - expf(-1.0 / (sample_rate * tau_fast_backaverage));
+    AGC_WDSP_tau_hang_decay = (float32_t)ts.agc_wdsp_tau_hang_decay / 1000.0;
+    AGC_WDSP_tau_decay = (float32_t)ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode] / 1000.0;
+    AGC_WDSP_max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
+    AGC_WDSP_fixed_gain = AGC_WDSP_max_gain / 10.0;
+    AGC_WDSP_attack_buffsize = (int)ceil(sample_rate * AGC_WDSP_n_tau * AGC_WDSP_tau_attack); // 48
+    AGC_WDSP_in_index = AGC_WDSP_attack_buffsize + AGC_WDSP_out_index;
+    AGC_WDSP_attack_mult = 1.0 - expf(-1.0 / (sample_rate * AGC_WDSP_tau_attack));
+    AGC_WDSP_decay_mult = 1.0 - expf(-1.0 / (sample_rate * AGC_WDSP_tau_decay));
+    AGC_WDSP_fast_decay_mult = 1.0 - expf(-1.0 / (sample_rate * AGC_WDSP_tau_fast_decay));
+    AGC_WDSP_fast_backmult = 1.0 - expf(-1.0 / (sample_rate * AGC_WDSP_tau_fast_backaverage));
 
-    onemfast_backmult = 1.0 - fast_backmult;
+    AGC_WDSP_onemfast_backmult = 1.0 - AGC_WDSP_fast_backmult;
 
-    out_target = out_targ * (1.0 - expf(-(float32_t)n_tau)) * 0.9999;
+    AGC_WDSP_out_target = AGC_WDSP_out_targ * (1.0 - expf(-(float32_t)AGC_WDSP_n_tau)) * 0.9999;
     //  out_target = out_target * (1.0 - expf(-(float32_t)n_tau)) * 0.9999;
-    min_volts = out_target / (var_gain * max_gain);
-    inv_out_target = 1.0 / out_target;
+    AGC_WDSP_min_volts = AGC_WDSP_out_target / (AGC_WDSP_var_gain * AGC_WDSP_max_gain);
+    AGC_WDSP_inv_out_target = 1.0 / AGC_WDSP_out_target;
 
-    tmp = log10f(out_target / (max_input * var_gain * max_gain));
+    tmp = log10f(AGC_WDSP_out_target / (AGC_WDSP_max_input * AGC_WDSP_var_gain * AGC_WDSP_max_gain));
     if (tmp == 0.0)
         tmp = 1e-16;
-    slope_constant = (out_target * (1.0 - 1.0 / var_gain)) / tmp;
+    AGC_WDSP_slope_constant = (AGC_WDSP_out_target * (1.0 - 1.0 / AGC_WDSP_var_gain)) / tmp;
 
-    inv_max_input = 1.0 / max_input;
+    AGC_WDSP_inv_max_input = 1.0 / AGC_WDSP_max_input;
 
-    if (max_input > min_volts)
+    if (AGC_WDSP_max_input > AGC_WDSP_min_volts)
     {
         float32_t convert = powf (10.0, (float32_t)ts.agc_wdsp_hang_thresh / 20.0);
-        tmp = (convert - min_volts) / (max_input - min_volts);
+        tmp = (convert - AGC_WDSP_min_volts) / (AGC_WDSP_max_input - AGC_WDSP_min_volts);
         if(tmp < 1e-8) tmp = 1e-8;
-        hang_thresh = 1.0 + 0.125 * log10f (tmp);
+        AGC_WDSP_hang_thresh = 1.0 + 0.125 * log10f (tmp);
     }
     else
     {
-        hang_thresh = 1.0;
+        AGC_WDSP_hang_thresh = 1.0;
     }
 
-    tmp = powf (10.0, (hang_thresh - 1.0) / 0.125);
-    hang_level = (max_input * tmp + (out_target /
-            (var_gain * max_gain)) * (1.0 - tmp)) * 0.637;
+    tmp = powf (10.0, (AGC_WDSP_hang_thresh - 1.0) / 0.125);
+    AGC_WDSP_hang_level = (AGC_WDSP_max_input * tmp + (AGC_WDSP_out_target /
+            (AGC_WDSP_var_gain * AGC_WDSP_max_gain)) * (1.0 - tmp)) * 0.637;
 
-    hang_backmult = 1.0 - expf(-1.0 / (sample_rate * tau_hang_backmult));
-    onemhang_backmult = 1.0 - hang_backmult;
+    AGC_WDSP_hang_backmult = 1.0 - expf(-1.0 / (sample_rate * AGC_WDSP_tau_hang_backmult));
+    AGC_WDSP_onemhang_backmult = 1.0 - AGC_WDSP_hang_backmult;
 
-    hang_decay_mult = 1.0 - expf(-1.0 / (sample_rate * tau_hang_decay));
+    AGC_WDSP_hang_decay_mult = 1.0 - expf(-1.0 / (sample_rate * AGC_WDSP_tau_hang_decay));
 }
 
 
@@ -1935,26 +1935,26 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
     {
         for (i = 0; i < blockSize; i++)
         {
-            adb.a_buffer[i] = adb.a_buffer[i] * fixed_gain;
+            adb.a_buffer[i] = adb.a_buffer[i] * AGC_WDSP_fixed_gain;
         }
         return;
     }
 
     for (i = 0; i < blockSize; i++)
     {
-        if (++out_index >= ring_buffsize)
-            out_index -= ring_buffsize;
-        if (++in_index >= ring_buffsize)
-            in_index -= ring_buffsize;
+        if (++AGC_WDSP_out_index >= AGC_WDSP_ring_buffsize)
+            AGC_WDSP_out_index -= AGC_WDSP_ring_buffsize;
+        if (++AGC_WDSP_in_index >= AGC_WDSP_ring_buffsize)
+            AGC_WDSP_in_index -= AGC_WDSP_ring_buffsize;
 
-        out_sample[0] = ring[out_index];
-        abs_out_sample = abs_ring[out_index];
-        ring[in_index] = adb.a_buffer[i];
-        abs_ring[in_index] = fabs(adb.a_buffer[i]);
+        AGC_WDSP_out_sample[0] = AGC_WDSP_ring[AGC_WDSP_out_index];
+        AGC_WDSP_abs_out_sample = AGC_WDSP_abs_ring[AGC_WDSP_out_index];
+        AGC_WDSP_ring[AGC_WDSP_in_index] = adb.a_buffer[i];
+        AGC_WDSP_abs_ring[AGC_WDSP_in_index] = fabs(adb.a_buffer[i]);
 
-        fast_backaverage = fast_backmult * abs_out_sample + onemfast_backmult * fast_backaverage;
-        hang_backaverage = hang_backmult * abs_out_sample + onemhang_backmult * hang_backaverage;
-        if(hang_backaverage > hang_level)
+        AGC_WDSP_fast_backaverage = AGC_WDSP_fast_backmult * AGC_WDSP_abs_out_sample + AGC_WDSP_onemfast_backmult * AGC_WDSP_fast_backaverage;
+        AGC_WDSP_hang_backaverage = AGC_WDSP_hang_backmult * AGC_WDSP_abs_out_sample + AGC_WDSP_onemhang_backmult * AGC_WDSP_hang_backaverage;
+        if(AGC_WDSP_hang_backaverage > AGC_WDSP_hang_level)
         {
             ts.agc_wdsp_hang_action = 1;
         }
@@ -1963,52 +1963,52 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
             ts.agc_wdsp_hang_action = 0;
         }
 
-        if ((abs_out_sample >= ring_max) && (abs_out_sample > 0.0))
+        if ((AGC_WDSP_abs_out_sample >= AGC_WDSP_ring_max) && (AGC_WDSP_abs_out_sample > 0.0))
         {
-            ring_max = 0.0;
-            k = out_index;
-            for (j = 0; j < attack_buffsize; j++)
+            AGC_WDSP_ring_max = 0.0;
+            k = AGC_WDSP_out_index;
+            for (j = 0; j < AGC_WDSP_attack_buffsize; j++)
             {
-                if (++k == ring_buffsize)
+                if (++k == AGC_WDSP_ring_buffsize)
                     k = 0;
-                if (abs_ring[k] > ring_max)
-                    ring_max = abs_ring[k];
+                if (AGC_WDSP_abs_ring[k] > AGC_WDSP_ring_max)
+                    AGC_WDSP_ring_max = AGC_WDSP_abs_ring[k];
             }
         }
-        if (abs_ring[in_index] > ring_max)
-            ring_max = abs_ring[in_index];
+        if (AGC_WDSP_abs_ring[AGC_WDSP_in_index] > AGC_WDSP_ring_max)
+            AGC_WDSP_ring_max = AGC_WDSP_abs_ring[AGC_WDSP_in_index];
 
-        if (hang_counter > 0)
-            --hang_counter;
+        if (AGC_WDSP_hang_counter > 0)
+            --AGC_WDSP_hang_counter;
 
-        switch (state)
+        switch (AGC_WDSP_state)
         {
         case 0: // starting point after ATTACK
         {
-            if (ring_max >= volts)
+            if (AGC_WDSP_ring_max >= AGC_WDSP_volts)
             { // ATTACK
-                volts += (ring_max - volts) * attack_mult;
+                AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_attack_mult;
             }
             else
             { // DECAY
-                if (volts > pop_ratio * fast_backaverage)
+                if (AGC_WDSP_volts > AGC_WDSP_pop_ratio * AGC_WDSP_fast_backaverage)
                 { // short time constant detector
-                    state = 1;
-                    volts += (ring_max - volts) * fast_decay_mult;
+                    AGC_WDSP_state = 1;
+                    AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_fast_decay_mult;
                 }
                 else
                 { // hang AGC enabled and being activated
-                    if (ts.agc_wdsp_hang_enable  && (hang_backaverage > hang_level))
+                    if (ts.agc_wdsp_hang_enable  && (AGC_WDSP_hang_backaverage > AGC_WDSP_hang_level))
                     {
-                        state = 2;
-                        hang_counter = (int)(hangtime * IQ_SAMPLE_RATE_F / ads.decimation_rate);
-                        decay_type = 1;
+                        AGC_WDSP_state = 2;
+                        AGC_WDSP_hang_counter = (int)(AGC_WDSP_hangtime * IQ_SAMPLE_RATE_F / ads.decimation_rate);
+                        AGC_WDSP_decay_type = 1;
                     }
                     else
                     {// long time constant detector
-                        state = 3;
-                        volts += (ring_max - volts) * decay_mult;
-                        decay_type = 0;
+                        AGC_WDSP_state = 3;
+                        AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_decay_mult;
+                        AGC_WDSP_decay_type = 0;
                     }
                 }
             }
@@ -2016,34 +2016,34 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
         }
         case 1: // short time constant decay
         {
-            if (ring_max >= volts)
+            if (AGC_WDSP_ring_max >= AGC_WDSP_volts)
             { // ATTACK
-                state = 0;
-                volts += (ring_max - volts) * attack_mult;
+                AGC_WDSP_state = 0;
+                AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_attack_mult;
             }
             else
             {
-                if (volts > save_volts)
+                if (AGC_WDSP_volts > AGC_WDSP_save_volts)
                 {// short time constant detector
-                    volts += (ring_max - volts) * fast_decay_mult;
+                    AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_fast_decay_mult;
                 }
                 else
                 {
-                    if (hang_counter > 0)
+                    if (AGC_WDSP_hang_counter > 0)
                     {
-                        state = 2;
+                        AGC_WDSP_state = 2;
                     }
                     else
                     {
-                        if (decay_type == 0)
+                        if (AGC_WDSP_decay_type == 0)
                         {// long time constant detector
-                            state = 3;
-                            volts += (ring_max - volts) * decay_mult;
+                            AGC_WDSP_state = 3;
+                            AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_decay_mult;
                         }
                         else
                         { // hang time constant
-                            state = 4;
-                            volts += (ring_max - volts) * hang_decay_mult;
+                            AGC_WDSP_state = 4;
+                            AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_hang_decay_mult;
                         }
                     }
                 }
@@ -2052,54 +2052,54 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
         }
         case 2: // Hang is enabled and active, hang counter still counting
         { // ATTACK
-            if (ring_max >= volts)
+            if (AGC_WDSP_ring_max >= AGC_WDSP_volts)
             {
-                state = 0;
-                save_volts = volts;
-                volts += (ring_max - volts) * attack_mult;
+                AGC_WDSP_state = 0;
+                AGC_WDSP_save_volts = AGC_WDSP_volts;
+                AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_attack_mult;
             }
             else
             {
-                if (hang_counter == 0)
+                if (AGC_WDSP_hang_counter == 0)
                 { // hang time constant
-                    state = 4;
-                    volts += (ring_max - volts) * hang_decay_mult;
+                    AGC_WDSP_state = 4;
+                    AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_hang_decay_mult;
                 }
             }
             break;
         }
         case 3: // long time constant decay in progress
         {
-            if (ring_max >= volts)
+            if (AGC_WDSP_ring_max >= AGC_WDSP_volts)
             { // ATTACK
-                state = 0;
-                save_volts = volts;
-                volts += (ring_max - volts) * attack_mult;
+                AGC_WDSP_state = 0;
+                AGC_WDSP_save_volts = AGC_WDSP_volts;
+                AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_attack_mult;
             }
             else
             { // DECAY
-                volts += (ring_max - volts) * decay_mult;
+                AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_decay_mult;
             }
             break;
         }
         case 4: // hang was enabled and counter has counted to zero --> hang decay
         {
-            if (ring_max >= volts)
+            if (AGC_WDSP_ring_max >= AGC_WDSP_volts)
             { // ATTACK
-                state = 0;
-                save_volts = volts;
-                volts += (ring_max - volts) * attack_mult;
+                AGC_WDSP_state = 0;
+                AGC_WDSP_save_volts = AGC_WDSP_volts;
+                AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_attack_mult;
             }
             else
             { // HANG DECAY
-                volts += (ring_max - volts) * hang_decay_mult;
+                AGC_WDSP_volts += (AGC_WDSP_ring_max - AGC_WDSP_volts) * AGC_WDSP_hang_decay_mult;
             }
             break;
         }
         }
-        if (volts < min_volts)
+        if (AGC_WDSP_volts < AGC_WDSP_min_volts)
         {
-            volts = min_volts; // no AGC action is taking place
+            AGC_WDSP_volts = AGC_WDSP_min_volts; // no AGC action is taking place
             ts.agc_wdsp_action = 0;
         }
         else
@@ -2108,13 +2108,13 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
             ts.agc_wdsp_action = 1;
         }
 
-        float32_t vo =  log10f_fast(inv_max_input * volts);
+        float32_t vo =  log10f_fast(AGC_WDSP_inv_max_input * AGC_WDSP_volts);
         if(vo > 0.0)
         {
             vo = 0.0;
         }
-        mult = (out_target - slope_constant * vo) / volts;
-        adb.a_buffer[i] = out_sample[0] * mult;
+        mult = (AGC_WDSP_out_target - AGC_WDSP_slope_constant * vo) / AGC_WDSP_volts;
+        adb.a_buffer[i] = AGC_WDSP_out_sample[0] * mult;
 
     }
     if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
@@ -2832,7 +2832,7 @@ static void AudioDriver_SnapCarrier (void)
 
         //        help_freq = (float32_t)df.tune_new / 4.0;
         sc.FFT_number = 1;
-        sc.state    = 0;
+        sc.AGC_WDSP_state    = 0;
         arm_fill_f32(0.0,sc.FFT_Samples,buff_len_int);
     }
     else
@@ -2863,7 +2863,7 @@ static void AudioDriver_SnapCarrier (void)
         df.tune_new = help_freq;
         // request a retune just by changing the frequency
 
-        sc.state = 0; // reset flag for FFT sample collection (used in audio_rx_driver)
+        sc.AGC_WDSP_state = 0; // reset flag for FFT sample collection (used in audio_rx_driver)
         sc.snap = 0; // reset flag for button press (used in ui_driver)
         sc.FFT_number = 0; // reset flag to first FFT
     }
@@ -3442,7 +3442,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
 #ifdef USE_SNAP
         if (sc.snap) {
-            if (sc.state == 0)
+            if (sc.AGC_WDSP_state == 0)
             {
                 for(i = 0; i < blockSize; i++)
                 {
@@ -3459,13 +3459,13 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2-1) //*2)
                         {
                             sc.samp_ptr = 0;
-                            sc.state    = 1;
+                            sc.AGC_WDSP_state    = 1;
                             sc.counter = 0;
                         }
                     }
                 }
             }
-            else if (sc.state == 1)
+            else if (sc.AGC_WDSP_state == 1)
             {
                 AudioDriver_SnapCarrier(); // tunes the mcHF to the largest signal in the filterpassband
             }
