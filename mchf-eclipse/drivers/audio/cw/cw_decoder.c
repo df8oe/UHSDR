@@ -33,11 +33,12 @@ void CwDecode_FilterInit()
 }
 
 // for experimental CW decoder
-
-#define CW_TIMEOUT            3  // Time, in seconds, to trigger display of last Character received
+#define CW_DECODER_AGC		0
+#define CW_TIMEOUT			3  // Time, in seconds, to trigger display of last Character received
 // and a New Line in the USB Serial Monitor.
-#define CW_AGC_ATTACK      0.95  // Audio automatic gain control (AGC) attack, audio vol reduce per cycle.
-#define CW_AGC_DECAY      1.005  // Audio AGC decay, audio volume increase per cycle.
+#define ONE_SECOND			375 // 375 * 2.67ms equals one second
+#define CW_AGC_ATTACK      	0.95  // Audio automatic gain control (AGC) attack, audio vol reduce per cycle.
+#define CW_AGC_DECAY      	1.005  // Audio AGC decay, audio volume increase per cycle.
 // AGC attempts to cap the max signal level at the Fpeak frequency to 40
 // (40 is arbitrarily picked, is max in FFT bargraph).
 
@@ -72,7 +73,7 @@ void CwDecode_FilterInit()
 #define  TRUE  1
 #define  FALSE 0
 
-static uint8_t state = 0;
+//static uint8_t state = 0;
 
 typedef struct
 {
@@ -89,20 +90,31 @@ typedef struct
 	unsigned overload :1; // Overload flag
 } bflags;
 
-volatile static int16_t CW_vol = 0; // FIXME
+//volatile static int16_t CW_vol = 1; //
+//volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
+//volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
+//volatile static int16_t thresh = 1; // 10;              // Audio threshold level (0 - 40)
+volatile static float32_t CW_vol = 2.0; // FIXME
 volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
-volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
-volatile static int16_t thresh = 10;              // Audio threshold level (0 - 40)
+//volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
+volatile static float32_t thresh = 10e-12; //0.01; // 10;              // Audio threshold level (0 - 40)
+
 volatile static bool cw_state;                         // Current decoded signal state
 volatile static sigbuf sig[CW_SIG_BUFSIZE]; // A circular buffer of decoded input levels and durations, input from
 // SignalSampler().  Used by CW Decode functions
 volatile static int32_t sig_lastrx = 0; // Circular buffer in pointer, updated by SignalSampler
+
 static int32_t sig_incount = 0; // Circular buffer in pointer, copy of sig_lastrx, used by CW Decode functions
 static int32_t sig_outcount = 0; // Circular buffer out pointer, used by CW Decode functions
-volatile static int32_t sig_timer = 0; // Elapsed time of current signal state, in units of the
-// FFT conversion time. approx 2.9ms for FFT256 with no averaging
-// or 11.6ms for FFT1024 with no averaging.  Updated by SignalSampler.
-volatile static int32_t timer_stepsize = 1; // Step size of signal timer depends on FFT conversion time, FFT1024=4
+
+volatile static int32_t sig_timer = 0; // Elapsed time of current signal state, dependent
+// on sample rate, decimation factor and CW_DECODE_BLOCK_SIZE
+// 48ksps & decimation-by-4 equals 12ksps
+// if CW_DECODE_BLOCK_SIZE == 32, then we have 12000/32 = 375 blocks per second, which means
+// one Goertzel magnitude is calculated 375 times a second, which means 2.67ms per timer_stepsize
+// this is very similar to the original 2.9ms (when using FFT256 in the Teensy 3 original sketch)
+// DD4WH 2017_09_08
+volatile static int32_t timer_stepsize = 1; // equivalent to 2.67ms, see above
 static int32_t cur_time;                     // copy of sig_timer
 static int32_t cur_outcount = 0; // Basically same as sig_outcount, for Error Correction functionality
 static int32_t last_outcount = 0; // sig_outcount for previous character, used for Error Correction func
@@ -121,16 +133,18 @@ static float32_t symspace_avg, cwspace_avg; // Intra symbol Space and Character-
 static int32_t w_space;                      // Last word space time
 static float32_t raw_signal_buffer[CW_DECODE_BLOCK_SIZE];
 
-
 static void CW_Decode_exe(void)
 {
 //                 static int32_t  spd;                              // CW speed indication
 //                 float32_t          spdcalc;
 //                 static int16_t  oldthresh;                        // Used to trigger refresh of threshold in FFT Waterfall on LCD
 
-	static int16_t siglevel;                         // FFT signal level
-	int16_t lvl = 0;                              // Multiuse variable
-	int16_t pklvl;                            // Used for AGC calculations
+	//	static int16_t siglevel;                         // FFT signal level
+	static float32_t siglevel;                         // signal level from Goertzel calculation
+	//	int16_t lvl = 0;                              // Multiuse variable
+	float32_t lvl = 0;                              // Multiuse variable
+	//	int16_t pklvl;                            // Used for AGC calculations
+	float32_t pklvl;                            // Used for AGC calculations
 //                 int16_t         pk;                               // FFT bin containing peak level
 	static bool prevstate; // Last recorded state of signal input (mark or space)
 //                 static bool     toneout;                          // Keep track of state changes for tone out
@@ -143,10 +157,12 @@ static void CW_Decode_exe(void)
 	{
 		AudioFilter_GoertzelInput(&cw_goertzel, raw_signal_buffer[index]);
 	}
-	float32_t magnitudeSquared = AudioFilter_GoertzelEnergy(&cw_goertzel); // I dont think we need this . . . !?
+	float32_t magnitudeSquared = AudioFilter_GoertzelEnergy(&cw_goertzel); //
 
 	// I am not sure whether we would need an AGC here, because the audio chain already has an AGC
 	//    3.) AGC
+	if(CW_DECODER_AGC)
+	{
 	pklvl = CW_agcvol * CW_vol * magnitudeSquared; // Get level at Goertzel frequency
 	if (pklvl > 45)
 		CW_agcvol = CW_agcvol * CW_AGC_ATTACK; // Decrease volume if above this level.
@@ -155,12 +171,16 @@ static void CW_Decode_exe(void)
 	if (CW_agcvol > 1.0)
 		CW_agcvol = 1.0;                 // Cap max at 1.0
 	siglevel = CW_agcvol * CW_vol * pklvl;
-
-	siglevel = magnitudeSquared; // FIXME
+	}
+	else
+	{
+		siglevel = magnitudeSquared;
+	}
 	//    4.) signal averaging/smoothing
 
-	static int16_t avg_win[CW_SIGAVERAGE]; // Sliding window buffer for signal averaging, if used
-	static uint8_t avg_cnt;                         // Sliding window counter
+	//	static int16_t avg_win[CW_SIGAVERAGE]; // Sliding window buffer for signal averaging, if used
+	static float32_t avg_win[CW_SIGAVERAGE]; // Sliding window buffer for signal averaging, if used
+	static uint8_t avg_cnt = 0;                         // Sliding window counter
 	avg_win[avg_cnt++] = siglevel;     // Add value onto "sliding window" buffer
 	if (avg_cnt == CW_SIGAVERAGE)
 	{
@@ -182,21 +202,21 @@ static void CW_Decode_exe(void)
 	else newstate = FALSE;
 	if (change == TRUE)
 	{
-		state = newstate;
+		cw_state = newstate;
 		change = FALSE;
 	}
-	else if (newstate != state) change = TRUE;
+	else if (newstate != cw_state) change = TRUE;
 #else                                           // No noise canceling
 	if (siglevel >= thresh)
-		state = TRUE;
+		cw_state = TRUE;
 	else
-		state = FALSE;
+		cw_state = FALSE;
 #endif
 
 	//    6.) fill into circular buffer
 	//----------------
 	// Record state changes and durations onto circular buffer
-	if (state != prevstate)
+	if (cw_state != prevstate)
 	{
 		// Enter the type and duration of the state change into the circular buffer
 		sig[sig_lastrx].state = prevstate;
@@ -207,17 +227,19 @@ static void CW_Decode_exe(void)
 			sig_lastrx = 0;
 		}
 		sig_timer = 0;                                // Zero the signal timer.
-		prevstate = state;                            // Update state
+		prevstate = cw_state;                            // Update state
 	}
 
 	//----------------
 	// Count signal state timer upwards based on which sampling rate is in effect
 	sig_timer = sig_timer + timer_stepsize;
-	if (sig_timer >= 63 * CW_TIMEOUT)
-		sig_timer = 63 * CW_TIMEOUT; // Impose a MAXTIME second boundary for overflow time
+	if (sig_timer >= ONE_SECOND * CW_TIMEOUT)
+	{
+		sig_timer = ONE_SECOND * CW_TIMEOUT; // Impose a MAXTIME second boundary for overflow time
+	}
 
-	//              sig_incount = sig_lastrx;                         // Current Incount pointer
-	//              cur_time    = sig_timer;
+	              sig_incount = sig_lastrx;                         // Current Incount pointer
+	              cur_time    = sig_timer;
 
 	//    7.) CW Decode
 	CW_Decode();                                     // Do all the heavy lifting
@@ -242,7 +264,7 @@ void CwDecode_RxProcessor(float32_t * const src, int16_t blockSize)
 	}
 	if (sample_counter >= CW_DECODE_BLOCK_SIZE)
 	// CW_DECODE_BLOCK_SIZE has to be a multiple integer of the decimated block size (8)
-	// for a first trial we use 48
+	//
 	{
 		CW_Decode_exe();
 		sample_counter = 0;
@@ -454,7 +476,9 @@ bool DataRecognitionFunc(void)
 			processed = FALSE; // Indicate that incoming character is not processed
 			sig_outcount++;                            // Update process counter
 			if ((sig_outcount == CW_SIG_BUFSIZE))
+			{
 				sig_outcount = 0;  // Wraparound output index
+			}
 
 			x = pulse_avg - t;           // Determine if Dot or Dash (e.q. 4.10)
 
@@ -494,7 +518,9 @@ bool DataRecognitionFunc(void)
 
 			sig_outcount++;                        // And update process counter
 			if ((sig_outcount == CW_SIG_BUFSIZE))
+			{
 				sig_outcount = 0;  // Wraparound output index
+			}
 
 			// We expect a bit shorter space if the last character was a dash
 			//
@@ -585,9 +611,13 @@ void CodeGenFunc()
 	for (a = 0; a < data_len; a++)
 	{
 		if (data[a].state)
+		{
 			code[a] = '-';
+		}
 		else
+		{
 			code[a] = '.';
+		}
 	}
 	code[a] = 0;                                      // Terminate string
 	data_len = 0;                               // And make ready for a new Char
@@ -862,7 +892,7 @@ void PrintCharFunc(uint8_t c)
 	}
 #endif
 
-	//--------------------------------------
+/*	//--------------------------------------
 	// Prosigns
 	if (c == '}')
 	{
@@ -927,7 +957,15 @@ void PrintCharFunc(uint8_t c)
 	//--------------------------------------
 	// Normal Characters
 	else
+*/
+	if(c == 0xfe || c == 0xff)
+	{
+		lcdLineScrollPrint('#');
+	}
+	else
+	{
 		lcdLineScrollPrint(c);
+	}
 }
 
 //------------------------------------------------------------------
@@ -1167,11 +1205,13 @@ void CW_Decode(void)
 	//-----------------------------------
 	// Initialize pulse_avg, dot_avg, dash_avg, symspace_avg, cwspace_avg
 	if (b.initialized == FALSE)
-		InitializationFunc();
+		{
+		    InitializationFunc();
+		}
 
 	//-----------------------------------
 	// Process the works once initialized - or if timeout
-	if ((b.initialized == TRUE) || (cur_time >= 63 * CW_TIMEOUT)) // 344 equals one second
+	if ((b.initialized == TRUE) || (cur_time >= ONE_SECOND * CW_TIMEOUT)) // 344 equals one second
 	{
 		received = DataRecognitionFunc();      // True if new character received
 		if (received && (data_len > 0))      // also make sure it is not a spike
