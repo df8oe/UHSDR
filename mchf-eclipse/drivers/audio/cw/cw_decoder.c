@@ -455,21 +455,24 @@ double spikeCancel(double t)
 // Variables containing dot, dash and space averages are maintained, and
 // output is a data[] buffer containing decoded dot/dash information, a
 // data_len variable containing length of incoming character data.
-// The function returns TRUE when a complete new character has been decoded
+// The function returns TRUE when further calls will not yield a change or a complete new character has been decoded.
+// The bool variable the parameter points to is set to true if a new character has been decoded
 // In addition, b.wspace flag indicates whether long (word) space after char
 //
 //------------------------------------------------------------------
-bool DataRecognitionFunc(void)
+bool DataRecognitionFunc(bool* new_char_p)
 {
 	double t;                                 // Temporary time
 	double x = 0;                             // Temp comparison value
-	bool new_char = FALSE;                  // Return value
+	*new_char_p = FALSE;
+	bool not_done = FALSE;                  // Return value
 	static bool processed;
 
 	//-----------------------------------
 	// Do we have a new state to process?
 	if (sig_outcount != sig_incount)
 	{
+		not_done = true;
 		b.timeout = FALSE;           // Mainly used by Error Correction Function
 		t = sig[sig_outcount].time;                 // Get time of the new state
 
@@ -580,7 +583,7 @@ bool DataRecognitionFunc(void)
 			}
 			// Process the character
 			if (processed == FALSE)
-				new_char = TRUE; // Indicate there is a new char to be processed
+				*new_char_p = TRUE; // Indicate there is a new char to be processed
 		}
 	}
 
@@ -588,25 +591,29 @@ bool DataRecognitionFunc(void)
 	// Long key down or key up
 	else if (cur_time > (10 * dash_avg))
 	{
+		not_done = true;
 		// If current state is Key up and Long key up then  Char finalized
 		if (!sig[sig_incount].state && !processed)
 		{
 			processed = TRUE;
 			b.wspace = TRUE;
 			b.timeout = TRUE;
-			new_char = TRUE;                            // Process the character
+			*new_char_p = TRUE;                            // Process the character
 		}
 	}
 
 	if (data_len > CW_DATA_BUFSIZE - 2)
+	{
 		data_len = CW_DATA_BUFSIZE - 2; // We're receiving garble, throw away
+	}
 
-	if (new_char)          // Update circular buffer pointers for Error function
+	if (*new_char_p)          // Update circular buffer pointers for Error function
 	{
 		last_outcount = cur_outcount;
 		cur_outcount = sig_outcount;
+		not_done = false;
 	}
-	return new_char;                        // TRUE if new character, else FALSE
+	return not_done;                        // TRUE if new character, else FALSE
 }
 
 //------------------------------------------------------------------
@@ -1032,16 +1039,7 @@ void WordSpaceFunc(uint8_t c)
 //------------------------------------------------------------------
 bool ErrorCorrectionFunc(void)
 {
-	int32_t pduration;                 // Short pulse duration and location
-	int32_t plocation;
-	int32_t sduration;                // Long symbol space duration and location
-	int32_t slocation;
-	int32_t temp_outcount;
-	uint8_t decoded[] =
-	{ 0xff, 0xff };
 	bool result = FALSE; // Result of Error resolution - FALSE if nothing resolved
-
-	uint32_t freezetime = ts.sysclock;     // Guard against misbehaviour of DataRecognitionFunc()
 
 	if (data_len >= CW_DATA_BUFSIZE - 2)     // Too long char received
 	{
@@ -1058,11 +1056,12 @@ bool ErrorCorrectionFunc(void)
 		//-----------------------------------------------------
 		// Find the location of pulse with shortest duration
 		// and the location of symbol space of longest duration
-		temp_outcount = last_outcount; // Grab a copy of endpos for last successful decode
-		slocation = last_outcount;
-		plocation = last_outcount;
-		pduration = 32767; // Very high number to decrement for min pulse duration
-		sduration = 0;  // and a zero to increment for max symbol space duration
+		int32_t temp_outcount = last_outcount; // Grab a copy of endpos for last successful decode
+		int32_t slocation = last_outcount; // Long symbol space duration and location
+		int32_t plocation = last_outcount; // Short pulse duration and location
+		int32_t pduration = 32767; // Very high number to decrement for min pulse duration
+		int32_t sduration = 0;  // and a zero to increment for max symbol space duration
+
 		while (temp_outcount != cur_outcount)
 		{
 			//-----------------------------------------------------
@@ -1099,6 +1098,8 @@ bool ErrorCorrectionFunc(void)
 			if (temp_outcount == CW_SIG_BUFSIZE)
 				temp_outcount = 0;
 		}
+
+		uint8_t decoded[] =	{ 0xff, 0xff };
 
 		//-----------------------------------------------------
 		// Take corrective action by dropping shortest pulse
@@ -1141,7 +1142,8 @@ bool ErrorCorrectionFunc(void)
 			//
 			// Pull out a character, using the adjusted sig[] buffer
 			// Process character delimited by character or word space
-			while((!DataRecognitionFunc()) && (ts.sysclock < freezetime + 2));
+			bool dummy;
+			while(DataRecognitionFunc(&dummy));
 			CodeGenFunc();                 // Generate a dot/dash pattern string
 			decoded[0] = CharacterIdFunc(); // Convert dot/dash data into a character
 			if (decoded[0] != 0xff)
@@ -1152,7 +1154,6 @@ bool ErrorCorrectionFunc(void)
 			else
 				PrintCharFunc(0xff);
 		}
-
 		//-----------------------------------------------------
 		// Take corrective action by converting the longest symbol space to character space
 		// This will result in two valid characters - or Error
@@ -1170,15 +1171,12 @@ bool ErrorCorrectionFunc(void)
 			// Not found out why, but millis() is used to guards against it.
 
 			// Process first character delimited by character or word space
-			while((!DataRecognitionFunc()) && (ts.sysclock < freezetime + 2));
-//			while ((!DataRecognitionFunc()))
-//				;
+			bool dummy;
+			while(DataRecognitionFunc(&dummy));
 			CodeGenFunc();                 // Generate a dot/dash pattern string
 			decoded[0] = CharacterIdFunc(); // Convert dot/dash pattern into a character
 			// Process second character delimited by character or word space
-			while((!DataRecognitionFunc()) && (ts.sysclock < freezetime + 2));
-//			while ((!DataRecognitionFunc()))
-				;
+			while(DataRecognitionFunc(&dummy));
 			CodeGenFunc();                 // Generate a dot/dash pattern string
 			decoded[1] = CharacterIdFunc(); // Convert dot/dash pattern into a character
 
@@ -1222,7 +1220,7 @@ void CW_Decode(void)
 	// Process the works once initialized - or if timeout
 	if ((b.initialized == TRUE) || (cur_time >= ONE_SECOND * CW_TIMEOUT)) //
 	{
-		received = DataRecognitionFunc();      // True if new character received
+		DataRecognitionFunc(&received);      // True if new character received
 		if (received && (data_len > 0))      // also make sure it is not a spike
 		{
 			CodeGenFunc();                 // Generate a dot/dash pattern string
