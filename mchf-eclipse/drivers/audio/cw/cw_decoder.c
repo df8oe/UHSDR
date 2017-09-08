@@ -72,7 +72,7 @@ void CwDecode_FilterInit()
 #define  TRUE  1
 #define  FALSE 0
 
-static uint8_t state = 0;
+//static uint8_t state = 0;
 
 typedef struct
 {
@@ -89,16 +89,18 @@ typedef struct
 	unsigned overload :1; // Overload flag
 } bflags;
 
-volatile static int16_t CW_vol = 0; // FIXME
+volatile static int16_t CW_vol = 2100; // FIXME
 volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
-volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
-volatile static int16_t thresh = 10;              // Audio threshold level (0 - 40)
+//volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
+volatile static int16_t thresh = 1; // 10;              // Audio threshold level (0 - 40)
 volatile static bool cw_state;                         // Current decoded signal state
 volatile static sigbuf sig[CW_SIG_BUFSIZE]; // A circular buffer of decoded input levels and durations, input from
 // SignalSampler().  Used by CW Decode functions
 volatile static int32_t sig_lastrx = 0; // Circular buffer in pointer, updated by SignalSampler
+
 static int32_t sig_incount = 0; // Circular buffer in pointer, copy of sig_lastrx, used by CW Decode functions
 static int32_t sig_outcount = 0; // Circular buffer out pointer, used by CW Decode functions
+
 volatile static int32_t sig_timer = 0; // Elapsed time of current signal state, in units of the
 // FFT conversion time. approx 2.9ms for FFT256 with no averaging
 // or 11.6ms for FFT1024 with no averaging.  Updated by SignalSampler.
@@ -120,7 +122,6 @@ static float32_t dot_avg, dash_avg;            // Dot and Dash Space averages
 static float32_t symspace_avg, cwspace_avg; // Intra symbol Space and Character-Word Space
 static int32_t w_space;                      // Last word space time
 static float32_t raw_signal_buffer[CW_DECODE_BLOCK_SIZE];
-
 
 static void CW_Decode_exe(void)
 {
@@ -156,7 +157,7 @@ static void CW_Decode_exe(void)
 		CW_agcvol = 1.0;                 // Cap max at 1.0
 	siglevel = CW_agcvol * CW_vol * pklvl;
 
-	siglevel = magnitudeSquared; // FIXME
+//	siglevel = magnitudeSquared; // FIXME
 	//    4.) signal averaging/smoothing
 
 	static int16_t avg_win[CW_SIGAVERAGE]; // Sliding window buffer for signal averaging, if used
@@ -182,21 +183,21 @@ static void CW_Decode_exe(void)
 	else newstate = FALSE;
 	if (change == TRUE)
 	{
-		state = newstate;
+		cw_state = newstate;
 		change = FALSE;
 	}
-	else if (newstate != state) change = TRUE;
+	else if (newstate != cw_state) change = TRUE;
 #else                                           // No noise canceling
 	if (siglevel >= thresh)
-		state = TRUE;
+		cw_state = TRUE;
 	else
-		state = FALSE;
+		cw_state = FALSE;
 #endif
 
 	//    6.) fill into circular buffer
 	//----------------
 	// Record state changes and durations onto circular buffer
-	if (state != prevstate)
+	if (cw_state != prevstate)
 	{
 		// Enter the type and duration of the state change into the circular buffer
 		sig[sig_lastrx].state = prevstate;
@@ -207,17 +208,19 @@ static void CW_Decode_exe(void)
 			sig_lastrx = 0;
 		}
 		sig_timer = 0;                                // Zero the signal timer.
-		prevstate = state;                            // Update state
+		prevstate = cw_state;                            // Update state
 	}
 
 	//----------------
 	// Count signal state timer upwards based on which sampling rate is in effect
 	sig_timer = sig_timer + timer_stepsize;
 	if (sig_timer >= 63 * CW_TIMEOUT)
+	{
 		sig_timer = 63 * CW_TIMEOUT; // Impose a MAXTIME second boundary for overflow time
+	}
 
-	//              sig_incount = sig_lastrx;                         // Current Incount pointer
-	//              cur_time    = sig_timer;
+	              sig_incount = sig_lastrx;                         // Current Incount pointer
+	              cur_time    = sig_timer;
 
 	//    7.) CW Decode
 	CW_Decode();                                     // Do all the heavy lifting
@@ -454,7 +457,9 @@ bool DataRecognitionFunc(void)
 			processed = FALSE; // Indicate that incoming character is not processed
 			sig_outcount++;                            // Update process counter
 			if ((sig_outcount == CW_SIG_BUFSIZE))
+			{
 				sig_outcount = 0;  // Wraparound output index
+			}
 
 			x = pulse_avg - t;           // Determine if Dot or Dash (e.q. 4.10)
 
@@ -494,7 +499,9 @@ bool DataRecognitionFunc(void)
 
 			sig_outcount++;                        // And update process counter
 			if ((sig_outcount == CW_SIG_BUFSIZE))
+			{
 				sig_outcount = 0;  // Wraparound output index
+			}
 
 			// We expect a bit shorter space if the last character was a dash
 			//
@@ -585,9 +592,13 @@ void CodeGenFunc()
 	for (a = 0; a < data_len; a++)
 	{
 		if (data[a].state)
+		{
 			code[a] = '-';
+		}
 		else
+		{
 			code[a] = '.';
+		}
 	}
 	code[a] = 0;                                      // Terminate string
 	data_len = 0;                               // And make ready for a new Char
@@ -862,7 +873,7 @@ void PrintCharFunc(uint8_t c)
 	}
 #endif
 
-	//--------------------------------------
+/*	//--------------------------------------
 	// Prosigns
 	if (c == '}')
 	{
@@ -927,7 +938,15 @@ void PrintCharFunc(uint8_t c)
 	//--------------------------------------
 	// Normal Characters
 	else
+*/
+	if(c == 0xfe || c == 0xff)
+	{
+		lcdLineScrollPrint('#');
+	}
+	else
+	{
 		lcdLineScrollPrint(c);
+	}
 }
 
 //------------------------------------------------------------------
