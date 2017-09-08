@@ -4992,7 +4992,6 @@ static void UiDriver_KeyTestScreen()
 static bool UiDriver_TouchscreenCalibration()
 {
 
-	uint16_t i;
 	bool retval = false;
 
 	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))

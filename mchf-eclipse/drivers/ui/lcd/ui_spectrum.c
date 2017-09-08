@@ -487,8 +487,6 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 
     uint16_t marker_line_pos[SPECTRUM_MAX_MARKER];
 
-    uint16_t marker_num = sd.marker_num > sd.marker_num_prev ? sd.marker_num : sd.marker_num_prev;
-
     for (uint16_t idx = 0; idx < SPECTRUM_MAX_MARKER; idx++)
     {
         marker_line_pos[idx] = SPECTRUM_START_X + sd.marker_pos[idx];
