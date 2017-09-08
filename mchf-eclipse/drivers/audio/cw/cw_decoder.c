@@ -36,7 +36,7 @@ void CwDecode_FilterInit()
 #define CW_DECODER_AGC		0
 #define CW_TIMEOUT			3  // Time, in seconds, to trigger display of last Character received
 // and a New Line in the USB Serial Monitor.
-#define ONE_SECOND			375 // 375 * 2.67ms equals one second
+#define ONE_SECOND			(12000 / CW_DECODE_BLOCK_SIZE) // sample rate / decimation rate / block size
 #define CW_AGC_ATTACK      	0.95  // Audio automatic gain control (AGC) attack, audio vol reduce per cycle.
 #define CW_AGC_DECAY      	1.005  // Audio AGC decay, audio volume increase per cycle.
 // AGC attempts to cap the max signal level at the Fpeak frequency to 40
@@ -97,7 +97,7 @@ typedef struct
 volatile static float32_t CW_vol = 2.0; // FIXME
 volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
 //volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
-volatile static float32_t thresh = 10e-12; //0.01; // 10;              // Audio threshold level (0 - 40)
+volatile static float32_t thresh = 30000.0; //0.01; // 10;              // Audio threshold level (0 - 40)
 
 volatile static bool cw_state;                         // Current decoded signal state
 volatile static sigbuf sig[CW_SIG_BUFSIZE]; // A circular buffer of decoded input levels and durations, input from
@@ -140,7 +140,7 @@ static void CW_Decode_exe(void)
 //                 static int16_t  oldthresh;                        // Used to trigger refresh of threshold in FFT Waterfall on LCD
 
 	//	static int16_t siglevel;                         // FFT signal level
-	static float32_t siglevel;                         // signal level from Goertzel calculation
+	float32_t siglevel;                         // signal level from Goertzel calculation
 	//	int16_t lvl = 0;                              // Multiuse variable
 	float32_t lvl = 0;                              // Multiuse variable
 	//	int16_t pklvl;                            // Used for AGC calculations
@@ -177,6 +177,7 @@ static void CW_Decode_exe(void)
 		siglevel = magnitudeSquared;
 	}
 	//    4.) signal averaging/smoothing
+	// better use exponential averager here !?
 
 	//	static int16_t avg_win[CW_SIGAVERAGE]; // Sliding window buffer for signal averaging, if used
 	static float32_t avg_win[CW_SIGAVERAGE]; // Sliding window buffer for signal averaging, if used
@@ -208,9 +209,15 @@ static void CW_Decode_exe(void)
 	else if (newstate != cw_state) change = TRUE;
 #else                                           // No noise canceling
 	if (siglevel >= thresh)
+	{
 		cw_state = TRUE;
+        Board_RedLed(LED_STATE_ON);
+	}
 	else
+	{
 		cw_state = FALSE;
+        Board_RedLed(LED_STATE_OFF);
+	}
 #endif
 
 	//    6.) fill into circular buffer
@@ -233,7 +240,7 @@ static void CW_Decode_exe(void)
 	//----------------
 	// Count signal state timer upwards based on which sampling rate is in effect
 	sig_timer = sig_timer + timer_stepsize;
-	if (sig_timer >= ONE_SECOND * CW_TIMEOUT)
+	if (sig_timer > ONE_SECOND * CW_TIMEOUT)
 	{
 		sig_timer = ONE_SECOND * CW_TIMEOUT; // Impose a MAXTIME second boundary for overflow time
 	}
@@ -337,6 +344,7 @@ static void InitializationFunc(void)
 		cwspace_avg = 0;
 		w_space = 0;
 	}
+//    Board_RedLed(LED_STATE_ON);
 
 	// Determine number of states waiting to be processed
 	if (progress < startpos)
@@ -349,6 +357,8 @@ static void InitializationFunc(void)
 		b.initialized = TRUE;                  // Indicate we're done and return
 		initializing = FALSE;          // Allow for correct setup of progress if
 									   // InitializaitonFunc is invoked a second time
+//        Board_RedLed(LED_STATE_OFF);
+
 	}
 	if (progress != sig_incount)                      // Do we have a new state?
 	{
@@ -1022,7 +1032,7 @@ void WordSpaceFunc(uint8_t c)
 //------------------------------------------------------------------
 bool ErrorCorrectionFunc(void)
 {
-	int32_t pduration;                 // Short pulse durationa and location
+	int32_t pduration;                 // Short pulse duration and location
 	int32_t plocation;
 	int32_t sduration;                // Long symbol space duration and location
 	int32_t slocation;
@@ -1031,7 +1041,7 @@ bool ErrorCorrectionFunc(void)
 	{ 0xff, 0xff };
 	bool result = FALSE; // Result of Error resolution - FALSE if nothing resolved
 
-//  uint64_t freezetime = millis();     // Guard against misbehaviour of DataRecognitionFunc()
+	uint32_t freezetime = ts.sysclock;     // Guard against misbehaviour of DataRecognitionFunc()
 
 	if (data_len >= CW_DATA_BUFSIZE - 2)     // Too long char received
 	{
@@ -1130,9 +1140,8 @@ bool ErrorCorrectionFunc(void)
 			// Now we reprocess
 			//
 			// Pull out a character, using the adjusted sig[] buffer
-			while (!DataRecognitionFunc())
-				;  // Process character delimited by character or word space
-//      while((!DataRecognitionFunc()) && (millis() < freezetime+2));
+			// Process character delimited by character or word space
+			while((!DataRecognitionFunc()) && (ts.sysclock < freezetime + 2));
 			CodeGenFunc();                 // Generate a dot/dash pattern string
 			decoded[0] = CharacterIdFunc(); // Convert dot/dash data into a character
 			if (decoded[0] != 0xff)
@@ -1161,14 +1170,14 @@ bool ErrorCorrectionFunc(void)
 			// Not found out why, but millis() is used to guards against it.
 
 			// Process first character delimited by character or word space
-			//      while((!DataRecognitionFunc()) && (millis() < freezetime+2));
-			while ((!DataRecognitionFunc()))
-				;
+			while((!DataRecognitionFunc()) && (ts.sysclock < freezetime + 2));
+//			while ((!DataRecognitionFunc()))
+//				;
 			CodeGenFunc();                 // Generate a dot/dash pattern string
 			decoded[0] = CharacterIdFunc(); // Convert dot/dash pattern into a character
 			// Process second character delimited by character or word space
-//      while((!DataRecognitionFunc()) && (millis() < freezetime+2));
-			while ((!DataRecognitionFunc()))
+			while((!DataRecognitionFunc()) && (ts.sysclock < freezetime + 2));
+//			while ((!DataRecognitionFunc()))
 				;
 			CodeGenFunc();                 // Generate a dot/dash pattern string
 			decoded[1] = CharacterIdFunc(); // Convert dot/dash pattern into a character
@@ -1211,7 +1220,7 @@ void CW_Decode(void)
 
 	//-----------------------------------
 	// Process the works once initialized - or if timeout
-	if ((b.initialized == TRUE) || (cur_time >= ONE_SECOND * CW_TIMEOUT)) // 344 equals one second
+	if ((b.initialized == TRUE) || (cur_time >= ONE_SECOND * CW_TIMEOUT)) //
 	{
 		received = DataRecognitionFunc();      // True if new character received
 		if (received && (data_len > 0))      // also make sure it is not a spike
