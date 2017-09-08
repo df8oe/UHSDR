@@ -36,7 +36,7 @@ void CwDecode_FilterInit()
 #define CW_DECODER_AGC		0
 #define CW_TIMEOUT			3  // Time, in seconds, to trigger display of last Character received
 // and a New Line in the USB Serial Monitor.
-#define ONE_SECOND			375 // 375 * 2.67ms equals one second
+#define ONE_SECOND			(12000 / CW_DECODE_BLOCK_SIZE) // sample rate / decimation rate / block size
 #define CW_AGC_ATTACK      	0.95  // Audio automatic gain control (AGC) attack, audio vol reduce per cycle.
 #define CW_AGC_DECAY      	1.005  // Audio AGC decay, audio volume increase per cycle.
 // AGC attempts to cap the max signal level at the Fpeak frequency to 40
@@ -211,12 +211,12 @@ static void CW_Decode_exe(void)
 	if (siglevel >= thresh)
 	{
 		cw_state = TRUE;
-//        Board_RedLed(LED_STATE_ON);
+        Board_RedLed(LED_STATE_ON);
 	}
 	else
 	{
 		cw_state = FALSE;
-//        Board_RedLed(LED_STATE_OFF);
+        Board_RedLed(LED_STATE_OFF);
 	}
 #endif
 
@@ -344,7 +344,7 @@ static void InitializationFunc(void)
 		cwspace_avg = 0;
 		w_space = 0;
 	}
-    Board_RedLed(LED_STATE_ON);
+//    Board_RedLed(LED_STATE_ON);
 
 	// Determine number of states waiting to be processed
 	if (progress < startpos)
@@ -357,7 +357,7 @@ static void InitializationFunc(void)
 		b.initialized = TRUE;                  // Indicate we're done and return
 		initializing = FALSE;          // Allow for correct setup of progress if
 									   // InitializaitonFunc is invoked a second time
-        Board_RedLed(LED_STATE_OFF);
+//        Board_RedLed(LED_STATE_OFF);
 
 	}
 	if (progress != sig_incount)                      // Do we have a new state?
