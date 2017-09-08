@@ -42,6 +42,9 @@
 #include "cat_driver.h"
 #include "ui_driver.h"
 
+// FIXME: will need to be changed to  "digimodes.h" later
+#include "rtty.h"
+
 
 // States
 #define CW_IDLE             0
@@ -88,15 +91,13 @@ typedef struct PaddleState
 	uint32_t   ultim;
 
 	uint32_t   cw_char;
+	uint32_t   sending_char;
+	bool       wait_space;
 
 } PaddleState;
 
 // Public paddle state
 PaddleState  ps;
-
-inline bool   CwGen_TimersActive() {
-	return ps.space_timer > 0 || ps.break_timer > 0 || ps.key_timer > 0;
-}
 
 static bool   CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static bool   CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong size);
@@ -104,9 +105,9 @@ static void   CwGen_TestFirstPaddle();
 
 // The vertical listing permits easier direct comparison of code vs. character in
 // editors by placing both in vertically split window
-const int cw_char_codes[] =
+const uint32_t cw_char_codes[] =
 {
-		0,    // 		-> ' '
+		1,    // 		-> ' '
 		2,    // . 		-> 'E'
 		3,    // - 		-> 'T'
 		10,   // .. 	-> 'I'
@@ -364,7 +365,14 @@ void CwGen_SetSpeed()
 
 static void CwGen_SetBreakTime()
 {
-	ps.break_timer = ts.cw_rx_delay*50;      // break timer value
+	if (ts.cw_rx_delay)
+	{
+		ps.break_timer = ts.cw_rx_delay*50;      // break timer value
+	}
+	else
+	{
+		ps.break_timer = 1;
+	}
 }
 
 /**
@@ -397,7 +405,8 @@ void CwGen_Init(void)
 
 	ps.cw_char = 0;
 	ps.space_timer = 0;
-
+	ps.sending_char = 0;
+	ps.wait_space = false;
 }
 
 /**
@@ -477,6 +486,7 @@ static bool CwGen_DitRequested()
 	{
 		retval =  Board_DitLinePressed();
 	}
+
 	return retval;
 }
 
@@ -494,11 +504,33 @@ static bool CwGen_DahRequested()
 	{
 		retval =  Board_DitLinePressed();
 	}
+
 	return retval;
+}
+
+uint32_t CwGen_ReverseCode(uint32_t code)
+{
+	int n[10], c = 0, i = 0;
+	uint32_t result = 0;
+
+	while (code > 0)
+	{
+		n[c++] = code % 4;
+		code /= 4;
+	}
+	for (i=0; i<c; i++)
+	{
+		result = result * 4 + n[i];
+	}
+
+	return result;
 }
 
 static void CwGen_CheckKeyerState(void)
 {
+	uint32_t char_code;
+	uint8_t symbol;
+
 	if (CwGen_DahRequested())
 	{
 		ps.port_state |= CW_DAH_L;
@@ -507,6 +539,67 @@ static void CwGen_CheckKeyerState(void)
 	if (CwGen_DitRequested())
 	{
 		ps.port_state |= CW_DIT_L;
+	}
+
+	if (!(ps.port_state & CW_DAH_L) && !(ps.port_state & CW_DIT_L) && ts.dmod_mode == DEMOD_CW && ts.txrx_mode == TRX_MODE_TX &&
+			!ts.cw_text_entry && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+	{
+		if (DigiModes_TxBufferHasData() && !ps.sending_char)
+		{
+			char_code = 0;
+			DigiModes_TxBufferRemove(&symbol);
+			UiDriver_TextMsgPutChar(symbol);
+			for (int i = 0; i<CW_CHAR_CODES; i++)
+			{
+				if (cw_char_chars[i] == symbol)
+				{
+					char_code = cw_char_codes[i];
+					break;
+				}
+			}
+			if (char_code)
+			{
+				ps.sending_char = CwGen_ReverseCode(char_code);
+				if (ps.sending_char == 1)
+				{
+					ps.wait_space = true;
+				}
+			}
+		}
+
+		if (ps.sending_char && ps.key_timer < 2)
+		{
+			if (ps.sending_char == 1) //Space
+			{
+				// FIXME process space
+				if (!ps.wait_space && ps.space_timer == 0)
+				{
+					ps.sending_char = 0;
+				}
+				else if (ps.space_timer > 0) {
+					ps.wait_space = false;
+					if (ps.break_timer < ps.space_timer)
+					{
+						ps.break_timer = ps.space_timer;
+					}
+				}
+			}
+			else
+			{
+				char_code = ps.sending_char % 4;
+				ps.sending_char /= 2;
+
+				if (char_code == 3)
+				{
+					ps.port_state |= CW_DAH_L;
+				}
+				else if (char_code == 2)
+				{
+					ps.port_state |= CW_DIT_L;
+				}
+
+			}
+		}
 	}
 }
 
@@ -553,13 +646,12 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 	// Exit to RX if key_timer is zero and break_timer is zero as well
 	if(ps.key_timer == 0)
 	{
-		if(ps.break_timer == 0)
+		if(ps.break_timer > 0)
 		{
-			ts.tx_stop_req = true;
-		}
-		else if (ps.break_timer > 0)
-		{
-			ps.break_timer--;
+			if (--ps.break_timer == 0)
+			{
+				ts.tx_stop_req = true;
+			}
 		}
 		retval = false;
 	}
@@ -629,8 +721,6 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 
 // FIXME: HACK RTTY
 #include "radio_management.h"
-// FIXME: will need to be changed to  "digimodes.h" later
-#include "rtty.h"
 
 void CwGen_AddChar(ulong code)
 {
@@ -660,7 +750,6 @@ void CwGen_AddChar(ulong code)
 
 static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
-	bool timers_active_start = CwGen_TimersActive();
 	uint32_t retval = false;
 
 	bool rerunStateMachine = false;
@@ -675,8 +764,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 		case CW_IDLE:
 		{
 			// at least one paddle is still or has been recently pressed
-			if( Board_DitLinePressed() || Board_PttDahLinePressed()	||
-					(ps.port_state & (CW_DAH_L|CW_DIT_L)))
+			if( Board_DitLinePressed() || Board_PttDahLinePressed()	|| (ps.port_state & (CW_DAH_L|CW_DIT_L)))
 			{
 				CwGen_CheckKeyerState();
 				ps.cw_state = CW_WAIT;		// Note if Dit/Dah is discriminated in this function, it breaks the Iambic-ness!
@@ -689,9 +777,27 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 					CwGen_AddChar(ps.cw_char);
 					ps.port_state &= ~CW_END_PROC;
 					ps.space_timer = ps.space_time;
+					CwGen_CheckKeyerState();
 				}
 
-				if(ps.break_timer > 0)
+				if (ps.space_timer > 0)
+				{
+					if (--ps.space_timer == 0)
+					{
+						CwGen_AddChar(1);
+					}
+				}
+
+				if (ts.dmod_mode == DEMOD_CW && ts.txrx_mode == TRX_MODE_TX && !ts.cw_text_entry && (DigiModes_TxBufferHasData() || ps.sending_char))
+				{
+					CwGen_CheckKeyerState();
+					if (ps.sending_char)
+					{
+						ps.cw_state = CW_WAIT;
+					}
+					rerunStateMachine = true;
+				}
+				if (ps.break_timer > 0)
 				{
 					if (--ps.break_timer == 0)
 					{
@@ -699,18 +805,6 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 					}
 				}
 
-				if (ps.space_timer > 0)
-				{
-					if (--ps.space_timer == 0)
-					{
-						CwGen_AddChar(0);
-					}
-				}
-
-				if (!CwGen_TimersActive() && timers_active_start)
-				{
-					CwGen_PrepareTx();
-				}
 				retval = false;
 			}
 		}
@@ -874,12 +968,20 @@ static void CwGen_TestFirstPaddle()
 	}
 }
 
+void CwGen_ResetBufferSending() {
+	if (!ts.cw_text_entry && ts.dmod_mode == DEMOD_CW) {
+		DigiModes_TxBufferReset();
+		ps.sending_char = 0;
+		ps.wait_space = false;
+	}
+}
 
 /**
  * @brief request switch to TX and sets timers
  */
 void CwGen_DahIRQ(void)
 {
+	CwGen_ResetBufferSending();
 	if(ts.cw_keyer_mode == CW_KEYER_MODE_STRAIGHT)
 	{
 		// Reset publics, but only when previous is sent
@@ -894,6 +996,7 @@ void CwGen_DahIRQ(void)
 	{
 		CwGen_TestFirstPaddle();
 	}
+
 }
 
 /**
@@ -901,19 +1004,12 @@ void CwGen_DahIRQ(void)
  */
 void CwGen_DitIRQ(void)
 {
+	CwGen_ResetBufferSending();
+
 	// CW mode handler - no dit interrupt in straight key mode
 	if(ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
 	{
 		CwGen_TestFirstPaddle();
 	}
-}
 
-void CwGen_PrepareTx()
-{
-	CwGen_SetSpeed();
-	ps.key_timer        = 0;
-//	ps.cw_state = CW_IDLE;
-//	ps.cw_char = 0;
-//	ps.break_timer = 0;
-//	ps.space_timer = 0;
 }
