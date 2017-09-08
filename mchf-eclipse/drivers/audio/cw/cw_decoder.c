@@ -44,7 +44,7 @@ void CwDecode_FilterInit()
 
 //-----------------------------------------------------------------------------
 // Selection of all sorts of post-filtering, including noise/spike/dropout cancel
-#define CW_SIGAVERAGE         4  // N = 1, 2, 3... Probably a better method than FFTAVERAGE.  Also works
+#define CW_SIGAVERAGE         2  // N = 1, 2, 3... Probably a better method than FFTAVERAGE.  Also works
 // with FFT1024.  Averages (smoothes) signal from N number of samples,
 //  but does not slow down sampling rate.  Fights drops and spikes.
 
@@ -97,7 +97,7 @@ typedef struct
 volatile static float32_t CW_vol = 2.0; // FIXME
 volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
 //volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
-volatile static float32_t thresh = 15000.0; //0.01; // 10;              // Audio threshold level (0 - 40)
+volatile static float32_t thresh = 30000.0; //0.01; // 10;              // Audio threshold level (0 - 40)
 
 volatile static bool cw_state;                         // Current decoded signal state
 volatile static sigbuf sig[CW_SIG_BUFSIZE]; // A circular buffer of decoded input levels and durations, input from
@@ -211,12 +211,12 @@ static void CW_Decode_exe(void)
 	if (siglevel >= thresh)
 	{
 		cw_state = TRUE;
-        Board_RedLed(LED_STATE_ON);
+//        Board_RedLed(LED_STATE_ON);
 	}
 	else
 	{
 		cw_state = FALSE;
-        Board_RedLed(LED_STATE_OFF);
+//        Board_RedLed(LED_STATE_OFF);
 	}
 #endif
 
@@ -344,6 +344,7 @@ static void InitializationFunc(void)
 		cwspace_avg = 0;
 		w_space = 0;
 	}
+    Board_RedLed(LED_STATE_ON);
 
 	// Determine number of states waiting to be processed
 	if (progress < startpos)
@@ -356,6 +357,8 @@ static void InitializationFunc(void)
 		b.initialized = TRUE;                  // Indicate we're done and return
 		initializing = FALSE;          // Allow for correct setup of progress if
 									   // InitializaitonFunc is invoked a second time
+        Board_RedLed(LED_STATE_OFF);
+
 	}
 	if (progress != sig_incount)                      // Do we have a new state?
 	{
@@ -1029,7 +1032,7 @@ void WordSpaceFunc(uint8_t c)
 //------------------------------------------------------------------
 bool ErrorCorrectionFunc(void)
 {
-	int32_t pduration;                 // Short pulse durationa and location
+	int32_t pduration;                 // Short pulse duration and location
 	int32_t plocation;
 	int32_t sduration;                // Long symbol space duration and location
 	int32_t slocation;
@@ -1038,7 +1041,7 @@ bool ErrorCorrectionFunc(void)
 	{ 0xff, 0xff };
 	bool result = FALSE; // Result of Error resolution - FALSE if nothing resolved
 
-//  uint64_t freezetime = millis();     // Guard against misbehaviour of DataRecognitionFunc()
+	uint32_t freezetime = ts.sysclock;     // Guard against misbehaviour of DataRecognitionFunc()
 
 	if (data_len >= CW_DATA_BUFSIZE - 2)     // Too long char received
 	{
@@ -1137,9 +1140,8 @@ bool ErrorCorrectionFunc(void)
 			// Now we reprocess
 			//
 			// Pull out a character, using the adjusted sig[] buffer
-			while (!DataRecognitionFunc())
-				;  // Process character delimited by character or word space
-//      while((!DataRecognitionFunc()) && (millis() < freezetime+2));
+			// Process character delimited by character or word space
+			while((!DataRecognitionFunc()) && (ts.sysclock < freezetime + 2));
 			CodeGenFunc();                 // Generate a dot/dash pattern string
 			decoded[0] = CharacterIdFunc(); // Convert dot/dash data into a character
 			if (decoded[0] != 0xff)
@@ -1168,14 +1170,14 @@ bool ErrorCorrectionFunc(void)
 			// Not found out why, but millis() is used to guards against it.
 
 			// Process first character delimited by character or word space
-			//      while((!DataRecognitionFunc()) && (millis() < freezetime+2));
-			while ((!DataRecognitionFunc()))
-				;
+			while((!DataRecognitionFunc()) && (ts.sysclock < freezetime + 2));
+//			while ((!DataRecognitionFunc()))
+//				;
 			CodeGenFunc();                 // Generate a dot/dash pattern string
 			decoded[0] = CharacterIdFunc(); // Convert dot/dash pattern into a character
 			// Process second character delimited by character or word space
-//      while((!DataRecognitionFunc()) && (millis() < freezetime+2));
-			while ((!DataRecognitionFunc()))
+			while((!DataRecognitionFunc()) && (ts.sysclock < freezetime + 2));
+//			while ((!DataRecognitionFunc()))
 				;
 			CodeGenFunc();                 // Generate a dot/dash pattern string
 			decoded[1] = CharacterIdFunc(); // Convert dot/dash pattern into a character
@@ -1236,8 +1238,8 @@ void CW_Decode(void)
 //        Serial.println();
 //        Serial.println(code);
 				// If Error Correction function cannot resolve, then reinitialize speed
-//				if (!ErrorCorrectionFunc())
-//					b.initialized = FALSE;
+				if (!ErrorCorrectionFunc())
+					b.initialized = FALSE;
 			}
 		}
 	}
