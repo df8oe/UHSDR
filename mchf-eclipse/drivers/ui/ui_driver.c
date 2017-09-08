@@ -5736,8 +5736,16 @@ static void UiAction_PlayKeyerBtnN(int n)
 		pmacro = (uint8_t *)ts.keyer_mode.macro[n];
 		while (*pmacro != '\0') //TODO not implemented - printing on the screen for debugging
 		{
-			UiDriver_TextMsgPutChar(*pmacro++);
+			DigiModes_TxBufferPutChar(*pmacro++);
 		}
+
+		/* FIXME This is work in progress to be uncommented when ready
+		if (ts.dmod_mode == DEMOD_CW && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+		{
+			ts.ptt_req = true;
+		}
+		*/
+
 		UiDriver_TextMsgPutChar('>');
 	}
 	else if (ts.keyer_mode.button_recording == n)
