@@ -39,7 +39,7 @@ void CwDecode_FilterInit()
 
 //-----------------------------------------------------------------------------
 // Selection of all sorts of post-filtering, including noise/spike/dropout cancel
-#define CW_SIGAVERAGE         3 //10  // N = 1, 2, 3... Probably a better method than FFTAVERAGE.  Also works
+#define CW_SIGAVERAGE         1 //10  // N = 1, 2, 3... Probably a better method than FFTAVERAGE.  Also works
 // with FFT1024.  Averages (smoothes) signal from N number of samples,
 //  but does not slow down sampling rate.  Fights drops and spikes.
 
@@ -92,7 +92,7 @@ typedef struct
 volatile static float32_t CW_vol = 2.0; // FIXME
 volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
 //volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
-volatile static float32_t thresh = 15000.0; //0.01; // 10;              // Audio threshold level (0 - 40)
+volatile static float32_t thresh = 32000.0; //0.01; // 10;              // Audio threshold level (0 - 40)
 
 volatile static bool cw_state;                   // Current decoded signal state
 volatile static sigbuf sig[CW_SIG_BUFSIZE]; // A circular buffer of decoded input levels and durations, input from
