@@ -240,31 +240,24 @@ typedef struct {
 } flex_buffer;
 
 static char ui_txt_msg_buffer[ui_txt_msg_buffer_max+1]; // we need to be able store the '\0' as well.
-static const char fdv_rx_empty_line[ui_txt_msg_buffer_max+1] = "                                             ";
+static const char ui_txt_empty_line[ui_txt_msg_buffer_max+1] = "                                             ";
 static int ui_txt_msg_idx= 0;
 static bool ui_txt_msg_update = false;
 
 
 void UiDriver_TextMsgClear()
 {
-    UiLcdHy28_PrintText(5,92, fdv_rx_empty_line,Yellow,Black,4);
+    UiLcdHy28_PrintText(5,92, ui_txt_empty_line,Yellow,Black,4);
     ui_txt_msg_idx = 0;
     ui_txt_msg_update = true;
 }
-void fdv_clear_display()
-{
-    UiLcdHy28_PrintText(5,116,"            ",Yellow,Black,4);
-    UiLcdHy28_PrintText(5,104,"            ",Yellow,Black,4);
-    UiDriver_TextMsgClear();
-}
-
 
 void UiDriver_TextMsgDisplay()
 {
     if (ui_txt_msg_update == true)
     {
         ui_txt_msg_update = false;
-        const char* txt_ptr = ui_txt_msg_idx == 0? fdv_rx_empty_line:ui_txt_msg_buffer;
+        const char* txt_ptr = ui_txt_msg_idx == 0? ui_txt_empty_line:ui_txt_msg_buffer;
         UiLcdHy28_PrintText(5,92,txt_ptr,Yellow,Black,4);
     }
 }
@@ -274,11 +267,13 @@ void UiDriver_TextMsgPutChar(char ch)
     if (ch=='\n' || ch == '\r')
     {
         ui_txt_msg_idx=0;
+    	ui_txt_msg_buffer[ui_txt_msg_idx] = '\0';
     }
     else if (ui_txt_msg_idx < (ui_txt_msg_buffer_max))
     {
-        ui_txt_msg_buffer[ui_txt_msg_idx]=ch; //fill from left to right
         ui_txt_msg_idx++;
+    	ui_txt_msg_buffer[ui_txt_msg_idx] = '\0'; // set the line end before we add the character prevents unterminated strings
+        ui_txt_msg_buffer[ui_txt_msg_idx-1]=ch; //fill from left to right
     }
     else
     {
@@ -288,8 +283,14 @@ void UiDriver_TextMsgPutChar(char ch)
         }
         ui_txt_msg_buffer[ui_txt_msg_buffer_max-1]=ch;
     }
-    ui_txt_msg_buffer[ui_txt_msg_idx] = '\0'; // this is the end of the string
     ui_txt_msg_update = true;
+}
+
+void fdv_clear_display()
+{
+    UiLcdHy28_PrintText(5,116,"            ",Yellow,Black,4);
+    UiLcdHy28_PrintText(5,104,"            ",Yellow,Black,4);
+    UiDriver_TextMsgClear();
 }
 
 
