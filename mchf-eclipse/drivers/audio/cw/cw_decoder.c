@@ -12,11 +12,19 @@
 #include "ui_driver.h"
 #include "cw_decoder.h"
 
-#define CW_DECODE_BLOCK_SIZE 32
+//#define CW_DECODE_BLOCK_SIZE 32
 Goertzel cw_goertzel;
 
 cw_config_t cw_decoder_config =
-{ .sampling_freq = 12000.0, .target_freq = 700.0 };
+{ .sampling_freq = 12000.0, .target_freq = 700.0,
+		.average = 2,
+		.thresh = 15000,
+		.blocksize = 32,
+		.AGC_enable = 0,
+		.noisecancel_enable = 1,
+		.spikecancel = 0,
+		.use_3_goertzels = false
+};
 
 static void CW_Decode(void);
 
@@ -24,14 +32,14 @@ void CwDecode_FilterInit()
 {
 	// set Goertzel parameters for CW decoding
 	AudioFilter_CalcGoertzel(&cw_goertzel, cw_decoder_config.target_freq,
-			CW_DECODE_BLOCK_SIZE, 1.0, cw_decoder_config.sampling_freq);
+			cw_decoder_config.blocksize, 1.0, cw_decoder_config.sampling_freq);
 }
 
 // for experimental CW decoder
-#define CW_DECODER_AGC		0
+//#define CW_DECODER_AGC		0
 #define CW_TIMEOUT			3  // Time, in seconds, to trigger display of last Character received
 // and a New Line in the USB Serial Monitor.
-#define ONE_SECOND			(12000 / CW_DECODE_BLOCK_SIZE) // sample rate / decimation rate / block size
+#define ONE_SECOND			(12000 / cw_decoder_config.blocksize) // sample rate / decimation rate / block size
 #define CW_AGC_ATTACK      	0.95  // Audio automatic gain control (AGC) attack, audio vol reduce per cycle.
 #define CW_AGC_DECAY      	1.005  // Audio AGC decay, audio volume increase per cycle.
 // AGC attempts to cap the max signal level at the Fpeak frequency to 40
@@ -39,18 +47,19 @@ void CwDecode_FilterInit()
 
 //-----------------------------------------------------------------------------
 // Selection of all sorts of post-filtering, including noise/spike/dropout cancel
-#define CW_SIGAVERAGE         1 //10  // N = 1, 2, 3... Probably a better method than FFTAVERAGE.  Also works
+//#define CW_SIGAVERAGE         1 //10  // N = 1, 2, 3... Probably a better method than FFTAVERAGE.  Also works
 // with FFT1024.  Averages (smoothes) signal from N number of samples,
 //  but does not slow down sampling rate.  Fights drops and spikes.
 
-#define CW_NOISECANCEL        1  // Noise Cancellation by requiring two consecutive reads to be the same
+//#define CW_NOISECANCEL        1  // Noise Cancellation by requiring two consecutive reads to be the same
 // for a state change.  1 to select, 0 to deselect. Normally 1.
+// now handled by cw_decoder_config.noisecancel_enable
 
-#define CW_SPIKECANCEL        0  // Cancel transients/spikes/drops that have max duration of number chosen.
+#define CW_SPIKECANCEL        8  // Cancel transients/spikes/drops that have max duration of number chosen.
 // Typically 4 or 8 to select at time periods of 4 or 8 times 2.9ms.
 // 0 to deselect.
 
-#define CW_SHORTCANCEL        0  // Drops any transients (mark or space) that are shorter than 1/3rd "dot"
+//#define CW_SHORTCANCEL        0  // Drops any transients (mark or space) that are shorter than 1/3rd "dot"
 // length.  Only active when not in "initialize" state. Do not enable at
 // same time as SPIKECANCEL. 1 to select, 0 to deselect.
 //-----------------------------------------------------------------------------
@@ -92,7 +101,7 @@ typedef struct
 volatile static float32_t CW_vol = 2.0; // FIXME
 volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
 //volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
-volatile static float32_t thresh = 32000.0; //0.01; // 10;              // Audio threshold level (0 - 40)
+//volatile static float32_t thresh = 32000.0; //0.01; // 10;              // Audio threshold level (0 - 40)
 
 volatile static bool cw_state;                   // Current decoded signal state
 volatile static sigbuf sig[CW_SIG_BUFSIZE]; // A circular buffer of decoded input levels and durations, input from
@@ -126,7 +135,7 @@ static float32_t pulse_avg; // CW timing variables - pulse_avg is a composite va
 static float32_t dot_avg, dash_avg;            // Dot and Dash Space averages
 static float32_t symspace_avg, cwspace_avg; // Intra symbol Space and Character-Word Space
 static int32_t w_space;                      // Last word space time
-static float32_t raw_signal_buffer[CW_DECODE_BLOCK_SIZE];
+static float32_t raw_signal_buffer[128];  //cw_decoder_config.blocksize];
 
 // RINGBUFFER HELPER MACROS START
 
@@ -167,7 +176,7 @@ static void CW_Decode_exe(void)
 	// these are already in raw_signal_buffer
 
 	//    2.) calculate Goertzel
-	for (uint16_t index = 0; index < CW_DECODE_BLOCK_SIZE; index++)
+	for (uint16_t index = 0; index < cw_decoder_config.blocksize; index++)
 	{
 		AudioFilter_GoertzelInput(&cw_goertzel, raw_signal_buffer[index]);
 	}
@@ -176,7 +185,7 @@ static void CW_Decode_exe(void)
 
 	// I am not sure whether we would need an AGC here, because the audio chain already has an AGC
 	//    3.) AGC
-	if (CW_DECODER_AGC)
+	if (cw_decoder_config.AGC_enable)
 	{
 		pklvl = CW_agcvol * CW_vol * magnitudeSquared; // Get level at Goertzel frequency
 		if (pklvl > 45)
@@ -195,44 +204,58 @@ static void CW_Decode_exe(void)
 	// better use exponential averager here !?
 
 	//	static int16_t avg_win[CW_SIGAVERAGE]; // Sliding window buffer for signal averaging, if used
-	static float32_t avg_win[CW_SIGAVERAGE]; // Sliding window buffer for signal averaging, if used
+	static float32_t avg_win[20]; // Sliding window buffer for signal averaging, if used
 	static uint8_t avg_cnt = 0;                        // Sliding window counter
 
 	avg_win[avg_cnt] = siglevel;     // Add value onto "sliding window" buffer
-	avg_cnt = ring_idx_increment(avg_cnt, CW_SIGAVERAGE);
+	avg_cnt = ring_idx_increment(avg_cnt, cw_decoder_config.average);
 
 	lvl = 0;
-	for (uint8_t x = 0; x < CW_SIGAVERAGE; x++) // Average up all values within sliding window
+	for (uint8_t x = 0; x < cw_decoder_config.average; x++) // Average up all values within sliding window
 	{
 		lvl = lvl + avg_win[x];
 	}
-	siglevel = lvl / CW_SIGAVERAGE;
+	siglevel = lvl / cw_decoder_config.average;
 
 	//    5.) signal state determination
 	//----------------
 	// Signal State sampling
-#if NOISECANCEL                                 // Noise Cancel function requires two consecutive
-	static bool newstate, change; // reads to be the same to confirm a true change
-	if (siglevel >= thresh) newstate = TRUE;
-	else newstate = FALSE;
-	if (change == TRUE)
+
+	if(cw_decoder_config.noisecancel_enable)
 	{
-		cw_state = newstate;
-		change = FALSE;
-	}
-	else if (newstate != cw_state) change = TRUE;
-#else                                           // No noise canceling
-	if (siglevel >= thresh)
-	{
-		cw_state = TRUE;
-		Board_RedLed(LED_STATE_ON);
+		static bool newstate, change; // reads to be the same to confirm a true change
+		if (siglevel >= cw_decoder_config.thresh)
+		{
+			newstate = TRUE;
+		}
+		else
+		{
+			newstate = FALSE;
+		}
+		if (change == TRUE)
+		{
+			cw_state = newstate;
+			change = FALSE;
+		}
+		else if (newstate != cw_state)
+		{
+			change = TRUE;
+		}
+
 	}
 	else
-	{
-		cw_state = FALSE;
-		Board_RedLed(LED_STATE_OFF);
+	{// No noise canceling
+		if (siglevel >= cw_decoder_config.thresh)
+		{
+			cw_state = TRUE;
+			Board_RedLed(LED_STATE_ON);
+		}
+		else
+		{
+			cw_state = FALSE;
+			Board_RedLed(LED_STATE_OFF);
+		}
 	}
-#endif
 
 	//    6.) fill into circular buffer
 	//----------------
@@ -278,7 +301,7 @@ void CwDecode_RxProcessor(float32_t * const src, int16_t blockSize)
 		raw_signal_buffer[sample_counter] = src[idx];
 		sample_counter++;
 	}
-	if (sample_counter >= CW_DECODE_BLOCK_SIZE)
+	if (sample_counter >= cw_decoder_config.blocksize)
 	// CW_DECODE_BLOCK_SIZE has to be a multiple integer of the decimated block size (8)
 	//
 	{
@@ -423,32 +446,46 @@ static void InitializationFunc(void)
 // function to identify and ignore spikes of short duration.
 //
 //------------------------------------------------------------------
-#if SPIKECANCEL || SHORTCANCEL
-double spikeCancel(double t)
+float32_t spikeCancel(float32_t t)
 {
 	static bool spike;
 
-#if SPIKECANCEL                               // Squash spikes/transients of short duration
-	if (t <= SPIKECANCEL)
-#elif SHORTCANCEL                             // Squash spikes shorter than 1/3rd dot duration
-	if ((3*t<dot_avg) && (b.initialized==TRUE)) // Only do this if we are not initializing dot/dash periods
-#endif
+	if(cw_decoder_config.spikecancel == 1) // SPIKE CANCEL // Squash spikes/transients of short duration
+	{
+		if((t <= CW_SPIKECANCEL))
+		{
+			spike = TRUE;
+			sig_outcount++;                             // If short, then do nothing
+			if (sig_outcount == CW_SIG_BUFSIZE) sig_outcount = 0;
+			return 0;
+		}
+		else if (spike == TRUE)     // Check if last state was a short Spike or Drop
+		{
+			spike = FALSE;
+			// Add time of last three states together.
+			t = t + sig[(sig_outcount-1<0)?CW_SIG_BUFSIZE-1:sig_outcount-1].time
+			+ sig[(sig_outcount-2<0)?CW_SIG_BUFSIZE-(2-sig_outcount):sig_outcount-2].time;
+		}
+	}
+	else if (cw_decoder_config.spikecancel == 2) // SHORT CANCEL // Squash spikes shorter than 1/3rd dot duration
+	{
+		if ((3*t<dot_avg) && (b.initialized==TRUE)) // Only do this if we are not initializing dot/dash periods
 	{
 		spike = TRUE;
 		sig_outcount++;                             // If short, then do nothing
-		if (sig_outcount == SIG_BUFSIZE) sig_outcount = 0;
+		if (sig_outcount == CW_SIG_BUFSIZE) sig_outcount = 0;
 		return 0;
 	}
 	else if (spike == TRUE)     // Check if last state was a short Spike or Drop
 	{
 		spike = FALSE;
 		// Add time of last three states together.
-		t = t + sig[(sig_outcount-1<0)?SIG_BUFSIZE-1:sig_outcount-1].time
-		+ sig[(sig_outcount-2<0)?SIG_BUFSIZE-(2-sig_outcount):sig_outcount-2].time;
+		t = t + sig[(sig_outcount-1<0)?CW_SIG_BUFSIZE-1:sig_outcount-1].time
+		+ sig[(sig_outcount-2<0)?CW_SIG_BUFSIZE-(2-sig_outcount):sig_outcount-2].time;
+	}
 	}
 	return t;
 }
-#endif
 
 //------------------------------------------------------------------
 //
@@ -485,11 +522,19 @@ bool DataRecognitionFunc(bool* new_char_p)
 		// Is it a Mark (keydown)?
 		if (sig[sig_outcount].state)
 		{
-#if SPIKECANCEL || SHORTCANCEL                // Squash spikes/transients
-			double temp = spikeCancel(t);
-			if (temp == 0) return FALSE;               // It was a transient
-			else t = temp;// If last was a transient, then t = last 3 t added together
-#endif
+			 if(cw_decoder_config.spikecancel)
+			{
+				// Squash spikes/transients
+							float32_t temp = spikeCancel(t);
+							if (temp == 0) // can this happen? FIXME
+								{
+									return FALSE;               // It was a transient
+								}
+							else
+								{
+									t = temp;// If last was a transient, then t = last 3 t added together
+								}
+			}
 
 			processed = FALSE; // Indicate that incoming character is not processed
 
@@ -525,11 +570,19 @@ bool DataRecognitionFunc(bool* new_char_p)
 		// Is it a Space?
 		else
 		{
-#if SPIKECANCEL || SHORTCANCEL                // Squash spikes/transients
-			double temp = spikeCancel(t);
-			if (temp == 0) return FALSE;               // It was a transient
-			else t = temp;// If last was a transient, then t = last 3 t added together
-#endif
+			 if(cw_decoder_config.spikecancel)
+			{
+				// Squash spikes/transients
+							float32_t temp = spikeCancel(t);
+							if (temp == 0) // can this happen? FIXME
+								{
+									return FALSE;               // It was a transient
+								}
+							else
+								{
+									t = temp;// If last was a transient, then t = last 3 t added together
+								}
+			}
 
 			// FIXME: This control flow looks strange since when we wrap around the ringbuffer,
 			// we are not supposed to check for the dash?
@@ -1080,16 +1133,29 @@ bool ErrorCorrectionFunc(void)
 			// Find shortest pulse duration. Only test key-down states
 			if (sig[temp_outcount].state)
 			{
-#if SPIKECANCEL               // Squash spikes/transients of short duration
-				if ((sig[temp_outcount].time < pduration) && (sig[temp_outcount].time > SPIKECANCEL))
-#elif SHORTCANCEL             // Squash spikes shorter than 1/3rd dot duration
-				if ((sig[temp_outcount].time < pduration) && ((3*sig[temp_outcount].time)>dot_avg))
-#else
-				if (sig[temp_outcount].time < pduration)
-#endif
+				switch(cw_decoder_config.spikecancel)
 				{
-					pduration = sig[temp_outcount].time;
-					plocation = temp_outcount;
+				case 0:
+					if (sig[temp_outcount].time < pduration)
+					{
+						pduration = sig[temp_outcount].time;
+						plocation = temp_outcount;
+					}
+				break;
+				case 1:
+					if ((sig[temp_outcount].time < pduration) && (sig[temp_outcount].time > CW_SPIKECANCEL))
+					{
+						pduration = sig[temp_outcount].time;
+						plocation = temp_outcount;
+					}
+				break;
+				case 2:
+					if ((sig[temp_outcount].time < pduration) && ((3*sig[temp_outcount].time)>dot_avg))
+					{
+						pduration = sig[temp_outcount].time;
+						plocation = temp_outcount;
+					}
+				break;
 				}
 			}
 

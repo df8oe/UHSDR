@@ -1817,10 +1817,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     }
-    /*
-    cw_decoder_config
-    ts.cw_decode_threshold - ab welchem Audiolevel erkennt der Decoder
-einen Ton? [uint32_t 1000 bis 100000 --> wird dann zu float32_t]
 
     case MENU_CW_DECODER_THRESH:   //
         var_change = UiDriverMenuItemChangeUInt32(var, mode, &cw_decoder_config.thresh,
@@ -1831,7 +1827,6 @@ einen Ton? [uint32_t 1000 bis 100000 --> wird dann zu float32_t]
                                               );
         snprintf(options,32, "  %u", cw_decoder_config.thresh);
         break;
-
 
 
 //ts.cw_decode_average - wieviele Goertzel-Schätzwerte werden in einem
@@ -1865,14 +1860,14 @@ einen Ton? [uint32_t 1000 bis 100000 --> wird dann zu float32_t]
         break;
 
 
-ts.cw_decode_block_size - wieviele samples (von den dezimierten
+/*ts.cw_decode_block_size - wieviele samples (von den dezimierten
 12ksps) werden im Goertzel-Algorithmus zur Signalberechnung verwendet
 [uint8_t: darf Werte von 8, 16, 24, 32, 40, 48, 56, 72, 96, 128
 annehmen, im Prinzip alle int, die durch 8 teilbar sind]
 
 ts.cw_decode_AGC_enable - AGC des decoders ON/OFF [bool]
-
-        case CONFIG_CW_DECODER_AGC:    // On/Off
+*/
+        case MENU_CW_DECODER_AGC:    // On/Off
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.AGC_enable,
                                                   0,
                                                   1,
@@ -1888,12 +1883,12 @@ ts.cw_decode_AGC_enable - AGC des decoders ON/OFF [bool]
                 txt_ptr = "  ON";
                 break;
             }
-
-        case CONFIG_CW_DECODER_NOISECANCEL:    // On/Off
+            break;
+        case MENU_CW_DECODER_NOISECANCEL:    // On/Off
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.noisecancel_enable,
                                                   0,
                                                   1,
-                                                  0,
+                                                  1,
                                                   1
                                                  );
 
@@ -1905,8 +1900,8 @@ ts.cw_decode_AGC_enable - AGC des decoders ON/OFF [bool]
                 txt_ptr = "  ON";
                 break;
             }
-
-        case CONFIG_CW_DECODER_SPIKECANCEL:    // On/Off
+            break;
+        case MENU_CW_DECODER_SPIKECANCEL:    // On/Off
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.spikecancel,
                                                   0,
                                                   2,
@@ -1914,7 +1909,7 @@ ts.cw_decode_AGC_enable - AGC des decoders ON/OFF [bool]
                                                   1
                                                  );
 
-            switch(cw_decoder_config.) {
+            switch(cw_decoder_config.spikecancel) {
             case 0:
                 txt_ptr = " OFF";
                 break;
@@ -1925,13 +1920,7 @@ ts.cw_decode_AGC_enable - AGC des decoders ON/OFF [bool]
                 txt_ptr = "SHORT";
                 break;
             }
-
-
-ts.cw_decode_noisecancel - schaltet verschiedene noisecancel und
-spikecancel-Algorithmen an [uint8_t: 0 = OFF, 1 = noise cancel, 2 =
-spike cancel]
-
-    */
+            break;
     case MENU_TCXO_MODE:    // TCXO On/Off
         temp_var_u8 = RadioManagement_TcxoGetMode();     // get current setting without upper nibble
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
@@ -3638,9 +3627,13 @@ spike cancel]
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.rtty_atc_enable,0,options,&clr);
          break;
 
-     case MENU_DEBUG_CW_DECODER:
+     case MENU_CW_DECODER:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.cw_decoder_enable,0,options,&clr);
          break;
+
+     case MENU_CW_DECODER_USE_3_GOERTZEL:
+         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &cw_decoder_config.use_3_goertzels,0,options,&clr);
+    	 break;
 
     case MENU_DIGITAL_MODE_SELECT:
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.digital_mode,0,DigitalMode_RTTY,0,1);
