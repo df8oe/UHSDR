@@ -54,10 +54,122 @@
 
 #include "rtty.h"
 
+// POSITIONS START
+#define SPLIT_ACTIVE_COLOUR         		Yellow      // colour of "SPLIT" indicator when active
+#define SPLIT_INACTIVE_COLOUR           	Grey        // colour of "SPLIT" indicator when NOT active
+#define COL_PWR_IND                 		White
+
+// Frequency display control
+#define POS_TUNE_FREQ_X             		116
+#define POS_TUNE_FREQ_Y             		100
+
+#define POS_TUNE_SPLIT_FREQ_X           	POS_TUNE_FREQ_X+80//Shift with a small split to the right to close the frequency digits.
+#define POS_TUNE_SPLIT_MARKER_X         	POS_TUNE_FREQ_X+40
+#define POS_TUNE_SPLIT_FREQ_Y_TX        	POS_TUNE_FREQ_Y+12
+
+// Second frequency display control
+#define POS_TUNE_SFREQ_X            		(POS_TUNE_FREQ_X + 120)
+#define POS_TUNE_SFREQ_Y            		(POS_TUNE_FREQ_Y - 20)
+
+// Band selection control
+#define POS_BAND_MODE_X             		(POS_TUNE_FREQ_X + 160)
+#define POS_BAND_MODE_Y             		(POS_TUNE_FREQ_Y + 7)
+#define POS_BAND_MODE_MASK_X            	(POS_BAND_MODE_X - 1)
+#define POS_BAND_MODE_MASK_Y            	(POS_BAND_MODE_Y - 1)
+#define POS_BAND_MODE_MASK_H            	13
+#define POS_BAND_MODE_MASK_W            	33
+
+// Demodulator mode control
+#define POS_DEMOD_MODE_X            		(POS_TUNE_FREQ_X + 1)
+#define POS_DEMOD_MODE_Y            		(POS_TUNE_FREQ_Y - 20)
+#define POS_DEMOD_MODE_MASK_X           	(POS_DEMOD_MODE_X - 1)
+#define POS_DEMOD_MODE_MASK_Y           	(POS_DEMOD_MODE_Y - 1)
+#define POS_DEMOD_MODE_MASK_H           	13
+#define POS_DEMOD_MODE_MASK_W           	41
+
+// Tunning step control
+#define POS_TUNE_STEP_X             		(POS_TUNE_FREQ_X + 45)
+#define POS_TUNE_STEP_Y             		(POS_TUNE_FREQ_Y - 21)
+//#define POS_TUNE_STEP_MASK_H            	15
+#define POS_TUNE_STEP_MASK_W            	(SMALL_FONT_WIDTH*7)
+
+//#define POS_RADIO_MODE_X            		4
+//#define POS_RADIO_MODE_Y            		5
+
+// Bottom bar
+#define POS_BOTTOM_BAR_X            		0
+#define POS_BOTTOM_BAR_Y            		228
+#define POS_BOTTOM_BAR_BUTTON_W         	62
+#define POS_BOTTOM_BAR_BUTTON_H         	16
+
+// Virtual Button 1
+#define POS_BOTTOM_BAR_F1_X         		(POS_BOTTOM_BAR_X + 2)
+#define POS_BOTTOM_BAR_F1_Y         		POS_BOTTOM_BAR_Y
+
+// --------------------------------------------------
+// Encoder controls indicator
+#define POS_ENCODER_IND_X                	0
+#define POS_ENCODER_IND_Y                	16
+
+
+// --------------------------------------------------
+// Standalone controls
+//
+// DSP mode
+// Lower DSP box
+#define POS_LEFTBOXES_IND_X              	0
+#define POS_LEFTBOXES_IND_Y              	130
+#define LEFTBOX_WIDTH 58 // used for the lower left side controls
+#define LEFTBOX_ROW_H  (28)
+#define LEFTBOX_ROW_2ND_OFF  (13)
+
+// Power level
+#define POS_PW_IND_X                		POS_DEMOD_MODE_X -1
+#define POS_PW_IND_Y                		POS_DEMOD_MODE_Y - 16
+
+#define POS_DIGMODE_IND_X              		0
+#define POS_DIGMODE_IND_Y              		(191)
+
+// S meter position
+#define POS_SM_IND_X                		116
+#define POS_SM_IND_Y                		0
+#define SM_IND_W (200)
+#define SM_IND_H (72 - BTM_MINUS)
+
+// Supply Voltage indicator
+//#define POS_PWRN_IND_X              		0
+#define POS_PWRN_IND_Y              		193
+
+#define POS_PWR_IND_X               		4
+#define POS_PWR_IND_Y               		(POS_PWRN_IND_Y + 15)
+
+
+// Temperature Indicator
+#define POS_TEMP_IND_X              		0
+#define POS_TEMP_IND_Y              		0
+
+// RTC
+#define POS_RTC								79
+
+#define POS_LOADANDDEBUG_Y					95
+#define POS_DEBUG_X							0
+#define POS_LOAD_X							280
+
+
+//
+// Location of numerical FWD/REV power indicator
+//
+#define	POS_PWR_NUM_IND_X					1
+#define	POS_PWR_NUM_IND_Y					80
+
+#define POS_MEMORYLABEL_X (161+(SMALL_FONT_WIDTH * 11)+4)
+#define POS_MEMORYLABEL_Y (64)
+// POSITIONS END
+
 static void     UiDriver_CreateMainFreqDisplay();
 
 static void     UiDriver_CreateMeters();
-static void     UiDriver_DeleteSMeter();
+static void     UiDriver_DeleteMeters();
 static void 	UiDriver_DrawSMeter(ushort color);
 //
 static void 	UiDriver_UpdateTopMeterA(uchar val);
@@ -322,17 +434,10 @@ inline void decr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max 
 	*ptr = (change_and_wrap_uint(*ptr,-1,min,max))&0xff;
 }
 
-
-
-
-
 inline bool is_touchscreen_pressed()
 {
 	return (ts.tp->state == TP_DATASETS_VALID);	// touchscreen data available
 }
-
-
-
 
 bool is_vfo_b()
 {
@@ -354,7 +459,6 @@ inline bool is_dsp_nr_postagc()
 	return (ts.dsp_active & DSP_NR_POSTAGC_ENABLE) != 0;
 }
 
-
 inline bool is_dsp_notch()
 {
 	return (ts.dsp_active & DSP_NOTCH_ENABLE) != 0;
@@ -370,11 +474,6 @@ inline bool is_dsp_mpeak()
 	return (ts.dsp_active & DSP_MPEAK_ENABLE) != 0;
 }
 
-
-void UiDriver_ShowDebugText(const char* text)
-{
-	UiLcdHy28_PrintText(POS_PWR_NUM_IND_X,POS_PWR_NUM_IND_Y+24,text,White,Black,0);
-}
 
 typedef struct
 {
@@ -460,17 +559,9 @@ bool UiDriver_ProcessKeyActions(const keyaction_list_descr_t* kld)
 
 	return retval;
 }
-
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiLCDBlankTiming
-//* Object              : Do LCD Auto-Blank timing
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
+/**
+ * @brief restarts lcd blanking timer, called in all functions which detect user interaction with the device
+ */
 void UiDriver_LcdBlankingStartTimer()
 {
 	if(ts.lcd_backlight_blanking & LCD_BLANKING_ENABLE)     // is LCD blanking enabled?
@@ -481,7 +572,6 @@ void UiDriver_LcdBlankingStartTimer()
 		ts.lcd_blanking_flag = false;       // clear flag to make LCD turn on
 	}
 }
-
 
 static void   UiDriver_LcdBlankingProcessTimer()
 {
@@ -503,8 +593,7 @@ static void   UiDriver_LcdBlankingProcessTimer()
 	}
 }
 
-#define LEFTBOX_ROW_H  (14+12+2)
-#define LEFTBOX_ROW_2ND_OFF  (13)
+
 static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool encoder_active,
 		const char* text, uint32_t color, uint32_t clr_val, bool text_is_value)
 {
@@ -543,7 +632,9 @@ static void UiDriver_LcdBlankingStealthSwitch()
 	else
 	{
 		if(ts.lcd_backlight_blanking & LCD_BLANKING_TIMEMASK)    // bit NOT set AND the timing set to NON-zero?
+		{
 			ts.lcd_backlight_blanking |= LCD_BLANKING_ENABLE;       // no - turn on MSB to activate "stealth" mode
+		}
 	}
 }
 
@@ -628,18 +719,15 @@ void UiDriver_FrequencyUpdateLOandDisplay(bool full_update)
 void UiDriver_DebugInfo_DisplayEnable(bool enable)
 {
 
-	ts.show_debug_info = enable;
-	UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,ts.show_debug_info?"enabled":"       ",Green,Black,0);
+	UiLcdHy28_PrintText(POS_DEBUG_X,POS_LOADANDDEBUG_Y,enable?"enabled":"       ",Green,Black,0);
 
-	if (ts.show_debug_info == true)
+	if (enable == false)
 	{
-		UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,"enabled",Green,Black,0);
+		UiLcdHy28_PrintText(POS_LOAD_X,POS_LOADANDDEBUG_Y,"     ",White,Black,5); //  "    "    "     "
 	}
-	else
-	{
-		UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,"       ",White,Black,0); // clears debug text
-		UiLcdHy28_PrintText(280,POS_LOADANDDEBUG,"     ",White,Black,5); //  "    "    "     "
-	}
+
+	ts.show_debug_info = enable;
+
 }
 
 void UiDriver_SpectrumZoomChangeLevel()
@@ -802,15 +890,16 @@ void UiDriver_Init()
 	ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_DELAY_TIME;
 }
 
+#define BOTTOM_BAR_LABEL_W (56)
 void UiDriver_DrawFButtonLabel(uint8_t button_num, const char* label, uint32_t label_color)
 {
-	UiLcdHy28_PrintTextCentered(POS_BOTTOM_BAR_F1_X + (button_num - 1)*64, POS_BOTTOM_BAR_F1_Y, 56, label,
+	UiLcdHy28_PrintTextCentered(POS_BOTTOM_BAR_F1_X + (button_num - 1)*64, POS_BOTTOM_BAR_F1_Y, BOTTOM_BAR_LABEL_W, label,
 			label_color, Black, 0);
 }
 
-#define ENC_COL_W 37
-#define ENC_ROW_H (16+12+2)
-#define ENC_ROW_2ND_OFF 14
+#define ENC_COL_W (37)
+#define ENC_ROW_H (30)
+#define ENC_ROW_2ND_OFF (14)
 
 void UiDriver_EncoderDisplay(const uint8_t row, const uint8_t column, const char *label, bool encoder_active,
 		const char temp[5], uint32_t color)
@@ -1355,7 +1444,7 @@ static void UiDriver_DisplayMemoryLabel()
 	{
 		snprintf(txt,12,"  CAT  ");
 	}
-	UiLcdHy28_PrintText(161+(SMALL_FONT_WIDTH * 11)+4,  64,txt,col,Black,0);
+	UiLcdHy28_PrintText(POS_MEMORYLABEL_X,  POS_MEMORYLABEL_Y,txt,col,Black,0);
 }
 
 
@@ -1517,20 +1606,23 @@ static void UiDriver_CreateDesktop()
 }
 
 
-static void UiDriver_DrawSMeter(ushort color)
+static void UiDriver_DrawSMeter(uint16_t color)
 {
-	uchar 	i,v_s;
-
 	// Draw top line
 	UiLcdHy28_DrawStraightLineDouble((POS_SM_IND_X +  18),(POS_SM_IND_Y + 20),92,LCD_DIR_HORIZONTAL,color);
 	// Draw s markers on top white line
-	for(i = 0; i < 10; i++)
+	for(uint16_t i = 0; i < 10; i++)
 	{
+		uint8_t 	v_s;
 		// Draw s text, only odd numbers
 		if(i%2)
+		{
 			v_s = 5;
+		}
 		else
+		{
 			v_s = 3;
+		}
 		// Lines
 		UiLcdHy28_DrawStraightLineDouble(((POS_SM_IND_X + 18) + i*10),((POS_SM_IND_Y + 20) - v_s),v_s,LCD_DIR_VERTICAL,color);
 	}
@@ -1548,16 +1640,14 @@ static void UiDriver_DrawSMeter(ushort color)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_DeleteSMeter()
+static void UiDriver_DeleteMeters()
 {
-	// W/H ratio ~ 3.5
-	UiLcdHy28_DrawFullRect(POS_SM_IND_X+1,POS_SM_IND_Y+1,72 - BTM_MINUS ,200,Black);
+	UiLcdHy28_DrawFullRect(POS_SM_IND_X+1,POS_SM_IND_Y+1,SM_IND_H ,SM_IND_W,Black);
 }
 
 static void UiDriver_DeleteSMeterLabels()
 {
-	// W/H ratio ~ 3.5
-	UiLcdHy28_DrawFullRect(POS_SM_IND_X+1,POS_SM_IND_Y+1,21,200,Black);
+	UiLcdHy28_DrawFullRect(POS_SM_IND_X+1,POS_SM_IND_Y+1,21,SM_IND_W,Black);
 }
 
 
@@ -1566,11 +1656,6 @@ static void UiDriver_DrawPowerMeterLabels()
 	uchar   i;
 	char    num[20];
 
-	// MinX  = + 6
-	// MinY  = + 32
-	// MaxY  = +36 + 12 = +48?
-	// MaxX  = 18+178 = +196?
-	// Bounding Box = +6,+32,++190,++16
 	// Leading text
 	UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 5),"P",  White,Black,4);
 
@@ -1599,7 +1684,6 @@ static void UiDriver_DrawPowerMeterLabels()
 		// Draw s text, only odd numbers
 		if(!(i%2))
 		{
-			// Text
 			UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 3 + i*15),(POS_SM_IND_Y + 5),num,White,Black,4);
 		}
 		// Lines
@@ -1672,7 +1756,7 @@ static void UiDriver_CreateMeters()
 	int		col;
 
 	// W/H ratio ~ 3.5
-	UiLcdHy28_DrawEmptyRect(POS_SM_IND_X,POS_SM_IND_Y,72 - BTM_MINUS,202,Grey);
+	UiLcdHy28_DrawEmptyRect(POS_SM_IND_X,POS_SM_IND_Y,SM_IND_H,SM_IND_W + 2,Grey);
 
 	UiDriver_DrawSMeterLabels();
 	// UiDriver_DrawPowerMeterLabels();
@@ -1918,49 +2002,6 @@ static void UiDriver_UpdateBtmMeter(float val, uchar warn)
 }
 
 
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCreateDigiPanel
-//* Object              : draw the digital modes info panel
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-/*static void UiDriverCreateDigiPanel()
-{
-	ulong i;
-
-	// Draw top band
-	for(i = 0; i < 16; i++)
-		UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y - 20 + i),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
-
-	// Top band text - middle caption
-	UiLcdHy28_PrintText(			(POS_SPECTRUM_IND_X + 85),
-									(POS_SPECTRUM_IND_Y - 18),
-									"DIGI PANEL",
-									Grey,
-									RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
-
-	// Draw control left and right border
-	for(i = 0; i < 2; i++)
-	{
-		UiLcdHy28_DrawStraightLine(	(POS_SPECTRUM_IND_X - 2 + i),
-									(POS_SPECTRUM_IND_Y - 20),
-									(POS_SPECTRUM_IND_H + 12),
-									LCD_DIR_VERTICAL,
-									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
-
-		UiLcdHy28_DrawStraightLine(	(POS_SPECTRUM_IND_X + POS_SPECTRUM_IND_W - 2 + i),
-									(POS_SPECTRUM_IND_Y - 20),
-									(POS_SPECTRUM_IND_H + 12),
-									LCD_DIR_VERTICAL,
-									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
-	}
-
-	// Clear old spectrum part + frequency bar
-	UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X,POS_SPECTRUM_IND_Y - 4,POS_SPECTRUM_IND_H - 2,POS_SPECTRUM_IND_W - 2,Black);
-}*/
-
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverInitFrequency
 //* Object              : set default values, some could be overwritten later
@@ -2055,14 +2096,6 @@ uchar UiDriver_DisplayBandForFreq(ulong freq)
  *
  * @param trx_mode The mode which the frequency is being used for (TRX_MODE_TX/TRX_MODE_RX)
  */
-//*----------------------------------------------------------------------------
-//* Function Name       : ui_driver_toggle_tx
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode)
 {
 
@@ -2145,7 +2178,7 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 
 
 
-static void UiDriver_UpdateFreqDisplay(ulong dial_freq, volatile uint8_t* dial_digits, ulong pos_x_loc, ulong font_width, ulong pos_y_loc, ushort color, uchar digit_size)
+static void UiDriver_UpdateFreqDisplay(ulong dial_freq, uint8_t* dial_digits, ulong pos_x_loc, ulong font_width, ulong pos_y_loc, ushort color, uchar digit_size)
 {
 	{
 
@@ -2205,7 +2238,7 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 	ulong		pos_y_loc;
 	ulong		pos_x_loc;
 	ulong		font_width;
-	volatile 	uint8_t*		digits_ptr;
+	uint8_t*		digits_ptr;
 
 	//
 	//
@@ -5318,7 +5351,7 @@ static void UiAction_ChangeLowerMeterDownOrSnap()
 #else
 	// Not in MENU mode - select the METER mode
 	decr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
-	UiDriver_DeleteSMeter();
+	UiDriver_DeleteMeters();
 	UiDriver_CreateMeters();    // redraw meter
 #endif
 }
@@ -5326,7 +5359,7 @@ static void UiAction_ChangeLowerMeterDownOrSnap()
 static void UiAction_ChangeLowerMeterUp()
 {
 	incr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
-	UiDriver_DeleteSMeter();
+	UiDriver_DeleteMeters();
 	UiDriver_CreateMeters();	// redraw meter
 }
 
@@ -5973,7 +6006,7 @@ static void UiDriver_HandleTouchScreen()
 		{
 			char text[10];
 			snprintf(text,10,"%02d%s%02d%s",ts.tp->x," : ",ts.tp->y,"  ");
-			UiLcdHy28_PrintText(0,POS_LOADANDDEBUG,text,White,Black,0);
+			UiLcdHy28_PrintText(0,POS_LOADANDDEBUG_Y,text,White,Black,0);
 		}
 
 		uint32_t touchaction_idx = ts.menu_mode == true?1:0;
@@ -6260,7 +6293,7 @@ void UiDriver_MainHandler()
 				snprintf(str,20,"L%3u%%",(unsigned int)load);
 				if(ts.show_debug_info)
 				{
-					UiLcdHy28_PrintText(280,POS_LOADANDDEBUG,str,White,Black,5);
+					UiLcdHy28_PrintText(280,POS_LOADANDDEBUG_Y,str,White,Black,5);
 				}
 #endif
 			}
