@@ -132,7 +132,7 @@ static float32_t raw_signal_buffer[CW_DECODE_BLOCK_SIZE];
 
 
 #define ring_idx_wrap_upper(value,size) (((value) >= (size)) ? (value) - (size) : (value))
-#define ring_idx_wrap_zero(value,size) (((value) <= (size)) ? (value) + (size) : (value))
+#define ring_idx_wrap_zero(value,size) (((value) < (0)) ? (value) + (size) : (value))
 
 /*
  * @brief adjust index "value" by "change" while keeping it in the ring buffer size limits of "size"
