@@ -92,7 +92,6 @@ typedef struct PaddleState
 
 	uint32_t   cw_char;
 	uint32_t   sending_char;
-	bool       wait_space;
 
 } PaddleState;
 
@@ -365,14 +364,7 @@ void CwGen_SetSpeed()
 
 static void CwGen_SetBreakTime()
 {
-	if (ts.cw_rx_delay)
-	{
-		ps.break_timer = ts.cw_rx_delay*50;      // break timer value
-	}
-	else
-	{
-		ps.break_timer = 1;
-	}
+	ps.break_timer = ts.cw_rx_delay*50 + 1;      // break timer value
 }
 
 /**
@@ -406,7 +398,6 @@ void CwGen_Init(void)
 	ps.cw_char = 0;
 	ps.space_timer = 0;
 	ps.sending_char = 0;
-	ps.wait_space = false;
 }
 
 /**
@@ -528,8 +519,6 @@ uint32_t CwGen_ReverseCode(uint32_t code)
 
 static void CwGen_CheckKeyerState(void)
 {
-	uint32_t char_code;
-	uint8_t symbol;
 
 	if (CwGen_DahRequested())
 	{
@@ -541,66 +530,6 @@ static void CwGen_CheckKeyerState(void)
 		ps.port_state |= CW_DIT_L;
 	}
 
-	if (!(ps.port_state & CW_DAH_L) && !(ps.port_state & CW_DIT_L) && ts.dmod_mode == DEMOD_CW && ts.txrx_mode == TRX_MODE_TX &&
-			!ts.cw_text_entry && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
-	{
-		if (DigiModes_TxBufferHasData() && !ps.sending_char)
-		{
-			char_code = 0;
-			DigiModes_TxBufferRemove(&symbol);
-			UiDriver_TextMsgPutChar(symbol);
-			for (int i = 0; i<CW_CHAR_CODES; i++)
-			{
-				if (cw_char_chars[i] == symbol)
-				{
-					char_code = cw_char_codes[i];
-					break;
-				}
-			}
-			if (char_code)
-			{
-				ps.sending_char = CwGen_ReverseCode(char_code);
-				if (ps.sending_char == 1)
-				{
-					ps.wait_space = true;
-				}
-			}
-		}
-
-		if (ps.sending_char && ps.key_timer < 2)
-		{
-			if (ps.sending_char == 1) //Space
-			{
-				// FIXME process space
-				if (!ps.wait_space && ps.space_timer == 0)
-				{
-					ps.sending_char = 0;
-				}
-				else if (ps.space_timer > 0) {
-					ps.wait_space = false;
-					if (ps.break_timer < ps.space_timer)
-					{
-						ps.break_timer = ps.space_timer;
-					}
-				}
-			}
-			else
-			{
-				char_code = ps.sending_char % 4;
-				ps.sending_char /= 2;
-
-				if (char_code == 3)
-				{
-					ps.port_state |= CW_DAH_L;
-				}
-				else if (char_code == 2)
-				{
-					ps.port_state |= CW_DIT_L;
-				}
-
-			}
-		}
-	}
 }
 
 /**
@@ -694,6 +623,7 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 			CwGen_RemoveClickOnFallingEdge(i_buffer,q_buffer,blockSize);
 			if(ps.sm_tbl_ptr <= 0) // end of falling edge when pointer at end of table
 			{
+				CwGen_SetBreakTime();
 				ps.key_timer = 0;
 			}
 		}
@@ -763,6 +693,8 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 		{
 		case CW_IDLE:
 		{
+			rerunStateMachine = false;
+
 			// at least one paddle is still or has been recently pressed
 			if( Board_DitLinePressed() || Board_PttDahLinePressed()	|| (ps.port_state & (CW_DAH_L|CW_DIT_L)))
 			{
@@ -777,7 +709,6 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 					CwGen_AddChar(ps.cw_char);
 					ps.port_state &= ~CW_END_PROC;
 					ps.space_timer = ps.space_time;
-					CwGen_CheckKeyerState();
 				}
 
 				if (ps.space_timer > 0)
@@ -788,15 +719,6 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 					}
 				}
 
-				if (ts.dmod_mode == DEMOD_CW && ts.txrx_mode == TRX_MODE_TX && !ts.cw_text_entry && (DigiModes_TxBufferHasData() || ps.sending_char))
-				{
-					CwGen_CheckKeyerState();
-					if (ps.sending_char)
-					{
-						ps.cw_state = CW_WAIT;
-					}
-					rerunStateMachine = true;
-				}
 				if (ps.break_timer > 0)
 				{
 					if (--ps.break_timer == 0)
@@ -842,9 +764,8 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 			}
 			else
 			{
-				ps.cw_state  = CW_IDLE;
-
 				CwGen_SetBreakTime();
+				ps.cw_state  = CW_IDLE;
 			}
 			rerunStateMachine = true;
 		}
@@ -919,8 +840,8 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 					else
 					{
 						ps.port_state &= ~(CW_DAH_L);
-						ps.cw_state    = CW_IDLE;
 						CwGen_SetBreakTime();
+						ps.cw_state    = CW_IDLE;
 					}
 				}
 				else
@@ -935,8 +856,8 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 						else
 						{
 							ps.port_state &= ~(CW_DAH_L);
-							ps.cw_state    = CW_IDLE;
 							CwGen_SetBreakTime();
+							ps.cw_state    = CW_IDLE;
 						}
 				}
 				rerunStateMachine = true;
@@ -972,7 +893,6 @@ void CwGen_ResetBufferSending() {
 	if (!ts.cw_text_entry && ts.dmod_mode == DEMOD_CW) {
 		DigiModes_TxBufferReset();
 		ps.sending_char = 0;
-		ps.wait_space = false;
 	}
 }
 
