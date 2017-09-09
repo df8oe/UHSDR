@@ -32,6 +32,7 @@
 #include "codec.h"
 #include "radio_management.h"
 #include "soft_tcxo.h"
+#include "cw_decoder.h"
 
 #define CLR_OR_SET_BITMASK(cond,value,mask) ((value) = (((cond))? ((value) | (mask)): ((value) & ~(mask))))
 
@@ -1816,6 +1817,110 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     }
+
+    case MENU_CW_DECODER_THRESH:   //
+        var_change = UiDriverMenuItemChangeUInt32(var, mode, &cw_decoder_config.thresh,
+                                               1000,
+                                               50000,
+                                               15000,
+                                               500
+                                              );
+        snprintf(options,32, "  %u", cw_decoder_config.thresh);
+        break;
+
+
+//ts.cw_decode_average - wieviele Goertzel-Schätzwerte werden in einem
+//moving window zusammengefasst [uint8_t 1 - 20]
+
+    case MENU_CW_DECODER_AVERAGE:  // averager for CW decode [1 - 20]
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.average,
+                                              1,
+                                              20,
+                                              2,
+                                              1
+                                             );
+        if(cw_decoder_config.average !=1)
+        {
+            snprintf(options,32, "  %u", cw_decoder_config.average);
+        }
+        else
+        {
+            txt_ptr = "OFF";
+        }
+        break;
+
+    case MENU_CW_DECODER_BLOCKSIZE:  // spectrum scope speed
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.blocksize,
+                                              8,
+                                              128,
+                                              32,
+                                              8
+                                             );
+            snprintf(options,32, "  %u", cw_decoder_config.blocksize);
+        break;
+
+
+/*ts.cw_decode_block_size - wieviele samples (von den dezimierten
+12ksps) werden im Goertzel-Algorithmus zur Signalberechnung verwendet
+[uint8_t: darf Werte von 8, 16, 24, 32, 40, 48, 56, 72, 96, 128
+annehmen, im Prinzip alle int, die durch 8 teilbar sind]
+
+ts.cw_decode_AGC_enable - AGC des decoders ON/OFF [bool]
+*/
+        case MENU_CW_DECODER_AGC:    // On/Off
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.AGC_enable,
+                                                  0,
+                                                  1,
+                                                  0,
+                                                  1
+                                                 );
+
+            switch(cw_decoder_config.AGC_enable) {
+            case 0:
+                txt_ptr = " OFF";
+                break;
+            case 1:
+                txt_ptr = "  ON";
+                break;
+            }
+            break;
+        case MENU_CW_DECODER_NOISECANCEL:    // On/Off
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.noisecancel_enable,
+                                                  0,
+                                                  1,
+                                                  1,
+                                                  1
+                                                 );
+
+            switch(cw_decoder_config.noisecancel_enable) {
+            case 0:
+                txt_ptr = " OFF";
+                break;
+            case 1:
+                txt_ptr = "  ON";
+                break;
+            }
+            break;
+        case MENU_CW_DECODER_SPIKECANCEL:    // On/Off
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.spikecancel,
+                                                  0,
+                                                  2,
+                                                  0,
+                                                  1
+                                                 );
+
+            switch(cw_decoder_config.spikecancel) {
+            case 0:
+                txt_ptr = " OFF";
+                break;
+            case 1:
+                txt_ptr = "SPIKE";
+                break;
+            case 2:
+                txt_ptr = "SHORT";
+                break;
+            }
+            break;
     case MENU_TCXO_MODE:    // TCXO On/Off
         temp_var_u8 = RadioManagement_TcxoGetMode();     // get current setting without upper nibble
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
@@ -3522,9 +3627,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.rtty_atc_enable,0,options,&clr);
          break;
 
-     case MENU_DEBUG_CW_DECODER:
+     case MENU_CW_DECODER:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.cw_decoder_enable,0,options,&clr);
          break;
+
+     case MENU_CW_DECODER_USE_3_GOERTZEL:
+         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &cw_decoder_config.use_3_goertzels,0,options,&clr);
+    	 break;
 
     case MENU_DIGITAL_MODE_SELECT:
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.digital_mode,0,DigitalMode_RTTY,0,1);

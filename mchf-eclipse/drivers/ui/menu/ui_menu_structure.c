@@ -243,7 +243,14 @@ const MenuDescriptor cwGroup[] =
     { MENU_CW, MENU_ITEM, MENU_CW_TX_RX_DELAY, NULL, "CW TX->RX Delay", UiMenuDesc("How long to stay in CW TX mode after stop sending a signal.") },
     { MENU_CW, MENU_ITEM, MENU_CW_OFFSET_MODE, NULL, "CW Freq. Offset", UiMenuDesc("TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts, display is RX frequency if signal is matched to sidetone.") },
     { MENU_CW, MENU_ITEM, MENU_CW_AUTO_MODE_SELECT, NULL, "CW LSB/USB Select", UiMenuDesc("Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. A long press on Mode button gets the other sideband mode")},
-
+    { MENU_CW, MENU_ITEM, MENU_CW_DECODER, NULL,"CW decoder enable", UiMenuDesc("enable experimental CW decoding") },
+    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_THRESH, NULL,"Signal threshold", UiMenuDesc("All signals above this threshold are intepreted as a dit or daah") },
+    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_AVERAGE, NULL,"Goertzel averager", UiMenuDesc("The CW tone is averaged over N Goertzel values") },
+    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_BLOCKSIZE, NULL,"Blocksize for Goertzel", UiMenuDesc("How many samples are taken for the signal detection with the Goertzel algorithm?") },
+    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_AGC, NULL,"AGC for decoder", UiMenuDesc("Enable/disable AGC for CW decoder") },
+    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_NOISECANCEL, NULL,"Noise cancel", UiMenuDesc("Enable/disable noise canceler for CW decoder") },
+    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_SPIKECANCEL, NULL,"Spike cancel", UiMenuDesc("Enable/disable spike canceler or short cancel for CW decoder") },
+    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_USE_3_GOERTZEL, NULL,"use 3 Goertzels", UiMenuDesc("Use three Goertzel values for CW decoder") },
     { MENU_CW, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
@@ -377,7 +384,6 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NEW_NB, NULL,"New Noiseblanker", UiMenuDesc("New noiseblanker for testing purposes") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_RTTY_ATC, NULL,"RTTY ATC enable", UiMenuDesc("enable automatic threshold correction ATC for RTTY decoding") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CW_DECODER, NULL,"CW decoder enable", UiMenuDesc("enable experimental CW decoding") },
     { MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
