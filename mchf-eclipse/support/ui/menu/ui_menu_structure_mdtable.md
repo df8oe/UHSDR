@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-09-07T08:48:41  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-09-09T18:12:31  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-09-07T08:48:41  by "./ui_menu_structure_mdtable.py"
+generated at  2017-09-09T18:12:31  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -165,6 +165,14 @@ generated at  2017-09-07T08:48:41  by "./ui_menu_structure_mdtable.py"
 | **CW TX->RX Delay**           (                        MENU_CW_TX_RX_DELAY) | How long to stay in CW TX mode after stop sending a signal. | 
 | **CW Freq. Offset**           (                        MENU_CW_OFFSET_MODE) | TX: display is TX frequency if received frequency was zero-beated. DISP: display is RX frequency if received signal is matched to sidetone. SHIFT: LO shifts, display is RX frequency if signal is matched to sidetone. | 
 | **CW LSB/USB Select**         (                   MENU_CW_AUTO_MODE_SELECT) | Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. A long press on Mode button gets the other sideband mode | 
+| **CW decoder enable**         (                            MENU_CW_DECODER) | enable experimental CW decoding                | 
+| **Signal threshold**          (                     MENU_CW_DECODER_THRESH) | All signals above this threshold are intepreted as a dit or daah | 
+| **Goertzel averager**         (                    MENU_CW_DECODER_AVERAGE) | The CW tone is averaged over N Goertzel values | 
+| **Blocksize for Goertzel**    (                  MENU_CW_DECODER_BLOCKSIZE) | How many samples are taken for the signal detection with the Goertzel algorithm? | 
+| **AGC for decoder**           (                        MENU_CW_DECODER_AGC) | Enable/disable AGC for CW decoder              | 
+| **Noise cancel**              (                MENU_CW_DECODER_NOISECANCEL) | Enable/disable noise canceler for CW decoder   | 
+| **Spike cancel**              (                MENU_CW_DECODER_SPIKECANCEL) | Enable/disable spike canceler or short cancel for CW decoder | 
+| **use 3 Goertzels**           (             MENU_CW_DECODER_USE_3_GOERTZEL) | Use three Goertzel values for CW decoder       | 
 
 
 ## Filter Selection (`MENU_FILTER`)
@@ -278,7 +286,6 @@ generated at  2017-09-07T08:48:41  by "./ui_menu_structure_mdtable.py"
 | **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 
 | **New Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | New noiseblanker for testing purposes          | 
 | **RTTY ATC enable**           (                        MENU_DEBUG_RTTY_ATC) | enable automatic threshold correction ATC for RTTY decoding | 
-| **CW decoder enable**         (                      MENU_DEBUG_CW_DECODER) | enable experimental CW decoding                | 
 
 
 [//]: # ( EOFILE                                                                       )

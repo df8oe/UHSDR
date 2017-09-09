@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-09-07T08:48:36  by "./ui_menu_structure_graph.py"
+#  generated at  2017-09-09T18:12:28  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-07T08:48:36  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-09T18:12:28  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -717,6 +717,46 @@
              shape = record
              ];
         
+        "MENU_CW_DECODER" [
+             label = "MENU_CW_DECODER | CW decoder enable"
+             shape = record
+             ];
+        
+        "MENU_CW_DECODER_THRESH" [
+             label = "MENU_CW_DECODER_THRESH | Signal threshold"
+             shape = record
+             ];
+        
+        "MENU_CW_DECODER_AVERAGE" [
+             label = "MENU_CW_DECODER_AVERAGE | Goertzel averager"
+             shape = record
+             ];
+        
+        "MENU_CW_DECODER_BLOCKSIZE" [
+             label = "MENU_CW_DECODER_BLOCKSIZE | Blocksize for Goertzel"
+             shape = record
+             ];
+        
+        "MENU_CW_DECODER_AGC" [
+             label = "MENU_CW_DECODER_AGC | AGC for decoder"
+             shape = record
+             ];
+        
+        "MENU_CW_DECODER_NOISECANCEL" [
+             label = "MENU_CW_DECODER_NOISECANCEL | Noise cancel"
+             shape = record
+             ];
+        
+        "MENU_CW_DECODER_SPIKECANCEL" [
+             label = "MENU_CW_DECODER_SPIKECANCEL | Spike cancel"
+             shape = record
+             ];
+        
+        "MENU_CW_DECODER_USE_3_GOERTZEL" [
+             label = "MENU_CW_DECODER_USE_3_GOERTZEL | use 3 Goertzels"
+             shape = record
+             ];
+        
         "MENU_FP_SSB_01" [
              label = "MENU_FP_SSB_01 | SSB Filter 1"
              shape = record
@@ -1189,11 +1229,6 @@
         
         "MENU_DEBUG_RTTY_ATC" [
              label = "MENU_DEBUG_RTTY_ATC | RTTY ATC enable"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_CW_DECODER" [
-             label = "MENU_DEBUG_CW_DECODER | CW decoder enable"
              shape = record
              ];
         
@@ -1725,6 +1760,22 @@
             
             MENU_CW -> MENU_CW_AUTO_MODE_SELECT
             
+            MENU_CW -> MENU_CW_DECODER
+            
+            MENU_CW -> MENU_CW_DECODER_THRESH
+            
+            MENU_CW -> MENU_CW_DECODER_AVERAGE
+            
+            MENU_CW -> MENU_CW_DECODER_BLOCKSIZE
+            
+            MENU_CW -> MENU_CW_DECODER_AGC
+            
+            MENU_CW -> MENU_CW_DECODER_NOISECANCEL
+            
+            MENU_CW -> MENU_CW_DECODER_SPIKECANCEL
+            
+            MENU_CW -> MENU_CW_DECODER_USE_3_GOERTZEL
+            
         }  ## END subgraph MENU_HALL_OF_FAME
     
         #  -  -  -  -
@@ -1744,8 +1795,6 @@
             MENU_DEBUG -> MENU_DEBUG_NEW_NB
             
             MENU_DEBUG -> MENU_DEBUG_RTTY_ATC
-            
-            MENU_DEBUG -> MENU_DEBUG_CW_DECODER
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
