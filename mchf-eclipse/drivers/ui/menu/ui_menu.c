@@ -1723,6 +1723,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
             softdds_configRunIQ(freq,ts.samp_rate,0);
             UiDriver_FrequencyUpdateLOandDisplay(false);
+            CwDecode_FilterInit();
         }
         snprintf(options,32, "  %uHz", (uint)ts.cw_sidetone_freq);
         break;
@@ -1857,6 +1858,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                               8
                                              );
             snprintf(options,32, "  %u", cw_decoder_config.blocksize);
+            CwDecode_FilterInit();
         break;
 
 
