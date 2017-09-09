@@ -31,7 +31,7 @@ static void CW_Decode(void);
 void CwDecode_FilterInit()
 {
 	// set Goertzel parameters for CW decoding
-	AudioFilter_CalcGoertzel(&cw_goertzel, cw_decoder_config.target_freq,
+	AudioFilter_CalcGoertzel(&cw_goertzel, ts.cw_sidetone_freq , // cw_decoder_config.target_freq,
 			cw_decoder_config.blocksize, 1.0, cw_decoder_config.sampling_freq);
 }
 
@@ -248,13 +248,19 @@ static void CW_Decode_exe(void)
 		if (siglevel >= cw_decoder_config.thresh)
 		{
 			cw_state = TRUE;
-			Board_RedLed(LED_STATE_ON);
 		}
 		else
 		{
 			cw_state = FALSE;
-			Board_RedLed(LED_STATE_OFF);
 		}
+	}
+	if(cw_state == true)
+	{
+		Board_RedLed(LED_STATE_ON);
+	}
+	else
+	{
+		Board_RedLed(LED_STATE_OFF);
 	}
 
 	//    6.) fill into circular buffer
@@ -289,7 +295,7 @@ static void CW_Decode_exe(void)
 
 	// TODO: create proper decode state struct
 	float32_t spdcalc = 10.0*dot_avg + 4.0*dash_avg + 9.0*symspace_avg + 5.0*cwspace_avg;
-	spdcalc = spdcalc*1000.0/62.5;                 // Convert to Milliseconds per Word
+	spdcalc = spdcalc*1000.0/(12000.0 / cw_decoder_config.blocksize);                 // Convert to Milliseconds per Word
 	cw_decoder_config.speed = (0.5 + 60000.0 / spdcalc);                // Convert to Words per Minute (WPM)
 }
 
