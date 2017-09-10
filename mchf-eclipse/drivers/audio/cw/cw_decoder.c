@@ -7,6 +7,38 @@
  **  Partially Derived from:   See below                                            **
  **  Licence:		GNU GPLv3                                                      **
  ************************************************************************************/
+//*********************************************************************************
+//**
+//** Project.........: Read Hand Sent Morse Code (tolerant of considerable jitter)
+//**
+//** Copyright (c) 2016  Loftur E. Jonasson  (tf3lj [at] arrl [dot] net)
+//**
+//** This program is free software: you can redistribute it and/or modify
+//** it under the terms of the GNU General Public License as published by
+//** the Free Software Foundation, either version 3 of the License, or
+//** (at your option) any later version.
+//**
+//** This program is distributed in the hope that it will be useful,
+//** but WITHOUT ANY WARRANTY; without even the implied warranty of
+//** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//** GNU General Public License for more details.
+//**
+//** The GNU General Public License is available at
+//** http://www.gnu.org/licenses/
+//**
+//** Substantive portions of the methodology used here to decode Morse Code are found in:
+//**
+//** "MACHINE RECOGNITION OF HAND-SENT MORSE CODE USING THE PDP-12 COMPUTER"
+//** by Joel Arthur Guenther, Air Force Institute of Technology,
+//** Wright-Patterson Air Force Base, Ohio
+//** December 1973
+//** http://www.dtic.mil/dtic/tr/fulltext/u2/786492.pdf
+//**
+//** Platform........: Teensy 3.1 / 3.2 and the Teensy Audio Shield
+//**
+//** Initial version.: 0.00, 2016-01-25  Loftur Jonasson, TF3LJ / VE2LJX
+//**
+//*********************************************************************************
 
 #include "uhsdr_board.h"
 #include "ui_driver.h"
@@ -339,40 +371,6 @@ void CwDecode_RxProcessor(float32_t * const src, int16_t blockSize)
 	}
 }
 
-//*********************************************************************************
-//**
-//** Project.........: Read Hand Sent Morse Code (tolerant of considerable jitter)
-//**
-//** Copyright (c) 2016  Loftur E. Jonasson  (tf3lj [at] arrl [dot] net)
-//**
-//** This program is free software: you can redistribute it and/or modify
-//** it under the terms of the GNU General Public License as published by
-//** the Free Software Foundation, either version 3 of the License, or
-//** (at your option) any later version.
-//**
-//** This program is distributed in the hope that it will be useful,
-//** but WITHOUT ANY WARRANTY; without even the implied warranty of
-//** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//** GNU General Public License for more details.
-//**
-//** The GNU General Public License is available at
-//** http://www.gnu.org/licenses/
-//**
-//** Substantive portions of the methodology used here to decode Morse Code are found in:
-//**
-//** "MACHINE RECOGNITION OF HAND-SENT MORSE CODE USING THE PDP-12 COMPUTER"
-//** by Joel Arthur Guenther, Air Force Institute of Technology,
-//** Wright-Patterson Air Force Base, Ohio
-//** December 1973
-//** http://www.dtic.mil/dtic/tr/fulltext/u2/786492.pdf
-//**
-//** Platform........: Teensy 3.1 / 3.2 and the Teensy Audio Shield
-//**
-//** Initial version.: 0.00, 2016-01-25  Loftur Jonasson, TF3LJ / VE2LJX
-//**
-//** adapted to UHSDR, DD4WH 2017_08_27
-//**
-//*********************************************************************************
 
 //------------------------------------------------------------------
 //
