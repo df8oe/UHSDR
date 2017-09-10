@@ -1832,10 +1832,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
 //ts.cw_decode_average - wieviele Goertzel-Schätzwerte werden in einem
 //moving window zusammengefasst [uint8_t 1 - 20]
-
+#if 0
     case MENU_CW_DECODER_AVERAGE:  // averager for CW decode [1 - 20]
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.average,
-                                              1,
+                                              2,
                                               20,
                                               2,
                                               1
@@ -1849,7 +1849,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             txt_ptr = "OFF";
         }
         break;
-
+#endif
     case MENU_CW_DECODER_BLOCKSIZE:  // spectrum scope speed
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.blocksize,
                                               8,

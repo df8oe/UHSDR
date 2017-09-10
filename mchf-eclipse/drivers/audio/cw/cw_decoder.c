@@ -39,6 +39,9 @@ void CwDecode_FilterInit()
 }
 
 // for experimental CW decoder
+#define SIGNAL_TAU			0.01
+#define	ONEM_SIGNAL_TAU     (1.0 - SIGNAL_TAU)
+
 #define AGC_MAX_PEAK		40000
 #define AGC_MIN_PEAK		35000
 #define CW_TIMEOUT			3  // Time, in seconds, to trigger display of last Character received
@@ -164,11 +167,12 @@ static float32_t raw_signal_buffer[128];  //cw_decoder_config.blocksize];
 
 static void CW_Decode_exe(void)
 {
+	static float32_t old_siglevel = 0.001;
 	float32_t speed_help = 0.0;
 	float32_t speed_help2 = 0.0;
 	static float32_t old_speed = 0.0;
 	float32_t siglevel;                	// signal level from Goertzel calculation
-	float32_t lvl = 0;                 	// Multiuse variable
+//	float32_t lvl = 0;                 	// Multiuse variable
 	float32_t pklvl;                   	// Used for AGC calculations
 	static bool prevstate; 				// Last recorded state of signal input (mark or space)
 
@@ -201,9 +205,9 @@ static void CW_Decode_exe(void)
 		siglevel = magnitudeSquared;
 	}
 	//    4.) signal averaging/smoothing
-	// better use exponential averager here !?
 
-	//	static int16_t avg_win[CW_SIGAVERAGE]; // Sliding window buffer for signal averaging, if used
+#if 0
+
 	static float32_t avg_win[20]; // Sliding window buffer for signal averaging, if used
 	static uint8_t avg_cnt = 0;                        // Sliding window counter
 
@@ -217,6 +221,11 @@ static void CW_Decode_exe(void)
 	}
 	siglevel = lvl / cw_decoder_config.average;
 
+#else
+	// better use exponential averager here !?
+	siglevel = siglevel * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
+	old_siglevel = magnitudeSquared;
+#endif
 	//    5.) signal state determination
 	//----------------
 	// Signal State sampling
@@ -299,7 +308,7 @@ static void CW_Decode_exe(void)
 	if(spdcalc > 0)
 	{
 		speed_help = (0.5 + 60000.0 / spdcalc);
-		speed_help2 = speed_help * 0.01 + 0.99 * old_speed;
+		speed_help2 = speed_help * 0.1 + 0.9 * old_speed;
 		cw_decoder_config.speed = (uint8_t)speed_help2;
 		old_speed = speed_help2;
 	}

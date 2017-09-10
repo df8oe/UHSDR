@@ -245,7 +245,7 @@ const MenuDescriptor cwGroup[] =
     { MENU_CW, MENU_ITEM, MENU_CW_AUTO_MODE_SELECT, NULL, "CW LSB/USB Select", UiMenuDesc("Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. A long press on Mode button gets the other sideband mode")},
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER, NULL,"CW decoder enable", UiMenuDesc("enable experimental CW decoding") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_THRESH, NULL,"Signal threshold", UiMenuDesc("All signals above this threshold are intepreted as a dit or daah") },
-    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_AVERAGE, NULL,"Goertzel averager", UiMenuDesc("The CW tone is averaged over N Goertzel values") },
+//    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_AVERAGE, NULL,"Goertzel averager", UiMenuDesc("The CW tone is averaged over N Goertzel values") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_BLOCKSIZE, NULL,"Blocksize for Goertzel", UiMenuDesc("How many samples are taken for the signal detection with the Goertzel algorithm?") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_AGC, NULL,"AGC for decoder", UiMenuDesc("Enable/disable AGC for CW decoder") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_NOISECANCEL, NULL,"Noise cancel", UiMenuDesc("Enable/disable noise canceler for CW decoder") },
