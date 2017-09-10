@@ -247,7 +247,7 @@ const MenuDescriptor cwGroup[] =
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_THRESH, NULL,"Signal threshold", UiMenuDesc("All signals above this threshold are intepreted as a dit or daah") },
 //    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_AVERAGE, NULL,"Goertzel averager", UiMenuDesc("The CW tone is averaged over N Goertzel values") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_BLOCKSIZE, NULL,"Blocksize for Goertzel", UiMenuDesc("How many samples are taken for the signal detection with the Goertzel algorithm?") },
-    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_AGC, NULL,"AGC for decoder", UiMenuDesc("Enable/disable AGC for CW decoder") },
+//    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_AGC, NULL,"AGC for decoder", UiMenuDesc("Enable/disable AGC for CW decoder") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_NOISECANCEL, NULL,"Noise cancel", UiMenuDesc("Enable/disable noise canceler for CW decoder") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_SPIKECANCEL, NULL,"Spike cancel", UiMenuDesc("Enable/disable spike canceler or short cancel for CW decoder") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_USE_3_GOERTZEL, NULL,"use 3 Goertzels", UiMenuDesc("Use three Goertzel values for CW decoder") },

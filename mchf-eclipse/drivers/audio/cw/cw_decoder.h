@@ -19,10 +19,10 @@ typedef struct
 	float32_t target_freq;
 //	float32_t speed;
 	uint8_t speed;
-	uint8_t average;
+//	uint8_t average;
 	uint32_t thresh;
 	uint8_t blocksize;
-	uint8_t AGC_enable;
+//	uint8_t AGC_enable;
 	uint8_t noisecancel_enable;
 	uint8_t spikecancel;
 	bool use_3_goertzels;

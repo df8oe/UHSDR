@@ -1861,14 +1861,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             CwDecode_FilterInit();
         break;
 
-
-/*ts.cw_decode_block_size - wieviele samples (von den dezimierten
-12ksps) werden im Goertzel-Algorithmus zur Signalberechnung verwendet
-[uint8_t: darf Werte von 8, 16, 24, 32, 40, 48, 56, 72, 96, 128
-annehmen, im Prinzip alle int, die durch 8 teilbar sind]
-
-ts.cw_decode_AGC_enable - AGC des decoders ON/OFF [bool]
-*/
+#if 0
         case MENU_CW_DECODER_AGC:    // On/Off
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.AGC_enable,
                                                   0,
@@ -1886,7 +1879,8 @@ ts.cw_decode_AGC_enable - AGC des decoders ON/OFF [bool]
                 break;
             }
             break;
-        case MENU_CW_DECODER_NOISECANCEL:    // On/Off
+#endif
+            case MENU_CW_DECODER_NOISECANCEL:    // On/Off
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.noisecancel_enable,
                                                   0,
                                                   1,

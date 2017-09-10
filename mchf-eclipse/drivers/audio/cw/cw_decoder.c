@@ -20,10 +20,10 @@ Goertzel cw_goertzel;
 cw_config_t cw_decoder_config =
 { .sampling_freq = 12000.0, .target_freq = 700.0,
 		.speed = 25,
-		.average = 2,
+//		.average = 2,
 		.thresh = 15000,
 		.blocksize = 32,
-		.AGC_enable = 0,
+//		.AGC_enable = 0,
 		.noisecancel_enable = 1,
 		.spikecancel = 0,
 		.use_3_goertzels = false
@@ -42,13 +42,13 @@ void CwDecode_FilterInit()
 #define SIGNAL_TAU			0.01
 #define	ONEM_SIGNAL_TAU     (1.0 - SIGNAL_TAU)
 
-#define AGC_MAX_PEAK		40000
-#define AGC_MIN_PEAK		35000
+//#define AGC_MAX_PEAK		40000
+//#define AGC_MIN_PEAK		35000
 #define CW_TIMEOUT			3  // Time, in seconds, to trigger display of last Character received
 // and a New Line in the USB Serial Monitor.
 #define ONE_SECOND			(12000 / cw_decoder_config.blocksize) // sample rate / decimation rate / block size
-#define CW_AGC_ATTACK      	0.95  // Audio automatic gain control (AGC) attack, audio vol reduce per cycle.
-#define CW_AGC_DECAY      	1.005  // Audio AGC decay, audio volume increase per cycle.
+//#define CW_AGC_ATTACK      	0.95  // Audio automatic gain control (AGC) attack, audio vol reduce per cycle.
+//#define CW_AGC_DECAY      	1.005  // Audio AGC decay, audio volume increase per cycle.
 // AGC attempts to cap the max signal level at the Fpeak frequency to 40
 // (40 is arbitrarily picked, is max in FFT bargraph).
 
@@ -105,8 +105,8 @@ typedef struct
 //volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
 //volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
 //volatile static int16_t thresh = 1; // 10;              // Audio threshold level (0 - 40)
-volatile static float32_t CW_vol = 2.0; // FIXME
-volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
+//volatile static float32_t CW_vol = 2.0; // FIXME
+//volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
 //volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
 //volatile static float32_t thresh = 32000.0; //0.01; // 10;              // Audio threshold level (0 - 40)
 
@@ -188,7 +188,9 @@ static void CW_Decode_exe(void)
 	float32_t magnitudeSquared = AudioFilter_GoertzelEnergy(&cw_goertzel);
 
 	// I am not sure whether we would need an AGC here, because the audio chain already has an AGC
+	// Now I am sure, we do not need it
 	//    3.) AGC
+#if 0
 	if (cw_decoder_config.AGC_enable)
 	{
 		pklvl = CW_agcvol * CW_vol * magnitudeSquared; // Get level at Goertzel frequency
@@ -201,6 +203,7 @@ static void CW_Decode_exe(void)
 		siglevel = CW_agcvol * CW_vol * pklvl;
 	}
 	else
+#endif
 	{
 		siglevel = magnitudeSquared;
 	}
@@ -222,7 +225,7 @@ static void CW_Decode_exe(void)
 	siglevel = lvl / cw_decoder_config.average;
 
 #else
-	// better use exponential averager here !?
+	// better use exponential averager here !? Let´s try!
 	siglevel = siglevel * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
 	old_siglevel = magnitudeSquared;
 #endif
