@@ -1749,18 +1749,23 @@ static void UiDriver_DrawSMeterLabels()
 
 }
 
-
 static void UiDriver_CreateMeters()
 {
 	uchar 	i;
 	char	num[20];
 	int		col;
 
-	// W/H ratio ~ 3.5
 	UiLcdHy28_DrawEmptyRect(POS_SM_IND_X,POS_SM_IND_Y,SM_IND_H,SM_IND_W + 2,Grey);
 
-	UiDriver_DrawSMeterLabels();
-	// UiDriver_DrawPowerMeterLabels();
+	if (ts.txrx_mode == TRX_MODE_RX)
+	{
+		UiDriver_DrawSMeterLabels();
+	}
+	else
+	{
+		UiDriver_DrawPowerMeterLabels();
+	}
+
 	if(ts.tx_meter_mode == METER_SWR)
 	{
 		UiLcdHy28_PrintText(((POS_SM_IND_X + 18) - 12),(POS_SM_IND_Y + 59 - BTM_MINUS),"SWR",Red2,Black,4);
