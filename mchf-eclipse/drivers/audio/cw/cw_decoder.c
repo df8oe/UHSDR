@@ -7,23 +7,52 @@
  **  Partially Derived from:   See below                                            **
  **  Licence:		GNU GPLv3                                                      **
  ************************************************************************************/
+//*********************************************************************************
+//**
+//** Project.........: Read Hand Sent Morse Code (tolerant of considerable jitter)
+//**
+//** Copyright (c) 2016  Loftur E. Jonasson  (tf3lj [at] arrl [dot] net)
+//**
+//** This program is free software: you can redistribute it and/or modify
+//** it under the terms of the GNU General Public License as published by
+//** the Free Software Foundation, either version 3 of the License, or
+//** (at your option) any later version.
+//**
+//** This program is distributed in the hope that it will be useful,
+//** but WITHOUT ANY WARRANTY; without even the implied warranty of
+//** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//** GNU General Public License for more details.
+//**
+//** The GNU General Public License is available at
+//** http://www.gnu.org/licenses/
+//**
+//** Substantive portions of the methodology used here to decode Morse Code are found in:
+//**
+//** "MACHINE RECOGNITION OF HAND-SENT MORSE CODE USING THE PDP-12 COMPUTER"
+//** by Joel Arthur Guenther, Air Force Institute of Technology,
+//** Wright-Patterson Air Force Base, Ohio
+//** December 1973
+//** http://www.dtic.mil/dtic/tr/fulltext/u2/786492.pdf
+//**
+//** Platform........: Teensy 3.1 / 3.2 and the Teensy Audio Shield
+//**
+//** Initial version.: 0.00, 2016-01-25  Loftur Jonasson, TF3LJ / VE2LJX
+//**
+//*********************************************************************************
 
 #include "uhsdr_board.h"
 #include "ui_driver.h"
 #include "cw_decoder.h"
 
-
-
-//#define CW_DECODE_BLOCK_SIZE 32
 Goertzel cw_goertzel;
 
 cw_config_t cw_decoder_config =
 { .sampling_freq = 12000.0, .target_freq = 700.0,
 		.speed = 25,
-		.average = 2,
+//		.average = 2,
 		.thresh = 15000,
 		.blocksize = 32,
-		.AGC_enable = 0,
+//		.AGC_enable = 0,
 		.noisecancel_enable = 1,
 		.spikecancel = 0,
 		.use_3_goertzels = false
@@ -38,37 +67,16 @@ void CwDecode_FilterInit()
 			cw_decoder_config.blocksize, 1.0, cw_decoder_config.sampling_freq);
 }
 
-// for experimental CW decoder
 #define SIGNAL_TAU			0.01
 #define	ONEM_SIGNAL_TAU     (1.0 - SIGNAL_TAU)
 
-#define AGC_MAX_PEAK		40000
-#define AGC_MIN_PEAK		35000
 #define CW_TIMEOUT			3  // Time, in seconds, to trigger display of last Character received
-// and a New Line in the USB Serial Monitor.
 #define ONE_SECOND			(12000 / cw_decoder_config.blocksize) // sample rate / decimation rate / block size
-#define CW_AGC_ATTACK      	0.95  // Audio automatic gain control (AGC) attack, audio vol reduce per cycle.
-#define CW_AGC_DECAY      	1.005  // Audio AGC decay, audio volume increase per cycle.
-// AGC attempts to cap the max signal level at the Fpeak frequency to 40
-// (40 is arbitrarily picked, is max in FFT bargraph).
-
-//-----------------------------------------------------------------------------
-// Selection of all sorts of post-filtering, including noise/spike/dropout cancel
-//#define CW_SIGAVERAGE         1 //10  // N = 1, 2, 3... Probably a better method than FFTAVERAGE.  Also works
-// with FFT1024.  Averages (smoothes) signal from N number of samples,
-//  but does not slow down sampling rate.  Fights drops and spikes.
-
-//#define CW_NOISECANCEL        1  // Noise Cancellation by requiring two consecutive reads to be the same
-// for a state change.  1 to select, 0 to deselect. Normally 1.
-// now handled by cw_decoder_config.noisecancel_enable
 
 #define CW_SPIKECANCEL        8  // Cancel transients/spikes/drops that have max duration of number chosen.
 // Typically 4 or 8 to select at time periods of 4 or 8 times 2.9ms.
 // 0 to deselect.
 
-//#define CW_SHORTCANCEL        0  // Drops any transients (mark or space) that are shorter than 1/3rd "dot"
-// length.  Only active when not in "initialize" state. Do not enable at
-// same time as SPIKECANCEL. 1 to select, 0 to deselect.
 //-----------------------------------------------------------------------------
 // Decode of International Morse Code Symbols - a somewhat random collection of country specific symbols
 // If you are not using these, then better not to enable.  The fewer unnecessary symbols - the more "meat"
@@ -83,8 +91,6 @@ void CwDecode_FilterInit()
 // Needs to be significantly longer than longest symbol 'sos'= ~30.
 #define  TRUE  1
 #define  FALSE 0
-
-//static uint8_t state = 0;
 
 typedef struct
 {
@@ -101,18 +107,8 @@ typedef struct
 	unsigned overload :1; // Overload flag
 } bflags;
 
-//volatile static int16_t CW_vol = 1; //
-//volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
-//volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
-//volatile static int16_t thresh = 1; // 10;              // Audio threshold level (0 - 40)
-volatile static float32_t CW_vol = 2.0; // FIXME
-volatile static float32_t CW_agcvol = 1.0; // AGC adjusted volume, Max 1.0.  Updated by SignalSampler()
-//volatile static int16_t peakFrq = 700;            // Audio peak tone frequency in Hz
-//volatile static float32_t thresh = 32000.0; //0.01; // 10;              // Audio threshold level (0 - 40)
-
 volatile static bool cw_state;                   // Current decoded signal state
 volatile static sigbuf sig[CW_SIG_BUFSIZE]; // A circular buffer of decoded input levels and durations, input from
-// SignalSampler().  Used by CW Decode functions
 volatile static int32_t sig_lastrx = 0; // Circular buffer in pointer, updated by SignalSampler
 
 static int32_t sig_incount = 0; // Circular buffer in pointer, copy of sig_lastrx, used by CW Decode functions
@@ -145,8 +141,6 @@ static int32_t w_space;                      // Last word space time
 static float32_t raw_signal_buffer[128];  //cw_decoder_config.blocksize];
 
 // RINGBUFFER HELPER MACROS START
-
-
 #define ring_idx_wrap_upper(value,size) (((value) >= (size)) ? (value) - (size) : (value))
 #define ring_idx_wrap_zero(value,size) (((value) < (0)) ? (value) + (size) : (value))
 
@@ -173,7 +167,7 @@ static void CW_Decode_exe(void)
 	static float32_t old_speed = 0.0;
 	float32_t siglevel;                	// signal level from Goertzel calculation
 //	float32_t lvl = 0;                 	// Multiuse variable
-	float32_t pklvl;                   	// Used for AGC calculations
+//	float32_t pklvl;                   	// Used for AGC calculations
 	static bool prevstate; 				// Last recorded state of signal input (mark or space)
 
 	//    1.) get samples
@@ -188,7 +182,9 @@ static void CW_Decode_exe(void)
 	float32_t magnitudeSquared = AudioFilter_GoertzelEnergy(&cw_goertzel);
 
 	// I am not sure whether we would need an AGC here, because the audio chain already has an AGC
+	// Now I am sure, we do not need it
 	//    3.) AGC
+#if 0
 	if (cw_decoder_config.AGC_enable)
 	{
 		pklvl = CW_agcvol * CW_vol * magnitudeSquared; // Get level at Goertzel frequency
@@ -201,6 +197,7 @@ static void CW_Decode_exe(void)
 		siglevel = CW_agcvol * CW_vol * pklvl;
 	}
 	else
+#endif
 	{
 		siglevel = magnitudeSquared;
 	}
@@ -222,10 +219,11 @@ static void CW_Decode_exe(void)
 	siglevel = lvl / cw_decoder_config.average;
 
 #else
-	// better use exponential averager here !?
+	// better use exponential averager for averaging/smoothing here !? Let´s try!
 	siglevel = siglevel * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
 	old_siglevel = magnitudeSquared;
 #endif
+
 	//    5.) signal state determination
 	//----------------
 	// Signal State sampling
@@ -312,11 +310,6 @@ static void CW_Decode_exe(void)
 		cw_decoder_config.speed = (uint8_t)speed_help2;
 		old_speed = speed_help2;
 	}
-			//(0.5 + 60000.0 / spdcalc);                // Convert to Words per Minute (WPM)
-
-	//	cw_decoder_config.speed = old_speed * 0.9 + 0.1 * speed_help; // lowpass filtering
-//	old_speed = cw_decoder_config.speed;
-
 }
 
 void CwDecode_RxProcessor(float32_t * const src, int16_t blockSize)
@@ -328,48 +321,12 @@ void CwDecode_RxProcessor(float32_t * const src, int16_t blockSize)
 		sample_counter++;
 	}
 	if (sample_counter >= cw_decoder_config.blocksize)
-	// CW_DECODE_BLOCK_SIZE has to be a multiple integer of the decimated block size (8)
-	//
 	{
 		CW_Decode_exe();
 		sample_counter = 0;
 	}
 }
 
-//*********************************************************************************
-//**
-//** Project.........: Read Hand Sent Morse Code (tolerant of considerable jitter)
-//**
-//** Copyright (c) 2016  Loftur E. Jonasson  (tf3lj [at] arrl [dot] net)
-//**
-//** This program is free software: you can redistribute it and/or modify
-//** it under the terms of the GNU General Public License as published by
-//** the Free Software Foundation, either version 3 of the License, or
-//** (at your option) any later version.
-//**
-//** This program is distributed in the hope that it will be useful,
-//** but WITHOUT ANY WARRANTY; without even the implied warranty of
-//** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//** GNU General Public License for more details.
-//**
-//** The GNU General Public License is available at
-//** http://www.gnu.org/licenses/
-//**
-//** Substantive portions of the methodology used here to decode Morse Code are found in:
-//**
-//** "MACHINE RECOGNITION OF HAND-SENT MORSE CODE USING THE PDP-12 COMPUTER"
-//** by Joel Arthur Guenther, Air Force Institute of Technology,
-//** Wright-Patterson Air Force Base, Ohio
-//** December 1973
-//** http://www.dtic.mil/dtic/tr/fulltext/u2/786492.pdf
-//**
-//** Platform........: Teensy 3.1 / 3.2 and the Teensy Audio Shield
-//**
-//** Initial version.: 0.00, 2016-01-25  Loftur Jonasson, TF3LJ / VE2LJX
-//**
-//** adapted to UHSDR, DD4WH 2017_08_27
-//**
-//*********************************************************************************
 
 //------------------------------------------------------------------
 //
