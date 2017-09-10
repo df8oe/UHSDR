@@ -6379,9 +6379,9 @@ void UiDriver_MainHandler()
 				}
 				UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,AGC_color2,AGC_color,0);
 				// display CW decoder WPM speed
-				if(ts.cw_decoder_enable)
+				if(ts.cw_decoder_enable && ts.dmod_mode == DEMOD_CW)
 				{
-					CW_Decoder_WPM_display();
+					CW_Decoder_WPM_display(1);
 				}
 
 			}

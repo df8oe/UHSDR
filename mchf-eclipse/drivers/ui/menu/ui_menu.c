@@ -3627,7 +3627,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.cw_decoder_enable,0,options,&clr);
          if(!ts.cw_decoder_enable)
          {
-				CW_Decoder_WPM_display_erase();
+				CW_Decoder_WPM_display(0);
 				Board_RedLed(LED_STATE_OFF);
          }
          break;
