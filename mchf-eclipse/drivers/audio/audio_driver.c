@@ -4495,10 +4495,6 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
 
     bool signal_active = false; // unless this is set to true, zero output will be generated
     bool cw_signal_active = false;
-    if (ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT && ts.cw_text_entry) // FIXME to be simplified when straight mode reworked to call always when cw_text_entry is active
-    {
-    	cw_signal_active = CwGen_Process(adb.i_buffer, adb.q_buffer, blockSize);
-    }
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
     // let the normal processing happen
@@ -4551,15 +4547,11 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
         }
         else
         {
+        	cw_signal_active = CwGen_Process(adb.i_buffer, adb.q_buffer, blockSize);
             // Generate CW tone if necessary
             if (external_tx_mute == false)
             {
-                if (ts.cw_keyer_mode == CW_KEYER_MODE_STRAIGHT || !ts.cw_text_entry) // FIXME to delete straight mode check when straight mode reworked
-                {
-                	cw_signal_active = CwGen_Process(adb.i_buffer, adb.q_buffer, blockSize);
-                }
-
-                signal_active = cw_signal_active;
+            	signal_active = cw_signal_active;
             }
         }
 
