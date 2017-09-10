@@ -299,7 +299,7 @@ static void CW_Decode_exe(void)
 	if(spdcalc > 0)
 	{
 		speed_help = (0.5 + 60000.0 / spdcalc);
-		speed_help2 = speed_help * 0.0001 + 0.9999 * old_speed;
+		speed_help2 = speed_help * 0.01 + 0.99 * old_speed;
 		cw_decoder_config.speed = (uint8_t)speed_help2;
 		old_speed = speed_help2;
 	}
@@ -1362,10 +1362,14 @@ void CW_Decoder_WPM_display_erase(void)
 
 void CW_Decoder_WPM_display(void)
 {
+	static uint8_t old_speed = 0;
 	char WPM_str[10];
     const char* label;
-	snprintf(WPM_str, 10, "%3u", cw_decoder_config.speed);
-	label = "wpm";
-	UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X, POS_CW_DECODER_WPM_Y,WPM_str,White,Black,0);
-    UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X + 27, POS_CW_DECODER_WPM_Y, label, Green, Black, 4);
+    if(cw_decoder_config.speed != old_speed)
+    {
+		snprintf(WPM_str, 10, "%3u", cw_decoder_config.speed);
+		label = "wpm";
+		UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X, POS_CW_DECODER_WPM_Y,WPM_str,White,Black,0);
+		UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X + 27, POS_CW_DECODER_WPM_Y, label, Green, Black, 4);
+    }
 }
