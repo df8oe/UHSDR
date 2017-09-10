@@ -3634,6 +3634,7 @@ ts.cw_decode_AGC_enable - AGC des decoders ON/OFF [bool]
          if(!ts.cw_decoder_enable)
          {
 				CW_Decoder_WPM_display_erase();
+				Board_RedLed(LED_STATE_OFF);
          }
          break;
 
