@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-09-09T18:12:28  by "./ui_menu_structure_graph.py"
+#  generated at  2017-09-10T16:44:37  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-09T18:12:28  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-10T16:44:37  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -724,11 +724,6 @@
         
         "MENU_CW_DECODER_THRESH" [
              label = "MENU_CW_DECODER_THRESH | Signal threshold"
-             shape = record
-             ];
-        
-        "MENU_CW_DECODER_AVERAGE" [
-             label = "MENU_CW_DECODER_AVERAGE | Goertzel averager"
              shape = record
              ];
         
@@ -1763,8 +1758,6 @@
             MENU_CW -> MENU_CW_DECODER
             
             MENU_CW -> MENU_CW_DECODER_THRESH
-            
-            MENU_CW -> MENU_CW_DECODER_AVERAGE
             
             MENU_CW -> MENU_CW_DECODER_BLOCKSIZE
             
