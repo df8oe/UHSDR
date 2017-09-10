@@ -36,7 +36,8 @@ void CwDecode_FilterInit()
 }
 
 // for experimental CW decoder
-//#define CW_DECODER_AGC		0
+#define AGC_MAX_PEAK		40000
+#define AGC_MIN_PEAK		35000
 #define CW_TIMEOUT			3  // Time, in seconds, to trigger display of last Character received
 // and a New Line in the USB Serial Monitor.
 #define ONE_SECOND			(12000 / cw_decoder_config.blocksize) // sample rate / decimation rate / block size
@@ -188,9 +189,9 @@ static void CW_Decode_exe(void)
 	if (cw_decoder_config.AGC_enable)
 	{
 		pklvl = CW_agcvol * CW_vol * magnitudeSquared; // Get level at Goertzel frequency
-		if (pklvl > 45)
+		if (pklvl > AGC_MAX_PEAK)
 			CW_agcvol = CW_agcvol * CW_AGC_ATTACK; // Decrease volume if above this level.
-		if (pklvl < 40)
+		if (pklvl < AGC_MIN_PEAK)
 			CW_agcvol = CW_agcvol * CW_AGC_DECAY; // Increase volume if below this level.
 		if (CW_agcvol > 1.0)
 			CW_agcvol = 1.0;                 // Cap max at 1.0
@@ -984,7 +985,7 @@ void PrintCharFunc(uint8_t c)
 	}
 #endif
 
-	/*	//--------------------------------------
+		//--------------------------------------
 	 // Prosigns
 	 if (c == '}')
 	 {
@@ -1048,12 +1049,13 @@ void PrintCharFunc(uint8_t c)
 
 	 //--------------------------------------
 	 // Normal Characters
-	 else
-	 */
-	if (c == 0xfe || c == 0xff)
+
+
+/*	if (c == 0xfe || c == 0xff)
 	{
 		lcdLineScrollPrint('#');
 	}
+	*/
 	else
 	{
 		lcdLineScrollPrint(c);
