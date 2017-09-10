@@ -8,8 +8,8 @@
 #ifndef AUDIO_CW_CW_DECODER_H_
 #define AUDIO_CW_CW_DECODER_H_
 
-#define POS_CW_DECODER_WPM_X 	4
-#define POS_CW_DECODER_WPM_Y 	79
+#define POS_CW_DECODER_WPM_X 	0
+#define POS_CW_DECODER_WPM_Y 	116 //79 --> this collides with the RTC!
 
 
 
