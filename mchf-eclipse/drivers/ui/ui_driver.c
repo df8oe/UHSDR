@@ -53,6 +53,7 @@
 #include "soft_tcxo.h"
 
 #include "rtty.h"
+#include "cw_decoder.h"
 
 // POSITIONS START
 #define SPLIT_ACTIVE_COLOUR         		Yellow      // colour of "SPLIT" indicator when active
@@ -6350,6 +6351,7 @@ void UiDriver_MainHandler()
 				{
 					UiDriver_UpdateLcdFreq(df.tune_old/TUNE_MULT, Yellow, UFM_SECONDARY);
 				}
+		// display AGC box and AGC state
 				const char* txt = "   ";
 				uint16_t AGC_color = Black;
 				uint16_t AGC_color2 = Black;
@@ -6371,6 +6373,12 @@ void UiDriver_MainHandler()
 					}
 				}
 				UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,AGC_color2,AGC_color,0);
+				// display CW decoder WPM speed
+				if(ts.cw_decoder_enable)
+				{
+					CW_Decoder_WPM_display();
+				}
+
 			}
 			break;
 		default:

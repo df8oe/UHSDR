@@ -1826,7 +1826,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                                15000,
                                                500
                                               );
-        snprintf(options,32, "  %u", cw_decoder_config.thresh);
+        snprintf(options,32, "  %u", (unsigned int)cw_decoder_config.thresh);
         break;
 
 
@@ -3631,6 +3631,10 @@ ts.cw_decode_AGC_enable - AGC des decoders ON/OFF [bool]
 
      case MENU_CW_DECODER:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.cw_decoder_enable,0,options,&clr);
+         if(!ts.cw_decoder_enable)
+         {
+				CW_Decoder_WPM_display_erase();
+         }
          break;
 
      case MENU_CW_DECODER_USE_3_GOERTZEL:

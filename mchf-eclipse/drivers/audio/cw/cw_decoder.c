@@ -12,11 +12,14 @@
 #include "ui_driver.h"
 #include "cw_decoder.h"
 
+
+
 //#define CW_DECODE_BLOCK_SIZE 32
 Goertzel cw_goertzel;
 
 cw_config_t cw_decoder_config =
 { .sampling_freq = 12000.0, .target_freq = 700.0,
+		.speed = 25,
 		.average = 2,
 		.thresh = 15000,
 		.blocksize = 32,
@@ -161,17 +164,13 @@ static float32_t raw_signal_buffer[128];  //cw_decoder_config.blocksize];
 
 static void CW_Decode_exe(void)
 {
-//                 static int16_t  oldthresh;                        // Used to trigger refresh of threshold in FFT Waterfall on LCD
-
-	//	static int16_t siglevel;                         // FFT signal level
-	float32_t siglevel;                // signal level from Goertzel calculation
-	//	int16_t lvl = 0;                              // Multiuse variable
-	float32_t lvl = 0;                              // Multiuse variable
-	//	int16_t pklvl;                            // Used for AGC calculations
-	float32_t pklvl;                            // Used for AGC calculations
-//                 int16_t         pk;                               // FFT bin containing peak level
-	static bool prevstate; // Last recorded state of signal input (mark or space)
-//                 static bool     toneout;                          // Keep track of state changes for tone out
+	float32_t speed_help = 0.0;
+	float32_t speed_help2 = 0.0;
+	static float32_t old_speed = 0.0;
+	float32_t siglevel;                	// signal level from Goertzel calculation
+	float32_t lvl = 0;                 	// Multiuse variable
+	float32_t pklvl;                   	// Used for AGC calculations
+	static bool prevstate; 				// Last recorded state of signal input (mark or space)
 
 	//    1.) get samples
 	// these are already in raw_signal_buffer
@@ -295,9 +294,20 @@ static void CW_Decode_exe(void)
 	CW_Decode();                                     // Do all the heavy lifting
 
 	// TODO: create proper decode state struct
-	float32_t spdcalc = 10.0*dot_avg + 4.0*dash_avg + 9.0*symspace_avg + 5.0*cwspace_avg;
-	spdcalc = spdcalc*1000.0/(12000.0 / cw_decoder_config.blocksize);                 // Convert to Milliseconds per Word
-	cw_decoder_config.speed = (0.5 + 60000.0 / spdcalc);                // Convert to Words per Minute (WPM)
+	float32_t spdcalc = 10.0 * dot_avg + 4.0 * dash_avg + 9.0 * symspace_avg + 5.0 * cwspace_avg;
+	spdcalc = spdcalc * 1000.0 / (cw_decoder_config.sampling_freq / (float32_t)cw_decoder_config.blocksize);                 // Convert to Milliseconds per Word
+	if(spdcalc > 0)
+	{
+		speed_help = (0.5 + 60000.0 / spdcalc);
+		speed_help2 = speed_help * 0.0001 + 0.9999 * old_speed;
+		cw_decoder_config.speed = (uint8_t)speed_help2;
+		old_speed = speed_help2;
+	}
+			//(0.5 + 60000.0 / spdcalc);                // Convert to Words per Minute (WPM)
+
+	//	cw_decoder_config.speed = old_speed * 0.9 + 0.1 * speed_help; // lowpass filtering
+//	old_speed = cw_decoder_config.speed;
+
 }
 
 void CwDecode_RxProcessor(float32_t * const src, int16_t blockSize)
@@ -1338,4 +1348,24 @@ void CW_Decode(void)
 			}
 		}
 	}
+}
+
+void CW_Decoder_WPM_display_erase(void)
+{
+	char WPM_str[10];
+    const char* label;
+	snprintf(WPM_str, 10, "%3u", cw_decoder_config.speed);
+	UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X, POS_CW_DECODER_WPM_Y,WPM_str,Black,Black,0);
+	label = "wpm";
+    UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X + 27, POS_CW_DECODER_WPM_Y, label, Black, Black, 4);
+}
+
+void CW_Decoder_WPM_display(void)
+{
+	char WPM_str[10];
+    const char* label;
+	snprintf(WPM_str, 10, "%3u", cw_decoder_config.speed);
+	label = "wpm";
+	UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X, POS_CW_DECODER_WPM_Y,WPM_str,White,Black,0);
+    UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X + 27, POS_CW_DECODER_WPM_Y, label, Green, Black, 4);
 }
