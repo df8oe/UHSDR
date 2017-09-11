@@ -1169,9 +1169,62 @@ static void UiSpectrum_DisplayDbm()
     }
 }
 
+
+#define CW_snap_carrier_X	29 // central position of variable freq marker
+#define CW_snap_carrier_Y	116 // position of variable freq marker
+
+void ui_spectrum_init_cw_snap_display (void)
+{
+#if 0
+    UiLcdHy28_DrawStraightLineDouble(((float32_t)POS_SPECTRUM_IND_X + roundf(left_filter_border_pos)), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), roundf(width_pixel), LCD_DIR_HORIZONTAL, clr);
+    UiLcdHy28_DrawStraightLine( marker_line_pos[idx],
+            spec_top_y - spec_height_limit,
+            spec_height_limit,
+            LCD_DIR_VERTICAL,
+            sd.scope_centre_grid_colour_active);
+#endif
+}
+
+void ui_spectrum_cw_snap_display (float32_t delta)
+{
+    static float32_t old_delta = 0.0;
+    delta = delta - (float32_t)(ts.cw_sidetone_freq);
+	static int old_delta_p = 0.0;
+    if(delta > 300.0)
+    {
+    	delta = 300.0;
+    }
+    else if(delta < -300.0)
+    {
+    	delta = -300.0;
+    }
+//    delta = 0.1 * delta + 0.9 * old_delta;
+
+    int delta_p = (int)(0.5 + (delta / 10.0));
+
+    if(delta_p != old_delta_p)
+    {
+	UiLcdHy28_DrawStraightLineDouble( CW_snap_carrier_X + old_delta_p,
+    		CW_snap_carrier_Y,
+            8,
+            LCD_DIR_VERTICAL,
+            Black);
+
+	UiLcdHy28_DrawStraightLineDouble( CW_snap_carrier_X + delta_p,
+    		CW_snap_carrier_Y,
+            8,
+            LCD_DIR_VERTICAL,
+            Yellow);
+	old_delta = delta;
+	old_delta_p = delta_p;
+    }
+}
+
+
 void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float32_t bin_BW)
 {
-	if(ads.CW_signal)
+	if(ads.CW_signal) // this is only done, if there has been a pulse from the CW station that exceeds the threshold
+		// in the CW decoder section
 	{
 		static float32_t freq_old = 10000000.0;
 	float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
@@ -1202,9 +1255,7 @@ void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float
     delta1 = ((maxbin + 1.0) - (float32_t)posbin) * bin_BW;
 
 // 4. second frequency carrier offset calculation
-    //    float32_t bin1 = sd.FFT_Samples[posbin-1];
-    //    float32_t bin2 = sd.FFT_Samples[posbin];
-    //    float32_t bin3 = sd.FFT_Samples[posbin+1];
+
     if(maxbin < 1.0)
     {
     	maxbin = 1.0;
@@ -1223,17 +1274,12 @@ void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float
     if(delta2 > bin_BW) delta2 = 0.0;
     delta = delta1 + delta2;
 
-/*    // prevent large jumps, because we assume we are already near our carrier frequency
-    if(delta > 200.0 || delta < -200.0)
-    	{
-    		delta = 0.0;
-    	}
-*/
     help_freq = help_freq + delta;
     help_freq = 0.2 * help_freq + 0.8 * freq_old;
     //help_freq = help_freq * ((float32_t)TUNE_MULT);
     ads.snap_carrier_freq = (ulong) (help_freq);
     freq_old = help_freq;
+    ui_spectrum_cw_snap_display (delta);
     // this estimated carrier freq is then printed in the small
     // frequency display by UiDriver_MainHandler
 
@@ -1243,6 +1289,7 @@ void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float
 	 * */
 	}
 }
+
 
 static void UiSpectrum_CalculateDBm()
 {

@@ -2298,6 +2298,10 @@ static void AudioDriver_DemodFM(int16_t blockSize)
 			x = (i_prev * adb.i_buffer[i]) + (adb.q_buffer[i] * q_prev);
 
 			/*        //
+			  we do not use this approximation any more, because it does not contribute significantly to saving processor cycles,
+			  and does not deliver as clean audio as we would expect.
+			  with atan2f the audio (and especially the hissing noise!) is much cleaner, DD4WH
+
 			 // What follows is adapted from "Fixed-Point Atan2 With Self Normalization", public domain code by "Jim Shima".
 			 // The result is "approximate" - but plenty good enough for speech-grade communications!
 			 //
