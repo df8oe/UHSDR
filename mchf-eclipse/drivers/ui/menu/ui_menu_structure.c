@@ -251,7 +251,9 @@ const MenuDescriptor cwGroup[] =
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_NOISECANCEL, NULL,"Noise cancel", UiMenuDesc("Enable/disable noise canceler for CW decoder") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_SPIKECANCEL, NULL,"Spike cancel", UiMenuDesc("Enable/disable spike canceler or short cancel for CW decoder") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_USE_3_GOERTZEL, NULL,"use 3 Goertzels", UiMenuDesc("Use three Goertzel values for CW decoder") },
-    { MENU_CW, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
+    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_SNAP_ENABLE, NULL,"carrier snap", UiMenuDesc("activate small green frequency display with CW carrier frequency") },
+
+	{ MENU_CW, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
 const MenuDescriptor filterGroup[] =

@@ -21,6 +21,8 @@
 #include "waterfall_colours.h"
 #include "radio_management.h"
 #include "rtty.h"
+#include "cw_decoder.h"
+
 
 // ------------------------------------------------
 // Spectrum display public
@@ -1167,6 +1169,81 @@ static void UiSpectrum_DisplayDbm()
     }
 }
 
+void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float32_t bin_BW)
+{
+	if(ads.CW_signal)
+	{
+		static float32_t freq_old = 10000000.0;
+	float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
+	// 1. lowpass filter all the relevant bins over 2 to 20 FFTs (?)
+	// lowpass filtering already exists in the spectrum/waterfall display driver
+
+// 2. determine bin with maximum value inside these samples
+
+    // look for maximum value and save the bin # for frequency delta calculation
+    float32_t maximum = 0.0;
+    float32_t maxbin = 1.0;
+    float32_t delta1 = 0.0;
+    float32_t delta2 = 0.0;
+    float32_t delta = 0.0;
+
+    for (int c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
+    {
+        if (maximum < sd.FFT_Samples[c])
+        {
+            maximum = sd.FFT_Samples[c];
+            maxbin = c;
+        }
+    }
+
+// 3. first frequency carrier offset calculation
+    // ok, we have found the maximum, now save first delta frequency
+//    delta1 = (maxbin - (float32_t)posbin) * bin_BW;
+    delta1 = ((maxbin + 1.0) - (float32_t)posbin) * bin_BW;
+
+// 4. second frequency carrier offset calculation
+    //    float32_t bin1 = sd.FFT_Samples[posbin-1];
+    //    float32_t bin2 = sd.FFT_Samples[posbin];
+    //    float32_t bin3 = sd.FFT_Samples[posbin+1];
+    if(maxbin < 1.0)
+    {
+    	maxbin = 1.0;
+    }
+    float32_t bin1 = sd.FFT_Samples[(int)maxbin-1];
+    float32_t bin2 = sd.FFT_Samples[(int)maxbin];
+    float32_t bin3 = sd.FFT_Samples[(int)maxbin+1];
+
+    if (bin1+bin2+bin3 == 0.0) bin1= 0.00000001; // prevent divide by 0
+
+    // estimate frequency of carrier by three-point-interpolation of bins around maxbin
+    // formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
+
+//    delta2 = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
+    delta2 = (bin_BW * (1.36 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
+    if(delta2 > bin_BW) delta2 = 0.0;
+    delta = delta1 + delta2;
+
+/*    // prevent large jumps, because we assume we are already near our carrier frequency
+    if(delta > 200.0 || delta < -200.0)
+    	{
+    		delta = 0.0;
+    	}
+*/
+    help_freq = help_freq + delta;
+    help_freq = 0.2 * help_freq + 0.8 * freq_old;
+    //help_freq = help_freq * ((float32_t)TUNE_MULT);
+    ads.snap_carrier_freq = (ulong) (help_freq);
+    freq_old = help_freq;
+    // this estimated carrier freq is then printed in the small
+    // frequency display by UiDriver_MainHandler
+
+/*
+		5. display delta + Rx-frequency in small freq display (like SAM freq)
+		6. new display
+	 * */
+	}
+}
+
 static void UiSpectrum_CalculateDBm()
 {
     // Variables for dbm display --> void calculate_dBm
@@ -1291,6 +1368,13 @@ static void UiSpectrum_CalculateDBm()
                 sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i - buff_len_int/4] * SCOPE_PREAMP_GAIN;	// get data
             }
 
+            // here would be the right place to start with the SNAP mode!
+            if(cw_decoder_config.snap_enable)
+            {
+            	 UiSpectrum_Calculate_snap(Lbin, Ubin, posbin, bin_BW);
+
+            }
+
             float32_t sum_db = 0.0;
             // determine the sum of all the bin values in the passband
             for (int c = Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
@@ -1354,3 +1438,6 @@ static void UiSpectrum_CalculateDBm()
         UiSpectrum_DisplayDbm();
     }
 }
+
+
+

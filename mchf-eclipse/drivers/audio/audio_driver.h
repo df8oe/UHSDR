@@ -193,6 +193,9 @@ typedef struct AudioDriverState
     float32_t               iq_phase_balance_rx;
     float32_t               iq_phase_balance_tx[IQ_TRANS_NUM];
 
+    ulong snap_carrier_freq; // used for passing the estimated carrier freq in SNAP mode to the print routine in UI_Driver
+    bool CW_signal;
+
 } AudioDriverState;
 
 void AudioManagement_CalcIQPhaseAdjust(uint32_t freq);
