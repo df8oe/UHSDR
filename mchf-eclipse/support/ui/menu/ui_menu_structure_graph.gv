@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-09-11T12:41:48  by "./ui_menu_structure_graph.py"
+#  generated at  2017-09-11T14:32:48  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-11T12:41:48  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-11T14:32:48  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -747,11 +747,6 @@
              shape = record
              ];
         
-        "MENU_CW_DECODER_SNAP_ENABLE" [
-             label = "MENU_CW_DECODER_SNAP_ENABLE | carrier snap"
-             shape = record
-             ];
-        
         "MENU_FP_SSB_01" [
              label = "MENU_FP_SSB_01 | SSB Filter 1"
              shape = record
@@ -1224,6 +1219,11 @@
         
         "MENU_DEBUG_RTTY_ATC" [
              label = "MENU_DEBUG_RTTY_ATC | RTTY ATC enable"
+             shape = record
+             ];
+        
+        "MENU_CW_DECODER_SNAP_ENABLE" [
+             label = "MENU_CW_DECODER_SNAP_ENABLE | Do not use: cs"
              shape = record
              ];
         
