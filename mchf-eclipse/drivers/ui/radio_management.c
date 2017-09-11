@@ -44,6 +44,8 @@
 #include "freedv_api.h"
 #include "codec2_fdmdv.h"
 
+#include "cw_decoder.h"
+
 #define SWR_SAMPLES_SKP             1   //5000
 #define SWR_SAMPLES_CNT             5//10
 #define SWR_ADC_FULL_SCALE          4095    // full scale of A/D converter (4095 = 10 bits)
@@ -914,7 +916,11 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
     AudioDriver_TxFilterInit(new_mode);
     AudioManagement_SetSidetoneForDemodMode(new_mode,false);
 
-
+    if(ts.dmod_mode == DEMOD_CW && ts.cw_decoder_enable)
+    { 	// if old mode == DEMOD_CW and cw decoder is enabled:
+    	// clear WPM display to make room for other modes´ display features
+    	CW_Decoder_WPM_display(0);
+    }
     // Finally update public flag
     ts.dmod_mode = new_mode;
 

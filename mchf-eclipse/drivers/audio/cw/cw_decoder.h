@@ -33,7 +33,7 @@ extern cw_config_t cw_decoder_config;
 
 void CwDecode_RxProcessor(float32_t * const src, int16_t blockSize);
 void CwDecode_FilterInit();
-void CW_Decoder_WPM_display_erase();
+//void CW_Decoder_WPM_display_erase();
 void CW_Decoder_WPM_display();
 
 #endif /* AUDIO_CW_CW_DECODER_H_ */
