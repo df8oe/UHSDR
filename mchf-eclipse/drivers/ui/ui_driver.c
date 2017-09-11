@@ -5544,9 +5544,13 @@ static void UiAction_ChangeFrequencyByTouch()
 		{
 			step = 400;					// adjust to 100Hz
 		}
-		if(sd.magnify > 3)
+		if(sd.magnify == 4)
 		{
-			step = 200;					// adjust to 50Hz
+			step = 40;					// adjust to 10Hz
+		}
+		if(sd.magnify == 5)
+		{
+			step = 4;					// adjust to 1Hz
 		}
 		if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
 		{
@@ -5554,7 +5558,7 @@ static void UiAction_ChangeFrequencyByTouch()
 		}
 
 		uint16_t line = 29;				// x-position of rx frequency in middle position
-		if(sd.magnify == 0)					// x-position differs in translated modes if not magnified
+		if(sd.magnify == 0)				// x-position differs in translated modes if not magnified
 		{
 			switch(ts.iq_freq_mode)
 			{
@@ -5573,6 +5577,16 @@ static void UiAction_ChangeFrequencyByTouch()
 			default:
 				line = 29;
 			}
+		}
+		else
+		{
+		  if(ts.dmod_mode == DEMOD_CW)	// x position differs if dmod_mode is CW, only relevant
+		  {								// if magnify > 1
+			uint32_t offset;
+			offset = (ts.cw_sidetone_freq * (1 << (sd.magnify))) / 1000;
+			offset = ts.cw_lsb?(-offset):offset;		// CW-L or CW-U?
+			line = 29 + offset;
+		  }
 		}
 
 		uint32_t tunediff = ((1000)/(1 << sd.magnify))*(ts.tp->x-line)*TUNE_MULT;
