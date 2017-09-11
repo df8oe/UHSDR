@@ -6373,7 +6373,7 @@ void UiDriver_MainHandler()
 				}
 				else if (ts.dmod_mode == DEMOD_CW && cw_decoder_config.snap_enable)
 				{
-					UiDriver_UpdateLcdFreq(ads.snap_carrier_freq, Green, UFM_SECONDARY);
+					//UiDriver_UpdateLcdFreq(ads.snap_carrier_freq, Green, UFM_SECONDARY);
 				}
 		// display AGC box and AGC state
 				const char* txt = "   ";

@@ -1230,7 +1230,9 @@ void ui_spectrum_init_cw_snap_display (uint8_t visible)
 
 void ui_spectrum_cw_snap_display (float32_t delta)
 {
-//    static float32_t old_delta = 0.0;
+	#define max_delta 140.0
+	#define divider 5.0
+	//    static float32_t old_delta = 0.0;
 	// delta is the offset from the carrier freq
 	// now we have to account for CW sidetones etc.
 
@@ -1246,17 +1248,17 @@ void ui_spectrum_cw_snap_display (float32_t delta)
     }
 
     static int old_delta_p = 0.0;
-    if(delta > 280.0)
+    if(delta > max_delta)
     {
-    	delta = 280.0;
+    	delta = max_delta;
     }
-    else if(delta < -280.0)
+    else if(delta < -max_delta)
     {
-    	delta = -280.0;
+    	delta = -max_delta;
     }
 //    delta = 0.1 * delta + 0.9 * old_delta;
 
-    int delta_p = (int)(0.5 + (delta / 10.0));
+    int delta_p = (int)(0.5 + (delta / divider));
 
     if(delta_p != old_delta_p)
     {
