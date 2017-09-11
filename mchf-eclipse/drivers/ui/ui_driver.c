@@ -4068,7 +4068,7 @@ static void UiDriver_DisplayDigitalMode()
 	UiLcdHy28_DrawStraightLine(POS_DIGMODE_IND_X,(POS_DIGMODE_IND_Y - 1),LEFTBOX_WIDTH,LCD_DIR_HORIZONTAL,bgclr);
 	UiLcdHy28_PrintTextCentered((POS_DIGMODE_IND_X),(POS_DIGMODE_IND_Y),LEFTBOX_WIDTH,txt,color,bgclr,0);
 
-	fdv_clear_display();
+	//fdv_clear_display();
 }
 
 static void UiDriver_DisplayPowerLevel()

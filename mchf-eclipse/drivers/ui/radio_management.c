@@ -33,6 +33,7 @@
 #include "audio_management.h"
 
 #include "cat_driver.h"
+#include "ui_spectrum.h"
 
 
 #include "ui_configuration.h"
@@ -904,6 +905,7 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
     else if (ts.dmod_mode == DEMOD_DIGI)
     {
             RadioManagement_ChangeCodec(ts.digital_mode,0);
+            fdv_clear_display();
     }
 
     if (new_mode == DEMOD_FM && ts.dmod_mode != DEMOD_FM)
@@ -920,8 +922,14 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
     { 	// if old mode == DEMOD_CW and cw decoder is enabled:
     	// clear WPM display to make room for other modes´ display features
     	CW_Decoder_WPM_display(0);
+    	// clear tune helper for CW carrier
+    	ui_spectrum_init_cw_snap_display(0);
     }
-    // Finally update public flag
+    if(new_mode == DEMOD_CW && ts.cw_decoder_enable && cw_decoder_config.snap_enable)
+    {
+    	// draw init graphical CW carrier tuner helper
+    	ui_spectrum_init_cw_snap_display(1);
+    }    // Finally update public flag
     ts.dmod_mode = new_mode;
 
     if  (ads.af_disabled) { ads.af_disabled--; }
