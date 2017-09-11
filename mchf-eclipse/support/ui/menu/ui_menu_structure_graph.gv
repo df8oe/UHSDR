@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-09-10T17:17:27  by "./ui_menu_structure_graph.py"
+#  generated at  2017-09-11T12:41:48  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-10T17:17:27  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-11T12:41:48  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -744,6 +744,11 @@
         
         "MENU_CW_DECODER_USE_3_GOERTZEL" [
              label = "MENU_CW_DECODER_USE_3_GOERTZEL | use 3 Goertzels"
+             shape = record
+             ];
+        
+        "MENU_CW_DECODER_SNAP_ENABLE" [
+             label = "MENU_CW_DECODER_SNAP_ENABLE | carrier snap"
              shape = record
              ];
         
@@ -1761,6 +1766,8 @@
             MENU_CW -> MENU_CW_DECODER_SPIKECANCEL
             
             MENU_CW -> MENU_CW_DECODER_USE_3_GOERTZEL
+            
+            MENU_CW -> MENU_CW_DECODER_SNAP_ENABLE
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
