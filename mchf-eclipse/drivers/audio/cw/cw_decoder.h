@@ -26,6 +26,7 @@ typedef struct
 	uint8_t noisecancel_enable;
 	uint8_t spikecancel;
 	bool use_3_goertzels;
+	bool snap_enable;
 } cw_config_t;
 
 extern cw_config_t cw_decoder_config;

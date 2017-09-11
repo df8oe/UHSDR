@@ -2280,6 +2280,7 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 			color = Yellow;
 	}
 
+#if 0
 	// Handle frequency display offset in "CW RX" modes
 	if(ts.dmod_mode == DEMOD_CW)	 		// In CW mode?
 	{
@@ -2305,7 +2306,7 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 			break;
 		}
 	}
-
+#endif
 	switch(mode)
 	{
 	case UFM_SMALL_RX:
@@ -6369,6 +6370,10 @@ void UiDriver_MainHandler()
 				if(ts.dmod_mode == DEMOD_SAM)
 				{
 					UiDriver_UpdateLcdFreq(df.tune_old/TUNE_MULT, Yellow, UFM_SECONDARY);
+				}
+				else if (ts.dmod_mode == DEMOD_CW)
+				{
+					UiDriver_UpdateLcdFreq(ads.snap_carrier_freq, Green, UFM_SECONDARY);
 				}
 		// display AGC box and AGC state
 				const char* txt = "   ";
