@@ -6371,7 +6371,7 @@ void UiDriver_MainHandler()
 				{
 					UiDriver_UpdateLcdFreq(df.tune_old/TUNE_MULT, Yellow, UFM_SECONDARY);
 				}
-				else if (ts.dmod_mode == DEMOD_CW)
+				else if (ts.dmod_mode == DEMOD_CW && cw_decoder_config.snap_enable)
 				{
 					UiDriver_UpdateLcdFreq(ads.snap_carrier_freq, Green, UFM_SECONDARY);
 				}
