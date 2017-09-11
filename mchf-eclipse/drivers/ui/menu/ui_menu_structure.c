@@ -251,7 +251,6 @@ const MenuDescriptor cwGroup[] =
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_NOISECANCEL, NULL,"Noise cancel", UiMenuDesc("Enable/disable noise canceler for CW decoder") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_SPIKECANCEL, NULL,"Spike cancel", UiMenuDesc("Enable/disable spike canceler or short cancel for CW decoder") },
     { MENU_CW, MENU_ITEM, MENU_CW_DECODER_USE_3_GOERTZEL, NULL,"use 3 Goertzels", UiMenuDesc("Use three Goertzel values for CW decoder") },
-    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_SNAP_ENABLE, NULL,"carrier snap", UiMenuDesc("activate small green frequency display with CW carrier frequency") },
 
 	{ MENU_CW, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
@@ -386,6 +385,7 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NEW_NB, NULL,"New Noiseblanker", UiMenuDesc("New noiseblanker for testing purposes") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_RTTY_ATC, NULL,"RTTY ATC enable", UiMenuDesc("enable automatic threshold correction ATC for RTTY decoding") },
+    { MENU_CW, MENU_ITEM, MENU_CW_DECODER_SNAP_ENABLE, NULL,"Do not use: cs", UiMenuDesc("activate small green frequency display with CW carrier frequency") },
     { MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
