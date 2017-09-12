@@ -69,6 +69,7 @@ static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM] =
 
 static void     UiSpectrum_DrawFrequencyBar();
 static void		UiSpectrum_CalculateDBm();
+void ui_spectrum_init_cw_snap_display (uint8_t visible);
 
 // FIXME: This is partially application logic and should be moved to UI and/or radio management
 // instead of monitoring change, changes should trigger update of spectrum configuration (from pull to push)
@@ -360,7 +361,10 @@ static void UiSpectrum_CreateDrawArea()
                 Grey,
                 RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
     }
-
+    if(cw_decoder_config.snap_enable && ts.dmod_mode == DEMOD_CW)
+    {
+    	ui_spectrum_init_cw_snap_display(1);
+    }
 }
 
 void UiSpectrum_Clear()
@@ -1169,9 +1173,116 @@ static void UiSpectrum_DisplayDbm()
     }
 }
 
+
+#define CW_snap_carrier_X	27 // central position of variable freq marker
+#define CW_snap_carrier_Y	122 // position of variable freq marker
+
+void ui_spectrum_init_cw_snap_display (uint8_t visible)
+{
+	int color = Green;
+	if(!visible)
+	{
+		color = Black;
+		// also erase yellow indicator
+        UiLcdHy28_DrawFullRect(0, CW_snap_carrier_Y, 6, 57, Black);
+	}
+	//Horizontal lines of box
+	UiLcdHy28_DrawStraightLine(0,
+    		CW_snap_carrier_Y + 6,
+            27,
+            LCD_DIR_HORIZONTAL,
+            color);
+	UiLcdHy28_DrawStraightLine(32,
+    		CW_snap_carrier_Y + 6,
+            27,
+            LCD_DIR_HORIZONTAL,
+            color);
+	UiLcdHy28_DrawStraightLine(0,
+    		CW_snap_carrier_Y - 1,
+            27,
+            LCD_DIR_HORIZONTAL,
+            color);
+	UiLcdHy28_DrawStraightLine(32,
+    		CW_snap_carrier_Y - 1,
+            27,
+            LCD_DIR_HORIZONTAL,
+            color);
+	// vertical lines of box
+	UiLcdHy28_DrawStraightLine(0,
+    		CW_snap_carrier_Y - 1,
+            8,
+            LCD_DIR_VERTICAL,
+            color);
+	UiLcdHy28_DrawStraightLine(58,
+    		CW_snap_carrier_Y - 1,
+            8,
+            LCD_DIR_VERTICAL,
+            color);
+#if 0
+    UiLcdHy28_DrawStraightLineDouble(((float32_t)POS_SPECTRUM_IND_X + roundf(left_filter_border_pos)), (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y), roundf(width_pixel), LCD_DIR_HORIZONTAL, clr);
+    UiLcdHy28_DrawStraightLine( marker_line_pos[idx],
+            spec_top_y - spec_height_limit,
+            spec_height_limit,
+            LCD_DIR_VERTICAL,
+            sd.scope_centre_grid_colour_active);
+#endif
+}
+
+void ui_spectrum_cw_snap_display (float32_t delta)
+{
+	#define max_delta 140.0
+	#define divider 5.0
+	//    static float32_t old_delta = 0.0;
+	// delta is the offset from the carrier freq
+	// now we have to account for CW sidetones etc.
+
+//	delta = RadioManagement_GetTXDialFrequency()/TUNE_MULT;
+//	delta = RadioManagement_GetRXDialFrequency()/TUNE_MULT;
+    if(ts.cw_lsb)
+    {
+    	delta = delta + (float32_t)(ts.cw_sidetone_freq);
+    }
+    else
+    {
+    	delta = delta - (float32_t)(ts.cw_sidetone_freq);
+    }
+
+    static int old_delta_p = 0.0;
+    if(delta > max_delta)
+    {
+    	delta = max_delta;
+    }
+    else if(delta < -max_delta)
+    {
+    	delta = -max_delta;
+    }
+//    delta = 0.1 * delta + 0.9 * old_delta;
+
+    int delta_p = (int)(0.5 + (delta / divider));
+
+    if(delta_p != old_delta_p)
+    {
+	UiLcdHy28_DrawStraightLineDouble( CW_snap_carrier_X + old_delta_p + 1,
+    		CW_snap_carrier_Y,
+            6,
+            LCD_DIR_VERTICAL,
+            Black);
+
+	UiLcdHy28_DrawStraightLineDouble( CW_snap_carrier_X + delta_p + 1,
+    		CW_snap_carrier_Y,
+            6,
+            LCD_DIR_VERTICAL,
+            Yellow);
+//	old_delta = delta;
+	old_delta_p = delta_p;
+    }
+}
+
+
 void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float32_t bin_BW)
 {
-	if(ads.CW_signal)
+	if(ads.CW_signal) // this is only done, if there has been a pulse from the CW station that exceeds the threshold
+		// in the CW decoder section
 	{
 		static float32_t freq_old = 10000000.0;
 	float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
@@ -1202,9 +1313,7 @@ void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float
     delta1 = ((maxbin + 1.0) - (float32_t)posbin) * bin_BW;
 
 // 4. second frequency carrier offset calculation
-    //    float32_t bin1 = sd.FFT_Samples[posbin-1];
-    //    float32_t bin2 = sd.FFT_Samples[posbin];
-    //    float32_t bin3 = sd.FFT_Samples[posbin+1];
+
     if(maxbin < 1.0)
     {
     	maxbin = 1.0;
@@ -1223,17 +1332,12 @@ void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float
     if(delta2 > bin_BW) delta2 = 0.0;
     delta = delta1 + delta2;
 
-/*    // prevent large jumps, because we assume we are already near our carrier frequency
-    if(delta > 200.0 || delta < -200.0)
-    	{
-    		delta = 0.0;
-    	}
-*/
     help_freq = help_freq + delta;
     help_freq = 0.2 * help_freq + 0.8 * freq_old;
     //help_freq = help_freq * ((float32_t)TUNE_MULT);
     ads.snap_carrier_freq = (ulong) (help_freq);
     freq_old = help_freq;
+    ui_spectrum_cw_snap_display (delta);
     // this estimated carrier freq is then printed in the small
     // frequency display by UiDriver_MainHandler
 
@@ -1243,6 +1347,7 @@ void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float
 	 * */
 	}
 }
+
 
 static void UiSpectrum_CalculateDBm()
 {
@@ -1369,7 +1474,7 @@ static void UiSpectrum_CalculateDBm()
             }
 
             // here would be the right place to start with the SNAP mode!
-            if(cw_decoder_config.snap_enable)
+            if(cw_decoder_config.snap_enable && ts.dmod_mode == DEMOD_CW)
             {
             	 UiSpectrum_Calculate_snap(Lbin, Ubin, posbin, bin_BW);
 

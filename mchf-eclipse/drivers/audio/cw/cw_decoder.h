@@ -9,7 +9,7 @@
 #define AUDIO_CW_CW_DECODER_H_
 
 #define POS_CW_DECODER_WPM_X 	0
-#define POS_CW_DECODER_WPM_Y 	116 //79 --> this collides with the RTC!
+#define POS_CW_DECODER_WPM_Y 	108 // 116 --> above DSP box //79 --> this collides with the RTC!
 
 
 
