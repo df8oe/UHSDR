@@ -121,10 +121,7 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
       break;
 
     case HOST_USER_DISCONNECTION:
-      Appli_state = APPLICATION_IDLE;
-      // BSP_LED_Off(LED4);
-      // BSP_LED_Off(LED5);
-      f_mount(NULL, (TCHAR const*)"", 0);
+      Appli_state = APPLICATION_DISCONNECT;
       break;
 
     case HOST_USER_CLASS_ACTIVE:
