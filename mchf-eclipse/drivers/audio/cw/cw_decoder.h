@@ -22,9 +22,16 @@ typedef struct
 //	uint8_t average;
 	uint32_t thresh;
 	uint8_t blocksize;
+#define CW_DECODER_BLOCKSIZE_MIN 8
+#define CW_DECODER_BLOCKSIZE_MAX 128
+#define CW_DECODER_BLOCKSIZE_DEFAULT 32
+
 //	uint8_t AGC_enable;
 	uint8_t noisecancel_enable;
 	uint8_t spikecancel;
+#define CW_SPIKECANCEL_MODE_OFF 0
+#define CW_SPIKECANCEL_MODE_SPIKE 1
+#define CW_SPIKECANCEL_MODE_SHORT 2
 	bool use_3_goertzels;
 	bool snap_enable;
 } cw_config_t;

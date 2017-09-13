@@ -1850,11 +1850,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 #endif
-    case MENU_CW_DECODER_BLOCKSIZE:  // spectrum scope speed
+    case MENU_CW_DECODER_BLOCKSIZE:  // processing block size for cw decoder
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &cw_decoder_config.blocksize,
-                                              8,
-                                              128,
-                                              32,
+                                              CW_DECODER_BLOCKSIZE_MIN,
+											  CW_DECODER_BLOCKSIZE_MAX,
+											  CW_DECODER_BLOCKSIZE_DEFAULT,
                                               8
                                              );
             snprintf(options,32, "  %u", cw_decoder_config.blocksize);
