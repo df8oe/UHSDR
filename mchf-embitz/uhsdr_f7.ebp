@@ -283,6 +283,9 @@
 		<Unit filename="..\mchf-eclipse\drivers\audio\codec\uhsdr_hw_i2s.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\audio\cw\cw_decoder.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\cw\cw_gen.c">
 			<Option compilerVar="CC" />
 		</Unit>

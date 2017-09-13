@@ -232,6 +232,9 @@
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_pipes.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\ff.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\adc.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -296,6 +299,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\codec\uhsdr_hw_i2s.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\audio\cw\cw_decoder.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\cw\cw_gen.c">
