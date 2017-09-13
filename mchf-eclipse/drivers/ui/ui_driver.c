@@ -6376,27 +6376,34 @@ void UiDriver_MainHandler()
 					//UiDriver_UpdateLcdFreq(ads.snap_carrier_freq, Green, UFM_SECONDARY);
 				}
 		// display AGC box and AGC state
+				// we have 5 states -> We can collapse 1 and 2 -> you see this in the box title anyway
+				// we use an asterisk to indicate action
+				// 1 OFF -> WDSP AGC not active
+				// 2 ON + NO_HANG + NO ACTION		no asterisk
+				// 3 ON + HANG_ACTION + NO ACTION 	white asterisk
+				// 4 ON + ACTION                	green asterisk
+				// 5 ON + ACTION + HANG_ACTION  	blue asterisk
 				const char* txt = "   ";
-				uint16_t AGC_color = Black;
-				uint16_t AGC_color2 = Black;
+				uint16_t AGC_bg_clr = Black;
+				uint16_t AGC_fg_clr = Black;
 				if(ts.agc_wdsp == 1)
 				{
 					if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
 					{
-						AGC_color = White;
-						AGC_color2 = Black;
+						AGC_bg_clr = White;
+						AGC_fg_clr = Black;
 					}
 					else
 					{
-						AGC_color = Blue;
-						AGC_color2 = White;
+						AGC_bg_clr = Blue;
+						AGC_fg_clr = White;
 					}
 					if(ts.agc_wdsp_action == 1)
 					{
 						txt = "AGC";
 					}
 				}
-				UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,AGC_color2,AGC_color,0);
+				UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,AGC_fg_clr,AGC_bg_clr,0);
 				// display CW decoder WPM speed
 				if(ts.cw_decoder_enable && ts.dmod_mode == DEMOD_CW)
 				{

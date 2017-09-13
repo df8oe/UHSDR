@@ -51,7 +51,7 @@ cw_config_t cw_decoder_config =
 		.speed = 25,
 //		.average = 2,
 		.thresh = 15000,
-		.blocksize = 32,
+		.blocksize = CW_DECODER_BLOCKSIZE_DEFAULT,
 //		.AGC_enable = 0,
 		.noisecancel_enable = 1,
 		.spikecancel = 0,
@@ -74,7 +74,7 @@ void CwDecode_FilterInit()
 #define CW_TIMEOUT			3  // Time, in seconds, to trigger display of last Character received
 #define ONE_SECOND			(12000 / cw_decoder_config.blocksize) // sample rate / decimation rate / block size
 
-#define CW_SPIKECANCEL        8  // Cancel transients/spikes/drops that have max duration of number chosen.
+#define CW_SPIKECANCEL_MAX_DURATION        8  // Cancel transients/spikes/drops that have max duration of number chosen.
 // Typically 4 or 8 to select at time periods of 4 or 8 times 2.9ms.
 // 0 to deselect.
 
@@ -90,6 +90,8 @@ void CwDecode_FilterInit()
 #define CW_SIG_BUFSIZE      256  // Size of a circular buffer of decoded input levels and durations
 #define CW_DATA_BUFSIZE      40  // Size of a buffer of accumulated dot/dash information. Max is DATA_BUFSIZE-2
 // Needs to be significantly longer than longest symbol 'sos'= ~30.
+
+// FIXME: replace with true/false (since already defined elsewhere)
 #define  TRUE  1
 #define  FALSE 0
 
@@ -108,21 +110,21 @@ typedef struct
 	unsigned overload :1; // Overload flag
 } bflags;
 
-volatile static bool cw_state;                   // Current decoded signal state
-volatile static sigbuf sig[CW_SIG_BUFSIZE]; // A circular buffer of decoded input levels and durations, input from
-volatile static int32_t sig_lastrx = 0; // Circular buffer in pointer, updated by SignalSampler
+static bool cw_state;                   // Current decoded signal state
+static sigbuf sig[CW_SIG_BUFSIZE]; // A circular buffer of decoded input levels and durations, input from
 
+static int32_t sig_lastrx = 0; // Circular buffer in pointer, updated by SignalSampler
 static int32_t sig_incount = 0; // Circular buffer in pointer, copy of sig_lastrx, used by CW Decode functions
 static int32_t sig_outcount = 0; // Circular buffer out pointer, used by CW Decode functions
+static int32_t sig_timer = 0; // Elapsed time of current signal state, dependent
 
-volatile static int32_t sig_timer = 0; // Elapsed time of current signal state, dependent
 // on sample rate, decimation factor and CW_DECODE_BLOCK_SIZE
 // 48ksps & decimation-by-4 equals 12ksps
 // if CW_DECODE_BLOCK_SIZE == 32, then we have 12000/32 = 375 blocks per second, which means
 // one Goertzel magnitude is calculated 375 times a second, which means 2.67ms per timer_stepsize
 // this is very similar to the original 2.9ms (when using FFT256 in the Teensy 3 original sketch)
 // DD4WH 2017_09_08
-volatile static int32_t timer_stepsize = 1; // equivalent to 2.67ms, see above
+static int32_t timer_stepsize = 1; // equivalent to 2.67ms, see above
 static int32_t cur_time;                     // copy of sig_timer
 static int32_t cur_outcount = 0; // Basically same as sig_outcount, for Error Correction functionality
 static int32_t last_outcount = 0; // sig_outcount for previous character, used for Error Correction func
@@ -135,11 +137,21 @@ static char code[CW_DATA_BUFSIZE]; // Decoded dot/dash info in symbol form, e.g.
 
 static bflags b;                            // Various Operational state flags
 
-static float32_t pulse_avg; // CW timing variables - pulse_avg is a composite value
-static float32_t dot_avg, dash_avg;            // Dot and Dash Space averages
-static float32_t symspace_avg, cwspace_avg; // Intra symbol Space and Character-Word Space
-static int32_t w_space;                      // Last word space time
-static float32_t raw_signal_buffer[128];  //cw_decoder_config.blocksize];
+typedef struct
+{
+	float32_t pulse_avg; // CW timing variables - pulse_avg is a composite value
+	float32_t dot_avg;
+	float32_t dash_avg;            // Dot and Dash Space averages
+	float32_t symspace_avg;
+	float32_t cwspace_avg; // Intra symbol Space and Character-Word Space
+	int32_t w_space;                      // Last word space time
+} cw_times_t;
+
+static cw_times_t cw_times;
+
+// audio signal buffer
+static float32_t raw_signal_buffer[CW_DECODER_BLOCKSIZE_MAX];  //cw_decoder_config.blocksize];
+
 
 // RINGBUFFER HELPER MACROS START
 #define ring_idx_wrap_upper(value,size) (((value) >= (size)) ? (value) - (size) : (value))
@@ -163,9 +175,7 @@ static float32_t raw_signal_buffer[128];  //cw_decoder_config.blocksize];
 static void CW_Decode_exe(void)
 {
 	static float32_t old_siglevel = 0.001;
-	float32_t speed_help = 0.0;
-	float32_t speed_help2 = 0.0;
-	static float32_t old_speed = 0.0;
+	static float32_t speed_wpm_avg = 0.0;
 	float32_t siglevel;                	// signal level from Goertzel calculation
 //	float32_t lvl = 0;                 	// Multiuse variable
 //	float32_t pklvl;                   	// Used for AGC calculations
@@ -304,18 +314,19 @@ static void CW_Decode_exe(void)
 	//    7.) CW Decode
 	CW_Decode();                                     // Do all the heavy lifting
 
-	// TODO: create proper decode state struct
 	// calculation of speed of the received morse signal on basis of the standard "PARIS"
-	float32_t spdcalc = 10.0 * dot_avg + 4.0 * dash_avg + 9.0 * symspace_avg + 5.0 * cwspace_avg;
-	// Convert to Milliseconds per Word
-	spdcalc = spdcalc * 1000.0 / (cw_decoder_config.sampling_freq / (float32_t)cw_decoder_config.blocksize);
+	float32_t spdcalc = 10.0 * cw_times.dot_avg + 4.0 * cw_times.dash_avg + 9.0 * cw_times.symspace_avg + 5.0 * cw_times.cwspace_avg;
+
 	// prevent division by zero in first round
 	if(spdcalc > 0)
 	{
-		speed_help = (0.5 + 60000.0 / spdcalc); // calculate words per minute
-		speed_help2 = speed_help * 0.1 + 0.9 * old_speed; // a little lowpass filtering
-		cw_decoder_config.speed = (uint8_t)speed_help2; // convert to integer
-		old_speed = speed_help2; // for lowpass
+
+		// Convert to Milliseconds per Word
+		float32_t speed_ms_per_word = spdcalc * 1000.0 / (cw_decoder_config.sampling_freq / (float32_t)cw_decoder_config.blocksize);
+
+		float32_t speed_wpm_raw = (0.5 + 60000.0 / speed_ms_per_word); // calculate words per minute
+		speed_wpm_avg = speed_wpm_raw * 0.1 + 0.9 * speed_wpm_avg; // a little lowpass filtering
+		cw_decoder_config.speed = speed_wpm_avg; // convert to integer
 	}
 }
 
@@ -359,12 +370,12 @@ static void InitializationFunc(void)
 		startpos = sig_outcount;        // We start at last processed mark/space
 		progress = sig_outcount;
 		initializing = TRUE;
-		pulse_avg = 0;                         // Reset CW timing variables to 0
-		dot_avg = 0;
-		dash_avg = 0;
-		symspace_avg = 0;
-		cwspace_avg = 0;
-		w_space = 0;
+		cw_times.pulse_avg = 0;                         // Reset CW timing variables to 0
+		cw_times.dot_avg = 0;
+		cw_times.dash_avg = 0;
+		cw_times.symspace_avg = 0;
+		cw_times.cwspace_avg = 0;
+		cw_times.w_space = 0;
 	}
 //    Board_RedLed(LED_STATE_ON);
 
@@ -387,39 +398,39 @@ static void InitializationFunc(void)
 		{
 			if (processed > 32)                  // More than 32, getting stable
 			{
-				if (t > pulse_avg)
+				if (t > cw_times.pulse_avg)
 				{
-					dash_avg = dash_avg + (t - dash_avg) / 4.0;    // (e.q. 4.5)
+					cw_times.dash_avg = cw_times.dash_avg + (t - cw_times.dash_avg) / 4.0;    // (e.q. 4.5)
 				}
 				else
 				{
-					dot_avg = dot_avg + (t - dot_avg) / 4.0;       // (e.q. 4.4)
+					cw_times.dot_avg = cw_times.dot_avg + (t - cw_times.dot_avg) / 4.0;       // (e.q. 4.4)
 				}
 			}
 			else                           // Less than 32, still quite unstable
 			{
-				if (t > pulse_avg)
+				if (t > cw_times.pulse_avg)
 				{
-					dash_avg = (t + dash_avg) / 2.0;               // (e.q. 4.2)
+					cw_times.dash_avg = (t + cw_times.dash_avg) / 2.0;               // (e.q. 4.2)
 				}
 				else
 				{
-					dot_avg = (t + dot_avg) / 2.0;                 // (e.q. 4.1)
+					cw_times.dot_avg = (t + cw_times.dot_avg) / 2.0;                 // (e.q. 4.1)
 				}
 			}
-			pulse_avg = (dot_avg / 4 + dash_avg) / 2.0; // Update pulse_avg (e.q. 4.3)
+			cw_times.pulse_avg = (cw_times.dot_avg / 4 + cw_times.dash_avg) / 2.0; // Update pulse_avg (e.q. 4.3)
 		}
 		else          // Not a pulse - determine character_word space avg
 		{
 			if (processed > 32)
 			{
-				if (t > pulse_avg)                              // Symbol space?
+				if (t > cw_times.pulse_avg)                              // Symbol space?
 				{
-					cwspace_avg = cwspace_avg + (t - cwspace_avg) / 4.0; // (e.q. 4.8)
+					cw_times.cwspace_avg = cw_times.cwspace_avg + (t - cw_times.cwspace_avg) / 4.0; // (e.q. 4.8)
 				}
 				else
 				{
-					symspace_avg = symspace_avg + (t - symspace_avg) / 4.0; // New EQ, to assist calculating Rate
+					cw_times.symspace_avg = cw_times.symspace_avg + (t - cw_times.symspace_avg) / 4.0; // New EQ, to assist calculating Rate
 				}
 			}
 		}
@@ -440,40 +451,35 @@ float32_t spikeCancel(float32_t t)
 {
 	static bool spike;
 
-	if(cw_decoder_config.spikecancel == 1) // SPIKE CANCEL // Squash spikes/transients of short duration
+	if (cw_decoder_config.spikecancel != CW_SPIKECANCEL_MODE_OFF)
 	{
-		if((t <= CW_SPIKECANCEL))
+		bool do_spike_cancel = false;
+
+		if (cw_decoder_config.spikecancel == CW_SPIKECANCEL_MODE_SPIKE) // SPIKE CANCEL // Squash spikes/transients of short duration
+		{
+			do_spike_cancel = t <= CW_SPIKECANCEL_MAX_DURATION;
+		}
+		else if (cw_decoder_config.spikecancel == CW_SPIKECANCEL_MODE_SHORT) // SHORT CANCEL // Squash spikes shorter than 1/3rd dot duration
+		{
+			do_spike_cancel = ((3 * t < cw_times.dot_avg) && (b.initialized == TRUE)); // Only do this if we are not initializing dot/dash periods
+		}
+
+		if (do_spike_cancel == true)
 		{
 			spike = TRUE;
-			sig_outcount++;                             // If short, then do nothing
-			if (sig_outcount == CW_SIG_BUFSIZE) sig_outcount = 0;
-			return 0;
+			sig_outcount = ring_idx_increment(sig_outcount, CW_SIG_BUFSIZE); // If short, then do nothing
+			t = 0.0;
 		}
-		else if (spike == TRUE)     // Check if last state was a short Spike or Drop
+		else if (spike == TRUE) // Check if last state was a short Spike or Drop
 		{
 			spike = FALSE;
 			// Add time of last three states together.
-			t = t + sig[(sig_outcount-1<0)?CW_SIG_BUFSIZE-1:sig_outcount-1].time
-			+ sig[(sig_outcount-2<0)?CW_SIG_BUFSIZE-(2-sig_outcount):sig_outcount-2].time;
+			t =		t
+					+ sig[ring_idx_change(sig_outcount, -1, CW_SIG_BUFSIZE)].time
+					+ sig[ring_idx_change(sig_outcount, -2, CW_SIG_BUFSIZE)].time;
 		}
 	}
-	else if (cw_decoder_config.spikecancel == 2) // SHORT CANCEL // Squash spikes shorter than 1/3rd dot duration
-	{
-		if ((3*t<dot_avg) && (b.initialized==TRUE)) // Only do this if we are not initializing dot/dash periods
-	{
-		spike = TRUE;
-		sig_outcount++;                             // If short, then do nothing
-		if (sig_outcount == CW_SIG_BUFSIZE) sig_outcount = 0;
-		return 0;
-	}
-	else if (spike == TRUE)     // Check if last state was a short Spike or Drop
-	{
-		spike = FALSE;
-		// Add time of last three states together.
-		t = t + sig[(sig_outcount-1<0)?CW_SIG_BUFSIZE-1:sig_outcount-1].time
-		+ sig[(sig_outcount-2<0)?CW_SIG_BUFSIZE-(2-sig_outcount):sig_outcount-2].time;
-	}
-	}
+
 	return t;
 }
 
@@ -494,11 +500,10 @@ float32_t spikeCancel(float32_t t)
 //------------------------------------------------------------------
 bool DataRecognitionFunc(bool* new_char_p)
 {
-	double t;                                 // Temporary time
-	double x = 0;                             // Temp comparison value
-	*new_char_p = FALSE;
 	bool not_done = FALSE;                  // Return value
 	static bool processed;
+
+	*new_char_p = FALSE;
 
 	//-----------------------------------
 	// Do we have a new state to process?
@@ -506,147 +511,107 @@ bool DataRecognitionFunc(bool* new_char_p)
 	{
 		not_done = true;
 		b.timeout = FALSE;           // Mainly used by Error Correction Function
-		t = sig[sig_outcount].time;                 // Get time of the new state
 
-		//-----------------------------------
-		// Is it a Mark (keydown)?
-		if (sig[sig_outcount].state)
+		double t = spikeCancel(sig[sig_outcount].time); // Get time of the new state
+		// Squash spikes/transients if enabled
+		// Attention: Side Effect -> sig_outcount has been be incremented inside spikeCancel if result == 0, because of this we increment only if not 0
+
+		if (t > 0) // not a spike (or spike processing not enabled)
 		{
-			 if(cw_decoder_config.spikecancel)
+			const bool is_markstate = sig[sig_outcount].state;
+
+			sig_outcount = ring_idx_increment(sig_outcount, CW_SIG_BUFSIZE); // Update process counter
+			//-----------------------------------
+			// Is it a Mark (keydown)?
+			if (is_markstate == true)
 			{
-				// Squash spikes/transients
-							float32_t temp = spikeCancel(t);
-							if (temp == 0) // can this happen? FIXME
-								{
-									return FALSE;               // It was a transient
-								}
-							else
-								{
-									t = temp;// If last was a transient, then t = last 3 t added together
-								}
+				processed = FALSE; // Indicate that incoming character is not processed
+
+				// Determine if Dot or Dash (e.q. 4.10)
+				if ((cw_times.pulse_avg - t) >= 0)                         // It is a Dot
+				{
+					b.dash = FALSE;                           // Clear Dash flag
+					data[data_len].state = 0;                   // Store as Dot
+					cw_times.dot_avg = cw_times.dot_avg + (t - cw_times.dot_avg) / 8.0; // Update cw_times.dot_avg (e.q. 4.6)
+				}
+				//-----------------------------------
+				// Is it a Dash?
+				else
+				{
+					b.dash = TRUE;                              // Set Dash flag
+					data[data_len].state = 1;                   // Store as Dash
+					if (t <= 5 * cw_times.dash_avg)        // Store time if not stuck key
+					{
+						cw_times.dash_avg = cw_times.dash_avg + (t - cw_times.dash_avg) / 8.0; // Update dash_avg (e.q. 4.7)
+					}
+				}
+
+				data[data_len].time = (uint32_t) t;     // Store associated time
+				data_len++;                         // Increment by one dot/dash
+				cw_times.pulse_avg = (cw_times.dot_avg / 4 + cw_times.dash_avg) / 2.0; // Update pulse_avg (e.q. 4.3)
 			}
 
-			processed = FALSE; // Indicate that incoming character is not processed
-
-			sig_outcount = ring_idx_increment(sig_outcount, CW_SIG_BUFSIZE);                            // Update process counter
-
-			x = pulse_avg - t;           // Determine if Dot or Dash (e.q. 4.10)
-
 			//-----------------------------------
-			// Is it a dot?
-			if (x >= 0)                                   // It is a Dot
-			{
-				b.dash = FALSE;                             // Clear Dash flag
-				data[data_len].state = 0;                   // Store as Dot
-				dot_avg = dot_avg + (t - dot_avg) / 8.0; // Update dot_avg (e.q. 4.6)
-			}
-			//-----------------------------------
-			// Is it a Dash?
+			// Is it a Space?
 			else
 			{
-				b.dash = TRUE;                              // Set Dash flag
-				data[data_len].state = 1;                   // Store as Dash
-				if (t <= 5 * dash_avg)            // Store time if not stuck key
+				bool full_char_detected = true;
+				if (b.dash == TRUE)                // Last character was a dash
 				{
-					dash_avg = dash_avg + (t - dash_avg) / 8.0; // Update dash_avg (e.q. 4.7)
-				}
-			}
-			data[data_len].time = (uint32_t) t;         // Store associated time
-			data_len++;                             // Increment by one dot/dash
-			pulse_avg = (dot_avg / 4 + dash_avg) / 2.0; // Update pulse_avg (e.q. 4.3)
-		}
-
-		//-----------------------------------
-		// Is it a Space?
-		else
-		{
-			 if(cw_decoder_config.spikecancel)
-			{
-				// Squash spikes/transients
-							float32_t temp = spikeCancel(t);
-							if (temp == 0) // can this happen? FIXME
-								{
-									return FALSE;               // It was a transient
-								}
-							else
-								{
-									t = temp;// If last was a transient, then t = last 3 t added together
-								}
-			}
-
-			// FIXME: This control flow looks strange since when we wrap around the ringbuffer,
-			// we are not supposed to check for the dash?
-			// Verified with original arduino code -> this has it but the original algorithm from 1973 doesn't.
-			// so I decided to go for the original algorithm
-			// and have the index increment as an independent operation not related to the
-			// checks for signal state.
-#if 0
-			sig_outcount++;                        // And update process counter
-			if ((sig_outcount == CW_SIG_BUFSIZE))
-			{
-				sig_outcount = 0;  // Wraparound output index
-			}
-			// We expect a bit shorter space if the last character was a dash
-			//
-			else if (b.dash == TRUE)                // Last character was a dash
-#else
-			sig_outcount = ring_idx_increment(sig_outcount, CW_SIG_BUFSIZE);                            // Update process counter
-			if (b.dash == TRUE)                // Last character was a dash
-#endif
-			{
-				b.dash = false;
-				x = t
-						- (pulse_avg
-								- ((uint32_t) data[data_len - 1].time
-										- pulse_avg) / 4.0); // (e.q. 4.12, corrected)
-				if (x < 0)       // Return on symbol space - not a full char yet
-				{
-					symspace_avg = symspace_avg + (t - symspace_avg) / 8.0; // New EQ, to assist calculating Rat
-					return FALSE;
-				}
-				else if (t <= 10 * dash_avg)   // Current space is not a timeout
-				{
-					x = t
-							- (cwspace_avg
+					b.dash = false;
+					double eq4_12 = t
+							- (cw_times.pulse_avg
 									- ((uint32_t) data[data_len - 1].time
-											- pulse_avg) / 4.0);  // (e.q. 4.14)
-					if (x >= 0)                            // It is a Word space
+											- cw_times.pulse_avg) / 4.0); // (e.q. 4.12, corrected)
+					if (eq4_12 < 0) // Return on symbol space - not a full char yet
 					{
-						w_space = t;
-						b.wspace = TRUE;
+						cw_times.symspace_avg = cw_times.symspace_avg + (t - cw_times.symspace_avg) / 8.0; // New EQ, to assist calculating Rat
+						full_char_detected = false;
+					}
+					else if (t <= 10 * cw_times.dash_avg) // Current space is not a timeout
+					{
+						double eq4_14 = t
+								- (cw_times.cwspace_avg
+										- ((uint32_t) data[data_len - 1].time
+												- cw_times.pulse_avg) / 4.0); // (e.q. 4.14)
+						if (eq4_14 >= 0)                   // It is a Word space
+						{
+							cw_times.w_space = t;
+							b.wspace = TRUE;
+						}
 					}
 				}
-			}
-			else                                     // Last character was a dot
-			{
-				x = t - pulse_avg;                          // (e.q. 4.11)
-				if (x < 0)       // Return on symbol space - not a full char yet
+				else                                 // Last character was a dot
 				{
-					symspace_avg = symspace_avg + (t - symspace_avg) / 8.0; // New EQ, to assist calculating Rate
-					return FALSE;
-				}
-				else if (t <= 10 * dash_avg)   // Current space is not a timeout
-				{
-					cwspace_avg = cwspace_avg + (t - cwspace_avg) / 8.0; // (e.q. 4.9)
-					x = t - cwspace_avg;                      // (e.q. 4.13)
-					if (x >= 0)                            // It is a Word space
+					// (e.q. 4.11)
+					if ((t - cw_times.pulse_avg) < 0) // Return on symbol space - not a full char yet
 					{
-						w_space = t;
-						b.wspace = TRUE;
+						cw_times.symspace_avg = cw_times.symspace_avg + (t - cw_times.symspace_avg) / 8.0; // New EQ, to assist calculating Rate
+						full_char_detected = false;
+					}
+					else if (t <= 10 * cw_times.dash_avg) // Current space is not a timeout
+					{
+						cw_times.cwspace_avg = cw_times.cwspace_avg + (t - cw_times.cwspace_avg) / 8.0; // (e.q. 4.9)
+
+						// (e.q. 4.13)
+						if ((t - cw_times.cwspace_avg) >= 0)        // It is a Word space
+						{
+							cw_times.w_space = t;
+							b.wspace = TRUE;
+						}
 					}
 				}
-			}
-			// Process the character
-			if (processed == FALSE)
-			{
-				*new_char_p = TRUE; // Indicate there is a new char to be processed
+				// Process the character
+				if (full_char_detected == true && processed == FALSE)
+				{
+					*new_char_p = TRUE; // Indicate there is a new char to be processed
+				}
 			}
 		}
 	}
-
 	//-----------------------------------
 	// Long key down or key up
-	else if (cur_time > (10 * dash_avg))
+	else if (cur_time > (10 * cw_times.dash_avg))
 	{
 		// If current state is Key up and Long key up then  Char finalized
 		if (!sig[sig_incount].state && !processed)
@@ -668,7 +633,7 @@ bool DataRecognitionFunc(bool* new_char_p)
 		last_outcount = cur_outcount;
 		cur_outcount = sig_outcount;
 	}
-	return not_done;                        // FALSE if all data processed or new character, else TRUE
+	return not_done;  // FALSE if all data processed or new character, else TRUE
 }
 
 //------------------------------------------------------------------
@@ -1064,7 +1029,7 @@ void WordSpaceFunc(uint8_t c)
 		if ((c == 'I') || (c == 'J') || (c == 'Q') || (c == 'U') || (c == 'V')
 				|| (c == 'Z'))
 		{
-			int16_t x = (cwspace_avg + pulse_avg) - w_space;      // (e.q. 4.15)
+			int16_t x = (cw_times.cwspace_avg + cw_times.pulse_avg) - cw_times.w_space;      // (e.q. 4.15)
 			if (x < 0)
 			{
 				lcdLineScrollPrint(' ');
@@ -1135,14 +1100,14 @@ bool ErrorCorrectionFunc(void)
 					}
 				break;
 				case 1:
-					if ((sig[temp_outcount].time < pduration) && (sig[temp_outcount].time > CW_SPIKECANCEL))
+					if ((sig[temp_outcount].time < pduration) && (sig[temp_outcount].time > CW_SPIKECANCEL_MAX_DURATION))
 					{
 						pduration = sig[temp_outcount].time;
 						plocation = temp_outcount;
 					}
 				break;
 				case 2:
-					if ((sig[temp_outcount].time < pduration) && ((3*sig[temp_outcount].time)>dot_avg))
+					if ((sig[temp_outcount].time < pduration) && ((3*sig[temp_outcount].time)>cw_times.dot_avg))
 					{
 						pduration = sig[temp_outcount].time;
 						plocation = temp_outcount;
@@ -1173,9 +1138,9 @@ bool ErrorCorrectionFunc(void)
 
 		//-----------------------------------------------------
 		// Take corrective action by dropping shortest pulse
-		// if shorter than half of dot_avg
+		// if shorter than half of cw_times.dot_avg
 		// This can result in one or more valid characters - or Error
-		if ((pduration < dot_avg / 2) && (plocation != temp_outcount))
+		if ((pduration < cw_times.dot_avg / 2) && (plocation != temp_outcount))
 		{
 			// Add up duration of short pulse and the two spaces on either side,
 			// as space at pulse location + 1
@@ -1231,7 +1196,7 @@ bool ErrorCorrectionFunc(void)
 		{
 			// Split char in two by adjusting time of longest sym space to a char space
 			sig[slocation].time =
-					((cwspace_avg - 1) >= 1 ? cwspace_avg - 1 : 1); // Make sure it is always larger than 0
+					((cw_times.cwspace_avg - 1) >= 1 ? cw_times.cwspace_avg - 1 : 1); // Make sure it is always larger than 0
 			sig_outcount = last_outcount; // Set circ buffer reference to the start of previous failed decode
 			//
 			// Now we reprocess
@@ -1287,7 +1252,7 @@ bool ErrorCorrectionFunc(void)
 void CW_Decode(void)
 {
 	//-----------------------------------
-	// Initialize pulse_avg, dot_avg, dash_avg, symspace_avg, cwspace_avg
+	// Initialize pulse_avg, dot_avg, cw_times.dash_avg, cw_times.symspace_avg, cwspace_avg
 	if (b.initialized == FALSE)
 	{
 		InitializationFunc();
