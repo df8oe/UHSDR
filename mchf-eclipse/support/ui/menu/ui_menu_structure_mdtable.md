@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-09-11T14:32:53  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-09-13T21:45:44  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-09-11T14:32:53  by "./ui_menu_structure_mdtable.py"
+generated at  2017-09-13T21:45:44  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -167,11 +167,11 @@ generated at  2017-09-11T14:32:53  by "./ui_menu_structure_mdtable.py"
 | **CW LSB/USB Select**         (                   MENU_CW_AUTO_MODE_SELECT) | Set appropriate sideband mode for CW. If AUTO, sideband is chosen for bands by its frequency. A long press on Mode button gets the other sideband mode | 
 | **CW decoder enable**         (                            MENU_CW_DECODER) | enable experimental CW decoding                | 
 | **Signal threshold**          (                     MENU_CW_DECODER_THRESH) | All signals above this threshold are intepreted as a dit or daah | 
+| **Tune helper**               (                MENU_CW_DECODER_SNAP_ENABLE) | graphical tune helper: adjust frequency until yellow vertical line is in centre of green box --> right on CW carrier frequency | 
 | **Blocksize for Goertzel**    (                  MENU_CW_DECODER_BLOCKSIZE) | How many samples are taken for the signal detection with the Goertzel algorithm? | 
 | **Noise cancel**              (                MENU_CW_DECODER_NOISECANCEL) | Enable/disable noise canceler for CW decoder   | 
 | **Spike cancel**              (                MENU_CW_DECODER_SPIKECANCEL) | Enable/disable spike canceler or short cancel for CW decoder | 
 | **use 3 Goertzels**           (             MENU_CW_DECODER_USE_3_GOERTZEL) | Use three Goertzel values for CW decoder       | 
-| **Do not use: cs**            (                MENU_CW_DECODER_SNAP_ENABLE) | activate small green frequency display with CW carrier frequency | 
 
 
 ## Filter Selection (`MENU_FILTER`)

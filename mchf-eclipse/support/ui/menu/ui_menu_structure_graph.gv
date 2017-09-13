@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-09-11T14:32:48  by "./ui_menu_structure_graph.py"
+#  generated at  2017-09-13T21:45:40  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-11T14:32:48  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-13T21:45:40  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -727,6 +727,11 @@
              shape = record
              ];
         
+        "MENU_CW_DECODER_SNAP_ENABLE" [
+             label = "MENU_CW_DECODER_SNAP_ENABLE | Tune helper"
+             shape = record
+             ];
+        
         "MENU_CW_DECODER_BLOCKSIZE" [
              label = "MENU_CW_DECODER_BLOCKSIZE | Blocksize for Goertzel"
              shape = record
@@ -1219,11 +1224,6 @@
         
         "MENU_DEBUG_RTTY_ATC" [
              label = "MENU_DEBUG_RTTY_ATC | RTTY ATC enable"
-             shape = record
-             ];
-        
-        "MENU_CW_DECODER_SNAP_ENABLE" [
-             label = "MENU_CW_DECODER_SNAP_ENABLE | Do not use: cs"
              shape = record
              ];
         
@@ -1759,6 +1759,8 @@
             
             MENU_CW -> MENU_CW_DECODER_THRESH
             
+            MENU_CW -> MENU_CW_DECODER_SNAP_ENABLE
+            
             MENU_CW -> MENU_CW_DECODER_BLOCKSIZE
             
             MENU_CW -> MENU_CW_DECODER_NOISECANCEL
@@ -1766,8 +1768,6 @@
             MENU_CW -> MENU_CW_DECODER_SPIKECANCEL
             
             MENU_CW -> MENU_CW_DECODER_USE_3_GOERTZEL
-            
-            MENU_CW -> MENU_CW_DECODER_SNAP_ENABLE
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
