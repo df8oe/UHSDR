@@ -321,7 +321,10 @@ void BL_Application()
       BL_MSC_Application();
       Appli_state = APPLICATION_IDLE;
       break;
-
+    case APPLICATION_DISCONNECT:
+      f_mount(NULL, (TCHAR const*)"", 0);
+      Appli_state = APPLICATION_IDLE;
+      break;
     case APPLICATION_IDLE:
     default:
       break;
