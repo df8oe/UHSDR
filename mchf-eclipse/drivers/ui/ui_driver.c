@@ -2280,7 +2280,6 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 			color = Yellow;
 	}
 
-#if 0
 	// Handle frequency display offset in "CW RX" modes
 	if(ts.dmod_mode == DEMOD_CW)	 		// In CW mode?
 	{
@@ -2306,7 +2305,7 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 			break;
 		}
 	}
-#endif
+
 	switch(mode)
 	{
 	case UFM_SMALL_RX:

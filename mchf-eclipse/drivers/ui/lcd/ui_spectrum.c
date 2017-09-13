@@ -1331,7 +1331,10 @@ void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float
     delta2 = (bin_BW * (1.36 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
     if(delta2 > bin_BW) delta2 = 0.0;
     delta = delta1 + delta2;
-
+    if(delta > 300.0)
+    {
+    	delta = 0.0;
+    }
     help_freq = help_freq + delta;
     help_freq = 0.2 * help_freq + 0.8 * freq_old;
     //help_freq = help_freq * ((float32_t)TUNE_MULT);

@@ -325,7 +325,7 @@ static void CW_Decode_exe(void)
 		float32_t speed_ms_per_word = spdcalc * 1000.0 / (cw_decoder_config.sampling_freq / (float32_t)cw_decoder_config.blocksize);
 
 		float32_t speed_wpm_raw = (0.5 + 60000.0 / speed_ms_per_word); // calculate words per minute
-		speed_wpm_avg = speed_wpm_raw * 0.1 + 0.9 * speed_wpm_avg; // a little lowpass filtering
+		speed_wpm_avg = speed_wpm_raw * 0.3 + 0.7 * speed_wpm_avg; // a little lowpass filtering
 		cw_decoder_config.speed = speed_wpm_avg; // convert to integer
 	}
 }
