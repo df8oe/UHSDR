@@ -177,8 +177,6 @@ static void CW_Decode_exe(void)
 	static float32_t old_siglevel = 0.001;
 	static float32_t speed_wpm_avg = 0.0;
 	float32_t siglevel;                	// signal level from Goertzel calculation
-//	float32_t lvl = 0;                 	// Multiuse variable
-//	float32_t pklvl;                   	// Used for AGC calculations
 	static bool prevstate; 				// Last recorded state of signal input (mark or space)
 
 	//    1.) get samples
@@ -195,7 +193,10 @@ static void CW_Decode_exe(void)
 	// I am not sure whether we would need an AGC here, because the audio chain already has an AGC
 	// Now I am sure, we do not need it
 	//    3.) AGC
+
 #if 0
+
+	float32_t pklvl;                   	// Used for AGC calculations
 	if (cw_decoder_config.AGC_enable)
 	{
 		pklvl = CW_agcvol * CW_vol * magnitudeSquared; // Get level at Goertzel frequency
@@ -222,7 +223,7 @@ static void CW_Decode_exe(void)
 	avg_win[avg_cnt] = siglevel;     // Add value onto "sliding window" buffer
 	avg_cnt = ring_idx_increment(avg_cnt, cw_decoder_config.average);
 
-	lvl = 0;
+	float32_t lvl = 0;                 	// Multiuse variable
 	for (uint8_t x = 0; x < cw_decoder_config.average; x++) // Average up all values within sliding window
 	{
 		lvl = lvl + avg_win[x];
@@ -239,17 +240,14 @@ static void CW_Decode_exe(void)
 	//----------------
 	// Signal State sampling
 
+	// noise cancel requires at least two consecutive samples to be
+	// of same (changed state) to accept change (i.e. a single sample change is ignored).
+	bool newstate = (siglevel >= cw_decoder_config.thresh);
+
 	if(cw_decoder_config.noisecancel_enable)
 	{
-		static bool newstate, change; // reads to be the same to confirm a true change
-		if (siglevel >= cw_decoder_config.thresh)
-		{
-			newstate = TRUE;
-		}
-		else
-		{
-			newstate = FALSE;
-		}
+		static bool change; // reads to be the same to confirm a true change
+
 		if (change == TRUE)
 		{
 			cw_state = newstate;
@@ -263,25 +261,12 @@ static void CW_Decode_exe(void)
 	}
 	else
 	{// No noise canceling
-		if (siglevel >= cw_decoder_config.thresh)
-		{
-			cw_state = TRUE;
-		}
-		else
-		{
-			cw_state = FALSE;
-		}
+		cw_state = newstate;
 	}
-	if(cw_state == true)
-	{
-		Board_RedLed(LED_STATE_ON);
-		ads.CW_signal = true;
-	}
-	else
-	{
-		Board_RedLed(LED_STATE_OFF);
-		ads.CW_signal = false;
-	}
+
+	ads.CW_signal = cw_state;
+	Board_RedLed(cw_state == true? LED_STATE_ON : LED_STATE_OFF);
+
 
 	//    6.) fill into circular buffer
 	//----------------
@@ -320,14 +305,17 @@ static void CW_Decode_exe(void)
 	// prevent division by zero in first round
 	if(spdcalc > 0)
 	{
-
 		// Convert to Milliseconds per Word
 		float32_t speed_ms_per_word = spdcalc * 1000.0 / (cw_decoder_config.sampling_freq / (float32_t)cw_decoder_config.blocksize);
-
 		float32_t speed_wpm_raw = (0.5 + 60000.0 / speed_ms_per_word); // calculate words per minute
 		speed_wpm_avg = speed_wpm_raw * 0.3 + 0.7 * speed_wpm_avg; // a little lowpass filtering
-		cw_decoder_config.speed = speed_wpm_avg; // convert to integer
 	}
+	else
+	{
+		speed_wpm_avg = 0; // we have no calculated speed, i.e. not synchronized to signal
+	}
+
+	cw_decoder_config.speed = speed_wpm_avg; // for external use, 0 indicates no signal condition
 }
 
 void CwDecode_RxProcessor(float32_t * const src, int16_t blockSize)
@@ -512,7 +500,7 @@ bool DataRecognitionFunc(bool* new_char_p)
 		not_done = true;
 		b.timeout = FALSE;           // Mainly used by Error Correction Function
 
-		double t = spikeCancel(sig[sig_outcount].time); // Get time of the new state
+		const double t = spikeCancel(sig[sig_outcount].time); // Get time of the new state
 		// Squash spikes/transients if enabled
 		// Attention: Side Effect -> sig_outcount has been be incremented inside spikeCancel if result == 0, because of this we increment only if not 0
 
@@ -614,7 +602,7 @@ bool DataRecognitionFunc(bool* new_char_p)
 	else if (cur_time > (10 * cw_times.dash_avg))
 	{
 		// If current state is Key up and Long key up then  Char finalized
-		if (!sig[sig_incount].state && !processed)
+		if (sig[sig_incount].state == false && processed == false)
 		{
 			processed = TRUE;
 			b.wspace = TRUE;
@@ -1280,7 +1268,7 @@ void CW_Decode(void)
 			else if (decoded == 0xff)                // Attempt Error Correction
 			{
 				// If Error Correction function cannot resolve, then reinitialize speed
-				if (!ErrorCorrectionFunc())
+				if (ErrorCorrectionFunc() == FALSE)
 				{
 					b.initialized = FALSE;
 				}
