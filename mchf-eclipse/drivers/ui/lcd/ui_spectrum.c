@@ -1238,14 +1238,6 @@ void ui_spectrum_cw_snap_display (float32_t delta)
 
 //	delta = RadioManagement_GetTXDialFrequency()/TUNE_MULT;
 //	delta = RadioManagement_GetRXDialFrequency()/TUNE_MULT;
-    if(ts.cw_lsb)
-    {
-    	delta = delta + (float32_t)(ts.cw_sidetone_freq);
-    }
-    else
-    {
-    	delta = delta - (float32_t)(ts.cw_sidetone_freq);
-    }
 
     static int old_delta_p = 0.0;
     if(delta > max_delta)
@@ -1331,6 +1323,10 @@ void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float
     delta2 = (bin_BW * (1.36 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
     if(delta2 > bin_BW) delta2 = 0.0;
     delta = delta1 + delta2;
+
+    const float32_t cw_offset = (ts.cw_lsb?1.0:-1.0)*(float32_t)ts.cw_sidetone_freq;
+
+    delta = delta + cw_offset;
     if(delta > 300.0)
     {
     	delta = 0.0;
