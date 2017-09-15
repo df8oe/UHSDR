@@ -536,7 +536,7 @@ int32_t AudioDriver_GetTranslateFreq()
 }
 
 static void AudioDriver_InitFilters(void);
-void AudioDriver_SetupAGC(void);
+void AudioDriver_SetupAgcWdsp(void);
 //
 // THE FOLLOWING FUNCTION HAS BEEN TESTED, BUT NOT USED - see the function "audio_rx_freq_conv"
 //*----------------------------------------------------------------------------
@@ -1202,7 +1202,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
 
     AudioFilter_InitRxHilbertFIR(dmod_mode); // this switches the Hilbert/FIR-filters
 
-    AudioDriver_SetupAGC();
+    AudioDriver_SetupAgcWdsp();
 
     // Unlock - re-enable filtering
     if  (ads.af_disabled) { ads.af_disabled--; }
@@ -1780,7 +1780,7 @@ static void AudioDriver_RxProcessor_Rtty(float32_t * const src, int16_t blockSiz
 // END RTTY Experiment
 #endif
 
-void AudioDriver_SetupAGC()
+void AudioDriver_SetupAgcWdsp()
 {
     static bool initialised = 0;
 	float32_t tmp;
@@ -1810,7 +1810,7 @@ void AudioDriver_SetupAGC()
     {
     	agc_wdsp.ring_buffsize = 96;
 		//do one-time initialization
-    	agc_wdsp.out_index = -1;
+    	agc_wdsp.out_index = agc_wdsp.ring_buffsize;
     	agc_wdsp.fixed_gain = 1.0;
     	agc_wdsp.ring_max = 0.0;
     	agc_wdsp.volts = 0.0;
@@ -1897,7 +1897,10 @@ void AudioDriver_SetupAGC()
     agc_wdsp.max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
     agc_wdsp.fixed_gain = agc_wdsp.max_gain / 10.0;
     agc_wdsp.attack_buffsize = (int)ceil(sample_rate * agc_wdsp.n_tau * agc_wdsp.tau_attack); // 48
-    agc_wdsp.in_index = agc_wdsp.attack_buffsize + agc_wdsp.out_index;
+
+    agc_wdsp.in_index = agc_wdsp.attack_buffsize + agc_wdsp.out_index; // attack_buffsize + out_index can be more than 2x ring_bufsize !!!
+    agc_wdsp.in_index %= agc_wdsp.ring_buffsize; // need to keep this within the index boundaries
+
     agc_wdsp.attack_mult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_attack));
     agc_wdsp.decay_mult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_decay));
     agc_wdsp.fast_decay_mult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_fast_decay));
@@ -1912,16 +1915,22 @@ void AudioDriver_SetupAGC()
 
     tmp = log10f(agc_wdsp.out_target / (agc_wdsp.max_input * agc_wdsp.var_gain * agc_wdsp.max_gain));
     if (tmp == 0.0)
+    {
         tmp = 1e-16;
+    }
     agc_wdsp.slope_constant = (agc_wdsp.out_target * (1.0 - 1.0 / agc_wdsp.var_gain)) / tmp;
 
     agc_wdsp.inv_max_input = 1.0 / agc_wdsp.max_input;
 
     if (agc_wdsp.max_input > agc_wdsp.min_volts)
     {
-        float32_t convert = powf (10.0, (float32_t)ts.agc_wdsp_hang_thresh / 20.0);
+        float32_t convert
+		= powf (10.0, (float32_t)ts.agc_wdsp_hang_thresh / 20.0);
         tmp = (convert - agc_wdsp.min_volts) / (agc_wdsp.max_input - agc_wdsp.min_volts);
-        if(tmp < 1e-8) tmp = 1e-8;
+        if(tmp < 1e-8)
+        {
+        	tmp = 1e-8;
+        }
         agc_wdsp.hang_thresh = 1.0 + 0.125 * log10f (tmp);
     }
     else
@@ -1940,7 +1949,7 @@ void AudioDriver_SetupAGC()
 }
 
 
-void AudioDriver_RxAGCWDSP(int16_t blockSize)
+void AudioDriver_RxAgcWdsp(int16_t blockSize)
 {
     // TODO:
     // "LED" that indicates that the AGC starts working (input signal above the "knee") --> has to be seen when in menu mode
@@ -1952,31 +1961,30 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
     // Be careful: the original source code has no comments,
     // all comments added by DD4WH, February 2017: comments could be wrong, misinterpreting or highly misleading!
     //
-    static float32_t    w = 0.0;
-    static float32_t    wold = 0.0;
-    int i, j, k;
-    float32_t mult;
-
     if (ts.agc_wdsp_mode == 5)  // AGC OFF
     {
-        for (i = 0; i < blockSize; i++)
+        for (uint16_t i = 0; i < blockSize; i++)
         {
             adb.a_buffer[i] = adb.a_buffer[i] * agc_wdsp.fixed_gain;
         }
         return;
     }
 
-    for (i = 0; i < blockSize; i++)
+    for (uint16_t i = 0; i < blockSize; i++)
     {
         if (++agc_wdsp.out_index >= agc_wdsp.ring_buffsize)
+        {
             agc_wdsp.out_index -= agc_wdsp.ring_buffsize;
+        }
         if (++agc_wdsp.in_index >= agc_wdsp.ring_buffsize)
+        {
             agc_wdsp.in_index -= agc_wdsp.ring_buffsize;
+        }
 
         agc_wdsp.out_sample[0] = agc_wdsp.ring[agc_wdsp.out_index];
         agc_wdsp.abs_out_sample = agc_wdsp.abs_ring[agc_wdsp.out_index];
         agc_wdsp.ring[agc_wdsp.in_index] = adb.a_buffer[i];
-        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabs(adb.a_buffer[i]);
+        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(adb.a_buffer[i]);
 
         agc_wdsp.fast_backaverage = agc_wdsp.fast_backmult * agc_wdsp.abs_out_sample + agc_wdsp.onemfast_backmult * agc_wdsp.fast_backaverage;
         agc_wdsp.hang_backaverage = agc_wdsp.hang_backmult * agc_wdsp.abs_out_sample + agc_wdsp.onemhang_backmult * agc_wdsp.hang_backaverage;
@@ -1992,20 +2000,29 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
         if ((agc_wdsp.abs_out_sample >= agc_wdsp.ring_max) && (agc_wdsp.abs_out_sample > 0.0))
         {
             agc_wdsp.ring_max = 0.0;
-            k = agc_wdsp.out_index;
-            for (j = 0; j < agc_wdsp.attack_buffsize; j++)
+            int k = agc_wdsp.out_index;
+
+            for (uint16_t j = 0; j < agc_wdsp.attack_buffsize; j++)
             {
                 if (++k == agc_wdsp.ring_buffsize)
+                {
                     k = 0;
+                }
                 if (agc_wdsp.abs_ring[k] > agc_wdsp.ring_max)
+                {
                     agc_wdsp.ring_max = agc_wdsp.abs_ring[k];
+                }
             }
         }
         if (agc_wdsp.abs_ring[agc_wdsp.in_index] > agc_wdsp.ring_max)
+        {
             agc_wdsp.ring_max = agc_wdsp.abs_ring[agc_wdsp.in_index];
+        }
 
         if (agc_wdsp.hang_counter > 0)
+        {
             --agc_wdsp.hang_counter;
+        }
 
         switch (agc_wdsp.state)
         {
@@ -2139,16 +2156,20 @@ void AudioDriver_RxAGCWDSP(int16_t blockSize)
         {
             vo = 0.0;
         }
-        mult = (agc_wdsp.out_target - agc_wdsp.slope_constant * vo) / agc_wdsp.volts;
+
+        float32_t mult = (agc_wdsp.out_target - agc_wdsp.slope_constant * vo) / agc_wdsp.volts;
         adb.a_buffer[i] = agc_wdsp.out_sample[0] * mult;
 
     }
+
     if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
     {
+        static float32_t    wold = 0.0;
+
         // eliminate DC in the audio after the AGC
-        for(i = 0; i < blockSize; i++)
+        for(uint16_t i = 0; i < blockSize; i++)
         {
-            w = adb.a_buffer[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
+            float32_t w = adb.a_buffer[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
             adb.a_buffer[i] = w - wold;
             wold = w;
         }
@@ -2272,12 +2293,11 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void AudioDriver_DemodFM(int16_t blockSize)
+static void AudioDriver_DemodFM(const int16_t blockSize)
 {
 
 	float r, s, angle, x, y, a, b;
 	float32_t goertzel_buf[blockSize], squelch_buf[blockSize];
-	ulong i;
 	bool tone_det_enabled;
 	static float i_prev, q_prev, lpf_prev, hpf_prev_a, hpf_prev_b;// used in FM detection and low/high pass processing
 
@@ -2290,7 +2310,7 @@ static void AudioDriver_DemodFM(int16_t blockSize)
 
 		tone_det_enabled = ts.fm_subaudible_tone_det_select ? 1 : 0;// set a quick flag for checking to see if tone detection is enabled
 
-		for (i = 0; i < blockSize; i++)
+		for (uint16_t i = 0; i < blockSize; i++)
 		{
 			// first, calculate "x" and "y" for the arctan2, comparing the vectors of present data with previous data
 
@@ -2402,7 +2422,7 @@ static void AudioDriver_DemodFM(int16_t blockSize)
 				blockSize);	// Do IIR high-pass filter on audio so we may detect squelch noise energy
 
 		ads.fm_sql_avg = ((1 - FM_RX_SQL_SMOOTHING) * ads.fm_sql_avg)
-				+ (FM_RX_SQL_SMOOTHING * sqrtf(fabs(squelch_buf[0])));// IIR filter squelch energy magnitude:  We need look at only one representative sample
+				+ (FM_RX_SQL_SMOOTHING * sqrtf(fabsf(squelch_buf[0])));// IIR filter squelch energy magnitude:  We need look at only one representative sample
 
 		//
 		// Squelch processing
@@ -2483,7 +2503,7 @@ static void AudioDriver_DemodFM(int16_t blockSize)
 			//
 			gcount++;// this counter is used for the accumulation of data over multiple cycles
 			//
-			for (i = 0; i < blockSize; i++)
+			for (uint16_t i = 0; i < blockSize; i++)
 			{
 
 				// Detect above target frequency
@@ -3534,12 +3554,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
         if (dvmode_signal == false)
         {
-            bool use_decimatedIQ =
+            const bool use_decimatedIQ =
                     FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs
                     && dmod_mode != DEMOD_FM
                     && dmod_mode != DEMOD_SAM
                     && dmod_mode != DEMOD_AM;
-            uint16_t blockSizeIQ = use_decimatedIQ? blockSizeDecim: blockSize;
+            volatile const uint16_t blockSizeIQ = use_decimatedIQ? blockSizeDecim: blockSize;
 
             // ------------------------
             // In SSB and CW - Do 0-90 degree Phase-added Hilbert Transform
@@ -3548,14 +3568,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             //
             //
             if(dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
-            {   // FilterPathInfo[ts.filter_path].FIR_I_coeff_file == &i_rx_new_coeffs
-
-                //                if(ts.filter_path < 48 && dmod_mode != DEMOD_FM)
+            {
                 if(use_decimatedIQ)
                 {
                     // TODO HILBERT
-                    //    FilterPathInfo[ts.filter_path].id >= 12
-                    // decimation of both channels here for LSB/USB/CW, if Filter BW <= 3k6
                     arm_fir_decimate_f32(&DECIMATE_RX,   adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                     arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                     arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer, blockSizeDecim);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
@@ -3654,7 +3670,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 // now process the samples and perform the receiver AGC function
                 if(ts.agc_wdsp)
                 {
-                    AudioDriver_RxAGCWDSP(blockSizeDecim);
+                    AudioDriver_RxAgcWdsp(blockSizeDecim);
                 }
                 else
                 {
@@ -3807,7 +3823,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                                 blockSizeDecim);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
                 if(ts.agc_wdsp)
                 {
-                    AudioDriver_RxAGCWDSP(blockSizeDecim);
+                    AudioDriver_RxAgcWdsp(blockSizeDecim);
                 }
 
             }
