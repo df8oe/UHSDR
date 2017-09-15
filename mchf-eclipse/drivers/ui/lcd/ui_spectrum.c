@@ -1233,11 +1233,6 @@ void ui_spectrum_cw_snap_display (float32_t delta)
 	#define max_delta 140.0
 	#define divider 5.0
 	//    static float32_t old_delta = 0.0;
-	// delta is the offset from the carrier freq
-	// now we have to account for CW sidetones etc.
-
-//	delta = RadioManagement_GetTXDialFrequency()/TUNE_MULT;
-//	delta = RadioManagement_GetRXDialFrequency()/TUNE_MULT;
 
     static int old_delta_p = 0.0;
     if(delta > max_delta)
@@ -1248,6 +1243,8 @@ void ui_spectrum_cw_snap_display (float32_t delta)
     {
     	delta = -max_delta;
     }
+
+    // no lowpass filtering required !?
 //    delta = 0.1 * delta + 0.9 * old_delta;
 
     int delta_p = (int)(0.5 + (delta / divider));
@@ -1327,23 +1324,19 @@ void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float
     const float32_t cw_offset = (ts.cw_lsb?1.0:-1.0)*(float32_t)ts.cw_sidetone_freq;
 
     delta = delta + cw_offset;
-    if(delta > 300.0)
-    {
-    	delta = 0.0;
-    }
+
+    // these frequency calculations are unused at the moment, they will be used with
+    // real snap by button press
     help_freq = help_freq + delta;
+    // do we need a lowpass filter?
     help_freq = 0.2 * help_freq + 0.8 * freq_old;
     //help_freq = help_freq * ((float32_t)TUNE_MULT);
     ads.snap_carrier_freq = (ulong) (help_freq);
     freq_old = help_freq;
-    ui_spectrum_cw_snap_display (delta);
-    // this estimated carrier freq is then printed in the small
-    // frequency display by UiDriver_MainHandler
 
-/*
-		5. display delta + Rx-frequency in small freq display (like SAM freq)
-		6. new display
-	 * */
+    // graphical TUNE HELPER display
+    ui_spectrum_cw_snap_display (delta);
+
 	}
 }
 
