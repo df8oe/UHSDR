@@ -49,10 +49,10 @@ Goertzel cw_goertzel;
 cw_config_t cw_decoder_config =
 { .sampling_freq = 12000.0, .target_freq = 700.0,
 		.speed = 25,
-//		.average = 2,
+		//		.average = 2,
 		.thresh = 15000,
 		.blocksize = CW_DECODER_BLOCKSIZE_DEFAULT,
-//		.AGC_enable = 0,
+		//		.AGC_enable = 0,
 		.noisecancel_enable = 1,
 		.spikecancel = 0,
 		.use_3_goertzels = false,
@@ -129,7 +129,7 @@ static int32_t cur_time;                     // copy of sig_timer
 static int32_t cur_outcount = 0; // Basically same as sig_outcount, for Error Correction functionality
 static int32_t last_outcount = 0; // sig_outcount for previous character, used for Error Correction func
 
-static sigbuf data[CW_DATA_BUFSIZE]; // Buffer containing decoded dot/dash and time information
+sigbuf data[CW_DATA_BUFSIZE]; // Buffer containing decoded dot/dash and time information
 // for assembly into a character
 static uint8_t data_len = 0;             // Length of incoming character data
 
@@ -168,7 +168,7 @@ static float32_t raw_signal_buffer[CW_DECODER_BLOCKSIZE_MAX];  //cw_decoder_conf
 #define ring_idx_decrement(value,size) ((value) == 0?(size)-1:(value)-1)
 
 // Determine number of states waiting to be processed
-#define ring_distanceFromTo(from,to) (((to) < (from))? (CW_SIG_BUFSIZE - ((from) + (to))) : (to - from))
+#define ring_distanceFromTo(from,to) (((to) < (from))? ((CW_SIG_BUFSIZE + (to)) - ((from) )) : (to - from))
 
 // RINGBUFFER HELPER MACROS END
 
@@ -350,8 +350,8 @@ static void InitializationFunc(void)
 	static bool initializing = FALSE; // Bool for first time init of progress counter
 	int16_t processed;              // Number of states that have been processed
 	double t;                     // We do timing calculations in floating point
-								  // to gain a little bit of precision when low
-								  // sampling rate
+	// to gain a little bit of precision when low
+	// sampling rate
 	// Set up progress counter at beginning of initialize
 	if (initializing == FALSE)
 	{
@@ -365,7 +365,7 @@ static void InitializationFunc(void)
 		cw_times.cwspace_avg = 0;
 		cw_times.w_space = 0;
 	}
-//    Board_RedLed(LED_STATE_ON);
+	//    Board_RedLed(LED_STATE_ON);
 
 	// Determine number of states waiting to be processed
 	processed = ring_distanceFromTo(startpos,progress);
@@ -374,8 +374,8 @@ static void InitializationFunc(void)
 	{
 		b.initialized = TRUE;                  // Indicate we're done and return
 		initializing = FALSE;          // Allow for correct setup of progress if
-									   // InitializaitonFunc is invoked a second time
-//        Board_RedLed(LED_STATE_OFF);
+		// InitializaitonFunc is invoked a second time
+		//        Board_RedLed(LED_STATE_OFF);
 
 	}
 	if (progress != sig_incount)                      // Do we have a new state?
@@ -435,24 +435,30 @@ static void InitializationFunc(void)
 // function to identify and ignore spikes of short duration.
 //
 //------------------------------------------------------------------
+
+bool CwDecoder_IsSpike(uint32_t t)
+{
+	bool retval = false;
+
+	if (cw_decoder_config.spikecancel == CW_SPIKECANCEL_MODE_SPIKE) // SPIKE CANCEL // Squash spikes/transients of short duration
+	{
+		retval = t <= CW_SPIKECANCEL_MAX_DURATION;
+	}
+	else if (cw_decoder_config.spikecancel == CW_SPIKECANCEL_MODE_SHORT) // SHORT CANCEL // Squash spikes shorter than 1/3rd dot duration
+	{
+		retval = (3 * t < cw_times.dot_avg) && (b.initialized == TRUE); // Only do this if we are not initializing dot/dash periods
+	}
+	return retval;
+}
+
+
 float32_t spikeCancel(float32_t t)
 {
 	static bool spike;
 
 	if (cw_decoder_config.spikecancel != CW_SPIKECANCEL_MODE_OFF)
 	{
-		bool do_spike_cancel = false;
-
-		if (cw_decoder_config.spikecancel == CW_SPIKECANCEL_MODE_SPIKE) // SPIKE CANCEL // Squash spikes/transients of short duration
-		{
-			do_spike_cancel = t <= CW_SPIKECANCEL_MAX_DURATION;
-		}
-		else if (cw_decoder_config.spikecancel == CW_SPIKECANCEL_MODE_SHORT) // SHORT CANCEL // Squash spikes shorter than 1/3rd dot duration
-		{
-			do_spike_cancel = ((3 * t < cw_times.dot_avg) && (b.initialized == TRUE)); // Only do this if we are not initializing dot/dash periods
-		}
-
-		if (do_spike_cancel == true)
+		if (CwDecoder_IsSpike(t) == true)
 		{
 			spike = TRUE;
 			sig_outcount = ring_idx_increment(sig_outcount, CW_SIG_BUFSIZE); // If short, then do nothing
@@ -551,23 +557,23 @@ bool DataRecognitionFunc(bool* new_char_p)
 							- (cw_times.pulse_avg
 									- ((uint32_t) data[data_len - 1].time
 											- cw_times.pulse_avg) / 4.0); // (e.q. 4.12, corrected)
-					if (eq4_12 < 0) // Return on symbol space - not a full char yet
-					{
-						cw_times.symspace_avg = cw_times.symspace_avg + (t - cw_times.symspace_avg) / 8.0; // New EQ, to assist calculating Rat
-						full_char_detected = false;
-					}
-					else if (t <= 10 * cw_times.dash_avg) // Current space is not a timeout
-					{
-						double eq4_14 = t
-								- (cw_times.cwspace_avg
-										- ((uint32_t) data[data_len - 1].time
-												- cw_times.pulse_avg) / 4.0); // (e.q. 4.14)
-						if (eq4_14 >= 0)                   // It is a Word space
-						{
-							cw_times.w_space = t;
-							b.wspace = TRUE;
-						}
-					}
+											if (eq4_12 < 0) // Return on symbol space - not a full char yet
+											{
+												cw_times.symspace_avg = cw_times.symspace_avg + (t - cw_times.symspace_avg) / 8.0; // New EQ, to assist calculating Rat
+												full_char_detected = false;
+											}
+											else if (t <= 10 * cw_times.dash_avg) // Current space is not a timeout
+											{
+												double eq4_14 = t
+														- (cw_times.cwspace_avg
+																- ((uint32_t) data[data_len - 1].time
+																		- cw_times.pulse_avg) / 4.0); // (e.q. 4.14)
+																		if (eq4_14 >= 0)                   // It is a Word space
+																		{
+																			cw_times.w_space = t;
+																			b.wspace = TRUE;
+																		}
+											}
 				}
 				else                                 // Last character was a dot
 				{
@@ -921,77 +927,77 @@ void PrintCharFunc(uint8_t c)
 	}
 #endif
 
-		//--------------------------------------
-	 // Prosigns
-	 if (c == '}')
-	 {
-	 lcdLineScrollPrint('k');
-	 lcdLineScrollPrint('a');
-	 }
-	 else if (c == '(')
-	 {
-	 lcdLineScrollPrint('k');
-	 lcdLineScrollPrint('n');
-	 }
-	 else if (c == '&')
-	 {
-	 lcdLineScrollPrint('a');
-	 lcdLineScrollPrint('s');
-	 }
-	 else if (c == '~')
-	 {
-	 lcdLineScrollPrint('s');
-	 lcdLineScrollPrint('n');
-	 }
-	 else if (c == '>')
-	 {
-	 lcdLineScrollPrint('s');
-	 lcdLineScrollPrint('k');
-	 }
-	 else if (c == '+')
-	 {
-	 lcdLineScrollPrint('a');
-	 lcdLineScrollPrint('r');
-	 }
-	 else if (c == '^')
-	 {
-	 lcdLineScrollPrint('b');
-	 lcdLineScrollPrint('k');
-	 }
-	 else if (c == '{')
-	 {
-	 lcdLineScrollPrint('c');
-	 lcdLineScrollPrint('l');
-	 }
-	 else if (c == '!')
-	 {
-	 lcdLineScrollPrint('s');
-	 lcdLineScrollPrint('o');
-	 lcdLineScrollPrint('s');
-	 }
-	 else if (c == 0x7f)
-	 {
-	 lcdLineScrollPrint('e');
-	 lcdLineScrollPrint('r');
-	 lcdLineScrollPrint('r');
-	 }
+	//--------------------------------------
+	// Prosigns
+	if (c == '}')
+	{
+		lcdLineScrollPrint('k');
+		lcdLineScrollPrint('a');
+	}
+	else if (c == '(')
+	{
+		lcdLineScrollPrint('k');
+		lcdLineScrollPrint('n');
+	}
+	else if (c == '&')
+	{
+		lcdLineScrollPrint('a');
+		lcdLineScrollPrint('s');
+	}
+	else if (c == '~')
+	{
+		lcdLineScrollPrint('s');
+		lcdLineScrollPrint('n');
+	}
+	else if (c == '>')
+	{
+		lcdLineScrollPrint('s');
+		lcdLineScrollPrint('k');
+	}
+	else if (c == '+')
+	{
+		lcdLineScrollPrint('a');
+		lcdLineScrollPrint('r');
+	}
+	else if (c == '^')
+	{
+		lcdLineScrollPrint('b');
+		lcdLineScrollPrint('k');
+	}
+	else if (c == '{')
+	{
+		lcdLineScrollPrint('c');
+		lcdLineScrollPrint('l');
+	}
+	else if (c == '!')
+	{
+		lcdLineScrollPrint('s');
+		lcdLineScrollPrint('o');
+		lcdLineScrollPrint('s');
+	}
+	else if (c == 0x7f)
+	{
+		lcdLineScrollPrint('e');
+		lcdLineScrollPrint('r');
+		lcdLineScrollPrint('r');
+	}
 
-	 //--------------------------------------
-	 // # is our designated ERROR Symbol
-	 else if (c == 0xff)
-	 {
-	 lcdLineScrollPrint('#');
-	 }
-
-	 //--------------------------------------
-	 // Normal Characters
-
-
-/*	if (c == 0xfe || c == 0xff)
+	//--------------------------------------
+	// # is our designated ERROR Symbol
+	else if (c == 0xff)
 	{
 		lcdLineScrollPrint('#');
 	}
-	*/
+
+	//--------------------------------------
+	// Normal Characters
+
+
+	/*	if (c == 0xfe || c == 0xff)
+	{
+		lcdLineScrollPrint('#');
+	}
+	 */
 	else
 	{
 		lcdLineScrollPrint(c);
@@ -1054,9 +1060,6 @@ bool ErrorCorrectionFunc(void)
 	{
 		PrintCharFunc(0xff);              // Print Error to LCD and Serial (USB)
 		WordSpaceFunc(0xff); // Print Word Space to LCD and Serial when required
-		// Debug
-//    Serial.println();
-//    Serial.println("{{long_char}}");
 	}
 
 	else
@@ -1068,8 +1071,8 @@ bool ErrorCorrectionFunc(void)
 		int32_t temp_outcount = last_outcount; // Grab a copy of endpos for last successful decode
 		int32_t slocation = last_outcount; // Long symbol space duration and location
 		int32_t plocation = last_outcount; // Short pulse duration and location
-		int32_t pduration = 32767; // Very high number to decrement for min pulse duration
-		int32_t sduration = 0; // and a zero to increment for max symbol space duration
+		uint32_t pduration = UINT32_MAX; // Very high number to decrement for min pulse duration
+		uint32_t sduration = 0; // and a zero to increment for max symbol space duration
 
 		// if cur_outcount is < CW_SIG_BUFSIZE, loop must terminate after CW_SIG_BUFSIZE -1 steps
 		while (temp_outcount != cur_outcount)
@@ -1078,29 +1081,15 @@ bool ErrorCorrectionFunc(void)
 			// Find shortest pulse duration. Only test key-down states
 			if (sig[temp_outcount].state)
 			{
-				switch(cw_decoder_config.spikecancel)
+				bool is_shortest_pulse = sig[temp_outcount].time < pduration;
+				// basic test -> shorter than all previously seen ones
+
+				bool is_not_spike = CwDecoder_IsSpike(sig[temp_outcount].time) == false;
+
+				if (is_shortest_pulse == true && is_not_spike == true)
 				{
-				case 0:
-					if (sig[temp_outcount].time < pduration)
-					{
-						pduration = sig[temp_outcount].time;
-						plocation = temp_outcount;
-					}
-				break;
-				case 1:
-					if ((sig[temp_outcount].time < pduration) && (sig[temp_outcount].time > CW_SPIKECANCEL_MAX_DURATION))
-					{
-						pduration = sig[temp_outcount].time;
-						plocation = temp_outcount;
-					}
-				break;
-				case 2:
-					if ((sig[temp_outcount].time < pduration) && ((3*sig[temp_outcount].time)>cw_times.dot_avg))
-					{
-						pduration = sig[temp_outcount].time;
-						plocation = temp_outcount;
-					}
-				break;
+					pduration = sig[temp_outcount].time;
+					plocation = temp_outcount;
 				}
 			}
 
@@ -1121,8 +1110,7 @@ bool ErrorCorrectionFunc(void)
 			temp_outcount = ring_idx_increment(temp_outcount,CW_SIG_BUFSIZE);
 		}
 
-		uint8_t decoded[] =
-		{ 0xff, 0xff };
+		uint8_t decoded[] = { 0xff, 0xff };
 
 		//-----------------------------------------------------
 		// Take corrective action by dropping shortest pulse
@@ -1134,8 +1122,8 @@ bool ErrorCorrectionFunc(void)
 			// as space at pulse location + 1
 			sig[ring_idx_change(plocation, +1, CW_SIG_BUFSIZE)].time =
 					sig[ring_idx_change(plocation, -1, CW_SIG_BUFSIZE)].time
-							+ sig[plocation].time
-							+ sig[ring_idx_change(plocation, +1, CW_SIG_BUFSIZE)].time;
+					+ sig[plocation].time
+					+ sig[ring_idx_change(plocation, +1, CW_SIG_BUFSIZE)].time;
 
 			// Shift the preceding data forward accordingly
 			temp_outcount = ring_idx_change(plocation, -2 ,CW_SIG_BUFSIZE);
@@ -1281,22 +1269,22 @@ void CW_Decoder_WPM_display(bool visible)
 {
 	static uint8_t old_speed = 0;
 	char WPM_str[10];
-    const char* label;
-    uint16_t color1 = White;
-    uint16_t color2 = Green;
-    if(!visible)
-    {
-    	color1 = Black;
-    	color2 = Black;
-    }
+	const char* label;
+	uint16_t color1 = White;
+	uint16_t color2 = Green;
+	if(!visible)
+	{
+		color1 = Black;
+		color2 = Black;
+	}
 
-    if(cw_decoder_config.speed != old_speed)
-    {
+	if(cw_decoder_config.speed != old_speed)
+	{
 		snprintf(WPM_str, 10, "%3u", cw_decoder_config.speed);
 		label = "wpm";
 		UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X, POS_CW_DECODER_WPM_Y,WPM_str,color1,Black,0);
 		UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X + 27, POS_CW_DECODER_WPM_Y, label, color2, Black, 4);
-    }
+	}
 }
 
 #if 0
@@ -1322,97 +1310,97 @@ static void CW_Decoder_SnapCarrier (void)
 	 */
 
 
-    const float32_t buff_len = FFT_IQ_BUFF_LEN2;
-    // the calculation of bin_BW is perfectly right at the moment, but we have to change it, if we switch to using the spectrum display zoom FFT to finetune
-    //    const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / (buff_len * (1 << sd.magnify))); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
-    const float32_t bin_BW = (float32_t) (IQ_SAMPLE_RATE_F * 2.0 / (buff_len));
-    const int buff_len_int = FFT_IQ_BUFF_LEN2;
+	const float32_t buff_len = FFT_IQ_BUFF_LEN2;
+	// the calculation of bin_BW is perfectly right at the moment, but we have to change it, if we switch to using the spectrum display zoom FFT to finetune
+	//    const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / (buff_len * (1 << sd.magnify))); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
+	const float32_t bin_BW = (float32_t) (IQ_SAMPLE_RATE_F * 2.0 / (buff_len));
+	const int buff_len_int = FFT_IQ_BUFF_LEN2;
 
-    float32_t   FFT_MagData[FFT_IQ_BUFF_LEN2/2];
+	float32_t   FFT_MagData[FFT_IQ_BUFF_LEN2/2];
 
-    float32_t bw_LSB = 0.0;
-    float32_t bw_USB = 0.0;
+	float32_t bw_LSB = 0.0;
+	float32_t bw_USB = 0.0;
 
-    float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
+	float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
 
-    //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
-    const int posbin = buff_len_int/4  - (buff_len_int * (AudioDriver_GetTranslateFreq()/(IQ_SAMPLE_RATE/8)))/16;
-    const float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-    const float32_t centre_f = FilterPathInfo[ts.filter_path].offset;
-    const float32_t offset = centre_f - (width/2.0);
+	//	determine posbin (where we receive at the moment) from ts.iq_freq_mode
+	const int posbin = buff_len_int/4  - (buff_len_int * (AudioDriver_GetTranslateFreq()/(IQ_SAMPLE_RATE/8)))/16;
+	const float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+	const float32_t centre_f = FilterPathInfo[ts.filter_path].offset;
+	const float32_t offset = centre_f - (width/2.0);
 
-    //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
-    //	= determine bandwith separately for lower and upper sideband
-    switch(ts.dmod_mode)
-    {
-    case DEMOD_LSB:
-    {
-        bw_USB = 1000.0; // also "look" 1kHz away from carrier
-        bw_LSB = width;
-    }
-    break;
-    case DEMOD_USB:
-    {
-        bw_LSB = 1000.0; // also "look" 1kHz away from carrier
-        bw_USB = width;
-    }
-    break;
-    case DEMOD_CW:   // experimental feature for CW - morse code signals
-    {
-        if(ts.cw_offset_mode == CW_OFFSET_USB_SHIFT)  	// Yes - USB?
-        {
-            // set flag for USB-freq-correction
-            // set limits for Lbin and Ubin according to filter_settings: offset = centre frequency!!!
-            // Lbin = posbin + offset from 0Hz
-            // offset = centre_f - (width/2)
-            // Lbin = posbin + round (off/bin_BW)
-            // Ubin = posbin + round((off + width)/bin_BW)
-            bw_LSB = - 1.0 * offset;
-            bw_USB = offset + width;
-            //	        	Lbin = (float32_t)posbin + round (offset / bin_BW);
-            //	        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
-        }
-        else if(ts.cw_offset_mode == CW_OFFSET_LSB_SHIFT) 	// LSB?
-        {
-            bw_USB = - 1.0 * offset;
-            bw_LSB = offset + width;
-            //	        	Ubin = (float32_t)posbin - round (offset / bin_BW);
-            //		        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
-        }
-        else if(ts.cw_offset_mode == CW_OFFSET_AUTO_SHIFT)	 	// Auto mode?  Check flag
-        {
-            if(ts.cw_lsb)
-            {
-                bw_USB = - 1.0 * offset;
-                bw_LSB = offset + width;
-                //			        Ubin = (float32_t)posbin - round (offset / bin_BW);
-                //			        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
-            }
-            else
-            {
-                bw_LSB = - 1.0 * offset;
-                bw_USB = offset + width;
-                //		        	Lbin = (float32_t)posbin + round (offset / bin_BW);
-                //		        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
-            }
-        }
-    }
-    break;
-    case DEMOD_SAM:
-    case DEMOD_AM:
-    {
-        bw_LSB = width;
-        bw_USB = width;
-    }
-    break;
-    }
-    // calculate upper and lower limit for determination of maximum magnitude
-    const float32_t Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
-    const float32_t Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
+	//	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
+	//	= determine bandwith separately for lower and upper sideband
+	switch(ts.dmod_mode)
+	{
+	case DEMOD_LSB:
+	{
+		bw_USB = 1000.0; // also "look" 1kHz away from carrier
+		bw_LSB = width;
+	}
+	break;
+	case DEMOD_USB:
+	{
+		bw_LSB = 1000.0; // also "look" 1kHz away from carrier
+		bw_USB = width;
+	}
+	break;
+	case DEMOD_CW:   // experimental feature for CW - morse code signals
+	{
+		if(ts.cw_offset_mode == CW_OFFSET_USB_SHIFT)  	// Yes - USB?
+		{
+			// set flag for USB-freq-correction
+			// set limits for Lbin and Ubin according to filter_settings: offset = centre frequency!!!
+			// Lbin = posbin + offset from 0Hz
+			// offset = centre_f - (width/2)
+			// Lbin = posbin + round (off/bin_BW)
+			// Ubin = posbin + round((off + width)/bin_BW)
+			bw_LSB = - 1.0 * offset;
+			bw_USB = offset + width;
+			//	        	Lbin = (float32_t)posbin + round (offset / bin_BW);
+			//	        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
+		}
+		else if(ts.cw_offset_mode == CW_OFFSET_LSB_SHIFT) 	// LSB?
+		{
+			bw_USB = - 1.0 * offset;
+			bw_LSB = offset + width;
+			//	        	Ubin = (float32_t)posbin - round (offset / bin_BW);
+			//		        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
+		}
+		else if(ts.cw_offset_mode == CW_OFFSET_AUTO_SHIFT)	 	// Auto mode?  Check flag
+		{
+			if(ts.cw_lsb)
+			{
+				bw_USB = - 1.0 * offset;
+				bw_LSB = offset + width;
+				//			        Ubin = (float32_t)posbin - round (offset / bin_BW);
+				//			        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
+			}
+			else
+			{
+				bw_LSB = - 1.0 * offset;
+				bw_USB = offset + width;
+				//		        	Lbin = (float32_t)posbin + round (offset / bin_BW);
+				//		        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
+			}
+		}
+	}
+	break;
+	case DEMOD_SAM:
+	case DEMOD_AM:
+	{
+		bw_LSB = width;
+		bw_USB = width;
+	}
+	break;
+	}
+	// calculate upper and lower limit for determination of maximum magnitude
+	const float32_t Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
+	const float32_t Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
 
-    /* NEVER USE THIS, THIS CAUSES BIG PROBLEMS (but I dunno why . . )
-     *
-     *    if(Lbin < 0)
+	/* NEVER USE THIS, THIS CAUSES BIG PROBLEMS (but I dunno why . . )
+	 *
+	 *    if(Lbin < 0)
     {
     	Lbin = 0;
     }
@@ -1420,114 +1408,114 @@ static void CW_Decoder_SnapCarrier (void)
     {
     	Ubin = 255;
     }
-     */
-    // 	FFT preparation
-    // we do not need to scale for this purpose !
-    // arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)((1/ads.codec_gain_calc) * 1000.0), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
-    //
-    // do windowing function on input data to get less "Bin Leakage" on FFT data
-    //
-    for(int i = 0; i < buff_len_int; i++)
-    {
-        //	Hanning 1.36
-        //sc.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
-        // Hamming 1.22
-        //sc.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
-        // Blackman 1.75
-        float32_t help_sample = (0.42659 - (0.49656*arm_cos_f32((2.0*PI*(float32_t)i)/(buff_len-1.0))) + (0.076849*arm_cos_f32((4.0*PI*(float32_t)i)/(buff_len-1.0)))) * sc.FFT_Samples[i];
-        sc.FFT_Samples[i] = help_sample;
-    }
+	 */
+	// 	FFT preparation
+	// we do not need to scale for this purpose !
+	// arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)((1/ads.codec_gain_calc) * 1000.0), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
+	//
+	// do windowing function on input data to get less "Bin Leakage" on FFT data
+	//
+	for(int i = 0; i < buff_len_int; i++)
+	{
+		//	Hanning 1.36
+		//sc.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
+		// Hamming 1.22
+		//sc.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
+		// Blackman 1.75
+		float32_t help_sample = (0.42659 - (0.49656*arm_cos_f32((2.0*PI*(float32_t)i)/(buff_len-1.0))) + (0.076849*arm_cos_f32((4.0*PI*(float32_t)i)/(buff_len-1.0)))) * sc.FFT_Samples[i];
+		sc.FFT_Samples[i] = help_sample;
+	}
 
-    // run FFT
-    //		arm_rfft_f32((arm_rfft_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples));	// Do FFT
-    //		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
-    // arm_rfft_fast_f32(&sc.S,sc.FFT_Samples,sc.FFT_Samples,0);	// Do FFT
-    //
-    // Calculate magnitude
-    // as I understand this, this takes two samples and calculates ONE magnitude from this --> length is FFT_IQ_BUFF_LEN2 / 2
-    // arm_cmplx_mag_f32(sc.FFT_Samples, FFT_MagData,(buff_len_int/2));
-    //
-    // putting the bins in frequency-sequential order!
-    // it puts the Magnitude samples into FFT_Samples again
-    // the samples are centred at FFT_IQ_BUFF_LEN2 / 2, so go from FFT_IQ_BUFF_LEN2 / 2 to the right and fill the buffer sc.FFT_Samples,
-    // when you have come to the end (FFT_IQ_BUFF_LEN2), continue from FFT_IQ_BUFF_LEN2 / 2 to the left until you have reached sample 0
-    //
-    for(int i = 0; i < (buff_len_int/2); i++)
-    {
-        if(i < (buff_len_int/4))	 		// build left half of magnitude data
-        {
-            sc.FFT_Samples[i] = FFT_MagData[i + buff_len_int/4];	// get data
-        }
-        else	 							// build right half of magnitude data
-        {
-            sc.FFT_Samples[i] = FFT_MagData[i - buff_len_int/4];	// get data
-        }
-    }
-    //####################################################################
-    if (sc.FFT_number == 0)
-    {
-        // look for maximum value and save the bin # for frequency delta calculation
-        float32_t maximum = 0.0;
-        float32_t maxbin = 1.0;
-        float32_t delta = 0.0;
+	// run FFT
+	//		arm_rfft_f32((arm_rfft_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples));	// Do FFT
+	//		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
+	// arm_rfft_fast_f32(&sc.S,sc.FFT_Samples,sc.FFT_Samples,0);	// Do FFT
+	//
+	// Calculate magnitude
+	// as I understand this, this takes two samples and calculates ONE magnitude from this --> length is FFT_IQ_BUFF_LEN2 / 2
+	// arm_cmplx_mag_f32(sc.FFT_Samples, FFT_MagData,(buff_len_int/2));
+	//
+	// putting the bins in frequency-sequential order!
+	// it puts the Magnitude samples into FFT_Samples again
+	// the samples are centred at FFT_IQ_BUFF_LEN2 / 2, so go from FFT_IQ_BUFF_LEN2 / 2 to the right and fill the buffer sc.FFT_Samples,
+	// when you have come to the end (FFT_IQ_BUFF_LEN2), continue from FFT_IQ_BUFF_LEN2 / 2 to the left until you have reached sample 0
+	//
+	for(int i = 0; i < (buff_len_int/2); i++)
+	{
+		if(i < (buff_len_int/4))	 		// build left half of magnitude data
+		{
+			sc.FFT_Samples[i] = FFT_MagData[i + buff_len_int/4];	// get data
+		}
+		else	 							// build right half of magnitude data
+		{
+			sc.FFT_Samples[i] = FFT_MagData[i - buff_len_int/4];	// get data
+		}
+	}
+	//####################################################################
+	if (sc.FFT_number == 0)
+	{
+		// look for maximum value and save the bin # for frequency delta calculation
+		float32_t maximum = 0.0;
+		float32_t maxbin = 1.0;
+		float32_t delta = 0.0;
 
-        for (int c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
-        {
-            if (maximum < sc.FFT_Samples[c])
-            {
-                maximum = sc.FFT_Samples[c];
-                maxbin = c;
-            }
-        }
+		for (int c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
+		{
+			if (maximum < sc.FFT_Samples[c])
+			{
+				maximum = sc.FFT_Samples[c];
+				maxbin = c;
+			}
+		}
 
-        // ok, we have found the maximum, now save first delta frequency
-        delta = (maxbin - (float32_t)posbin) * bin_BW;
+		// ok, we have found the maximum, now save first delta frequency
+		delta = (maxbin - (float32_t)posbin) * bin_BW;
 
-        help_freq = help_freq + delta;
+		help_freq = help_freq + delta;
 
-        //        if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq + centre_f; // tuning in CW mode for passband centre!
+		//        if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq + centre_f; // tuning in CW mode for passband centre!
 
-        help_freq = help_freq * ((float32_t)TUNE_MULT);
-        // set frequency of Si570 with 4 * dialfrequency
-        df.tune_new = help_freq;
-        // request a retune just by changing the frequency
+		help_freq = help_freq * ((float32_t)TUNE_MULT);
+		// set frequency of Si570 with 4 * dialfrequency
+		df.tune_new = help_freq;
+		// request a retune just by changing the frequency
 
-        //        help_freq = (float32_t)df.tune_new / 4.0;
-        sc.FFT_number = 1;
-        sc.state    = 0;
-        arm_fill_f32(0.0,sc.FFT_Samples,buff_len_int);
-    }
-    else
-    {
-        // ######################################################
+		//        help_freq = (float32_t)df.tune_new / 4.0;
+		sc.FFT_number = 1;
+		sc.state    = 0;
+		arm_fill_f32(0.0,sc.FFT_Samples,buff_len_int);
+	}
+	else
+	{
+		// ######################################################
 
-        // and now: fine-tuning:
-        //	get amplitude values of the three bins around the carrier
+		// and now: fine-tuning:
+		//	get amplitude values of the three bins around the carrier
 
-        float32_t bin1 = sc.FFT_Samples[posbin-1];
-        float32_t bin2 = sc.FFT_Samples[posbin];
-        float32_t bin3 = sc.FFT_Samples[posbin+1];
+		float32_t bin1 = sc.FFT_Samples[posbin-1];
+		float32_t bin2 = sc.FFT_Samples[posbin];
+		float32_t bin3 = sc.FFT_Samples[posbin+1];
 
-        if (bin1+bin2+bin3 == 0.0) bin1= 0.00000001; // prevent divide by 0
+		if (bin1+bin2+bin3 == 0.0) bin1= 0.00000001; // prevent divide by 0
 
-        // estimate frequency of carrier by three-point-interpolation of bins around maxbin
-        // formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
+		// estimate frequency of carrier by three-point-interpolation of bins around maxbin
+		// formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
 
-        float32_t delta = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
-        if(delta > bin_BW) delta = 0.0;
+		float32_t delta = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
+		if(delta > bin_BW) delta = 0.0;
 
-        // set frequency variable with delta2
-        help_freq = help_freq + delta;
-        //       if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq - centre_f; // tuning in CW mode for passband centre!
+		// set frequency variable with delta2
+		help_freq = help_freq + delta;
+		//       if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq - centre_f; // tuning in CW mode for passband centre!
 
-        help_freq = help_freq * ((float32_t)TUNE_MULT);
-        // set frequency of Si570 with 4 * dialfrequency
-        df.tune_new = help_freq;
-        // request a retune just by changing the frequency
+		help_freq = help_freq * ((float32_t)TUNE_MULT);
+		// set frequency of Si570 with 4 * dialfrequency
+		df.tune_new = help_freq;
+		// request a retune just by changing the frequency
 
-        sc.state = 0; // reset flag for FFT sample collection (used in audio_rx_driver)
-        sc.snap = 0; // reset flag for button press (used in ui_driver)
-        sc.FFT_number = 0; // reset flag to first FFT
-    }
+		sc.state = 0; // reset flag for FFT sample collection (used in audio_rx_driver)
+		sc.snap = 0; // reset flag for button press (used in ui_driver)
+		sc.FFT_number = 0; // reset flag to first FFT
+	}
 }
 #endif

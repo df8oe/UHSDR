@@ -2286,13 +2286,7 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 		switch(ts.cw_offset_mode)
 		{
 		case CW_OFFSET_LSB_RX:	// Yes - In an LSB mode with display offset?
-			dial_freq -= ts.cw_sidetone_freq;
-			// yes, lower display freq. by sidetone amount
-			break;
 		case CW_OFFSET_USB_RX:	// In a USB mode with display offset?
-			dial_freq += ts.cw_sidetone_freq;
-			// yes, raise display freq. by sidetone amount
-			break;
 		case CW_OFFSET_AUTO_RX:	// in "auto" mode with display offset?
 			if(ts.cw_lsb)
 			{
