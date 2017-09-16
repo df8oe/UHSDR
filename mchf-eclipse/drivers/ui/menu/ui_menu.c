@@ -3625,10 +3625,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
      case MENU_CW_DECODER:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.cw_decoder_enable,0,options,&clr);
-         if(!ts.cw_decoder_enable)
+         if (var_change)
          {
-				CW_Decoder_WPM_display(0);
-				Board_RedLed(LED_STATE_OFF);
+             if (ts.dmod_mode == DEMOD_CW)
+             {
+                 UiDriver_UpdateDemodSpecificDisplayAfterParamChange();
+             }
+             Board_RedLed(LED_STATE_OFF);
          }
          break;
 
@@ -3638,6 +3641,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
      case MENU_CW_DECODER_SNAP_ENABLE:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &cw_decoder_config.snap_enable,0,options,&clr);
+         if (var_change)
+         {
+             if (ts.dmod_mode == DEMOD_CW)
+             {
+                 UiDriver_UpdateDemodSpecificDisplayAfterParamChange();
+             }
+         }
     	 break;
 
     case MENU_DIGITAL_MODE_SELECT:

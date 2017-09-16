@@ -182,6 +182,7 @@ void UiDriver_DebugInfo_DisplayEnable(bool enable);
 
 void UiDriver_ChangeTuningStep(uchar is_up);
 void UiDriver_UpdateDisplayAfterParamChange();
+void UiDriver_UpdateDemodSpecificDisplayAfterParamChange();
 void UiDriver_SetDemodMode(uint8_t new_mode);
 
 void UiDriver_StartUpScreenInit();

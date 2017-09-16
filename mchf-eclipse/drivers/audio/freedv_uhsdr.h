@@ -27,12 +27,12 @@
 #define FREEDV_TX_MESSAGE	" CQ CQ CQ UHSDR " TRX_NAME " SDR with integrated FreeDV codec calling!"
 #define FREEDV_TX_DF8OE_MESSAGE	" DF8OE JO42jr using UHSDR " TRX_NAME " SDR with integrated FreeDV codec"
 
-void FreeDV_mcHF_HandleFreeDV();
+void FreeDv_HandleFreeDv();
 void FreeDV_mcHF_init();
 
-void fdv_print_ber();
-void fdv_clear_display();
-void fdv_print_SNR();
+void FreeDv_DisplayClear();
+void FreeDv_DisplayPrepare();
+void FreeDv_DisplayUpdate();
 
 #endif
 
