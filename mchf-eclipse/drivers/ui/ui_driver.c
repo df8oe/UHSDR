@@ -594,6 +594,53 @@ static void   UiDriver_LcdBlankingProcessTimer()
 	}
 }
 
+static char ui_txt_msg_buffer[ui_txt_msg_buffer_max+1]; // we need to be able store the '\0' as well.
+static const char ui_txt_empty_line[ui_txt_msg_buffer_max+1] = "                                             ";
+static int ui_txt_msg_idx= 0;
+static bool ui_txt_msg_update = false;
+
+
+void UiDriver_TextMsgClear()
+{
+    UiLcdHy28_PrintText(5,92, ui_txt_empty_line,Yellow,Black,4);
+    ui_txt_msg_idx = 0;
+    ui_txt_msg_update = true;
+}
+
+void UiDriver_TextMsgDisplay()
+{
+    if (ui_txt_msg_update == true)
+    {
+        ui_txt_msg_update = false;
+        const char* txt_ptr = ui_txt_msg_idx == 0? ui_txt_empty_line:ui_txt_msg_buffer;
+        UiLcdHy28_PrintText(5,92,txt_ptr,Yellow,Black,4);
+    }
+}
+
+void UiDriver_TextMsgPutChar(char ch)
+{
+    if (ch=='\n' || ch == '\r')
+    {
+        ui_txt_msg_idx=0;
+    	ui_txt_msg_buffer[ui_txt_msg_idx] = '\0';
+    }
+    else if (ui_txt_msg_idx < (ui_txt_msg_buffer_max))
+    {
+        ui_txt_msg_idx++;
+    	ui_txt_msg_buffer[ui_txt_msg_idx] = '\0'; // set the line end before we add the character prevents unterminated strings
+        ui_txt_msg_buffer[ui_txt_msg_idx-1]=ch; //fill from left to right
+    }
+    else
+    {
+        for (int shift_count = 0;shift_count < (ui_txt_msg_buffer_max-1);shift_count++)
+        {
+            ui_txt_msg_buffer[shift_count]=ui_txt_msg_buffer[shift_count+1];
+        }
+        ui_txt_msg_buffer[ui_txt_msg_buffer_max-1]=ch;
+    }
+    ui_txt_msg_update = true;
+}
+
 
 static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool encoder_active,
 		const char* text, uint32_t color, uint32_t clr_val, bool text_is_value)
@@ -1184,8 +1231,113 @@ void UiDriver_RefreshEncoderDisplay()
  * @brief This is THE function to call after changing operational parameters such as frequency or demod mode
  * It will make sure to update the display AND also tunes to a newly selected frequency if not already tuned to it.
  */
+typedef struct
+{
+	uint8_t dmod_mode;
+	uint8_t digital_mode;
+} ui_driver_mode_t;
+
+ui_driver_mode_t ui_driver_state;
+
+bool UiDriver_IsDemodModeChange()
+{
+	bool retval = (ts.dmod_mode != ui_driver_state.dmod_mode);
+	retval |= ts.dmod_mode == DEMOD_DIGI && ts.digital_mode != ui_driver_state.digital_mode;
+
+	return retval;
+}
+
+/**
+ * @brief cleans out mode specific ui elements before switching to next mode
+ */
+void UiDriver_ModeSpecificDisplayClear(uint8_t dmod_mode, uint8_t digital_mode)
+{
+	switch(dmod_mode)
+	{
+	case DEMOD_CW:
+		UiDriver_TextMsgClear();
+		CwDecoder_WpmDisplayClearOrPrepare(false);
+        ui_spectrum_init_cw_snap_display(false);
+		break;
+	case DEMOD_DIGI:
+	{
+		switch(digital_mode)
+		{
+		case DigitalMode_FreeDV:
+			FreeDv_DisplayClear();
+			break;
+		case DigitalMode_RTTY:
+			UiDriver_TextMsgClear();
+			break;
+		default:
+			break;
+		}
+	}
+	break;
+
+	default:
+		break;
+	}
+}
+
+/**
+ * @brief prepares mode specific ui elements run the mode
+ */
+void UiDriver_ModeSpecificDisplayPrepare(uint8_t dmod_mode, uint8_t digital_mode)
+{
+	switch(dmod_mode)
+	{
+	case DEMOD_CW:
+	    if (ts.cw_decoder_enable == true)
+	    {
+	        CwDecoder_WpmDisplayClearOrPrepare(true);
+	    }
+	    if(cw_decoder_config.snap_enable == true && ts.dmod_mode == DEMOD_CW)
+	    {
+	        ui_spectrum_init_cw_snap_display(true);
+	    }
+		break;
+	case DEMOD_DIGI:
+	{
+		switch(digital_mode)
+		{
+		case DigitalMode_FreeDV:
+			FreeDv_DisplayPrepare();
+			break;
+		case DigitalMode_RTTY:
+			UiDriver_TextMsgClear();
+			break;
+		default:
+			break;
+		}
+	}
+	break;
+
+	default:
+		break;
+	}
+}
+
+void UiDriver_UpdateDemodSpecificDisplayAfterParamChange()
+{
+    // clear display content specific for the old mode
+    UiDriver_ModeSpecificDisplayClear(ui_driver_state.dmod_mode,ui_driver_state.digital_mode);
+    // prepare mode specific UI elements used in the new mode
+    UiDriver_ModeSpecificDisplayPrepare(ts.dmod_mode,ts.digital_mode);
+    ui_driver_state.dmod_mode = ts.dmod_mode;
+    ui_driver_state.digital_mode = ts.digital_mode;
+}
+
 void UiDriver_UpdateDisplayAfterParamChange()
 {
+    // TODO Maybe we should split this, so that we clear BEFORE doing the general stuff
+    // and prepare after, but for now it should work this way
+	if (UiDriver_IsDemodModeChange())
+	{
+	    UiDriver_UpdateDemodSpecificDisplayAfterParamChange();
+	}
+
+	// below are the always present UI elements
 	UiDriver_FrequencyUpdateLOandDisplay(false);   // update frequency display without checking encoder
 
 	UiDriver_DisplayDemodMode();
@@ -1202,7 +1354,6 @@ void UiDriver_UpdateDisplayAfterParamChange()
 	{
 		UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
 	}
-
 }
 //
 //
@@ -6222,7 +6373,7 @@ void UiDriver_MainHandler()
 #ifdef USE_FREEDV
 	if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_FreeDV)
 	{
-		FreeDV_mcHF_HandleFreeDV();
+		FreeDv_HandleFreeDv();
 	}
 #endif // USE_FREEDV
 
@@ -6400,7 +6551,7 @@ void UiDriver_MainHandler()
 				// display CW decoder WPM speed
 				if(ts.cw_decoder_enable && ts.dmod_mode == DEMOD_CW)
 				{
-					CW_Decoder_WPM_display(1);
+					CwDecoder_WpmDisplayUpdate(false);
 				}
 
 			}

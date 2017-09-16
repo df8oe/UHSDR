@@ -1265,25 +1265,29 @@ void CW_Decode(void)
 	}
 }
 
-void CW_Decoder_WPM_display(bool visible)
+void CwDecoder_WpmDisplayClearOrPrepare(bool prepare)
+{
+    uint16_t color1 = prepare?White:Black;
+    uint16_t color2 = prepare?Green:Black;
+
+    UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X, POS_CW_DECODER_WPM_Y," --",color1,Black,0);
+    UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X + 27, POS_CW_DECODER_WPM_Y, "wpm", color2, Black, 4);
+
+    if (prepare == true)
+    {
+        CwDecoder_WpmDisplayUpdate(true);
+    }
+}
+
+void CwDecoder_WpmDisplayUpdate(bool force_update)
 {
 	static uint8_t old_speed = 0;
 	char WPM_str[10];
-	const char* label;
-	uint16_t color1 = White;
-	uint16_t color2 = Green;
-	if(!visible)
-	{
-		color1 = Black;
-		color2 = Black;
-	}
 
-	if(cw_decoder_config.speed != old_speed)
+	if(cw_decoder_config.speed != old_speed || force_update == true)
 	{
 		snprintf(WPM_str, 10, "%3u", cw_decoder_config.speed);
-		label = "wpm";
-		UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X, POS_CW_DECODER_WPM_Y,WPM_str,color1,Black,0);
-		UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X + 27, POS_CW_DECODER_WPM_Y, label, color2, Black, 4);
+		UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X, POS_CW_DECODER_WPM_Y,WPM_str,White,Black,0);
 	}
 }
 

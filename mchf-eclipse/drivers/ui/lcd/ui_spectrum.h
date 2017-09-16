@@ -24,6 +24,8 @@ void UiSpectrum_Redraw();
 void UiSpectrum_WaterfallClearData();
 void UiSpectrum_DisplayFilterBW();
 
+void ui_spectrum_init_cw_snap_display (bool visible);
+
 
 // Settings for dB/division for spectrum display
 enum

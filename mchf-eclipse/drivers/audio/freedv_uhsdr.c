@@ -12,7 +12,7 @@
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
 #include "freedv_uhsdr.h"
-
+#include "ui_driver.h"
 
 
 
@@ -239,73 +239,27 @@ typedef struct {
     int32_t count;
 } flex_buffer;
 
-static char ui_txt_msg_buffer[ui_txt_msg_buffer_max+1]; // we need to be able store the '\0' as well.
-static const char ui_txt_empty_line[ui_txt_msg_buffer_max+1] = "                                             ";
-static int ui_txt_msg_idx= 0;
-static bool ui_txt_msg_update = false;
+#define POS_FREEDV_X 5
+#define POS_FREEDV_SNR_Y 116
+#define POS_FREEDV_BER_Y 104
+#define FREEDV_UI_FONT 4
+
+static uint16_t freedv_display_x_offset;
 
 
-void UiDriver_TextMsgClear()
-{
-    UiLcdHy28_PrintText(5,92, ui_txt_empty_line,Yellow,Black,4);
-    ui_txt_msg_idx = 0;
-    ui_txt_msg_update = true;
-}
 
-void UiDriver_TextMsgDisplay()
-{
-    if (ui_txt_msg_update == true)
-    {
-        ui_txt_msg_update = false;
-        const char* txt_ptr = ui_txt_msg_idx == 0? ui_txt_empty_line:ui_txt_msg_buffer;
-        UiLcdHy28_PrintText(5,92,txt_ptr,Yellow,Black,4);
-    }
-}
-
-void UiDriver_TextMsgPutChar(char ch)
-{
-    if (ch=='\n' || ch == '\r')
-    {
-        ui_txt_msg_idx=0;
-    	ui_txt_msg_buffer[ui_txt_msg_idx] = '\0';
-    }
-    else if (ui_txt_msg_idx < (ui_txt_msg_buffer_max))
-    {
-        ui_txt_msg_idx++;
-    	ui_txt_msg_buffer[ui_txt_msg_idx] = '\0'; // set the line end before we add the character prevents unterminated strings
-        ui_txt_msg_buffer[ui_txt_msg_idx-1]=ch; //fill from left to right
-    }
-    else
-    {
-        for (int shift_count = 0;shift_count < (ui_txt_msg_buffer_max-1);shift_count++)
-        {
-            ui_txt_msg_buffer[shift_count]=ui_txt_msg_buffer[shift_count+1];
-        }
-        ui_txt_msg_buffer[ui_txt_msg_buffer_max-1]=ch;
-    }
-    ui_txt_msg_update = true;
-}
-
-void fdv_clear_display()
-{
-    UiLcdHy28_PrintText(5,116,"            ",Yellow,Black,4);
-    UiLcdHy28_PrintText(5,104,"            ",Yellow,Black,4);
-    UiDriver_TextMsgClear();
-}
-
-
-void fdv_print_ber()
+static void FreeDv_DisplayBer()
 {
     int ber = 0;
     char ber_string[12];
 
     ber = 1000*freedv_get_total_bit_errors(f_FREEDV)/freedv_get_total_bits(f_FREEDV);
-    snprintf(ber_string,12,"BER=0.%03d",ber);  //calculate and display the bit error rate
-    UiLcdHy28_PrintText(5,104,ber_string,Yellow,Black,4);
+    snprintf(ber_string,12,"0.%03d",ber);  //calculate and display the bit error rate
+    UiLcdHy28_PrintText(POS_FREEDV_X+ freedv_display_x_offset,POS_FREEDV_BER_Y,ber_string,Yellow,Black, FREEDV_UI_FONT);
 
 }
 
-void fdv_print_SNR()
+static void FreeDv_DisplaySnr()
 {
     static float SNR = 1;
     float SNR_est;
@@ -316,14 +270,34 @@ void fdv_print_SNR()
 
     SNR = 0.95*SNR + 0.05 * SNR_est; //some averaging to keep it more calm
     if (SNR<0) SNR=0.0;
-    snprintf(SNR_string,12,"SNR=%02d",(int)(SNR+0.5));  //Display the current SNR and round it up to the next int
-    UiLcdHy28_PrintText(5,116,SNR_string,Yellow,Black,4);
+    snprintf(SNR_string,12,"%02d",(int)(SNR+0.5));  //Display the current SNR and round it up to the next int
+    UiLcdHy28_PrintText(POS_FREEDV_X+ freedv_display_x_offset, POS_FREEDV_SNR_Y,SNR_string,Yellow,Black, FREEDV_UI_FONT);
+}
 
+void FreeDv_DisplayClear()
+{
+    UiLcdHy28_PrintText(POS_FREEDV_X,POS_FREEDV_SNR_Y,"            ",Yellow,Black,FREEDV_UI_FONT);
+    UiLcdHy28_PrintText(POS_FREEDV_X,POS_FREEDV_BER_Y,"            ",Yellow,Black,FREEDV_UI_FONT);
+    UiDriver_TextMsgClear();
+}
+
+void FreeDv_DisplayPrepare()
+{
+	freedv_display_x_offset = UiLcdHy28_TextWidth("SNR=", FREEDV_UI_FONT);
+    UiLcdHy28_PrintText(POS_FREEDV_X,POS_FREEDV_SNR_Y,"SNR=",Yellow,Black, FREEDV_UI_FONT);
+    UiLcdHy28_PrintText(POS_FREEDV_X,POS_FREEDV_BER_Y,"BER=",Yellow,Black, FREEDV_UI_FONT);
+    UiDriver_TextMsgClear();
+}
+
+void FreeDv_DisplayUpdate()
+{
+    FreeDv_DisplayBer();
+    FreeDv_DisplaySnr();
+    UiDriver_TextMsgDisplay();
 }
 
 
-
-void FreeDV_mcHF_HandleFreeDV()
+void FreeDv_HandleFreeDv()
 {
 
     // Freedv Test DL2FW
@@ -387,7 +361,7 @@ void FreeDV_mcHF_HandleFreeDV()
             if (!rx_was_here) {
                 freedv_set_total_bit_errors(f_FREEDV,0);  //reset ber calculation after coming from TX
                 freedv_set_total_bits(f_FREEDV,0);
-                fdv_clear_display();
+                FreeDv_DisplayClear();
             }
 
 
@@ -513,9 +487,7 @@ void FreeDV_mcHF_HandleFreeDV()
             }
         }
         // MchfBoard_GreenLed(LED_STATE_ON);
-        fdv_print_ber();
-        fdv_print_SNR();
-        UiDriver_TextMsgDisplay();
+        FreeDv_DisplayUpdate();
     }
     // END Freedv Test DL2FW
 }

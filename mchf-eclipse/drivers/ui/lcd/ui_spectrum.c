@@ -69,7 +69,6 @@ static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM] =
 
 static void     UiSpectrum_DrawFrequencyBar();
 static void		UiSpectrum_CalculateDBm();
-void ui_spectrum_init_cw_snap_display (uint8_t visible);
 
 // FIXME: This is partially application logic and should be moved to UI and/or radio management
 // instead of monitoring change, changes should trigger update of spectrum configuration (from pull to push)
@@ -360,10 +359,6 @@ static void UiSpectrum_CreateDrawArea()
                 "   DISABLED   ",
                 Grey,
                 RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
-    }
-    if(cw_decoder_config.snap_enable && ts.dmod_mode == DEMOD_CW)
-    {
-    	ui_spectrum_init_cw_snap_display(1);
     }
 }
 
@@ -1177,7 +1172,7 @@ static void UiSpectrum_DisplayDbm()
 #define CW_snap_carrier_X	27 // central position of variable freq marker
 #define CW_snap_carrier_Y	122 // position of variable freq marker
 
-void ui_spectrum_init_cw_snap_display (uint8_t visible)
+void ui_spectrum_init_cw_snap_display (bool visible)
 {
 	int color = Green;
 	if(!visible)
@@ -1230,41 +1225,41 @@ void ui_spectrum_init_cw_snap_display (uint8_t visible)
 
 void ui_spectrum_cw_snap_display (float32_t delta)
 {
-	#define max_delta 140.0
-	#define divider 5.0
+#define max_delta 140.0
+#define divider 5.0
 	//    static float32_t old_delta = 0.0;
 
-    static int old_delta_p = 0.0;
-    if(delta > max_delta)
-    {
-    	delta = max_delta;
-    }
-    else if(delta < -max_delta)
-    {
-    	delta = -max_delta;
-    }
+	static int old_delta_p = 0.0;
+	if(delta > max_delta)
+	{
+		delta = max_delta;
+	}
+	else if(delta < -max_delta)
+	{
+		delta = -max_delta;
+	}
 
-    // no lowpass filtering required !?
-//    delta = 0.1 * delta + 0.9 * old_delta;
+	// no lowpass filtering required !?
+	//    delta = 0.1 * delta + 0.9 * old_delta;
 
-    int delta_p = (int)(0.5 + (delta / divider));
+	int delta_p = (int)(0.5 + (delta / divider));
 
-    if(delta_p != old_delta_p)
-    {
-	UiLcdHy28_DrawStraightLineDouble( CW_snap_carrier_X + old_delta_p + 1,
-    		CW_snap_carrier_Y,
-            6,
-            LCD_DIR_VERTICAL,
-            Black);
+	if(delta_p != old_delta_p)
+	{
+	    UiLcdHy28_DrawStraightLineDouble( CW_snap_carrier_X + old_delta_p + 1,
+	            CW_snap_carrier_Y,
+	            6,
+	            LCD_DIR_VERTICAL,
+	            Black);
 
-	UiLcdHy28_DrawStraightLineDouble( CW_snap_carrier_X + delta_p + 1,
-    		CW_snap_carrier_Y,
-            6,
-            LCD_DIR_VERTICAL,
-            Yellow);
-//	old_delta = delta;
-	old_delta_p = delta_p;
-    }
+	    UiLcdHy28_DrawStraightLineDouble( CW_snap_carrier_X + delta_p + 1,
+	            CW_snap_carrier_Y,
+	            6,
+	            LCD_DIR_VERTICAL,
+	            Yellow);
+	    //	old_delta = delta;
+		old_delta_p = delta_p;
+	}
 }
 
 
