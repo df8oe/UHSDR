@@ -236,13 +236,7 @@ int32_t RadioManagement_GetCWDialOffset()
     switch(ts.cw_offset_mode)
     {
     case CW_OFFSET_USB_SHIFT:    // Yes - USB?
-        retval -= ts.cw_sidetone_freq;
-        // lower LO by sidetone amount
-        break;
     case CW_OFFSET_LSB_SHIFT:   // LSB?
-        retval += ts.cw_sidetone_freq;
-        // raise LO by sidetone amount
-        break;
     case CW_OFFSET_AUTO_SHIFT:  // Auto mode?  Check flag
         if(ts.cw_lsb)
         {
