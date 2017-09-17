@@ -1509,8 +1509,8 @@ void UiDriver_DisplayFreqStepSize()
 
 	if(step_line)	 	// Remove underline indicating step size if one had been drawn
 	{
-		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * 3)),(POS_TUNE_FREQ_Y + 20),(LARGE_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
-		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * 3)),(POS_TUNE_FREQ_Y + 20),(SMALL_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
+		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * 3)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
+		UiLcdHy28_DrawStraightLineDouble((POS_TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * 3)),(POS_TUNE_FREQ_Y + 24),(SMALL_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
 	}
 
 	// Blank old step size
@@ -1539,11 +1539,11 @@ void UiDriver_DisplayFreqStepSize()
 	{
 		if(is_splitmode())
 		{
-			UiLcdHy28_DrawStraightLineDouble((POS_TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 20),(SMALL_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
+			UiLcdHy28_DrawStraightLineDouble((POS_TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 24),(SMALL_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
 		}
 		else
 		{
-			UiLcdHy28_DrawStraightLineDouble((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 20),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
+			UiLcdHy28_DrawStraightLineDouble((POS_TUNE_FREQ_X + (LARGE_FONT_WIDTH * line_loc)),(POS_TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
 		}
 		step_line = 1;	// indicate that a line under the step size had been drawn
 	}
