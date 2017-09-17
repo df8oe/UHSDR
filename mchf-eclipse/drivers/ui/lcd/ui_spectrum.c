@@ -130,7 +130,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
             case DigitalMode_FreeDV:
             	// 1500 +/- 625Hz
                 mode_marker[0] = 875;
-                mode_marker[0] = 2125;
+                mode_marker[1] = 2125;
                 sd.marker_num = 2;
                 break;
             case DigitalMode_RTTY:
