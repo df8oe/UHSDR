@@ -300,10 +300,10 @@ static void CW_Decode_exe(void)
 	CW_Decode();                                     // Do all the heavy lifting
 
 	// calculation of speed of the received morse signal on basis of the standard "PARIS"
-	float32_t spdcalc = 10.0 * cw_times.dot_avg + 4.0 * cw_times.dash_avg + 9.0 * cw_times.symspace_avg + 5.0 * cw_times.cwspace_avg;
+	float32_t spdcalc =  10.0 * cw_times.dot_avg + 4.0 * cw_times.dash_avg + 9.0 * cw_times.symspace_avg + 5.0 * cw_times.cwspace_avg;
 
-	// prevent division by zero in first round
-	if(spdcalc > 0)
+	// update only if initialized and prevent division  by zero
+	if(b.initialized == true && spdcalc > 0)
 	{
 		// Convert to Milliseconds per Word
 		float32_t speed_ms_per_word = spdcalc * 1000.0 / (cw_decoder_config.sampling_freq / (float32_t)cw_decoder_config.blocksize);
@@ -375,8 +375,7 @@ static void InitializationFunc(void)
 		b.initialized = TRUE;                  // Indicate we're done and return
 		initializing = FALSE;          // Allow for correct setup of progress if
 		// InitializaitonFunc is invoked a second time
-		//        Board_RedLed(LED_STATE_OFF);
-
+		// Board_RedLed(LED_STATE_OFF);
 	}
 	if (progress != sig_incount)                      // Do we have a new state?
 	{
@@ -552,28 +551,28 @@ bool DataRecognitionFunc(bool* new_char_p)
 				bool full_char_detected = true;
 				if (b.dash == TRUE)                // Last character was a dash
 				{
-					b.dash = false;
-					double eq4_12 = t
-							- (cw_times.pulse_avg
-									- ((uint32_t) data[data_len - 1].time
-											- cw_times.pulse_avg) / 4.0); // (e.q. 4.12, corrected)
-											if (eq4_12 < 0) // Return on symbol space - not a full char yet
-											{
-												cw_times.symspace_avg = cw_times.symspace_avg + (t - cw_times.symspace_avg) / 8.0; // New EQ, to assist calculating Rat
-												full_char_detected = false;
-											}
-											else if (t <= 10 * cw_times.dash_avg) // Current space is not a timeout
-											{
-												double eq4_14 = t
-														- (cw_times.cwspace_avg
-																- ((uint32_t) data[data_len - 1].time
-																		- cw_times.pulse_avg) / 4.0); // (e.q. 4.14)
-																		if (eq4_14 >= 0)                   // It is a Word space
-																		{
-																			cw_times.w_space = t;
-																			b.wspace = TRUE;
-																		}
-											}
+				    b.dash = false;
+				    double eq4_12 = t
+				            - (cw_times.pulse_avg
+				                    - ((uint32_t) data[data_len - 1].time
+				                            - cw_times.pulse_avg) / 4.0); // (e.q. 4.12, corrected)
+				    if (eq4_12 < 0) // Return on symbol space - not a full char yet
+				    {
+				        cw_times.symspace_avg = cw_times.symspace_avg + (t - cw_times.symspace_avg) / 8.0; // New EQ, to assist calculating Rat
+				        full_char_detected = false;
+				    }
+				    else if (t <= 10 * cw_times.dash_avg) // Current space is not a timeout
+				    {
+				        double eq4_14 = t
+				                - (cw_times.cwspace_avg
+				                        - ((uint32_t) data[data_len - 1].time
+				                                - cw_times.pulse_avg) / 4.0); // (e.q. 4.14)
+				        if (eq4_14 >= 0)                   // It is a Word space
+				        {
+				            cw_times.w_space = t;
+				            b.wspace = TRUE;
+				        }
+				    }
 				}
 				else                                 // Last character was a dot
 				{
@@ -1282,11 +1281,13 @@ void CwDecoder_WpmDisplayClearOrPrepare(bool prepare)
 void CwDecoder_WpmDisplayUpdate(bool force_update)
 {
 	static uint8_t old_speed = 0;
-	char WPM_str[10];
 
 	if(cw_decoder_config.speed != old_speed || force_update == true)
 	{
-		snprintf(WPM_str, 10, "%3u", cw_decoder_config.speed);
+	    char WPM_str[10];
+
+	    snprintf(WPM_str, 10, cw_decoder_config.speed > 0? "%3u" : " --", cw_decoder_config.speed);
+
 		UiLcdHy28_PrintText(POS_CW_DECODER_WPM_X, POS_CW_DECODER_WPM_Y,WPM_str,White,Black,0);
 	}
 }
