@@ -696,7 +696,8 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 			rerunStateMachine = false;
 
 			// at least one paddle is still or has been recently pressed
-			if( Board_DitLinePressed() || Board_PttDahLinePressed()	|| (ps.port_state & (CW_DAH_L|CW_DIT_L)))
+			if( (Board_DitLinePressed() || Board_PttDahLinePressed() || (ps.port_state & (CW_DAH_L|CW_DIT_L)))
+					&& (ts.txrx_mode == TRX_MODE_TX || ts.cw_text_entry))
 			{
 				CwGen_CheckKeyerState();
 				ps.cw_state = CW_WAIT;		// Note if Dit/Dah is discriminated in this function, it breaks the Iambic-ness!
