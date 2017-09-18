@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-09-13T21:45:44  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-09-18T19:21:55  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-09-13T21:45:44  by "./ui_menu_structure_mdtable.py"
+generated at  2017-09-18T19:21:55  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -280,11 +280,12 @@ generated at  2017-09-13T21:45:44  by "./ui_menu_structure_mdtable.py"
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
 | **Enable Debug Info Display** (                     MENU_DEBUG_ENABLE_INFO) | Enable debug outputs on LCD for testing purposes (touch screen coordinates, load) and audio interrupt duration indication via green led | 
+| **CW Shift Keeps Signal**     (     MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL) | Enable automatic sidetone correction for CW OFFSET MODE = SHIFT. If you tuned in SSB to a CW signal around the sidetone frequency, you'll keep that signal when going to CW. Even if you switch from USB to CW-LSB etc. | 
 | **TX Audio via USB**          (                        MENU_DEBUG_TX_AUDIO) | If enabled, send generated audio to PC during TX. | 
 | **FT817 Clone Transmit**      (                        MENU_DEBUG_CLONEOUT) | Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP). | 
 | **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 
 | **New Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | New noiseblanker for testing purposes          | 
-| **RTTY ATC enable**           (                        MENU_DEBUG_RTTY_ATC) | enable automatic threshold correction ATC for RTTY decoding | 
+| **RTTY ATC Enable**           (                        MENU_DEBUG_RTTY_ATC) | Enable automatic threshold correction ATC for RTTY decoding | 
 
 
 [//]: # ( EOFILE                                                                       )

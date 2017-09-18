@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-09-13T21:45:40  by "./ui_menu_structure_graph.py"
+#  generated at  2017-09-18T19:21:52  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-13T21:45:40  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-09-18T19:21:52  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1202,6 +1202,11 @@
              shape = record
              ];
         
+        "MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL" [
+             label = "MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL | CW Shift Keeps Signal"
+             shape = record
+             ];
+        
         "MENU_DEBUG_TX_AUDIO" [
              label = "MENU_DEBUG_TX_AUDIO | TX Audio via USB"
              shape = record
@@ -1223,7 +1228,7 @@
              ];
         
         "MENU_DEBUG_RTTY_ATC" [
-             label = "MENU_DEBUG_RTTY_ATC | RTTY ATC enable"
+             label = "MENU_DEBUG_RTTY_ATC | RTTY ATC Enable"
              shape = record
              ];
         
@@ -1778,6 +1783,8 @@
 
     
             MENU_DEBUG -> MENU_DEBUG_ENABLE_INFO
+            
+            MENU_DEBUG -> MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL
             
             MENU_DEBUG -> MENU_DEBUG_TX_AUDIO
             
