@@ -43,6 +43,7 @@
 #include "ui_driver.h"
 #include "cw_decoder.h"
 #include "audio_driver.h"
+#include "rtty.h"
 
 Goertzel cw_goertzel;
 
@@ -68,11 +69,20 @@ void CwDecode_FilterInit()
 			cw_decoder_config.blocksize, 1.0, cw_decoder_config.sampling_freq);
 }
 
-#define SIGNAL_TAU			0.01
+#define SIGNAL_TAU			0.0001
 #define	ONEM_SIGNAL_TAU     (1.0 - SIGNAL_TAU)
 
 #define CW_TIMEOUT			3  // Time, in seconds, to trigger display of last Character received
 #define ONE_SECOND			(12000 / cw_decoder_config.blocksize) // sample rate / decimation rate / block size
+
+//#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 5.83) // standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+//#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 58.3) // works ! standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 25.0) // works ! standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+//#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 583.0) // does not work. standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+//#define CW_ONE_BIT_SAMPLE_COUNT (12000 / 5.83) // standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+//#define CW_ONE_BIT_SAMPLE_COUNT (12000) // standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+													// 14bits * 25words per min / (60 sec/min) = 5.83 bits/sec bitrate
+													// (sample_rate / blocksize) / bitrate = samples per bit !
 
 #define CW_SPIKECANCEL_MAX_DURATION        8  // Cancel transients/spikes/drops that have max duration of number chosen.
 // Typically 4 or 8 to select at time periods of 4 or 8 times 2.9ms.
@@ -174,6 +184,11 @@ static float32_t raw_signal_buffer[CW_DECODER_BLOCKSIZE_MAX];  //cw_decoder_conf
 
 static void CW_Decode_exe(void)
 {
+	static float32_t CW_env = 0.0;
+	static float32_t CW_mag = 0.0;
+	static float32_t CW_noise = 0.0;
+	float32_t CW_clipped = 0.0;
+
 	static float32_t old_siglevel = 0.001;
 	static float32_t speed_wpm_avg = 0.0;
 	float32_t siglevel;                	// signal level from Goertzel calculation
@@ -232,9 +247,30 @@ static void CW_Decode_exe(void)
 
 #else
 	// better use exponential averager for averaging/smoothing here !? Let´s try!
-	siglevel = siglevel * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
-	old_siglevel = magnitudeSquared;
+//	siglevel = siglevel * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
+//	old_siglevel = magnitudeSquared;
 #endif
+
+
+	// 4b.) automatic threshold correction
+
+	CW_mag = siglevel;
+	CW_env = decayavg(CW_env, CW_mag, (CW_mag > CW_env)?
+				(CW_ONE_BIT_SAMPLE_COUNT / 4) : (CW_ONE_BIT_SAMPLE_COUNT * 16));
+
+	CW_noise = decayavg(CW_noise, CW_mag, (CW_mag < CW_noise)?
+				(CW_ONE_BIT_SAMPLE_COUNT / 4) : (CW_ONE_BIT_SAMPLE_COUNT * 48));
+
+	CW_clipped = CW_mag > CW_env? CW_env: CW_mag;
+
+	float32_t v1 = (CW_clipped - CW_noise) * (CW_env - CW_noise) -
+			0.25 * ((CW_env - CW_noise) * (CW_env - CW_noise));
+
+	//lowpass
+		siglevel = v1 * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
+		old_siglevel = v1;
+//	bool newstate = (siglevel > 0)? false:true;
+	bool newstate = (siglevel < 0)? false:true;
 
 	//    5.) signal state determination
 	//----------------
@@ -242,7 +278,7 @@ static void CW_Decode_exe(void)
 
 	// noise cancel requires at least two consecutive samples to be
 	// of same (changed state) to accept change (i.e. a single sample change is ignored).
-	bool newstate = (siglevel >= cw_decoder_config.thresh);
+//	bool newstate = (siglevel >= cw_decoder_config.thresh);
 
 	if(cw_decoder_config.noisecancel_enable)
 	{

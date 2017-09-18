@@ -61,6 +61,7 @@ typedef struct
 
 extern const rtty_speed_item_t rtty_speeds[RTTY_SPEED_NUM];
 extern const rtty_shift_item_t rtty_shifts[RTTY_SHIFT_NUM];
+extern float32_t decayavg(float32_t average, float32_t input, int weight);
 
 // TODO: maybe this should be placed in the ui or radio management part
 typedef struct
