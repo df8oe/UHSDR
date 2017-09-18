@@ -934,6 +934,35 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
         // ads.fm_sql_avg = 1;
     }
 
+    if (ts.cw_offset_shift_keep_signal == true && (ts.cw_offset_mode == CW_OFFSET_AUTO_SHIFT || ts.cw_offset_mode == CW_OFFSET_LSB_SHIFT || ts.cw_offset_mode == CW_OFFSET_USB_SHIFT))
+    {
+        static  int16_t sidetone_mult = 0;
+
+        if (new_mode == DEMOD_CW && ts.dmod_mode != DEMOD_CW)
+        {
+            // we come from a non-CW mode
+            if (RadioManagement_UsesBothSidebands(ts.dmod_mode) == false)
+            {
+                sidetone_mult = (RadioManagement_LSBActive(ts.dmod_mode)?-TUNE_MULT:TUNE_MULT);
+                // if we have a sideband mode
+                // adjust dial frequency by side tone offset
+                // if the sidetone frequency is not change, we return exactly to the frequency we have been before
+                // this is important if we just cycle through the modes.
+                df.tune_new += sidetone_mult * ts.cw_sidetone_freq;
+            }
+            else
+            {
+                sidetone_mult = 0;
+            }
+        }
+        if (new_mode != DEMOD_CW && ts.dmod_mode == DEMOD_CW)
+        {
+             // we revert now our frequency change
+             // we go to a non-CW mode
+             // adjust dial frequency by former side tone offset
+             df.tune_new -= sidetone_mult * ts.cw_sidetone_freq;
+         }
+    }
     AudioDriver_SetRxAudioProcessing(new_mode, false);
     AudioDriver_TxFilterInit(new_mode);
     AudioManagement_SetSidetoneForDemodMode(new_mode,false);

@@ -1747,24 +1747,24 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         const cw_mode_map_entry_t* curr_mode = RadioManagement_CWConfigValueToModeEntry(ts.cw_offset_mode);
         temp_var_u8 = curr_mode->sideband_mode;
 
-                var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
-                        0,
-                        2,
-                        2,
-                        1
-                );
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
+                0,
+                2,
+                2,
+                1
+        );
 
-                if(var_change)      // update parameters if changed
-                {
-                    cw_mode_map_entry_t new_mode;
-                    new_mode.dial_mode = curr_mode->dial_mode;
-                    new_mode.sideband_mode = temp_var_u8;
-                    ts.cw_offset_mode = RadioManagement_CWModeEntryToConfigValue(&new_mode);
+        if(var_change)      // update parameters if changed
+        {
+            cw_mode_map_entry_t new_mode;
+            new_mode.dial_mode = curr_mode->dial_mode;
+            new_mode.sideband_mode = temp_var_u8;
+            ts.cw_offset_mode = RadioManagement_CWModeEntryToConfigValue(&new_mode);
 
-                    ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
-                    UiDriver_DisplayDemodMode();
-                    UiDriver_FrequencyUpdateLOandDisplay(true); // update frequency display and local oscillator
-                }
+            ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
+            UiDriver_DisplayDemodMode();
+            UiDriver_FrequencyUpdateLOandDisplay(true); // update frequency display and local oscillator
+        }
 
         switch(temp_var_u8)
         {
@@ -1793,7 +1793,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         );
 
         if(var_change)      // update parameters if changed
-                {
+        {
             cw_mode_map_entry_t new_mode;
             new_mode.sideband_mode = curr_mode->sideband_mode;
             new_mode.dial_mode = temp_var_u8;
@@ -1802,7 +1802,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();
             UiDriver_DisplayDemodMode();
             UiDriver_FrequencyUpdateLOandDisplay(true); // update frequency display and local oscillator
-                }
+        }
 
         switch(temp_var_u8)
         {
@@ -1905,7 +1905,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                                   1
                                                  );
 
-            switch(cw_decoder_config.spikecancel) {
+            switch(cw_decoder_config.spikecancel)
+            {
             case 0:
                 txt_ptr = " OFF";
                 break;
@@ -1937,7 +1938,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             UiDriver_CreateTemperatureDisplay();
         }
 
-        switch(temp_var_u8) {
+        switch(temp_var_u8)
+        {
         case TCXO_OFF:
             txt_ptr = " OFF";
             break;
@@ -1958,7 +1960,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                                   1
                                                  );
 
-            switch(ts.iq_auto_correction) {
+            switch(ts.iq_auto_correction)
+            {
             case 0:
                 txt_ptr = " OFF";
                 ts.display_rx_iq = true;
@@ -3634,7 +3637,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
              Board_RedLed(LED_STATE_OFF);
          }
          break;
-
+     case MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL:
+         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.cw_offset_shift_keep_signal,0,options,&clr);
+         break;
      case MENU_CW_DECODER_USE_3_GOERTZEL:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &cw_decoder_config.use_3_goertzels,0,options,&clr);
     	 break;
