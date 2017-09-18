@@ -968,6 +968,7 @@ typedef struct TransceiverState
 
 	uint8_t enable_rtty_decode; // new rtty encoder (experimental)
 	bool cw_decoder_enable;
+	bool cw_offset_shift_keep_signal; // experimental flag, shall we move shift by sidetone frequency to keep tuned signal?
 	bool enable_ptt_rts; // disable/enable ptt via virtual serial port rts
 
 	keyer_mode_t keyer_mode; // disable/enable keyer mode for F1-F5 buttons

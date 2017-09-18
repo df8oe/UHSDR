@@ -381,11 +381,12 @@ const MenuDescriptor infoGroup[] =
 const MenuDescriptor debugGroup[] =
 {
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ENABLE_INFO, NULL,"Enable Debug Info Display", UiMenuDesc("Enable debug outputs on LCD for testing purposes (touch screen coordinates, load) and audio interrupt duration indication via green led") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL, NULL,"CW Shift Keeps Signal", UiMenuDesc("Enable automatic sidetone correction for CW OFFSET MODE = SHIFT. If you tuned in SSB to a CW signal around the sidetone frequency, you'll keep that signal when going to CW. Even if you switch from USB to CW-LSB etc.") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TX_AUDIO, NULL,"TX Audio via USB", UiMenuDesc("If enabled, send generated audio to PC during TX.") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEOUT, NULL,"FT817 Clone Transmit", UiMenuDesc("Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NEW_NB, NULL,"New Noiseblanker", UiMenuDesc("New noiseblanker for testing purposes") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_RTTY_ATC, NULL,"RTTY ATC enable", UiMenuDesc("enable automatic threshold correction ATC for RTTY decoding") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_RTTY_ATC, NULL,"RTTY ATC Enable", UiMenuDesc("Enable automatic threshold correction ATC for RTTY decoding") },
     { MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
