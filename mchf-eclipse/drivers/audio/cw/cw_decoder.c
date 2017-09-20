@@ -77,7 +77,7 @@ void CwDecode_FilterInit()
 
 //#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 5.83) // standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
 //#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 58.3) // works ! standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
-#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 25.0) // works ! standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 25.0) // ??! standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
 //#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 583.0) // does not work. standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
 //#define CW_ONE_BIT_SAMPLE_COUNT (12000 / 5.83) // standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
 //#define CW_ONE_BIT_SAMPLE_COUNT (12000) // standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
