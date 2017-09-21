@@ -1169,47 +1169,48 @@ static void UiSpectrum_DisplayDbm()
 }
 
 
-#define CW_snap_carrier_X	27 // central position of variable freq marker
-#define CW_snap_carrier_Y	122 // position of variable freq marker
+#define CW_SNAP_CARRIER_X	27 // central position of variable freq marker
+#define CW_SNAP_CARRIER_Y	122 // position of variable freq marker
 
-void ui_spectrum_init_cw_snap_display (bool visible)
+//void ui_spectrum_init_cw_snap_display (bool visible)
+void UiSpectrum_InitCwSnapDisplay (bool visible)
 {
 	int color = Green;
 	if(!visible)
 	{
 		color = Black;
 		// also erase yellow indicator
-        UiLcdHy28_DrawFullRect(0, CW_snap_carrier_Y, 6, 57, Black);
+        UiLcdHy28_DrawFullRect(0, CW_SNAP_CARRIER_Y, 6, 57, Black);
 	}
 	//Horizontal lines of box
 	UiLcdHy28_DrawStraightLine(0,
-    		CW_snap_carrier_Y + 6,
+			CW_SNAP_CARRIER_Y + 6,
             27,
             LCD_DIR_HORIZONTAL,
             color);
 	UiLcdHy28_DrawStraightLine(32,
-    		CW_snap_carrier_Y + 6,
+			CW_SNAP_CARRIER_Y + 6,
             27,
             LCD_DIR_HORIZONTAL,
             color);
 	UiLcdHy28_DrawStraightLine(0,
-    		CW_snap_carrier_Y - 1,
+			CW_SNAP_CARRIER_Y - 1,
             27,
             LCD_DIR_HORIZONTAL,
             color);
 	UiLcdHy28_DrawStraightLine(32,
-    		CW_snap_carrier_Y - 1,
+			CW_SNAP_CARRIER_Y - 1,
             27,
             LCD_DIR_HORIZONTAL,
             color);
 	// vertical lines of box
 	UiLcdHy28_DrawStraightLine(0,
-    		CW_snap_carrier_Y - 1,
+			CW_SNAP_CARRIER_Y - 1,
             8,
             LCD_DIR_VERTICAL,
             color);
 	UiLcdHy28_DrawStraightLine(58,
-    		CW_snap_carrier_Y - 1,
+			CW_SNAP_CARRIER_Y - 1,
             8,
             LCD_DIR_VERTICAL,
             color);
@@ -1223,7 +1224,8 @@ void ui_spectrum_init_cw_snap_display (bool visible)
 #endif
 }
 
-void ui_spectrum_cw_snap_display (float32_t delta)
+//void ui_spectrum_cw_snap_display (float32_t delta)
+void UiSpectrum_CwSnapDisplay (float32_t delta)
 {
 #define max_delta 140.0
 #define divider 5.0
@@ -1246,14 +1248,14 @@ void ui_spectrum_cw_snap_display (float32_t delta)
 
 	if(delta_p != old_delta_p)
 	{
-	    UiLcdHy28_DrawStraightLineDouble( CW_snap_carrier_X + old_delta_p + 1,
-	            CW_snap_carrier_Y,
+	    UiLcdHy28_DrawStraightLineDouble( CW_SNAP_CARRIER_X + old_delta_p + 1,
+	    		CW_SNAP_CARRIER_Y,
 	            6,
 	            LCD_DIR_VERTICAL,
 	            Black);
 
-	    UiLcdHy28_DrawStraightLineDouble( CW_snap_carrier_X + delta_p + 1,
-	            CW_snap_carrier_Y,
+	    UiLcdHy28_DrawStraightLineDouble( CW_SNAP_CARRIER_X + delta_p + 1,
+	    		CW_SNAP_CARRIER_Y,
 	            6,
 	            LCD_DIR_VERTICAL,
 	            Yellow);
@@ -1263,7 +1265,7 @@ void ui_spectrum_cw_snap_display (float32_t delta)
 }
 
 
-void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float32_t bin_BW)
+void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float32_t bin_BW)
 {
 	if(ads.CW_signal) // this is only done, if there has been a pulse from the CW station that exceeds the threshold
 		// in the CW decoder section
@@ -1330,7 +1332,7 @@ void UiSpectrum_Calculate_snap(float32_t Lbin, float32_t Ubin, int posbin, float
     freq_old = help_freq;
 
     // graphical TUNE HELPER display
-    ui_spectrum_cw_snap_display (delta);
+    UiSpectrum_CwSnapDisplay (delta);
 
 	}
 }
@@ -1463,7 +1465,7 @@ static void UiSpectrum_CalculateDBm()
             // here would be the right place to start with the SNAP mode!
             if(cw_decoder_config.snap_enable && ts.dmod_mode == DEMOD_CW)
             {
-            	 UiSpectrum_Calculate_snap(Lbin, Ubin, posbin, bin_BW);
+            	 UiSpectrum_CalculateSnap(Lbin, Ubin, posbin, bin_BW);
 
             }
 
