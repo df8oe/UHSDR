@@ -1523,7 +1523,7 @@ void UiDriver_DisplayFreqStepSize()
 		// ever. But it does the job of display any freq step somewhat reasonable.
 		// khz/Mhz only whole  khz/Mhz is shown, no fraction
 		// showing fractions would require some more coding, which is not yet necessary
-		const uint32_t pow10 = log10(df.tuning_step);
+		const uint32_t pow10 = log10f(df.tuning_step);
 		line_loc = 9 - pow10 - pow10/3;
 		if (line_loc < 0)
 		{
@@ -5288,8 +5288,8 @@ static bool UiDriver_TouchscreenCalibration()
 
 			UiDriver_DoCrossCheck(cross5, x_corr, y_corr);
 
-			diffx = round(*x_corr / 15);
-			diffy = round(*y_corr / 15);
+			diffx = roundf(*x_corr / 15);
+			diffy = roundf(*y_corr / 15);
 			*x_corr = diffx;
 			*y_corr = diffy;
 

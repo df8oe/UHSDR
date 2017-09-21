@@ -673,17 +673,17 @@ void AudioDriver_SetSamPllParameters()
     //pll
     adb.omega_min = - (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
     adb.omega_max = (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //0.5235987756; //
-    adb.g1 = (1.0 - exp(-2.0 * adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)); //0.0082987073611; //
-    adb.g2 = (- adb.g1 + 2.0 * (1 - exp(- adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)
+    adb.g1 = (1.0 - expf(-2.0 * adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)); //0.0082987073611; //
+    adb.g2 = (- adb.g1 + 2.0 * (1 - expf(- adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)
             * cosf(adb.omegaN * adb.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - adb.zeta * adb.zeta)))); //0.01036367597097734813032783691644; //
     //fade leveler
     //    ads.tauR_int = 20; // -->  / 1000 = 0.02
     //    ads.tauI_int = 140; // --> / 100 = 1.4
     adb.tauR = 0.02; // ((float32_t)ads.tauR_int) / 1000.0; //0.02; // original 0.02;
     adb.tauI = 1.4; // ((float32_t)ads.tauI_int) / 100.0; //1.4; // original 1.4;
-    adb.mtauR = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauR))); //0.99948;
+    adb.mtauR = (expf(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauR))); //0.99948;
     adb.onem_mtauR = (1.0 - adb.mtauR);
-    adb.mtauI = (exp(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauI))); //0.99999255955;
+    adb.mtauI = (expf(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauI))); //0.99999255955;
     adb.onem_mtauI = (1.0 - adb.mtauI);
 }
 
@@ -736,10 +736,10 @@ void AudioDriver_SetBiquadCoeffs(float32_t* coeffsTo,const float32_t* coeffsFrom
 void AudioDriver_CalcHighShelf(float32_t coeffs[6], float32_t f0, float32_t S, float32_t gain, float32_t FS)
 {
     float32_t w0 = 2 * PI * f0 / FS;
-    float32_t A = powf(10.0,gain/40.0); // gain ranges from -20 to 5
-    float32_t alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
-    float32_t cosw0 = cos(w0);
-    float32_t twoAa = 2 * sqrt(A) * alpha;
+    float32_t A = pow10f(gain/40.0); // gain ranges from -20 to 5
+    float32_t alpha = sinf(w0) / 2 * sqrtf( (A + 1/A) * (1/S - 1) + 2 );
+    float32_t cosw0 = cosf(w0);
+    float32_t twoAa = 2 * sqrtf(A) * alpha;
     // highShelf
     //
     coeffs[B0] = A *        ( (A + 1) + (A - 1) * cosw0 + twoAa );
@@ -764,11 +764,11 @@ void AudioDriver_CalcLowShelf(float32_t coeffs[6], float32_t f0, float32_t S, fl
 {
 
     float32_t w0 = 2 * PI * f0 / FS;
-    float32_t A = powf(10.0,gain/40.0); // gain ranges from -20 to 5
+    float32_t A = pow10f(gain/40.0); // gain ranges from -20 to 5
 
-    float32_t alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
-    float32_t cosw0 = cos(w0);
-    float32_t twoAa = 2 * sqrt(A) * alpha;
+    float32_t alpha = sinf(w0) / 2 * sqrtf( (A + 1/A) * (1/S - 1) + 2 );
+    float32_t cosw0 = cosf(w0);
+    float32_t twoAa = 2 * sqrtf(A) * alpha;
 
     // lowShelf
     coeffs[B0] = A *        ( (A + 1) - (A - 1) * cosw0 + twoAa );
@@ -841,13 +841,13 @@ void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
         float32_t f0 = ts.notch_frequency;
         float32_t Q = 10; // larger Q gives narrower notch
         float32_t w0 = 2 * PI * f0 / FSdec;
-        float32_t alpha = sin(w0) / (2 * Q);
+        float32_t alpha = sinf(w0) / (2 * Q);
 
         coeffs[B0] = 1;
-        coeffs[B1] = - 2 * cos(w0);
+        coeffs[B1] = - 2 * cosf(w0);
         coeffs[B2] = 1;
         coeffs[A0] = 1 + alpha;
-        coeffs[A1] = 2 * cos(w0); // already negated!
+        coeffs[A1] = 2 * cosf(w0); // already negated!
         coeffs[A2] = alpha - 1; // already negated!
 
         AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[0],coeffs,coeffs[A0]);
@@ -899,13 +899,13 @@ void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
         float32_t Q = 4; //
         float32_t BW = 0.03;
         float32_t w0 = 2 * PI * f0 / FSdec;
-        float32_t alpha = sin (w0) * sinh( log(2) / 2 * BW * w0 / sin(w0) ); //
+        float32_t alpha = sinf (w0) * sinhf( log(2) / 2 * BW * w0 / sinf(w0) ); //
 
         coeffs[B0] = Q * alpha;
         coeffs[B1] = 0;
         coeffs[B2] = - Q * alpha;
         coeffs[A0] = 1 + alpha;
-        coeffs[A1] = 2 * cos(w0); // already negated!
+        coeffs[A1] = 2 * cosf(w0); // already negated!
         coeffs[A2] = alpha - 1; // already negated!
 
         AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[5],coeffs,coeffs[A0]);

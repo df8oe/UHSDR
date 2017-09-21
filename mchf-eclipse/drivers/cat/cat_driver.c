@@ -1243,7 +1243,7 @@ static void CatDriver_HandleCommands()
             else
             {
                 // PWR / SWR
-                resp[0] =(limit_4bits(round(swrm.fwd_pwr))<<4)+limit_4bits(round(swrm.vswr_dampened));
+                resp[0] =(limit_4bits(roundf(swrm.fwd_pwr))<<4)+limit_4bits(roundf(swrm.vswr_dampened));
                 // ALC / MOD
                 resp[1] = (limit_4bits(0)<<4)+limit_4bits(0);
                 bc = 2;
@@ -1251,7 +1251,7 @@ static void CatDriver_HandleCommands()
 
             break;
         case FT817_READ_RX_STATE: /* E7 */
-            resp[0] = (uint8_t)round(sm.s_count*0.5);   //S-Meter signal
+            resp[0] = (uint8_t)roundf(sm.s_count*0.5);   //S-Meter signal
             bc = 1;
             break;
         case FT817_PTT_STATE:
