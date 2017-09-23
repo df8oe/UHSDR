@@ -1243,11 +1243,11 @@ static void RadioManagement_PowerFromADCValue(float val, float sensor_null, floa
 
     if(val <= LOW_POWER_CALC_THRESHOLD)     // is this low power as evidenced by low voltage from the sensor?
     {
-        pwr = LOW_RF_PWR_COEFF_A + (LOW_RF_PWR_COEFF_B * val) + (LOW_RF_PWR_COEFF_C * pow(val,2 )) + (LOW_RF_PWR_COEFF_D * pow(val, 3));
+        pwr = LOW_RF_PWR_COEFF_A + (LOW_RF_PWR_COEFF_B * val) + (LOW_RF_PWR_COEFF_C * powf(val,2 )) + (LOW_RF_PWR_COEFF_D * powf(val, 3));
     }
     else            // it is high power
     {
-        pwr = HIGH_RF_PWR_COEFF_A + (HIGH_RF_PWR_COEFF_B * val) + (HIGH_RF_PWR_COEFF_C * pow(val, 2));
+        pwr = HIGH_RF_PWR_COEFF_A + (HIGH_RF_PWR_COEFF_B * val) + (HIGH_RF_PWR_COEFF_C * powf(val, 2));
     }
     // calculate forward and reverse RF power in watts (p = a + bx + cx^2) for high power (above 50-60
 
@@ -1256,8 +1256,8 @@ static void RadioManagement_PowerFromADCValue(float val, float sensor_null, floa
         pwr = 0;
     }
 
-    dbm = (10 * (log10(pwr))) + 30 + coupling_calc;
-    pwr = pow10(dbm/10)/1000;
+    dbm = (10 * (log10f(pwr))) + 30 + coupling_calc;
+    pwr = pow10f(dbm/10)/1000;
     *pwr_ptr = pwr;
     *dbm_ptr = dbm;
 }

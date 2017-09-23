@@ -139,7 +139,7 @@ struct COHPSK *cohpsk_create(void)
 
         /* note non-linear carrier spacing to help PAPR, works v well in conjunction with CLIP */
 
-        freq_hz = fdmdv->fsep*( -(COHPSK_NC*ND)/2 - 0.5 + pow(c + 1.0, 0.98) );
+        freq_hz = fdmdv->fsep*( -(COHPSK_NC*ND)/2 - 0.5 + powf(c + 1.0, 0.98) );
 
 	fdmdv->freq[c].real = cosf(2.0*M_PI*freq_hz/COHPSK_FS);
  	fdmdv->freq[c].imag = sinf(2.0*M_PI*freq_hz/COHPSK_FS);
