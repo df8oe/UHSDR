@@ -48,10 +48,10 @@
 Goertzel cw_goertzel;
 
 cw_config_t cw_decoder_config =
-{ .sampling_freq = 12000.0, .target_freq = 700.0,
+{ .sampling_freq = 12000.0, .target_freq = 750.0,
 		.speed = 25,
 		//		.average = 2,
-		.thresh = 15000,
+		.thresh = 32000,
 		.blocksize = CW_DECODER_BLOCKSIZE_DEFAULT,
 		//		.AGC_enable = 0,
 		.noisecancel_enable = 1,
@@ -274,12 +274,14 @@ static void CW_Decode_exe(void)
 	}
 
 	float32_t v1 = (CW_clipped - CW_noise) * (CW_env - CW_noise) -
-					0.5 * ((CW_env - CW_noise) * (CW_env - CW_noise));
+					0.8 * ((CW_env - CW_noise) * (CW_env - CW_noise));
 	//				0.85 * ((CW_env - CW_noise) * (CW_env - CW_noise));
 //				 ((CW_env - CW_noise) * (CW_env - CW_noise));
 //	0.25 * ((CW_env - CW_noise) * (CW_env - CW_noise));
 
 	//lowpass
+
+//	v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
 		siglevel = v1 * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
 		old_siglevel = v1;
 //	bool newstate = (siglevel > 0)? false:true;

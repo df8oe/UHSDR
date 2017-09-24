@@ -1319,12 +1319,16 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     delta = delta1 + delta2;
 
     if(ts.dmod_mode == DEMOD_CW)
-    {
+    { // only add offset, if in CW mode, not in AM/SAM etc.
         const float32_t cw_offset = (ts.cw_lsb?1.0:-1.0)*(float32_t)ts.cw_sidetone_freq;
         delta = delta + cw_offset;
     }
     // these frequency calculations are unused at the moment, they will be used with
     // real snap by button press
+
+    // make 10 frequency measurements and after that take the lowpass filtered frequency to tune to
+
+
     help_freq = help_freq + delta;
     // do we need a lowpass filter?
     help_freq = 0.2 * help_freq + 0.8 * freq_old;
