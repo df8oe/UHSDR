@@ -26,8 +26,8 @@ We love pull requests. Here's a quick guide:
   * Checkout the branch you want to modify (`git checkout active-devel`)
   * Create your feature branch (`git branch my-new-feature`)
   * Commit your changes and provide good explaination in the commit message (`git commit -m`)
-  * If it took a while to complete the changes, consider rebasing (`git fetch main; git rebase main/active-devel`) before pushing
-  * Push the branch to your GitHub repository (`git push`)
+  * If it took a while to complete the changes, consider rebasing (`git fetch main; git rebase main/active-devel`) before pushing. This is generally strongly recommended to avoid nasty surprise during integration for the main repository maintainer.
+  * Push the branch to your GitHub repository (`git push` / `git push -f` if you did an rebase)
   * It is strongly recommended that you do an operational test using a mcHF before you start a pull request.
   * Create new pull request at http://www.github.com/df8oe/UHSDR . Make sure to select the right branch (active-devel) as target.
   
