@@ -20,8 +20,8 @@ If you fixed or added something useful to the project, you can send pull-request
 We love pull requests. Here's a quick guide:
 
   * Make sure you have a [GitHub](https://www.github.com) account and read more about [pull requests](http://help.github.com/pull-requests/)
-  * Fork it in GitHub
-  * Clone it locally to your PC (`github clone ...`)
+  * Fork the UHSDR repository in GitHub
+  * Clone the your forked repository locally to your PC (`git clone ...`)
   * Add the main repository as "main" (`git remote add main https://github.com/df8oe/mchf-github.git`)
   * Checkout the branch you want to modify (`git checkout active-devel`)
   * Create your feature branch (`git branch my-new-feature`)
