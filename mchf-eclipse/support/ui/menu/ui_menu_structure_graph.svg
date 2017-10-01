@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-11886 752,-11886 752,4 -4,4"/>
 <text text-anchor="middle" x="374" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v.. &#45; Menus Overview</text>
-<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;09&#45;18T19:21:52 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;10&#45;01T18:50:45 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="uhsdr-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3858.5"/>
@@ -1748,7 +1748,7 @@
 <polygon fill="none" stroke="black" points="416,-5001.5 416,-5047.5 695,-5047.5 695,-5001.5 416,-5001.5"/>
 <text text-anchor="middle" x="555.5" y="-5032.3" font-family="Times,serif" font-size="14.00">MENU_CW_DECODER_USE_3_GOERTZEL</text>
 <polyline fill="none" stroke="black" points="416,-5024.5 695,-5024.5 "/>
-<text text-anchor="middle" x="555.5" y="-5009.3" font-family="Times,serif" font-size="14.00">use 3 Goertzels</text>
+<text text-anchor="middle" x="555.5" y="-5009.3" font-family="Times,serif" font-size="14.00">AGC for decoder</text>
 </g>
 <!-- MENU_CW&#45;&gt;MENU_CW_DECODER_USE_3_GOERTZEL -->
 <g id="edge210" class="edge"><title>MENU_CW&#45;&gt;MENU_CW_DECODER_USE_3_GOERTZEL</title>
