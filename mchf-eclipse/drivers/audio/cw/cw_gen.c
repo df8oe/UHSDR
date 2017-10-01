@@ -519,6 +519,7 @@ uint32_t CwGen_ReverseCode(uint32_t code)
 
 static void CwGen_CheckKeyerState(void)
 {
+	uint8_t c;
 
 	if (CwGen_DahRequested())
 	{
@@ -530,6 +531,35 @@ static void CwGen_CheckKeyerState(void)
 		ps.port_state |= CW_DIT_L;
 	}
 
+	if (!ts.cw_text_entry && ps.cw_state == CW_IDLE)
+	{
+		if (ts.txrx_mode == TRX_MODE_TX && DigiModes_TxBufferHasData() && !ps.sending_char &&
+				(! (ps.port_state & CW_END_PROC) && ps.space_timer < ps.space_time - ps.dah_time))
+		{
+			DigiModes_TxBufferRemove(&c);
+			for (int i = 0; i<CW_CHAR_CODES; i++)
+			{
+				if (cw_char_chars[i] == c) {
+					ps.sending_char = CwGen_ReverseCode(cw_char_codes[i]);
+					break;
+				}
+			}
+
+		}
+
+		if (ps.sending_char > 1) // 1 is space
+		{
+			if (ps.sending_char % 4 == 3)
+			{
+				ps.port_state |= CW_DAH_L;
+			}
+			else
+			{
+				ps.port_state |= CW_DIT_L;
+			}
+			ps.sending_char /= 4;
+		}
+	}
 }
 
 /**
@@ -695,11 +725,11 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 		{
 			rerunStateMachine = false;
 
+			CwGen_CheckKeyerState();
 			// at least one paddle is still or has been recently pressed
 			if( (Board_DitLinePressed() || Board_PttDahLinePressed() || (ps.port_state & (CW_DAH_L|CW_DIT_L)))
 					&& (ts.txrx_mode == TRX_MODE_TX || ts.cw_text_entry))
 			{
-				CwGen_CheckKeyerState();
 				ps.cw_state = CW_WAIT;		// Note if Dit/Dah is discriminated in this function, it breaks the Iambic-ness!
 				rerunStateMachine = true;
 			}
@@ -717,10 +747,14 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 					if (--ps.space_timer == 0)
 					{
 						CwGen_AddChar(1);
+						if (ps.sending_char == 1)
+						{
+							ps.sending_char = 0;
+						}
 					}
 				}
 
-				if (ps.break_timer > 0)
+				if (ps.break_timer > 0 && !ps.sending_char && !DigiModes_TxBufferHasData())
 				{
 					if (--ps.break_timer == 0)
 					{

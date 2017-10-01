@@ -350,6 +350,8 @@ void TransceiverStateInit(void)
     for (int idx = 0; idx<KEYER_BUTTONS; idx++)
     {
     	ts.keyer_mode.macro[idx][0] = '\0';
+    	strcpy(ts.keyer_mode.cap[idx], "BTN");
+
     }
     ts.buffered_tx = false;
     ts.cw_text_entry = false;
