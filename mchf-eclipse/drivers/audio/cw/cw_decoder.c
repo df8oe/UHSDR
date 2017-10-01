@@ -57,7 +57,7 @@ cw_config_t cw_decoder_config =
 		.noisecancel_enable = 1,
 		.spikecancel = 0,
 		.use_3_goertzels = false,
-		.snap_enable = false
+		.snap_enable = true
 };
 
 static void CW_Decode(void);
