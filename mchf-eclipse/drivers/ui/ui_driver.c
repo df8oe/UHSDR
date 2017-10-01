@@ -1029,7 +1029,7 @@ static void UiDriver_DisplayFButton_F2SnapMeter()
 	}
 	else
 	{
-#ifdef SNAP
+#ifdef USE_SNAP
 		cap = "SNAP";
 		color = White;    // yes - indicate with color
 #else
