@@ -43,20 +43,21 @@
 #include "ui_driver.h"
 #include "cw_decoder.h"
 #include "audio_driver.h"
+#include "rtty.h"
 
 Goertzel cw_goertzel;
 
 cw_config_t cw_decoder_config =
-{ .sampling_freq = 12000.0, .target_freq = 700.0,
+{ .sampling_freq = 12000.0, .target_freq = 750.0,
 		.speed = 25,
 		//		.average = 2,
-		.thresh = 15000,
+		.thresh = 32000,
 		.blocksize = CW_DECODER_BLOCKSIZE_DEFAULT,
 		//		.AGC_enable = 0,
 		.noisecancel_enable = 1,
 		.spikecancel = 0,
 		.use_3_goertzels = false,
-		.snap_enable = false
+		.snap_enable = true
 };
 
 static void CW_Decode(void);
@@ -68,11 +69,21 @@ void CwDecode_FilterInit()
 			cw_decoder_config.blocksize, 1.0, cw_decoder_config.sampling_freq);
 }
 
-#define SIGNAL_TAU			0.01
+//#define SIGNAL_TAU			0.01
+#define SIGNAL_TAU			0.1
 #define	ONEM_SIGNAL_TAU     (1.0 - SIGNAL_TAU)
 
 #define CW_TIMEOUT			3  // Time, in seconds, to trigger display of last Character received
 #define ONE_SECOND			(12000 / cw_decoder_config.blocksize) // sample rate / decimation rate / block size
+
+//#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 5.83) // standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 58.3) // = 6.4 works ! standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+//#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 25.0) // does not work! standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+//#define CW_ONE_BIT_SAMPLE_COUNT (ONE_SECOND / 583.0) // does not work. standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+//#define CW_ONE_BIT_SAMPLE_COUNT (12000 / 5.83) // standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+//#define CW_ONE_BIT_SAMPLE_COUNT (12000) // standard word PARIS has 14 pulses & 14 spaces, assumed: 25WPM
+													// 14bits * 25words per min / (60 sec/min) = 5.83 bits/sec bitrate
+													// (sample_rate / blocksize) / bitrate = samples per bit !
 
 #define CW_SPIKECANCEL_MAX_DURATION        8  // Cancel transients/spikes/drops that have max duration of number chosen.
 // Typically 4 or 8 to select at time periods of 4 or 8 times 2.9ms.
@@ -174,6 +185,12 @@ static float32_t raw_signal_buffer[CW_DECODER_BLOCKSIZE_MAX];  //cw_decoder_conf
 
 static void CW_Decode_exe(void)
 {
+	bool newstate;
+	static float32_t CW_env = 0.0;
+	static float32_t CW_mag = 0.0;
+	static float32_t CW_noise = 0.0;
+	float32_t CW_clipped = 0.0;
+
 	static float32_t old_siglevel = 0.001;
 	static float32_t speed_wpm_avg = 0.0;
 	float32_t siglevel;                	// signal level from Goertzel calculation
@@ -232,17 +249,56 @@ static void CW_Decode_exe(void)
 
 #else
 	// better use exponential averager for averaging/smoothing here !? Let´s try!
-	siglevel = siglevel * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
-	old_siglevel = magnitudeSquared;
+//	siglevel = siglevel * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
+//	old_siglevel = magnitudeSquared;
 #endif
 
+
+	// 4b.) automatic threshold correction
+	if(cw_decoder_config.use_3_goertzels)
+	{
+	CW_mag = siglevel;
+	CW_env = decayavg(CW_env, CW_mag, (CW_mag > CW_env)?
+			//				(CW_ONE_BIT_SAMPLE_COUNT / 4) : (CW_ONE_BIT_SAMPLE_COUNT * 16));
+				(cw_decoder_config.thresh /1000 / 4) : (cw_decoder_config.thresh /1000 * 16));
+
+	CW_noise = decayavg(CW_noise, CW_mag, (CW_mag < CW_noise)?
+			//(CW_ONE_BIT_SAMPLE_COUNT / 4) : (CW_ONE_BIT_SAMPLE_COUNT * 48));
+			(cw_decoder_config.thresh /1000 / 4) : (cw_decoder_config.thresh /1000 * 48));
+
+	CW_clipped = CW_mag > CW_env? CW_env: CW_mag;
+
+	if (CW_clipped < CW_noise)
+	{
+		CW_clipped = CW_noise;
+	}
+
+	float32_t v1 = (CW_clipped - CW_noise) * (CW_env - CW_noise) -
+					0.8 * ((CW_env - CW_noise) * (CW_env - CW_noise));
+	//				0.85 * ((CW_env - CW_noise) * (CW_env - CW_noise));
+//				 ((CW_env - CW_noise) * (CW_env - CW_noise));
+//	0.25 * ((CW_env - CW_noise) * (CW_env - CW_noise));
+
+	//lowpass
+
+//	v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
+		siglevel = v1 * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
+		old_siglevel = v1;
+//	bool newstate = (siglevel > 0)? false:true;
+	newstate = (siglevel < 0)? false:true;
+	}
 	//    5.) signal state determination
 	//----------------
 	// Signal State sampling
 
 	// noise cancel requires at least two consecutive samples to be
 	// of same (changed state) to accept change (i.e. a single sample change is ignored).
-	bool newstate = (siglevel >= cw_decoder_config.thresh);
+	else
+	{
+		siglevel = siglevel * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
+		old_siglevel = magnitudeSquared;
+		newstate = (siglevel >= cw_decoder_config.thresh);
+	}
 
 	if(cw_decoder_config.noisecancel_enable)
 	{
@@ -265,7 +321,10 @@ static void CW_Decode_exe(void)
 	}
 
 	ads.CW_signal = cw_state;
-	Board_RedLed(cw_state == true? LED_STATE_ON : LED_STATE_OFF);
+	if(ts.dmod_mode == DEMOD_CW)
+		{
+			Board_RedLed(cw_state == true? LED_STATE_ON : LED_STATE_OFF);
+		}
 
 
 	//    6.) fill into circular buffer
@@ -351,7 +410,7 @@ static void InitializationFunc(void)
 	static int16_t startpos, progress;   // Progress counter, size = SIG_BUFSIZE
 	static bool initializing = FALSE; // Bool for first time init of progress counter
 	int16_t processed;              // Number of states that have been processed
-	double t;                     // We do timing calculations in floating point
+	float32_t t;                     // We do timing calculations in floating point
 	// to gain a little bit of precision when low
 	// sampling rate
 	// Set up progress counter at beginning of initialize
@@ -507,7 +566,7 @@ bool DataRecognitionFunc(bool* new_char_p)
 		not_done = true;
 		b.timeout = FALSE;           // Mainly used by Error Correction Function
 
-		const double t = spikeCancel(sig[sig_outcount].time); // Get time of the new state
+		const float32_t t = spikeCancel(sig[sig_outcount].time); // Get time of the new state
 		// Squash spikes/transients if enabled
 		// Attention: Side Effect -> sig_outcount has been be incremented inside spikeCancel if result == 0, because of this we increment only if not 0
 
@@ -554,7 +613,7 @@ bool DataRecognitionFunc(bool* new_char_p)
 				if (b.dash == TRUE)                // Last character was a dash
 				{
 				    b.dash = false;
-				    double eq4_12 = t
+				    float32_t eq4_12 = t
 				            - (cw_times.pulse_avg
 				                    - ((uint32_t) data[data_len - 1].time
 				                            - cw_times.pulse_avg) / 4.0); // (e.q. 4.12, corrected)
@@ -565,7 +624,7 @@ bool DataRecognitionFunc(bool* new_char_p)
 				    }
 				    else if (t <= 10 * cw_times.dash_avg) // Current space is not a timeout
 				    {
-				        double eq4_14 = t
+				        float32_t eq4_14 = t
 				                - (cw_times.cwspace_avg
 				                        - ((uint32_t) data[data_len - 1].time
 				                                - cw_times.pulse_avg) / 4.0); // (e.q. 4.14)
