@@ -2696,7 +2696,7 @@ static void AudioDriver_NoiseReduction(int16_t blockSize)
 
 
 
-#ifdef USE_SNAP
+#if 0
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_snap_carrier [DD4WH, march 2016]
@@ -3490,7 +3490,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             adb.q_buffer[i] = (float32_t)src[i].r;
         }
 
-#ifdef USE_SNAP
+#if 0
         if (sc.snap) {
             if (sc.state == 0)
             {

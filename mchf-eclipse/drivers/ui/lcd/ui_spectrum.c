@@ -1270,6 +1270,7 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
 	if(ads.CW_signal || (ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)) // this is only done, if there has been a pulse from the CW station that exceeds the threshold
 		// in the CW decoder section
 	{
+		static uint8_t snap_counter = 0;
 		static float32_t freq_old = 10000000.0;
 	float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
 	// 1. lowpass filter all the relevant bins over 2 to 20 FFTs (?)
@@ -1335,6 +1336,20 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     //help_freq = help_freq * ((float32_t)TUNE_MULT);
     ads.snap_carrier_freq = (ulong) (help_freq);
     freq_old = help_freq;
+
+    if(sc.snap == true)
+    {
+    	snap_counter++;
+    	if(snap_counter >= 6) // take low pass filtered 6 freq measurements
+    	{
+    		// tune to frequency
+            // set frequency of Si570 with 4 * dialfrequency
+            df.tune_new = (help_freq * ((float32_t)TUNE_MULT));
+    		// reset counter
+    		snap_counter = 0;
+    		sc.snap = false;
+    	}
+    }
 
     // graphical TUNE HELPER display
     UiSpectrum_CwSnapDisplay (delta);
