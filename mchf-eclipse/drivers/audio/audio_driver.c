@@ -3796,7 +3796,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSizeDecim);
                 }
 #endif
-                if(ts.cw_decoder_enable && blockSizeDecim ==8 && dmod_mode == DEMOD_CW)
+                if(blockSizeDecim ==8 && dmod_mode == DEMOD_CW)
                 {
                 	CwDecode_RxProcessor(adb.a_buffer, blockSizeDecim);
                 }

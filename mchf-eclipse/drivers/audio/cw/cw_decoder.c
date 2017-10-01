@@ -297,8 +297,10 @@ static void CW_Decode_exe(void)
 	cur_time = sig_timer;
 
 	//    7.) CW Decode
-	CW_Decode();                                     // Do all the heavy lifting
-
+	if(ts.cw_decoder_enable)
+	{
+	  CW_Decode();                                     // Do all the heavy lifting
+	}
 	// calculation of speed of the received morse signal on basis of the standard "PARIS"
 	float32_t spdcalc =  10.0 * cw_times.dot_avg + 4.0 * cw_times.dash_avg + 9.0 * cw_times.symspace_avg + 5.0 * cw_times.cwspace_avg;
 
