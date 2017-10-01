@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-09-18T19:21:55  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-10-01T18:50:49  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-09-18T19:21:55  by "./ui_menu_structure_mdtable.py"
+generated at  2017-10-01T18:50:49  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -171,7 +171,7 @@ generated at  2017-09-18T19:21:55  by "./ui_menu_structure_mdtable.py"
 | **Blocksize for Goertzel**    (                  MENU_CW_DECODER_BLOCKSIZE) | How many samples are taken for the signal detection with the Goertzel algorithm? | 
 | **Noise cancel**              (                MENU_CW_DECODER_NOISECANCEL) | Enable/disable noise canceler for CW decoder   | 
 | **Spike cancel**              (                MENU_CW_DECODER_SPIKECANCEL) | Enable/disable spike canceler or short cancel for CW decoder | 
-| **use 3 Goertzels**           (             MENU_CW_DECODER_USE_3_GOERTZEL) | Use three Goertzel values for CW decoder       | 
+| **AGC for decoder**           (             MENU_CW_DECODER_USE_3_GOERTZEL) | Enable/disable AGC for CW decoder              | 
 
 
 ## Filter Selection (`MENU_FILTER`)
