@@ -980,7 +980,7 @@ static void UiDriver_DisplayFButton_F1MenuExit()
 		}
 		else
 		{
-			cap = "BTN1";
+			cap = ts.keyer_mode.cap[0];
 			color = White;
 		}
 	}
@@ -1023,7 +1023,7 @@ static void UiDriver_DisplayFButton_F2SnapMeter()
 		}
 		else
 		{
-			cap = "BTN2";
+			cap = ts.keyer_mode.cap[1];
 			color = White;
 		}
 	}
@@ -1056,7 +1056,7 @@ static void UiDriver_FButton_F3MemSplit()
 		}
 		else
 		{
-			cap = "BTN3";
+			cap = ts.keyer_mode.cap[2];
 			color = White;
 		}
 
@@ -1084,7 +1084,7 @@ static inline void UiDriver_FButton_F4ActiveVFO()
 	const char* cap;
 	if (ts.keyer_mode.active)
 	{
-		cap = "DEL";
+		cap = " "; //FIXME This will be DEL
 	}
 	else
 	{
@@ -1102,11 +1102,11 @@ static inline void UiDriver_FButton_F5Tune()
 	{
 		if (ts.buffered_tx)
 		{
-			cap = "TX/RX";
+			cap = " "; //FIXME this will be TX/RX
 		}
 		else
 		{
-			cap = "UNBUF";
+			cap = " "; //FIXME this will be UNBUF
 		}
 	}
 	else
@@ -5891,7 +5891,7 @@ static void UiAction_ToggleTuneMode()
 	UiDriver_FButton_F5Tune();
 }
 
-static void UiAction_PlayKeyerBtnN(int n)
+static void UiAction_PlayKeyerBtnN(int8_t n)
 {
 	uint8_t *pmacro;
 	uint16_t c = 0;
@@ -5899,17 +5899,18 @@ static void UiAction_PlayKeyerBtnN(int n)
 	if (ts.keyer_mode.button_recording == KEYER_BUTTON_NONE)
 	{
 		pmacro = (uint8_t *)ts.keyer_mode.macro[n];
-		while (*pmacro != '\0') //TODO not implemented - printing on the screen for debugging
+		if (*pmacro != '\0') // If there is a macro
 		{
-			DigiModes_TxBufferPutChar(*pmacro++);
-		}
+			while (*pmacro != '\0')
+			{
+				DigiModes_TxBufferPutChar(*pmacro++);
+			}
 
-		/* FIXME This is work in progress to be uncommented when ready
-		if (ts.dmod_mode == DEMOD_CW && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
-		{
-			ts.ptt_req = true;
+			if (ts.dmod_mode == DEMOD_CW && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+			{
+				ts.ptt_req = true;
+			}
 		}
-		*/
 
 		UiDriver_TextMsgPutChar('>');
 	}
@@ -5926,6 +5927,23 @@ static void UiAction_PlayKeyerBtnN(int n)
 			DigiModes_TxBufferRemove(pmacro++);
 		}
 		*pmacro = '\0';
+
+		if (c)
+		{
+			// Make button label from start of the macro
+			pmacro = (uint8_t *)ts.keyer_mode.macro[n];
+			c = 0;
+			while(*pmacro != ' ' && *pmacro != '\0' && c < KEYER_CAP_LEN)
+			{
+				ts.keyer_mode.cap[n][c++] = *pmacro++;
+			}
+			ts.keyer_mode.cap[n][c] = '\0';
+		}
+		else
+		{
+			strcpy(ts.keyer_mode.cap[n], "BTN");
+		}
+
 		UiDriver_TextMsgPutChar('<');
 		ts.keyer_mode.button_recording = KEYER_BUTTON_NONE;
 	}
@@ -5947,7 +5965,7 @@ static void UiAction_PlayKeyerBtn3()
 	UiAction_PlayKeyerBtnN(KEYER_BUTTON_3);
 }
 
-static void UiAction_RecordKeyerBtnN(int n)
+static void UiAction_RecordKeyerBtnN(int8_t n)
 {
 	if (ts.keyer_mode.button_recording == KEYER_BUTTON_NONE && ts.txrx_mode == TRX_MODE_RX && !ts.cw_text_entry)
 	{

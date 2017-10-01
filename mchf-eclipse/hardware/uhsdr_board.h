@@ -478,15 +478,17 @@ typedef struct {
 iq_balance_data_t;
 
 #define KEYER_BUTTONS 3
-#define KEYER_BUTTON_NONE 0
-#define KEYER_BUTTON_1 1
-#define KEYER_BUTTON_2 2
-#define KEYER_BUTTON_3 3
+#define KEYER_BUTTON_NONE -1
+#define KEYER_BUTTON_1 0
+#define KEYER_BUTTON_2 1
+#define KEYER_BUTTON_3 2
 #define KEYER_MACRO_LEN 200
+#define KEYER_CAP_LEN 6
 typedef struct {
 	bool active;
-	uint8_t button_recording;
+	int8_t button_recording;
 	uint8_t macro[KEYER_BUTTONS][KEYER_MACRO_LEN];
+	uint8_t cap[KEYER_BUTTONS][KEYER_CAP_LEN + 1];
 }
 keyer_mode_t;
 
