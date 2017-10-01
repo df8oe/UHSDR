@@ -24,6 +24,11 @@
 #define NR_FFT_SIZE 128
 #endif
 
+//new lcd defines
+#define USE_GFX_ILI9486
+#define USE_DISP_480_320
+
+
 #define USE_RTTY_PROCESSOR
 
 #define USE_USBHOST
