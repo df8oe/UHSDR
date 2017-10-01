@@ -1257,7 +1257,7 @@ void UiDriver_ModeSpecificDisplayClear(uint8_t dmod_mode, uint8_t digital_mode)
 	case DEMOD_CW:
 		UiDriver_TextMsgClear();
 		CwDecoder_WpmDisplayClearOrPrepare(false);
-        ui_spectrum_init_cw_snap_display(false);
+		UiSpectrum_InitCwSnapDisplay(false);
 		break;
 	case DEMOD_DIGI:
 	{
@@ -1273,6 +1273,10 @@ void UiDriver_ModeSpecificDisplayClear(uint8_t dmod_mode, uint8_t digital_mode)
 			break;
 		}
 	}
+	break;
+	case DEMOD_AM:
+	case DEMOD_SAM:
+		UiSpectrum_InitCwSnapDisplay(false);
 	break;
 
 	default:
@@ -1294,7 +1298,7 @@ void UiDriver_ModeSpecificDisplayPrepare(uint8_t dmod_mode, uint8_t digital_mode
 	    }
 	    if(cw_decoder_config.snap_enable == true && ts.dmod_mode == DEMOD_CW)
 	    {
-	        ui_spectrum_init_cw_snap_display(true);
+	    	UiSpectrum_InitCwSnapDisplay(true);
 	    }
 		break;
 	case DEMOD_DIGI:
@@ -1311,6 +1315,13 @@ void UiDriver_ModeSpecificDisplayPrepare(uint8_t dmod_mode, uint8_t digital_mode
 			break;
 		}
 	}
+	break;
+	case DEMOD_AM:
+	case DEMOD_SAM:
+	    if(cw_decoder_config.snap_enable == true)
+	    {
+	    	UiSpectrum_InitCwSnapDisplay(true);
+	    }
 	break;
 
 	default:

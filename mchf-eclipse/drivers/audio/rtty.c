@@ -378,7 +378,7 @@ void RttyDecoder_Init()
 
 }
 
-static float32_t decayavg(float32_t average, float32_t input, int weight)
+float32_t decayavg(float32_t average, float32_t input, int weight)
 { // adapted from https://github.com/ukhas/dl-fldigi/blob/master/src/include/misc.h
 	float32_t retval;
 	if (weight <= 1)
