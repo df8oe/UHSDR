@@ -1267,7 +1267,7 @@ void UiSpectrum_CwSnapDisplay (float32_t delta)
 
 void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float32_t bin_BW)
 {
-	if(ads.CW_signal) // this is only done, if there has been a pulse from the CW station that exceeds the threshold
+	if(ads.CW_signal || (ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)) // this is only done, if there has been a pulse from the CW station that exceeds the threshold
 		// in the CW decoder section
 	{
 		static float32_t freq_old = 10000000.0;
@@ -1318,10 +1318,11 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     if(delta2 > bin_BW) delta2 = 0.0;
     delta = delta1 + delta2;
 
-    const float32_t cw_offset = (ts.cw_lsb?1.0:-1.0)*(float32_t)ts.cw_sidetone_freq;
-
-    delta = delta + cw_offset;
-
+    if(ts.dmod_mode == DEMOD_CW)
+    {
+        const float32_t cw_offset = (ts.cw_lsb?1.0:-1.0)*(float32_t)ts.cw_sidetone_freq;
+        delta = delta + cw_offset;
+    }
     // these frequency calculations are unused at the moment, they will be used with
     // real snap by button press
     help_freq = help_freq + delta;
@@ -1463,7 +1464,7 @@ static void UiSpectrum_CalculateDBm()
             }
 
             // here would be the right place to start with the SNAP mode!
-            if(cw_decoder_config.snap_enable && ts.dmod_mode == DEMOD_CW)
+            if(cw_decoder_config.snap_enable && (ts.dmod_mode == DEMOD_CW || ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM))
             {
             	 UiSpectrum_CalculateSnap(Lbin, Ubin, posbin, bin_BW);
 

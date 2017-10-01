@@ -3796,7 +3796,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSizeDecim);
                 }
 #endif
-                if(blockSizeDecim ==8 && dmod_mode == DEMOD_CW)
+//                if(blockSizeDecim ==8 && dmod_mode == DEMOD_CW)
+//                if(ts.cw_decoder_enable && blockSizeDecim ==8 && (dmod_mode == DEMOD_CW || dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM))
+                if(blockSizeDecim ==8 && (dmod_mode == DEMOD_CW || dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM))
+// switch to use TUNE HELPER in AM/SAM
                 {
                 	CwDecode_RxProcessor(adb.a_buffer, blockSizeDecim);
                 }

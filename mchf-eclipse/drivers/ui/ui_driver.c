@@ -1274,6 +1274,10 @@ void UiDriver_ModeSpecificDisplayClear(uint8_t dmod_mode, uint8_t digital_mode)
 		}
 	}
 	break;
+	case DEMOD_AM:
+	case DEMOD_SAM:
+		UiSpectrum_InitCwSnapDisplay(false);
+	break;
 
 	default:
 		break;
@@ -1311,6 +1315,13 @@ void UiDriver_ModeSpecificDisplayPrepare(uint8_t dmod_mode, uint8_t digital_mode
 			break;
 		}
 	}
+	break;
+	case DEMOD_AM:
+	case DEMOD_SAM:
+	    if(cw_decoder_config.snap_enable == true)
+	    {
+	    	UiSpectrum_InitCwSnapDisplay(true);
+	    }
 	break;
 
 	default:
