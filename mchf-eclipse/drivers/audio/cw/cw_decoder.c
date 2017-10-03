@@ -323,7 +323,7 @@ static void CW_Decode_exe(void)
 
 	ads.CW_signal = cw_state;
 //	if(ts.dmod_mode == DEMOD_CW)
-	if(cw_decoder_config.show_CW_LED == true)
+	if(cw_decoder_config.show_CW_LED == true && ts.cw_decoder_enable)
 		{
 			Board_RedLed(cw_state == true? LED_STATE_ON : LED_STATE_OFF);
 		}
