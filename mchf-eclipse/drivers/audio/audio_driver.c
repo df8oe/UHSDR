@@ -3674,6 +3674,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         else
         {
 #ifdef USE_TWO_CHANNEL_AUDIO
+        	// Stereo modes should be implemented here?
             dst[i].r = dst[i].l = adb.b_buffer[i];
 #else
             dst[i].l = adb.b_buffer[i]; // VARIABLE LEVEL FOR SPEAKER

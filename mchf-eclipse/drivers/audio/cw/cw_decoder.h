@@ -34,6 +34,7 @@ typedef struct
 #define CW_SPIKECANCEL_MODE_SHORT 2
 	bool use_3_goertzels;
 	bool snap_enable;
+    bool show_CW_LED; // menu choice whether the user wants the CW LED indicator to be working or not
 } cw_config_t;
 
 extern cw_config_t cw_decoder_config;
