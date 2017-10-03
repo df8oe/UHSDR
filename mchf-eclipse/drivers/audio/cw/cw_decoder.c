@@ -328,7 +328,6 @@ static void CW_Decode_exe(void)
 			Board_RedLed(cw_state == true? LED_STATE_ON : LED_STATE_OFF);
 		}
 
-
 	//    6.) fill into circular buffer
 	//----------------
 	// Record state changes and durations onto circular buffer
@@ -379,6 +378,11 @@ static void CW_Decode_exe(void)
 	}
 
 	cw_decoder_config.speed = speed_wpm_avg; // for external use, 0 indicates no signal condition
+
+	if(ts.txrx_mode == TRX_MODE_TX)
+	{	// just to ensure that during RX/TX switching the red LED remains lit in TX_mode
+		Board_RedLed(LED_STATE_ON);
+	}
 }
 
 void CwDecode_RxProcessor(float32_t * const src, int16_t blockSize)
