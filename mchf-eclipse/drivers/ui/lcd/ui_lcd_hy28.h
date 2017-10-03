@@ -16,9 +16,13 @@
 #define __UI_LCD_HY28_H
 
 #include "uhsdr_types.h"
-
-#define MAX_X  320
-#define MAX_Y  240
+#ifdef USE_DISP_480_320
+	#define MAX_X  480
+	#define MAX_Y  320
+#else
+	#define MAX_X  320
+	#define MAX_Y  240
+#endif
 
 
 #ifndef HY28BHISPEED
