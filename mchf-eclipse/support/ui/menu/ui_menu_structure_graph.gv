@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-10-01T20:16:10  by "./ui_menu_structure_graph.py"
+#  generated at  2017-10-03T14:11:14  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-10-01T20:16:10  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-10-03T14:11:14  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -749,6 +749,11 @@
         
         "MENU_CW_DECODER_USE_3_GOERTZEL" [
              label = "MENU_CW_DECODER_USE_3_GOERTZEL | AGC for decoder"
+             shape = record
+             ];
+        
+        "MENU_CW_DECODER_SHOW_CW_LED" [
+             label = "MENU_CW_DECODER_SHOW_CW_LED | show CW LED"
              shape = record
              ];
         
@@ -1773,6 +1778,8 @@
             MENU_CW -> MENU_CW_DECODER_SPIKECANCEL
             
             MENU_CW -> MENU_CW_DECODER_USE_3_GOERTZEL
+            
+            MENU_CW -> MENU_CW_DECODER_SHOW_CW_LED
             
         }  ## END subgraph MENU_HALL_OF_FAME
     

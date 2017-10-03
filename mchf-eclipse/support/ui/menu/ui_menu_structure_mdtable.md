@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-10-01T20:16:13  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-10-03T14:11:19  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-10-01T20:16:13  by "./ui_menu_structure_mdtable.py"
+generated at  2017-10-03T14:11:19  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -172,6 +172,7 @@ generated at  2017-10-01T20:16:13  by "./ui_menu_structure_mdtable.py"
 | **Noise cancel**              (                MENU_CW_DECODER_NOISECANCEL) | Enable/disable noise canceler for CW decoder   | 
 | **Spike cancel**              (                MENU_CW_DECODER_SPIKECANCEL) | Enable/disable spike canceler or short cancel for CW decoder | 
 | **AGC for decoder**           (             MENU_CW_DECODER_USE_3_GOERTZEL) | Enable/disable AGC for CW decoder              | 
+| **show CW LED**               (                MENU_CW_DECODER_SHOW_CW_LED) | Enable/disable LED for CW decoder              | 
 
 
 ## Filter Selection (`MENU_FILTER`)
