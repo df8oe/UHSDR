@@ -57,7 +57,8 @@ cw_config_t cw_decoder_config =
 		.noisecancel_enable = 1,
 		.spikecancel = 0,
 		.use_3_goertzels = false,
-		.snap_enable = true
+		.snap_enable = true,
+		.show_CW_LED = true // menu choice whether the user wants the CW LED indicator to be working or not
 };
 
 static void CW_Decode(void);
@@ -321,7 +322,8 @@ static void CW_Decode_exe(void)
 	}
 
 	ads.CW_signal = cw_state;
-	if(ts.dmod_mode == DEMOD_CW)
+//	if(ts.dmod_mode == DEMOD_CW)
+	if(cw_decoder_config.show_CW_LED == true)
 		{
 			Board_RedLed(cw_state == true? LED_STATE_ON : LED_STATE_OFF);
 		}

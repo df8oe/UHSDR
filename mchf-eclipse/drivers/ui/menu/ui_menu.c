@@ -3640,10 +3640,18 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
      case MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.cw_offset_shift_keep_signal,0,options,&clr);
          break;
+
      case MENU_CW_DECODER_USE_3_GOERTZEL:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &cw_decoder_config.use_3_goertzels,0,options,&clr);
     	 break;
 
+     case MENU_CW_DECODER_SHOW_CW_LED:
+         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &cw_decoder_config.show_CW_LED,0,options,&clr);
+         if (cw_decoder_config.show_CW_LED == false)
+         {
+             Board_RedLed(LED_STATE_OFF);
+         }
+    	 break;
      case MENU_CW_DECODER_SNAP_ENABLE:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &cw_decoder_config.snap_enable,0,options,&clr);
          if (var_change)
