@@ -356,7 +356,7 @@ static void CW_Decode_exe(void)
 	cur_time = sig_timer;
 
 	//    7.) CW Decode
-	if(ts.cw_decoder_enable)
+	if(ts.cw_decoder_enable && ts.dmod_mode == DEMOD_CW)
 	{
 	  CW_Decode();                                     // Do all the heavy lifting
 	}

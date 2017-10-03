@@ -1908,7 +1908,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             switch(cw_decoder_config.spikecancel)
             {
             case 0:
-                txt_ptr = " OFF";
+                txt_ptr = "  OFF";
                 break;
             case 1:
                 txt_ptr = "SPIKE";
