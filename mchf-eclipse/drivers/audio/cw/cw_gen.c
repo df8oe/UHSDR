@@ -539,7 +539,8 @@ static void CwGen_CheckKeyerState(void)
 			DigiModes_TxBufferRemove(&c);
 			for (int i = 0; i<CW_CHAR_CODES; i++)
 			{
-				if (cw_char_chars[i] == c) {
+				if (cw_char_chars[i] == c)
+				{
 					ps.sending_char = CwGen_ReverseCode(cw_char_codes[i]);
 					break;
 				}
@@ -861,7 +862,9 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 				{
 					CwGen_AddChar(-1);
 					ps.port_state &= ~CW_END_PROC;
-				} else {
+				}
+				else
+				{
 					ps.port_state |= CW_END_PROC;
 				}
 
