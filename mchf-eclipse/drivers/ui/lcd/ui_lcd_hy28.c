@@ -60,21 +60,11 @@
 mchf_display_t mchf_display;
 
 
-#ifdef USE_GFX_ILI9486
-//SP9BSL adapter board has CS pin on HY28B CSB pin
-#define LCD_CS					GPIO_PIN_12
-#define LCD_CS_PIO        		GPIOE
-#else
 // ----------------------------------------------------------
 // Dual purpose pins (parallel + serial)
 #define LCD_CS                  LCD_CSA
 #define LCD_CS_SOURCE           LCD_CSA_SOURCE
 #define LCD_CS_PIO              LCD_CSA_PIO
-#endif
-
-
-
-
 
 #ifndef BOOTLOADER_BUILD
 
@@ -638,11 +628,19 @@ void UiLcdHy28_WriteIndexSpi(unsigned char index)
 {
     UiLcdHy28_SpiLcdCsEnable();
 #ifdef USE_GFX_ILI9486
+<<<<<<< HEAD
 
     GPIO_ResetBits(LCD_RS_PIO, LCD_RS);
     UiLcdHy28_SpiSendByte(0);
     UiLcdHy28_SpiSendByte(index);
 
+=======
+
+    GPIO_ResetBits(LCD_RS_PIO, LCD_RS);
+    UiLcdHy28_SpiSendByte(0);
+    UiLcdHy28_SpiSendByte(index);
+
+>>>>>>> 4c41b7127a437473bb71f96f0fbeebf7210a8f7e
 #else
     UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
     UiLcdHy28_SpiSendByte(0);
@@ -652,10 +650,11 @@ void UiLcdHy28_WriteIndexSpi(unsigned char index)
 #endif
 }
 
-void UiLcdHy28_WriteDataSpi( unsigned short data)
+static inline void UiLcdHy28_WriteDataSpiStart()
 {
     UiLcdHy28_SpiLcdCsEnable();
 #ifdef USE_GFX_ILI9486
+<<<<<<< HEAD
 
     GPIO_SetBits(LCD_RS_PIO, LCD_RS);
     UiLcdHy28_SpiSendByte((data >>   8));                    /* Write D8..D15                */
@@ -667,17 +666,29 @@ void UiLcdHy28_WriteDataSpi( unsigned short data)
     UiLcdHy28_SpiSendByte((data & 0xFF));                    /* Write D0..D7                 */
 
     UiLcdHy28_LcdSpiFinishTransfer();
+=======
+    GPIO_SetBits(LCD_RS_PIO, LCD_RS);
+#else
+    UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
+>>>>>>> 4c41b7127a437473bb71f96f0fbeebf7210a8f7e
 #endif
 }
 
-static inline void UiLcdHy28_WriteDataSpiStart()
+void UiLcdHy28_WriteDataSpi( unsigned short data)
 {
+<<<<<<< HEAD
     UiLcdHy28_SpiLcdCsEnable();
 #ifdef USE_GFX_ILI9486
     GPIO_SetBits(LCD_RS_PIO, LCD_RS);
 #else
     UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
 #endif
+=======
+	UiLcdHy28_WriteDataSpiStart();
+    UiLcdHy28_SpiSendByte((data >>   8));                    /* Write D8..D15                */
+    UiLcdHy28_SpiSendByte((data & 0xFF));                    /* Write D0..D7   */
+    UiLcdHy28_LcdSpiFinishTransfer();
+>>>>>>> 4c41b7127a437473bb71f96f0fbeebf7210a8f7e
 }
 
 static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
@@ -1357,8 +1368,13 @@ static uint16_t UiLcdHy28_InitA(uint32_t display_type)
 	uint16_t retval;
 #ifdef USE_GFX_ILI9486
 	mchf_display.use_spi = true;
+<<<<<<< HEAD
     mchf_display.lcd_cs = LCD_CS;
     mchf_display.lcd_cs_pio = LCD_CS_PIO;
+=======
+    mchf_display.lcd_cs = LCD_D11;
+    mchf_display.lcd_cs_pio = LCD_D11_PIO;
+>>>>>>> 4c41b7127a437473bb71f96f0fbeebf7210a8f7e
 
     UiLcdHy28_SpiInit(HY28BHISPEED);
     UiLcdHy28_Reset();

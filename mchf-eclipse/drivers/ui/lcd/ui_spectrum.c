@@ -707,17 +707,25 @@ static void UiSpectrum_InitSpectrumDisplayData()
 
     if(ts.spectrum_size == SPECTRUM_NORMAL)	 						// waterfall the same size as spectrum scope
     {
+#ifdef USE_DISP_480_320
+        sd.wfall_ystart = WATERFALL_START_Y;
+        sd.wfall_size = WATERFALL_HEIGHT;
+#else
         sd.wfall_ystart = SPECTRUM_START_Y + SPECTRUM_SCOPE_TOP_LIMIT;
         sd.wfall_size = SPECTRUM_HEIGHT - SPECTRUM_SCOPE_TOP_LIMIT;
-
+#endif
         sd.scope_ystart = SPECTRUM_START_Y;
         sd.scope_size = SPECTRUM_HEIGHT;
     }																	// waterfall larger, covering the word "Waterfall Display"
     else if(ts.spectrum_size == SPECTRUM_BIG)
     {
+#ifdef USE_DISP_480_320
+        sd.wfall_ystart = WATERFALL_START_Y;
+        sd.wfall_size = WATERFALL_HEIGHT;
+#else
         sd.wfall_ystart = SPECTRUM_START_Y - WFALL_MEDIUM_ADDITIONAL;
         sd.wfall_size = SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL;
-
+#endif
         sd.scope_ystart = SPECTRUM_START_Y - SPEC_LIGHT_MORE_POINTS;
         sd.scope_size = SPECTRUM_HEIGHT + SPEC_LIGHT_MORE_POINTS;
     }
@@ -941,6 +949,9 @@ static void UiSpectrum_RedrawSpectrum()
         else
         {
             UiSpectrum_DrawScope(sd.Old_PosData, sd.FFT_Samples);
+#ifdef USE_DISP_480_320
+            UiSpectrum_DrawWaterfall();
+#endif
         }
         sd.state = 0;
         break;

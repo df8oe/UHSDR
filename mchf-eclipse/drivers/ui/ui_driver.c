@@ -980,7 +980,7 @@ static void UiDriver_DisplayFButton_F1MenuExit()
 		}
 		else
 		{
-			cap = ts.keyer_mode.cap[0];
+			cap = (char*) ts.keyer_mode.cap[0];
 			color = White;
 		}
 	}
@@ -1023,7 +1023,7 @@ static void UiDriver_DisplayFButton_F2SnapMeter()
 		}
 		else
 		{
-			cap = ts.keyer_mode.cap[1];
+			cap = (char *)ts.keyer_mode.cap[1];
 			color = White;
 		}
 	}
@@ -1056,7 +1056,7 @@ static void UiDriver_FButton_F3MemSplit()
 		}
 		else
 		{
-			cap = ts.keyer_mode.cap[2];
+			cap = (char *)ts.keyer_mode.cap[2];
 			color = White;
 		}
 
@@ -5952,7 +5952,7 @@ static void UiAction_PlayKeyerBtnN(int8_t n)
 		}
 		else
 		{
-			strcpy(ts.keyer_mode.cap[n], "BTN");
+			strcpy((char *) ts.keyer_mode.cap[n], "BTN");
 		}
 
 		UiDriver_TextMsgPutChar('<');
