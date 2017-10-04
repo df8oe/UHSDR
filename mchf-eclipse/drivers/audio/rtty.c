@@ -717,6 +717,14 @@ int DigiModes_TxBufferPutChar(uint8_t c)
     return ret;
 }
 
+void DigiModes_TxBufferPutSign(const char* s)
+{
+	DigiModes_TxBufferPutChar('<');
+	DigiModes_TxBufferPutChar(s[0]);
+	DigiModes_TxBufferPutChar(s[1]);
+	DigiModes_TxBufferPutChar('>');
+}
+
 void DigiModes_TxBufferReset()
 {
     digimodes_tx_tail = digimodes_tx_buffer_head;

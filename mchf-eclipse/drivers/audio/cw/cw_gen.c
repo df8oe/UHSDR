@@ -68,6 +68,8 @@
 // 3 => 8ms, 13 steps
 #define CW_SMOOTH_STEPS		9	// 1 step = 0.6ms; 13 for 8ms, 9 for 5.4 ms, for internal keyer
 
+#define CW_SPACE_CHAR		1
+
 typedef struct PaddleState
 {
 	// State machine and port states
@@ -106,7 +108,7 @@ static void   CwGen_TestFirstPaddle();
 // editors by placing both in vertically split window
 const uint32_t cw_char_codes[] =
 {
-		1,    // 		-> ' '
+		CW_SPACE_CHAR,    // 		-> ' '
 		2,    // . 		-> 'E'
 		3,    // - 		-> 'T'
 		10,   // .. 	-> 'I'
@@ -205,6 +207,33 @@ const char cw_char_chars[CW_CHAR_CODES] =
 		'-',
 		',',
 		':'
+};
+
+const uint32_t cw_sign_codes[] =
+{
+		187, //   <AA>
+		750, //   <AR>
+		746, //   <AS>
+		955, //   <CT>
+		43690, // <HH>
+		958, //   <KN>
+		3775, //  <NJ>
+		2747, //  <SK>
+		686 //    <SN>
+};
+
+#define CW_SIGN_CODES (sizeof(cw_sign_codes)/sizeof(*cw_sign_codes))
+const char* cw_sign_chars[CW_SIGN_CODES] =
+{
+		"AA",
+		"AR",
+		"AS",
+		"CT",
+		"HH",
+		"KN",
+		"NJ",
+		"SK",
+		"SN"
 };
 
 // Blackman-Harris function to keep CW signal bandwidth narrow
@@ -520,6 +549,7 @@ uint32_t CwGen_ReverseCode(uint32_t code)
 static void CwGen_CheckKeyerState(void)
 {
 	uint8_t c;
+	char prosign[2];
 
 	if (CwGen_DahRequested())
 	{
@@ -537,18 +567,44 @@ static void CwGen_CheckKeyerState(void)
 				(! (ps.port_state & CW_END_PROC) && ps.space_timer < ps.space_time - ps.dah_time))
 		{
 			DigiModes_TxBufferRemove(&c);
-			for (int i = 0; i<CW_CHAR_CODES; i++)
+			if (c=='<')
 			{
-				if (cw_char_chars[i] == c)
+				DigiModes_TxBufferRemove(&c);
+				prosign[0] = c;
+				DigiModes_TxBufferRemove(&c);
+				prosign[1] = c;
+				DigiModes_TxBufferRemove(&c);
+				if (c != '>') // Something is wrong - prosign not closed by matching >, better use space then
 				{
-					ps.sending_char = CwGen_ReverseCode(cw_char_codes[i]);
-					break;
+					ps.sending_char = CW_SPACE_CHAR;
+				}
+				else
+				{
+					for (int i = 0; i<CW_SIGN_CODES; i++)
+					{
+						if (cw_sign_chars[i][0] == prosign[0] && cw_sign_chars[i][1] == prosign[1])
+						{
+							ps.sending_char = CwGen_ReverseCode(cw_sign_codes[i]);
+							break;
+						}
+					}
+				}
+
+			}
+			else
+			{
+				for (int i = 0; i<CW_CHAR_CODES; i++)
+				{
+					if (cw_char_chars[i] == c)
+					{
+						ps.sending_char = CwGen_ReverseCode(cw_char_codes[i]);
+						break;
+					}
 				}
 			}
-
 		}
 
-		if (ps.sending_char > 1) // 1 is space
+		if (ps.sending_char > CW_SPACE_CHAR) // 1 is space
 		{
 			if (ps.sending_char % 4 == 3)
 			{
@@ -699,13 +755,42 @@ void CwGen_AddChar(ulong code)
 			{
 				DigiModes_TxBufferPutChar(result);
 			}
+			// HACK END
 
 			break;
 		}
 	}
 
-	// HACK END
-	UiDriver_TextMsgPutChar(result);
+	if (result != '*')
+	{
+		UiDriver_TextMsgPutChar(result);
+	}
+	else
+	{
+		for (int i = 0; i<CW_SIGN_CODES; i++)
+		{
+			if (cw_sign_codes[i] == code) {
+				result = '-';
+
+				UiDriver_TextMsgPutSign(cw_sign_chars[i]);
+
+				// FIXME: HACK HACK FOR RTTY TX TESTING
+				// We can use the same buffer for all digimodes
+				if ((ts.txrx_mode == TRX_MODE_TX && is_demod_rtty()) || ts.cw_text_entry) // Can rtty rely just on cw_text_entry here?
+				{
+					DigiModes_TxBufferPutSign(cw_sign_chars[i]);
+				}
+				// HACK END
+
+				break;
+			}
+		}
+		if (result == '*')
+		{
+			UiDriver_TextMsgPutChar('*');
+		}
+	}
+
 	ps.cw_char = 0;
 }
 
@@ -858,7 +943,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 			ps.key_timer--;
 			if(ps.key_timer == 0)
 			{
-				if(ps.cw_char > 5000)
+				if(ps.cw_char > 50000)
 				{
 					CwGen_AddChar(-1);
 					ps.port_state &= ~CW_END_PROC;
