@@ -174,6 +174,12 @@ enum
 // Spectrum height is bit lower that the whole control
 #define SPECTRUM_HEIGHT			(POS_SPECTRUM_IND_H - 10)
 
+//new hVGA lcd definitions
+#ifdef USE_DISP_480_320
+	#define WATERFALL_START_Y 240
+	#define WATERFALL_HEIGHT 60
+#endif
+
 // How much larger than the NORMAL spectrum display should the BIG Spectrum display be?
 #define SPEC_LIGHT_MORE_POINTS 15
 
