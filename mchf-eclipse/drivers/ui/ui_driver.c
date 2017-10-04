@@ -641,7 +641,7 @@ void UiDriver_TextMsgPutChar(char ch)
     ui_txt_msg_update = true;
 }
 
-void UiDriver_TextMsgPutSign(char *s)
+void UiDriver_TextMsgPutSign(const char *s)
 {
 	UiDriver_TextMsgPutChar('<');
 	UiDriver_TextMsgPutChar(s[0]);

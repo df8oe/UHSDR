@@ -27,4 +27,6 @@ bool	CwGen_Process(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 void 	CwGen_DahIRQ();
 void 	CwGen_DitIRQ();
 
+uint8_t CwGen_CharacterIdFunc(uint32_t);
+
 #endif

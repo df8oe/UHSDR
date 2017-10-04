@@ -68,7 +68,6 @@
 // 3 => 8ms, 13 steps
 #define CW_SMOOTH_STEPS		9	// 1 step = 0.6ms; 13 for 8ms, 9 for 5.4 ms, for internal keyer
 
-#define CW_SPACE_CHAR		1
 
 typedef struct PaddleState
 {
@@ -103,6 +102,8 @@ PaddleState  ps;
 static bool   CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static bool   CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static void   CwGen_TestFirstPaddle();
+
+#define CW_SPACE_CHAR		1
 
 // The vertical listing permits easier direct comparison of code vs. character in
 // editors by placing both in vertically split window
@@ -214,6 +215,7 @@ const uint32_t cw_sign_codes[] =
 		187, //   <AA>
 		750, //   <AR>
 		746, //   <AS>
+		61114, // <CL>
 		955, //   <CT>
 		43690, // <HH>
 		958, //   <KN>
@@ -228,6 +230,7 @@ const char* cw_sign_chars[CW_SIGN_CODES] =
 		"AA",
 		"AR",
 		"AS",
+		"CL",
 		"CT",
 		"HH",
 		"KN",
@@ -235,6 +238,21 @@ const char* cw_sign_chars[CW_SIGN_CODES] =
 		"SK",
 		"SN"
 };
+
+const char cw_sign_onechar[CW_SIGN_CODES] =
+{
+		'^', // AA
+		'+', // AR
+		'&', // AS
+		'{', // CL
+		'}', // CT
+		0x7f, // HH
+		'(', // KN
+		'%', // NJ
+		'>', // SK
+		'~' // SN
+};
+
 
 // Blackman-Harris function to keep CW signal bandwidth narrow
 #define CW_SMOOTH_TBL_SIZE  128
@@ -735,6 +753,48 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 	}
 	return retval;
 }
+
+//------------------------------------------------------------------
+//
+// The Character Identification Function applies dot/dash pattern
+// recognition to identify the received character.
+//
+// The function returns the ASCII code for the character received,
+// or 0xff if pattern was not recognized.
+//
+//------------------------------------------------------------------
+uint8_t CwGen_CharacterIdFunc(uint32_t code)
+{
+	uint8_t out = 0xff; // 0xff selected to indicate ERROR
+	// Should never happen - Empty, spike suppression or similar
+	if (code == 0)
+	{
+		out = 0xfe;
+	}
+
+	for (int i = 0; i<CW_CHAR_CODES; i++)
+	{
+		if (cw_char_codes[i] == code) {
+			out = cw_char_chars[i];
+			break;
+		}
+	}
+
+	if (out == 0xff)
+	{
+		for (int i = 0; i<CW_SIGN_CODES; i++)
+		{
+			if (cw_sign_codes[i] == code) {
+				out = cw_sign_onechar[i];
+
+				break;
+			}
+		}
+	}
+
+	return out;
+}
+
 
 // FIXME: HACK RTTY
 #include "radio_management.h"
