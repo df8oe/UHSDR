@@ -60,8 +60,8 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 //
 #define MAX_RF_ATTEN        15      // Maximum setting for RF attenuation
 //
-#define MIN_RIT_VALUE       -50     // Minimum RIT Value
-#define MAX_RIT_VALUE       50      // Maximum RIT Value
+#define MIN_RIT_VALUE       -60     // Minimum RIT Value -1.2 kHz
+#define MAX_RIT_VALUE       60      // Maximum RIT Value +1.2 kHz
 //
 #define MAX_RF_GAIN         50      // Maximum RF gain setting
 #define DEFAULT_RF_GAIN     50      // Default RF gain setting
