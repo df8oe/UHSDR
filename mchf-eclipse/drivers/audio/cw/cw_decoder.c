@@ -57,7 +57,8 @@ cw_config_t cw_decoder_config =
 		.noisecancel_enable = 1,
 		.spikecancel = 0,
 		.use_3_goertzels = false,
-		.snap_enable = true
+		.snap_enable = true,
+		.show_CW_LED = true // menu choice whether the user wants the CW LED indicator to be working or not
 };
 
 static void CW_Decode(void);
@@ -321,11 +322,11 @@ static void CW_Decode_exe(void)
 	}
 
 	ads.CW_signal = cw_state;
-	if(ts.dmod_mode == DEMOD_CW)
+//	if(ts.dmod_mode == DEMOD_CW)
+	if(cw_decoder_config.show_CW_LED == true && ts.cw_decoder_enable)
 		{
 			Board_RedLed(cw_state == true? LED_STATE_ON : LED_STATE_OFF);
 		}
-
 
 	//    6.) fill into circular buffer
 	//----------------
@@ -356,7 +357,7 @@ static void CW_Decode_exe(void)
 	cur_time = sig_timer;
 
 	//    7.) CW Decode
-	if(ts.cw_decoder_enable)
+	if(ts.cw_decoder_enable && ts.dmod_mode == DEMOD_CW)
 	{
 	  CW_Decode();                                     // Do all the heavy lifting
 	}
@@ -377,6 +378,11 @@ static void CW_Decode_exe(void)
 	}
 
 	cw_decoder_config.speed = speed_wpm_avg; // for external use, 0 indicates no signal condition
+
+	if(ts.txrx_mode == TRX_MODE_TX)
+	{	// just to ensure that during RX/TX switching the red LED remains lit in TX_mode
+		Board_RedLed(LED_STATE_ON);
+	}
 }
 
 void CwDecode_RxProcessor(float32_t * const src, int16_t blockSize)
