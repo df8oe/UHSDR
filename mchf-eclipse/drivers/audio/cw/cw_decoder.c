@@ -44,6 +44,7 @@
 #include "cw_decoder.h"
 #include "audio_driver.h"
 #include "rtty.h"
+#include "cw_gen.h"
 
 Goertzel cw_goertzel;
 
@@ -90,14 +91,6 @@ void CwDecode_FilterInit()
 // Typically 4 or 8 to select at time periods of 4 or 8 times 2.9ms.
 // 0 to deselect.
 
-//-----------------------------------------------------------------------------
-// Decode of International Morse Code Symbols - a somewhat random collection of country specific symbols
-// If you are not using these, then better not to enable.  The fewer unnecessary symbols - the more "meat"
-// the Error Correction function gets to resolve
-#define CW_ICELAND_SYMBOLS    0  // Þ Ð Æ Ö
-#define CW_NOR_DEN_SYMBOLS    0  // Æ Å Ø   - Norway/Denmark - overlaps with Iceland symbols, only select one
-#define CW_SWEDEN_SYMBOLS     0  // Ä Å Ö   - Sweden - overlaps with above symbols, only select one
-#define CW_REST_SYMBOLS       1  // Ü Ch É Ñ  - a random colletion of symbols
 
 #define CW_SIG_BUFSIZE      256  // Size of a circular buffer of decoded input levels and durations
 #define CW_DATA_BUFSIZE      40  // Size of a buffer of accumulated dot/dash information. Max is DATA_BUFSIZE-2
@@ -145,7 +138,7 @@ sigbuf data[CW_DATA_BUFSIZE]; // Buffer containing decoded dot/dash and time inf
 // for assembly into a character
 static uint8_t data_len = 0;             // Length of incoming character data
 
-static char code[CW_DATA_BUFSIZE]; // Decoded dot/dash info in symbol form, e.g. ".-.."
+static uint32_t code; // Decoded dot/dash info in pairs of bits, - is encoded as 11, and . is encoded as 10
 
 static bflags b;                            // Various Operational state flags
 
@@ -249,7 +242,7 @@ static void CW_Decode_exe(void)
 	siglevel = lvl / cw_decoder_config.average;
 
 #else
-	// better use exponential averager for averaging/smoothing here !? Let´s try!
+	// better use exponential averager for averaging/smoothing here !? Letï¿½s try!
 //	siglevel = siglevel * SIGNAL_TAU + ONEM_SIGNAL_TAU * old_siglevel;
 //	old_siglevel = magnitudeSquared;
 #endif
@@ -705,203 +698,23 @@ bool DataRecognitionFunc(bool* new_char_p)
 void CodeGenFunc()
 {
 	uint8_t a;
+	code = 0;
+
 	for (a = 0; a < data_len; a++)
 	{
+		code *= 4;
 		if (data[a].state)
 		{
-			code[a] = '-';
+			code += 3; // Dash
 		}
 		else
 		{
-			code[a] = '.';
+			code += 2; // Dit
 		}
 	}
-	code[a] = 0;                                      // Terminate string
 	data_len = 0;                               // And make ready for a new Char
 }
 
-//------------------------------------------------------------------
-//
-// The Character Identification Function applies dot/dash pattern
-// recognition to identify the received character.
-//
-// The function returns the ASCII code for the character received,
-// or 0xff if pattern was not recognized.
-//
-//------------------------------------------------------------------
-uint8_t CharacterIdFunc(void)
-{
-	uint8_t out;
-	// FIXME: UHSDR CW Keyer Decoder has a more efficient way to do the same thing
-	// and we should not have twice the "same" function. It uses a different way to encode
-	// so that virtually all CW signs (all upto 8 symbols long dit/dash combinations) can be encoded in a 16bit uint.
-
-	// Should never happen - Empty, spike suppression or similar
-	if (code[0] == 0)
-	{
-		out = 0xfe;
-	}
-	// TODO, there are a number of ways to make this faster,
-	// but this doesn't seem to be a bottleneck
-	else if (strcmp(code, ".-") == 0)
-		out = 'A';
-	else if (strcmp(code, "-...") == 0)
-		out = 'B';
-	else if (strcmp(code, "-.-.") == 0)
-		out = 'C';
-	else if (strcmp(code, "-..") == 0)
-		out = 'D';
-	else if (strcmp(code, ".") == 0)
-		out = 'E';
-	else if (strcmp(code, "..-.") == 0)
-		out = 'F';
-	else if (strcmp(code, "--.") == 0)
-		out = 'G';
-	else if (strcmp(code, "....") == 0)
-		out = 'H';
-	else if (strcmp(code, "..") == 0)
-		out = 'I';
-	else if (strcmp(code, ".---") == 0)
-		out = 'J';
-	else if (strcmp(code, "-.-") == 0)
-		out = 'K';
-	else if (strcmp(code, ".-..") == 0)
-		out = 'L';
-	else if (strcmp(code, "--") == 0)
-		out = 'M';
-	else if (strcmp(code, "-.") == 0)
-		out = 'N';
-	else if (strcmp(code, "---") == 0)
-		out = 'O';
-	else if (strcmp(code, ".--.") == 0)
-		out = 'P';
-	else if (strcmp(code, "--.-") == 0)
-		out = 'Q';
-	else if (strcmp(code, ".-.") == 0)
-		out = 'R';
-	else if (strcmp(code, "...") == 0)
-		out = 'S';
-	else if (strcmp(code, "-") == 0)
-		out = 'T';
-	else if (strcmp(code, "..-") == 0)
-		out = 'U';
-	else if (strcmp(code, "...-") == 0)
-		out = 'V';
-	else if (strcmp(code, ".--") == 0)
-		out = 'W';
-	else if (strcmp(code, "-..-") == 0)
-		out = 'X';
-	else if (strcmp(code, "-.--") == 0)
-		out = 'Y';
-	else if (strcmp(code, "--..") == 0)
-		out = 'Z';
-
-	else if (strcmp(code, ".----") == 0)
-		out = '1';
-	else if (strcmp(code, "..---") == 0)
-		out = '2';
-	else if (strcmp(code, "...--") == 0)
-		out = '3';
-	else if (strcmp(code, "....-") == 0)
-		out = '4';
-	else if (strcmp(code, ".....") == 0)
-		out = '5';
-	else if (strcmp(code, "-....") == 0)
-		out = '6';
-	else if (strcmp(code, "--...") == 0)
-		out = '7';
-	else if (strcmp(code, "---..") == 0)
-		out = '8';
-	else if (strcmp(code, "----.") == 0)
-		out = '9';
-	else if (strcmp(code, "-----") == 0)
-		out = '0';
-
-	else if (strcmp(code, ".-.-.-") == 0)
-		out = '.';
-	else if (strcmp(code, "--..--") == 0)
-		out = ',';
-	else if (strcmp(code, "-....-") == 0)
-		out = '-';
-	else if (strcmp(code, "-...-") == 0)
-		out = '=';
-	else if (strcmp(code, "..--.-") == 0)
-		out = '_';
-	else if (strcmp(code, "-..-.") == 0)
-		out = '/';
-	else if (strcmp(code, ".-..-.") == 0)
-		out = '\"';
-	else if (strcmp(code, "..--..") == 0)
-		out = '?';
-	else if (strcmp(code, "-.-.--") == 0)
-		out = '!';
-	else if (strcmp(code, ".--.-.") == 0)
-		out = '@';
-	else if (strcmp(code, "---...") == 0)
-		out = ':';
-	else if (strcmp(code, "-.-.-.") == 0)
-		out = ';';
-	else if (strcmp(code, "-.--.-") == 0)
-		out = ')';
-	else if (strcmp(code, "...-..-") == 0)
-		out = '$';
-
-	// Prosign codes
-	else if (strcmp(code, "-.--.") == 0)
-		out = '(';   // ( and KN - Over to you only
-	else if (strcmp(code, ".-...") == 0)
-		out = '&';   // & and AS - Wait
-	else if (strcmp(code, ".-.-.") == 0)
-		out = '+';   // + and AR - End of message
-	else if (strcmp(code, "-.-.-") == 0)
-		out = '}';   // KA - Starting signal
-	else if (strcmp(code, "...-.") == 0)
-		out = '~';   // SN - Understood
-	else if (strcmp(code, "...-.-") == 0)
-		out = '>';   // SK . End of contact
-	else if (strcmp(code, "-...-.-") == 0)
-		out = '^';   // BK - Break
-	else if (strcmp(code, "-.-..-..") == 0)
-		out = '{';   // CL - Closing station
-	else if (strcmp(code, "........") == 0)
-		out = 0x7f; // Error / Correction
-	else if (strcmp(code, "...---...") == 0)
-		out = '!';  // SOS
-
-	// This is a somewhat random collection of International Characters,
-	// including Icelandic, Norwegian/Danish, Swedish...
-#if ICELAND_SYMBOLS
-	else if (strcmp(code,".--..") == 0) out = 0;     // 'Þ'
-	else if (strcmp(code,"..--.") == 0) out = 1;// 'Ð'
-#endif
-#if ICELAND_SYMBOLS || NOR_DEN_SYMBOLS
-	else if (strcmp(code,".-.-") == 0) out = 2;     // 'Æ' - overlaps with 'Ä'
-#endif
-#if SWEDEN_SYMBOLS
-	else if (strcmp(code,".-.-") == 0) out = 6;     // 'Ä' - overlaps with 'Æ'
-#endif
-#if ICELAND_SYMBOLS || SWEDEN_SYMBOLS
-	else if (strcmp(code,"---.") == 0) out = 3;     // 'Ö'  - overlaps with 'Ø'
-#endif
-#if NOR_DEN_SYMBOLS
-	else if (strcmp(code,"---.") == 0) out = 4;     // 'Ø'  - overlaps with 'Ö'
-#endif
-#if NOR_DEN_SYMBOLS || SWEDEN_SYMBOLS
-	else if (strcmp(code,".--.-") == 0) out = 5;     // 'Å'
-#endif
-#if REST_SYMBOLS
-	else if (strcmp(code,"..--") == 0) out = 7;     // 'Ü'
-	else if (strcmp(code,"..-..") == 0) out = 8;// 'É'
-	else if (strcmp(code,"--.--") == 0) out = 9;// 'Ñ'
-	else if (strcmp(code,"----") == 0) out = 10;// 'Ch'
-#endif
-
-	else                        // No code identified - error correction routine
-	{
-		out = 0xff;                           // 0xff selected to indicate ERROR
-	}
-	return out;
-}
 
 void lcdLineScrollPrint(char c)
 {
@@ -921,84 +734,11 @@ void PrintCharFunc(uint8_t c)
 	// Print Characters to LCD
 
 	//--------------------------------------
-	// International UTF-8 encoded (non ASCII) characters
-#if ICELAND_SYMBOLS || NOR_DAN_SYMBOLS || SWEDEN_SYMBOLS || REST_SYMBOLS
-	char tmp[3];                         // Accommodate UTF-8 encoded characters
-	if (c == 0)
-	{
-		strcpy(tmp,"Þ");
-		lcdLineScrollPrint(tmp[0]);
-		lcdLineScrollPrint(tmp[1]);
-	}
-	else if (c == 1)
-	{
-		strcpy(tmp,"Ð");
-		lcdLineScrollPrint(tmp[0]);
-		lcdLineScrollPrint(tmp[1]);
-	}
-	else if (c == 2)
-	{
-		strcpy(tmp,"Æ");
-		lcdLineScrollPrint(tmp[0]);
-		lcdLineScrollPrint(tmp[1]);
-	}
-	else if (c == 3)
-	{
-		strcpy(tmp,"Ö");
-		lcdLineScrollPrint(tmp[0]);
-		lcdLineScrollPrint(tmp[1]);
-	}
-	else if (c == 4)
-	{
-		strcpy(tmp,"Ø");
-		lcdLineScrollPrint(tmp[0]);
-		lcdLineScrollPrint(tmp[1]);
-	}
-	else if (c == 5)
-	{
-		strcpy(tmp,"Å");
-		lcdLineScrollPrint(tmp[0]);
-		lcdLineScrollPrint(tmp[1]);
-	}
-	else if (c == 6)
-	{
-		strcpy(tmp,"Ä");
-		lcdLineScrollPrint(tmp[0]);
-		lcdLineScrollPrint(tmp[1]);
-	}
-	else if (c == 7)
-	{
-		strcpy(tmp,"Ü");
-		lcdLineScrollPrint(tmp[0]);
-		lcdLineScrollPrint(tmp[1]);
-	}
-
-	else if (c == 8)
-	{
-		strcpy(tmp,"É");
-		lcdLineScrollPrint(tmp[0]);
-		lcdLineScrollPrint(tmp[1]);
-	}
-	else if (c == 9)
-	{
-		strcpy(tmp,"Ñ");
-		lcdLineScrollPrint(tmp[0]);
-		lcdLineScrollPrint(tmp[1]);
-	}
-	else if (c == 10)
-	{
-		strcpy(tmp,"Ch");
-		lcdLineScrollPrint(tmp[0]);
-		lcdLineScrollPrint(tmp[1]);
-	}
-#endif
-
-	//--------------------------------------
 	// Prosigns
 	if (c == '}')
 	{
-		lcdLineScrollPrint('k');
-		lcdLineScrollPrint('a');
+		lcdLineScrollPrint('c');
+		lcdLineScrollPrint('t');
 	}
 	else if (c == '(')
 	{
@@ -1035,11 +775,15 @@ void PrintCharFunc(uint8_t c)
 		lcdLineScrollPrint('c');
 		lcdLineScrollPrint('l');
 	}
-	else if (c == '!')
+	else if (c == '^')
 	{
-		lcdLineScrollPrint('s');
-		lcdLineScrollPrint('o');
-		lcdLineScrollPrint('s');
+		lcdLineScrollPrint('a');
+		lcdLineScrollPrint('a');
+	}
+	else if (c == '%')
+	{
+		lcdLineScrollPrint('n');
+		lcdLineScrollPrint('j');
 	}
 	else if (c == 0x7f)
 	{
@@ -1220,7 +964,7 @@ bool ErrorCorrectionFunc(void)
 			}
 
 			CodeGenFunc();                 // Generate a dot/dash pattern string
-			decoded[0] = CharacterIdFunc(); // Convert dot/dash data into a character
+			decoded[0] = CwGen_CharacterIdFunc(code); // Convert dot/dash data into a character
 			if (decoded[0] != 0xff)
 			{
 				PrintCharFunc(decoded[0]);
@@ -1255,7 +999,7 @@ bool ErrorCorrectionFunc(void)
 			}
 
 			CodeGenFunc();                 // Generate a dot/dash pattern string
-			decoded[0] = CharacterIdFunc(); // Convert dot/dash pattern into a character
+			decoded[0] = CwGen_CharacterIdFunc(code); // Convert dot/dash pattern into a character
 			// Process second character delimited by character or word space
 
 			while (DataRecognitionFunc(&dummy))
@@ -1263,7 +1007,7 @@ bool ErrorCorrectionFunc(void)
 				// nothing
 			}
 			CodeGenFunc();                 // Generate a dot/dash pattern string
-			decoded[1] = CharacterIdFunc(); // Convert dot/dash pattern into a character
+			decoded[1] = CwGen_CharacterIdFunc(code); // Convert dot/dash pattern into a character
 
 			if ((decoded[0] != 0xff) && (decoded[1] != 0xff)) // If successful error resolution
 			{
@@ -1310,7 +1054,7 @@ void CW_Decode(void)
 		{
 			CodeGenFunc();                 	// Generate a dot/dash pattern string
 
-			uint8_t decoded = CharacterIdFunc();
+			uint8_t decoded = CwGen_CharacterIdFunc(code);
 			// Identify the Character
 			// 0xff if char not recognized
 

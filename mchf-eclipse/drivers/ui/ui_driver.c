@@ -641,6 +641,13 @@ void UiDriver_TextMsgPutChar(char ch)
     ui_txt_msg_update = true;
 }
 
+void UiDriver_TextMsgPutSign(const char *s)
+{
+	UiDriver_TextMsgPutChar('<');
+	UiDriver_TextMsgPutChar(s[0]);
+	UiDriver_TextMsgPutChar(s[1]);
+	UiDriver_TextMsgPutChar('>');
+}
 
 static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool encoder_active,
 		const char* text, uint32_t color, uint32_t clr_val, bool text_is_value)
