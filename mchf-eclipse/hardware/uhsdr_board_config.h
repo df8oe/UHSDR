@@ -558,17 +558,16 @@
 #define LCD_CSA                 GPIO_PIN_7
 #define LCD_CSA_PIO             GPIOD
 // pin 8
-#define LCD_D15                 GPIO_PIN_8
-#define LCD_D15_PIO             GPIOD
+#define LCD_D13                 GPIO_PIN_8
+#define LCD_D13_PIO             GPIOD
 // pin 9
-#define LCD_D16                 GPIO_PIN_9
-#define LCD_D16_PIO             GPIOD
+#define LCD_D14                 GPIO_PIN_9
+#define LCD_D14_PIO             GPIOD
 // pin 10
-#define LCD_D17                 GPIO_PIN_10
-#define LCD_D17_PIO             GPIOD
+#define LCD_D15                 GPIO_PIN_10
+#define LCD_D15_PIO             GPIOD
 // pin 11
-#define LCD_RS                  GPIO_PIN_11
-#define LCD_RS_PIO              GPIOD
+//SAI INTERFACE: SAI2_SD_A
 // pin 12
 #define ENC_TWO_CH1             GPIO_PIN_12
 #define ENC_TWO_CH1_PIO         GPIOD
@@ -619,20 +618,20 @@
 #define LCD_D7                  GPIO_PIN_10
 #define LCD_D7_PIO              GPIOE
 // pin 11
-#define LCD_D10                 GPIO_PIN_11
-#define LCD_D10_PIO             GPIOE
+#define LCD_D8                  GPIO_PIN_11
+#define LCD_D8_PIO              GPIOE
 // pin 12
-#define LCD_D11                 GPIO_PIN_12
-#define LCD_D11_PIO             GPIOE
+#define LCD_D9                  GPIO_PIN_12
+#define LCD_D9_PIO              GPIOE
 // pin 13
-#define LCD_D12                 GPIO_PIN_13
-#define LCD_D12_PIO             GPIOE
+#define LCD_D10                 GPIO_PIN_13
+#define LCD_D10_PIO             GPIOE
 // pin 14
-#define LCD_D13                 GPIO_PIN_14
-#define LCD_D13_PIO             GPIOE
+#define LCD_D11                 GPIO_PIN_14
+#define LCD_D11_PIO             GPIOE
 // pin 15
-#define LCD_D14                 GPIO_PIN_15
-#define LCD_D14_PIO             GPIOE
+#define LCD_D12                 GPIO_PIN_15
+#define LCD_D12_PIO             GPIOE
 
 // -----------------------------------------------------------------------------
 // ----                         PORT F                                      ----
@@ -689,6 +688,8 @@
 #define BUTTON_PWR              GPIO_PIN_2
 #define BUTTON_PWR_PIO          GPIOG
 // pin 3
+#define LCD_RS                  GPIO_PIN_3
+#define LCD_RS_PIO              GPIOG
 // pin 4
 #define TP_IRQ                  GPIO_PIN_4
 #define TP_IRQ_PIO              GPIOG
