@@ -235,6 +235,9 @@ basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c \
 basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/gcc/startup_stm32f407xx.S \
 basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c \
+
+
+DSPLIB_SRC:=\
 basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/TransformFunctions/arm_bitreversal.c \
 basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/TransformFunctions/arm_cfft_f32.c \
 basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/TransformFunctions/arm_cfft_q15.c \
