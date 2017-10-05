@@ -249,6 +249,8 @@ basesw/ovi40/Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_ll_usb.c \
 basesw/ovi40/Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_ll_utils.c \
 basesw/ovi40/Drivers/CMSIS/Device/ST/STM32F7xx/Source/Templates/gcc/startup_stm32f767xx.S \
 basesw/ovi40/Drivers/CMSIS/Device/ST/STM32F7xx/Source/Templates/system_stm32f7xx.c \
+
+DSPLIB_SRC:=\
 basesw/ovi40/Drivers/CMSIS/DSP_Lib/Source/TransformFunctions/arm_bitreversal2.S \
 basesw/ovi40/Drivers/CMSIS/DSP_Lib/Source/TransformFunctions/arm_bitreversal.c \
 basesw/ovi40/Drivers/CMSIS/DSP_Lib/Source/TransformFunctions/arm_cfft_f32.c \

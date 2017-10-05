@@ -123,6 +123,7 @@ $(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link.ld
 
 	include $(ROOTLOC)/bootloader.mak
 
+
 endif
 ifeq ($(BUILDFOR),F7)
 
@@ -183,16 +184,19 @@ endif
 
 # how to compile individual object files
 OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRC:.cpp=.o)))
+DSPLIB_OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(DSPLIB_SRC:.cpp=.o)))
 BLOBJS := $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(BLSRC:.c=.o)))
+
+$(DSPLIB_OBJS): EXTRA_CFLAGS:= -Wno-strict-aliasing
 
 .S.o:
 	$(ECHO) "  [CC] $@"
 	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
-	$(CC) $(CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
 .c.o:
 	$(ECHO) "  [CC] $@"
 	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
-	$(CC) $(CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
 
 .cxx.o:
 	$(ECHO) "  [CXX] $@"
@@ -254,9 +258,9 @@ $(BOOTLOADER):  $(BOOTLOADER).bin $(BOOTLOADER).dfu
 	# compile the bootloader ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map and .dmp
 
 # compilation
-$(FIRMWARE).elf:  $(OBJS) 
+$(FIRMWARE).elf:  $(OBJS) $(DSPLIB_OBJS)
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ $(OBJS) $(DSPLIB_OBJS) $(LIBS)
 
 # compilation
 $(BOOTLOADER).elf:  $(BLOBJS) 
