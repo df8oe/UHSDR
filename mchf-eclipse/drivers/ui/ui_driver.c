@@ -1271,7 +1271,9 @@ void UiDriver_ModeSpecificDisplayClear(uint8_t dmod_mode, uint8_t digital_mode)
 		switch(digital_mode)
 		{
 		case DigitalMode_FreeDV:
+#ifdef USE_FREEDV
 			FreeDv_DisplayClear();
+#endif
 			break;
 		case DigitalMode_RTTY:
 			UiDriver_TextMsgClear();
@@ -1313,7 +1315,9 @@ void UiDriver_ModeSpecificDisplayPrepare(uint8_t dmod_mode, uint8_t digital_mode
 		switch(digital_mode)
 		{
 		case DigitalMode_FreeDV:
+#ifdef USE_FREEDV
 			FreeDv_DisplayPrepare();
+#endif
 			break;
 		case DigitalMode_RTTY:
 			UiDriver_TextMsgClear();

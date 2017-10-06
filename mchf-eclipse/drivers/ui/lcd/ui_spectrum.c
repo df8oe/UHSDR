@@ -1270,7 +1270,6 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
 	if(ads.CW_signal || (ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)) // this is only done, if there has been a pulse from the CW station that exceeds the threshold
 		// in the CW decoder section
 	{
-		static uint8_t snap_counter = 0;
 		static float32_t freq_old = 10000000.0;
 	float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
 	// 1. lowpass filter all the relevant bins over 2 to 20 FFTs (?)
@@ -1337,6 +1336,10 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     ads.snap_carrier_freq = (ulong) (help_freq);
     freq_old = help_freq;
 
+#ifdef USE_SNAP
+
+	static uint8_t snap_counter = 0;
+
     if(sc.snap == true)
     {
     	snap_counter++;
@@ -1350,7 +1353,7 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     		sc.snap = false;
     	}
     }
-
+#endif
     // graphical TUNE HELPER display
     UiSpectrum_CwSnapDisplay (delta);
 
