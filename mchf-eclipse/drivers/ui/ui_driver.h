@@ -256,24 +256,8 @@ extern PowerMeter				pwmt;
 
 extern const ulong tune_steps[T_STEP_MAX_STEPS];
 
-#ifdef USE_FREEDV
-int fdv_iq_buffer_peek(FDV_IQ_Buffer** c_ptr);
-int fdv_iq_buffer_remove(FDV_IQ_Buffer** c_ptr);
-/* no room left in the buffer returns 0 */
-int fdv_iq_buffer_add(FDV_IQ_Buffer* c);
-void fdv_iq_buffer_reset();
-int8_t fdv_iq_has_data();
-int32_t fdv_iq_has_room();
+#define ui_txt_msg_buffer_max 44 // no more space on single screen line
 
-
-int fdv_audio_buffer_peek(FDV_Audio_Buffer** c_ptr);
-int fdv_audio_buffer_remove(FDV_Audio_Buffer** c_ptr);
-/* no room left in the buffer returns 0 */
-int fdv_audio_buffer_add(FDV_Audio_Buffer* c);
-void fdv_audio_buffer_reset();
-int8_t fdv_audio_has_data();
-int32_t fdv_audio_has_room();
-#endif
 
 #ifdef alternate_NR
 
