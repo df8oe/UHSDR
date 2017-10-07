@@ -1830,7 +1830,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 
 
-//ts.cw_decode_average - wieviele Goertzel-Schätzwerte werden in einem
+//ts.cw_decode_average - wieviele Goertzel-Schï¿½tzwerte werden in einem
 //moving window zusammengefasst [uint8_t 1 - 20]
 #if 0
     case MENU_CW_DECODER_AVERAGE:  // averager for CW decode [1 - 20]
@@ -3664,7 +3664,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     	 break;
 
     case MENU_DIGITAL_MODE_SELECT:
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.digital_mode,0,DigitalMode_RTTY,0,1);
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.digital_mode,0,DigitalMode_BPSK,0,1);
         if (var_change)
         {
             // TODO: Factor this out into a Ui function for (de-)activating Rtty mode
