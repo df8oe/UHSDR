@@ -54,6 +54,7 @@
 
 #include "rtty.h"
 #include "cw_decoder.h"
+#include "psk.h"
 
 // POSITIONS START
 #define SPLIT_ACTIVE_COLOUR         		Yellow      // colour of "SPLIT" indicator when active
@@ -238,6 +239,7 @@ static bool UiDriver_SaveConfiguration();
 
 static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
+static void UiDriver_DisplayPskSpeed(bool encoder_active);
 
 typedef struct
 {
@@ -1276,6 +1278,7 @@ void UiDriver_ModeSpecificDisplayClear(uint8_t dmod_mode, uint8_t digital_mode)
 #endif
 			break;
 		case DigitalMode_RTTY:
+		case DigitalMode_BPSK:
 			UiDriver_TextMsgClear();
 			break;
 		default:
@@ -1320,6 +1323,7 @@ void UiDriver_ModeSpecificDisplayPrepare(uint8_t dmod_mode, uint8_t digital_mode
 #endif
 			break;
 		case DigitalMode_RTTY:
+		case DigitalMode_BPSK:
 			UiDriver_TextMsgClear();
 			break;
 		default:
@@ -1503,6 +1507,9 @@ void UiDriver_DisplayDemodMode()
 		{
 		case DigitalMode_RTTY:
 			txt = ts.digi_lsb?"RT-L":"RT-U";
+			break;
+		case DigitalMode_BPSK:
+			txt = ts.digi_lsb?"PSK-L":"PSK-U";
 			break;
 		default:
 			txt = ts.digi_lsb?"DI-L":"DI-U";
@@ -2986,6 +2993,9 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
 				ts.enc_one_mode = ENC_ONE_MODE_RTTY_SPEED;
 			}
 			ts.enc_two_mode = ENC_TWO_MODE_RTTY_SHIFT;
+			break;
+		case DigitalMode_BPSK:
+			ts.enc_thr_mode = ENC_THREE_MODE_PSK_SPEED;
 		}
 	}
 	break;
@@ -3601,6 +3611,13 @@ static void UiDriver_CheckEncoderThree()
 				CwGen_SetSpeed();
 				UiDriver_DisplayKeyerSpeed(1);
 				break;
+			case ENC_THREE_MODE_PSK_SPEED:
+				// FIXME Implement PSK speed selection
+				psk_ctrl_config.speed_idx = change_and_limit_int(psk_ctrl_config.speed_idx,pot_diff_step,0,PSK_SPEED_NUM-1);
+				PskDecoder_Init();
+				UiDriver_DisplayPskSpeed(true);
+				break;
+				// Update audio volume
 			case ENC_THREE_MODE_INPUT_CTRL:
 				// in voice mode, adjust audio input gain
 			{
@@ -3752,6 +3769,12 @@ static bool UiDriver_IsApplicableEncoderThreeMode(uint8_t mode)
 	case ENC_THREE_MODE_CW_SPEED:
 		retval = ts.dmod_mode == DEMOD_CW;
 		break;
+	case ENC_THREE_MODE_PSK_SPEED:
+		retval = is_demod_psk();
+		break;
+	case ENC_THREE_MODE_INPUT_CTRL:
+		//retval = ts.dmod_mode != DEMOD_DIGI || (ts.digital_mode != DigitalMode_BPSK && ts.digital_mode != DigitalMode_RTTY);
+		break;
 	}
 	return retval;
 }
@@ -3767,6 +3790,9 @@ static void UiDriver_DisplayEncoderThreeMode()
 	{
 	case ENC_THREE_MODE_CW_SPEED:
 		UiDriver_DisplayKeyerSpeed(1);
+		break;
+	case ENC_THREE_MODE_PSK_SPEED:
+		UiDriver_DisplayPskSpeed(1);
 		break;
 	case ENC_THREE_MODE_INPUT_CTRL:
 		UiDriver_DisplayLineInModeAndGain(1);
@@ -3954,6 +3980,12 @@ static void UiDriver_DisplayRttySpeed(bool encoder_active)
 {
 	uint16_t  color = encoder_active?White:Grey;
 	UiDriver_EncoderDisplay(1,0,"BD", encoder_active, rtty_speeds[rtty_ctrl_config.speed_idx].label, color);
+}
+
+static void UiDriver_DisplayPskSpeed(bool encoder_active)
+{
+	uint16_t  color = encoder_active?White:Grey;
+	UiDriver_EncoderDisplay(1,2,"PSK", encoder_active, psk_speeds[psk_ctrl_config.speed_idx].label, color);
 }
 
 static void UiDriver_DisplayRttyShift(bool encoder_active)
@@ -5764,9 +5796,9 @@ static void UiAction_ChangeFrequencyByTouch()
 
 static void UiAction_ChangeDigitalMode()
 {
-	incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_RTTY);
+	incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_BPSK);
 	// We limit the reachable modes to the ones truly available
-	// which is FreeDV1 and RTTY for now
+	// which is FreeDV1, RTTY, BPSK for now
 	UiDriver_ToggleDigitalMode();
 }
 
@@ -6398,7 +6430,7 @@ void UiDriver_MainHandler()
 			}
 			if (kbdChar != '\0')
 			{
-				if (is_demod_rtty())
+				if (is_demod_rtty() || is_demod_psk())
 				{
 					DigiModes_TxBufferPutChar(kbdChar);
 				}
