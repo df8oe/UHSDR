@@ -42,7 +42,7 @@
 //#define HY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
 
 // should be fine now (Oct 2017), since SNAP now does not use any more memory
-#define USE_FREEDV_AND_SNAP // experimental!!!
+//#define USE_FREEDV_AND_SNAP // experimental!!!
 
 
 #ifdef USE_FREEDV_AND_SNAP
@@ -70,6 +70,20 @@
 #include "stm32f7xx_hal_rtc.h"
 #include "stm32f7xx_hal_pwr.h"
 #include "stm32f7xx_hal_flash.h"
+#include "core_cm7.h"
+#elif defined(STM32H7)
+#include "stm32h7xx_hal_rcc.h"
+#include "stm32h7xx_hal_gpio.h"
+#include "stm32h7xx_hal_spi.h"
+#include "stm32h7xx_hal_dma.h"
+#include "stm32h7xx_hal_i2c.h"
+#include "stm32h7xx_hal_i2s.h"
+#include "stm32h7xx_hal_adc.h"
+#include "stm32h7xx_hal_dac.h"
+#include "stm32h7xx_hal_tim.h"
+#include "stm32h7xx_hal_rtc.h"
+#include "stm32h7xx_hal_pwr.h"
+#include "stm32h7xx_hal_flash.h"
 #include "core_cm7.h"
 #else
 #include "stm32f4xx_hal_rcc.h"

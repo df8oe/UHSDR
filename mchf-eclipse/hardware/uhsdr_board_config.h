@@ -335,7 +335,7 @@
 #define LCD_D14_PIO      		GPIOE
 #endif
 
-#ifdef STM32F7
+#if defined(STM32F7) || defined(STM32H7)
 
 #ifndef TRX_NAME
 #define TRX_NAME "OVI40"
@@ -714,6 +714,11 @@
 // pin 14
 // pin 15
 
+#ifdef STM32H7
+#define hdac hdac1
+#define FLASHSIZE_BASE 0x1FF1E880
+#define SRAM2_BASE 0x38000000
+#endif
 #endif
 
 //
@@ -724,9 +729,14 @@
 
 
 
-
+#ifdef STM32H7
+#define GPIO_SetBits(PORT,PINS) { (PORT)->BSRRL = (PINS); }
+#define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRRH = (PINS); }
+#else
 #define GPIO_SetBits(PORT,PINS) { (PORT)->BSRR = (PINS); }
 #define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRR = (PINS) << 16U; }
+#endif
+
 #define GPIO_ToggleBits(PORT,PINS) { (PORT)->ODR ^= (PINS); }
 #define GPIO_ReadInputDataBit(PORT,PINS) { ((PORT)->IDR = (PINS); }
 

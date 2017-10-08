@@ -19,11 +19,18 @@ typedef enum {
     CPU_NONE = 0,
     CPU_STM32F4 = 1,
     CPU_STM32F7 = 2,
+    CPU_STM32H7 = 3,
 } mchf_cpu_t;
 
 
 #ifdef CORTEX_M7
-#include "stm32f7xx_hal.h"
+#ifdef STM32H743xx
+	#include "stm32h7xx.h"
+	#include "stm32h7xx_hal.h"
+#else
+	#include "stm32f7xx_hal.h"
+#endif
+
 #endif
 #ifdef CORTEX_M4
 #include "stm32f4xx.h"
@@ -37,6 +44,8 @@ inline mchf_cpu_t MchfHW_Cpu()
     retval = CPU_STM32F4;
 #elif  defined(STM32F7)
     retval = CPU_STM32F7;
+#elif  defined(STM32H7)
+    retval = CPU_STM32H7;
 #endif
     return retval;
 }

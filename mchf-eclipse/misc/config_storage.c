@@ -68,7 +68,7 @@ uint16_t ConfigStorage_ReadVariable(uint16_t addr, uint16_t *value)
 //*----------------------------------------------------------------------------
 uint16_t ConfigStorage_WriteVariable(uint16_t addr, uint16_t value)
 {
-    HAL_StatusTypeDef status = FLASH_ERROR_OPERATION;
+    HAL_StatusTypeDef status = HAL_ERROR;
     if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
     {
         SerialEEPROM_UpdateVariable(addr, value);

@@ -18,7 +18,7 @@
 #ifdef UI_BRD_MCHF
     #define USE_DISPLAY_SPI
 #endif
-#ifdef STM32F7
+#if defined(STM32F7) || defined(STM32H7)
     #define USE_SPI_HAL
 #endif
 
@@ -359,7 +359,7 @@ void UiLcdHy28_BacklightInit()
     GPIO_InitStructure.Pin = LCD_BACKLIGHT;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
-    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(LCD_BACKLIGHT_PIO, &GPIO_InitStructure);
 
     // Backlight off
@@ -431,7 +431,7 @@ void UiLcdHy28_SpiInit(bool hispeed)
 #endif
     // Common misc pins settings
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
 
     // Configure GPIO PIN for Chip select
@@ -478,7 +478,7 @@ void UiLcdHy28_SpiDeInit()
 
     // Set as inputs
     GPIO_InitStructure.Mode		= GPIO_MODE_INPUT;
-    GPIO_InitStructure.Speed	= GPIO_SPEED_LOW;
+    GPIO_InitStructure.Speed	= GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Pull		= GPIO_NOPULL;
 
 #if 0
@@ -561,10 +561,17 @@ uint8_t spi_dr_dummy; // used to make sure that DR is being read
 static inline void UiLcdHy28_SpiFinishTransfer()
 {
     while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
+#ifdef STM32H7
+    while (!(SPI2->SR & SPI_FLAG_RXNE)) {}
+    if (SPI2->SR & SPI_FLAG_RXNE) {
+         spi_dr_dummy = SPI2->RXDR;
+     }
+#else
     while (SPI2->SR & SPI_FLAG_BSY) {}
     if (SPI2->SR & SPI_FLAG_RXNE) {
         spi_dr_dummy = SPI2->DR;
     }
+#endif
 }
 
 static void UiLcdHy28_LcdSpiFinishTransfer()
@@ -1398,13 +1405,20 @@ uint8_t UiLcdHy28_Init()
 /*
  * @brief Called to run the touch detection state machine, results are stored in ts structure
  */
-static inline void UiLcdHy28_SetSpiPrescaler(const uint16_t baudrate_prescaler)
+#ifndef STM32H7
+typedef uint16_t spi_reg_t;
+#else
+typedef uint32_t spi_reg_t;
+#endif
+
+static inline void UiLcdHy28_SetSpiPrescaler(const uint32_t baudrate_prescaler)
 {
     /*---------------------------- SPIx CR1 Configuration ------------------------*/
     /* Get the SPIx CR1 value */
-    uint16_t tmpreg = SPI2->CR1;
-    tmpreg &= ~(uint16_t)((uint32_t) (SPI_BAUDRATEPRESCALER_256));
-    tmpreg |= (uint16_t)((uint32_t) (baudrate_prescaler));
+
+    spi_reg_t tmpreg = SPI2->CR1;
+    tmpreg &= ~(spi_reg_t)(SPI_BAUDRATEPRESCALER_256);
+    tmpreg |= (spi_reg_t)(baudrate_prescaler);
     /* Write to SPIx CR1 */
     SPI2->CR1 = tmpreg;
 }

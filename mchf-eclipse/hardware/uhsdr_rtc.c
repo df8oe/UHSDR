@@ -15,6 +15,10 @@
 #include "stm32f4xx_hal_rtc.h"
 #include "stm32f4xx_hal_rtc_ex.h"
 #include "stm32f4xx_hal_rcc.h"
+#elif defined(STM32H7)
+#include "stm32h7xx_hal_rtc.h"
+#include "stm32h7xx_hal_rtc_ex.h"
+#include "stm32h7xx_hal_rcc.h"
 #else
 #include "stm32f7xx_hal_rtc.h"
 #include "stm32f7xx_hal_rtc_ex.h"

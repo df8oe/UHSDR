@@ -62,7 +62,7 @@ void fifo_destroy(struct FIFO *fifo) {
     free(fifo);
 }
 
-int fifo_write(struct FIFO *fifo, short data[], int n) {
+int fdv_fifo_write(struct FIFO *fifo, short data[], int n) {
     int            i;
     short         *pdata;
     short         *pin = fifo->pin;
@@ -90,7 +90,7 @@ int fifo_write(struct FIFO *fifo, short data[], int n) {
     return 0;
 }
 
-int fifo_read(struct FIFO *fifo, short data[], int n)
+int fdv_fifo_read(struct FIFO *fifo, short data[], int n)
 {
     int            i;
     short         *pdata;
