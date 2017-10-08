@@ -3623,6 +3623,7 @@ static void UiDriver_CheckEncoderThree()
 			case ENC_THREE_MODE_PSK_SPEED:
 				// FIXME Implement PSK speed selection
 				psk_ctrl_config.speed_idx = change_and_limit_int(psk_ctrl_config.speed_idx,pot_diff_step,0,PSK_SPEED_NUM-1);
+				UiDriver_TextMsgClear();
 				PskDecoder_Init();
 				UiDriver_DisplayPskSpeed(true);
 				break;
