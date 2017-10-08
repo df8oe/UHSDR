@@ -26,13 +26,13 @@ psk_ctrl_t psk_ctrl_config =
 void PskDecoder_Init(void)
 {
 	//FIXME To be implemented;
-	/*
-	char s[] = "PSK mode not implemented yet";
-	char *p = s;
-	while (p++ != '\0')
+	char s[] = "- PSK mode not implemented yet";
+	char *p;
+
+	p = s;
+	while (*(p++) != '\0')
 	{
 		UiDriver_TextMsgPutChar(*p);
 	}
-	*/
 }
 

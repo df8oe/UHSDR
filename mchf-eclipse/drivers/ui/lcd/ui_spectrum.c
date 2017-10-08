@@ -138,6 +138,10 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
                 mode_marker[1] = mode_marker[0] + rtty_shifts[rtty_ctrl_config.shift_idx].value;
                 sd.marker_num = 2;
                 break;
+            case DigitalMode_BPSK:
+            	mode_marker[0] = 1000;
+            	sd.marker_num = 1;
+            	break;
             default:
                 mode_marker[0] = 0;
                 sd.marker_num = 1;
