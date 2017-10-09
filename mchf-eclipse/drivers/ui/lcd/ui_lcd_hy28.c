@@ -455,6 +455,12 @@ void UiLcdHy28_SpiInit(bool hispeed)
     HAL_GPIO_Init(LCD_RS_PIO, &GPIO_InitStructure);
 #endif
 
+#ifdef TimeDebug
+    //Configure GPIO pin for routine time optimization (for scope probe)
+    GPIO_InitStructure.Pin = MARKER;
+    HAL_GPIO_Init(MARKER_PIO, &GPIO_InitStructure);
+#endif
+
     // Deselect : Chip Select high
     GPIO_SetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }

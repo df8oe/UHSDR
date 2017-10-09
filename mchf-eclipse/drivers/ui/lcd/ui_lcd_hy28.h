@@ -24,6 +24,13 @@
 	#define MAX_Y  240
 #endif
 
+#ifdef TimeDebug
+#define MARKER LCD_D0
+#define MARKER_PIO LCD_D0_PIO
+
+#define Marker_ON  MARKER_PIO->BSRR=MARKER;
+#define Marker_OFF MARKER_PIO->BSRR=MARKER<<16;
+#endif
 
 #ifndef HY28BHISPEED
 #define HY28BHISPEED false

@@ -12,6 +12,7 @@
  **  Licence:      GNU GPLv3                                                      **
  ************************************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 #include "ui_spectrum.h"
 #include "ui_lcd_hy28.h"
 // For spectrum display struct
@@ -30,6 +31,17 @@ SpectrumDisplay  __MCHF_SPECIALMEM       sd;
 // this data structure is now located in the Core Connected Memory of the STM32F4
 // this is highly hardware specific code. This data structure nicely fills the 64k with roughly 60k.
 // If this data structure is being changed,  be aware of the 64k limit. See linker script arm-gcc-link.ld
+
+
+#ifdef USE_DISP_480_320
+	#ifdef STM32F4
+	//Waterfall memory for low memory F4 devices (with 192kB of RAM).
+	//For higher memory capacity (256kB) devices, malloc() is used instead. But this memory is reserved always.
+	uint8_t __MCHF_SPECIALMEM WaterfallShortArray[WATERFALL_HEIGHT/2][SPECTRUM_WIDTH];
+	#endif
+#endif
+
+
 
 //
 // scaling factors for the various dB/division settings
@@ -360,6 +372,13 @@ static void UiSpectrum_CreateDrawArea()
                 Grey,
                 RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
     }
+#ifdef USE_DISP_480_320
+    if(ts.ramsize<256)
+    {
+
+    }
+
+#endif
 }
 
 void UiSpectrum_Clear()
@@ -707,28 +726,32 @@ static void UiSpectrum_InitSpectrumDisplayData()
 
     if(ts.spectrum_size == SPECTRUM_NORMAL)	 						// waterfall the same size as spectrum scope
     {
-#ifdef USE_DISP_480_320
-        sd.wfall_ystart = WATERFALL_START_Y;
-        sd.wfall_size = WATERFALL_HEIGHT;
-#else
         sd.wfall_ystart = SPECTRUM_START_Y + SPECTRUM_SCOPE_TOP_LIMIT;
         sd.wfall_size = SPECTRUM_HEIGHT - SPECTRUM_SCOPE_TOP_LIMIT;
-#endif
         sd.scope_ystart = SPECTRUM_START_Y;
         sd.scope_size = SPECTRUM_HEIGHT;
     }																	// waterfall larger, covering the word "Waterfall Display"
     else if(ts.spectrum_size == SPECTRUM_BIG)
     {
-#ifdef USE_DISP_480_320
-        sd.wfall_ystart = WATERFALL_START_Y;
-        sd.wfall_size = WATERFALL_HEIGHT;
-#else
         sd.wfall_ystart = SPECTRUM_START_Y - WFALL_MEDIUM_ADDITIONAL;
         sd.wfall_size = SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL;
-#endif
         sd.scope_ystart = SPECTRUM_START_Y - SPEC_LIGHT_MORE_POINTS;
         sd.scope_size = SPECTRUM_HEIGHT + SPEC_LIGHT_MORE_POINTS;
     }
+
+#ifdef USE_DISP_480_320
+        sd.wfall_ystart = WATERFALL_START_Y;
+        if(ts.ramsize<256)
+        {
+        	sd.wfall_size = WATERFALL_HEIGHT/2;
+        	sd.doubleWaterfallLine = 1;
+        }
+        else
+        {
+        	sd.wfall_size = WATERFALL_HEIGHT;
+        	sd.doubleWaterfallLine = 0;
+        }
+#endif
 
     for (uint16_t idx = 0; idx < SPECTRUM_WIDTH; idx++)
     {
@@ -811,7 +834,18 @@ static void UiSpectrum_DrawWaterfall()
         // the location of any of the display data - as long as we "blindly" write precisely the correct number of pixels per
         // line and the number of lines.
 
+#ifdef USE_DISP_480_320
+        if(sd.doubleWaterfallLine)
+        {
+        	UiLcdHy28_BulkPixel_OpenWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_size*2);
+        }
+        else
+        {
+        	UiLcdHy28_BulkPixel_OpenWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_size);
+        }
+#else
         UiLcdHy28_BulkPixel_OpenWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_size);
+#endif
 
         uint16_t spectrum_pixel_buf[SPECTRUM_WIDTH];
 
@@ -823,7 +857,12 @@ static void UiSpectrum_DrawWaterfall()
             }
 
             UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, SPECTRUM_WIDTH);
-
+#ifdef USE_DISP_480_320
+            if(sd.doubleWaterfallLine)
+            {
+            	UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, SPECTRUM_WIDTH);
+            }
+#endif
             lptr++;                                 // point to next line in circular display buffer
             lptr %= sd.wfall_size;              // clip to display height
         }
@@ -948,9 +987,13 @@ static void UiSpectrum_RedrawSpectrum()
         }
         else
         {
+        	Marker_ON
             UiSpectrum_DrawScope(sd.Old_PosData, sd.FFT_Samples);
+        	Marker_OFF
 #ifdef USE_DISP_480_320
+            //Marker_ON
             UiSpectrum_DrawWaterfall();
+            //Marker_OFF
 #endif
         }
         sd.state = 0;
@@ -1567,5 +1610,19 @@ static void UiSpectrum_CalculateDBm()
     }
 }
 
-
+#ifdef USE_DISP_480_320
+//Waterfall memory pointer allocation.
+//It sets memory pointer to Height/2 array located in CCM for f4 devices with low ram amount. For all rest allocates memory by calling malloc.
+void UiSpectrum_SetWaterfallMemoryPointer(uint16_t ramsize)
+{
+	if(ramsize<256)
+	{
+		sd.waterfall=WaterfallShortArray;	//CCM memory for devices with low ram amount. Used with each line doubled.
+	}
+	else
+	{
+		sd.waterfall=(uint8_t (*)[SPECTRUM_WIDTH]) malloc(WATERFALL_HEIGHT*SPECTRUM_WIDTH);	//malloc returns pointer in normal ram (for F4 devices CCM memory is always 64kB)
+	}
+}
+#endif
 
