@@ -2985,7 +2985,10 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
 			{
 				ts.enc_one_mode = ENC_ONE_MODE_RTTY_SPEED;
 			}
-			ts.enc_two_mode = ENC_TWO_MODE_RTTY_SHIFT;
+			if (ts.enc_two_mode != ENC_TWO_MODE_RF_GAIN)
+			{
+				ts.enc_two_mode = ENC_TWO_MODE_RTTY_SHIFT;
+			}
 		}
 	}
 	break;
