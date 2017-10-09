@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-11937 752,-11937 752,4 -4,4"/>
 <text text-anchor="middle" x="374" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v.. &#45; Menus Overview</text>
-<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;10&#45;04T08:41:28 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2017&#45;10&#45;09T17:54:20 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="uhsdr-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-3858.5"/>
@@ -1283,7 +1283,7 @@
 <text text-anchor="middle" x="555.5" y="-7049.3" font-family="Times,serif" font-size="14.00">LCD Auto Blank</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;CONFIG_LCD_AUTO_OFF_MODE -->
-<g id="edge231" class="edge"><title>MENU_DISPLAY&#45;&gt;CONFIG_LCD_AUTO_OFF_MODE</title>
+<g id="edge232" class="edge"><title>MENU_DISPLAY&#45;&gt;CONFIG_LCD_AUTO_OFF_MODE</title>
 <path fill="none" stroke="black" d="M244.768,-6475.54C250.679,-6574.05 278.895,-6958.41 363,-7037.5 382.086,-7055.45 407.329,-7064.96 433.202,-7069.52"/>
 <polygon fill="black" stroke="black" points="432.725,-7072.99 443.137,-7071.03 433.777,-7066.07 432.725,-7072.99"/>
 </g>
@@ -1295,7 +1295,7 @@
 <text text-anchor="middle" x="555.5" y="-6998.3" font-family="Times,serif" font-size="14.00">Step Size Marker</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;CONFIG_FREQ_STEP_MARKER_LINE -->
-<g id="edge232" class="edge"><title>MENU_DISPLAY&#45;&gt;CONFIG_FREQ_STEP_MARKER_LINE</title>
+<g id="edge233" class="edge"><title>MENU_DISPLAY&#45;&gt;CONFIG_FREQ_STEP_MARKER_LINE</title>
 <path fill="none" stroke="black" d="M245.265,-6475.72C252.849,-6569.07 285.858,-6915.3 363,-6986.5 379.154,-7001.41 399.571,-7010.46 421.014,-7015.67"/>
 <polygon fill="black" stroke="black" points="420.414,-7019.12 430.926,-7017.8 421.886,-7012.28 420.414,-7019.12"/>
 </g>
@@ -1307,7 +1307,7 @@
 <text text-anchor="middle" x="555.5" y="-6947.3" font-family="Times,serif" font-size="14.00">Filter BW Display</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;CONFIG_DISP_FILTER_BANDWIDTH -->
-<g id="edge233" class="edge"><title>MENU_DISPLAY&#45;&gt;CONFIG_DISP_FILTER_BANDWIDTH</title>
+<g id="edge234" class="edge"><title>MENU_DISPLAY&#45;&gt;CONFIG_DISP_FILTER_BANDWIDTH</title>
 <path fill="none" stroke="black" d="M245.835,-6475.58C255.162,-6563 292.698,-6872.06 363,-6935.5 379.536,-6950.42 400.362,-6959.42 422.143,-6964.57"/>
 <polygon fill="black" stroke="black" points="421.702,-6968.06 432.206,-6966.67 423.133,-6961.2 421.702,-6968.06"/>
 </g>
@@ -1319,7 +1319,7 @@
 <text text-anchor="middle" x="555.5" y="-6896.3" font-family="Times,serif" font-size="14.00">Spectrum Size</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_SIZE -->
-<g id="edge234" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_SIZE</title>
+<g id="edge235" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_SIZE</title>
 <path fill="none" stroke="black" d="M246.558,-6475.65C257.805,-6557.13 299.552,-6828.8 363,-6884.5 389.179,-6907.48 425.595,-6916.27 459.65,-6918.6"/>
 <polygon fill="black" stroke="black" points="459.489,-6922.09 469.653,-6919.1 459.843,-6915.1 459.489,-6922.09"/>
 </g>
@@ -1331,7 +1331,7 @@
 <text text-anchor="middle" x="555.5" y="-6845.3" font-family="Times,serif" font-size="14.00">Spectrum Filter</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_FILTER_STRENGTH -->
-<g id="edge235" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_FILTER_STRENGTH</title>
+<g id="edge236" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_FILTER_STRENGTH</title>
 <path fill="none" stroke="black" d="M242.935,-6475.86C242.69,-6543.28 251.981,-6739.33 363,-6833.5 377.151,-6845.5 394.116,-6853.58 412.022,-6858.87"/>
 <polygon fill="black" stroke="black" points="411.492,-6862.35 422.055,-6861.53 413.285,-6855.59 411.492,-6862.35"/>
 </g>
@@ -1343,7 +1343,7 @@
 <text text-anchor="middle" x="555.5" y="-6794.3" font-family="Times,serif" font-size="14.00">Spec FreqScale Colour</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_FREQSCALE_COLOUR -->
-<g id="edge236" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_FREQSCALE_COLOUR</title>
+<g id="edge237" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_FREQSCALE_COLOUR</title>
 <path fill="none" stroke="black" d="M244.217,-6475.85C247.462,-6537.12 265.298,-6703.21 363,-6782.5 375.19,-6792.39 389.316,-6799.57 404.263,-6804.7"/>
 <polygon fill="black" stroke="black" points="403.604,-6808.16 414.193,-6807.78 405.679,-6801.47 403.604,-6808.16"/>
 </g>
@@ -1355,7 +1355,7 @@
 <text text-anchor="middle" x="555.5" y="-6743.3" font-family="Times,serif" font-size="14.00">TX Carrier Colour</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_CENTER_LINE_COLOUR -->
-<g id="edge237" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_CENTER_LINE_COLOUR</title>
+<g id="edge238" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SPECTRUM_CENTER_LINE_COLOUR</title>
 <path fill="none" stroke="black" d="M245.924,-6475.87C252.933,-6530.5 278.464,-6666.82 363,-6731.5 373.625,-6739.63 385.581,-6745.88 398.197,-6750.64"/>
 <polygon fill="black" stroke="black" points="397.367,-6754.06 407.962,-6754 399.644,-6747.44 397.367,-6754.06"/>
 </g>
@@ -1367,7 +1367,7 @@
 <text text-anchor="middle" x="555.5" y="-6692.3" font-family="Times,serif" font-size="14.00">Spectrum FFT Wind.</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;CONFIG_SPECTRUM_FFT_WINDOW_TYPE -->
-<g id="edge238" class="edge"><title>MENU_DISPLAY&#45;&gt;CONFIG_SPECTRUM_FFT_WINDOW_TYPE</title>
+<g id="edge239" class="edge"><title>MENU_DISPLAY&#45;&gt;CONFIG_SPECTRUM_FFT_WINDOW_TYPE</title>
 <path fill="none" stroke="black" d="M248.234,-6475.52C259.229,-6522.65 291.225,-6629.9 363,-6680.5 375.268,-6689.15 389.092,-6695.6 403.554,-6700.36"/>
 <polygon fill="black" stroke="black" points="402.555,-6703.71 413.139,-6703.25 404.574,-6697.01 402.555,-6703.71"/>
 </g>
@@ -1379,7 +1379,7 @@
 <text text-anchor="middle" x="555.5" y="-6641.3" font-family="Times,serif" font-size="14.00">Scope Light</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SCOPE_LIGHT_ENABLE -->
-<g id="edge239" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_LIGHT_ENABLE</title>
+<g id="edge240" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_LIGHT_ENABLE</title>
 <path fill="none" stroke="black" d="M251.803,-6475.51C267.149,-6514.42 303.887,-6592.56 363,-6629.5 385.471,-6643.54 412.286,-6651.49 438.631,-6655.77"/>
 <polygon fill="black" stroke="black" points="438.296,-6659.26 448.696,-6657.24 439.304,-6652.33 438.296,-6659.26"/>
 </g>
@@ -1391,7 +1391,7 @@
 <text text-anchor="middle" x="555.5" y="-6590.3" font-family="Times,serif" font-size="14.00">Scope 1/Speed</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SCOPE_SPEED -->
-<g id="edge240" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_SPEED</title>
+<g id="edge241" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_SPEED</title>
 <path fill="none" stroke="black" d="M258.076,-6475.6C277.923,-6504.89 316.372,-6554.46 363,-6578.5 395.051,-6595.02 433.914,-6602.43 468.232,-6605.47"/>
 <polygon fill="black" stroke="black" points="468.011,-6608.96 478.252,-6606.25 468.552,-6601.98 468.011,-6608.96"/>
 </g>
@@ -1403,7 +1403,7 @@
 <text text-anchor="middle" x="555.5" y="-6539.3" font-family="Times,serif" font-size="14.00">Scope AGC Adj.</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SCOPE_AGC_ADJUST -->
-<g id="edge241" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_AGC_ADJUST</title>
+<g id="edge242" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_AGC_ADJUST</title>
 <path fill="none" stroke="black" d="M272.601,-6475.7C295.733,-6492.87 329.64,-6515.31 363,-6527.5 389.121,-6537.04 418.386,-6543.24 446.026,-6547.25"/>
 <polygon fill="black" stroke="black" points="445.745,-6550.74 456.127,-6548.63 446.694,-6543.81 445.745,-6550.74"/>
 </g>
@@ -1415,7 +1415,7 @@
 <text text-anchor="middle" x="555.5" y="-6488.3" font-family="Times,serif" font-size="14.00">Scope Trace Colour</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SCOPE_TRACE_COLOUR -->
-<g id="edge242" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_TRACE_COLOUR</title>
+<g id="edge243" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_TRACE_COLOUR</title>
 <path fill="none" stroke="black" d="M303.247,-6465.21C322.299,-6469.07 343.497,-6473.17 363,-6476.5 386.562,-6480.52 411.828,-6484.4 436.03,-6487.89"/>
 <polygon fill="black" stroke="black" points="435.57,-6491.36 445.965,-6489.32 436.562,-6484.43 435.57,-6491.36"/>
 </g>
@@ -1427,7 +1427,7 @@
 <text text-anchor="middle" x="555.5" y="-6437.3" font-family="Times,serif" font-size="14.00">Scope Grid Colour</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SCOPE_GRID_COLOUR -->
-<g id="edge243" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_GRID_COLOUR</title>
+<g id="edge244" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_GRID_COLOUR</title>
 <path fill="none" stroke="black" d="M303.096,-6452.5C342.122,-6452.5 394.369,-6452.5 441.122,-6452.5"/>
 <polygon fill="black" stroke="black" points="441.317,-6456 451.317,-6452.5 441.317,-6449 441.317,-6456"/>
 </g>
@@ -1439,7 +1439,7 @@
 <text text-anchor="middle" x="555.5" y="-6386.3" font-family="Times,serif" font-size="14.00">Scope Div.</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SCOPE_DB_DIVISION -->
-<g id="edge244" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_DB_DIVISION</title>
+<g id="edge245" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_DB_DIVISION</title>
 <path fill="none" stroke="black" d="M303.278,-6440.45C322.332,-6436.75 343.523,-6432.8 363,-6429.5 389.997,-6424.93 419.212,-6420.43 446.497,-6416.42"/>
 <polygon fill="black" stroke="black" points="447.064,-6419.88 456.454,-6414.97 446.053,-6412.95 447.064,-6419.88"/>
 </g>
@@ -1451,7 +1451,7 @@
 <text text-anchor="middle" x="555.5" y="-6335.3" font-family="Times,serif" font-size="14.00">Scope NoSig Adj.</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_SCOPE_NOSIG_ADJUST -->
-<g id="edge245" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_NOSIG_ADJUST</title>
+<g id="edge246" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_SCOPE_NOSIG_ADJUST</title>
 <path fill="none" stroke="black" d="M273.15,-6429.32C296.305,-6412.45 329.989,-6390.54 363,-6378.5 387.104,-6369.71 413.868,-6363.67 439.559,-6359.52"/>
 <polygon fill="black" stroke="black" points="440.368,-6362.94 449.725,-6357.97 439.311,-6356.02 440.368,-6362.94"/>
 </g>
@@ -1463,7 +1463,7 @@
 <text text-anchor="middle" x="555.5" y="-6284.3" font-family="Times,serif" font-size="14.00">Wfall 1/Speed</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_WFALL_SPEED -->
-<g id="edge246" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_WFALL_SPEED</title>
+<g id="edge247" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_WFALL_SPEED</title>
 <path fill="none" stroke="black" d="M258.312,-6429.37C278.278,-6400.32 316.714,-6351.39 363,-6327.5 394.251,-6311.37 431.962,-6303.75 465.625,-6300.37"/>
 <polygon fill="black" stroke="black" points="466.279,-6303.83 475.93,-6299.46 465.66,-6296.86 466.279,-6303.83"/>
 </g>
@@ -1475,7 +1475,7 @@
 <text text-anchor="middle" x="555.5" y="-6233.3" font-family="Times,serif" font-size="14.00">Wfall Colours</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_WFALL_COLOR_SCHEME -->
-<g id="edge247" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_WFALL_COLOR_SCHEME</title>
+<g id="edge248" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_WFALL_COLOR_SCHEME</title>
 <path fill="none" stroke="black" d="M251.985,-6429.34C267.492,-6390.59 304.319,-6313.27 363,-6276.5 383.645,-6263.56 407.958,-6255.71 432.206,-6251.1"/>
 <polygon fill="black" stroke="black" points="432.955,-6254.52 442.214,-6249.37 431.765,-6247.62 432.955,-6254.52"/>
 </g>
@@ -1487,7 +1487,7 @@
 <text text-anchor="middle" x="555.5" y="-6182.3" font-family="Times,serif" font-size="14.00">Wfall Step Size</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_WFALL_STEP_SIZE -->
-<g id="edge248" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_WFALL_STEP_SIZE</title>
+<g id="edge249" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_WFALL_STEP_SIZE</title>
 <path fill="none" stroke="black" d="M248.372,-6429.24C259.547,-6382.2 291.737,-6275.91 363,-6225.5 388.865,-6207.2 421.657,-6198.58 452.765,-6195"/>
 <polygon fill="black" stroke="black" points="453.188,-6198.47 462.794,-6194.01 452.498,-6191.51 453.188,-6198.47"/>
 </g>
@@ -1499,7 +1499,7 @@
 <text text-anchor="middle" x="555.5" y="-6131.3" font-family="Times,serif" font-size="14.00">Wfall Contrast</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_WFALL_CONTRAST -->
-<g id="edge249" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_WFALL_CONTRAST</title>
+<g id="edge250" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_WFALL_CONTRAST</title>
 <path fill="none" stroke="black" d="M245.975,-6429.24C253.093,-6374.86 278.843,-6239.14 363,-6174.5 387.886,-6155.38 420.101,-6146.49 450.985,-6142.9"/>
 <polygon fill="black" stroke="black" points="451.348,-6146.38 460.955,-6141.92 450.66,-6139.42 451.348,-6146.38"/>
 </g>
@@ -1511,7 +1511,7 @@
 <text text-anchor="middle" x="555.5" y="-6080.3" font-family="Times,serif" font-size="14.00">Upper Meter Colour</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_METER_COLOUR_UP -->
-<g id="edge250" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_METER_COLOUR_UP</title>
+<g id="edge251" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_METER_COLOUR_UP</title>
 <path fill="none" stroke="black" d="M244.265,-6429.25C247.626,-6368.23 265.723,-6202.78 363,-6123.5 386.401,-6104.43 416.963,-6095.3 446.778,-6091.47"/>
 <polygon fill="black" stroke="black" points="447.288,-6094.94 456.849,-6090.37 446.528,-6087.98 447.288,-6094.94"/>
 </g>
@@ -1523,7 +1523,7 @@
 <text text-anchor="middle" x="555.5" y="-6029.3" font-family="Times,serif" font-size="14.00">Lower Meter Colour</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_METER_COLOUR_DOWN -->
-<g id="edge251" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_METER_COLOUR_DOWN</title>
+<g id="edge252" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_METER_COLOUR_DOWN</title>
 <path fill="none" stroke="black" d="M242.981,-6429.22C242.859,-6362.05 252.452,-6166.69 363,-6072.5 382.957,-6055.5 408.54,-6046.26 434.465,-6041.63"/>
 <polygon fill="black" stroke="black" points="435.068,-6045.08 444.407,-6040.07 433.986,-6038.16 435.068,-6045.08"/>
 </g>
@@ -1535,7 +1535,7 @@
 <text text-anchor="middle" x="555.5" y="-5978.3" font-family="Times,serif" font-size="14.00">dBm display</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_DBM_DISPLAY -->
-<g id="edge252" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_DBM_DISPLAY</title>
+<g id="edge253" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_DBM_DISPLAY</title>
 <path fill="none" stroke="black" d="M246.576,-6429.42C257.885,-6348.16 299.814,-6077.23 363,-6021.5 390.637,-5997.13 429.742,-5988.5 465.415,-5986.6"/>
 <polygon fill="black" stroke="black" points="465.997,-5990.08 475.865,-5986.22 465.746,-5983.08 465.997,-5990.08"/>
 </g>
@@ -1547,7 +1547,7 @@
 <text text-anchor="middle" x="555.5" y="-5927.3" font-family="Times,serif" font-size="14.00">dBm calibrate</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_DBM_CALIBRATE -->
-<g id="edge253" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_DBM_CALIBRATE</title>
+<g id="edge254" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_DBM_CALIBRATE</title>
 <path fill="none" stroke="black" d="M245.852,-6429.48C255.244,-6342.27 292.982,-6033.98 363,-5970.5 388.04,-5947.8 422.97,-5938.61 456.151,-5935.83"/>
 <polygon fill="black" stroke="black" points="456.629,-5939.31 466.38,-5935.16 456.173,-5932.32 456.629,-5939.31"/>
 </g>
@@ -1559,7 +1559,7 @@
 <text text-anchor="middle" x="555.5" y="-5876.3" font-family="Times,serif" font-size="14.00">S&#45;Meter</text>
 </g>
 <!-- MENU_DISPLAY&#45;&gt;MENU_S_METER -->
-<g id="edge254" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_S_METER</title>
+<g id="edge255" class="edge"><title>MENU_DISPLAY&#45;&gt;MENU_S_METER</title>
 <path fill="none" stroke="black" d="M245.282,-6429.33C252.932,-6336.2 286.164,-5990.75 363,-5919.5 394.684,-5890.12 442.861,-5883.19 482.965,-5883.57"/>
 <polygon fill="black" stroke="black" points="482.889,-5887.07 492.972,-5883.82 483.061,-5880.07 482.889,-5887.07"/>
 </g>
@@ -2921,70 +2921,75 @@
 </g>
 <!-- 0 -->
 <g id="node244" class="node"><title>0</title>
-<polygon fill="none" stroke="black" points="496,-54.5 496,-100.5 615,-100.5 615,-54.5 496,-54.5"/>
+<polygon fill="none" stroke="black" points="505,-54.5 505,-100.5 606,-100.5 606,-54.5 505,-54.5"/>
 <text text-anchor="middle" x="555.5" y="-85.3" font-family="Times,serif" font-size="14.00">0</text>
-<polyline fill="none" stroke="black" points="496,-77.5 615,-77.5 "/>
-<text text-anchor="middle" x="555.5" y="-62.3" font-family="Times,serif" font-size="14.00">UA9OLB (Dmitri)</text>
+<polyline fill="none" stroke="black" points="505,-77.5 606,-77.5 "/>
+<text text-anchor="middle" x="555.5" y="-62.3" font-family="Times,serif" font-size="14.00">S53DZ (Bojan)</text>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge219" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-62.6723C376.864,-60.1857 438.957,-60.4722 485.694,-63.5318"/>
-<polygon fill="black" stroke="black" points="485.499,-67.0266 495.723,-64.2501 485.999,-60.0445 485.499,-67.0266"/>
+<path fill="none" stroke="black" d="M327.251,-61.3243C380.049,-58.4375 446.98,-58.9768 494.497,-62.9421"/>
+<polygon fill="black" stroke="black" points="494.353,-66.4434 504.63,-63.8703 494.991,-59.4726 494.353,-66.4434"/>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge220" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-65.3683C376.864,-63.3337 438.957,-63.5681 485.694,-66.0715"/>
-<polygon fill="black" stroke="black" points="485.536,-69.5681 495.723,-66.6591 485.945,-62.5801 485.536,-69.5681"/>
+<path fill="none" stroke="black" d="M327.251,-64.0203C380.049,-61.6146 446.98,-62.064 494.497,-65.3684"/>
+<polygon fill="black" stroke="black" points="494.393,-68.8705 504.63,-66.1419 494.926,-61.8908 494.393,-68.8705"/>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge221" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-68.0642C376.864,-66.4818 438.957,-66.6641 485.694,-68.6111"/>
-<polygon fill="black" stroke="black" points="485.574,-72.1092 495.723,-69.0682 485.893,-65.1165 485.574,-72.1092"/>
+<path fill="none" stroke="black" d="M327.251,-66.7162C380.049,-64.7917 446.98,-65.1512 494.497,-67.7947"/>
+<polygon fill="black" stroke="black" points="494.435,-71.2974 504.63,-68.4135 494.862,-64.3104 494.435,-71.2974"/>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge222" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-70.7601C376.864,-69.6299 438.957,-69.7601 485.694,-71.1508"/>
-<polygon fill="black" stroke="black" points="485.615,-74.65 495.723,-71.4773 485.843,-67.6537 485.615,-74.65"/>
+<path fill="none" stroke="black" d="M327.251,-69.4122C380.049,-67.9688 446.98,-68.2384 494.497,-70.221"/>
+<polygon fill="black" stroke="black" points="494.48,-73.7238 504.63,-70.6851 494.801,-66.7312 494.48,-73.7238"/>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge223" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-73.4561C376.864,-72.7779 438.957,-72.856 485.694,-73.6905"/>
-<polygon fill="black" stroke="black" points="485.657,-77.1903 495.723,-73.8864 485.794,-70.1917 485.657,-77.1903"/>
+<path fill="none" stroke="black" d="M327.251,-72.1081C380.049,-71.1458 446.98,-71.3256 494.497,-72.6474"/>
+<polygon fill="black" stroke="black" points="494.528,-76.1498 504.63,-72.9568 494.742,-69.1531 494.528,-76.1498"/>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge224" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-76.152C376.864,-75.926 438.957,-75.952 485.694,-76.2302"/>
-<polygon fill="black" stroke="black" points="485.701,-79.7302 495.723,-76.2955 485.746,-72.7303 485.701,-79.7302"/>
+<path fill="none" stroke="black" d="M327.251,-74.8041C380.049,-74.3229 446.98,-74.4128 494.497,-75.0737"/>
+<polygon fill="black" stroke="black" points="494.578,-78.5752 504.63,-75.2284 494.685,-71.576 494.578,-78.5752"/>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge225" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-78.848C376.864,-79.074 438.957,-79.048 485.694,-78.7698"/>
-<polygon fill="black" stroke="black" points="485.746,-82.2697 495.723,-78.7045 485.701,-75.2698 485.746,-82.2697"/>
+<path fill="none" stroke="black" d="M327.251,-77.5C380.049,-77.5 446.98,-77.5 494.497,-77.5"/>
+<polygon fill="black" stroke="black" points="494.63,-81.0001 504.63,-77.5 494.63,-74.0001 494.63,-81.0001"/>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge226" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-81.5439C376.864,-82.2221 438.957,-82.144 485.694,-81.3095"/>
-<polygon fill="black" stroke="black" points="485.794,-84.8083 495.723,-81.1136 485.657,-77.8097 485.794,-84.8083"/>
+<path fill="none" stroke="black" d="M327.251,-80.1959C380.049,-80.6771 446.98,-80.5872 494.497,-79.9263"/>
+<polygon fill="black" stroke="black" points="494.685,-83.424 504.63,-79.7716 494.578,-76.4248 494.685,-83.424"/>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge227" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-84.2399C376.864,-85.3701 438.957,-85.2399 485.694,-83.8492"/>
-<polygon fill="black" stroke="black" points="485.843,-87.3463 495.723,-83.5227 485.615,-80.35 485.843,-87.3463"/>
+<path fill="none" stroke="black" d="M327.251,-82.8919C380.049,-83.8542 446.98,-83.6744 494.497,-82.3526"/>
+<polygon fill="black" stroke="black" points="494.742,-85.8469 504.63,-82.0432 494.528,-78.8502 494.742,-85.8469"/>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge228" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-86.9358C376.864,-88.5182 438.957,-88.3359 485.694,-86.3889"/>
-<polygon fill="black" stroke="black" points="485.893,-89.8835 495.723,-85.9318 485.574,-82.8908 485.893,-89.8835"/>
+<path fill="none" stroke="black" d="M327.251,-85.5878C380.049,-87.0312 446.98,-86.7616 494.497,-84.779"/>
+<polygon fill="black" stroke="black" points="494.801,-88.2688 504.63,-84.3149 494.48,-81.2762 494.801,-88.2688"/>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge229" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-89.6317C376.864,-91.6663 438.957,-91.4319 485.694,-88.9285"/>
-<polygon fill="black" stroke="black" points="485.945,-92.4199 495.723,-88.3409 485.536,-85.4319 485.945,-92.4199"/>
+<path fill="none" stroke="black" d="M327.251,-88.2838C380.049,-90.2083 446.98,-89.8488 494.497,-87.2053"/>
+<polygon fill="black" stroke="black" points="494.862,-90.6896 504.63,-86.5865 494.435,-83.7026 494.862,-90.6896"/>
 </g>
 <!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
 <g id="edge230" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
-<path fill="none" stroke="black" d="M327.251,-92.3277C376.864,-94.8143 438.957,-94.5278 485.694,-91.4682"/>
-<polygon fill="black" stroke="black" points="485.999,-94.9555 495.723,-90.7499 485.499,-87.9734 485.999,-94.9555"/>
+<path fill="none" stroke="black" d="M327.251,-90.9797C380.049,-93.3854 446.98,-92.936 494.497,-89.6316"/>
+<polygon fill="black" stroke="black" points="494.926,-93.1092 504.63,-88.8581 494.393,-86.1295 494.926,-93.1092"/>
+</g>
+<!-- MENU_HALL_OF_FAME&#45;&gt;0 -->
+<g id="edge231" class="edge"><title>MENU_HALL_OF_FAME&#45;&gt;0</title>
+<path fill="none" stroke="black" d="M327.251,-93.6757C380.049,-96.5625 446.98,-96.0232 494.497,-92.0579"/>
+<polygon fill="black" stroke="black" points="494.991,-95.5274 504.63,-91.1297 494.353,-88.5566 494.991,-95.5274"/>
 </g>
 </g>
 </svg>
