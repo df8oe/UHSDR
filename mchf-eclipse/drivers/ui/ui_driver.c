@@ -1519,6 +1519,9 @@ void UiDriver_DisplayDemodMode()
 			txt = ts.digi_lsb?"DI-L":"DI-U";
 		}
 		break;
+	case DEMOD_IQ:
+		txt = "IQ";
+		break;
 		default:
 			break;
 	}

@@ -3415,6 +3415,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
                 }
                 break;
+            case DEMOD_IQ: // leave I & Q as they are!
+                arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
+                arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.b_buffer, blockSizeIQ);   // difference of I and Q - LSB
+            	break;
             case DEMOD_USB:
             default:
                 arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
@@ -3623,6 +3627,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
 
             }
+            else if(dmod_mode == DEMOD_IQ)
+            { // I & Q are raw data
+                if ((IIR_PreFilter.numStages > 0))
+                {
+                    arm_iir_lattice_f32(&IIR_PreFilter, adb.q_buffer, adb.q_buffer, blockSize);
+                    arm_iir_lattice_f32(&IIR_PreFilter, adb.i_buffer, adb.i_buffer, blockSize);
+                }
+            }
 
             // this is the biquad filter, a highshelf filter
             arm_biquad_cascade_df1_f32 (&IIR_biquad_2, adb.b_buffer,adb.b_buffer, blockSize);
@@ -3689,13 +3701,23 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         }
         else
         {
+
 #ifdef USE_TWO_CHANNEL_AUDIO
-        	// Stereo modes should be implemented here?
-            dst[i].r = dst[i].l = adb.b_buffer[i];
+        	// Stereo modes should be implemented here
+        	if(ts.dmod_mode == DEMOD_IQ)
+        	{
+				dst[i].r = adb.i_buffer[i];
+				dst[i].l = adb.q_buffer[i];
+        	}
+        	else
+            { // MONO
+        		dst[i].r = dst[i].l = adb.b_buffer[i];
+            }
 #else
             dst[i].l = adb.b_buffer[i]; // VARIABLE LEVEL FOR SPEAKER
             dst[i].r = adb.a_buffer[i];        // LINE OUT (constant level)
 #endif
+
         }
         // Unless this is DIGITAL I/Q Mode, we sent processed audio
         if (tx_audio_source != TX_AUDIO_DIGIQ)
