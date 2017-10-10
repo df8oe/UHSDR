@@ -24,17 +24,40 @@
 #define NR_FFT_SIZE 128
 #endif
 
-//new lcd defines
-//#define USE_GFX_ILI9486
-//#define USE_DISP_480_320
 //time optimisation debug pin enable
 #define TimeDebug
 
 
+// New lcd defines, ONLY ONE MAY BE SET AT COMPILE TIME
+
+// ALTERNATIVE GROUP START USE_GFX
+#define USE_GFX_ILI9486
+//#define USE_DRIVER_RA8875
+//#define USE_GFX_ILI932x
+// ALTERNATIVE GROUP END USE_GFX
+
+
+// Supported display sizes, ONLY ONE MAY BE SET AT COMPILE TIM
+// Currently this is strictly linked to the driver selection
+// may change in future
+
+// ALTERNATIVE GROUP START USE_DISP
+#ifdef USE_GFX_ILI9486
+	#define USE_DISP_480_320
+#endif
+#ifdef USE_DRIVER_RA8875
+	#define USE_DISP_800_480
+#endif
+#ifdef USE_GFX_ILI932x
+	#define USE_DISP_320_240
+#endif
+// ALTERNATIVE GROUP END USE_DISP
+
+// OPTION
 #define USE_RTTY_PROCESSOR
 
+// OPTION
 #define USE_USBHOST
-
 #ifdef USE_USBHOST
 // define additional USBHOST related "switches" only here!
 	// #define USE_USBDRIVE
@@ -43,19 +66,19 @@
 
 
 
-//#define USE_FREEDV //uncomment to use freedv instead of SNAP function
+// OPTION
+#define USE_FREEDV
 // #define DEBUG_FREEDV
 // hardware specific switches
 //#define HY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
 
+// Unified the 3 graphics drivers.
+
 // should be fine now (Oct 2017), since SNAP now does not use any more memory
-//#define USE_FREEDV_AND_SNAP // experimental!!!
+// TODO: Decide if option switch should be kept: Proposal -> no, just make this a standard feature
 
-
-#ifdef USE_FREEDV_AND_SNAP
-  #define USE_SNAP
-  #define USE_FREEDV
-#endif
+// OPTION
+#define USE_SNAP
 
 
 // use the STM32 internal RTC with an external quartz and

@@ -19,6 +19,9 @@
 #ifdef USE_DISP_480_320
 	#define MAX_X  480
 	#define MAX_Y  320
+#elif defined(USE_DISP_800_480)
+	#define MAX_X  800
+	#define MAX_Y  480
 #else
 	#define MAX_X  320
 	#define MAX_Y  240

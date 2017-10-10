@@ -34,11 +34,9 @@ SpectrumDisplay  __MCHF_SPECIALMEM       sd;
 
 
 #ifdef USE_DISP_480_320
-	#ifdef STM32F4
 	//Waterfall memory for low memory F4 devices (with 192kB of RAM).
 	//For higher memory capacity (256kB) devices, malloc() is used instead. But this memory is reserved always.
 	uint8_t __MCHF_SPECIALMEM WaterfallShortArray[WATERFALL_HEIGHT/2][SPECTRUM_WIDTH];
-	#endif
 #endif
 
 
