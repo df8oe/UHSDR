@@ -29,6 +29,8 @@
 #include "uhsdr_board.h"
 #ifdef STM32F7
 #include "stm32f7xx_hal_flash_ex.h"
+#elif defined(STM32H7)
+#include "stm32h7xx_hal_flash_ex.h"
 #else
 #include "stm32f4xx_hal_flash_ex.h"
 #endif
@@ -78,6 +80,15 @@ return HAL_FLASHEx_Erase(&flashEraseOp, &sectorError);
  */
 uint16_t Flash_GetVirtAddrForId(uint16_t id) {
     return VAR_ADDR_START + id;
+}
+
+static HAL_StatusTypeDef Flash_Program(uint32_t toAddress,uint16_t value)
+{
+	HAL_StatusTypeDef retval = HAL_ERROR;
+#ifndef STM32H7
+	retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,toAddress, value);
+#endif
+	return retval;
 }
 
 static bool Flash_PageIsErased(uint8_t page)
@@ -135,7 +146,7 @@ static uint16_t Flash_TransferFullPage(uint8_t fromPage, uint8_t toPage, bool sk
         }
     }
     /* Mark toPage as valid */
-    retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,toPageBaseAddress, VALID_PAGE);
+    retval = Flash_Program(toPageBaseAddress, VALID_PAGE);
     /* If program operation was failed, a Flash error code is returned */
     if (retval == HAL_OK)
     {
@@ -207,7 +218,7 @@ uint16_t Flash_InitA(void)
             if (retval == HAL_OK)
             {
                 /* Mark Page1 as valid */
-                retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,PAGE1_BASE_ADDRESS, VALID_PAGE);
+                retval = Flash_Program(PAGE1_BASE_ADDRESS, VALID_PAGE);
                 /* If program operation was failed, a Flash error code is returned */
             }
         }
@@ -227,7 +238,7 @@ uint16_t Flash_InitA(void)
             if (retval == HAL_OK)
             {
                 /* Mark Page0 as valid */
-                retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,PAGE0_BASE_ADDRESS, VALID_PAGE);
+                retval = Flash_Program(PAGE0_BASE_ADDRESS, VALID_PAGE);
             }
             /* If program operation was failed, a Flash error code is returned */
         }
@@ -430,7 +441,7 @@ static HAL_StatusTypeDef Flash_Format(void)
     }
 
     /* Set Page0 as valid page: Write VALID_PAGE at Page0 base address */
-    FlashStatus = HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,PAGE0_BASE_ADDRESS, VALID_PAGE);
+    FlashStatus = Flash_Program(PAGE0_BASE_ADDRESS, VALID_PAGE);
 
     /* If program operation was failed, a Flash error code is returned */
     if (FlashStatus != HAL_OK)
@@ -552,13 +563,13 @@ static uint16_t Flash_WriteVariableToPage(uint16_t VirtAddress, uint16_t Data, u
             if ((*(__IO uint32_t*)Address) == 0xFFFFFFFF)
             {
                 /* Set variable data */
-                retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,Address, Data);
+                retval = Flash_Program(Address, Data);
 
                 /* If program operation was okay, proceed */
                 if (retval == HAL_OK)
                 {
                     /* Set variable virtual address */
-                    retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD, Address + 2, VirtAddress);
+                    retval = Flash_Program( Address + 2, VirtAddress);
                 }
 
                 break;
@@ -610,7 +621,7 @@ static uint16_t Flash_PageTransfer(uint16_t VirtAddress)
     if (retval == HAL_OK )
     {
         /* Set the new Page status to RECEIVE_DATA status */
-        retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,NewPageAddress, RECEIVE_DATA);
+        retval = Flash_Program(NewPageAddress, RECEIVE_DATA);
         /* If program operation was failed, a Flash error code is returned */
         if (retval == HAL_OK)
         {

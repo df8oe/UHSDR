@@ -158,7 +158,7 @@ static void mchf_board_keypad_init(const ButtonMap* bm)
 
     // Common init
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
 
     // Init all from public struct declaration (ui driver)
@@ -179,7 +179,7 @@ static void mchf_board_ptt_init(void)
 
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Pull = GPIO_PULLDOWN;
-    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 
     // RX/TX control pin init
     GPIO_InitStructure.Pin = PTT_CNTR;
@@ -221,7 +221,7 @@ static void mchf_board_power_button_irq_init(void)
     GPIO_InitStructure.Pin   = BUTTON_PWR;
     GPIO_InitStructure.Mode  = GPIO_MODE_IT_FALLING;
     GPIO_InitStructure.Pull  = GPIO_PULLUP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(BUTTON_PWR_PIO, &GPIO_InitStructure);
 
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 15, 0);
@@ -297,7 +297,7 @@ static void mchf_board_power_down_init(void)
 
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
-    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 
     GPIO_InitStructure.Pin = POWER_DOWN;
     HAL_GPIO_Init(POWER_DOWN_PIO, &GPIO_InitStructure);
@@ -332,11 +332,11 @@ static void mchf_board_band_cntr_init(void)
     HAL_GPIO_Init(BAND0_PIO, &GPIO_InitStructure);
 #endif
     // Set initial state - low (20m band)
-    BAND0_PIO->BSRR = BAND0 << 16U;
-    BAND1_PIO->BSRR = BAND1 << 16U;
+    GPIO_ResetBits(BAND0_PIO,BAND0);
+    GPIO_ResetBits(BAND1_PIO,BAND1);
 
     // Pulse the latch relays line, active low, so set high to disable
-    BAND2_PIO->BSRR = BAND2;
+    GPIO_SetBits(BAND2_PIO,BAND2);
 }
 
 void Board_TouchscreenInit()
@@ -472,7 +472,7 @@ void Board_Powerdown()
 
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 
     GPIO_InitStructure.Pin = POWER_DOWN;
     HAL_GPIO_Init(POWER_DOWN_PIO, &GPIO_InitStructure);
