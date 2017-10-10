@@ -149,7 +149,7 @@ void fdv_iq_buffer_reset()
     fdv_iq_tail = fdv_iq_head;
 }
 
-int8_t fdv_iq_has_data()
+int32_t fdv_iq_has_data()
 {
     int32_t len = fdv_iq_head - fdv_iq_tail;
     return len < 0?len+FDV_BUFFER_IQ_FIFO_SIZE:len;
@@ -221,7 +221,7 @@ void fdv_audio_buffer_reset()
     fdv_audio_tail = fdv_audio_head;
 }
 
-int8_t fdv_audio_has_data()
+int32_t fdv_audio_has_data()
 {
     int32_t len = fdv_audio_head - fdv_audio_tail;
     return len < 0?len+FDV_BUFFER_AUDIO_FIFO_SIZE:len;

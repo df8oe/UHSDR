@@ -38,6 +38,7 @@
 #include "uhsdr_hw_i2s.h"
 #include "rtty.h"
 #include "cw_decoder.h"
+#include "freedv_uhsdr.h"
 
 typedef struct
 {

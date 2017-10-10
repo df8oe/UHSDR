@@ -25,8 +25,8 @@
 #endif
 
 //new lcd defines
-#define USE_GFX_ILI9486
-#define USE_DISP_480_320
+//#define USE_GFX_ILI9486
+//#define USE_DISP_480_320
 //time optimisation debug pin enable
 #define TimeDebug
 
