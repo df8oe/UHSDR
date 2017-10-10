@@ -25,7 +25,9 @@ void UiSpectrum_WaterfallClearData();
 void UiSpectrum_DisplayFilterBW();
 
 void UiSpectrum_InitCwSnapDisplay (bool visible);
-
+#ifdef USE_DISP_480_320
+void UiSpectrum_SetWaterfallMemoryPointer(uint16_t ramsize);
+#endif
 
 // Settings for dB/division for spectrum display
 enum
@@ -231,9 +233,12 @@ typedef struct SpectrumDisplay
     float   wfall_contrast;     // used to adjust the contrast of the waterfall display
 
     uint16_t waterfall_colours[NUMBER_WATERFALL_COLOURS+1];  // palette of colors for waterfall data
-
+#ifdef USE_DISP_480_320
+    uint8_t (*waterfall)[SPECTRUM_WIDTH];	//pointer to waterfall memory
+    uint8_t doubleWaterfallLine;				//line doubling control state
+#else
     uint8_t  waterfall[WATERFALL_MAX_SIZE][SPECTRUM_WIDTH];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
-
+#endif
     uint16_t wfall_line;        // pointer to current line of waterfall data
     uint16_t wfall_size;        // vertical size of the waterfall
     uint16_t wfall_ystart;

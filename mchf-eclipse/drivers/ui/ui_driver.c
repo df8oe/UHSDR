@@ -943,6 +943,10 @@ void UiDriver_Init()
 	UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
 	ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
 	ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_DELAY_TIME;
+
+#ifdef USE_DISP_480_320
+	UiSpectrum_SetWaterfallMemoryPointer(ts.ramsize);
+#endif
 }
 
 #define BOTTOM_BAR_LABEL_W (56)
@@ -1271,7 +1275,9 @@ void UiDriver_ModeSpecificDisplayClear(uint8_t dmod_mode, uint8_t digital_mode)
 		switch(digital_mode)
 		{
 		case DigitalMode_FreeDV:
+#ifdef USE_FREEDV
 			FreeDv_DisplayClear();
+#endif
 			break;
 		case DigitalMode_RTTY:
 			UiDriver_TextMsgClear();
@@ -1313,7 +1319,9 @@ void UiDriver_ModeSpecificDisplayPrepare(uint8_t dmod_mode, uint8_t digital_mode
 		switch(digital_mode)
 		{
 		case DigitalMode_FreeDV:
+#ifdef USE_FREEDV
 			FreeDv_DisplayPrepare();
+#endif
 			break;
 		case DigitalMode_RTTY:
 			UiDriver_TextMsgClear();
@@ -2981,7 +2989,10 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
 			{
 				ts.enc_one_mode = ENC_ONE_MODE_RTTY_SPEED;
 			}
-			ts.enc_two_mode = ENC_TWO_MODE_RTTY_SHIFT;
+			if (ts.enc_two_mode != ENC_TWO_MODE_RF_GAIN)
+			{
+				ts.enc_two_mode = ENC_TWO_MODE_RTTY_SHIFT;
+			}
 		}
 	}
 	break;

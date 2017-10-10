@@ -74,7 +74,14 @@ const float32_t NR_test_sinus_samp[128] = {
 
 #endif
 
+#if defined(USE_FREEDV) || defined(alternate_NR)
 
+#define FDV_BUFFER_IQ_FIFO_SIZE (FDV_BUFFER_IQ_NUM+1)
+FDV_IQ_Buffer __MCHF_SPECIALMEM fdv_iq_buff[FDV_BUFFER_IQ_NUM];
+
+// we allow for one more pointer to a buffer as we have buffers
+// why? because our implementation will only fill up the fifo only to N-1 elements
+#endif
 
 #ifdef USE_FREEDV
 
@@ -85,11 +92,7 @@ const float32_t NR_test_sinus_samp[128] = {
 struct freedv *f_FREEDV;
 
 FDV_Audio_Buffer fdv_audio_buff[FDV_BUFFER_AUDIO_NUM];
-FDV_IQ_Buffer __MCHF_SPECIALMEM fdv_iq_buff[FDV_BUFFER_IQ_NUM];
 
-#define FDV_BUFFER_IQ_FIFO_SIZE (FDV_BUFFER_IQ_NUM+1)
-// we allow for one more pointer to a buffer as we have buffers
-// why? because our implementation will only fill up the fifo only to N-1 elements
 
 FDV_IQ_Buffer* fdv_iq_buffers[FDV_BUFFER_IQ_FIFO_SIZE];
 
