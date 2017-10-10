@@ -943,6 +943,10 @@ void UiDriver_Init()
 	UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
 	ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
 	ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_DELAY_TIME;
+
+#ifdef USE_DISP_480_320
+	UiSpectrum_SetWaterfallMemoryPointer(ts.ramsize);
+#endif
 }
 
 #define BOTTOM_BAR_LABEL_W (56)

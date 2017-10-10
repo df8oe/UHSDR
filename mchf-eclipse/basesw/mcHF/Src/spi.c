@@ -58,7 +58,6 @@ DMA_HandleTypeDef hdma_spi2_tx;
 /* SPI2 init function */
 void MX_SPI2_Init(void)
 {
-
   hspi2.Instance = SPI2;
   hspi2.Init.Mode = SPI_MODE_MASTER;
   hspi2.Init.Direction = SPI_DIRECTION_2LINES;
