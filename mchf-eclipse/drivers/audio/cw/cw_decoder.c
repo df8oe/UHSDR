@@ -40,6 +40,7 @@
 //*********************************************************************************
 
 #include "uhsdr_board.h"
+#include "ui_lcd_items.h"
 #include "ui_driver.h"
 #include "cw_decoder.h"
 #include "audio_driver.h"

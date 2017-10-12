@@ -17,6 +17,7 @@
 #include "uhsdr_types.h"
 #include "audio_driver.h"
 #include "arm_const_structs.h"
+#include "ui_lcd_items.h"
 
 void UiSpectrum_Init();
 void UiSpectrum_Clear();
@@ -144,57 +145,7 @@ enum
 
 #define	NUMBER_WATERFALL_COLOURS			64		// number of colors in the waterfall table
 
-// ----------------------------------------------------------
-// Spectrum draw params
-//
-// Spectrum display
-#define POS_SPECTRUM_IND_X					60
-#define POS_SPECTRUM_IND_Y					150
-#define POS_SPECTRUM_IND_H					80
-#define POS_SPECTRUM_IND_W                  258
 
-#define	POS_SPECTRUM_FREQ_BAR_Y				64	// reducing value moves upwards
-#define	POS_SPECTRUM_FILTER_WIDTH_BAR_Y		61
-#define COL_SPECTRUM_GRAD					0x40
-
-#define     SPECTRUM_SCOPE_GRID_HORIZ 16
-#define     SPECTRUM_SCOPE_GRID_VERT  32
-
-
-#define SPECTRUM_SCOPE_TOP_LIMIT            5   // Top limit of spectrum scope magnitude
-
-#define	WFALL_MEDIUM_ADDITIONAL	12					// additional vertical height in pixels of "medium" waterfall
-
-// WARNING:  Because the waterfall uses a "block write" which is, in effect, a "blind" writing of data to the LCD, the size of the graphic
-// block *MUST* exactly match the number of pixels within that block.
-//
-// Furthermore, the "SPECTRUM WIDTH" must match exactly with graphical width of the "X" size of each line to be written or skewing will result!
-//
-#define SPECTRUM_START_X		POS_SPECTRUM_IND_X
-// Shift of whole spectrum in vertical direction
-#define SPECTRUM_START_Y		(POS_SPECTRUM_IND_Y - 10)
-// Spectrum height is bit lower that the whole control
-#define SPECTRUM_HEIGHT			(POS_SPECTRUM_IND_H - 10)
-
-//new hVGA lcd definitions
-#ifdef USE_DISP_480_320
-	#define WATERFALL_START_Y 240
-	#define WATERFALL_HEIGHT 60
-#endif
-
-// How much larger than the NORMAL spectrum display should the BIG Spectrum display be?
-#define SPEC_LIGHT_MORE_POINTS 15
-
-
-#define     POS_SPECTRUM_GRID_VERT_START (POS_SPECTRUM_IND_X-1)
-#define     POS_SPECTRUM_GRID_HORIZ_START (POS_SPECTRUM_IND_Y + 11 + 32)
-
-#define WATERFALL_MAX_SIZE (SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL)
-
-// Dark grey colour used for spectrum scope grid
-#define Grid                RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD)      // COL_SPECTRUM_GRAD = 0x40
-
-#define SPECTRUM_MAX_MARKER 3
 // Spectrum display
 typedef struct SpectrumDisplay
 {

@@ -991,13 +991,11 @@ static void UiSpectrum_RedrawSpectrum()
         }
         else
         {
-        	Marker_ON
+        	//Marker_ON
             UiSpectrum_DrawScope(sd.Old_PosData, sd.FFT_Samples);
-        	Marker_OFF
+        	//Marker_OFF
 #ifdef USE_DISP_480_320
-            //Marker_ON
             UiSpectrum_DrawWaterfall();
-            //Marker_OFF
 #endif
         }
         sd.state = 0;
@@ -1192,6 +1190,8 @@ static void UiSpectrum_DisplayDbm()
 {
     // TODO: Move to UI Driver
     bool display_something = false;
+    static long oldVal=99999;
+    static uint8_t dBmShown=0;
     if( ts.txrx_mode == TRX_MODE_RX)
     {
         long val;
@@ -1211,24 +1211,27 @@ static void UiSpectrum_DisplayDbm()
             break;
         }
 
-        if (display_something == true) {
+        if ((display_something == true) && (val!=oldVal))
+        {
             char txt[12];
             snprintf(txt,12,"%4ld      ", val);
-            UiLcdHy28_PrintText(161,64,txt,White,Blue,0);
-            UiLcdHy28_PrintText(161+SMALL_FONT_WIDTH * 4,64,unit_label,White,Blue,4);
+            UiLcdHy28_PrintText(POS_DisplayDbm_X,POS_DisplayDbm_Y,txt,White,Blue,0);
+            UiLcdHy28_PrintText(POS_DisplayDbm_X+SMALL_FONT_WIDTH * 4,POS_DisplayDbm_Y,unit_label,White,Blue,4);
+            oldVal=val;		//this will prevent from useless redrawing the same
+            dBmShown=1;		//for indicate that dms are shown and erase function may it clear when needed
         }
     }
 
     // clear the display since we are not showing dBm or dBm/Hz or we are in TX mode
-    if (display_something == false)
+    if ((display_something == false) && (dBmShown==1))
     {
-        UiLcdHy28_DrawFullRect(161, 64, 15, SMALL_FONT_WIDTH * 10 , Black);
+        UiLcdHy28_DrawFullRect(POS_DisplayDbm_X, POS_DisplayDbm_Y, 15, SMALL_FONT_WIDTH * 10 , Black);
+        dBmShown=0;		//just to indicate that dbm is erased
+        oldVal=99999;	//some value that will enforce refresh when user enable display dbm
     }
 }
 
 
-#define CW_SNAP_CARRIER_X	27 // central position of variable freq marker
-#define CW_SNAP_CARRIER_Y	122 // position of variable freq marker
 
 //void ui_spectrum_init_cw_snap_display (bool visible)
 void UiSpectrum_InitCwSnapDisplay (bool visible)
@@ -1238,36 +1241,36 @@ void UiSpectrum_InitCwSnapDisplay (bool visible)
 	{
 		color = Black;
 		// also erase yellow indicator
-        UiLcdHy28_DrawFullRect(0, CW_SNAP_CARRIER_Y, 6, 57, Black);
+        UiLcdHy28_DrawFullRect(CW_SNAP_CARRIER_X-27, CW_SNAP_CARRIER_Y, 6, 57, Black);
 	}
 	//Horizontal lines of box
-	UiLcdHy28_DrawStraightLine(0,
+	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X-27,
 			CW_SNAP_CARRIER_Y + 6,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(32,
+	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X+5,
 			CW_SNAP_CARRIER_Y + 6,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(0,
+	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X-27,
 			CW_SNAP_CARRIER_Y - 1,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(32,
+	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X+5,
 			CW_SNAP_CARRIER_Y - 1,
             27,
             LCD_DIR_HORIZONTAL,
             color);
 	// vertical lines of box
-	UiLcdHy28_DrawStraightLine(0,
+	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X-27,
 			CW_SNAP_CARRIER_Y - 1,
             8,
             LCD_DIR_VERTICAL,
             color);
-	UiLcdHy28_DrawStraightLine(58,
+	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X+31,
 			CW_SNAP_CARRIER_Y - 1,
             8,
             LCD_DIR_VERTICAL,

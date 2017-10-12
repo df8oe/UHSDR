@@ -21,6 +21,7 @@
 #include <math.h>
 #include <src/uhsdr_version.h>
 #include "hardware/uhsdr_board_config.h"
+#include "ui_lcd_items.h"
 #include "ui_menu.h"
 #include "uhsdr_rtc.h"
 #include "adc.h"
@@ -56,117 +57,11 @@
 #include "cw_decoder.h"
 #include "psk.h"
 
-// POSITIONS START
 #define SPLIT_ACTIVE_COLOUR         		Yellow      // colour of "SPLIT" indicator when active
 #define SPLIT_INACTIVE_COLOUR           	Grey        // colour of "SPLIT" indicator when NOT active
 #define COL_PWR_IND                 		White
 
-// Frequency display control
-#define POS_TUNE_FREQ_X             		116
-#define POS_TUNE_FREQ_Y             		100
 
-#define POS_TUNE_SPLIT_FREQ_X           	POS_TUNE_FREQ_X+80//Shift with a small split to the right to close the frequency digits.
-#define POS_TUNE_SPLIT_MARKER_X         	POS_TUNE_FREQ_X+40
-#define POS_TUNE_SPLIT_FREQ_Y_TX        	POS_TUNE_FREQ_Y+12
-
-// Second frequency display control
-#define POS_TUNE_SFREQ_X            		(POS_TUNE_FREQ_X + 120)
-#define POS_TUNE_SFREQ_Y            		(POS_TUNE_FREQ_Y - 20)
-
-// Band selection control
-#define POS_BAND_MODE_X             		(POS_TUNE_FREQ_X + 160)
-#define POS_BAND_MODE_Y             		(POS_TUNE_FREQ_Y + 7)
-#define POS_BAND_MODE_MASK_X            	(POS_BAND_MODE_X - 1)
-#define POS_BAND_MODE_MASK_Y            	(POS_BAND_MODE_Y - 1)
-#define POS_BAND_MODE_MASK_H            	13
-#define POS_BAND_MODE_MASK_W            	33
-
-// Demodulator mode control
-#define POS_DEMOD_MODE_X            		(POS_TUNE_FREQ_X + 1)
-#define POS_DEMOD_MODE_Y            		(POS_TUNE_FREQ_Y - 20)
-#define POS_DEMOD_MODE_MASK_X           	(POS_DEMOD_MODE_X - 1)
-#define POS_DEMOD_MODE_MASK_Y           	(POS_DEMOD_MODE_Y - 1)
-#define POS_DEMOD_MODE_MASK_H           	13
-#define POS_DEMOD_MODE_MASK_W           	41
-
-// Tunning step control
-#define POS_TUNE_STEP_X             		(POS_TUNE_FREQ_X + 45)
-#define POS_TUNE_STEP_Y             		(POS_TUNE_FREQ_Y - 21)
-//#define POS_TUNE_STEP_MASK_H            	15
-#define POS_TUNE_STEP_MASK_W            	(SMALL_FONT_WIDTH*7)
-
-//#define POS_RADIO_MODE_X            		4
-//#define POS_RADIO_MODE_Y            		5
-
-// Bottom bar
-#define POS_BOTTOM_BAR_X            		0
-#define POS_BOTTOM_BAR_Y            		228
-#define POS_BOTTOM_BAR_BUTTON_W         	62
-#define POS_BOTTOM_BAR_BUTTON_H         	16
-
-// Virtual Button 1
-#define POS_BOTTOM_BAR_F1_X         		(POS_BOTTOM_BAR_X + 2)
-#define POS_BOTTOM_BAR_F1_Y         		POS_BOTTOM_BAR_Y
-
-// --------------------------------------------------
-// Encoder controls indicator
-#define POS_ENCODER_IND_X                	0
-#define POS_ENCODER_IND_Y                	16
-
-
-// --------------------------------------------------
-// Standalone controls
-//
-// DSP mode
-// Lower DSP box
-#define POS_LEFTBOXES_IND_X              	0
-#define POS_LEFTBOXES_IND_Y              	130
-#define LEFTBOX_WIDTH 58 // used for the lower left side controls
-#define LEFTBOX_ROW_H  (28)
-#define LEFTBOX_ROW_2ND_OFF  (13)
-
-// Power level
-#define POS_PW_IND_X                		POS_DEMOD_MODE_X -1
-#define POS_PW_IND_Y                		POS_DEMOD_MODE_Y - 16
-
-#define POS_DIGMODE_IND_X              		0
-#define POS_DIGMODE_IND_Y              		(191)
-
-// S meter position
-#define POS_SM_IND_X                		116
-#define POS_SM_IND_Y                		0
-#define SM_IND_W (200)
-#define SM_IND_H (72 - BTM_MINUS)
-
-// Supply Voltage indicator
-//#define POS_PWRN_IND_X              		0
-#define POS_PWRN_IND_Y              		193
-
-#define POS_PWR_IND_X               		4
-#define POS_PWR_IND_Y               		(POS_PWRN_IND_Y + 15)
-
-
-// Temperature Indicator
-#define POS_TEMP_IND_X              		0
-#define POS_TEMP_IND_Y              		0
-
-// RTC
-#define POS_RTC								79
-
-#define POS_LOADANDDEBUG_Y					95
-#define POS_DEBUG_X							0
-#define POS_LOAD_X							280
-
-
-//
-// Location of numerical FWD/REV power indicator
-//
-#define	POS_PWR_NUM_IND_X					1
-#define	POS_PWR_NUM_IND_Y					80
-
-#define POS_MEMORYLABEL_X (161+(SMALL_FONT_WIDTH * 11)+4)
-#define POS_MEMORYLABEL_Y (64)
-// POSITIONS END
 
 static void     UiDriver_CreateMainFreqDisplay();
 

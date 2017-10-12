@@ -25,7 +25,7 @@
 #endif
 
 //time optimisation debug pin enable
-#define TimeDebug
+//#define TimeDebug
 
 
 // New lcd defines, ONLY ONE MAY BE SET AT COMPILE TIME
