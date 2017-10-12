@@ -590,9 +590,6 @@ typedef struct SnapCarrier
 
 	arm_rfft_fast_instance_f32           S; // new and faster real FFT routine
 
-    // Samples buffer
-    float32_t   FFT_Samples[FFT_IQ_BUFF_LEN2];
-
     // Current data ptr
     ulong   samp_ptr;
     int8_t FFT_number;
