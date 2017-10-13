@@ -1115,11 +1115,11 @@ static inline void UiDriver_FButton_F5Tune()
 	{
 		if (ts.buffered_tx)
 		{
-			cap = " "; //FIXME this will be TX/RX
+			cap = "TXRX B";
 		}
 		else
 		{
-			cap = " "; //FIXME this will be UNBUF
+			cap = "TXRX U";
 		}
 	}
 	else
@@ -2716,6 +2716,11 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
 					ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
 					ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
 				}
+				else if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)
+				{
+					ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
+					ts.enc_thr_mode = ENC_THREE_MODE_PSK_SPEED;
+				}
 				else // for all other modes we activate the compressor setting and input gain control
 				{
 					ts.enc_one_mode = ENC_ONE_MODE_CMP_LEVEL;
@@ -3005,6 +3010,7 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
 
 		case DigitalMode_BPSK:
 			ts.enc_thr_mode = ENC_THREE_MODE_PSK_SPEED;
+			break;
 		}
 	}
 	break;
@@ -3621,7 +3627,6 @@ static void UiDriver_CheckEncoderThree()
 				UiDriver_DisplayKeyerSpeed(1);
 				break;
 			case ENC_THREE_MODE_PSK_SPEED:
-				// FIXME Implement PSK speed selection
 				psk_ctrl_config.speed_idx = change_and_limit_int(psk_ctrl_config.speed_idx,pot_diff_step,0,PSK_SPEED_NUM-1);
 				UiDriver_TextMsgClear();
 				PskDecoder_Init();
@@ -3660,7 +3665,7 @@ static bool UiDriver_IsApplicableEncoderOneMode(uint8_t mode)
 		retval = is_demod_rtty();
 		break;
 	case ENC_ONE_MODE_ST_GAIN:
-		retval = ts.dmod_mode == DEMOD_CW;
+		retval = ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK);
 		break;
 	case ENC_ONE_MODE_CMP_LEVEL:
 		retval = ts.dmod_mode != DEMOD_CW && ts.dmod_mode != DEMOD_DIGI;
@@ -3693,7 +3698,7 @@ static void UiDriver_DisplayEncoderOneMode()
 		{
 			UiDriver_DisplayRttySpeed(0);
 		}
-		else if(ts.dmod_mode == DEMOD_CW)
+		else if(ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK))
 		{
 			UiDriver_DisplaySidetoneGain(0);
 		}
@@ -3783,6 +3788,7 @@ static bool UiDriver_IsApplicableEncoderThreeMode(uint8_t mode)
 		retval = is_demod_psk();
 		break;
 	case ENC_THREE_MODE_INPUT_CTRL:
+		retval = ts.dmod_mode != DEMOD_DIGI || ts.digital_mode != DigitalMode_BPSK;
 		//retval = ts.dmod_mode != DEMOD_DIGI || (ts.digital_mode != DigitalMode_BPSK && ts.digital_mode != DigitalMode_RTTY);
 		break;
 	}
@@ -3809,7 +3815,7 @@ static void UiDriver_DisplayEncoderThreeMode()
 		break;
 	default:
 		// this defines what is shown if the lower box is not actively selected
-		if (ts.dmod_mode == DEMOD_CW)
+		if (ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK))
 		{
 			UiDriver_DisplayKeyerSpeed(0);
 		}
@@ -5970,7 +5976,7 @@ static void UiAction_PlayKeyerBtnN(int8_t n)
 				DigiModes_TxBufferPutChar(*pmacro++);
 			}
 
-			if (ts.dmod_mode == DEMOD_CW && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+			if ((ts.dmod_mode == DEMOD_CW && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT) || is_demod_psk())
 			{
 				ts.ptt_req = true;
 			}
@@ -6031,7 +6037,7 @@ static void UiAction_PlayKeyerBtn3()
 
 static void UiAction_RecordKeyerBtnN(int8_t n)
 {
-	if (ts.keyer_mode.button_recording == KEYER_BUTTON_NONE && ts.txrx_mode == TRX_MODE_RX && !ts.cw_text_entry)
+	if (ts.keyer_mode.button_recording == KEYER_BUTTON_NONE && ts.txrx_mode == TRX_MODE_RX && !ts.cw_text_entry && ts.dmod_mode == DEMOD_CW)
 	{
 		ts.cw_text_entry = true;
 		ts.keyer_mode.button_recording = n;
@@ -6059,6 +6065,19 @@ static void UiAction_RecordKeyerBtn3()
 static void UiAction_ToggleBufferedTXMode()
 {
 	ts.buffered_tx = ! ts.buffered_tx;
+	UiDriver_FButton_F5Tune();
+}
+
+static void UiAction_ToggleTxRx()
+{
+	if(ts.txrx_mode == TRX_MODE_RX)
+	{
+		ts.ptt_req = true;
+	}
+	else
+	{
+		ts.tx_stop_req = true;
+	}
 	UiDriver_FButton_F5Tune();
 }
 
@@ -6307,7 +6326,7 @@ static const keyaction_descr_t keyactions_keyer[] =
 		{ BUTTON_F2_PRESSED, 	UiAction_PlayKeyerBtn2, 		UiAction_RecordKeyerBtn2 },
 		{ BUTTON_F3_PRESSED, 	UiAction_PlayKeyerBtn3, 		UiAction_RecordKeyerBtn3 },
 		{ BUTTON_F4_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
-		{ BUTTON_F5_PRESSED, 	KEYACTION_NOP,		UiAction_ToggleBufferedTXMode },
+		{ BUTTON_F5_PRESSED, 	UiAction_ToggleTxRx,		UiAction_ToggleBufferedTXMode },
 };
 
 static const keyaction_list_descr_t key_sets[] =
