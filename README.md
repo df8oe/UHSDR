@@ -11,10 +11,12 @@ bootloader, which is another part of the project, permits to update the
 firmware and bootloader using various means like USB disk or USB cable.
 
 The base of the firmware was started by Chris, M0NKA, and Clint, KA7OEI
-as part of the [mcHF](http://www.m0nka.co.uk/) project. Thanks to the
-Open Source Approach (now with the GPLv3 license) the mcHF firmware has
-been extended in this project with new functionality and also with
-support for use on different transceiver hardware.
+as part of the [mcHF](http://www.m0nka.co.uk/) project. In February 2017
+both agreed to change firmware license to GPLv3. Because of this the mcHF
+firmware has been extended in this project with new functionality
+and also with support for use on different transceiver hardware. For
+clarifying different license models on mcHF hardware and mcHF firmware the
+name of the firmware changed to UHSDR.
 
 The intent of this project is to give full support for mcHF [(and all
 other known and listed hardware platforms)](https://github.com/df8oe/UHSDR/wiki/Supported-Hardware) as long as there are
