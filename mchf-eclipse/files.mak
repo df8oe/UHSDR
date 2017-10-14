@@ -124,6 +124,7 @@ drivers/audio/audio_management.c \
 drivers/audio/freedv_uhsdr.c \
 drivers/audio/freedv_test_data.c \
 drivers/audio/rtty.c \
+drivers/audio/psk.c \
 basesw/mcHF/Src/adc.c \
 basesw/mcHF/Src/dac.c \
 basesw/mcHF/Src/dma.c \

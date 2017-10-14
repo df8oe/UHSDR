@@ -125,6 +125,7 @@ drivers/audio/audio_management.c \
 drivers/audio/freedv_uhsdr.c \
 drivers/audio/freedv_test_data.c \
 drivers/audio/rtty.c \
+drivers/audio/psk.c \
 basesw/ovi40/Src/adc.c \
 basesw/ovi40/Src/dac.c \
 basesw/ovi40/Src/dma.c \
