@@ -159,8 +159,8 @@ typedef enum
     DigitalMode_None = 0,
     DigitalMode_FreeDV,
     DigitalMode_RTTY,
+    DigitalMode_BPSK,
     DigitalMode_FreeDV2,
-    DigitalMode_BPSK31,
     DigitalMode_SSTV,
     DigitalMode_WSPR_A,
     DigitalMode_WSPR_P,
@@ -247,6 +247,11 @@ inline void RadioManagement_ToggleVfoMem()
 inline bool is_demod_rtty()
 {
 	return ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_RTTY;
+}
+
+inline bool is_demod_psk()
+{
+	return ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK;
 }
 
 

@@ -37,6 +37,7 @@
 #include "ui_driver.h"
 #include "uhsdr_hw_i2s.h"
 #include "rtty.h"
+#include "psk.h"
 #include "cw_decoder.h"
 #include "freedv_uhsdr.h"
 
@@ -572,6 +573,7 @@ void AudioDriver_Init(void)
     CwGen_Init();
 
     RttyDecoder_Init();
+    PskDecoder_Init();
 
     // Audio filter disabled
     ts.dsp_inhibit = 1;
@@ -1780,6 +1782,15 @@ static void AudioDriver_RxProcessor_Rtty(float32_t * const src, int16_t blockSiz
 }
 // END RTTY Experiment
 #endif
+
+static void AudioDriver_RxProcessor_Bpsk(float32_t * const src, int16_t blockSize)
+{
+
+    for (uint16_t idx = 0; idx < blockSize; idx++)
+    {
+        BpskDecoder_ProcessSample(src[idx]);
+    }
+}
 
 void AudioDriver_SetupAgcWdsp()
 {
@@ -3574,6 +3585,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     AudioDriver_RxProcessor_Rtty(adb.a_buffer, blockSizeDecim);
                 }
 #endif
+                if (is_demod_psk() && blockSizeDecim == 8) // only works when decimation rate is 4 --> sample rate == 12ksps
+                {
+                    AudioDriver_RxProcessor_Bpsk(adb.a_buffer, blockSizeDecim);
+                }
 //                if(blockSizeDecim ==8 && dmod_mode == DEMOD_CW)
 //                if(ts.cw_decoder_enable && blockSizeDecim ==8 && (dmod_mode == DEMOD_CW || dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM))
                 if(blockSizeDecim ==8 && (dmod_mode == DEMOD_CW || dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM))
@@ -3944,7 +3959,7 @@ static void AudioDriver_TxProcessorModulatorSSB(AudioSample_t * const dst, const
     // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
     // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
     // + 0 deg to I data
-    arm_fir_f32(&FIR_I_TX, adb.a_buffer, adb.i_buffer,blockSize);
+    arm_fir_f32(&FIR_I_TX, adb.a_buffer, adb.i_buffer, blockSize);
     // - 90 deg to Q data
     arm_fir_f32(&FIR_Q_TX, adb.a_buffer, adb.q_buffer, blockSize);
 
@@ -4280,6 +4295,27 @@ static void AudioDriver_TxProcessorRtty(AudioSample_t * const dst, uint16_t bloc
 
 }
 
+static void AudioDriver_TxProcessorPsk(AudioSample_t * const dst, uint16_t blockSize)
+{
+
+	for (uint16_t idx =0; idx < blockSize; idx++)
+	{
+		adb.a_buffer[idx] = Psk_Modulator_GenSample();
+	}
+
+    AudioDriver_TxFilterAudio(true,false, adb.a_buffer, adb.a_buffer, blockSize);
+	AudioDriver_TxProcessorModulatorSSB(dst, blockSize, false, false);
+/*
+    memset(adb.a_buffer,0,sizeof(adb.a_buffer[0])*blockSize);
+
+    if (ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+    {
+    	CwGen_Process(adb.a_buffer, adb.a_buffer, blockSize);
+    	// we just misuse adb.a_buffer, and generate a CW side tone
+    }
+*/
+}
+
 static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_t * const dst, AudioSample_t * const audioDst, uint16_t blockSize)
 {
     // we copy volatile variables which are used multiple times to local consts to let the compiler do its optimization magic
@@ -4306,7 +4342,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
         audio_out_fill_tx_buffer((int16_t*)srcUSB,2*blockSize);
     }
 
-    if (tx_audio_source == TX_AUDIO_DIGIQ && dmod_mode != DEMOD_CW && !tune)
+    if (tx_audio_source == TX_AUDIO_DIGIQ && dmod_mode != DEMOD_CW && !tune && !is_demod_psk())
     {
         // If in CW mode or Tune  DIQ audio input is ignored
         // Output I and Q as stereo, fill buffer
@@ -4335,6 +4371,12 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
     	{
             AudioDriver_TxProcessorRtty(dst,blockSize);
             signal_active = true;
+    	}
+    	break;
+    	case DigitalMode_BPSK:
+    	{
+    		AudioDriver_TxProcessorPsk(dst,blockSize);
+    		signal_active = true;
     	}
     	break;
     	}

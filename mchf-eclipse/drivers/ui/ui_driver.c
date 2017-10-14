@@ -54,6 +54,7 @@
 
 #include "rtty.h"
 #include "cw_decoder.h"
+#include "psk.h"
 
 // POSITIONS START
 #define SPLIT_ACTIVE_COLOUR         		Yellow      // colour of "SPLIT" indicator when active
@@ -238,6 +239,7 @@ static bool UiDriver_SaveConfiguration();
 
 static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
+static void UiDriver_DisplayPskSpeed(bool encoder_active);
 
 typedef struct
 {
@@ -1113,11 +1115,11 @@ static inline void UiDriver_FButton_F5Tune()
 	{
 		if (ts.buffered_tx)
 		{
-			cap = " "; //FIXME this will be TX/RX
+			cap = "TXRX B";
 		}
 		else
 		{
-			cap = " "; //FIXME this will be UNBUF
+			cap = "TXRX U";
 		}
 	}
 	else
@@ -1280,6 +1282,7 @@ void UiDriver_ModeSpecificDisplayClear(uint8_t dmod_mode, uint8_t digital_mode)
 #endif
 			break;
 		case DigitalMode_RTTY:
+		case DigitalMode_BPSK:
 			UiDriver_TextMsgClear();
 			break;
 		default:
@@ -1324,6 +1327,7 @@ void UiDriver_ModeSpecificDisplayPrepare(uint8_t dmod_mode, uint8_t digital_mode
 #endif
 			break;
 		case DigitalMode_RTTY:
+		case DigitalMode_BPSK:
 			UiDriver_TextMsgClear();
 			break;
 		default:
@@ -1507,6 +1511,9 @@ void UiDriver_DisplayDemodMode()
 		{
 		case DigitalMode_RTTY:
 			txt = ts.digi_lsb?"RT-L":"RT-U";
+			break;
+		case DigitalMode_BPSK:
+			txt = ts.digi_lsb?"PSK-L":"PSK-U";
 			break;
 		default:
 			txt = ts.digi_lsb?"DI-L":"DI-U";
@@ -2709,6 +2716,11 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
 					ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
 					ts.enc_thr_mode = ENC_THREE_MODE_CW_SPEED;
 				}
+				else if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)
+				{
+					ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
+					ts.enc_thr_mode = ENC_THREE_MODE_PSK_SPEED;
+				}
 				else // for all other modes we activate the compressor setting and input gain control
 				{
 					ts.enc_one_mode = ENC_ONE_MODE_CMP_LEVEL;
@@ -2989,10 +3001,16 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
 			{
 				ts.enc_one_mode = ENC_ONE_MODE_RTTY_SPEED;
 			}
+
 			if (ts.enc_two_mode != ENC_TWO_MODE_RF_GAIN)
 			{
 				ts.enc_two_mode = ENC_TWO_MODE_RTTY_SHIFT;
 			}
+			break;
+
+		case DigitalMode_BPSK:
+			ts.enc_thr_mode = ENC_THREE_MODE_PSK_SPEED;
+			break;
 		}
 	}
 	break;
@@ -3608,6 +3626,13 @@ static void UiDriver_CheckEncoderThree()
 				CwGen_SetSpeed();
 				UiDriver_DisplayKeyerSpeed(1);
 				break;
+			case ENC_THREE_MODE_PSK_SPEED:
+				psk_ctrl_config.speed_idx = change_and_limit_int(psk_ctrl_config.speed_idx,pot_diff_step,0,PSK_SPEED_NUM-1);
+				UiDriver_TextMsgClear();
+				PskDecoder_Init();
+				UiDriver_DisplayPskSpeed(true);
+				break;
+				// Update audio volume
 			case ENC_THREE_MODE_INPUT_CTRL:
 				// in voice mode, adjust audio input gain
 			{
@@ -3640,7 +3665,7 @@ static bool UiDriver_IsApplicableEncoderOneMode(uint8_t mode)
 		retval = is_demod_rtty();
 		break;
 	case ENC_ONE_MODE_ST_GAIN:
-		retval = ts.dmod_mode == DEMOD_CW;
+		retval = ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK);
 		break;
 	case ENC_ONE_MODE_CMP_LEVEL:
 		retval = ts.dmod_mode != DEMOD_CW && ts.dmod_mode != DEMOD_DIGI;
@@ -3673,7 +3698,7 @@ static void UiDriver_DisplayEncoderOneMode()
 		{
 			UiDriver_DisplayRttySpeed(0);
 		}
-		else if(ts.dmod_mode == DEMOD_CW)
+		else if(ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK))
 		{
 			UiDriver_DisplaySidetoneGain(0);
 		}
@@ -3759,6 +3784,13 @@ static bool UiDriver_IsApplicableEncoderThreeMode(uint8_t mode)
 	case ENC_THREE_MODE_CW_SPEED:
 		retval = ts.dmod_mode == DEMOD_CW;
 		break;
+	case ENC_THREE_MODE_PSK_SPEED:
+		retval = is_demod_psk();
+		break;
+	case ENC_THREE_MODE_INPUT_CTRL:
+		retval = ts.dmod_mode != DEMOD_DIGI || ts.digital_mode != DigitalMode_BPSK;
+		//retval = ts.dmod_mode != DEMOD_DIGI || (ts.digital_mode != DigitalMode_BPSK && ts.digital_mode != DigitalMode_RTTY);
+		break;
 	}
 	return retval;
 }
@@ -3775,12 +3807,15 @@ static void UiDriver_DisplayEncoderThreeMode()
 	case ENC_THREE_MODE_CW_SPEED:
 		UiDriver_DisplayKeyerSpeed(1);
 		break;
+	case ENC_THREE_MODE_PSK_SPEED:
+		UiDriver_DisplayPskSpeed(1);
+		break;
 	case ENC_THREE_MODE_INPUT_CTRL:
 		UiDriver_DisplayLineInModeAndGain(1);
 		break;
 	default:
 		// this defines what is shown if the lower box is not actively selected
-		if (ts.dmod_mode == DEMOD_CW)
+		if (ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK))
 		{
 			UiDriver_DisplayKeyerSpeed(0);
 		}
@@ -3961,6 +3996,12 @@ static void UiDriver_DisplayRttySpeed(bool encoder_active)
 {
 	uint16_t  color = encoder_active?White:Grey;
 	UiDriver_EncoderDisplay(1,0,"BD", encoder_active, rtty_speeds[rtty_ctrl_config.speed_idx].label, color);
+}
+
+static void UiDriver_DisplayPskSpeed(bool encoder_active)
+{
+	uint16_t  color = encoder_active?White:Grey;
+	UiDriver_EncoderDisplay(1,2,"PSK", encoder_active, psk_speeds[psk_ctrl_config.speed_idx].label, color);
 }
 
 static void UiDriver_DisplayRttyShift(bool encoder_active)
@@ -5771,9 +5812,9 @@ static void UiAction_ChangeFrequencyByTouch()
 
 static void UiAction_ChangeDigitalMode()
 {
-	incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_RTTY);
+	incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_BPSK);
 	// We limit the reachable modes to the ones truly available
-	// which is FreeDV1 and RTTY for now
+	// which is FreeDV1, RTTY, BPSK for now
 	UiDriver_ToggleDigitalMode();
 }
 
@@ -5935,7 +5976,7 @@ static void UiAction_PlayKeyerBtnN(int8_t n)
 				DigiModes_TxBufferPutChar(*pmacro++);
 			}
 
-			if (ts.dmod_mode == DEMOD_CW && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+			if ((ts.dmod_mode == DEMOD_CW && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT) || is_demod_psk())
 			{
 				ts.ptt_req = true;
 			}
@@ -5996,7 +6037,7 @@ static void UiAction_PlayKeyerBtn3()
 
 static void UiAction_RecordKeyerBtnN(int8_t n)
 {
-	if (ts.keyer_mode.button_recording == KEYER_BUTTON_NONE && ts.txrx_mode == TRX_MODE_RX && !ts.cw_text_entry)
+	if (ts.keyer_mode.button_recording == KEYER_BUTTON_NONE && ts.txrx_mode == TRX_MODE_RX && !ts.cw_text_entry && ts.dmod_mode == DEMOD_CW)
 	{
 		ts.cw_text_entry = true;
 		ts.keyer_mode.button_recording = n;
@@ -6024,6 +6065,19 @@ static void UiAction_RecordKeyerBtn3()
 static void UiAction_ToggleBufferedTXMode()
 {
 	ts.buffered_tx = ! ts.buffered_tx;
+	UiDriver_FButton_F5Tune();
+}
+
+static void UiAction_ToggleTxRx()
+{
+	if(ts.txrx_mode == TRX_MODE_RX)
+	{
+		ts.ptt_req = true;
+	}
+	else
+	{
+		ts.tx_stop_req = true;
+	}
 	UiDriver_FButton_F5Tune();
 }
 
@@ -6272,7 +6326,7 @@ static const keyaction_descr_t keyactions_keyer[] =
 		{ BUTTON_F2_PRESSED, 	UiAction_PlayKeyerBtn2, 		UiAction_RecordKeyerBtn2 },
 		{ BUTTON_F3_PRESSED, 	UiAction_PlayKeyerBtn3, 		UiAction_RecordKeyerBtn3 },
 		{ BUTTON_F4_PRESSED, 	KEYACTION_NOP, 		KEYACTION_NOP },
-		{ BUTTON_F5_PRESSED, 	KEYACTION_NOP,		UiAction_ToggleBufferedTXMode },
+		{ BUTTON_F5_PRESSED, 	UiAction_ToggleTxRx,		UiAction_ToggleBufferedTXMode },
 };
 
 static const keyaction_list_descr_t key_sets[] =
@@ -6405,7 +6459,7 @@ void UiDriver_MainHandler()
 			}
 			if (kbdChar != '\0')
 			{
-				if (is_demod_rtty())
+				if (is_demod_rtty() || is_demod_psk())
 				{
 					DigiModes_TxBufferPutChar(kbdChar);
 				}

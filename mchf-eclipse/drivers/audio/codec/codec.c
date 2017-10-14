@@ -282,7 +282,7 @@ void Codec_SwitchMicTxRxMode(uint8_t txrx_mode)
 
 static bool is_microphone_active()
 {
-	return ts.tx_audio_source == TX_AUDIO_MIC && (ts.dmod_mode != DEMOD_CW && is_demod_rtty() == false);
+	return ts.tx_audio_source == TX_AUDIO_MIC && (ts.dmod_mode != DEMOD_CW && is_demod_rtty() == false && is_demod_psk() == false);
 }
 
 /**
@@ -356,7 +356,7 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
     }
     else		// It is transmit
     {
-        if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || (ts.tune && !ts.iq_freq_mode))
+        if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || (ts.tune && !ts.iq_freq_mode))
         // Turn sidetone on for CW or TUNE mode without freq translation
         {
             Codec_TxSidetoneSetgain(txrx_mode);	// set sidetone level

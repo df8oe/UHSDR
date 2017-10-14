@@ -47,6 +47,8 @@
 
 #include "cw_decoder.h"
 
+#include "psk.h"
+
 #define SWR_SAMPLES_SKP             1   //5000
 #define SWR_SAMPLES_CNT             5//10
 #define SWR_ADC_FULL_SCALE          4095    // full scale of A/D converter (4095 = 10 bits)
@@ -109,8 +111,8 @@ const digital_mode_desc_t digimodes[DigitalMode_Num_Modes] =
     { "DIGITAL" , true },
     { "FreeDV"  , true },
     { "RTTY"    , true },
+    { "BPSK"    , true },
     { "FREEDV2" , false },
-    { "PSK"     , false },
     { "SSTV"    , false },
     { "WSPR A"  , false },
     { "WSPR P"  , false },
@@ -266,7 +268,7 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
     // Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
     // In CW TX mode we do not use frequency translation, this permits to use the generated I or Q channel as audio sidetone
 
-    if(!((ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_FreeDV)) && (txrx_mode == TRX_MODE_TX)))
+    if(!((ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && (ts.digital_mode == DigitalMode_FreeDV || ts.digital_mode == DigitalMode_BPSK))) && (txrx_mode == TRX_MODE_TX)))
     {
         tune_freq += AudioDriver_GetTranslateFreq();        // magnitude of shift is quadrupled at actual Si570 operating frequency
     }
@@ -581,6 +583,11 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
                 // in any other case, it is not okay to transmit with ts.tx_disable == true
                 tx_ok = false;
             }
+        }
+
+        if (is_demod_psk())
+        {
+        	Bpsk_ModulatorInit();
         }
     }
 
@@ -1048,8 +1055,12 @@ void RadioManagement_HandlePttOnOff()
         else if (CatDriver_CatPttActive() == false)
         {
             // When CAT driver "pressed" PTT skip auto return to RX
-
-            if(!(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry) || ts.tx_stop_req == true)
+        	if (ts.tx_stop_req && is_demod_psk() && !psk_state.tx_ending)
+        	{
+        		psk_state.tx_ending = true;
+        		ts.tx_stop_req = false;
+        	}
+        	else if(!(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || ts.cw_text_entry) || ts.tx_stop_req == true)
             {
                 // If we are in TX and ...
                 if(ts.txrx_mode == TRX_MODE_TX)

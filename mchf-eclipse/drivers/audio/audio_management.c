@@ -343,7 +343,7 @@ void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
         tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.cw_sidetone_freq;
         break;
     case DEMOD_DIGI:
-    	if (ts.digital_mode == DigitalMode_RTTY)
+    	if (ts.digital_mode == DigitalMode_RTTY || ts.digital_mode == DigitalMode_BPSK)
     	{
     		tonefreq[0] = tune_mode?CW_SIDETONE_FREQ_DEFAULT:ts.cw_sidetone_freq;
     	}
