@@ -12,7 +12,7 @@
 
 //new hVGA lcd definitions
 #ifdef USE_DISP_480_320
-
+//#ifdef USE_DISP_none		//this is only for debug purpose, tocheck that at 320x240 everything is ok
 // ----------------------------------------------------------
 // Spectrum draw params
 //
@@ -172,16 +172,16 @@
 #define	POS_PWR_NUM_IND_X					1
 #define	POS_PWR_NUM_IND_Y					80
 
-//text message position
-#define POS_TextMsg_X 						5
-#define POS_TextMsg_Y 						80
-
 #define POS_CW_DECODER_WPM_X 	205
-#define POS_CW_DECODER_WPM_Y 	 50 // 116 --> above DSP box //79 --> this collides with the RTC!
+#define POS_CW_DECODER_WPM_Y 	 38 // 116 --> above DSP box //79 --> this collides with the RTC!
 
 #define CW_SNAP_CARRIER_X	232 // central position of variable freq marker
-#define CW_SNAP_CARRIER_Y	40 // position of variable freq marker
+#define CW_SNAP_CARRIER_Y	52 // position of variable freq marker
 
+//coordinates for text line (CW decoder or freedv output)
+#define POS_TextMsgLine_X 						205
+#define POS_TextMsgLine_Y 						28
+#define ui_txt_msg_buffer_max 39 // no more space on single screen line
 // POSITIONS END
 
 #else
@@ -339,16 +339,21 @@
 #define	POS_PWR_NUM_IND_X					1
 #define	POS_PWR_NUM_IND_Y					80
 
-//text message position
-#define POS_TextMsg_X 						5
-#define POS_TextMsg_Y 						92
-
 #define POS_CW_DECODER_WPM_X 	0
 #define POS_CW_DECODER_WPM_Y 	108 // 116 --> above DSP box //79 --> this collides with the RTC!
 
 #define CW_SNAP_CARRIER_X	27 // central position of variable freq marker
 #define CW_SNAP_CARRIER_Y	122 // position of variable freq marker
 
+//coordinates for text line (CW decoder or freedv output)
+#define POS_TextMsgLine_X 						5
+#define POS_TextMsgLine_Y 						92
+#define ui_txt_msg_buffer_max 44 // no more space on single screen line
+
+//remove it!!
+
+	#define WATERFALL_START_Y 240
+	#define WATERFALL_HEIGHT 60
 // POSITIONS END
 #endif
 

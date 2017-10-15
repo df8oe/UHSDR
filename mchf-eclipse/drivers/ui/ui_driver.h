@@ -256,7 +256,7 @@ extern PowerMeter				pwmt;
 
 extern const ulong tune_steps[T_STEP_MAX_STEPS];
 
-#define ui_txt_msg_buffer_max 44 // no more space on single screen line
+
 
 
 #ifdef alternate_NR

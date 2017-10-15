@@ -492,14 +492,21 @@ static void   UiDriver_LcdBlankingProcessTimer()
 }
 
 static char ui_txt_msg_buffer[ui_txt_msg_buffer_max+1]; // we need to be able store the '\0' as well.
-static const char ui_txt_empty_line[ui_txt_msg_buffer_max+1] = "                                             ";
+//static const char ui_txt_empty_line[ui_txt_msg_buffer_max+1] = "                                             ";
 static int ui_txt_msg_idx= 0;
 static bool ui_txt_msg_update = false;
 
 
 void UiDriver_TextMsgClear()
 {
-    UiLcdHy28_PrintText(5,92, ui_txt_empty_line,Yellow,Black,4);
+	uint32_t fillcnt;
+	for(fillcnt=0; fillcnt<ui_txt_msg_buffer_max;fillcnt++)
+	{
+		ui_txt_msg_buffer[fillcnt]=' ';
+	}
+	ui_txt_msg_buffer[fillcnt]='\0';
+
+    UiLcdHy28_PrintText(POS_TextMsgLine_X,POS_TextMsgLine_Y, ui_txt_msg_buffer,Yellow,Black,4);
     ui_txt_msg_idx = 0;
     ui_txt_msg_update = true;
 }
@@ -509,8 +516,19 @@ void UiDriver_TextMsgDisplay()
     if (ui_txt_msg_update == true)
     {
         ui_txt_msg_update = false;
-        const char* txt_ptr = ui_txt_msg_idx == 0? ui_txt_empty_line:ui_txt_msg_buffer;
-        UiLcdHy28_PrintText(5,92,txt_ptr,Yellow,Black,4);
+        if(ui_txt_msg_idx==0)
+        {
+        	uint32_t fillcnt;
+        	for(fillcnt=0; fillcnt<ui_txt_msg_buffer_max;fillcnt++)
+        	{
+        		ui_txt_msg_buffer[fillcnt]=' ';
+        	}
+        	ui_txt_msg_buffer[fillcnt]='\0';
+        }
+
+        //const char* txt_ptr = ui_txt_msg_idx == 0? ui_txt_empty_line:ui_txt_msg_buffer;
+        //UiLcdHy28_PrintText(POS_TextMsgLine_X,POS_TextMsgLine_Y,txt_ptr,Yellow,Black,4);
+        UiLcdHy28_PrintText(POS_TextMsgLine_X,POS_TextMsgLine_Y, ui_txt_msg_buffer,Yellow,Black,4);
     }
 }
 
