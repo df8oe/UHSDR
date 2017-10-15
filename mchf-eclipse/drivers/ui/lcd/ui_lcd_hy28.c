@@ -74,7 +74,6 @@ mchf_display_t mchf_display;
 // ----------------------------------------------------------
 // Dual purpose pins (parallel + serial)
 #define LCD_CS                  LCD_CSA
-#define LCD_CS_SOURCE           LCD_CSA_SOURCE
 #define LCD_CS_PIO              LCD_CSA_PIO
 
 #ifndef BOOTLOADER_BUILD
@@ -840,15 +839,13 @@ unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
 // TODO: Do we need this function at all?
 static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 {
-#ifndef USE_GFX_ILI9486
 #ifdef USE_DRIVER_RA8875
     UiLcdRa8875_WriteReg_16bit(0x46, Xpos);
     UiLcdRa8875_WriteReg_16bit(0x48, Ypos);
-#else
+#elif defined(ILI932x)
     UiLcdHy28_WriteReg(0x20, Ypos );
     UiLcdHy28_WriteReg(0x21, Xpos );
 #endif    
-#endif
 }
 static void UiLcdHy28_WriteRAM_Prepare()
 {
@@ -1238,27 +1235,25 @@ void UiLcdHy28_DrawStraightLine(ushort x, ushort y, ushort Length, uchar Directi
 
     UiLcdRA8875_SetForegroundColor(color);
 
+    uint16_t x_end, y_end;
+
+    if (Direction == LCD_DIR_VERTICAL)
+    {
+
+    	x_end = x;
+        y_end = y + Length;
+    }
+    else
+    {
+    	x_end = x + Length;
+        y_end = y;
+    }
+
     /* Horizontal + vertical start */
     UiLcdRa8875_WriteReg_16bit(LCD_DLHSR0, x);
     UiLcdRa8875_WriteReg_16bit(LCD_DLVSR0, y);
-
-    if (Direction == LCD_DIR_VERTICAL)
-
-    {
-
-        /* Horizontal end */
-        UiLcdRa8875_WriteReg_16bit(LCD_DLHER0, x);
-
-        /* Vertical end */
-        UiLcdRa8875_WriteReg_16bit(LCD_DLVER0, y + Length);
-    } else {
-
-        /* Horizontal end */
-        UiLcdRa8875_WriteReg_16bit(LCD_DLHER0, x + Length);
-
-        /* Vertical end */
-        UiLcdRa8875_WriteReg_16bit(LCD_DLVER0, y);
-    }
+    UiLcdRa8875_WriteReg_16bit(LCD_DLHER0, x_end);
+    UiLcdRa8875_WriteReg_16bit(LCD_DLVER0, y_end);
 
     UiLcdRa8875_WriteReg_8bit(LCD_DCR, 0x80);
 

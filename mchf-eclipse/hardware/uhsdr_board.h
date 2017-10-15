@@ -36,6 +36,11 @@
 #define USE_GFX_ILI932x
 // ALTERNATIVE GROUP END USE_GFX
 
+// DEFAULT GRAPHICS DRIVER
+#if !defined(USE_GFX_ILI9486) && !defined(USE_GFX_RA8875) && !defined(USE_GFX_ILI932x)
+	#define USE_GFX_ILI932x)
+#endif
+
 
 // Supported display sizes, ONLY ONE MAY BE SET AT COMPILE TIM
 // Currently this is strictly linked to the driver selection
