@@ -118,8 +118,8 @@
 
 // --------------------------------------------------
 // Encoder controls indicator
-#define POS_ENCODER_IND_X                	330
-#define POS_ENCODER_IND_Y                	150
+#define POS_ENCODER_IND_X                	120
+#define POS_ENCODER_IND_Y                	64
 
 
 // --------------------------------------------------
@@ -128,7 +128,7 @@
 // DSP mode
 // Lower DSP box
 #define POS_LEFTBOXES_IND_X              	0
-#define POS_LEFTBOXES_IND_Y              	60
+#define POS_LEFTBOXES_IND_Y              	64
 #define LEFTBOX_WIDTH 58 // used for the lower left side controls
 #define LEFTBOX_ROW_H  (28)
 #define LEFTBOX_ROW_2ND_OFF  (13)
@@ -138,7 +138,7 @@
 #define POS_PW_IND_Y                		POS_DEMOD_MODE_Y - 16
 
 #define POS_DIGMODE_IND_X              		420
-#define POS_DIGMODE_IND_Y              		86
+#define POS_DIGMODE_IND_Y              		80
 
 // S meter position
 #define POS_SM_IND_X                		0
@@ -156,7 +156,7 @@
 
 // Temperature Indicator
 #define POS_TEMP_IND_X              		370
-#define POS_TEMP_IND_Y              		70
+#define POS_TEMP_IND_Y              		64
 
 // RTC
 #define POS_RTC								79

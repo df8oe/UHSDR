@@ -915,11 +915,23 @@ void UiDriver_EncoderDisplay(const uint8_t row, const uint8_t column, const char
 	uint32_t bg_color = encoder_active?Orange:Grey;
 	uint32_t brdr_color = encoder_active?Orange:Grey;
 
+#ifdef USE_DISP_480_320
+#define Xspacing 5
+	UiLcdHy28_DrawEmptyRect(POS_ENCODER_IND_X + ENC_COL_W *2 * column + row *ENC_COL_W+column*Xspacing, POS_ENCODER_IND_Y , ENC_ROW_H - 2, ENC_COL_W - 2, brdr_color);
+	UiLcdHy28_PrintTextCentered((POS_ENCODER_IND_X + 1 + ENC_COL_W * 2 * column + row *ENC_COL_W+column*Xspacing), (POS_ENCODER_IND_Y + 1),ENC_COL_W - 3, label,
+			label_color, bg_color, 0);
+	UiLcdHy28_PrintTextRight((POS_ENCODER_IND_X + ENC_COL_W - 4 + ENC_COL_W * 2 * column+ row *ENC_COL_W+column*Xspacing), (POS_ENCODER_IND_Y + 1 + ENC_ROW_2ND_OFF), temp,
+			color, Black, 0);
+
+#else
+
 	UiLcdHy28_DrawEmptyRect(POS_ENCODER_IND_X + ENC_COL_W * column, POS_ENCODER_IND_Y + row * ENC_ROW_H, ENC_ROW_H - 2, ENC_COL_W - 2, brdr_color);
 	UiLcdHy28_PrintTextCentered((POS_ENCODER_IND_X + 1 + ENC_COL_W * column), (POS_ENCODER_IND_Y + 1 + row * ENC_ROW_H),ENC_COL_W - 3, label,
 			label_color, bg_color, 0);
 	UiLcdHy28_PrintTextRight((POS_ENCODER_IND_X + ENC_COL_W - 4 + ENC_COL_W * column), (POS_ENCODER_IND_Y + 1 + row * ENC_ROW_H + ENC_ROW_2ND_OFF), temp,
 			color, Black, 0);
+
+#endif
 }
 
 
