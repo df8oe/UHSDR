@@ -91,7 +91,7 @@
 
 // Demodulator mode control
 #define POS_DEMOD_MODE_X            		(POS_TUNE_FREQ_X + 1)
-#define POS_DEMOD_MODE_Y            		(POS_TUNE_FREQ_Y - 36)
+#define POS_DEMOD_MODE_Y            		(POS_TUNE_FREQ_Y - 20)
 #define POS_DEMOD_MODE_MASK_X           	(POS_DEMOD_MODE_X - 1)
 #define POS_DEMOD_MODE_MASK_Y           	(POS_DEMOD_MODE_Y - 1)
 #define POS_DEMOD_MODE_MASK_H           	13
@@ -107,9 +107,9 @@
 //#define POS_RADIO_MODE_Y            		5
 
 // Bottom bar
-#define POS_BOTTOM_BAR_X            		0
-#define POS_BOTTOM_BAR_Y            		228
-#define POS_BOTTOM_BAR_BUTTON_W         	62
+#define POS_BOTTOM_BAR_X            		32
+#define POS_BOTTOM_BAR_Y            		308
+#define POS_BOTTOM_BAR_BUTTON_W         	74
 #define POS_BOTTOM_BAR_BUTTON_H         	16
 
 // Virtual Button 1
@@ -128,7 +128,7 @@
 // DSP mode
 // Lower DSP box
 #define POS_LEFTBOXES_IND_X              	0
-#define POS_LEFTBOXES_IND_Y              	130
+#define POS_LEFTBOXES_IND_Y              	60
 #define LEFTBOX_WIDTH 58 // used for the lower left side controls
 #define LEFTBOX_ROW_H  (28)
 #define LEFTBOX_ROW_2ND_OFF  (13)
@@ -137,8 +137,8 @@
 #define POS_PW_IND_X                		POS_DEMOD_MODE_X -1
 #define POS_PW_IND_Y                		POS_DEMOD_MODE_Y - 16
 
-#define POS_DIGMODE_IND_X              		0
-#define POS_DIGMODE_IND_Y              		(191)
+#define POS_DIGMODE_IND_X              		420
+#define POS_DIGMODE_IND_Y              		86
 
 // S meter position
 #define POS_SM_IND_X                		0
@@ -150,8 +150,8 @@
 //#define POS_PWRN_IND_X              		0
 #define POS_PWRN_IND_Y              		193
 
-#define POS_PWR_IND_X               		4
-#define POS_PWR_IND_Y               		(POS_PWRN_IND_Y + 15)
+#define POS_PWR_IND_X               		420
+#define POS_PWR_IND_Y               		307
 
 
 // Temperature Indicator

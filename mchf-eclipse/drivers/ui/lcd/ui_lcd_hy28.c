@@ -1635,8 +1635,8 @@ static uint16_t UiLcdHy28_InitA(uint32_t display_type)
 	uint16_t retval;
 #ifdef USE_GFX_ILI9486
     mchf_display.use_spi = true;
-    mchf_display.lcd_cs = LCD_D11;
-    mchf_display.lcd_cs_pio = LCD_D11_PIO;
+    mchf_display.lcd_cs = LCD_CS;
+    mchf_display.lcd_cs_pio = LCD_CS_PIO;
 
     UiLcdHy28_SpiInit(HY28BHISPEED);
     UiLcdHy28_Reset();
