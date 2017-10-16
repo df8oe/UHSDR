@@ -118,7 +118,7 @@
 
 // --------------------------------------------------
 // Encoder controls indicator
-#define POS_ENCODER_IND_X                	120
+#define POS_ENCODER_IND_X                	128
 #define POS_ENCODER_IND_Y                	64
 
 
@@ -137,8 +137,10 @@
 #define POS_PW_IND_X                		POS_DEMOD_MODE_X -1
 #define POS_PW_IND_Y                		POS_DEMOD_MODE_Y - 16
 
-#define POS_DIGMODE_IND_X              		420
-#define POS_DIGMODE_IND_Y              		80
+//#define POS_DIGMODE_IND_X              		420
+//#define POS_DIGMODE_IND_Y              		80
+#define POS_DIGMODE_IND_X              		215
+#define POS_DIGMODE_IND_Y              		0
 
 // S meter position
 #define POS_SM_IND_X                		0
