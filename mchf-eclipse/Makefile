@@ -107,6 +107,14 @@ UHSDR_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean
 BOOTLOADER=bl-$(TRX_ID)
 FIRMWARE=fw-$(TRX_ID)
 
+# Every subdirectory with header files must be mentioned here
+include $(ROOTLOC)/include.mak
+
+# every source-file has to be mentioned here 
+include $(ROOTLOC)/files.mak
+
+include $(ROOTLOC)/bootloader.mak
+
 ifeq ($(BUILDFOR),F4)
 
 $(BOOTLOADER).elf : CFLAGS = ${BASECFLAGS_F4} -Os -DBOOTLOADER_BUILD
@@ -115,14 +123,14 @@ $(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link-bootloader
 $(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link.ld
 	
 
+
 	# Every subdirectory with header files must be mentioned here
-	include $(ROOTLOC)/include.mak
+	include $(ROOTLOC)/f4-include.mak
 
 	# every source-file has to be mentioned here 
-	include $(ROOTLOC)/files.mak
+	include $(ROOTLOC)/f4-files.mak
 
-	include $(ROOTLOC)/bootloader.mak
-
+	include $(ROOTLOC)/f4-bootloader.mak
 
 endif
 ifeq ($(BUILDFOR),F7)
@@ -143,7 +151,7 @@ $(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F7} -T$(ROOTLOC)/arm-gcc-link_f7.ld
 
 endif
 
-INC_DIRS = $(foreach d, $(SUBDIRS), -I$(ROOTLOC)/$d)
+INC_DIRS = $(foreach d, $(SUBDIRS) $(HAL_SUBDIRS), -I$(ROOTLOC)/$d)
 
 CC = @${PREFIX}/bin/arm-none-eabi-gcc
 CXX = @${PREFIX}/bin/arm-none-eabi-g++
@@ -185,7 +193,8 @@ endif
 # how to compile individual object files
 OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRC:.cpp=.o)))
 DSPLIB_OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(DSPLIB_SRC:.cpp=.o)))
-BLOBJS := $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(BLSRC:.c=.o)))
+HAL_OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(HAL_SRC:.cpp=.o)))
+BL_OBJS := $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(BL_SRC:.c=.o)))
 
 $(DSPLIB_OBJS): EXTRA_CFLAGS:= -Wno-strict-aliasing
 
@@ -258,14 +267,14 @@ $(BOOTLOADER):  $(BOOTLOADER).bin $(BOOTLOADER).dfu
 	# compile the bootloader ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map and .dmp
 
 # compilation
-$(FIRMWARE).elf:  $(OBJS) $(DSPLIB_OBJS)
+$(FIRMWARE).elf:  $(OBJS) $(HAL_OBJS) $(DSPLIB_OBJS)
 	$(ECHO) "  [LD] $@"
 	$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ $(OBJS) $(DSPLIB_OBJS) $(LIBS)
 
 # compilation
-$(BOOTLOADER).elf:  $(BLOBJS) 
+$(BOOTLOADER).elf:  $(BL_OBJS) $(BL_HAL_OBJS)
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ $(BLOBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ $(BL_OBJS) $(LIBS)
 
 
 $(TRX_ID).handbook:
@@ -279,7 +288,10 @@ $(TRX_ID).version:
 clean:  
 	# remove the executables, map, dmp and all object files (.o)
 	$(RM) $(call FixPath,$(OBJS))
-	$(RM) $(call FixPath,$(BLOBJS))
+	$(RM) $(call FixPath,$(DSPLIB_OBJS))
+	$(RM) $(call FixPath,$(HAL_OBJS))
+	$(RM) $(call FixPath,$(BL_OBJS))
+	$(RM) $(call FixPath,$(BL_HAL_OBJS))
 	$(RM) $(call FixPath,$(FIRMWARE).elf)
 	$(RM) $(call FixPath,$(FIRMWARE).dfu)
 	$(RM) $(call FixPath,$(FIRMWARE).bin)
@@ -324,7 +336,10 @@ handbook-ui-menu-clean:
 handy:  
 	# rm all .o (but not executables, .map and .dmp)
 	$(RM) $(call FixPath,$(OBJS))
-	$(RM) $(call FixPath,$(BLOBJS))
+	$(RM) $(call FixPath,$(DSPLIB_OBJS))
+	$(RM) $(call FixPath,$(HAL_OBJS))
+	$(RM) $(call FixPath,$(BL_OBJS))
+	$(RM) $(call FixPath,$(BL_HAL_OBJS))
 	$(RM) $(call FixPath,*~)
 
 release:  

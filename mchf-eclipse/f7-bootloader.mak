@@ -1,10 +1,4 @@
-BLSRC := \
-src/bootloader/command.c \
-src/bootloader/flash_if.c \
-src/bootloader/uhsdr_boot_hw.c \
-src/bootloader/bootloader_main.c \
-drivers/ui/lcd/ui_lcd_hy28.c \
-drivers/ui/lcd/ui_lcd_hy28_fonts.c \
+BL_HAL_SRC := \
 basesw/ovi40/Src/adc.c \
 basesw/ovi40/Src/dac.c \
 basesw/ovi40/Src/dma.c \
