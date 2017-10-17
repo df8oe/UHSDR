@@ -269,12 +269,12 @@ $(BOOTLOADER):  $(BOOTLOADER).bin $(BOOTLOADER).dfu
 # compilation
 $(FIRMWARE).elf:  $(OBJS) $(HAL_OBJS) $(DSPLIB_OBJS)
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ $(OBJS) $(DSPLIB_OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ $^ $(LIBS)
 
 # compilation
 $(BOOTLOADER).elf:  $(BL_OBJS) $(BL_HAL_OBJS)
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ $(BL_OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ $^ $(LIBS)
 
 
 $(TRX_ID).handbook:
