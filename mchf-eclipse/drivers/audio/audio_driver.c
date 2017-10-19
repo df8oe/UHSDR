@@ -68,8 +68,8 @@ typedef struct
 	float32_t hangtime;
 	float32_t hang_thresh;
 	float32_t tau_hang_decay;
-	float32_t ring[96]; //192]; //96];
-	float32_t abs_ring[96]; //192]; //96];
+	float32_t ring[192]; //192]; //96];
+	float32_t abs_ring[96];// 192 //96]; // abs_ring is half the size of ring
 	//assign constants
 	int ring_buffsize; // = 96;
 	//do one-time initialization
@@ -1869,7 +1869,7 @@ void AudioDriver_SetupAgcWdsp()
     // one time initialization
     if(!initialised)
     {
-    	agc_wdsp.ring_buffsize = 192; //96;
+    	agc_wdsp.ring_buffsize = 96; //192; //96;
 		//do one-time initialization
     	agc_wdsp.out_index = agc_wdsp.ring_buffsize;
     	agc_wdsp.fixed_gain = 1.0;
@@ -2053,7 +2053,7 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1, float32_t *
 
 //        agc_wdsp.out_sample[0] = agc_wdsp.ring[agc_wdsp.out_index];
         agc_wdsp.out_sample[0] = agc_wdsp.ring[2 * agc_wdsp.out_index];
-#ifdef TWO_CHANNEL_AUDIO
+#ifdef USE_TWO_CHANNEL_AUDIO
         if(use_stereo)
         	{
         		agc_wdsp.out_sample[1] = agc_wdsp.ring[2 * agc_wdsp.out_index + 1];
@@ -2064,7 +2064,7 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1, float32_t *
         //        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(adb.a_buffer[i]);
 //        agc_wdsp.ring[agc_wdsp.in_index] = agcbuffer[i];
         agc_wdsp.ring[2 * agc_wdsp.in_index] = agcbuffer1[i];
-#ifdef TWO_CHANNEL_AUDIO
+#ifdef USE_TWO_CHANNEL_AUDIO
         if(use_stereo)
         	{
         		agc_wdsp.ring[2 * agc_wdsp.in_index + 1] = agcbuffer2[i];
@@ -2072,7 +2072,7 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1, float32_t *
 #endif
         //        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer[i]);
         agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer1[i]);
-#ifdef TWO_CHANNEL_AUDIO
+#ifdef USE_TWO_CHANNEL_AUDIO
         if(use_stereo)
         {
 			if(agc_wdsp.abs_ring[agc_wdsp.in_index] < fabsf(agcbuffer2[i]))
