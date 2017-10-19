@@ -3116,7 +3116,7 @@ static void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
 
     else // Automatic IQ imbalance correction
     {   // Moseley, N.A. & C.H. Slump (2006): A low-complexity feed-forward I/Q imbalance compensation algorithm.
-        // in 17th Annual Workshop on Circuits, Nov. 2006, pp. 158�164.
+        // in 17th Annual Workshop on Circuits, Nov. 2006, pp. 158-164.
         // http://doc.utwente.nl/66726/1/moseley.pdf
         if (ts.twinpeaks_tested == 2)
         {
@@ -3227,7 +3227,6 @@ static void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
 static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
 {
     const int16_t blockSizeDecim = blockSize/(int16_t)ads.decimation_rate;
-
     // we copy volatile variables which are used multiple times to local consts to let the compiler to its optimization magic
     // since we are in an interrupt, no one will change these anyway
     // shaved off a few bytes of code
@@ -3235,6 +3234,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
+//    const bool use_stereo = USE_TWO_CHANNEL_AUDIO && (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || dmod_mode != DEMOD_SAMSTEREO);
+    const bool use_stereo = (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || dmod_mode == DEMOD_SAMSTEREO);
 
     float post_agc_gain_scaling;
 
@@ -3349,7 +3350,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         if (dvmode_signal == false)
         {
             const bool use_decimatedIQ =
-                    FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs
+                    FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs // lower than 3k8 bandwidth
                     && dmod_mode != DEMOD_FM
                     && dmod_mode != DEMOD_SAM
                     && dmod_mode != DEMOD_AM;
@@ -3421,10 +3422,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
                 }
                 break;
-            case DEMOD_IQ: // leave I & Q as they are!
-            	// for now, this is in fact SSB_STEREO = LSB-left, USB-right
+            case DEMOD_SSBSTEREO: // LSB-left, USB-right
+            case DEMOD_IQ:	// leave I & Q as they are!
+
             	arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
-                arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.b_buffer, blockSizeIQ);   // difference of I and Q - LSB
+                arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.r_buffer, blockSizeIQ);   // difference of I and Q - LSB
             	break;
             case DEMOD_USB:
             default:
@@ -3443,6 +3445,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 {
                     // TODO HILBERT
                     arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+                    if(use_stereo)
+                    {
+                        arm_fir_decimate_f32(&DECIMATE_RX, adb.r_buffer, adb.r_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+                    }
                 }
 /////////////////////////////////////////////
 
@@ -3466,16 +3472,29 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 if ((IIR_PreFilter.numStages > 0))   // yes, we want an audio IIR filter
                 {
                     arm_iir_lattice_f32(&IIR_PreFilter, adb.a_buffer, adb.a_buffer, blockSizeDecim);
+                    if(use_stereo)
+                    {
+                        arm_iir_lattice_f32(&IIR_PreFilter, adb.r_buffer, adb.r_buffer, blockSizeDecim);
+                    }
+
                 }
 
                 // now process the samples and perform the receiver AGC function
                 if(ts.agc_wdsp)
                 {
                     AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
+                    if(use_stereo)
+                    {
+                        AudioDriver_RxAgcWdsp(blockSizeDecim, adb.r_buffer);
+                    }
                 }
                 else
                 {
                     AudioDriver_RxAgcProcessor(blockSizeDecim, adb.a_buffer);
+                    if(use_stereo)
+                    {
+                        AudioDriver_RxAgcProcessor(blockSizeDecim, adb.r_buffer);
+                    }
                 }
 
                 // DSP noise reduction using LMS (Least Mean Squared) algorithm
@@ -3587,9 +3606,16 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     }
                 }
                 arm_scale_f32(adb.a_buffer,scale_gain, adb.a_buffer, blockSizeDecim); // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
-
+                if(use_stereo)
+                {
+                    arm_scale_f32(adb.r_buffer,scale_gain, adb.r_buffer, blockSizeDecim); // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+                }
                 // this is the biquad filter, a notch, peak, and lowshelf filter
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
+                if(use_stereo)
+                {
+                    arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.r_buffer,adb.r_buffer, blockSizeDecim);
+                }
 
 #ifdef USE_RTTY_PROCESSOR
                 if (is_demod_rtty() && blockSizeDecim == 8) // only works when decimation rate is 4 --> sample rate == 12ksps
@@ -3613,12 +3639,20 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 if (INTERPOLATE_RX.phaseLength > 0)
                 {
                     arm_fir_interpolate_f32(&INTERPOLATE_RX, adb.a_buffer, adb.b_buffer, blockSizeDecim);
+                    if(use_stereo)
+                    {
+                        arm_fir_interpolate_f32(&INTERPOLATE_RX, adb.r_buffer, adb.a_buffer, blockSizeDecim);
+                    }
                 }
                 // additional antialias filter for specific bandwidths
                 // IIR ARMA-type lattice filter
                 if (IIR_AntiAlias.numStages > 0)   // yes, we want an interpolation IIR filter
                 {
                     arm_iir_lattice_f32(&IIR_AntiAlias, adb.b_buffer, adb.b_buffer, blockSize);
+                    if(use_stereo)
+                    {
+                        arm_iir_lattice_f32(&IIR_AntiAlias, adb.a_buffer, adb.a_buffer, blockSize);
+                    }
                 }
 
             } // end NOT in FM mode
@@ -3635,17 +3669,13 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
 
             }
-            else if(dmod_mode == DEMOD_IQ)
-            { // I & Q are raw data
-                if ((IIR_PreFilter.numStages > 0))
-                {
-                    arm_iir_lattice_f32(&IIR_PreFilter, adb.q_buffer, adb.q_buffer, blockSize);
-                    arm_iir_lattice_f32(&IIR_PreFilter, adb.i_buffer, adb.i_buffer, blockSize);
-                }
-            }
 
             // this is the biquad filter, a highshelf filter
             arm_biquad_cascade_df1_f32 (&IIR_biquad_2, adb.b_buffer,adb.b_buffer, blockSize);
+            if(use_stereo)
+            {
+                arm_biquad_cascade_df1_f32 (&IIR_biquad_2, adb.a_buffer,adb.a_buffer, blockSize);
+            }
         }
     }
 
@@ -3669,7 +3699,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     }
     else
     {
-        arm_scale_f32(adb.b_buffer, LINE_OUT_SCALING_FACTOR, adb.a_buffer, blockSize);       // Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
+//        arm_scale_f32(adb.b_buffer, LINE_OUT_SCALING_FACTOR, adb.a_buffer, blockSize);       // Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
+        arm_scale_f32(adb.b_buffer, LINE_OUT_SCALING_FACTOR, adb.r_buffer, blockSize);       // Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
         //
         // AF gain in "ts.audio_gain-active"
         //  0 - 16: via codec command
@@ -3712,10 +3743,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
 #ifdef USE_TWO_CHANNEL_AUDIO
         	// Stereo modes should be implemented here
-        	if(ts.dmod_mode == DEMOD_IQ)
+        	if(use_stereo)
         	{
-				dst[i].r = adb.i_buffer[i];
-				dst[i].l = adb.q_buffer[i];
+				dst[i].r = adb.a_buffer[i];
+				dst[i].l = adb.b_buffer[i];
         	}
         	else
             { // MONO
@@ -3723,14 +3754,16 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             }
 #else
             dst[i].l = adb.b_buffer[i]; // VARIABLE LEVEL FOR SPEAKER
-            dst[i].r = adb.a_buffer[i];        // LINE OUT (constant level)
+//            dst[i].r = adb.a_buffer[i];        // LINE OUT (constant level)
+            dst[i].r = adb.r_buffer[i];        // LINE OUT (constant level)
 #endif
 
         }
         // Unless this is DIGITAL I/Q Mode, we sent processed audio
         if (tx_audio_source != TX_AUDIO_DIGIQ)
         {
-            float32_t val = adb.a_buffer[i] * usb_audio_gain;
+//            float32_t val = adb.a_buffer[i] * usb_audio_gain;
+            float32_t val = adb.r_buffer[i] * usb_audio_gain;
             audio_in_put_buffer(val);
             audio_in_put_buffer(val);
         }
