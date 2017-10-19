@@ -1520,7 +1520,7 @@ void UiDriver_DisplayDemodMode()
 		}
 		break;
 	case DEMOD_IQ:
-		txt = "IQ";
+		txt = "IQ-S";
 		break;
 	case DEMOD_SSBSTEREO:
 		txt = "SSB-S";

@@ -188,12 +188,19 @@ float32_t			__MCHF_SPECIALMEM interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_N
 #ifdef USE_TWO_CHANNEL_AUDIO
 // Audio RX - Interpolator
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX_L;
+//float32_t			__MCHF_SPECIALMEM interplState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 float32_t			__MCHF_SPECIALMEM interplState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 #endif
 
 // variables for RX IIR filters
 static float32_t		iir_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 static arm_iir_lattice_instance_f32	IIR_PreFilter;
+
+#ifdef USE_TWO_CHANNEL_AUDIO
+// variables for RX IIR filters
+static float32_t		iir_rx_state2[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
+static arm_iir_lattice_instance_f32	IIR_PreFilter2;
+#endif
 
 // variables for RX antialias IIR filter
 static float32_t		iir_aa_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
@@ -221,6 +228,24 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_1 =
         } // 3 x 4 = 12 state variables
 };
 
+#ifdef USE_TWO_CHANNEL_AUDIO
+// static float32_t Koeff[20];
+// variables for RX manual notch, manual peak & bass shelf IIR biquad filter
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_12 =
+{
+        .numStages = 3,
+        .pCoeffs = (float32_t *)(float32_t [])
+        {
+            1,0,0,0,0,  1,0,0,0,0,  1,0,0,0,0
+        }, // 3 x 5 = 15 coefficients
+
+        .pState = (float32_t *)(float32_t [])
+        {
+            0,0,0,0,   0,0,0,0,   0,0,0,0
+        } // 3 x 4 = 12 state variables
+};
+#endif
+
 // variables for RX treble shelf IIR biquad filter
 static arm_biquad_casd_df1_inst_f32 IIR_biquad_2 =
 {
@@ -236,6 +261,22 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_2 =
         } // 1 x 4 = 4 state variables
 };
 
+#ifdef USE_TWO_CHANNEL_AUDIO
+// variables for RX treble shelf IIR biquad filter
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_22 =
+{
+        .numStages = 1,
+        .pCoeffs = (float32_t *)(float32_t [])
+        {
+            1,0,0,0,0
+        }, // 1 x 5 = 5 coefficients
+
+        .pState = (float32_t *)(float32_t [])
+        {
+            0,0,0,0
+        } // 1 x 4 = 4 state variables
+};
+#endif
 // variables for TX bass & treble adjustment IIR biquad filter
 static arm_biquad_casd_df1_inst_f32 IIR_TX_biquad =
 {
@@ -865,10 +906,16 @@ void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
         coeffs[A2] = alpha - 1; // already negated!
 
         AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[0],coeffs,coeffs[A0]);
+#ifdef USE_TWO_CHANNEL_AUDIO
+        AudioDriver_SetBiquadCoeffs(&IIR_biquad_12.pCoeffs[0],coeffs,coeffs[A0]);
+#endif
     }
     else   // passthru
     {
         AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[0],biquad_passthrough,1);
+#ifdef USE_TWO_CHANNEL_AUDIO
+        AudioDriver_SetBiquadCoeffs(&IIR_biquad_12.pCoeffs[0],biquad_passthrough,1);
+#endif
     }
 
     // the peak filter is in biquad 1 and works at the decimated sample rate FSdec
@@ -923,10 +970,16 @@ void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
         coeffs[A2] = alpha - 1; // already negated!
 
         AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[5],coeffs,coeffs[A0]);
+#ifdef USE_TWO_CHANNEL_AUDIO
+        AudioDriver_SetBiquadCoeffs(&IIR_biquad_12.pCoeffs[5],coeffs,coeffs[A0]);
+#endif
     }
     else   //passthru
     {
         AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[5],biquad_passthrough,1);
+#ifdef USE_TWO_CHANNEL_AUDIO
+        AudioDriver_SetBiquadCoeffs(&IIR_biquad_12.pCoeffs[5],biquad_passthrough,1);
+#endif
     }
 
     // EQ shelving filters
@@ -937,12 +990,18 @@ void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
     // lowShelf
     AudioDriver_CalcLowShelf(coeffs, 250, 0.7, ts.bass_gain, FSdec);
     AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[10],coeffs,coeffs[A0]);
+#ifdef USE_TWO_CHANNEL_AUDIO
+    AudioDriver_SetBiquadCoeffs(&IIR_biquad_12.pCoeffs[10],coeffs,coeffs[A0]);
+#endif
 
     // Treble = highShelf
     //
     // the treble filter is in biquad 2 and works at 48000ksps
     AudioDriver_CalcHighShelf(coeffs, 3500, 0.9, ts.treble_gain, FS);
     AudioDriver_SetBiquadCoeffs(&IIR_biquad_2.pCoeffs[0],coeffs,coeffs[A0]);
+#ifdef USE_TWO_CHANNEL_AUDIO
+    AudioDriver_SetBiquadCoeffs(&IIR_biquad_22.pCoeffs[0],coeffs,coeffs[A0]);
+#endif
 
     // insert coefficient calculation for TX bass & treble adjustment here!
     // the TX treble filter is in IIR_TX_biquad and works at 48000ksps
@@ -1001,6 +1060,28 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     arm_fill_f32(0.0,iir_rx_state,IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES);
 
     IIR_PreFilter.pState = iir_rx_state;					// point to state array for IIR filter
+
+#ifdef USE_TWO_CHANNEL_AUDIO
+    if (FilterPathInfo[ts.filter_path].pre_instance != NULL)
+    {
+        // if we turn on a filter, set the number of members to the number of elements last
+        IIR_PreFilter2.pkCoeffs = FilterPathInfo[ts.filter_path].pre_instance->pkCoeffs; // point to reflection coefficients
+        IIR_PreFilter2.pvCoeffs = FilterPathInfo[ts.filter_path].pre_instance->pvCoeffs; // point to ladder coefficients
+        IIR_PreFilter2.numStages = FilterPathInfo[ts.filter_path].pre_instance->numStages;        // number of stages
+    }
+    else
+    {
+        // if we turn off a filter, set the number of members to 0 first
+        IIR_PreFilter2.numStages = 0;        // number of stages
+        IIR_PreFilter2.pkCoeffs = NULL; // point to reflection coefficients
+        IIR_PreFilter2.pvCoeffs = NULL; // point to ladder coefficients
+    }
+
+    // Initialize IIR filter state buffer
+    arm_fill_f32(0.0,iir_rx_state2,IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES);
+
+    IIR_PreFilter2.pState = iir_rx_state2;					// point to state array for IIR filter
+#endif
 
     // Initialize IIR antialias filter state buffer
     if (FilterPathInfo[ts.filter_path].iir_instance != NULL)
@@ -3557,7 +3638,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.r_buffer, adb.r_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                     }
                 }
-/////////////////////////////////////////////
 
                 if (ts.dsp_inhibit == false)
                 {
@@ -3579,10 +3659,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 if ((IIR_PreFilter.numStages > 0))   // yes, we want an audio IIR filter
                 {
                     arm_iir_lattice_f32(&IIR_PreFilter, adb.a_buffer, adb.a_buffer, blockSizeDecim);
-                    if(use_stereo)
+                    if(use_stereo && !ads.af_disabled)
                     {
-//FIXME
-                    	//                         arm_iir_lattice_f32(&IIR_PreFilter, adb.r_buffer, adb.r_buffer, blockSizeDecim);
+//FIXME: in principle this works in all demod_modes, but crashes when I switch to CW!???
+//                         arm_iir_lattice_f32(&IIR_PreFilter2, adb.r_buffer, adb.r_buffer, blockSizeDecim);
                     }
 
                 }
@@ -3719,7 +3799,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 // FIXME
                 if(use_stereo)
                 {
-//                    arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.r_buffer,adb.r_buffer, blockSizeDecim);
+                    arm_biquad_cascade_df1_f32 (&IIR_biquad_12, adb.r_buffer,adb.r_buffer, blockSizeDecim);
                 }
 
 #ifdef USE_RTTY_PROCESSOR
@@ -3784,7 +3864,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 //FIXME
             if(use_stereo)
             {
-//                arm_biquad_cascade_df1_f32 (&IIR_biquad_2, adb.a_buffer,adb.a_buffer, blockSize);
+                arm_biquad_cascade_df1_f32 (&IIR_biquad_22, adb.a_buffer,adb.a_buffer, blockSize);
             }
         }
     }
