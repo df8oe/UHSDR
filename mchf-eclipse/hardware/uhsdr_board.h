@@ -1024,6 +1024,7 @@ typedef struct TransceiverState
 
 	keyer_mode_t keyer_mode; // disable/enable keyer mode for F1-F5 buttons
 	bool buffered_tx; // disable/enable buffered sending for CW and digital modes
+	bool stereo_enable; // enable/disable stereo demodulation (only in special hardware, NOT in mcHF)
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

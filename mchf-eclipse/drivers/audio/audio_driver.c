@@ -3421,7 +3421,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
 //    const bool use_stereo = USE_TWO_CHANNEL_AUDIO && (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || dmod_mode != DEMOD_SAMSTEREO);
-    const bool use_stereo = (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || dmod_mode == DEMOD_SAMSTEREO);
+    const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || dmod_mode == DEMOD_SAMSTEREO) && ts.stereo_enable);
 
     float post_agc_gain_scaling;
 
@@ -3796,7 +3796,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
                 // this is the biquad filter, a notch, peak, and lowshelf filter
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
-// FIXME
+
                 if(use_stereo)
                 {
                     arm_biquad_cascade_df1_f32 (&IIR_biquad_12, adb.r_buffer,adb.r_buffer, blockSizeDecim);
@@ -3861,7 +3861,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
             // this is the biquad filter, a highshelf filter
             arm_biquad_cascade_df1_f32 (&IIR_biquad_2, adb.b_buffer,adb.b_buffer, blockSize);
-//FIXME
+
             if(use_stereo)
             {
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_22, adb.a_buffer,adb.a_buffer, blockSize);

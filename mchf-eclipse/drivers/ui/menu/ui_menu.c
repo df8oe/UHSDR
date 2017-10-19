@@ -3596,7 +3596,20 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             UiDriver_DebugInfo_DisplayEnable(ts.show_debug_info);
         }
         break;
-     case MENU_DEBUG_CLONEOUT:
+    case MENU_DEBUG_ENABLE_STEREO:  // stereo demodulation on/off
+
+        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.stereo_enable,0,options,&clr);
+        switch(ts.stereo_enable)
+        {
+        case 0:
+            txt_ptr = " OFF";
+            break;
+        case 1:
+            txt_ptr = "  ON";
+            break;
+        }
+        break;
+    case MENU_DEBUG_CLONEOUT:
         txt_ptr = " Do it!";
         clr = White;
         if(var>=1)
