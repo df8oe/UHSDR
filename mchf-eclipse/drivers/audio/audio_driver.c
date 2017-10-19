@@ -1961,7 +1961,7 @@ void AudioDriver_SetupAgcWdsp()
 }
 
 
-void AudioDriver_RxAgcWdsp(int16_t blockSize)
+void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer)
 {
     // TODO:
     // "LED" that indicates that the AGC starts working (input signal above the "knee") --> has to be seen when in menu mode
@@ -1977,7 +1977,8 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize)
     {
         for (uint16_t i = 0; i < blockSize; i++)
         {
-            adb.a_buffer[i] = adb.a_buffer[i] * agc_wdsp.fixed_gain;
+        	//            adb.a_buffer[i] = adb.a_buffer[i] * agc_wdsp.fixed_gain;
+            agcbuffer[i] = agcbuffer[i] * agc_wdsp.fixed_gain;
         }
         return;
     }
@@ -1995,8 +1996,10 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize)
 
         agc_wdsp.out_sample[0] = agc_wdsp.ring[agc_wdsp.out_index];
         agc_wdsp.abs_out_sample = agc_wdsp.abs_ring[agc_wdsp.out_index];
-        agc_wdsp.ring[agc_wdsp.in_index] = adb.a_buffer[i];
-        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(adb.a_buffer[i]);
+        //        agc_wdsp.ring[agc_wdsp.in_index] = adb.a_buffer[i];
+        //        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(adb.a_buffer[i]);
+        agc_wdsp.ring[agc_wdsp.in_index] = agcbuffer[i];
+        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer[i]);
 
         agc_wdsp.fast_backaverage = agc_wdsp.fast_backmult * agc_wdsp.abs_out_sample + agc_wdsp.onemfast_backmult * agc_wdsp.fast_backaverage;
         agc_wdsp.hang_backaverage = agc_wdsp.hang_backmult * agc_wdsp.abs_out_sample + agc_wdsp.onemhang_backmult * agc_wdsp.hang_backaverage;
@@ -2170,7 +2173,7 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize)
         }
 
         float32_t mult = (agc_wdsp.out_target - agc_wdsp.slope_constant * vo) / agc_wdsp.volts;
-        adb.a_buffer[i] = agc_wdsp.out_sample[0] * mult;
+        agcbuffer[i] = agc_wdsp.out_sample[0] * mult;
 
     }
 
@@ -2181,8 +2184,8 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize)
         // eliminate DC in the audio after the AGC
         for(uint16_t i = 0; i < blockSize; i++)
         {
-            float32_t w = adb.a_buffer[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
-            adb.a_buffer[i] = w - wold;
+            float32_t w = agcbuffer[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
+            agcbuffer[i] = w - wold;
             wold = w;
         }
     }
@@ -3356,6 +3359,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             // which case there is ***NO*** audio phase shift applied to the I/Q channels.
             //
             //
+            // we need this "if" although Danilo introduced "use_decimated_IQ"
             if(dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM) // || ads.sam_sideband == 0) // for SAM & one sideband, leave out this processor-intense filter
             {
                 if(use_decimatedIQ)
@@ -3367,7 +3371,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer, blockSizeDecim);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
                 }
                 else
-                {
+                { // not SAM/AM AND higher filter bandwidths (> 4k8)
                     arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer, blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
                     arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer, blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
                 }
@@ -3416,7 +3420,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
                 break;
             case DEMOD_IQ: // leave I & Q as they are!
-                arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
+            	// for now, this is in fact SSB_STEREO = LSB-left, USB-right
+            	arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
                 arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.b_buffer, blockSizeIQ);   // difference of I and Q - LSB
             	break;
             case DEMOD_USB:
@@ -3428,6 +3433,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             if(dmod_mode != DEMOD_FM)       // are we NOT in FM mode?  If we are not, do decimation, filtering, DSP notch/noise reduction, etc.
             {
                 // Do decimation down to lower rate to reduce processor load
+// is this decimation ever going to be used??? DD4WH 2017_10_19
                 if (    DECIMATE_RX.numTaps > 0
                         && use_decimatedIQ == false // we did not already decimate the input earlier
                         && dmod_mode != DEMOD_SAM
@@ -3436,7 +3442,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     // TODO HILBERT
                     arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                 }
-
+/////////////////////////////////////////////
 
                 if (ts.dsp_inhibit == false)
                 {
@@ -3463,7 +3469,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 // now process the samples and perform the receiver AGC function
                 if(ts.agc_wdsp)
                 {
-                    AudioDriver_RxAgcWdsp(blockSizeDecim);
+                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
                 }
                 else
                 {
@@ -3623,7 +3629,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                                 blockSizeDecim);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
                 if(ts.agc_wdsp)
                 {
-                    AudioDriver_RxAgcWdsp(blockSizeDecim);
+                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
                 }
 
             }
