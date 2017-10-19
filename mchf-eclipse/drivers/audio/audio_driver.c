@@ -185,6 +185,12 @@ float32_t			__MCHF_SPECIALMEM decimZoomFFTQState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RX
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
 float32_t			__MCHF_SPECIALMEM interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
+#ifdef USE_TWO_CHANNEL_AUDIO
+// Audio RX - Interpolator
+static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX_L;
+float32_t			__MCHF_SPECIALMEM interplState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
+#endif
+
 // variables for RX IIR filters
 static float32_t		iir_rx_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 static arm_iir_lattice_instance_f32	IIR_PreFilter;
@@ -1195,6 +1201,22 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     INTERPOLATE_RX.pState = interpState;        // Filter state variables
     arm_fill_f32(0.0,interpState,FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS);
 
+#ifdef USE_TWO_CHANNEL_AUDIO
+    if (FilterPathInfo[ts.filter_path].interpolate != NULL)
+    {
+        INTERPOLATE_RX_L.pCoeffs = FilterPathInfo[ts.filter_path].interpolate->pCoeffs; // Filter coefficients
+        INTERPOLATE_RX_L.phaseLength = FilterPathInfo[ts.filter_path].interpolate->phaseLength/ads.decimation_rate;    // Phase Length ( numTaps / L )
+    }
+    else
+    {
+        INTERPOLATE_RX_L.phaseLength = 0;
+        INTERPOLATE_RX_L.pCoeffs = NULL;
+    }
+
+    INTERPOLATE_RX_L.L = ads.decimation_rate;         // Interpolation factor, L  (12 kHz * 4 = 48 kHz)
+    INTERPOLATE_RX_L.pState = interplState;        // Filter state variables
+    arm_fill_f32(0.0,interplState,FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS);
+#endif
 
     ads.dsp_zero_count = 0;		// initialize "zero" count to detect if DSP has crashed
 
@@ -1961,7 +1983,7 @@ void AudioDriver_SetupAgcWdsp()
 }
 
 
-void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer)
+void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1, float32_t *agcbuffer2)
 {
     // TODO:
     // "LED" that indicates that the AGC starts working (input signal above the "knee") --> has to be seen when in menu mode
@@ -1978,7 +2000,12 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer)
         for (uint16_t i = 0; i < blockSize; i++)
         {
         	//            adb.a_buffer[i] = adb.a_buffer[i] * agc_wdsp.fixed_gain;
-            agcbuffer[i] = agcbuffer[i] * agc_wdsp.fixed_gain;
+            agcbuffer1[i] = agcbuffer1[i] * agc_wdsp.fixed_gain;
+#ifdef TWO_CHANNEL_AUDIO
+            {
+                agcbuffer2[i] = agcbuffer2[i] * agc_wdsp.fixed_gain;
+            }
+#endif
         }
         return;
     }
@@ -1994,12 +2021,18 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer)
             agc_wdsp.in_index -= agc_wdsp.ring_buffsize;
         }
 
-        agc_wdsp.out_sample[0] = agc_wdsp.ring[agc_wdsp.out_index];
+//        agc_wdsp.out_sample[0] = agc_wdsp.ring[agc_wdsp.out_index];
+        agc_wdsp.out_sample[0] = agc_wdsp.ring[2 * agc_wdsp.out_index];
+        agc_wdsp.out_sample[1] = agc_wdsp.ring[2 * agc_wdsp.out_index + 1];
+
         agc_wdsp.abs_out_sample = agc_wdsp.abs_ring[agc_wdsp.out_index];
         //        agc_wdsp.ring[agc_wdsp.in_index] = adb.a_buffer[i];
         //        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(adb.a_buffer[i]);
-        agc_wdsp.ring[agc_wdsp.in_index] = agcbuffer[i];
-        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer[i]);
+//        agc_wdsp.ring[agc_wdsp.in_index] = agcbuffer[i];
+        agc_wdsp.ring[2 * agc_wdsp.in_index] = agcbuffer1[i];
+        agc_wdsp.ring[2 * agc_wdsp.in_index + 1] = agcbuffer2[i];
+//        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer[i]);
+        agc_wdsp.abs_ring[agc_wdsp.in_index] = (fabsf(agcbuffer1[i]) > fabsf(agcbuffer2[i])) ? fabsf(agcbuffer1[i]): fabsf(agcbuffer2[i]);
 
         agc_wdsp.fast_backaverage = agc_wdsp.fast_backmult * agc_wdsp.abs_out_sample + agc_wdsp.onemfast_backmult * agc_wdsp.fast_backaverage;
         agc_wdsp.hang_backaverage = agc_wdsp.hang_backmult * agc_wdsp.abs_out_sample + agc_wdsp.onemhang_backmult * agc_wdsp.hang_backaverage;
@@ -2173,20 +2206,29 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer)
         }
 
         float32_t mult = (agc_wdsp.out_target - agc_wdsp.slope_constant * vo) / agc_wdsp.volts;
-        agcbuffer[i] = agc_wdsp.out_sample[0] * mult;
-
+        agcbuffer1[i] = agc_wdsp.out_sample[0] * mult;
+#ifdef TWO_CHANNEL_AUDIO
+        agcbuffer2[i] = agc_wdsp.out_sample[1] * mult;
+#endif
     }
 
     if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
     {
         static float32_t    wold = 0.0;
-
+#ifdef USE_TWO_CHANNEL_AUDIO
+        static float32_t    wold2 = 0.0;
+#endif
         // eliminate DC in the audio after the AGC
         for(uint16_t i = 0; i < blockSize; i++)
         {
-            float32_t w = agcbuffer[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
-            agcbuffer[i] = w - wold;
+            float32_t w = agcbuffer1[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
+            agcbuffer1[i] = w - wold;
             wold = w;
+#ifdef USE_TWO_CHANNEL_AUDIO
+            float32_t w2 = agcbuffer2[i] + wold2 * 0.9999; // yes, I want a superb bass response ;-)
+            agcbuffer2[i] = w2 - wold2;
+            wold2 = w2;
+#endif
         }
     }
 }
@@ -2960,7 +3002,7 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
         static float32_t omega2 = 0.0;
         static float32_t phs = 0.0;
 
-        // Wheatley 2011 cuteSDR & Warren Pratt�s WDSP, 2016
+        // Wheatley 2011 cuteSDR & Warren Pratts WDSP, 2016
         for(int i = 0; i < blockSize / adb.DF; i++)
         {   // NCO
 
@@ -3040,13 +3082,22 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                 audio = (ai_ps + bi_ps) - (aq_ps - bq_ps);
                 break;
             }
+            /*
+             *             case SAM_STEREO:
+              {
+                audio = (ai_ps + bi_ps) - (aq_ps - bq_ps);
+                audiou = (ai_ps - bi_ps) + (aq_ps + bq_ps);
+                break;
+}
+             */
             }
 
-            // "fade leveler", taken from Warren Pratts� WDSP / HPSDR, 2016
+            // "fade leveler", taken from Warren Pratts WDSP / HPSDR, 2016
             // http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
             if(ads.fade_leveler)
             {
                 audio = AudioDriver_FadeLeveler(audio,corr[0]);
+                // audiou = AudioDriver_FadeLeveler(audio,corr[0]);
             }
 
             adb.a_buffer[i] = audio;
@@ -3350,7 +3401,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         if (dvmode_signal == false)
         {
             const bool use_decimatedIQ =
-                    FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs // lower than 3k8 bandwidth
+                    FilterPathInfo[ts.filter_path].FIR_I_coeff_file == i_rx_new_coeffs // lower than 3k8 bandwidth: new filters with excellent sideband suppression
                     && dmod_mode != DEMOD_FM
                     && dmod_mode != DEMOD_SAM
                     && dmod_mode != DEMOD_AM;
@@ -3375,6 +3426,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
                 else
                 { // not SAM/AM AND higher filter bandwidths (> 4k8)
+                	// attention, this could be called with decimated audio !??? DD4WH, 19.10.2017
                     arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer, blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
                     arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer, blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
                 }
@@ -3422,9 +3474,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
                 }
                 break;
-            case DEMOD_SSBSTEREO: // LSB-left, USB-right
             case DEMOD_IQ:	// leave I & Q as they are!
-
+            	arm_copy_f32(adb.i_buffer, adb.a_buffer, blockSizeIQ);
+            	arm_copy_f32(adb.q_buffer, adb.r_buffer, blockSizeIQ);
+            	break;
+            case DEMOD_SSBSTEREO: // LSB-left, USB-right
             	arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
                 arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.r_buffer, blockSizeIQ);   // difference of I and Q - LSB
             	break;
@@ -3447,7 +3501,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                     if(use_stereo)
                     {
-                        arm_fir_decimate_f32(&DECIMATE_RX, adb.r_buffer, adb.r_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+                        arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.r_buffer, adb.r_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                     }
                 }
 /////////////////////////////////////////////
@@ -3474,7 +3528,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     arm_iir_lattice_f32(&IIR_PreFilter, adb.a_buffer, adb.a_buffer, blockSizeDecim);
                     if(use_stereo)
                     {
-                        arm_iir_lattice_f32(&IIR_PreFilter, adb.r_buffer, adb.r_buffer, blockSizeDecim);
+//                       arm_iir_lattice_f32(&IIR_PreFilter, adb.r_buffer, adb.r_buffer, blockSizeDecim);
                     }
 
                 }
@@ -3482,11 +3536,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 // now process the samples and perform the receiver AGC function
                 if(ts.agc_wdsp)
                 {
-                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
-                    if(use_stereo)
+                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer, adb.r_buffer);
+/*                    if(use_stereo)
                     {
                         AudioDriver_RxAgcWdsp(blockSizeDecim, adb.r_buffer);
-                    }
+                    } */
                 }
                 else
                 {
@@ -3614,7 +3668,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
                 if(use_stereo)
                 {
-                    arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.r_buffer,adb.r_buffer, blockSizeDecim);
+//                    arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.r_buffer,adb.r_buffer, blockSizeDecim);
                 }
 
 #ifdef USE_RTTY_PROCESSOR
@@ -3641,8 +3695,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     arm_fir_interpolate_f32(&INTERPOLATE_RX, adb.a_buffer, adb.b_buffer, blockSizeDecim);
                     if(use_stereo)
                     {
-                        arm_fir_interpolate_f32(&INTERPOLATE_RX, adb.r_buffer, adb.a_buffer, blockSizeDecim);
-                    }
+#ifdef USE_TWO_CHANNEL_AUDIO
+                        arm_fir_interpolate_f32(&INTERPOLATE_RX_L, adb.r_buffer, adb.a_buffer, blockSizeDecim);
+#endif
+                     }
                 }
                 // additional antialias filter for specific bandwidths
                 // IIR ARMA-type lattice filter
@@ -3651,7 +3707,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     arm_iir_lattice_f32(&IIR_AntiAlias, adb.b_buffer, adb.b_buffer, blockSize);
                     if(use_stereo)
                     {
-                        arm_iir_lattice_f32(&IIR_AntiAlias, adb.a_buffer, adb.a_buffer, blockSize);
+//                        arm_iir_lattice_f32(&IIR_AntiAlias, adb.a_buffer, adb.a_buffer, blockSize);
                     }
                 }
 
@@ -3665,7 +3721,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                                 blockSizeDecim);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
                 if(ts.agc_wdsp)
                 {
-                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
+                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer, adb.r_buffer);
                 }
 
             }
@@ -3674,7 +3730,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             arm_biquad_cascade_df1_f32 (&IIR_biquad_2, adb.b_buffer,adb.b_buffer, blockSize);
             if(use_stereo)
             {
-                arm_biquad_cascade_df1_f32 (&IIR_biquad_2, adb.a_buffer,adb.a_buffer, blockSize);
+//                arm_biquad_cascade_df1_f32 (&IIR_biquad_2, adb.a_buffer,adb.a_buffer, blockSize);
             }
         }
     }
