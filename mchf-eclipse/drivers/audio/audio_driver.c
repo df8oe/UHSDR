@@ -2201,7 +2201,7 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void AudioDriver_RxAgcProcessor(int16_t blockSize)
+static void AudioDriver_RxAgcProcessor(int16_t blockSize, float32_t *agcbuffer)
 {
     static ulong 		i;
     static ulong		agc_delay_inbuf = 0, agc_delay_outbuf = 0;
@@ -2223,12 +2223,14 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
             { // TODO: cleanup
                 // but leave this here for the moment, we are still testing 2017-02-08
                 //                ads.agc_calc = ads.am_fm_agc * ads.agc_val;
-                ads.agc_calc = fabs(adb.a_buffer[i]) * ads.agc_val;
+//                ads.agc_calc = fabs(adb.a_buffer[i]) * ads.agc_val;
+                ads.agc_calc = fabs(agcbuffer[i]) * ads.agc_val;
             }
             else	 							// not AM - get the amplitude of the recovered audio
             {   // take the absolute value of the pre-AGC, post-filter audio signal
                 // and multiply by the current AGC value
-                ads.agc_calc = fabs(adb.a_buffer[i]) * ads.agc_val;
+//                ads.agc_calc = fabs(adb.a_buffer[i]) * ads.agc_val;
+                ads.agc_calc = fabs(agcbuffer[i]) * ads.agc_val;
                 //agc_calc = max_signal * ads.agc_val;	// calculate current level by scaling it with AGC value
             }
 
@@ -2270,8 +2272,8 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
     // This eliminates a "click" that can occur when a very strong signal appears due to the AGC lag.  The delay is adjusted based on
     // decimation rate so that it is constant for all settings.
 
-    arm_copy_f32(adb.a_buffer, &audio_delay_buffer[agc_delay_inbuf], blockSize);	// put new data into the delay buffer
-    arm_copy_f32(&audio_delay_buffer[agc_delay_outbuf], adb.a_buffer, blockSize);	// take old data out of the delay buffer
+    arm_copy_f32(agcbuffer, &audio_delay_buffer[agc_delay_inbuf], blockSize);	// put new data into the delay buffer
+    arm_copy_f32(&audio_delay_buffer[agc_delay_outbuf], agcbuffer, blockSize);	// take old data out of the delay buffer
 
     // Update the in/out pointers to the AGC delay buffer
     agc_delay_inbuf += blockSize;						// update circular delay buffer
@@ -2287,14 +2289,14 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize)
         // eliminate DC in the audio before application of AGC gain
         for(i = 0; i < blockSize; i++)
         {
-            w = adb.a_buffer[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
-            adb.a_buffer[i] = w - wold;
+            w = agcbuffer[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
+            agcbuffer[i] = w - wold;
             wold = w;
         }
     }
     // Now apply pre-calculated AGC values to delayed audio
 
-    arm_mult_f32(adb.a_buffer, adb.agc_valbuf, adb.a_buffer, blockSize);		// do vector multiplication to apply delayed "running" AGC data
+    arm_mult_f32(agcbuffer, adb.agc_valbuf, agcbuffer, blockSize);		// do vector multiplication to apply delayed "running" AGC data
 
 }
 
@@ -2652,16 +2654,16 @@ static void AudioDriver_DemodAmExperimental(int16_t blockSize)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void AudioDriver_NotchFilter(int16_t blockSize)
+static void AudioDriver_NotchFilter(int16_t blockSize, float32_t *notchbuffer)
 {
     static ulong		lms2_inbuf = 0;
     static ulong		lms2_outbuf = 0;
 
     // DSP Automatic Notch Filter using LMS (Least Mean Squared) algorithm
     //
-    arm_copy_f32(adb.a_buffer, &lmsData.lms2_nr_delay[lms2_inbuf], blockSize);	// put new data into the delay buffer
+    arm_copy_f32(notchbuffer, &lmsData.lms2_nr_delay[lms2_inbuf], blockSize);	// put new data into the delay buffer
     //
-    arm_lms_norm_f32(&lmsData.lms2Norm_instance, adb.a_buffer, &lmsData.lms2_nr_delay[lms2_outbuf], lmsData.errsig2, adb.a_buffer, blockSize);	// do automatic notch
+    arm_lms_norm_f32(&lmsData.lms2Norm_instance, notchbuffer, &lmsData.lms2_nr_delay[lms2_outbuf], lmsData.errsig2, notchbuffer, blockSize);	// do automatic notch
     // Desired (notched) audio comes from the "error" term - "errsig2" is used to hold the discarded ("non-error") audio data
     //
     lms2_inbuf += blockSize;				// update circular de-correlation delay buffer
@@ -2680,17 +2682,17 @@ static void AudioDriver_NotchFilter(int16_t blockSize)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void AudioDriver_NoiseReduction(int16_t blockSize)
+static void AudioDriver_NoiseReduction(int16_t blockSize, float32_t *nrbuffer)
 {
     static ulong		lms1_inbuf = 0, lms1_outbuf = 0;
 
-    arm_copy_f32(adb.a_buffer, &lmsData.lms1_nr_delay[lms1_inbuf], blockSize);	// put new data into the delay buffer
+    arm_copy_f32(nrbuffer, &lmsData.lms1_nr_delay[lms1_inbuf], blockSize);	// put new data into the delay buffer
     //
-    arm_lms_norm_f32(&lmsData.lms1Norm_instance, adb.a_buffer, &lmsData.lms1_nr_delay[lms1_outbuf], adb.a_buffer, lmsData.errsig1 ,blockSize);	// do noise reduction
+    arm_lms_norm_f32(&lmsData.lms1Norm_instance, nrbuffer, &lmsData.lms1_nr_delay[lms1_outbuf], nrbuffer, lmsData.errsig1 ,blockSize);	// do noise reduction
     //
     // Detect if the DSP output has gone to (near) zero output - a sign of it crashing!
     //
-    if((((ulong)fabs(adb.a_buffer[0])) * DSP_ZERO_DET_MULT_FACTOR) < DSP_OUTPUT_MINVAL)	 	// is DSP level too low?
+    if((((ulong)fabs(nrbuffer[0])) * DSP_ZERO_DET_MULT_FACTOR) < DSP_OUTPUT_MINVAL)	 	// is DSP level too low?
     {
         // For some stupid reason we can't just compare above to a small fractional value  (e.g. "x < 0.001") so we must multiply it first!
         if(ads.dsp_zero_count < MAX_DSP_ZERO_COUNT)
@@ -2701,7 +2703,7 @@ static void AudioDriver_NoiseReduction(int16_t blockSize)
     else
         ads.dsp_zero_count = 0;
     //
-    ads.dsp_nr_sample = adb.a_buffer[0];		// provide a sample of the DSP output for crash detection
+    ads.dsp_nr_sample = nrbuffer[0];		// provide a sample of the DSP output for crash detection
     //
     lms1_inbuf += blockSize;	// bump input to the next location in our de-correlation buffer
     lms1_outbuf = lms1_inbuf + blockSize;	// advance output to same distance ahead of input
@@ -3448,14 +3450,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 {
                     if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))       // No notch in CW
                     {
-                        AudioDriver_NotchFilter(blockSizeDecim);     // Do notch filter
+                        AudioDriver_NotchFilter(blockSizeDecim, adb.a_buffer);     // Do notch filter
                     }
 
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
                     if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))      // Do this if enabled and "Pre-AGC" DSP NR enabled
                     {
-                        AudioDriver_NoiseReduction(blockSizeDecim);
+                        AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);
                     }
 
                 }
@@ -3473,7 +3475,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
                 else
                 {
-                    AudioDriver_RxAgcProcessor(blockSizeDecim);
+                    AudioDriver_RxAgcProcessor(blockSizeDecim, adb.a_buffer);
                 }
 
                 // DSP noise reduction using LMS (Least Mean Squared) algorithm
@@ -3481,7 +3483,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 //
                 if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ts.dsp_inhibit) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))     // Do DSP NR if enabled and if post-DSP NR enabled
                 {
-                    AudioDriver_NoiseReduction(blockSizeDecim);
+                    AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);
                 }
                 //
 
