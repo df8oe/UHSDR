@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-10-10T10:17:22  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-10-20T18:40:59  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-10-10T10:17:22  by "./ui_menu_structure_mdtable.py"
+generated at  2017-10-20T18:40:59  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -287,6 +287,7 @@ generated at  2017-10-10T10:17:22  by "./ui_menu_structure_mdtable.py"
 | **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 
 | **New Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | New noiseblanker for testing purposes          | 
 | **RTTY ATC Enable**           (                        MENU_DEBUG_RTTY_ATC) | Enable automatic threshold correction ATC for RTTY decoding | 
+| **STEREO Enable**             (                   MENU_DEBUG_ENABLE_STEREO) | Enable stereo demodulation modes               | 
 
 
 [//]: # ( EOFILE                                                                       )
