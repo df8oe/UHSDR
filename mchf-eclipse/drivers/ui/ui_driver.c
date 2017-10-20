@@ -1464,6 +1464,12 @@ void UiDriver_DisplayDemodMode()
 		{
 			txt = "SAM-U";
 		}
+#ifdef USE_TWO_CHANNEL_AUDIO
+		else if (ads.sam_sideband == SAM_SIDEBAND_STEREO)
+		{
+			txt = "SAM-S";
+		}
+#endif
 		else
 		{
 			txt = "SAM";
@@ -1519,6 +1525,14 @@ void UiDriver_DisplayDemodMode()
 			txt = ts.digi_lsb?"DI-L":"DI-U";
 		}
 		break;
+#ifdef USE_TWO_CHANNEL_AUDIO
+	case DEMOD_IQ:
+		txt = "IQ-S";
+		break;
+	case DEMOD_SSBSTEREO:
+		txt = "SSB-S";
+		break;
+#endif
 		default:
 			break;
 	}

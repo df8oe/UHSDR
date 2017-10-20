@@ -1133,6 +1133,19 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
     case DEMOD_SAM:
         retval =( ts.flags1 & FLAGS1_SAM_ENABLE) != 0;        // is SAM enabled?
         break;
+#ifdef USE_TWO_CHANNEL_AUDIO
+    case DEMOD_SSBSTEREO:
+    case DEMOD_IQ:
+    	if(!ts.stereo_enable)
+    	{
+    		retval = false;
+    	}
+    	else
+    	{
+    		retval = true;
+    	}
+    	break;
+#endif
     default:
         retval = true;
     }

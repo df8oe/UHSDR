@@ -212,7 +212,13 @@ struct mchf_waterfall
 #define	DEMOD_SAM				4
 #define	DEMOD_FM				5
 #define DEMOD_DIGI				6
+#ifdef USE_TWO_CHANNEL_AUDIO
+#define DEMOD_SSBSTEREO			7
+#define DEMOD_IQ				8
+#define DEMOD_MAX_MODE			8
+#else
 #define DEMOD_MAX_MODE			6
+#endif
 
 // codec x demod
 // analog USB LSB CW AM FM SAM
@@ -1021,6 +1027,9 @@ typedef struct TransceiverState
 
 	keyer_mode_t keyer_mode; // disable/enable keyer mode for F1-F5 buttons
 	bool buffered_tx; // disable/enable buffered sending for CW and digital modes
+#ifdef USE_TWO_CHANNEL_AUDIO
+	bool stereo_enable; // enable/disable stereo demodulation (only in special hardware, NOT in mcHF)
+#endif
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

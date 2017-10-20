@@ -73,7 +73,9 @@ typedef struct
 
     float32_t                   a_buffer[IQ_BUFSZ];
     float32_t                   b_buffer[IQ_BUFSZ];
-
+#ifdef USE_TWO_CHANNEL_AUDIO
+    float32_t					r_buffer[IQ_BUFSZ]; // used for the right channel in STEREO DEMODULATION
+#endif
     float32_t               agc_valbuf[BUFF_LEN];   // holder for "running" AGC value
     float32_t               DF;
     float32_t               pll_fmax;
@@ -178,8 +180,13 @@ typedef struct AudioDriverState
     #define SAM_SIDEBAND_BOTH 0
     #define SAM_SIDEBAND_LSB 1
     #define SAM_SIDEBAND_USB 2
+#ifdef USE_TWO_CHANNEL_AUDIO
+	#define SAM_SIDEBAND_STEREO 3
+	#define SAM_SIDEBAND_MAX (SAM_SIDEBAND_STEREO)
+#else
     #define SAM_SIDEBAND_MAX (SAM_SIDEBAND_USB)
-//    int                     tauR_int;
+#endif
+    //    int                     tauR_int;
 //    int                     tauI_int;
 
     //
