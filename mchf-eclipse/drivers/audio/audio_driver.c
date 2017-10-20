@@ -2094,8 +2094,9 @@ void AudioDriver_SetupAgcWdsp()
 void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1, float32_t *agcbuffer2)
 {
     const uint8_t dmod_mode = ts.dmod_mode;
+#ifdef USE_TWO_CHANNEL_AUDIO
     const bool use_stereo = (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || dmod_mode == DEMOD_SAMSTEREO);
-
+#endif
     // TODO:
     // "LED" that indicates that the AGC starts working (input signal above the "knee") --> has to be seen when in menu mode
     // --> DONE
@@ -3796,12 +3797,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
                 // this is the biquad filter, a notch, peak, and lowshelf filter
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
-
+#ifdef USE_TWO_CHANNEL_AUDIO
                 if(use_stereo)
                 {
                     arm_biquad_cascade_df1_f32 (&IIR_biquad_12, adb.r_buffer,adb.r_buffer, blockSizeDecim);
                 }
-
+#endif
 #ifdef USE_RTTY_PROCESSOR
                 if (is_demod_rtty() && blockSizeDecim == 8) // only works when decimation rate is 4 --> sample rate == 12ksps
                 {
@@ -3861,11 +3862,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
             // this is the biquad filter, a highshelf filter
             arm_biquad_cascade_df1_f32 (&IIR_biquad_2, adb.b_buffer,adb.b_buffer, blockSize);
-
+#ifdef USE_TWO_CHANNEL_AUDIO
             if(use_stereo)
             {
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_22, adb.a_buffer,adb.a_buffer, blockSize);
             }
+#endif
         }
     }
 
