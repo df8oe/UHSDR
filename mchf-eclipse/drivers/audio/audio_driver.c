@@ -3425,8 +3425,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
 //    const bool use_stereo = USE_TWO_CHANNEL_AUDIO && (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || dmod_mode != DEMOD_SAMSTEREO);
+#ifdef USE_TWO_CHANNEL_AUDIO
     const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || dmod_mode == DEMOD_SAMSTEREO) && ts.stereo_enable);
-
+#endif
     float post_agc_gain_scaling;
 
 #ifdef alternate_NR
@@ -3667,12 +3668,13 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 if ((IIR_PreFilter.numStages > 0))   // yes, we want an audio IIR filter
                 {
                     arm_iir_lattice_f32(&IIR_PreFilter, adb.a_buffer, adb.a_buffer, blockSizeDecim);
+#ifdef USE_TWO_CHANNEL_AUDIO
                     if(use_stereo && !ads.af_disabled)
                     {
 //FIXME: in principle this works in all demod_modes, but crashes when I switch to CW!???
 //                         arm_iir_lattice_f32(&IIR_PreFilter2, adb.r_buffer, adb.r_buffer, blockSizeDecim);
                     }
-
+#endif
                 }
 
                 // now process the samples and perform the receiver AGC function
