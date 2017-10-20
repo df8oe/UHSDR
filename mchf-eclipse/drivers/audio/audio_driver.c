@@ -2090,8 +2090,11 @@ void AudioDriver_SetupAgcWdsp()
     agc_wdsp.hang_decay_mult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_hang_decay));
 }
 
-
+#ifdef USE_TWO_CHANNEL_AUDIO
 void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1, float32_t *agcbuffer2)
+#else
+void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
+#endif
 {
     const uint8_t dmod_mode = ts.dmod_mode;
 #ifdef USE_TWO_CHANNEL_AUDIO
@@ -3610,6 +3613,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
                 }
                 break;
+#ifdef USE_TWO_CHANNEL_AUDIO
             case DEMOD_IQ:	// leave I & Q as they are!
             	arm_copy_f32(adb.i_buffer, adb.a_buffer, blockSizeIQ);
             	arm_copy_f32(adb.q_buffer, adb.r_buffer, blockSizeIQ);
@@ -3618,6 +3622,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             	arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
                 arm_sub_f32(adb.i_buffer, adb.q_buffer, adb.r_buffer, blockSizeIQ);   // difference of I and Q - LSB
             	break;
+#endif
             case DEMOD_USB:
             default:
                 arm_add_f32(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSizeIQ);   // sum of I and Q - USB
@@ -3634,10 +3639,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 {
                     // TODO HILBERT
                     arm_fir_decimate_f32(&DECIMATE_RX, adb.a_buffer, adb.a_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+#ifdef USE_TWO_CHANNEL_AUDIO
                     if(use_stereo)
                     {
                         arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.r_buffer, adb.r_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                     }
+#endif
                 }
 
                 if (ts.dsp_inhibit == false)
@@ -3671,15 +3678,21 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 // now process the samples and perform the receiver AGC function
                 if(ts.agc_wdsp)
                 {
+#ifdef USE_TWO_CHANNEL_AUDIO
                     AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer, adb.r_buffer);
+#else
+                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
+#endif
                 }
                 else
                 {
                     AudioDriver_RxAgcProcessor(blockSizeDecim, adb.a_buffer);
+#ifdef USE_TWO_CHANNEL_AUDIO
                     if(use_stereo)
                     {
                         AudioDriver_RxAgcProcessor(blockSizeDecim, adb.r_buffer);
                     }
+#endif
                 }
 
                 // DSP noise reduction using LMS (Least Mean Squared) algorithm
@@ -3791,10 +3804,13 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     }
                 }
                 arm_scale_f32(adb.a_buffer,scale_gain, adb.a_buffer, blockSizeDecim); // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+#ifdef USE_TWO_CHANNEL_AUDIO
+
                 if(use_stereo)
                 {
                     arm_scale_f32(adb.r_buffer,scale_gain, adb.r_buffer, blockSizeDecim); // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
                 }
+#endif
                 // this is the biquad filter, a notch, peak, and lowshelf filter
                 arm_biquad_cascade_df1_f32 (&IIR_biquad_1, adb.a_buffer,adb.a_buffer, blockSizeDecim);
 #ifdef USE_TWO_CHANNEL_AUDIO
@@ -3855,9 +3871,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                                 blockSizeDecim);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
                 if(ts.agc_wdsp)
                 {
+#ifdef USE_TWO_CHANNEL_AUDIO
                     AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer, adb.r_buffer);
-                }
-
+#else
+                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
+#endif
+                 }
             }
 
             // this is the biquad filter, a highshelf filter
@@ -3891,9 +3910,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     }
     else
     {
-//        arm_scale_f32(adb.b_buffer, LINE_OUT_SCALING_FACTOR, adb.a_buffer, blockSize);       // Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
-        arm_scale_f32(adb.b_buffer, LINE_OUT_SCALING_FACTOR, adb.r_buffer, blockSize);       // Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
-        //
+#ifdef USE_TWO_CHANNEL_AUDIO
+    	arm_scale_f32(adb.b_buffer, LINE_OUT_SCALING_FACTOR, adb.r_buffer, blockSize);       // Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
+#else
+    	arm_scale_f32(adb.b_buffer, LINE_OUT_SCALING_FACTOR, adb.a_buffer, blockSize);       // Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
+#endif
+    	//
         // AF gain in "ts.audio_gain-active"
         //  0 - 16: via codec command
         // 17 - 20: soft gain after decoder
@@ -3946,22 +3968,26 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             }
 #else
             dst[i].l = adb.b_buffer[i]; // VARIABLE LEVEL FOR SPEAKER
-//            dst[i].r = adb.a_buffer[i];        // LINE OUT (constant level)
-            dst[i].r = adb.r_buffer[i];        // LINE OUT (constant level)
+            dst[i].r = adb.a_buffer[i];        // LINE OUT (constant level)
+//            dst[i].r = adb.r_buffer[i];        // LINE OUT (constant level)
 #endif
 
         }
         // Unless this is DIGITAL I/Q Mode, we sent processed audio
         if (tx_audio_source != TX_AUDIO_DIGIQ)
         {
-//            float32_t val = adb.a_buffer[i] * usb_audio_gain;
-            float32_t val = adb.r_buffer[i] * usb_audio_gain;
-            audio_in_put_buffer(val);
+#ifdef USE_TWO_CHANNEL_AUDIO
+        	float32_t val = adb.r_buffer[i] * usb_audio_gain;
+#else
+        	float32_t val = adb.a_buffer[i] * usb_audio_gain;
+#endif
+        	audio_in_put_buffer(val);
             audio_in_put_buffer(val);
         }
     }
 
     // RTTY decoder was here!
+    // do not use it here any more
 #ifdef XUSE_RTTY_PROCESSOR
     if (ts.enable_rtty_decode)
     {

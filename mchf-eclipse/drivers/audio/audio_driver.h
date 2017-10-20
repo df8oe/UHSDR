@@ -73,9 +73,9 @@ typedef struct
 
     float32_t                   a_buffer[IQ_BUFSZ];
     float32_t                   b_buffer[IQ_BUFSZ];
-
+#ifdef USE_TWO_CHANNEL_AUDIO
     float32_t					r_buffer[IQ_BUFSZ]; // used for the right channel in STEREO DEMODULATION
-
+#endif
     float32_t               agc_valbuf[BUFF_LEN];   // holder for "running" AGC value
     float32_t               DF;
     float32_t               pll_fmax;
