@@ -212,10 +212,13 @@ struct mchf_waterfall
 #define	DEMOD_SAM				4
 #define	DEMOD_FM				5
 #define DEMOD_DIGI				6
+#ifdef USE_TWO_CHANNEL_AUDIO
 #define DEMOD_SSBSTEREO			7
-#define DEMOD_IQ				8 // not yet used
-#define DEMOD_SAMSTEREO			9 // not yet used
+#define DEMOD_IQ				8
 #define DEMOD_MAX_MODE			8
+#else
+#define DEMOD_MAX_MODE			6
+#endif
 
 // codec x demod
 // analog USB LSB CW AM FM SAM

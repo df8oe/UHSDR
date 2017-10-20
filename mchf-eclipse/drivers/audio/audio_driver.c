@@ -2098,7 +2098,7 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
 {
     const uint8_t dmod_mode = ts.dmod_mode;
 #ifdef USE_TWO_CHANNEL_AUDIO
-    const bool use_stereo = (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || dmod_mode == DEMOD_SAMSTEREO);
+    const bool use_stereo = (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || ads.sam_sideband == SAM_SIDEBAND_STEREO);
 #endif
     // TODO:
     // "LED" that indicates that the AGC starts working (input signal above the "knee") --> has to be seen when in menu mode
@@ -3424,9 +3424,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
-//    const bool use_stereo = USE_TWO_CHANNEL_AUDIO && (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || dmod_mode != DEMOD_SAMSTEREO);
 #ifdef USE_TWO_CHANNEL_AUDIO
-    const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || dmod_mode == DEMOD_SAMSTEREO) && ts.stereo_enable);
+    const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || ads.sam_sideband == SAM_SIDEBAND_STEREO) && ts.stereo_enable);
 #endif
     float post_agc_gain_scaling;
 

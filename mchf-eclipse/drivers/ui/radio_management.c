@@ -1135,7 +1135,6 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
         break;
 #ifdef USE_TWO_CHANNEL_AUDIO
     case DEMOD_SSBSTEREO:
-    case DEMOD_SAMSTEREO:
     case DEMOD_IQ:
     	if(!ts.stereo_enable)
     	{

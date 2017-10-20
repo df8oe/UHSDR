@@ -180,8 +180,13 @@ typedef struct AudioDriverState
     #define SAM_SIDEBAND_BOTH 0
     #define SAM_SIDEBAND_LSB 1
     #define SAM_SIDEBAND_USB 2
+#ifdef USE_TWO_CHANNEL_AUDIO
+	#define SAM_SIDEBAND_STEREO 3
+	#define SAM_SIDEBAND_MAX (SAM_SIDEBAND_STEREO)
+#else
     #define SAM_SIDEBAND_MAX (SAM_SIDEBAND_USB)
-//    int                     tauR_int;
+#endif
+    //    int                     tauR_int;
 //    int                     tauI_int;
 
     //
