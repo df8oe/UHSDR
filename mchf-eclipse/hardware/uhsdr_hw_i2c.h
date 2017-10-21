@@ -30,7 +30,7 @@ uint16_t MCHF_I2C_WriteBlock(I2C_HandleTypeDef* i2c, uchar I2CAddr, uint16_t add
 uint16_t MCHF_I2C_ReadRegister(I2C_HandleTypeDef* i2c, uchar I2CAddr, uint16_t addr, uint16_t addr_size, uint8_t *RegisterValue);
 uint16_t MCHF_I2C_ReadBlock(I2C_HandleTypeDef* i2c, uchar I2CAddr,uint16_t addr, uint16_t addr_size, uint8_t *data, uint32_t size);
 
-
+uint16_t MCHF_I2C_DeviceReady(I2C_HandleTypeDef* hi2c, uchar I2CAddr);
 
 // Special init and wrapper functions for I2C Bus 1
 

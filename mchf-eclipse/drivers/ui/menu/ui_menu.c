@@ -34,6 +34,9 @@
 #include "soft_tcxo.h"
 #include "cw_decoder.h"
 
+#include "ui_si5351a.h"
+#include "ui_si570.h"
+
 #define CLR_OR_SET_BITMASK(cond,value,mask) ((value) = (((cond))? ((value) | (mask)): ((value) & ~(mask))))
 
 void float2fixedstr(char* buf, int maxchar, float32_t f, uint16_t digitsBefore, uint16_t digitsAfter)
@@ -508,6 +511,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         snprintf(out,32,"ILI%04x",ts.display->DeviceCode);
         break;
     }
+#ifdef USE_OSC_SI570
     case INFO_SI570:
     {
         if (Si570_IsPresent()) {
@@ -519,10 +523,31 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         else
         {
             outs = "Not found!";
-            *m_clr_ptr = Red;
+            if (osc == NULL)
+            {
+            	*m_clr_ptr = Red;
+            }
         }
     }
     break;
+#endif
+#ifdef USE_OSC_SI5351A
+    case INFO_SI5351A:
+    {
+        if (Si5351a_IsPresent()) {
+        	outs = "Detected";
+        }
+        else
+        {
+            outs = "Not found!";
+            if (osc == NULL)
+            {
+            	*m_clr_ptr = Red;
+            }
+        }
+    }
+    break;
+#endif
     case INFO_TP:
         outs = (ts.tp->present == 0)?"n/a":"XPT2046";
         break;
@@ -2711,7 +2736,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         if(var_change)
         {
-            Si570_SetPPM(((float32_t)ts.freq_cal)/10.0);
+            osc->setPPM(((float32_t)ts.freq_cal)/10.0);
             // Update LO PPM (will automatically adjust frequency)
         }
         {

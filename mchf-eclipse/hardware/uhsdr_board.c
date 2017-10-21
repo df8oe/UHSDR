@@ -26,7 +26,6 @@
 
 #include "codec.h"
 
-#include "ui_si570.h"
 #include "soft_tcxo.h"
 //
 // Eeprom items
@@ -385,9 +384,7 @@ void Board_InitMinimal()
     mchf_hw_i2c1_init();
 
     // Initialize Si570, by DF8OE, 201506
-    Si570_Init();
-
-    SoftTcxo_Init();
+    Osc_Init();
 
     // Codec control interface
     mchf_hw_i2c2_init();

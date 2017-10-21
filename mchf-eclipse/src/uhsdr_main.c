@@ -37,7 +37,7 @@
 #include "drivers/ui/ui_driver.h"
 #include "drivers/ui/lcd/ui_lcd_hy28.h"
 #include "drivers/ui/menu/ui_menu.h"
-#include "drivers/ui/oscillator/ui_si570.h"
+#include "drivers/ui/oscillator/osc_interface.h"
 #include "drivers/audio/codec/codec.h"
 #include "misc/profiling.h"
 // Keyboard Driver

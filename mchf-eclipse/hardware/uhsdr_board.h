@@ -64,8 +64,6 @@
 	#define USE_USBKEYBOARD
 #endif
 
-
-
 // OPTION
 #define USE_FREEDV
 // #define DEBUG_FREEDV
@@ -84,6 +82,16 @@
 // use the STM32 internal RTC with an external quartz and
 // M1 and F3 connected to PD14 and PD15 (D0 and D1 of LCD) instead of PC14 and PC15 (to which the 32768 Hz quartz has to be connected)
 #define USE_RTC_LSE
+
+// AT LEAST ONE GROUP START USE_OSC
+// multiple oscillators may be enabled, but only the first detected oscillator is issued
+// i.e. there is currently only support for a single oscillator in a TRX.
+// Support for LO based on SI570
+#define USE_OSC_SI570
+// Support for LO based on SI5351
+#define USE_OSC_SI5351A
+// AT LEAST ONE GROUP END USE_OSC
+
 
 #include "uhsdr_mcu.h"
 // HW libs
@@ -134,7 +142,7 @@
 
 #include "uhsdr_types.h"
 #include "audio_filter.h"
-#include "ui_si570.h"
+#include "osc_interface.h"
 #include "ui_lcd_hy28.h"
 
 #include "comp.h"
@@ -984,7 +992,7 @@ typedef struct TransceiverState
     bool encoder3state;
     int bc_band;
 
-    Si570_ResultCodes last_lo_result;			// used in dynamic tuning to hold frequency color
+    Oscillator_ResultCodes_t last_lo_result;			// used in dynamic tuning to hold frequency color
 
     TuneToneMode tune_tone_mode;
 
