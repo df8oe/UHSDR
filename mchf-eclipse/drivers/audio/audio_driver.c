@@ -2096,8 +2096,8 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1, float32_t *
 void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
 #endif
 {
-    const uint8_t dmod_mode = ts.dmod_mode;
 #ifdef USE_TWO_CHANNEL_AUDIO
+    const uint8_t dmod_mode = ts.dmod_mode;
     const bool use_stereo = (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO));
 #endif
     // TODO:
