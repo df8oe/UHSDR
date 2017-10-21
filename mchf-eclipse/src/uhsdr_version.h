@@ -14,7 +14,7 @@
 
 #define 	UHSDR_VER_MAJOR			"2"
 #define 	UHSDR_VER_MINOR			"5"
-#define 	UHSDR_VER_RELEASE		"123"
+#define 	UHSDR_VER_RELEASE		"124"
 
 #define		UHSDR_BOOT_VERS			"3.4.1"
 
