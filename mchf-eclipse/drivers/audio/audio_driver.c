@@ -2098,7 +2098,7 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
 {
     const uint8_t dmod_mode = ts.dmod_mode;
 #ifdef USE_TWO_CHANNEL_AUDIO
-    const bool use_stereo = (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || ads.sam_sideband == SAM_SIDEBAND_STEREO);
+    const bool use_stereo = (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO));
 #endif
     // TODO:
     // "LED" that indicates that the AGC starts working (input signal above the "knee") --> has to be seen when in menu mode
@@ -3201,7 +3201,9 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             }
 
             float32_t audio;
-
+#ifdef USE_TWO_CHANNEL_AUDIO
+            float32_t audiou;
+#endif
             float32_t corr[2] = { ai + bq, -bi + aq };
 
             switch(ads.sam_sideband)
@@ -3221,14 +3223,15 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                 audio = (ai_ps + bi_ps) - (aq_ps - bq_ps);
                 break;
             }
-            /*
-             *             case SAM_STEREO:
-              {
+#ifdef USE_TWO_CHANNEL_AUDIO
+            case SAM_SIDEBAND_STEREO:
+            {
                 audio = (ai_ps + bi_ps) - (aq_ps - bq_ps);
                 audiou = (ai_ps - bi_ps) + (aq_ps + bq_ps);
                 break;
-}
-             */
+            }
+#endif
+
             }
 
             // "fade leveler", taken from Warren Pratts WDSP / HPSDR, 2016
@@ -3236,11 +3239,15 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             if(ads.fade_leveler)
             {
                 audio = AudioDriver_FadeLeveler(audio,corr[0]);
-                // audiou = AudioDriver_FadeLeveler(audio,corr[0]);
+#ifdef USE_TWO_CHANNEL_AUDIO
+                audiou = AudioDriver_FadeLeveler(audiou,corr[0]);
+#endif
             }
 
             adb.a_buffer[i] = audio;
-
+#ifdef USE_TWO_CHANNEL_AUDIO
+            adb.r_buffer[i] = audiou;
+#endif
             // determine phase error
             float32_t phzerror = atan2f(corr[1], corr[0]);
 
@@ -3425,7 +3432,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
 #ifdef USE_TWO_CHANNEL_AUDIO
-    const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || ads.sam_sideband == SAM_SIDEBAND_STEREO) && ts.stereo_enable);
+    const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
 #endif
     float post_agc_gain_scaling;
 
