@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-10-20T18:40:56  by "./ui_menu_structure_graph.py"
+#  generated at  2017-10-22T09:26:32  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-10-20T18:40:56  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-10-22T09:26:32  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1127,6 +1127,11 @@
              shape = record
              ];
         
+        "INFO_SI5351A" [
+             label = "INFO_SI5351A | SI5351A"
+             shape = record
+             ];
+        
         "INFO_EEPROM" [
              label = "INFO_EEPROM | EEPROM"
              shape = record
@@ -1718,6 +1723,8 @@
             MENU_SYSINFO -> INFO_DISPLAY_CTRL
             
             MENU_SYSINFO -> INFO_SI570
+            
+            MENU_SYSINFO -> INFO_SI5351A
             
             MENU_SYSINFO -> INFO_EEPROM
             
