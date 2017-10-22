@@ -1280,12 +1280,13 @@ void UiSpectrum_InitCwSnapDisplay (bool visible)
 #endif
 }
 
-//void ui_spectrum_cw_snap_display (float32_t delta)
 void UiSpectrum_CwSnapDisplay (float32_t delta)
 {
 #define max_delta 140.0
 #define divider 5.0
-	//    static float32_t old_delta = 0.0;
+#if	defined(STM32F7) || defined(STM32H7)
+	static float32_t old_delta = 0.0;
+#endif
 
 	static int old_delta_p = 0.0;
 	if(delta > max_delta)
@@ -1297,8 +1298,11 @@ void UiSpectrum_CwSnapDisplay (float32_t delta)
 		delta = -max_delta;
 	}
 
-	// no lowpass filtering required !?
-	//    delta = 0.1 * delta + 0.9 * old_delta;
+	// lowpass filtering only for fast processors
+#if	defined(STM32F7) || defined(STM32H7)
+    delta = 0.3 * delta + 0.7 * old_delta;
+#endif
+
 
 	int delta_p = (int)(0.5 + (delta / divider));
 
@@ -1315,7 +1319,9 @@ void UiSpectrum_CwSnapDisplay (float32_t delta)
 	            6,
 	            LCD_DIR_VERTICAL,
 	            Yellow);
-	    //	old_delta = delta;
+#if	defined(STM32F7) || defined(STM32H7)
+	    old_delta = delta;
+#endif
 		old_delta_p = delta_p;
 	}
 }
@@ -1395,11 +1401,15 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
 #ifdef USE_SNAP
 
 	static uint8_t snap_counter = 0;
-
+#if	defined(STM32F7) || defined(STM32H7)
+	const int SNAP_COUNT_MAX = 6;
+#else
+	const int SNAP_COUNT_MAX = 6;
+#endif
     if(sc.snap == true)
     {
     	snap_counter++;
-    	if(snap_counter >= 6) // take low pass filtered 6 freq measurements
+    	if(snap_counter >= SNAP_COUNT_MAX) // take low pass filtered 6 freq measurements
     	{
     		// tune to frequency
             // set frequency of Si570 with 4 * dialfrequency
