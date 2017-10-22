@@ -3678,7 +3678,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     if(use_stereo && !ads.af_disabled)
                     {
 //FIXME: in principle this works in all demod_modes, but crashes when I switch to CW!???
-//                         arm_iir_lattice_f32(&IIR_PreFilter2, adb.r_buffer, adb.r_buffer, blockSizeDecim);
+                         arm_iir_lattice_f32(&IIR_PreFilter2, adb.r_buffer, adb.r_buffer, blockSizeDecim);
                     }
 #endif
                 }
