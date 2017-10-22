@@ -1226,7 +1226,10 @@ uint32_t RadioManagement_NextNormalDemodMode(uint32_t loc_mode)
 
 bool RadioManagement_UsesBothSidebands(uint16_t dmod_mode)
 {
-    return ((dmod_mode == DEMOD_AM) ||(dmod_mode == DEMOD_SAM && ads.sam_sideband == 0) || (dmod_mode == DEMOD_FM));
+    return ((dmod_mode == DEMOD_AM) ||(dmod_mode == DEMOD_SAM && (ads.sam_sideband == SAM_SIDEBAND_BOTH)) || (dmod_mode == DEMOD_FM));
+#ifdef USE_TWO_CHANNEL_AUDIO
+    return ((dmod_mode == DEMOD_STEREOSSB) || (dmod_mode == DEMOD_IQ) || (dmod_mode == DEMOD_AM) ||(dmod_mode == DEMOD_SAM && (ads.sam_sideband == SAM_SIDEBAND_BOTH || ads.sam_sideband == SAM_SIDEBAND_STEREO )) || (dmod_mode == DEMOD_FM));
+#endif
 }
 
 bool RadioManagement_LSBActive(uint16_t dmod_mode)
@@ -1236,7 +1239,7 @@ bool RadioManagement_LSBActive(uint16_t dmod_mode)
     switch(dmod_mode)        // determine if the receiver is set to LSB or USB or FM
     {
     case DEMOD_SAM:
-        is_lsb = ads.sam_sideband == 1;
+        is_lsb = ads.sam_sideband == SAM_SIDEBAND_LSB;
         break;
     case DEMOD_LSB:
         is_lsb = true;      // it is LSB
