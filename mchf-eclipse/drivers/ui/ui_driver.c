@@ -3023,7 +3023,10 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
 			break;
 
 		case DigitalMode_BPSK:
-			ts.enc_thr_mode = ENC_THREE_MODE_PSK_SPEED;
+			if (ts.enc_thr_mode != ENC_THREE_MODE_RIT)
+			{
+				ts.enc_thr_mode = ENC_THREE_MODE_PSK_SPEED;
+			}
 			break;
 		}
 	}
