@@ -17,6 +17,11 @@
 #include "uhsdr_hw_i2c.h"
 #include "i2c.h"
 
+uint16_t MCHF_I2C_DeviceReady(I2C_HandleTypeDef* hi2c, uchar I2CAddr)
+{
+	return HAL_I2C_IsDeviceReady(hi2c, I2CAddr,100,100);
+}
+
 uint16_t MCHF_I2C_WriteRegister(I2C_HandleTypeDef* hi2c, uchar I2CAddr,uint16_t addr,uint16_t addr_size, uchar RegisterValue)
 {
     HAL_StatusTypeDef i2cRet = HAL_I2C_Mem_Write(hi2c,I2CAddr,addr,addr_size,&RegisterValue,1,100);

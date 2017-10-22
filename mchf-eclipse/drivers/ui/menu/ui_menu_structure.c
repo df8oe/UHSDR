@@ -358,7 +358,12 @@ const MenuDescriptor infoGroup[] =
 {
     { MENU_SYSINFO, MENU_INFO, INFO_DISPLAY, NULL,"Display", UiMenuDesc("Displays working mode (SPI/parallel") },
     { MENU_SYSINFO, MENU_INFO, INFO_DISPLAY_CTRL, NULL,"Disp. Controller", UiMenuDesc("identified LCD controller chip") },
-    { MENU_SYSINFO, MENU_INFO, INFO_SI570, NULL,"SI570", UiMenuDesc("startup frequency and I2C addrss of SI570") },
+#ifdef USE_OSC_SI570
+    { MENU_SYSINFO, MENU_INFO, INFO_SI570, NULL,"SI570", UiMenuDesc("Startup frequency and I2C address of local oscillator Type SI570") },
+#endif
+#ifdef USE_OSC_SI5351A
+    { MENU_SYSINFO, MENU_INFO, INFO_SI5351A, NULL,"SI5351A", UiMenuDesc("Local oscillator type SI5351A detected.") },
+#endif
     { MENU_SYSINFO, MENU_INFO, INFO_EEPROM, NULL,"EEPROM", UiMenuDesc("type of serial EEPROM and its capacity") },
     { MENU_SYSINFO, MENU_INFO, INFO_TP, NULL,"Touchscreen", UiMenuDesc("touchscreen state") },
     { MENU_SYSINFO, MENU_INFO, INFO_CPU, NULL,"CPU", UiMenuDesc("identification of fitted MCU") },

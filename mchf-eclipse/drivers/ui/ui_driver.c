@@ -917,7 +917,7 @@ void UiDriver_Init()
 	}
 
 
-	Si570_SetPPM((float)ts.freq_cal/10.0);
+	osc->setPPM((float)ts.freq_cal/10.0);
 
 	df.tune_new = vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
 	df.tune_old = 0;
@@ -2305,7 +2305,7 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 
 	// FIXME: Don't like the handling of lo_result if in Split mode and transmitting
 	uint32_t		dial_freq;
-	Si570_ResultCodes       lo_result = SI570_OK;
+	Oscillator_ResultCodes_t       lo_result = OSC_OK;
 	bool        lo_change_not_pending = true;
 
 	if(mode == UFM_SMALL_TX)
@@ -2353,14 +2353,14 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 
 			switch(lo_result)
 			{
-			case SI570_TUNE_IMPOSSIBLE:
+			case OSC_TUNE_IMPOSSIBLE:
 				clr = Orange; // Color in orange if there was a problem setting frequency
 				break;
-			case SI570_TUNE_LIMITED:
+			case OSC_TUNE_LIMITED:
 				clr = Yellow; // Color in yellow if there was a problem setting frequency exactly
 				break;
-			case SI570_LARGE_STEP:
-			case SI570_OK:
+			case OSC_LARGE_STEP:
+			case OSC_OK:
 				clr = White;
 				break;
 			default:
@@ -5526,7 +5526,7 @@ void UiDriver_StartUpScreenFinish()
 
 	uint32_t hold_time;
 
-	UiDriver_StartupScreen_LogIfProblem(Si570_IsPresent() == false, "Si570 Oscillator NOT Detected!");
+	UiDriver_StartupScreen_LogIfProblem(osc->isPresent() == false, "Local Oscillator NOT Detected!");
 	UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
 
 	if(ts.ee_init_stat != HAL_OK)                                   // problem with EEPROM init

@@ -27,7 +27,7 @@
 
 #include "freedv_uhsdr.h"
 // SI570 control
-#include "ui_si570.h"
+#include "osc_interface.h"
 #include "codec.h"
 #include "audio_driver.h"
 #include "audio_management.h"
@@ -336,9 +336,9 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
 
         if(ts.sysclock-ts.last_tuning > 5 || ts.last_tuning == 0)     // prevention for SI570 crash due too fast frequency changes
         {
-            Si570_ResultCodes lo_prep_result = Si570_PrepareNextFrequency(ts.tune_freq_req, df.temp_factor);
+            Oscillator_ResultCodes_t lo_prep_result = osc->prepareNextFrequency(ts.tune_freq_req, df.temp_factor);
             // first check and mute output if a large step is to be done
-            if(Si570_IsNextStepLarge() == true)     // did the tuning require that a large tuning step occur?
+            if(osc->isNextStepLarge() == true)     // did the tuning require that a large tuning step occur?
             {
                 // 18 is a little more than 10ms (15 ==10ms) which is max for the Si570 to change the frequency
                 if (ts.audio_dac_muting_buffer_count < 18)
@@ -356,16 +356,16 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
 
             ts.last_lo_result  = lo_prep_result;
 
-            Si570_ResultCodes lo_exec_result = SI570_TUNE_IMPOSSIBLE;
-            if (lo_prep_result != SI570_TUNE_IMPOSSIBLE)
+            Oscillator_ResultCodes_t lo_exec_result = OSC_TUNE_IMPOSSIBLE;
+            if (lo_prep_result != OSC_TUNE_IMPOSSIBLE)
             {
                 // Set frequency
-                lo_exec_result = Si570_ChangeToNextFrequency();
+                lo_exec_result = osc->changeToNextFrequency();
             }
 
             // if i2c error or verify error, there is a chance that we can fix that, so we mark this
             // as NOT executed, in all other cases we assume the change has happened (but may prevent TX)
-            if (lo_exec_result != SI570_I2C_ERROR && lo_exec_result != SI570_ERROR_VERIFY)
+            if (lo_exec_result != OSC_COMM_ERROR && lo_exec_result != OSC_ERROR_VERIFY)
             {
                 df.temp_factor_changed = false;
                 ts.tune_freq = ts.tune_freq_req;        // frequency change required - update change detector
@@ -377,7 +377,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
                 ts.last_lo_result = lo_exec_result;
             }
 
-            if (ts.last_lo_result == SI570_OK || ts.last_lo_result == SI570_TUNE_LIMITED)
+            if (ts.last_lo_result == OSC_OK || ts.last_lo_result == OSC_TUNE_LIMITED)
             {
 
                 ts.tx_disable &= ~TX_DISABLE_OUTOFRANGE;
@@ -417,10 +417,10 @@ void RadioManagement_MuteTemporarilyRxAudio()
     ts.audio_dac_muting_buffer_count = 13 * 15;
 }
 
-Si570_ResultCodes RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
+Oscillator_ResultCodes_t RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
 {
     // we check with the si570 code if the frequency is tunable, we do not tune to it.
-    return Si570_PrepareNextFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX), df.temp_factor);
+    return osc->prepareNextFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX), df.temp_factor);
 }
 
 /**
@@ -566,7 +566,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
     if(txrx_mode == TRX_MODE_TX)
     {
         // FIXME: Not very robust code, make sure Validate always returns TUNE_IMPOSSIBLE in case of issues
-        tx_ok = RadioManagement_ValidateFrequencyForTX(tune_new/TUNE_MULT) != SI570_TUNE_IMPOSSIBLE;
+        tx_ok = RadioManagement_ValidateFrequencyForTX(tune_new/TUNE_MULT) != OSC_TUNE_IMPOSSIBLE;
 
 
         // this code handles the ts.tx_disable

@@ -191,7 +191,7 @@ static SerialEEPROM_24CXX_Descriptor serialEeprom_desc;
 
 static uint16_t SerialEEPROM_24Cxx_DeviceConnected()
 {
-    uint16_t retVal = HAL_I2C_IsDeviceReady(&hi2c2,MEM_DEVICE_WRITE_ADDR,100,100);
+    uint16_t retVal = MCHF_I2C_DeviceReady(&hi2c2,MEM_DEVICE_WRITE_ADDR);
     return retVal;
 }
 
@@ -224,7 +224,7 @@ static uint16_t SerialEEPROM_24Cxx_ackPolling(uint32_t Addr, uint8_t Mem_Type)
 
     SerialEEPROM_24Cxx_AdjustAddrs(Mem_Type,&devaddr,&Addr);
 
-    uint16_t retVal = HAL_I2C_IsDeviceReady(&hi2c2,devaddr,100,100); // != HAL_OK?0xFD00:0;
+    uint16_t retVal = MCHF_I2C_DeviceReady(&hi2c2,devaddr); // != HAL_OK?0xFD00:0;
     return retVal;
 }
 

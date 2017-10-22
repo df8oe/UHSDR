@@ -41,6 +41,7 @@
 #define __MCHF_SPECIALMEM __attribute__ ((section (".ccm")))
 
 #define SI570_I2C               (&hi2c1)
+#define SI5351A_I2C				(&hi2c1)
 
 #define CODEC_I2C               (&hi2c2)
 #define CODEC_ANA_I2C               (&hi2c2)
@@ -358,7 +359,7 @@
 
 
 #define SI570_I2C               (&hi2c1)
-
+#define SI5351A_I2C				(&hi2c1)
 
 #define CODEC_ANA_I2C               (&hi2c2)
 #define CODEC_ANA_SAI               SAI1

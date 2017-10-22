@@ -30,10 +30,108 @@
 //
 #include "uhsdr_board.h"
 #include "soft_tcxo.h"
-#include "ui_si570.h"
 #include "radio_management.h"
+#include "uhsdr_hw_i2c.h"
 
 LoTcxo lo;
+
+// -------------------------------------------------------------------------------------
+// Temperature sensor
+// ------------------
+#define MCP_ADDR                (0x90)
+
+// MCP registers
+#define MCP_TEMP                (0x00)
+#define MCP_CONFIG              (0x01)
+#define MCP_HYSTR               (0x02)
+#define MCP_LIMIT               (0x03)
+
+// MCP CONFIG register bits
+#define MCP_ONE_SHOT            (7)
+#define MCP_ADC_RES             (5)
+#define MCP_FAULT_QUEUE         (3)
+#define MCP_ALERT_POL           (2)
+#define MCP_INT_MODE            (1)
+#define MCP_SHUTDOWN            (0)
+#define R_BIT                   (1)
+#define W_BIT                   (0)
+
+#define MCP_ADC_RES_9           0
+#define MCP_ADC_RES_10          1
+#define MCP_ADC_RES_11          2
+#define MCP_ADC_RES_12          3
+
+#define MCP_POWER_UP            0
+#define MCP_POWER_DOWN          1
+
+static int32_t MCP9801_ConvExternalTemp(uint8_t *temp)
+{
+    int32_t  ts = 0;
+
+    ts = temp[1];
+
+    ts += (int8_t)temp[0] << 8;
+    ts *= 10000;
+    ts /= 256;
+
+    return ts;
+}
+
+
+/*
+ * @brief configures the MCP9801 external temperature sensor for monitoring Si570 temperature
+ * @returns 0 if detected and working, 1 if not detected on I2C, 2 for other errors
+ */
+static uint8_t MCP9801_InitExternalTempSensor()
+{
+    uint8_t config, retval = 0;
+    uint16_t res;
+
+    // Read config reg
+    res = mchf_hw_i2c1_ReadRegister(MCP_ADDR, MCP_CONFIG, &config);
+    if(res != 0)
+    {
+        retval = 1;
+    }
+    else
+    {
+        // Modify resolution
+        config &= ~(3 << MCP_ADC_RES);
+        config |= (MCP_ADC_RES_12 << MCP_ADC_RES);
+
+        // Modify power mode
+        config &= ~(1 << MCP_SHUTDOWN);
+        config |= (MCP_POWER_UP << MCP_SHUTDOWN);
+
+        // Write config reg
+        res = mchf_hw_i2c1_WriteRegister(MCP_ADDR, MCP_CONFIG, config);
+        if(res != 0)
+        {
+            retval = 2;
+        }
+    }
+    return retval;
+}
+
+
+static uint8_t MCP9801_ReadExternalTempSensor(int32_t *temp)
+{
+    uint8_t	data[2];
+    uint8_t retval = 0;
+
+
+    // Read temperature
+    if(temp != NULL && mchf_hw_i2c1_ReadData(MCP_ADDR, MCP_TEMP, data, 2) == 0)
+    {
+        *temp = MCP9801_ConvExternalTemp(data);
+    }
+    else
+    {
+        retval = 2;
+    }
+    return retval;
+}
+
 
 #define TCXO_TBL_SIZE 100
 const short tcxo_table_20m[TCXO_TBL_SIZE] =
@@ -146,7 +244,7 @@ void SoftTcxo_Init()
     lo.comp                 = 0;
 
     // Temp sensor setup
-    lo.sensor_present = Si570_InitExternalTempSensor() == 0;
+    lo.sensor_present = MCP9801_InitExternalTempSensor() == 0;
 }
 
 
@@ -170,7 +268,7 @@ bool SoftTcxo_HandleLoTemperatureDrift()
     {
         {
             // Get current temperature
-            if(Si570_ReadExternalTempSensor(&temp) == 0)
+            if(MCP9801_ReadExternalTempSensor(&temp) == 0)
             {
                 // Get temperature from sensor with its maximum precision
                 dtemp = (float)temp;    // get temperature
