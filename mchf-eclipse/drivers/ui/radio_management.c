@@ -1226,9 +1226,12 @@ uint32_t RadioManagement_NextNormalDemodMode(uint32_t loc_mode)
 
 bool RadioManagement_UsesBothSidebands(uint16_t dmod_mode)
 {
-    return ((dmod_mode == DEMOD_AM) ||(dmod_mode == DEMOD_SAM && (ads.sam_sideband == SAM_SIDEBAND_BOTH)) || (dmod_mode == DEMOD_FM));
 #ifdef USE_TWO_CHANNEL_AUDIO
-    return ((dmod_mode == DEMOD_STEREOSSB) || (dmod_mode == DEMOD_IQ) || (dmod_mode == DEMOD_AM) ||(dmod_mode == DEMOD_SAM && (ads.sam_sideband == SAM_SIDEBAND_BOTH || ads.sam_sideband == SAM_SIDEBAND_STEREO )) || (dmod_mode == DEMOD_FM));
+    return ((dmod_mode == DEMOD_SSBSTEREO) || (dmod_mode == DEMOD_IQ) || (dmod_mode == DEMOD_AM) ||
+    		(dmod_mode == DEMOD_SAM && (ads.sam_sideband == SAM_SIDEBAND_BOTH || ads.sam_sideband == SAM_SIDEBAND_STEREO )) ||
+			(dmod_mode == DEMOD_FM));
+#else
+    return ((dmod_mode == DEMOD_AM) ||(dmod_mode == DEMOD_SAM && (ads.sam_sideband == SAM_SIDEBAND_BOTH)) || (dmod_mode == DEMOD_FM));
 #endif
 }
 
