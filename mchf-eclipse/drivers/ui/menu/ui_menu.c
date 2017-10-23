@@ -3636,6 +3636,38 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 #endif
+
+        case MENU_DEBUG_ANR_GAIN:      //
+            var_change = UiDriverMenuItemChangeUInt32(var, mode, &leakyLMS.two_mu_int,
+                    1,
+                    1000,
+                    100,
+                    10
+            );
+            if(var_change)
+            {
+            	leakyLMS.two_mu = leakyLMS.two_mu_int / 1000000;
+            }
+            snprintf(options, 32, " %4u",(unsigned int)leakyLMS.two_mu_int);
+
+        break;
+        case MENU_DEBUG_ANR_LEAK:      //
+            var_change = UiDriverMenuItemChangeUInt32(var, mode, &leakyLMS.gamma_int,
+                    1,
+                    1000,
+                    100,
+                    10
+            );
+            if(var_change)
+            {
+            	leakyLMS.gamma = leakyLMS.gamma_int / 1000;
+            }
+            snprintf(options, 32, " %4u",(unsigned int)leakyLMS.gamma_int);
+
+        break;
+
+
+
         case MENU_DEBUG_CLONEOUT:
         txt_ptr = " Do it!";
         clr = White;

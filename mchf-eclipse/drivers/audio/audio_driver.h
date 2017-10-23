@@ -607,5 +607,38 @@ typedef struct SnapCarrier
 
 extern SnapCarrier sc;
 
+#define LEAKYLMSDLINE_SIZE 256 //512 //2048 funktioniert nicht, 128 & 256 OK                 // dline_size
+typedef struct
+{// Automatic noise reduction
+	// Variable-leak LMS algorithm
+	// taken from (c) Warren Pratts wdsp library 2016
+	// GPLv3 licensed
+//	#define DLINE_SIZE 256 //512 //2048 funktioniert nicht, 128 & 256 OK                 // dline_size
+	int n_taps; // =     64; //64;                       // taps
+	int delay; // =    16; //16;                       // delay
+	int dline_size; // = LEAKYLMSDLINE_SIZE;
+	//int ANR_buff_size = FFT_length / 2.0;
+	int position;// = 0;
+	float32_t two_mu;// =   0.0001;   typical: 0.001 to 0.000001  = 1000 to 1 -> div by 1000000     // two_mu --> "gain"
+	uint32_t two_mu_int;
+	float32_t gamma;// =    0.1;      typical: 1.000 to 0.001  = 1000 to 1 -> div by 1000           // gamma --> "leakage"
+	uint32_t gamma_int;
+	float32_t lidx;// =     120.0;                      // lidx
+	float32_t lidx_min;// = 0.0;                      // lidx_min
+	float32_t lidx_max;// = 200.0;                      // lidx_max
+	float32_t ngamma;// =   0.001;                      // ngamma
+	float32_t den_mult;// = 6.25e-10;                   // den_mult
+	float32_t lincr;// =    1.0;                      // lincr
+	float32_t ldecr;// =    3.0;                     // ldecr
+	//int ANR_mask = ANR_dline_size - 1;
+	int mask;// = DLINE_SIZE - 1;
+	int in_idx;// = 0;
+	float32_t d [LEAKYLMSDLINE_SIZE];
+	float32_t w [LEAKYLMSDLINE_SIZE];
+	uint8_t on;// = 0;
+	uint8_t notch;// = 0;
+} lLMS;
+
+extern lLMS leakyLMS;
 
 #endif

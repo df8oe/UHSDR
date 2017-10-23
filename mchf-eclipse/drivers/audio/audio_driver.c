@@ -135,37 +135,6 @@ typedef struct
 } LMSData;
 
 
-#define LEAKYLMSDLINE_SIZE 256 //512 //2048 funktioniert nicht, 128 & 256 OK                 // dline_size
-typedef struct
-{// Automatic noise reduction
-	// Variable-leak LMS algorithm
-	// taken from (c) Warren Pratts wdsp library 2016
-	// GPLv3 licensed
-//	#define DLINE_SIZE 256 //512 //2048 funktioniert nicht, 128 & 256 OK                 // dline_size
-	int n_taps; // =     64; //64;                       // taps
-	int delay; // =    16; //16;                       // delay
-	int dline_size; // = LEAKYLMSDLINE_SIZE;
-	//int ANR_buff_size = FFT_length / 2.0;
-	int position;// = 0;
-	float32_t two_mu;// =   0.0001;                     // two_mu --> "gain"
-	float32_t gamma;// =    0.1;                      // gamma --> "leakage"
-	float32_t lidx;// =     120.0;                      // lidx
-	float32_t lidx_min;// = 0.0;                      // lidx_min
-	float32_t lidx_max;// = 200.0;                      // lidx_max
-	float32_t ngamma;// =   0.001;                      // ngamma
-	float32_t den_mult;// = 6.25e-10;                   // den_mult
-	float32_t lincr;// =    1.0;                      // lincr
-	float32_t ldecr;// =    3.0;                     // ldecr
-	//int ANR_mask = ANR_dline_size - 1;
-	int mask;// = DLINE_SIZE - 1;
-	int in_idx;// = 0;
-	float32_t d [LEAKYLMSDLINE_SIZE];
-	float32_t w [LEAKYLMSDLINE_SIZE];
-	uint8_t on;// = 0;
-	uint8_t notch;// = 0;
-} lLMS;
-
-lLMS leakyLMS;
 
 float32_t	__MCHF_SPECIALMEM audio_delay_buffer	[AUDIO_DELAY_BUFSIZE];
 
@@ -593,6 +562,8 @@ AudioDriverState   __MCHF_SPECIALMEM ads;
 AudioDriverBuffer  __MCHF_SPECIALMEM adb;
 LMSData            __MCHF_SPECIALMEM lmsData;
 
+lLMS leakyLMS;
+
 SnapCarrier   sc;
 
 /**
@@ -714,6 +685,30 @@ void AudioDriver_Init(void)
     ads.tx_filter_adjusting = 0;	// used to disable TX I/Q filter during adjustment
     // Audio Filter Init init
     AudioDriver_InitFilters();
+
+    /////////////////////// LEAKY LMS
+    leakyLMS.n_taps =     64; //64;                       // taps
+    leakyLMS.delay =    16; //16;                       // delay
+    leakyLMS.dline_size = LEAKYLMSDLINE_SIZE;
+    //int ANR_buff_size = FFT_length / 2.0;
+    leakyLMS.position = 0;
+    leakyLMS.two_mu =   0.0001;                     // two_mu --> "gain"
+    leakyLMS.two_mu_int = 100;
+    leakyLMS.gamma =    0.1;                      // gamma --> "leakage"
+    leakyLMS.gamma_int = 100;
+    leakyLMS.lidx =     120.0;                      // lidx
+    leakyLMS.lidx_min = 0.0;                      // lidx_min
+    leakyLMS.lidx_max = 200.0;                      // lidx_max
+    leakyLMS.ngamma =   0.001;                      // ngamma
+    leakyLMS.den_mult = 6.25e-10;                   // den_mult
+    leakyLMS.lincr =    1.0;                      // lincr
+    leakyLMS.ldecr =    3.0;                     // ldecr
+    //int leakyLMS.mask = leakyLMS.dline_size - 1;
+    leakyLMS.mask = LEAKYLMSDLINE_SIZE - 1;
+    leakyLMS.in_idx = 0;
+    leakyLMS.on = 0;
+    leakyLMS.notch = 0;
+    /////////////////////// LEAKY LMS END
 
 
     ts.codec_present = Codec_Reset(ts.samp_rate,word_size) == HAL_OK;
@@ -1265,30 +1260,6 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
         ts.dsp_nr_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
     }
     // AUTO NOTCH INIT END
-
-    /////////////////////// LEAKY LMS
-    leakyLMS.n_taps =     64; //64;                       // taps
-    leakyLMS.delay =    16; //16;                       // delay
-    leakyLMS.dline_size = LEAKYLMSDLINE_SIZE;
-    //int ANR_buff_size = FFT_length / 2.0;
-    leakyLMS.position = 0;
-    leakyLMS.two_mu =   0.0001;                     // two_mu --> "gain"
-    leakyLMS.gamma =    0.1;                      // gamma --> "leakage"
-    leakyLMS.lidx =     120.0;                      // lidx
-    leakyLMS.lidx_min = 0.0;                      // lidx_min
-    leakyLMS.lidx_max = 200.0;                      // lidx_max
-    leakyLMS.ngamma =   0.001;                      // ngamma
-    leakyLMS.den_mult = 6.25e-10;                   // den_mult
-    leakyLMS.lincr =    1.0;                      // lincr
-    leakyLMS.ldecr =    3.0;                     // ldecr
-    //int leakyLMS.mask = leakyLMS.dline_size - 1;
-    leakyLMS.mask = LEAKYLMSDLINE_SIZE - 1;
-    leakyLMS.in_idx = 0;
-    leakyLMS.on = 0;
-    leakyLMS.notch = 0;
-
-    /////////////////////// LEAKY LMS END
-
 
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
