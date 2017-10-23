@@ -1398,8 +1398,6 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     ads.snap_carrier_freq = (ulong) (help_freq);
     freq_old = help_freq;
 
-#ifdef USE_SNAP
-
 	static uint8_t snap_counter = 0;
 #if	defined(STM32F7) || defined(STM32H7)
 	const int SNAP_COUNT_MAX = 6;
@@ -1419,7 +1417,6 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     		sc.snap = false;
     	}
     }
-#endif
     // graphical TUNE HELPER display
     UiSpectrum_CwSnapDisplay (delta);
 

@@ -135,6 +135,38 @@ typedef struct
 } LMSData;
 
 
+#define LEAKYLMSDLINE_SIZE 256 //512 //2048 funktioniert nicht, 128 & 256 OK                 // dline_size
+typedef struct
+{// Automatic noise reduction
+	// Variable-leak LMS algorithm
+	// taken from (c) Warren Pratts wdsp library 2016
+	// GPLv3 licensed
+//	#define DLINE_SIZE 256 //512 //2048 funktioniert nicht, 128 & 256 OK                 // dline_size
+	int n_taps; // =     64; //64;                       // taps
+	int delay; // =    16; //16;                       // delay
+	int dline_size; // = LEAKYLMSDLINE_SIZE;
+	//int ANR_buff_size = FFT_length / 2.0;
+	int position;// = 0;
+	float32_t two_mu;// =   0.0001;                     // two_mu --> "gain"
+	float32_t gamma;// =    0.1;                      // gamma --> "leakage"
+	float32_t lidx;// =     120.0;                      // lidx
+	float32_t lidx_min;// = 0.0;                      // lidx_min
+	float32_t lidx_max;// = 200.0;                      // lidx_max
+	float32_t ngamma;// =   0.001;                      // ngamma
+	float32_t den_mult;// = 6.25e-10;                   // den_mult
+	float32_t lincr;// =    1.0;                      // lincr
+	float32_t ldecr;// =    3.0;                     // ldecr
+	//int ANR_mask = ANR_dline_size - 1;
+	int mask;// = DLINE_SIZE - 1;
+	int in_idx;// = 0;
+	float32_t d [LEAKYLMSDLINE_SIZE];
+	float32_t w [LEAKYLMSDLINE_SIZE];
+	uint8_t on;// = 0;
+	uint8_t notch;// = 0;
+} lLMS;
+
+lLMS leakyLMS;
+
 float32_t	__MCHF_SPECIALMEM audio_delay_buffer	[AUDIO_DELAY_BUFSIZE];
 
 static void AudioDriver_ClearAudioDelayBuffer()
@@ -561,9 +593,7 @@ AudioDriverState   __MCHF_SPECIALMEM ads;
 AudioDriverBuffer  __MCHF_SPECIALMEM adb;
 LMSData            __MCHF_SPECIALMEM lmsData;
 
-#ifdef USE_SNAP
 SnapCarrier   sc;
-#endif
 
 /**
  * @returns offset frequency in Hz for current frequency translate mode
@@ -690,13 +720,6 @@ void AudioDriver_Init(void)
 
     // Start DMA transfers
     MchfHw_Codec_StartDMA();
-
-
-#ifdef USE_SNAP
-    // initialize FFT structure used for snap carrier
-    //	arm_rfft_init_f32((arm_rfft_instance_f32 *)&sc.S,(arm_cfft_radix4_instance_f32 *)&sc.S_CFFT,FFT_IQ_BUFF_LEN2,1,1);
-    arm_rfft_fast_init_f32((arm_rfft_fast_instance_f32 *)&sc.S, FFT_IQ_BUFF_LEN2);
-#endif
 
     // Audio filter enabled
     ads.af_disabled = 0;
@@ -1242,6 +1265,30 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
         ts.dsp_nr_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
     }
     // AUTO NOTCH INIT END
+
+    /////////////////////// LEAKY LMS
+    leakyLMS.n_taps =     64; //64;                       // taps
+    leakyLMS.delay =    16; //16;                       // delay
+    leakyLMS.dline_size = LEAKYLMSDLINE_SIZE;
+    //int ANR_buff_size = FFT_length / 2.0;
+    leakyLMS.position = 0;
+    leakyLMS.two_mu =   0.0001;                     // two_mu --> "gain"
+    leakyLMS.gamma =    0.1;                      // gamma --> "leakage"
+    leakyLMS.lidx =     120.0;                      // lidx
+    leakyLMS.lidx_min = 0.0;                      // lidx_min
+    leakyLMS.lidx_max = 200.0;                      // lidx_max
+    leakyLMS.ngamma =   0.001;                      // ngamma
+    leakyLMS.den_mult = 6.25e-10;                   // den_mult
+    leakyLMS.lincr =    1.0;                      // lincr
+    leakyLMS.ldecr =    3.0;                     // ldecr
+    //int leakyLMS.mask = leakyLMS.dline_size - 1;
+    leakyLMS.mask = LEAKYLMSDLINE_SIZE - 1;
+    leakyLMS.in_idx = 0;
+    leakyLMS.on = 0;
+    leakyLMS.notch = 0;
+
+    /////////////////////// LEAKY LMS END
+
 
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
@@ -3419,13 +3466,14 @@ static void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
 // Variable-leak LMS algorithm
 // taken from (c) Warren Pratts wdsp library 2016
 // GPLv3 licensed
+/*
 #define ANR_DLINE_SIZE 256 //512 //2048 funktioniert nicht, 128 & 256 OK                 // dline_size
 int ANR_n_taps =     64; //64;                       // taps
 int ANR_delay =    16; //16;                       // delay
 int ANR_dline_size = ANR_DLINE_SIZE;
 //int ANR_buff_size = FFT_length / 2.0;
 int ANR_position = 0;
-float32_t ANR_two_mu =   0.001; //0.0001;                     // two_mu --> "gain"
+float32_t ANR_two_mu =   0.0001;                     // two_mu --> "gain"
 float32_t ANR_gamma =    0.1;                      // gamma --> "leakage"
 float32_t ANR_lidx =     120.0;                      // lidx
 float32_t ANR_lidx_min = 0.0;                      // lidx_min
@@ -3441,57 +3489,57 @@ float32_t ANR_d [ANR_DLINE_SIZE];
 float32_t ANR_w [ANR_DLINE_SIZE];
 uint8_t ANR_on = 0;
 uint8_t ANR_notch = 0;
-
-void AudioDriver_LeakyLmsNr (float32_t *ANR_in_buff, float32_t *ANR_out_buff, int ANR_buff_size, bool notch)
+*/
+void AudioDriver_LeakyLmsNr (float32_t *in_buff, float32_t *out_buff, int buff_size, bool notch)
 {
     int i, j, idx;
     float32_t c0, c1;
     float32_t y, error, sigma, inv_sigp;
     float32_t nel, nev;
-		for (i = 0; i < ANR_buff_size; i++)
+		for (i = 0; i < buff_size; i++)
 		{
-			ANR_d[ANR_in_idx] = ANR_in_buff[i];
+			leakyLMS.d[leakyLMS.in_idx] = in_buff[i];
 
 			y = 0;
 			sigma = 0;
 
-			for (j = 0; j < ANR_n_taps; j++)
+			for (j = 0; j < leakyLMS.n_taps; j++)
 			{
-				idx = (ANR_in_idx + j + ANR_delay) & ANR_mask;
-				y += ANR_w[j] * ANR_d[idx];
-				sigma += ANR_d[idx] * ANR_d[idx];
+				idx = (leakyLMS.in_idx + j + leakyLMS.delay) & leakyLMS.mask;
+				y += leakyLMS.w[j] * leakyLMS.d[idx];
+				sigma += leakyLMS.d[idx] * leakyLMS.d[idx];
 			}
 			inv_sigp = 1.0 / (sigma + 1e-10);
-			error = ANR_d[ANR_in_idx] - y;
+			error = leakyLMS.d[leakyLMS.in_idx] - y;
 
 			if(notch)
-			{ // automtatic notch filter
-				ANR_out_buff[i] = error;
+			{ // automatic notch filter
+				out_buff[i] = error;
 			}
 			else
 			{ // noise reduction
-				ANR_out_buff[i] = y;
+				out_buff[i] = y;
 			}
-//			ANR_out_buff[2 * i + 1] = 0.0;
+//			leakyLMS.out_buff[2 * i + 1] = 0.0;
 
-			if((nel = error * (1.0 - ANR_two_mu * sigma * inv_sigp)) < 0.0) nel = -nel;
-			if((nev = ANR_d[ANR_in_idx] - (1.0 - ANR_two_mu * ANR_ngamma) * y - ANR_two_mu * error * sigma * inv_sigp) < 0.0) nev = -nev;
+			if((nel = error * (1.0 - leakyLMS.two_mu * sigma * inv_sigp)) < 0.0) nel = -nel;
+			if((nev = leakyLMS.d[leakyLMS.in_idx] - (1.0 - leakyLMS.two_mu * leakyLMS.ngamma) * y - leakyLMS.two_mu * error * sigma * inv_sigp) < 0.0) nev = -nev;
 			if (nev < nel)
-				if((ANR_lidx += ANR_lincr) > ANR_lidx_max) ANR_lidx = ANR_lidx_max;
+				if((leakyLMS.lidx += leakyLMS.lincr) > leakyLMS.lidx_max) leakyLMS.lidx = leakyLMS.lidx_max;
 			else
-				if((ANR_lidx -= ANR_ldecr) < ANR_lidx_min) ANR_lidx = ANR_lidx_min;
+				if((leakyLMS.lidx -= leakyLMS.ldecr) < leakyLMS.lidx_min) leakyLMS.lidx = leakyLMS.lidx_min;
 
-			ANR_ngamma = ANR_gamma * (ANR_lidx * ANR_lidx) * (ANR_lidx * ANR_lidx) * ANR_den_mult;
+			leakyLMS.ngamma = leakyLMS.gamma * (leakyLMS.lidx * leakyLMS.lidx) * (leakyLMS.lidx * leakyLMS.lidx) * leakyLMS.den_mult;
 
-			c0 = 1.0 - ANR_two_mu * ANR_ngamma;
-			c1 = ANR_two_mu * error * inv_sigp;
+			c0 = 1.0 - leakyLMS.two_mu * leakyLMS.ngamma;
+			c1 = leakyLMS.two_mu * error * inv_sigp;
 
-			for (j = 0; j < ANR_n_taps; j++)
+			for (j = 0; j < leakyLMS.n_taps; j++)
 			{
-				idx = (ANR_in_idx + j + ANR_delay) & ANR_mask;
-				ANR_w[j] = c0 * ANR_w[j] + c1 * ANR_d[idx];
+				idx = (leakyLMS.in_idx + j + leakyLMS.delay) & leakyLMS.mask;
+				leakyLMS.w[j] = c0 * leakyLMS.w[j] + c1 * leakyLMS.d[idx];
 			}
-			ANR_in_idx = (ANR_in_idx + ANR_mask) & ANR_mask;
+			leakyLMS.in_idx = (leakyLMS.in_idx + leakyLMS.mask) & leakyLMS.mask;
 		}
 }
 
@@ -3746,7 +3794,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))       // No notch in CW
                     {
 //                        AudioDriver_NotchFilter(blockSizeDecim, adb.a_buffer);     // Do notch filter
-                  	  AudioDriver_LeakyLmsNr(adb.a_buffer, adb.a_buffer, blockSizeDecim, 1);
+                  	      AudioDriver_LeakyLmsNr(adb.a_buffer, adb.a_buffer, blockSizeDecim, 1);
                     }
 
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm

@@ -1042,13 +1042,11 @@ static void UiDriver_DisplayFButton_F2SnapMeter()
 	}
 	else
 	{
-#ifdef USE_SNAP
+
 		cap = "SNAP";
 		color = White;    // yes - indicate with color
-#else
-		color = White;
-		cap = "METER";
-#endif
+//		color = White;
+//		cap = "METER";
 	}
 	UiDriver_DrawFButtonLabel(2,cap,color);
 }
@@ -5584,14 +5582,13 @@ void UiDriver_StartUpScreenFinish()
 // TODO: Make Atomic
 static void UiAction_ChangeLowerMeterDownOrSnap()
 {
-#ifdef USE_SNAP
+
 	sc.snap = 1;
-#else
+
 	// Not in MENU mode - select the METER mode
-	decr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
-	UiDriver_DeleteMeters();
-	UiDriver_CreateMeters();    // redraw meter
-#endif
+//	decr_wrap_uint8(&ts.tx_meter_mode,0,METER_MAX-1);
+//	UiDriver_DeleteMeters();
+//	UiDriver_CreateMeters();    // redraw meter
 }
 
 static void UiAction_ChangeLowerMeterUp()

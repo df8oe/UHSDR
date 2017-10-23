@@ -395,6 +395,10 @@ const MenuDescriptor debugGroup[] =
 #ifdef USE_TWO_CHANNEL_AUDIO
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ENABLE_STEREO, NULL,"STEREO Enable", UiMenuDesc("Enable stereo demodulation modes") },
 #endif
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_TAPS, NULL,"NR no taps", UiMenuDesc("Number of taps of leaky LMS noise reduction") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_DELAY, NULL,"NR delay", UiMenuDesc("Delay length of leaky LMS noise reduction") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_GAIN, NULL,"NR gain", UiMenuDesc("Gain of leaky LMS noise reduction") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_LEAK, NULL,"NR leak", UiMenuDesc("Leak of leaky LMS noise reduction") },
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 

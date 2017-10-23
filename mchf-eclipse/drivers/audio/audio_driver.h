@@ -586,8 +586,6 @@ extern __IO SMeter              sm;
 #define FFT_IQ_BUFF_LEN2 2048
 //#define FFT_IQ_BUFF_LEN2 4096 // = 2048 tap FFT !!! this is very very accurate
 
-#ifdef USE_SNAP
-
 typedef struct SnapCarrier
 {
     // FFT state
@@ -595,19 +593,19 @@ typedef struct SnapCarrier
 //    arm_cfft_radix4_instance_f32    S_CFFT;  // old, depricated FFT routine, do not use
 // 	  this was responsible for the initial inaccuracy of the snap carrier routine!
 
-	arm_rfft_fast_instance_f32           S; // new and faster real FFT routine
+//	arm_rfft_fast_instance_f32           S; // new and faster real FFT routine
 
     // Current data ptr
-    ulong   samp_ptr;
-    int8_t FFT_number;
-    int16_t counter;
+//    ulong   samp_ptr;
+//    int8_t FFT_number;
+//    int16_t counter;
     // State machine current state
-    uchar   state;
+//    uchar   state;
     bool	snap;
 
 } SnapCarrier;
 
 extern SnapCarrier sc;
-#endif
+
 
 #endif
