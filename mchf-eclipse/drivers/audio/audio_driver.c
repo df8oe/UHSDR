@@ -3919,7 +3919,17 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     else
     {
 #ifdef USE_TWO_CHANNEL_AUDIO
-    	arm_scale_f32(adb.b_buffer, LINE_OUT_SCALING_FACTOR, adb.r_buffer, blockSize);       // Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
+    	// Do fixed scaling of audio for LINE OUT
+    	arm_scale_f32(adb.b_buffer, LINE_OUT_SCALING_FACTOR, adb.b_buffer, blockSize);
+    	if (use_stereo)
+    	{
+    		arm_scale_f32(adb.a_buffer, LINE_OUT_SCALING_FACTOR, adb.a_buffer, blockSize);
+    	}
+    	else
+    	{
+    		// we simply copy the data from the other channel
+    		arm_copy_f32(adb.b_buffer, adb.a_buffer, blockSize);
+    	}
 #else
     	arm_scale_f32(adb.b_buffer, LINE_OUT_SCALING_FACTOR, adb.a_buffer, blockSize);       // Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
 #endif
@@ -3964,33 +3974,29 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         {
 
 #ifdef USE_TWO_CHANNEL_AUDIO
-        	// Stereo modes should be implemented here
-        	if(use_stereo)
-        	{
-				dst[i].r = adb.a_buffer[i];
-				dst[i].l = adb.b_buffer[i];
-        	}
-        	else
-            { // MONO
-        		dst[i].r = dst[i].l = adb.b_buffer[i];
-            }
+        	// BOTH CHANNELS "FIXED" GAIN as input for audio amp and headphones/lineout
+        	// each output path has its own gain control.
 #else
-            dst[i].l = adb.b_buffer[i]; // VARIABLE LEVEL FOR SPEAKER
-            dst[i].r = adb.a_buffer[i];        // LINE OUT (constant level)
-//            dst[i].r = adb.r_buffer[i];        // LINE OUT (constant level)
+        	// VARIABLE LEVEL FOR SPEAKER
+        	// LINE OUT (constant level)
 #endif
-
+        	dst[i].l = adb.b_buffer[i];
+        	dst[i].r = adb.a_buffer[i];
         }
         // Unless this is DIGITAL I/Q Mode, we sent processed audio
         if (tx_audio_source != TX_AUDIO_DIGIQ)
         {
-#ifdef USE_TWO_CHANNEL_AUDIO
-        	float32_t val = adb.r_buffer[i] * usb_audio_gain;
+        	int16_t vals[2];
+
+        	#ifdef USE_TWO_CHANNEL_AUDIO
+        	vals[0] = adb.a_buffer[i] * usb_audio_gain;
+        	vals[1] = adb.b_buffer[i] * usb_audio_gain;
 #else
-        	float32_t val = adb.a_buffer[i] * usb_audio_gain;
+        	vals[0] = vals[1] = adb.a_buffer[i] * usb_audio_gain;
 #endif
-        	audio_in_put_buffer(val);
-            audio_in_put_buffer(val);
+
+        	audio_in_put_buffer(vals[0]);
+            audio_in_put_buffer(vals[1]);
         }
     }
 
