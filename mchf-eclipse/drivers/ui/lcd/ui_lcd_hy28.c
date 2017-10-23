@@ -24,11 +24,10 @@
 
 
 #define USE_DISPLAY_PAR
+
 #define USE_SPI_DMA
 
 // #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
-
-
 
 #include "spi.h"
 
@@ -448,7 +447,13 @@ void UiLcdHy28_SpiInit(bool hispeed)
 	  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
 	  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
 	  hspi2.Init.NSS = SPI_NSS_SOFT;
-	  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+
+	#if defined(STM32F7)
+	  	  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+	#else
+	  	  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+	#endif
+
 	  if (HAL_SPI_Init(&hspi2) != HAL_OK)
 	  {
 	    Error_Handler();
@@ -737,6 +742,23 @@ static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
     {
         UiLcdHy28_SpiSendByte((data >>   8));      /* Write D8..D15                */
         UiLcdHy28_SpiSendByte((data & 0xFF));      /* Write D0..D7                 */
+    }
+    else
+    {
+        LCD_RAM = data;
+        __DMB();
+
+    }
+}
+
+static inline void UiLcdHy28_WriteData( unsigned short data)
+{
+    if(UiLcdHy28_SpiDisplayUsed())
+    {
+        UiLcdHy28_WriteDataSpiStart();
+        UiLcdHy28_SpiSendByte((data >>   8));                    /* Write D8..D15                */
+        UiLcdHy28_SpiSendByte((data & 0xFF));                    /* Write D0..D7   */
+        UiLcdHy28_LcdSpiFinishTransfer();
     }
     else
     {
@@ -1730,16 +1752,41 @@ uint8_t UiLcdHy28_Init()
 
 #elif defined(USE_GFX_ILI9486)
 
-    mchf_display.use_spi = true;
+	#ifdef USE_DISPLAY_SPI
+    	mchf_display.use_spi = true;
+	#else
+    	mchf_display.use_spi = false;
+	#endif
+
     mchf_display.lcd_cs = LCD_CS;
     mchf_display.lcd_cs_pio = LCD_CS_PIO;
 
-    UiLcdHy28_SpiInit(HY28BHISPEED);
+    if(mchf_display.use_spi)
+    {
+    	UiLcdHy28_SpiInit(HY28BHISPEED);
+    }
+    else
+    {
+        UiLcdHy28_ParallelInit();
+        UiLcdHy28_FSMCConfig();
+    }
+
     UiLcdHy28_Reset();
     UiLcdHy28_ILI9486init();
-    uint8_t retval = DISPLAY_HY28B_SPI;
+
     mchf_display.DeviceCode=0x9486;
-    mchf_display.display_type = DISPLAY_HY28B_SPI;
+    uint8_t retval;
+
+    if(mchf_display.use_spi)
+    {
+    	mchf_display.display_type = DISPLAY_HY28B_SPI;
+        retval = DISPLAY_HY28B_SPI;
+    }
+    else
+    {
+    	mchf_display.display_type = DISPLAY_HY28B_PARALLEL;
+        retval = DISPLAY_HY28B_PARALLEL;
+    }
 #else
 
 
@@ -2047,141 +2094,97 @@ void UiLcdHy28_TouchscreenInit(uint8_t mirror)
 }
 
 #ifdef USE_GFX_ILI9486
+/**
+ * @brief parallel and serial init of ILI9486
+ */
 void UiLcdHy28_ILI9486init(void)
 {
-//TODO: need cleanup (use tables)
-	if(mchf_display.use_spi)
-	{
-		//serial init
-		UiLcdHy28_WriteIndexSpi(0xB0);
-		UiLcdHy28_WriteDataSpi(0x0);
-		UiLcdHy28_LcdSpiFinishTransfer();
 
-		UiLcdHy28_WriteIndexSpi(0x11);
-		UiLcdHy28_LcdSpiFinishTransfer();
+		UiLcdHy28_WriteReg(0xB0,0);
+
+		UiLcdHy28_WriteReg(0x11,0);
 		HAL_Delay(250);
 
-		UiLcdHy28_WriteIndexSpi(0x3A);      // COLMOD_PIXEL_FORMAT_SET
-		UiLcdHy28_WriteDataSpi(0x55);     // 16 bit pixel
-		UiLcdHy28_LcdSpiFinishTransfer();
+		UiLcdHy28_WriteReg(0x3A,0x55);      // COLMOD_PIXEL_FORMAT_SET 16 bit pixel
 
+		UiLcdHy28_WriteReg(0xC0,0x0f);
+		UiLcdHy28_WriteData(0x0f);
 
-		UiLcdHy28_WriteIndexSpi(0xC0);
-		UiLcdHy28_WriteDataSpi(0x0f); //13
-		UiLcdHy28_WriteDataSpi(0x0f); //10
-		UiLcdHy28_LcdSpiFinishTransfer();
+		UiLcdHy28_WriteReg(0xC1,0x42);
 
-		UiLcdHy28_WriteIndexSpi(0xC1);
-		UiLcdHy28_WriteDataSpi(0x42); //43
-		UiLcdHy28_LcdSpiFinishTransfer();
+		UiLcdHy28_WriteReg(0xC2,0x22);
 
-		UiLcdHy28_WriteIndexSpi(0xC2);
-		UiLcdHy28_WriteDataSpi(0x22);
-		UiLcdHy28_LcdSpiFinishTransfer();
+		UiLcdHy28_WriteReg(0xC5,0x01);
+		UiLcdHy28_WriteData(0x29); //4D
+		UiLcdHy28_WriteData(0x80);
 
-		UiLcdHy28_WriteIndexSpi(0xC5);
-		UiLcdHy28_WriteDataSpi(0x01); //00
-		UiLcdHy28_WriteDataSpi(0x29); //4D
-		UiLcdHy28_WriteDataSpi(0x80);
-		UiLcdHy28_LcdSpiFinishTransfer();
+		UiLcdHy28_WriteReg(0xB6,0x00);
+		UiLcdHy28_WriteData(0x02); //42
+		UiLcdHy28_WriteData(0x3b);
 
-		UiLcdHy28_WriteIndexSpi(0xB6);
-		UiLcdHy28_WriteDataSpi(0x00);
-		UiLcdHy28_WriteDataSpi(0x02); //42
-		UiLcdHy28_WriteDataSpi(0x3b);
-		UiLcdHy28_LcdSpiFinishTransfer();
+		UiLcdHy28_WriteReg(0xB1,0xB0);
+		UiLcdHy28_WriteData(0x11);
 
-		UiLcdHy28_WriteIndexSpi(0xB1);
-		UiLcdHy28_WriteDataSpi(0xB0); //C0
-		UiLcdHy28_WriteDataSpi(0x11);
-		UiLcdHy28_LcdSpiFinishTransfer();
+		UiLcdHy28_WriteReg(0xB4,0x02);
 
-		UiLcdHy28_WriteIndexSpi(0xB4);
-		UiLcdHy28_WriteDataSpi(0x02); //01
-		UiLcdHy28_LcdSpiFinishTransfer();
+		UiLcdHy28_WriteReg(0xE0,0x0f);
+		UiLcdHy28_WriteData(0x1F);
+		UiLcdHy28_WriteData(0x1C);
+		UiLcdHy28_WriteData(0x0C);
+		UiLcdHy28_WriteData(0x0F);
+		UiLcdHy28_WriteData(0x08);
+		UiLcdHy28_WriteData(0x48);
+		UiLcdHy28_WriteData(0x98);
+		UiLcdHy28_WriteData(0x37);
+		UiLcdHy28_WriteData(0x0a);
+		UiLcdHy28_WriteData(0x13);
+		UiLcdHy28_WriteData(0x04);
+		UiLcdHy28_WriteData(0x11);
+		UiLcdHy28_WriteData(0x0d);
+		UiLcdHy28_WriteData(0x00);
 
+		UiLcdHy28_WriteReg(0xE1,0x0f);
+		UiLcdHy28_WriteData(0x32);
+		UiLcdHy28_WriteData(0x2e);
+		UiLcdHy28_WriteData(0x0b);
+		UiLcdHy28_WriteData(0x0d);
+		UiLcdHy28_WriteData(0x05);
+		UiLcdHy28_WriteData(0x47);
+		UiLcdHy28_WriteData(0x75);
+		UiLcdHy28_WriteData(0x37);
+		UiLcdHy28_WriteData(0x06);
+		UiLcdHy28_WriteData(0x10);
+		UiLcdHy28_WriteData(0x03);
+		UiLcdHy28_WriteData(0x24);
+		UiLcdHy28_WriteData(0x20);
+		UiLcdHy28_WriteData(0x00);
 
+		UiLcdHy28_WriteReg(0xE2,0x0f);
+		UiLcdHy28_WriteData(0x32);
+		UiLcdHy28_WriteData(0x2e);
+		UiLcdHy28_WriteData(0x0b);
+		UiLcdHy28_WriteData(0x0d);
+		UiLcdHy28_WriteData(0x05);
+		UiLcdHy28_WriteData(0x47);
+		UiLcdHy28_WriteData(0x75);
+		UiLcdHy28_WriteData(0x37);
+		UiLcdHy28_WriteData(0x06);
+		UiLcdHy28_WriteData(0x10);
+		UiLcdHy28_WriteData(0x03);
+		UiLcdHy28_WriteData(0x24);
+		UiLcdHy28_WriteData(0x20);
+		UiLcdHy28_WriteData(0x00);
 
+		UiLcdHy28_WriteReg(0x13,0x00);    //normal display mode ON
+		UiLcdHy28_WriteReg(0x20,0x00);    //display inversion off
 
+		UiLcdHy28_WriteReg(0x36,0x028);
 
-
-		UiLcdHy28_WriteIndexSpi(0xE0);
-		UiLcdHy28_WriteDataSpi(0x0F);
-		UiLcdHy28_WriteDataSpi(0x1F);
-		UiLcdHy28_WriteDataSpi(0x1C);
-		UiLcdHy28_WriteDataSpi(0x0C);
-		UiLcdHy28_WriteDataSpi(0x0F);
-		UiLcdHy28_WriteDataSpi(0x08);
-		UiLcdHy28_WriteDataSpi(0x48);
-		UiLcdHy28_WriteDataSpi(0x98);
-		UiLcdHy28_WriteDataSpi(0x37);
-		UiLcdHy28_WriteDataSpi(0x0a);
-		UiLcdHy28_WriteDataSpi(0x13);
-		UiLcdHy28_WriteDataSpi(0x04);
-		UiLcdHy28_WriteDataSpi(0x11);
-		UiLcdHy28_WriteDataSpi(0x0d);
-		UiLcdHy28_WriteDataSpi(0x00);
-		UiLcdHy28_LcdSpiFinishTransfer();
-
-		UiLcdHy28_WriteIndexSpi(0xE1);
-		UiLcdHy28_WriteDataSpi(0x0F);
-		UiLcdHy28_WriteDataSpi(0x32);
-		UiLcdHy28_WriteDataSpi(0x2e);
-		UiLcdHy28_WriteDataSpi(0x0b);
-		UiLcdHy28_WriteDataSpi(0x0d);
-		UiLcdHy28_WriteDataSpi(0x05);
-		UiLcdHy28_WriteDataSpi(0x47);
-		UiLcdHy28_WriteDataSpi(0x75);
-		UiLcdHy28_WriteDataSpi(0x37);
-		UiLcdHy28_WriteDataSpi(0x06);
-		UiLcdHy28_WriteDataSpi(0x10);
-		UiLcdHy28_WriteDataSpi(0x03);
-		UiLcdHy28_WriteDataSpi(0x24);
-		UiLcdHy28_WriteDataSpi(0x20);
-		UiLcdHy28_WriteDataSpi(0x00);
-		UiLcdHy28_LcdSpiFinishTransfer();
-
-		UiLcdHy28_WriteIndexSpi(0xE2);
-		UiLcdHy28_WriteDataSpi(0x0F);
-		UiLcdHy28_WriteDataSpi(0x32);
-		UiLcdHy28_WriteDataSpi(0x2e);
-		UiLcdHy28_WriteDataSpi(0x0b);
-		UiLcdHy28_WriteDataSpi(0x0d);
-		UiLcdHy28_WriteDataSpi(0x05);
-		UiLcdHy28_WriteDataSpi(0x47);
-		UiLcdHy28_WriteDataSpi(0x75);
-		UiLcdHy28_WriteDataSpi(0x37);
-		UiLcdHy28_WriteDataSpi(0x06);
-		UiLcdHy28_WriteDataSpi(0x10);
-		UiLcdHy28_WriteDataSpi(0x03);
-		UiLcdHy28_WriteDataSpi(0x24);
-		UiLcdHy28_WriteDataSpi(0x20);
-		UiLcdHy28_WriteDataSpi(0x00);
-		UiLcdHy28_LcdSpiFinishTransfer();
-
-		UiLcdHy28_WriteIndexSpi(0x13);    //normal display mode ON
-		UiLcdHy28_LcdSpiFinishTransfer();
-		UiLcdHy28_WriteIndexSpi(0x20);    //display inversion off
-		UiLcdHy28_LcdSpiFinishTransfer();
-
-		UiLcdHy28_WriteIndexSpi(0x36);
-		UiLcdHy28_WriteDataSpi(0x28); //memory access control
-		UiLcdHy28_LcdSpiFinishTransfer();
-
-		UiLcdHy28_WriteIndexSpi(0x11);
-		UiLcdHy28_LcdSpiFinishTransfer();
+		UiLcdHy28_WriteReg(0x11,0x00);
 		HAL_Delay(250);
 
-		UiLcdHy28_WriteIndexSpi(0x29);
-		UiLcdHy28_LcdSpiFinishTransfer();
+		UiLcdHy28_WriteReg(0x29,0x00);
 		HAL_Delay(250);
-	}
-	else
-	{
-		//parallel init
 
-	}
-
-
- }
+}
 #endif
