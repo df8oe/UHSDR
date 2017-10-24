@@ -323,7 +323,7 @@ typedef struct SMeter
 #define	CUST_AGC_OFFSET_VAL	30	// RF Gain offset value used in calculations
 #define	CUST_AGC_VAL_DEFAULT	17.8	// Value for "medium" AGC value
 //
-#define	LINE_OUT_SCALING_FACTOR	10		// multiplication of audio for fixed LINE out level (nominally 1vpp)
+#define	LINE_OUT_SCALING_FACTOR	1 // was 10		// multiplication of audio for fixed LINE out level (nominally 1vpp)
 //
 #define	LINE_IN_GAIN_RESCALE	20		// multiplier for line input gain
 #define	MIC_GAIN_RESCALE	2	// divisor for microphone gain setting
@@ -582,10 +582,6 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t *audioDst, int1
 extern AudioDriverState	ads;
 extern __IO SMeter              sm;
 
-// change this to 2048 (=1024 tap FFT), if problems with spectrum display with 7k5 SAM mode persist!
-#define FFT_IQ_BUFF_LEN2 2048
-//#define FFT_IQ_BUFF_LEN2 4096 // = 2048 tap FFT !!! this is very very accurate
-
 typedef struct SnapCarrier
 {
     // FFT state
@@ -607,13 +603,14 @@ typedef struct SnapCarrier
 
 extern SnapCarrier sc;
 
-#define LEAKYLMSDLINE_SIZE 256 //512 //2048 funktioniert nicht, 128 & 256 OK                 // dline_size
+#define LEAKYLMSDLINE_SIZE 512 // was 256 //2048   // dline_size
+// 1024 funktioniert nicht
 typedef struct
 {// Automatic noise reduction
 	// Variable-leak LMS algorithm
 	// taken from (c) Warren Pratts wdsp library 2016
 	// GPLv3 licensed
-//	#define DLINE_SIZE 256 //512 //2048 funktioniert nicht, 128 & 256 OK                 // dline_size
+//	#define DLINE_SIZE 256 //512 //2048  // dline_size
 	int n_taps; // =     64; //64;                       // taps
 	int delay; // =    16; //16;                       // delay
 	int dline_size; // = LEAKYLMSDLINE_SIZE;
