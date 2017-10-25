@@ -23,7 +23,7 @@
 // reference oscillator xtal frequency
 #define SI5351_XTAL_FREQ		27000000			// Crystal frequency
 #define SI5351_MIN_PLL			600000000			// Min PLL frequency
-#define SI5351_MAX_PLL			900000000			// Max PLL frequency
+#define SI5351_MAX_PLL		    1200000000			// Max PLL frequency
 
 // Register definitions
 #define SI5351_CLK0_CONTROL		16
@@ -45,6 +45,8 @@
 #define SI5351_R_DIV_32			0b01010000
 #define SI5351_R_DIV_64			0b01100000
 #define SI5351_R_DIV_128		0b01110000
+
+#define SI5351_DIV_BY_4			0b00001100
 
 #define SI5351_CLK_SRC_PLL_A	0b00000000
 #define SI5351_CLK_SRC_PLL_B	0b00100000
@@ -129,7 +131,7 @@ static void setupMultisynth(uint8_t synth, uint32_t divider, uint8_t rDiv)
 	{
 			(P3 & 0x0000FF00) >> 8,
 			(P3 & 0x000000FF),
-			((P1 & 0x00030000) >> 16) | rDiv,
+			((P1 & 0x00030000) >> 16) | rDiv | (divider == 4?SI5351_DIV_BY_4:0),
 			(P1 & 0x0000FF00) >> 8,
 			(P1 & 0x000000FF),
 			((P3 & 0x000F0000) >> 12) | ((P2 & 0x000F0000) >> 16),
