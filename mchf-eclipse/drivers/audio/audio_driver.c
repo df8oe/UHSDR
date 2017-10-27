@@ -3480,10 +3480,13 @@ void AudioDriver_LeakyLmsNr (float32_t *in_buff, float32_t *out_buff, int buff_s
 			if((nel = error * (1.0 - leakyLMS.two_mu * sigma * inv_sigp)) < 0.0) nel = -nel;
 			if((nev = leakyLMS.d[leakyLMS.in_idx] - (1.0 - leakyLMS.two_mu * leakyLMS.ngamma) * y - leakyLMS.two_mu * error * sigma * inv_sigp) < 0.0) nev = -nev;
 			if (nev < nel)
+			{
 				if((leakyLMS.lidx += leakyLMS.lincr) > leakyLMS.lidx_max) leakyLMS.lidx = leakyLMS.lidx_max;
+			}
 			else
+			{
 				if((leakyLMS.lidx -= leakyLMS.ldecr) < leakyLMS.lidx_min) leakyLMS.lidx = leakyLMS.lidx_min;
-
+			}
 			leakyLMS.ngamma = leakyLMS.gamma * (leakyLMS.lidx * leakyLMS.lidx) * (leakyLMS.lidx * leakyLMS.lidx) * leakyLMS.den_mult;
 
 			c0 = 1.0 - leakyLMS.two_mu * leakyLMS.ngamma;
@@ -3713,16 +3716,28 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 {
                     if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))       // No notch in CW
                     {
-//                        AudioDriver_NotchFilter(blockSizeDecim, adb.a_buffer);     // Do notch filter
-                  	      AudioDriver_LeakyLmsNr(adb.a_buffer, adb.a_buffer, blockSizeDecim, 1);
+                    	if(ts.enable_leaky_LMS)
+                    	{
+                    	      AudioDriver_LeakyLmsNr(adb.a_buffer, adb.a_buffer, blockSizeDecim, 1);
+                    	}
+                        else
+                        {
+                        	  AudioDriver_NotchFilter(blockSizeDecim, adb.a_buffer);     // Do notch filter
+                        }
                     }
 
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
                     if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))      // Do this if enabled and "Pre-AGC" DSP NR enabled
                     {
-//                        AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);
-                    	  AudioDriver_LeakyLmsNr(adb.a_buffer, adb.a_buffer, blockSizeDecim, 0);
+                    	if(ts.enable_leaky_LMS)
+                    	{
+                    	      AudioDriver_LeakyLmsNr(adb.a_buffer, adb.a_buffer, blockSizeDecim, 0);
+                    	}
+                        else
+                        {
+                        	AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);     //
+                        }
                     }
 
                 }
@@ -3764,8 +3779,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 //
                 if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ts.dsp_inhibit) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))     // Do DSP NR if enabled and if post-DSP NR enabled
                 {
-//                    AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);
-                	  AudioDriver_LeakyLmsNr(adb.a_buffer, adb.a_buffer, blockSizeDecim, 0);
+                	if(ts.enable_leaky_LMS)
+                	{
+                	      AudioDriver_LeakyLmsNr(adb.a_buffer, adb.a_buffer, blockSizeDecim, 0);
+                	}
+                    else
+                    {
+                    	AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);     //
+                    }
                 }
                 //
 

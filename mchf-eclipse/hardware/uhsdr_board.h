@@ -1033,6 +1033,7 @@ typedef struct TransceiverState
 #ifdef USE_TWO_CHANNEL_AUDIO
 	bool stereo_enable; // enable/disable stereo demodulation (only in special hardware, NOT in mcHF)
 #endif
+	bool enable_leaky_LMS;
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

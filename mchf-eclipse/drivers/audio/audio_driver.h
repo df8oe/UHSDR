@@ -323,7 +323,7 @@ typedef struct SMeter
 #define	CUST_AGC_OFFSET_VAL	30	// RF Gain offset value used in calculations
 #define	CUST_AGC_VAL_DEFAULT	17.8	// Value for "medium" AGC value
 //
-#define	LINE_OUT_SCALING_FACTOR	1 // was 10		// multiplication of audio for fixed LINE out level (nominally 1vpp)
+#define	LINE_OUT_SCALING_FACTOR	10 // was 10		// multiplication of audio for fixed LINE out level (nominally 1vpp)
 //
 #define	LINE_IN_GAIN_RESCALE	20		// multiplier for line input gain
 #define	MIC_GAIN_RESCALE	2	// divisor for microphone gain setting
@@ -603,7 +603,7 @@ typedef struct SnapCarrier
 
 extern SnapCarrier sc;
 
-#define LEAKYLMSDLINE_SIZE 512 // was 256 //2048   // dline_size
+#define LEAKYLMSDLINE_SIZE 256 //512 // was 256 //2048   // dline_size
 // 1024 funktioniert nicht
 typedef struct
 {// Automatic noise reduction

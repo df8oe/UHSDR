@@ -3637,6 +3637,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 #endif
 
+        case MENU_DEBUG_LEAKY_LMS:
+            var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_leaky_LMS,0,options,&clr);
+            break;
+
+
         case MENU_DEBUG_ANR_GAIN:      //
             var_change = UiDriverMenuItemChangeUInt32(var, mode, &leakyLMS.two_mu_int,
                     1,
