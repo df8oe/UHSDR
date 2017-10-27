@@ -611,8 +611,8 @@ typedef struct
 	// taken from (c) Warren Pratts wdsp library 2016
 	// GPLv3 licensed
 //	#define DLINE_SIZE 256 //512 //2048  // dline_size
-	int n_taps; // =     64; //64;                       // taps
-	int delay; // =    16; //16;                       // delay
+	int16_t n_taps; // =     64; //64;                       // taps
+	int16_t delay; // =    16; //16;                       // delay
 	int dline_size; // = LEAKYLMSDLINE_SIZE;
 	//int ANR_buff_size = FFT_length / 2.0;
 	int position;// = 0;

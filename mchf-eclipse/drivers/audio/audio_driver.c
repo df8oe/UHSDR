@@ -1906,13 +1906,6 @@ return true;
 }
 #endif
 
-/*******************************************************************************************************************
- *  AGC WDSP
- *  code taken from wdsp lib by Warren Pratt
- *  http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
- *  the AGC code is licensed under the GPL license
- *******************************************************************************************************************/
-
 // RTTY Experiment based on code from the DSP Tutorial at http://dp.nonoo.hu/projects/ham-dsp-tutorial/18-rtty-decoder-using-iir-filters/
 // Used with permission from Norbert Varga, HA2NON under GPLv3 license
 
@@ -2118,13 +2111,6 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
     const uint8_t dmod_mode = ts.dmod_mode;
     const bool use_stereo = (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO));
 #endif
-    // TODO:
-    // "LED" that indicates that the AGC starts working (input signal above the "knee") --> has to be seen when in menu mode
-    // --> DONE
-    // hang time adjust
-    // hang threshold adjust
-    // "LED" that indicates that the input signal is higher than the hang threshold --> has to be seen when in menu mode
-    //
     // Be careful: the original source code has no comments,
     // all comments added by DD4WH, February 2017: comments could be wrong, misinterpreting or highly misleading!
     //
@@ -3455,31 +3441,6 @@ static void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
 
 #if 1
 
-/*
-#define ANR_DLINE_SIZE 256 //512 //2048 funktioniert nicht, 128 & 256 OK                 // dline_size
-int ANR_n_taps =     64; //64;                       // taps
-int ANR_delay =    16; //16;                       // delay
-int ANR_dline_size = ANR_DLINE_SIZE;
-//int ANR_buff_size = FFT_length / 2.0;
-int ANR_position = 0;
-float32_t ANR_two_mu =   0.0001;                     // two_mu --> "gain"
-float32_t ANR_gamma =    0.1;                      // gamma --> "leakage"
-float32_t ANR_lidx =     120.0;                      // lidx
-float32_t ANR_lidx_min = 0.0;                      // lidx_min
-float32_t ANR_lidx_max = 200.0;                      // lidx_max
-float32_t ANR_ngamma =   0.001;                      // ngamma
-float32_t ANR_den_mult = 6.25e-10;                   // den_mult
-float32_t ANR_lincr =    1.0;                      // lincr
-float32_t ANR_ldecr =    3.0;                     // ldecr
-//int ANR_mask = ANR_dline_size - 1;
-int ANR_mask = ANR_DLINE_SIZE - 1;
-int ANR_in_idx = 0;
-float32_t ANR_d [ANR_DLINE_SIZE];
-float32_t ANR_w [ANR_DLINE_SIZE];
-uint8_t ANR_on = 0;
-uint8_t ANR_notch = 0;
-*/
-
 // Automatic noise reduction
 // Variable-leak LMS algorithm
 // taken from (c) Warren Pratts wdsp library 2016
@@ -3773,7 +3734,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 #ifdef USE_TWO_CHANNEL_AUDIO
                     if(use_stereo && !ads.af_disabled)
                     {
-//FIXME: in principle this works in all demod_modes, but crashes when I switch to CW!???
                          arm_iir_lattice_f32(&IIR_PreFilter2, adb.r_buffer, adb.r_buffer, blockSizeDecim);
                     }
 #endif
