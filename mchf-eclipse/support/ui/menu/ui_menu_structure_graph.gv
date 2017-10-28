@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-10-22T18:26:57  by "./ui_menu_structure_graph.py"
+#  generated at  2017-10-28T08:51:27  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-10-22T18:26:57  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-10-28T08:51:27  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1247,6 +1247,31 @@
              shape = record
              ];
         
+        "MENU_DEBUG_LEAKY_LMS" [
+             label = "MENU_DEBUG_LEAKY_LMS | leaky LMS"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_ANR_TAPS" [
+             label = "MENU_DEBUG_ANR_TAPS | NR no taps"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_ANR_DELAY" [
+             label = "MENU_DEBUG_ANR_DELAY | NR delay"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_ANR_GAIN" [
+             label = "MENU_DEBUG_ANR_GAIN | NR gain"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_ANR_LEAK" [
+             label = "MENU_DEBUG_ANR_LEAK | NR leak"
+             shape = record
+             ];
+        
         "0" [
              label = "0 | M0NKA  (Chris) founder of mcHF"
              shape = record
@@ -1821,6 +1846,16 @@
             MENU_DEBUG -> MENU_DEBUG_RTTY_ATC
             
             MENU_DEBUG -> MENU_DEBUG_ENABLE_STEREO
+            
+            MENU_DEBUG -> MENU_DEBUG_LEAKY_LMS
+            
+            MENU_DEBUG -> MENU_DEBUG_ANR_TAPS
+            
+            MENU_DEBUG -> MENU_DEBUG_ANR_DELAY
+            
+            MENU_DEBUG -> MENU_DEBUG_ANR_GAIN
+            
+            MENU_DEBUG -> MENU_DEBUG_ANR_LEAK
             
         }  ## END subgraph MENU_HALL_OF_FAME
     

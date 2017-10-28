@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-10-22T18:27:00  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-10-28T08:51:31  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-10-22T18:27:00  by "./ui_menu_structure_mdtable.py"
+generated at  2017-10-28T08:51:31  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -289,6 +289,11 @@ generated at  2017-10-22T18:27:00  by "./ui_menu_structure_mdtable.py"
 | **New Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | New noiseblanker for testing purposes          | 
 | **RTTY ATC Enable**           (                        MENU_DEBUG_RTTY_ATC) | Enable automatic threshold correction ATC for RTTY decoding | 
 | **STEREO Enable**             (                   MENU_DEBUG_ENABLE_STEREO) | Enable stereo demodulation modes               | 
+| **leaky LMS**                 (                       MENU_DEBUG_LEAKY_LMS) | Use leaky LMS noise reduction instead of built-in CMSIS LMS algorithm | 
+| **NR no taps**                (                        MENU_DEBUG_ANR_TAPS) | Number of taps of leaky LMS noise reduction    | 
+| **NR delay**                  (                       MENU_DEBUG_ANR_DELAY) | Delay length of leaky LMS noise reduction      | 
+| **NR gain**                   (                        MENU_DEBUG_ANR_GAIN) | Gain of leaky LMS noise reduction              | 
+| **NR leak**                   (                        MENU_DEBUG_ANR_LEAK) | Leak of leaky LMS noise reduction              | 
 
 
 [//]: # ( EOFILE                                                                       )
