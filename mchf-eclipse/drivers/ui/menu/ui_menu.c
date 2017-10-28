@@ -3636,6 +3636,70 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 #endif
+
+        case MENU_DEBUG_LEAKY_LMS:
+            var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_leaky_LMS,0,options,&clr);
+            break;
+
+
+        case MENU_DEBUG_ANR_GAIN:      //
+            var_change = UiDriverMenuItemChangeUInt32(var, mode, &leakyLMS.two_mu_int,
+                    1,
+                    10000,
+                    100,
+                    10
+            );
+            if(var_change)
+            {
+            	leakyLMS.two_mu = leakyLMS.two_mu_int / 1000000;
+            }
+            snprintf(options, 32, " %4u",(unsigned int)leakyLMS.two_mu_int);
+
+        break;
+        case MENU_DEBUG_ANR_LEAK:      //
+            var_change = UiDriverMenuItemChangeUInt32(var, mode, &leakyLMS.gamma_int,
+                    1,
+                    1000,
+                    100,
+                    10
+            );
+            if(var_change)
+            {
+            	leakyLMS.gamma = leakyLMS.gamma_int / 1000;
+            }
+            snprintf(options, 32, " %4u",(unsigned int)leakyLMS.gamma_int);
+
+        break;
+
+        case MENU_DEBUG_ANR_TAPS:      //
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &leakyLMS.n_taps,
+                    1,
+                    192,
+                    64,
+                    2
+            );
+            if(var_change)
+            {
+//            	leakyLMS.gamma = leakyLMS.gamma_int / 1000;
+            }
+            snprintf(options, 32, " %3u",(unsigned int)leakyLMS.n_taps);
+
+        break;
+        case MENU_DEBUG_ANR_DELAY:      //
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &leakyLMS.delay,
+                    1,
+                    64,
+                    16,
+                    2
+            );
+            if(var_change)
+            {
+//            	leakyLMS.gamma = leakyLMS.gamma_int / 1000;
+            }
+            snprintf(options, 32, " %3u",(unsigned int)leakyLMS.delay);
+
+        break;
+
         case MENU_DEBUG_CLONEOUT:
         txt_ptr = " Do it!";
         clr = White;

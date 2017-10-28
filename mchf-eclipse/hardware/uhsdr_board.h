@@ -72,12 +72,7 @@
 
 // Unified the 3 graphics drivers.
 
-// should be fine now (Oct 2017), since SNAP now does not use any more memory
-// TODO: Decide if option switch should be kept: Proposal -> no, just make this a standard feature
-
 // OPTION
-#define USE_SNAP
-
 
 // use the STM32 internal RTC with an external quartz and
 // M1 and F3 connected to PD14 and PD15 (D0 and D1 of LCD) instead of PC14 and PC15 (to which the 32768 Hz quartz has to be connected)
@@ -1038,6 +1033,7 @@ typedef struct TransceiverState
 #ifdef USE_TWO_CHANNEL_AUDIO
 	bool stereo_enable; // enable/disable stereo demodulation (only in special hardware, NOT in mcHF)
 #endif
+	bool enable_leaky_LMS;
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

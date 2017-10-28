@@ -135,6 +135,7 @@ typedef struct
 } LMSData;
 
 
+
 float32_t	__MCHF_SPECIALMEM audio_delay_buffer	[AUDIO_DELAY_BUFSIZE];
 
 static void AudioDriver_ClearAudioDelayBuffer()
@@ -561,9 +562,9 @@ AudioDriverState   __MCHF_SPECIALMEM ads;
 AudioDriverBuffer  __MCHF_SPECIALMEM adb;
 LMSData            __MCHF_SPECIALMEM lmsData;
 
-#ifdef USE_SNAP
+lLMS leakyLMS;
+
 SnapCarrier   sc;
-#endif
 
 /**
  * @returns offset frequency in Hz for current frequency translate mode
@@ -685,18 +686,35 @@ void AudioDriver_Init(void)
     // Audio Filter Init init
     AudioDriver_InitFilters();
 
+    /////////////////////// LEAKY LMS noise reduction
+    leakyLMS.n_taps =     64; //64;                       // taps
+    leakyLMS.delay =    16; //16;                       // delay
+    leakyLMS.dline_size = LEAKYLMSDLINE_SIZE;
+    //int ANR_buff_size = FFT_length / 2.0;
+    leakyLMS.position = 0;
+    leakyLMS.two_mu =   0.0001;                     // two_mu --> "gain"
+    leakyLMS.two_mu_int = 100;
+    leakyLMS.gamma =    0.1;                      // gamma --> "leakage"
+    leakyLMS.gamma_int = 100;
+    leakyLMS.lidx =     120.0;                      // lidx
+    leakyLMS.lidx_min = 0.0;                      // lidx_min
+    leakyLMS.lidx_max = 200.0;                      // lidx_max
+    leakyLMS.ngamma =   0.001;                      // ngamma
+    leakyLMS.den_mult = 6.25e-10;                   // den_mult
+    leakyLMS.lincr =    1.0;                      // lincr
+    leakyLMS.ldecr =    3.0;                     // ldecr
+    //int leakyLMS.mask = leakyLMS.dline_size - 1;
+    leakyLMS.mask = LEAKYLMSDLINE_SIZE - 1;
+    leakyLMS.in_idx = 0;
+    leakyLMS.on = 0;
+    leakyLMS.notch = 0;
+    /////////////////////// LEAKY LMS END
+
 
     ts.codec_present = Codec_Reset(ts.samp_rate,word_size) == HAL_OK;
 
     // Start DMA transfers
     MchfHw_Codec_StartDMA();
-
-
-#ifdef USE_SNAP
-    // initialize FFT structure used for snap carrier
-    //	arm_rfft_init_f32((arm_rfft_instance_f32 *)&sc.S,(arm_cfft_radix4_instance_f32 *)&sc.S_CFFT,FFT_IQ_BUFF_LEN2,1,1);
-    arm_rfft_fast_init_f32((arm_rfft_fast_instance_f32 *)&sc.S, FFT_IQ_BUFF_LEN2);
-#endif
 
     // Audio filter enabled
     ads.af_disabled = 0;
@@ -1888,13 +1906,6 @@ return true;
 }
 #endif
 
-/*******************************************************************************************************************
- *  AGC WDSP
- *  code taken from wdsp lib by Warren Pratt
- *  http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/
- *  the AGC code is licensed under the GPL license
- *******************************************************************************************************************/
-
 // RTTY Experiment based on code from the DSP Tutorial at http://dp.nonoo.hu/projects/ham-dsp-tutorial/18-rtty-decoder-using-iir-filters/
 // Used with permission from Norbert Varga, HA2NON under GPLv3 license
 
@@ -2100,13 +2111,6 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
     const uint8_t dmod_mode = ts.dmod_mode;
     const bool use_stereo = (dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO));
 #endif
-    // TODO:
-    // "LED" that indicates that the AGC starts working (input signal above the "knee") --> has to be seen when in menu mode
-    // --> DONE
-    // hang time adjust
-    // hang threshold adjust
-    // "LED" that indicates that the input signal is higher than the hang threshold --> has to be seen when in menu mode
-    //
     // Be careful: the original source code has no comments,
     // all comments added by DD4WH, February 2017: comments could be wrong, misinterpreting or highly misleading!
     //
@@ -3094,6 +3098,21 @@ static float32_t AudioDriver_FadeLeveler(float32_t audio, float32_t corr)
     return audio;
 }
 
+#ifdef USE_TWO_CHANNEL_AUDIO
+static float32_t AudioDriver_FadeLevelerotherchannel(float32_t audio, float32_t corr)
+{
+    static float32_t dc27 = 0.0;
+    static float32_t dc_insert = 0.0;
+
+    dc27 = adb.mtauR * dc27 + adb.onem_mtauR * audio;
+    dc_insert = adb.mtauI * dc_insert + adb.onem_mtauI * corr;
+    audio = audio + dc_insert - dc27;
+
+    return audio;
+}
+#endif
+
+
 
 //*----------------------------------------------------------------------------
 //* Function Name       : SAM_demodulation [DD4WH, december 2016]
@@ -3240,9 +3259,15 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             {
                 audio = AudioDriver_FadeLeveler(audio,corr[0]);
 #ifdef USE_TWO_CHANNEL_AUDIO
-                audiou = AudioDriver_FadeLeveler(audiou,corr[0]);
+                audiou = AudioDriver_FadeLevelerotherchannel(audiou, corr[0]);
 #endif
             }
+
+ /*
+            a->dc = a->mtauR * a->dc + a->onem_mtauR * audio;
+            							a->dc_insert = a->mtauI * a->dc_insert + a->onem_mtauI * corr[0];
+            audio += a->dc_insert - a->dc;
+   */
 
             adb.a_buffer[i] = audio;
 #ifdef USE_TWO_CHANNEL_AUDIO
@@ -3412,6 +3437,74 @@ static void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
     }
 
 }
+
+
+#if 1
+
+// Automatic noise reduction
+// Variable-leak LMS algorithm
+// taken from (c) Warren Pratts wdsp library 2016
+// GPLv3 licensed
+void AudioDriver_LeakyLmsNr (float32_t *in_buff, float32_t *out_buff, int buff_size, bool notch)
+{
+    int i, j, idx;
+    float32_t c0, c1;
+    float32_t y, error, sigma, inv_sigp;
+    float32_t nel, nev;
+		for (i = 0; i < buff_size; i++)
+		{
+			leakyLMS.d[leakyLMS.in_idx] = in_buff[i];
+
+			y = 0;
+			sigma = 0;
+
+			for (j = 0; j < leakyLMS.n_taps; j++)
+			{
+				idx = (leakyLMS.in_idx + j + leakyLMS.delay) & leakyLMS.mask;
+				y += leakyLMS.w[j] * leakyLMS.d[idx];
+				sigma += leakyLMS.d[idx] * leakyLMS.d[idx];
+			}
+			inv_sigp = 1.0 / (sigma + 1e-10);
+			error = leakyLMS.d[leakyLMS.in_idx] - y;
+
+			if(notch)
+			{ // automatic notch filter
+				out_buff[i] = error;
+			}
+			else
+			{ // noise reduction
+				out_buff[i] = y;
+			}
+//			leakyLMS.out_buff[2 * i + 1] = 0.0;
+
+			if((nel = error * (1.0 - leakyLMS.two_mu * sigma * inv_sigp)) < 0.0) nel = -nel;
+			if((nev = leakyLMS.d[leakyLMS.in_idx] - (1.0 - leakyLMS.two_mu * leakyLMS.ngamma) * y - leakyLMS.two_mu * error * sigma * inv_sigp) < 0.0) nev = -nev;
+			if (nev < nel)
+			{
+				if((leakyLMS.lidx += leakyLMS.lincr) > leakyLMS.lidx_max) leakyLMS.lidx = leakyLMS.lidx_max;
+			}
+			else
+			{
+				if((leakyLMS.lidx -= leakyLMS.ldecr) < leakyLMS.lidx_min) leakyLMS.lidx = leakyLMS.lidx_min;
+			}
+			leakyLMS.ngamma = leakyLMS.gamma * (leakyLMS.lidx * leakyLMS.lidx) * (leakyLMS.lidx * leakyLMS.lidx) * leakyLMS.den_mult;
+
+			c0 = 1.0 - leakyLMS.two_mu * leakyLMS.ngamma;
+			c1 = leakyLMS.two_mu * error * inv_sigp;
+
+			for (j = 0; j < leakyLMS.n_taps; j++)
+			{
+				idx = (leakyLMS.in_idx + j + leakyLMS.delay) & leakyLMS.mask;
+				leakyLMS.w[j] = c0 * leakyLMS.w[j] + c1 * leakyLMS.d[idx];
+			}
+			leakyLMS.in_idx = (leakyLMS.in_idx + leakyLMS.mask) & leakyLMS.mask;
+		}
+}
+
+#endif
+
+
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_processor
@@ -3479,41 +3572,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             adb.i_buffer[i] = (float32_t)src[i].l;
             adb.q_buffer[i] = (float32_t)src[i].r;
         }
-
-#if 0
-        // not used any more, the new SNAP mode uses/recycles the data already collected by the spectrum/waterfall FFT
-        // DD4WH Oct 2017
-        if (sc.snap) {
-            if (sc.state == 0)
-            {
-                for(i = 0; i < blockSize; i++)
-                {
-                    sc.counter += blockSize;
-                    if (sc.counter >= 4864)  // wait for 4864 samples until you gather new data for the FFT
-                    {
-
-                        // collect samples for snap carrier FFT
-                        sc.FFT_Samples[sc.samp_ptr] = adb.q_buffer[i];    // get floating point data for FFT for snap carrier
-                        sc.samp_ptr++;
-                        sc.FFT_Samples[sc.samp_ptr] = adb.i_buffer[i];
-                        sc.samp_ptr++;
-                        // obtain samples for snap carrier mode
-                        if(sc.samp_ptr >= FFT_IQ_BUFF_LEN2-1) //*2)
-                        {
-                            sc.samp_ptr = 0;
-                            sc.state    = 1;
-                            sc.counter = 0;
-                        }
-                    }
-                }
-            }
-            else if (sc.state == 1)
-            {
-                AudioDriver_SnapCarrier(); // tunes the mcHF to the largest signal in the filterpassband
-            }
-        }
-#endif
-
 
         // artificial amplitude imbalance for testing of the automatic IQ imbalance correction
         //    arm_scale_f32 (adb.i_buffer, 0.6, adb.i_buffer, blockSize);
@@ -3658,14 +3716,28 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 {
                     if((dsp_active & DSP_NOTCH_ENABLE) && (dmod_mode != DEMOD_CW) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))       // No notch in CW
                     {
-                        AudioDriver_NotchFilter(blockSizeDecim, adb.a_buffer);     // Do notch filter
+                    	if(ts.enable_leaky_LMS)
+                    	{
+                    	      AudioDriver_LeakyLmsNr(adb.a_buffer, adb.a_buffer, blockSizeDecim, 1);
+                    	}
+                        else
+                        {
+                        	  AudioDriver_NotchFilter(blockSizeDecim, adb.a_buffer);     // Do notch filter
+                        }
                     }
 
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
                     if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))      // Do this if enabled and "Pre-AGC" DSP NR enabled
                     {
-                        AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);
+                    	if(ts.enable_leaky_LMS)
+                    	{
+                    	      AudioDriver_LeakyLmsNr(adb.a_buffer, adb.a_buffer, blockSizeDecim, 0);
+                    	}
+                        else
+                        {
+                        	AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);     //
+                        }
                     }
 
                 }
@@ -3677,7 +3749,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 #ifdef USE_TWO_CHANNEL_AUDIO
                     if(use_stereo && !ads.af_disabled)
                     {
-//FIXME: in principle this works in all demod_modes, but crashes when I switch to CW!???
                          arm_iir_lattice_f32(&IIR_PreFilter2, adb.r_buffer, adb.r_buffer, blockSizeDecim);
                     }
 #endif
@@ -3708,7 +3779,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 //
                 if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ts.dsp_inhibit) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))     // Do DSP NR if enabled and if post-DSP NR enabled
                 {
-                    AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);
+                	if(ts.enable_leaky_LMS)
+                	{
+                	      AudioDriver_LeakyLmsNr(adb.a_buffer, adb.a_buffer, blockSizeDecim, 0);
+                	}
+                    else
+                    {
+                    	AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);     //
+                    }
                 }
                 //
 
@@ -3988,7 +4066,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         {
         	int16_t vals[2];
 
-        	#ifdef USE_TWO_CHANNEL_AUDIO
+#ifdef USE_TWO_CHANNEL_AUDIO
         	vals[0] = adb.a_buffer[i] * usb_audio_gain;
         	vals[1] = adb.b_buffer[i] * usb_audio_gain;
 #else
@@ -4993,230 +5071,3 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
 }
 
 
-#if 0
-// this version of the snap_carrier algorithm is not used anymore
-// we now use/recycle the data from the spectrum/waterfall FFT and do not use a specific FFT anymore
-// DD4WH Oct 2017
-
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_snap_carrier [DD4WH, march 2016]
-//* Object              :
-//* Object              : when called, it determines the carrier frequency inside the filter bandwidth and tunes RX to that frequency
-//* Input Parameters    : uses the new arm_rfft_fast_f32 for the FFT, that is 10 times (!!!) more accurate than the old arm_rfft_f32
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
-static void AudioDriver_SnapCarrier (void)
-{
-
-    const float32_t buff_len = FFT_IQ_BUFF_LEN2;
-    // the calculation of bin_BW is perfectly right at the moment, but we have to change it, if we switch to using the spectrum display zoom FFT to finetune
-    //    const float32_t bin_BW = (float32_t) (48000.0 * 2.0 / (buff_len * (1 << sd.magnify))); // width of a 1024 tap FFT bin = 46.875Hz, if FFT_IQ_BUFF_LEN2 = 2048 --> 1024 tap FFT
-    const float32_t bin_BW = (float32_t) (IQ_SAMPLE_RATE_F * 2.0 / (buff_len));
-    const int buff_len_int = FFT_IQ_BUFF_LEN2;
-
-    float32_t   FFT_MagData[FFT_IQ_BUFF_LEN2/2];
-
-    float32_t bw_LSB = 0.0;
-    float32_t bw_USB = 0.0;
-
-    float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
-
-    //	determine posbin (where we receive at the moment) from ts.iq_freq_mode
-    const int posbin = buff_len_int/4  - (buff_len_int * (AudioDriver_GetTranslateFreq()/(IQ_SAMPLE_RATE/8)))/16;
-    const float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-    const float32_t centre_f = FilterPathInfo[ts.filter_path].offset;
-    const float32_t offset = centre_f - (width/2.0);
-
-    //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
-    //	= determine bandwith separately for lower and upper sideband
-    switch(ts.dmod_mode)
-    {
-    case DEMOD_LSB:
-    {
-        bw_USB = 1000.0; // also "look" 1kHz away from carrier
-        bw_LSB = width;
-    }
-    break;
-    case DEMOD_USB:
-    {
-        bw_LSB = 1000.0; // also "look" 1kHz away from carrier
-        bw_USB = width;
-    }
-    break;
-    case DEMOD_CW:   // experimental feature for CW - morse code signals
-    {
-        if(ts.cw_offset_mode == CW_OFFSET_USB_SHIFT)  	// Yes - USB?
-        {
-            // set flag for USB-freq-correction
-            // set limits for Lbin and Ubin according to filter_settings: offset = centre frequency!!!
-            // Lbin = posbin + offset from 0Hz
-            // offset = centre_f - (width/2)
-            // Lbin = posbin + round (off/bin_BW)
-            // Ubin = posbin + round((off + width)/bin_BW)
-            bw_LSB = - 1.0 * offset;
-            bw_USB = offset + width;
-            //	        	Lbin = (float32_t)posbin + round (offset / bin_BW);
-            //	        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
-        }
-        else if(ts.cw_offset_mode == CW_OFFSET_LSB_SHIFT) 	// LSB?
-        {
-            bw_USB = - 1.0 * offset;
-            bw_LSB = offset + width;
-            //	        	Ubin = (float32_t)posbin - round (offset / bin_BW);
-            //		        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
-        }
-        else if(ts.cw_offset_mode == CW_OFFSET_AUTO_SHIFT)	 	// Auto mode?  Check flag
-        {
-            if(ts.cw_lsb)
-            {
-                bw_USB = - 1.0 * offset;
-                bw_LSB = offset + width;
-                //			        Ubin = (float32_t)posbin - round (offset / bin_BW);
-                //			        Lbin = (float32_t)posbin - round ((offset + width)/bin_BW);
-            }
-            else
-            {
-                bw_LSB = - 1.0 * offset;
-                bw_USB = offset + width;
-                //		        	Lbin = (float32_t)posbin + round (offset / bin_BW);
-                //		        	Ubin = (float32_t)posbin + round ((offset + width)/bin_BW);
-            }
-        }
-    }
-    break;
-    case DEMOD_SAM:
-    case DEMOD_AM:
-    {
-        bw_LSB = width;
-        bw_USB = width;
-    }
-    break;
-    }
-    // calculate upper and lower limit for determination of maximum magnitude
-    const float32_t Lbin = (float32_t)posbin - round(bw_LSB / bin_BW);
-    const float32_t Ubin = (float32_t)posbin + round(bw_USB / bin_BW); // the bin on the upper sideband side
-
-    /* NEVER USE THIS, THIS CAUSES BIG PROBLEMS (but I dunno why . . )
-     *
-     *    if(Lbin < 0)
-    {
-    	Lbin = 0;
-    }
-    if (Ubin > 255)
-    {
-    	Ubin = 255;
-    }
-     */
-    // 	FFT preparation
-    // we do not need to scale for this purpose !
-    // arm_scale_f32((float32_t *)sc.FFT_Samples, (float32_t)((1/ads.codec_gain_calc) * 1000.0), (float32_t *)sc.FFT_Samples, FFT_IQ_BUFF_LEN2);	// scale input according to A/D gain
-    //
-    // do windowing function on input data to get less "Bin Leakage" on FFT data
-    //
-    for(int i = 0; i < buff_len_int; i++)
-    {
-        //	Hanning 1.36
-        //sc.FFT_Windat[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
-        // Hamming 1.22
-        //sc.FFT_Windat[i] = (float32_t)((0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN2-1)))) * sc.FFT_Samples[i]);
-        // Blackman 1.75
-        float32_t help_sample = (0.42659 - (0.49656*arm_cos_f32((2.0*PI*(float32_t)i)/(buff_len-1.0))) + (0.076849*arm_cos_f32((4.0*PI*(float32_t)i)/(buff_len-1.0)))) * sc.FFT_Samples[i];
-        sc.FFT_Samples[i] = help_sample;
-    }
-
-    // run FFT
-    //		arm_rfft_f32((arm_rfft_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples));	// Do FFT
-    //		arm_rfft_fast_f32((arm_rfft_fast_instance_f32 *)&sc.S,(float32_t *)(sc.FFT_Windat),(float32_t *)(sc.FFT_Samples),0);	// Do FFT
-    arm_rfft_fast_f32(&sc.S,sc.FFT_Samples,sc.FFT_Samples,0);	// Do FFT
-    //
-    // Calculate magnitude
-    // as I understand this, this takes two samples and calculates ONE magnitude from this --> length is FFT_IQ_BUFF_LEN2 / 2
-    arm_cmplx_mag_f32(sc.FFT_Samples, FFT_MagData,(buff_len_int/2));
-    //
-    // putting the bins in frequency-sequential order!
-    // it puts the Magnitude samples into FFT_Samples again
-    // the samples are centred at FFT_IQ_BUFF_LEN2 / 2, so go from FFT_IQ_BUFF_LEN2 / 2 to the right and fill the buffer sc.FFT_Samples,
-    // when you have come to the end (FFT_IQ_BUFF_LEN2), continue from FFT_IQ_BUFF_LEN2 / 2 to the left until you have reached sample 0
-    //
-    for(int i = 0; i < (buff_len_int/2); i++)
-    {
-        if(i < (buff_len_int/4))	 		// build left half of magnitude data
-        {
-            sc.FFT_Samples[i] = FFT_MagData[i + buff_len_int/4];	// get data
-        }
-        else	 							// build right half of magnitude data
-        {
-            sc.FFT_Samples[i] = FFT_MagData[i - buff_len_int/4];	// get data
-        }
-    }
-    //####################################################################
-    if (sc.FFT_number == 0)
-    {
-        // look for maximum value and save the bin # for frequency delta calculation
-        float32_t maximum = 0.0;
-        float32_t maxbin = 1.0;
-        float32_t delta = 0.0;
-
-        for (int c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
-        {
-            if (maximum < sc.FFT_Samples[c])
-            {
-                maximum = sc.FFT_Samples[c];
-                maxbin = c;
-            }
-        }
-
-        // ok, we have found the maximum, now save first delta frequency
-        delta = (maxbin - (float32_t)posbin) * bin_BW;
-
-        help_freq = help_freq + delta;
-
-        //        if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq + centre_f; // tuning in CW mode for passband centre!
-
-        help_freq = help_freq * ((float32_t)TUNE_MULT);
-        // set frequency of Si570 with 4 * dialfrequency
-        df.tune_new = help_freq;
-        // request a retune just by changing the frequency
-
-        //        help_freq = (float32_t)df.tune_new / 4.0;
-        sc.FFT_number = 1;
-        sc.state    = 0;
-        arm_fill_f32(0.0,sc.FFT_Samples,buff_len_int);
-    }
-    else
-    {
-        // ######################################################
-
-        // and now: fine-tuning:
-        //	get amplitude values of the three bins around the carrier
-
-        float32_t bin1 = sc.FFT_Samples[posbin-1];
-        float32_t bin2 = sc.FFT_Samples[posbin];
-        float32_t bin3 = sc.FFT_Samples[posbin+1];
-
-        if (bin1+bin2+bin3 == 0.0) bin1= 0.00000001; // prevent divide by 0
-
-        // estimate frequency of carrier by three-point-interpolation of bins around maxbin
-        // formula by (Jacobsen & Kootsookos 2007) equation (4) P=1.36 for Hanning window FFT function
-
-        float32_t delta = (bin_BW * (1.75 * (bin3 - bin1)) / (bin1 + bin2 + bin3));
-        if(delta > bin_BW) delta = 0.0;
-
-        // set frequency variable with delta2
-        help_freq = help_freq + delta;
-        //       if(ts.dmod_mode == DEMOD_CW) help_freq = help_freq - centre_f; // tuning in CW mode for passband centre!
-
-        help_freq = help_freq * ((float32_t)TUNE_MULT);
-        // set frequency of Si570 with 4 * dialfrequency
-        df.tune_new = help_freq;
-        // request a retune just by changing the frequency
-
-        sc.state = 0; // reset flag for FFT sample collection (used in audio_rx_driver)
-        sc.snap = 0; // reset flag for button press (used in ui_driver)
-        sc.FFT_number = 0; // reset flag to first FFT
-    }
-}
-#endif

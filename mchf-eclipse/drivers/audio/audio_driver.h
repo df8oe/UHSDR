@@ -323,7 +323,7 @@ typedef struct SMeter
 #define	CUST_AGC_OFFSET_VAL	30	// RF Gain offset value used in calculations
 #define	CUST_AGC_VAL_DEFAULT	17.8	// Value for "medium" AGC value
 //
-#define	LINE_OUT_SCALING_FACTOR	10		// multiplication of audio for fixed LINE out level (nominally 1vpp)
+#define	LINE_OUT_SCALING_FACTOR	10 // was 10		// multiplication of audio for fixed LINE out level (nominally 1vpp)
 //
 #define	LINE_IN_GAIN_RESCALE	20		// multiplier for line input gain
 #define	MIC_GAIN_RESCALE	2	// divisor for microphone gain setting
@@ -582,12 +582,6 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t *audioDst, int1
 extern AudioDriverState	ads;
 extern __IO SMeter              sm;
 
-// change this to 2048 (=1024 tap FFT), if problems with spectrum display with 7k5 SAM mode persist!
-#define FFT_IQ_BUFF_LEN2 2048
-//#define FFT_IQ_BUFF_LEN2 4096 // = 2048 tap FFT !!! this is very very accurate
-
-#ifdef USE_SNAP
-
 typedef struct SnapCarrier
 {
     // FFT state
@@ -595,19 +589,53 @@ typedef struct SnapCarrier
 //    arm_cfft_radix4_instance_f32    S_CFFT;  // old, depricated FFT routine, do not use
 // 	  this was responsible for the initial inaccuracy of the snap carrier routine!
 
-	arm_rfft_fast_instance_f32           S; // new and faster real FFT routine
+//	arm_rfft_fast_instance_f32           S; // new and faster real FFT routine
 
     // Current data ptr
-    ulong   samp_ptr;
-    int8_t FFT_number;
-    int16_t counter;
+//    ulong   samp_ptr;
+//    int8_t FFT_number;
+//    int16_t counter;
     // State machine current state
-    uchar   state;
+//    uchar   state;
     bool	snap;
 
 } SnapCarrier;
 
 extern SnapCarrier sc;
-#endif
+
+#define LEAKYLMSDLINE_SIZE 256 //512 // was 256 //2048   // dline_size
+// 1024 funktioniert nicht
+typedef struct
+{// Automatic noise reduction
+	// Variable-leak LMS algorithm
+	// taken from (c) Warren Pratts wdsp library 2016
+	// GPLv3 licensed
+//	#define DLINE_SIZE 256 //512 //2048  // dline_size
+	int16_t n_taps; // =     64; //64;                       // taps
+	int16_t delay; // =    16; //16;                       // delay
+	int dline_size; // = LEAKYLMSDLINE_SIZE;
+	//int ANR_buff_size = FFT_length / 2.0;
+	int position;// = 0;
+	float32_t two_mu;// =   0.0001;   typical: 0.001 to 0.000001  = 1000 to 1 -> div by 1000000     // two_mu --> "gain"
+	uint32_t two_mu_int;
+	float32_t gamma;// =    0.1;      typical: 1.000 to 0.001  = 1000 to 1 -> div by 1000           // gamma --> "leakage"
+	uint32_t gamma_int;
+	float32_t lidx;// =     120.0;                      // lidx
+	float32_t lidx_min;// = 0.0;                      // lidx_min
+	float32_t lidx_max;// = 200.0;                      // lidx_max
+	float32_t ngamma;// =   0.001;                      // ngamma
+	float32_t den_mult;// = 6.25e-10;                   // den_mult
+	float32_t lincr;// =    1.0;                      // lincr
+	float32_t ldecr;// =    3.0;                     // ldecr
+	//int ANR_mask = ANR_dline_size - 1;
+	int mask;// = DLINE_SIZE - 1;
+	int in_idx;// = 0;
+	float32_t d [LEAKYLMSDLINE_SIZE];
+	float32_t w [LEAKYLMSDLINE_SIZE];
+	uint8_t on;// = 0;
+	uint8_t notch;// = 0;
+} lLMS;
+
+extern lLMS leakyLMS;
 
 #endif
