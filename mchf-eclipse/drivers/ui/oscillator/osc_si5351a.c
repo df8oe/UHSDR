@@ -18,7 +18,7 @@
 #include <math.h>
 
 #include "uhsdr_hw_i2c.h"
-#include "ui_si5351a.h"
+#include "osc_si5351a.h"
 
 #ifdef USE_OSC_SI5351A
 // Will be removed and made a dynamic config element
@@ -180,14 +180,15 @@ static bool Si5351a_ValidateConfig(Si5351a_Config_t* config)
 	// we check against the data sheet and known limitations.
 	bool retval =  (config->multisynth_divider == 4 || config->multisynth_divider == 6 || (config->multisynth_divider >= 8 && config->multisynth_divider <= SI5351_MAX_DIVIDER ));
 
-	// we check that only the relevant bits are set and no others, this will ensure no problems when setting the register using or.
-	// the value encodes the exponent of rdiv in the bits [6:4] , i.e. 0 -> 1, 7 -> 128
 
 	if (retval == true && config->phasedOutput == true)
 	{
 		retval = config->multisynth_divider <= SI5351_MAX_DIVIDER_PHASE90 ;
 
 	}
+
+	// we check that only the relevant bits are set and no others, this will ensure no problems when setting the register using or.
+	// the value encodes the exponent of rdiv in the bits [6:4] , i.e. 0 -> 1, 7 -> 128
 
 	if (retval == true)
 	{

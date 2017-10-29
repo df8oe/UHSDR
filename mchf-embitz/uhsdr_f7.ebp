@@ -580,7 +580,10 @@
 		<Unit filename="..\mchf-eclipse\drivers\ui\oscillator\soft_tcxo.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\ui\oscillator\ui_si570.c">
+		<Unit filename="..\mchf-eclipse\drivers\ui\oscillator\osc_si570.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\ui\oscillator\osc_si5351a.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\ui\radio_management.c">
