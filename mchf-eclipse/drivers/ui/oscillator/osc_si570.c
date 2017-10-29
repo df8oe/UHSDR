@@ -21,7 +21,7 @@
 #include <stdio.h>
 
 #include "uhsdr_hw_i2c.h"
-#include "ui_si570.h"
+#include "osc_si570.h"
 
 // -------------------------------------------------------------------------------------
 // Local Oscillator

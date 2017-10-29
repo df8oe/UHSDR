@@ -14,8 +14,8 @@
 // Common
 #include "osc_interface.h"
 #include "uhsdr_board.h"
-#include "ui_si570.h"
-#include "ui_si5351a.h"
+#include "osc_si570.h"
+#include "osc_si5351a.h"
 #include "soft_tcxo.h"
 // -------------------------------------------------------------------------------------
 // Local Oscillator

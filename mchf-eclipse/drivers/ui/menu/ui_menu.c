@@ -34,8 +34,8 @@
 #include "soft_tcxo.h"
 #include "cw_decoder.h"
 
-#include "ui_si5351a.h"
-#include "ui_si570.h"
+#include "osc_si5351a.h"
+#include "osc_si570.h"
 
 #define CLR_OR_SET_BITMASK(cond,value,mask) ((value) = (((cond))? ((value) | (mask)): ((value) & ~(mask))))
 
