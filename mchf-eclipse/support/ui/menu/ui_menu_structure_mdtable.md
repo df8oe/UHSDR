@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-10-28T08:51:31  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-10-29T12:21:02  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-10-28T08:51:31  by "./ui_menu_structure_mdtable.py"
+generated at  2017-10-29T12:21:02  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -135,13 +135,13 @@ generated at  2017-10-28T08:51:31  by "./ui_menu_structure_mdtable.py"
 | **TX Carrier Colour**         (           MENU_SPECTRUM_CENTER_LINE_COLOUR) | Colour of the vertical line indicating the TX carrier frequency in the spectrum or waterdall display. | 
 | **Spectrum FFT Wind.**        (            CONFIG_SPECTRUM_FFT_WINDOW_TYPE) | Selects the window algorithm for the spectrum FFT. For low spectral leakage, Hann, Hamming or Blackman window is recommended. | 
 | **Scope Light**               (                    MENU_SCOPE_LIGHT_ENABLE) | The scope uses bars (NORMAL) or points (LIGHT) to represent data. LIGHT is a little less resource intensive. | 
-| **Scope 1/Speed**             (                           MENU_SCOPE_SPEED) | Lower Values: Higher refresh rate              | 
+| **Scope 1/Speed**             (                           MENU_SCOPE_SPEED) | Lower Values: Higher refresh rate. Set to 0 to disable scope. | 
 | **Scope AGC Adj.**            (                      MENU_SCOPE_AGC_ADJUST) | Adjusting of scope / waterfall AGC for fitting graphs to screen | 
 | **Scope Trace Colour**        (                    MENU_SCOPE_TRACE_COLOUR) | Set colour of scope                            | 
 | **Scope Grid Colour**         (                     MENU_SCOPE_GRID_COLOUR) | Set colour of scope grid                       | 
 | **Scope Div.**                (                     MENU_SCOPE_DB_DIVISION) | Set rf range for scope                         | 
 | **Scope NoSig Adj.**          (                    MENU_SCOPE_NOSIG_ADJUST) | Set scope line corresponding to NO SIGNAL      | 
-| **Wfall 1/Speed**             (                           MENU_WFALL_SPEED) | Lower Values: Higher refresh rate.             | 
+| **Wfall 1/Speed**             (                           MENU_WFALL_SPEED) | Lower Values: Higher refresh rate. Set to 0 to disable waterfall. | 
 | **Wfall Colours**             (                    MENU_WFALL_COLOR_SCHEME) | Select colour scheme for waterfall display.    | 
 | **Wfall Step Size**           (                       MENU_WFALL_STEP_SIZE) | How many lines are moved in a single screen update | 
 | **Wfall Contrast**            (                        MENU_WFALL_CONTRAST) | Adjust to fit your personal input level range to displayable colour range for waterfall | 
