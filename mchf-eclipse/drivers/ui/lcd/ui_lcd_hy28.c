@@ -589,6 +589,13 @@ inline void UiLcdHy28_SpiLcdCsEnable() {
 
 void UiLcdHy28_ParallelInit()
 {
+	GPIO_InitTypeDef GPIO_InitStructure;
+	GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+	GPIO_InitStructure.Pull = GPIO_NOPULL;
+
+    GPIO_InitStructure.Pin = LCD_RESET;
+    HAL_GPIO_Init(LCD_RESET_PIO, &GPIO_InitStructure);
 }
 
 
@@ -885,10 +892,13 @@ static void UiLcdHy28_WriteRAM_Prepare()
     {
 #ifdef USE_DRIVER_RA8875
         LCD_REG = 0x02;
+#elif defined(USE_GFX_ILI9486)
+        LCD_REG = 0x2c;
 #else
         LCD_REG = 0x22;
+
+#endif
         __DMB();
-#endif	
     }
 }
 
@@ -918,19 +928,16 @@ void UiLcdHy28_SetActiveWindow(uint16_t XLeft, uint16_t XRight, uint16_t YTop,
     UiLcdRa8875_WriteReg_16bit(0x36, YBottom);
 
 #elif defined(USE_GFX_ILI9486)
-    UiLcdHy28_WriteIndexSpi(0x2a);
-    UiLcdHy28_WriteDataSpi(XLeft>>8);                   // Horizontal GRAM Start Address
-    UiLcdHy28_WriteDataSpi(XLeft&0xff);
-    UiLcdHy28_WriteDataSpi((XRight)>>8);    // Horizontal GRAM End Address  -1
-    UiLcdHy28_WriteDataSpi((XRight)&0xff);
-    UiLcdHy28_LcdSpiFinishTransfer();
+	UiLcdHy28_WriteReg(0x2a,XLeft>>8);
+	UiLcdHy28_WriteData(XLeft&0xff);
+	UiLcdHy28_WriteData((XRight)>>8);
+	UiLcdHy28_WriteData((XRight)&0xff);
 
-    UiLcdHy28_WriteIndexSpi(0x2b);
-    UiLcdHy28_WriteDataSpi(YTop>>8);                   // Horizontal GRAM Start Address
-    UiLcdHy28_WriteDataSpi(YTop&0xff);
-    UiLcdHy28_WriteDataSpi((YBottom)>>8);    // Horizontal GRAM End Address  -1
-    UiLcdHy28_WriteDataSpi((YBottom)&0xff);
-    UiLcdHy28_LcdSpiFinishTransfer();
+	UiLcdHy28_WriteReg(0x2b,YTop>>8);
+	UiLcdHy28_WriteData(YTop&0xff);
+	UiLcdHy28_WriteData((YBottom)>>8);
+	UiLcdHy28_WriteData((YBottom)&0xff);
+
 #else
     UiLcdHy28_WriteReg(0x52, XLeft);    // Horizontal GRAM Start Address
     UiLcdHy28_WriteReg(0x53, XRight);    // Horizontal GRAM End Address  -1
@@ -1727,6 +1734,7 @@ static uint16_t UiLcdHy28_InitA(uint32_t display_type)
  * @param devicecode_ptr pointer to a variable to store the device code of the controller in
  * @returns 0 if no display detected, DISPLAY_HY28x_xxx otherwise, see header
  */
+
 uint8_t UiLcdHy28_Init()
 {
 
@@ -1752,29 +1760,34 @@ uint8_t UiLcdHy28_Init()
 
 #elif defined(USE_GFX_ILI9486)
 
-	#ifdef USE_DISPLAY_SPI
-    	mchf_display.use_spi = true;
-	#else
-    	mchf_display.use_spi = false;
-	#endif
-
     mchf_display.lcd_cs = LCD_CS;
     mchf_display.lcd_cs_pio = LCD_CS_PIO;
 
-    if(mchf_display.use_spi)
+    //first checking the parallel configuration, if it fails then go SPI mode
+    UiLcdHy28_FSMCConfig();
+    UiLcdHy28_ParallelInit();
+    UiLcdHy28_Reset();
+
+    uint16_t LcdCtrlType;
+    LcdCtrlType=UiLcdHy28_ReadReg(0xd3);
+    LcdCtrlType=LCD_RAM;	//first dummy read
+    LcdCtrlType=(LCD_RAM&0xff)<<8;
+    LcdCtrlType|=LCD_RAM&0xff;
+    if((LcdCtrlType==0x9486) || (LcdCtrlType==0x9488))
     {
-    	UiLcdHy28_SpiInit(HY28BHISPEED);
+    	mchf_display.use_spi = false;
+    	mchf_display.DeviceCode=LcdCtrlType;
     }
     else
     {
-        UiLcdHy28_ParallelInit();
-        UiLcdHy28_FSMCConfig();
+    	mchf_display.use_spi = true;
+        UiLcdHy28_SpiInit(HY28BHISPEED);
+        UiLcdHy28_Reset();
+        mchf_display.DeviceCode=0x9486;
     }
 
-    UiLcdHy28_Reset();
-    UiLcdHy28_ILI9486init();
 
-    mchf_display.DeviceCode=0x9486;
+    UiLcdHy28_ILI9486init();
     uint8_t retval;
 
     if(mchf_display.use_spi)
@@ -1786,6 +1799,7 @@ uint8_t UiLcdHy28_Init()
     {
     	mchf_display.display_type = DISPLAY_HY28B_PARALLEL;
         retval = DISPLAY_HY28B_PARALLEL;
+        UiLcdHy28_BacklightInit();
     }
 #else
 
