@@ -39,9 +39,21 @@ before_deploy:
     - make docs > /dev/null && tar -czf docs.tar.gz -C .. docs
 deploy:
   provider: releases
-  skip_cleanup: true
   api_key:
     secure: "SECURE TOKEN MISSING"
+  file: 
+  - build-fw/fw-mchf.bin
+  - build-fw-f7/fw-ovi40.bin
+  - build-bl/bl-mchf.bin
+  - build-bl-f7/bl-ovi40.bin
+  - build-fw/fw-mchf.dfu
+  - build-fw-f7/fw-ovi40.dfu
+  - build-bl/bl-mchf.dfu
+  - build-bl-f7/bl-ovi40.dfu
+  skip_cleanup: true
   on:
-    repo: df8oe/mchf-github
+    repo: sp9bsl/UHSDR
     tags: true
+    branches: 
+      only:
+      - wip-sp9bsl-4-new-lcds
