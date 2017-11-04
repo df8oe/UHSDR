@@ -1620,6 +1620,7 @@ static void quisk_filt_destroy(struct quisk_cfFilter * filter)
     }
 }
 
+#if 0
 /*---------------------------------------------------------------------------*\
 
   FUNCTIONS...: quisk_cfInterpDecim
@@ -1674,4 +1675,4 @@ static int quisk_cfInterpDecim(COMP * cSamples, int count, struct quisk_cfFilter
     }
     return nOut;
 }
-
+#endif
