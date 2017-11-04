@@ -994,6 +994,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             clr = Red;
         }
         break;
+#if 0
     case MENU_AGC_MODE: // AGC mode
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_mode,
                                               0,
@@ -1066,7 +1067,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options, 32, "  %d", ts.rf_gain);
         break;
-
+#endif
     case MENU_AGC_WDSP_MODE: // AGC mode
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_mode,
                                               0, //
@@ -1202,7 +1203,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options, 32, "  %dms", ts.agc_wdsp_hang_time);
         break;
-
+#if 0
         case MENU_AGC_WDSP_SWITCH:     // Enable/Disable wdsp AGC
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp,
                                                   0,
@@ -1219,7 +1220,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 txt_ptr = "Standard AGC";        //
             }
             break;
-
+#endif
             case MENU_AGC_WDSP_HANG_ENABLE:     //
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_hang_enable,
                                                   0,
@@ -1360,7 +1361,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 */
 
         // RX Codec gain adjust
-    case MENU_CUSTOM_AGC:       // Custom AGC adjust
+#if 0
+                case MENU_CUSTOM_AGC:       // Custom AGC adjust
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_custom_decay,
                                               0,
                                               AGC_CUSTOM_MAX,
@@ -1394,7 +1396,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options,32, "  %d", ts.agc_custom_decay);
         break;
-    // A/D Codec Gain/Mode setting/adjust
+#endif
+        // A/D Codec Gain/Mode setting/adjust
     case MENU_CODEC_GAIN_MODE:
         UiDriverMenuItemChangeUInt8(var, mode, &ts.rf_codec_gain,
                                     0,
@@ -2616,6 +2619,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         else if(ts.rx_gain[RX_AUDIO_SPKR].max <= MAX_VOLUME_YELLOW_THRESH)
             clr = Orange;
         break;
+#if 0
     case CONFIG_MAX_RX_GAIN:    // maximum RX gain setting
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.max_rf_gain,
                                               0,
@@ -2629,6 +2633,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options,32, "    %u", ts.max_rf_gain);
         break;
+#endif
     case CONFIG_LINEOUT_GAIN:
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.lineout_gain,
                                               LINEOUT_GAIN_MIN,

@@ -688,10 +688,10 @@ typedef struct TransceiverState
 
 
     // AGC mode
-    uint8_t	agc_mode;
-    uint8_t	agc_custom_decay;
+//    uint8_t	agc_mode;
+//    uint8_t	agc_custom_decay;
 
-    uint8_t	max_rf_gain;
+//    uint8_t	max_rf_gain;
 
     // Eth to UI driver requests flag
     uint8_t	LcdRefreshReq;

@@ -3436,17 +3436,9 @@ static void UiDriver_CheckEncoderTwo()
 				case ENC_TWO_MODE_RF_GAIN:
 					if(ts.dmod_mode != DEMOD_FM)	 	// is this *NOT* FM?  Change RF gain
 					{
-						if(!ts.agc_wdsp)
-						{
-							// Convert to Audio Gain incr/decr
-							ts.rf_gain = change_and_limit_int(ts.rf_gain,pot_diff_step,0,MAX_RF_GAIN);
-							AudioManagement_CalcRFGain();		// convert from user RF gain value to "working" RF gain value
-						}
-						else
-						{
+
 							ts.agc_wdsp_thresh = change_and_limit_int(ts.agc_wdsp_thresh,pot_diff_step,-20,120);
 							AudioDriver_SetupAgcWdsp();
-						}
 					}
 					else	 		// it is FM - change squelch setting
 					{
@@ -4077,33 +4069,17 @@ static void UiDriver_DisplayRfGain(bool encoder_active)
 	char	temp[5];
 	const char* label = "???";
 	int32_t value;
-	if(ts.agc_wdsp && ts.dmod_mode != DEMOD_FM) // WDSP AGC AND NOT FM
+	if(ts.dmod_mode != DEMOD_FM) // NOT FM
 	{
 		label = "AGC";
 		value = ts.agc_wdsp_thresh;
 	}
-	else if(ts.dmod_mode == DEMOD_FM) // in both AGCs, use SQL for FM
+	else // use SQL for FM
 	{
 		label = "SQL";
 		value = ts.fm_sql_threshold;
 	}
-	else // this is Standard AGC and NOT FM
-	{
-		if(encoder_active)
-		{
-			//
-			// set color as warning that RX sensitivity is reduced
-			//
-			if(ts.rf_gain < 20)
-				color = Red;
-			else if(ts.rf_gain < 30)
-				color = Orange;
-			else if(ts.rf_gain < 40)
-				color = Yellow;
-		}
-		label = "RFG";
-		value = ts.rf_gain;
-	}
+
 	/*
     if(ts.dmod_mode != DEMOD_FM) // && !ts.agc_wdsp)	 	// If not FM, use RF gain
     {
