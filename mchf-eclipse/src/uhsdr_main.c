@@ -257,7 +257,7 @@ void TransceiverStateInit(void)
     ts.waterfall.nosig_adjust = WATERFALL_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for waterfall
 #endif
     ts.spectrum_size	= SPECTRUM_SIZE_DEFAULT;		// adjustment for waterfall size
-    ts.fft_window_type = FFT_WINDOW_DEFAULT;			// FFT Windowing type
+//    ts.fft_window_type = FFT_WINDOW_DEFAULT;			// FFT Windowing type
     ts.dvmode = false;							        // disable "DV" mode RX/TX functions by default
 
     ts.txrx_switch_audio_muting_timing = 0;					// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"

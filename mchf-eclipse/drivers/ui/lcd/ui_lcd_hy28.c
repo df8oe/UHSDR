@@ -393,8 +393,9 @@ typedef struct
 } lcd_bulk_transfer_header_t;
 
 static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len);
+#ifdef USE_GFX_ILI9486
 void UiLcdHy28_ILI9486init(void);
-
+#endif
 
 static inline bool UiLcdHy28_SpiDisplayUsed()
 {
