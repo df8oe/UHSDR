@@ -75,10 +75,10 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_FM_DET_SUBAUDIBLE_TONE, NULL, "FM Sub Tone Det", UiMenuDesc("Enable detection of CTCSS tones during FM receive. RX is muted unless tone is detected.") },
     { MENU_BASE, MENU_ITEM, MENU_FM_TONE_BURST_MODE, NULL, "FM Tone Burst", UiMenuDesc("Enabled sending of short tone at beginning of each FM transmission. Used to open repeaters. Available frequencies are 1750 Hz and 2135 Hz.") },
     { MENU_BASE, MENU_ITEM, MENU_FM_DEV_MODE, NULL, "FM Deviation", UiMenuDesc("Select between normal and narrow deviation (5 and 2.5kHz) for FM RX/TX") },
-    { MENU_BASE, MENU_ITEM, MENU_RF_GAIN_ADJ, NULL, "RF Gain", UiMenuDesc("RF Receive Gain. This setting is also accessible via Encoder 2, RFG.") }, // also via knob
-    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SWITCH, NULL, "AGC Mode Switch", UiMenuDesc("You can choose between two different AGC systems here: ´Standard AGC´ and ´WDSP AGC´.") },
-    { MENU_BASE, MENU_ITEM, MENU_AGC_MODE, NULL, "AGC STD Mode", UiMenuDesc("Standard AGC: Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain") },
-    { MENU_BASE, MENU_ITEM, MENU_CUSTOM_AGC, NULL, "AGC STD Custom Speed (+=Slower)", UiMenuDesc("Standard AGC:  If AGC STD Mode is set to CUSTOM, this controls the speed setting of AGC") },
+//    { MENU_BASE, MENU_ITEM, MENU_RF_GAIN_ADJ, NULL, "RF Gain", UiMenuDesc("RF Receive Gain. This setting is also accessible via Encoder 2, RFG.") }, // also via knob
+//    { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SWITCH, NULL, "AGC Mode Switch", UiMenuDesc("You can choose between two different AGC systems here: ´Standard AGC´ and ´WDSP AGC´.") },
+//    { MENU_BASE, MENU_ITEM, MENU_AGC_MODE, NULL, "AGC STD Mode", UiMenuDesc("Standard AGC: Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain") },
+//    { MENU_BASE, MENU_ITEM, MENU_CUSTOM_AGC, NULL, "AGC STD Custom Speed (+=Slower)", UiMenuDesc("Standard AGC:  If AGC STD Mode is set to CUSTOM, this controls the speed setting of AGC") },
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_MODE, NULL, "AGC WDSP Mode", UiMenuDesc("Choose a bundle of preset AGC parameters for the WDSP AGC: FAST / MED / SLOW / LONG / very LONG or switch OFF the AGC.") },
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_SLOPE, NULL, "AGC WDSP Slope", UiMenuDesc("Slope of the AGC is the difference between the loudest signal and the quietest signal after the AGC action has taken place. Given in dB.") },
     { MENU_BASE, MENU_ITEM, MENU_AGC_WDSP_TAU_DECAY, NULL, "AGC WDSP Decay", UiMenuDesc("Time constant for the AGC decay (speed of recovery of the AGC gain) in milliseconds.") },

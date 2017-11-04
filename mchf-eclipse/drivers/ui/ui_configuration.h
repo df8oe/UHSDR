@@ -234,14 +234,14 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 //
 #define EEPROM_FREQ_CAL						75      // Frequency calibration
 #define EEPROM_NB_SETTING					76      // Noise Blanker Setting
-#define EEPROM_AGC_MODE						77      // AGC setting
+//#define EEPROM_AGC_MODE						77      // AGC setting
 #define EEPROM_MIC_GAIN						78      // Mic gain setting
 #define EEPROM_LINE_GAIN					79      // Line gain setting
 #define EEPROM_SIDETONE_FREQ				80      // Sidetone frequency (Hz)
 #define EEPROM_SPEC_SCOPE_SPEED				81      // Spectrum Scope Speed
 #define EEPROM_SPECTRUM_FILTER				82      // Spectrum Scope filter strength
-#define EEPROM_RX_GAIN						83      // RX Gain setting (e.g. minimum RF gain as might be used for manual AGC)
-#define EEPROM_AGC_CUSTOM_DECAY				84      // Custom setting for AGC decay rate
+//#define EEPROM_RX_GAIN						83      // RX Gain setting (e.g. minimum RF gain as might be used for manual AGC)
+//#define EEPROM_AGC_CUSTOM_DECAY				84      // Custom setting for AGC decay rate
 #define EEPROM_SPECTRUM_TRACE_COLOUR		85      // Custom setting for spectrum scope trace colour
 #define EEPROM_SPECTRUM_GRID_COLOUR			86      // Custom setting for spectrum scope grid colour
 #define EEPROM_SPECTRUM_SCALE_COLOUR		87      // Custom setting for spectrum scope frequency scale colour
@@ -345,7 +345,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_DSP_NOTCH_DECOR_BUFLEN		164     // DSP Notch De-correlator buffer length
 #define EEPROM_DSP_NOTCH_CONV_RATE			165     // DSP Notch convergence rate
 //
-#define EEPROM_MAX_RX_GAIN					166     // Maximum RX gain - adjusts maximum allowed AGC gain in S-units
+//#define EEPROM_MAX_RX_GAIN					166     // Maximum RX gain - adjusts maximum allowed AGC gain in S-units
 #define EEPROM_TX_AUDIO_COMPRESS			167     // TX audio compressor setting, used to calculate other values
 //
 #define EEPROM_TX_IQ_80M_GAIN_BALANCE_TRANS_OFF		168     // IQ Gain balance for AM reception

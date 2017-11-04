@@ -609,7 +609,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         if(txrx_mode_final == TRX_MODE_RX)
         {
                 // remember current agc
-                ads.agc_holder = ads.agc_val;
+//                ads.agc_holder = ads.agc_val;
         }
         else
         {

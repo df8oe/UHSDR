@@ -105,11 +105,8 @@ void TransceiverStateInit(void)
     ts.rx_gain[RX_AUDIO_DIG].active_value = 1;			// this variable is used in the active RX audio processing function
     ts.rf_gain			= DEFAULT_RF_GAIN;		//
     ts.lineout_gain     = LINEOUT_GAIN_DEFAULT;
-    ts.max_rf_gain		= MAX_RF_GAIN_DEFAULT;			// setting for maximum gain (e.g. minimum S-meter reading)
     ts.rf_codec_gain	= DEFAULT_RF_CODEC_GAIN_VAL;		// Set default RF gain (0 = lowest, 8 = highest, 9 = "Auto")
     ts.rit_value		= 0;					// RIT value
-    ts.agc_mode			= AGC_DEFAULT;			// AGC setting
-    ts.agc_custom_decay	= AGC_CUSTOM_DEFAULT;			// Default setting for AGC custom setting - higher = slower
 
     ts.cw_sidetone_gain			= DEFAULT_SIDETONE_GAIN;	// Sidetone gain
 
@@ -300,7 +297,7 @@ void TransceiverStateInit(void)
     ts.treble_gain = 0;						// gain of the high shelf EQ filter
     ts.tx_bass_gain = 4;					// gain of the TX low shelf EQ filter
     ts.tx_treble_gain = 4;					// gain of the TX high shelf EQ filter
-    ts.s_meter = 0;							// S-Meter configuration, 0 = old school, 1 = dBm-based, 2=dBm/Hz-based
+    ts.s_meter = 1;							// S-Meter configuration, 0 = old school, 1 = dBm-based, 2=dBm/Hz-based
     ts.display_dbm = 0;						// style of dBm display, 0=OFF, 1= dbm, 2= dbm/Hz
 //    ts.dBm_count = 0;						// timer start
     ts.tx_filter = 0;						// which TX filter has been chosen by the user

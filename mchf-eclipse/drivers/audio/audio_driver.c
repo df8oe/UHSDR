@@ -637,7 +637,7 @@ void AudioDriver_Init(void)
     sm.s_count	= 0;
     sm.curr_max	= 0;
     sm.gain_calc = 0;	// gain calculation used for S-meter
-
+#if 0
     ads.agc_val = 1;			// Post AF Filter gain (AGC)
     ads.agc_var = 1;			// used in AGC processing
     ads.agc_calc = 1;			// used in AGC processing
@@ -646,7 +646,7 @@ void AudioDriver_Init(void)
     {
         adb.agc_valbuf[x] = 1;
     }
-
+#endif
     ads.alc_val = 1;			// init TX audio auto-level-control (ALC)
     //
     ads.fm_sql_avg = 0;			// init FM squelch averaging
@@ -666,13 +666,13 @@ void AudioDriver_Init(void)
 
     //
     //
-    AudioManagement_CalcAGCDecay();	// initialize AGC decay ("hang time") values
+//    AudioManagement_CalcAGCDecay();	// initialize AGC decay ("hang time") values
     //
-    AudioManagement_CalcRFGain();		// convert from user RF gain value to "working" RF gain value
+//    AudioManagement_CalcRFGain();		// convert from user RF gain value to "working" RF gain value
     //
     AudioManagement_CalcALCDecay();	// initialize ALC decay values
     //
-    AudioManagement_CalcAGCVals();	// calculate AGC internal values from user settings
+//    AudioManagement_CalcAGCVals();	// calculate AGC internal values from user settings
     //
     AudioManagement_CalcNB_AGC();		// set up noise blanker AGC values
     //
@@ -1264,8 +1264,8 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
 
-    ads.agc_decimation_scaling = ads.decimation_rate;
-    ads.agc_delay_buflen = AUDIO_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
+//    ads.agc_decimation_scaling = ads.decimation_rate;
+//    ads.agc_delay_buflen = AUDIO_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
 
     // Set up ZOOM FFT FIR decimation filters
     // switch right FIR decimation filter depending on sd.magnify
@@ -2377,7 +2377,7 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
 }
 
 
-
+#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_agc_processor
 //* Object              :
@@ -2484,7 +2484,7 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize, float32_t *agcbuffer)
     arm_mult_f32(agcbuffer, adb.agc_valbuf, agcbuffer, blockSize);		// do vector multiplication to apply delayed "running" AGC data
 
 }
-
+#endif
 //
 //
 //*----------------------------------------------------------------------------
@@ -2581,7 +2581,7 @@ static void AudioDriver_DemodFM(const int16_t blockSize)
 			q_prev = adb.q_buffer[i];// save "previous" value of each channel to allow detection of the change of angle in next go-around
 			i_prev = adb.i_buffer[i];
 		}
-
+#if 0
 		if (!ts.agc_wdsp)
 		{
 			//
@@ -2617,7 +2617,7 @@ static void AudioDriver_DemodFM(const int16_t blockSize)
 				}
 			}
 		}
-
+#endif
 
 		// *** Squelch Processing ***
 		arm_iir_lattice_f32(&IIR_Squelch_HPF, squelch_buf, squelch_buf,
@@ -2761,74 +2761,6 @@ static void AudioDriver_DemodFM(const int16_t blockSize)
 }
 
 
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_demod_am  (rewritten to use optimized ARM complex magnitude function, October 2015 - KA7OEI)
-//* Object              : AM demodulator
-//* Object              :
-//* Input Parameters    : size - size of buffer on which to operate
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-/*
-static void AudioDriver_DemodAM(int16_t blockSize)
-{
-    ulong i, j;
-        j = 0;
-        static float32_t last_dc_level;
-        for(i = 0; i < blockSize; i++)	 					// interleave I and Q data, putting result in "b" buffer
-        {
-            adb.a_buffer[j] = adb.i_buffer[i];
-            j++;
-            adb.a_buffer[j] = adb.q_buffer[i];
-            j++;
-        }
-        //
-        // perform complex vector magnitude calculation on interleaved data in "b" to recover
-        // instantaneous carrier power:  sqrtf(b[n]^2+b[n+1]^2) - put result in "a"
-        //
-        arm_cmplx_mag_f32(adb.a_buffer, adb.b_buffer, blockSize);	// use optimized (fast) ARM function
-        last_dc_level = fastdcblock_ff(adb.b_buffer, adb.a_buffer, blockSize, last_dc_level);
-
-    //
-    // Now produce signal/carrier level for AGC
-    //
-//    arm_mean_f32(adb.a_buffer, blockSize, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
-//    ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
-
-}
-
-static void AudioDriver_DemodAmExperimental(int16_t blockSize)
-{
-    ulong i;
-    float32_t sqrt, w;
-    static float32_t wold;
-        //
-        // uses optimized ARM sqrt function, but not the arm_cmplx_mag, because the latter needs the data in interleaved format!
-        // this could possibly make this even faster than first interleaving and then calculating magnitude
-    	// (because arm_cmplx_mag uses the same sqrt function )
-
-    for(i = 0; i < blockSize; i++) {
-       arm_sqrt_f32 (adb.i_buffer[i] * adb.i_buffer[i] + adb.q_buffer[i] * adb.q_buffer[i], &sqrt);
-//       sqrt = sqrtf(adb.i_buffer[i] * adb.i_buffer[i] + adb.q_buffer[i] * adb.q_buffer[i]);
-//    	 adb.a_buffer[i] = sqrt;
-         // DC removal filter -----------------------
-         w = sqrt + wold * 0.9999; // yes, I want a superb bass response ;-)
-         adb.a_buffer[i] = w - wold;
-         wold = w;
-    }
-
-    //
-    // Now produce signal/carrier level for AGC
-    //
-//    arm_mean_f32(adb.a_buffer, blockSize, (float32_t *)&ads.am_fm_agc);	// get "average" value of "a" buffer - the recovered DC (carrier) value - for the AGC (always positive since value was squared!)
-    //
-//    ads.am_fm_agc *= AM_SCALING;	// rescale AM AGC to match SSB scaling so that AGC comes out the same
-
-}
- */
-////
 //
 //
 //*----------------------------------------------------------------------------
@@ -3755,24 +3687,12 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
 
                 // now process the samples and perform the receiver AGC function
-                if(ts.agc_wdsp)
-                {
 #ifdef USE_TWO_CHANNEL_AUDIO
                     AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer, adb.r_buffer);
 #else
                     AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
 #endif
-                }
-                else
-                {
-                    AudioDriver_RxAgcProcessor(blockSizeDecim, adb.a_buffer);
-#ifdef USE_TWO_CHANNEL_AUDIO
-                    if(use_stereo)
-                    {
-                        AudioDriver_RxAgcProcessor(blockSizeDecim, adb.r_buffer);
-                    }
-#endif
-                }
+
 
                 // DSP noise reduction using LMS (Least Mean Squared) algorithm
                 // This is the post-filter, post-AGC instance
@@ -3869,25 +3789,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 float32_t scale_gain;
                 if(dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM)
                 {
-                    if(ts.agc_wdsp)
-                    {
                         scale_gain = post_agc_gain_scaling * 0.5; // ignore ts.max_rf_gain  --> has no meaning with WDSP AGC; and take into account AM scaling factor
-                    }
-                    else
-                    {
-                        scale_gain = ads.post_agc_gain * post_agc_gain_scaling * (AM_SCALING * AM_AUDIO_SCALING);
-                    }
                 }
                 else        // Not AM
                 {
-                    if(ts.agc_wdsp)
-                    {
                         scale_gain = post_agc_gain_scaling * 0.333; // ignore ts.max_rf_gain --> has no meaning with WDSP AGC
-                    }
-                    else
-                    {
-                        scale_gain = ads.post_agc_gain * post_agc_gain_scaling;
-                    }
                 }
                 arm_scale_f32(adb.a_buffer,scale_gain, adb.a_buffer, blockSizeDecim); // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
 #ifdef USE_TWO_CHANNEL_AUDIO
@@ -3955,14 +3861,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         RadioManagement_FmDevIs5khz() ? FM_RX_SCALING_5K : FM_RX_SCALING_2K5,
                                 adb.b_buffer,
                                 blockSizeDecim);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
-                if(ts.agc_wdsp)
-                {
 #ifdef USE_TWO_CHANNEL_AUDIO
                     AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer, adb.r_buffer);
 #else
                     AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
 #endif
-                 }
             }
 
             // this is the biquad filter, a highshelf filter
@@ -4982,10 +4885,10 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
         if (muted)
         {
             // muted input should not modify the ALC so we simply restore it after processing
-            float agc_holder = ads.agc_val;
+//            float agc_holder = ads.agc_val;
             bool dsp_inhibit_holder = ts.dsp_inhibit;
             AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,size/2);
-            ads.agc_val = agc_holder;
+//            ads.agc_val = agc_holder;
             ts.dsp_inhibit = dsp_inhibit_holder;
         }
         else

@@ -128,15 +128,15 @@ typedef struct AudioDriverState
 
     // AGC and audio related variables
 
-    float 					agc_val;			// "live" receiver AGC value
-    float					agc_var;
-    float					agc_calc;
-    float					agc_holder;			// used to hold AGC value during transmit and tuning
-    float					agc_decay;			// decay rate (speed) of AGC
-    float					agc_rf_gain;		// manual RF gain (actual) - calculated from the value of "ts.rf_gain"
-    float					agc_knee;			// "knee" for AGC operation
-    float					agc_val_max;		// maximum AGC gain (at minimum signal)
-    float					am_fm_agc;			// Signal/AGC level in AM and FM demod mode
+//    float 					agc_val;			// "live" receiver AGC value
+//    float					agc_var;
+//    float					agc_calc;
+//    float					agc_holder;			// used to hold AGC value during transmit and tuning
+//    float					agc_decay;			// decay rate (speed) of AGC
+//    float					agc_rf_gain;		// manual RF gain (actual) - calculated from the value of "ts.rf_gain"
+//    float					agc_knee;			// "knee" for AGC operation
+//    float					agc_val_max;		// maximum AGC gain (at minimum signal)
+//    float					am_fm_agc;			// Signal/AGC level in AM and FM demod mode
     float					fm_sql_avg;			// averaged squelch level (for FM)
     bool					fm_squelched;		// TRUE if FM receiver audio is to be squelched
     //
@@ -152,8 +152,8 @@ typedef struct AudioDriverState
     float					post_agc_gain;		// post AGC gain scaling
     //
     uchar					decimation_rate;		// current decimation/interpolation rate
-    ulong					agc_delay_buflen;		// AGC delay buffer length
-    float					agc_decimation_scaling;	// used to adjust AGC timing based on sample rate
+//    ulong					agc_delay_buflen;		// AGC delay buffer length
+//    float					agc_decimation_scaling;	// used to adjust AGC timing based on sample rate
     //
     float					nb_agc_filt;			// used for the filtering/determination of the noise blanker AGC level
     float					nb_sig_filt;

@@ -8,6 +8,7 @@
 #include "softdds.h"
 #include "fm_subaudible_tone_table.h"
 #include "radio_management.h"
+#if 0
 //
 //
 //*----------------------------------------------------------------------------
@@ -38,6 +39,7 @@ void AudioManagement_CalcAGCDecay()
         ads.agc_decay = AGC_MED_DECAY;
     }
 }
+#endif
 //
 //
 //*----------------------------------------------------------------------------
@@ -53,7 +55,8 @@ void AudioManagement_CalcALCDecay(void)
     // calculate ALC decay (release) time constant - this needs to be moved to its own function (and the one in "ui_menu.c")
     ads.alc_decay = powf(10,-((((float32_t)ts.alc_decay_var)+35.0)/10.0));
 }
-//
+
+#if 0//
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiCalcRFGain
@@ -75,7 +78,6 @@ void AudioManagement_CalcRFGain(void)
     ads.agc_rf_gain = powf(10, tcalc);
 
 }
-
 //
 //
 //*----------------------------------------------------------------------------
@@ -95,6 +97,7 @@ void AudioManagement_CalcAGCVals(void)
     ads.post_agc_gain = POST_AGC_GAIN_SCALING_REF / (float)(ts.max_rf_gain + 1);
     // TODO: Why is here always ts.max_rf_gain used? Shouldn't it be max_rf_gain too?
 }
+#endif
 //
 //
 //*----------------------------------------------------------------------------
