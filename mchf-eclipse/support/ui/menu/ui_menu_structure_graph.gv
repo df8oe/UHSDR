@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-11-04T15:44:05  by "./ui_menu_structure_graph.py"
+#  generated at  2017-11-04T16:09:13  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-04T15:44:05  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-04T16:09:13  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -144,26 +144,6 @@
         
         "MENU_FM_DEV_MODE" [
              label = "MENU_FM_DEV_MODE | FM Deviation"
-             shape = record
-             ];
-        
-        "MENU_RF_GAIN_ADJ" [
-             label = "MENU_RF_GAIN_ADJ | RF Gain"
-             shape = record
-             ];
-        
-        "MENU_AGC_WDSP_SWITCH" [
-             label = "MENU_AGC_WDSP_SWITCH | AGC Mode Switch"
-             shape = record
-             ];
-        
-        "MENU_AGC_MODE" [
-             label = "MENU_AGC_MODE | AGC STD Mode"
-             shape = record
-             ];
-        
-        "MENU_CUSTOM_AGC" [
-             label = "MENU_CUSTOM_AGC | AGC STD Custom Speed (+=Slower)"
              shape = record
              ];
         
@@ -1524,14 +1504,6 @@
             MENU_BASE -> MENU_FM_TONE_BURST_MODE
             
             MENU_BASE -> MENU_FM_DEV_MODE
-            
-            MENU_BASE -> MENU_RF_GAIN_ADJ
-            
-            MENU_BASE -> MENU_AGC_WDSP_SWITCH
-            
-            MENU_BASE -> MENU_AGC_MODE
-            
-            MENU_BASE -> MENU_CUSTOM_AGC
             
             MENU_BASE -> MENU_AGC_WDSP_MODE
             

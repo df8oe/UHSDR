@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-11-04T15:44:09  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-11-04T16:09:19  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-11-04T15:44:09  by "./ui_menu_structure_mdtable.py"
+generated at  2017-11-04T16:09:19  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -33,10 +33,6 @@ generated at  2017-11-04T15:44:09  by "./ui_menu_structure_mdtable.py"
 | **FM Sub Tone Det**           (                MENU_FM_DET_SUBAUDIBLE_TONE) | Enable detection of CTCSS tones during FM receive. RX is muted unless tone is detected. | 
 | **FM Tone Burst**             (                    MENU_FM_TONE_BURST_MODE) | Enabled sending of short tone at beginning of each FM transmission. Used to open repeaters. Available frequencies are 1750 Hz and 2135 Hz. | 
 | **FM Deviation**              (                           MENU_FM_DEV_MODE) | Select between normal and narrow deviation (5 and 2.5kHz) for FM RX/TX | 
-| **RF Gain**                   (                           MENU_RF_GAIN_ADJ) | RF Receive Gain. This setting is also accessible via Encoder 2, RFG. | 
-| **AGC Mode Switch**           (                       MENU_AGC_WDSP_SWITCH) | You can choose between two different AGC systems here: ´Standard AGC´ and ´WDSP AGC´. | 
-| **AGC STD Mode**              (                              MENU_AGC_MODE) | Standard AGC: Automatic Gain Control Mode setting. You may select preconfigured settings (SLOW,MED,FAST), define settings yourself (CUSTOM) or use MANUAL (no AGC, use RFG to control gain | 
-| **AGC STD Custom Speed (+=Slower)** (                            MENU_CUSTOM_AGC) | Standard AGC:  If AGC STD Mode is set to CUSTOM, this controls the speed setting of AGC | 
 | **AGC WDSP Mode**             (                         MENU_AGC_WDSP_MODE) | Choose a bundle of preset AGC parameters for the WDSP AGC: FAST / MED / SLOW / LONG / very LONG or switch OFF the AGC. | 
 | **AGC WDSP Slope**            (                        MENU_AGC_WDSP_SLOPE) | Slope of the AGC is the difference between the loudest signal and the quietest signal after the AGC action has taken place. Given in dB. | 
 | **AGC WDSP Decay**            (                    MENU_AGC_WDSP_TAU_DECAY) | Time constant for the AGC decay (speed of recovery of the AGC gain) in milliseconds. | 
