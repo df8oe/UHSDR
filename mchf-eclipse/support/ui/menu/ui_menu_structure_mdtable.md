@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-10-29T12:21:02  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-11-04T15:44:09  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-10-29T12:21:02  by "./ui_menu_structure_mdtable.py"
+generated at  2017-11-04T15:44:09  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -149,7 +149,6 @@ generated at  2017-10-29T12:21:02  by "./ui_menu_structure_mdtable.py"
 | **Lower Meter Colour**        (                     MENU_METER_COLOUR_DOWN) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
 | **dBm display**               (                           MENU_DBM_DISPLAY) | RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. This value is supposed to be quite accurate to +-3dB. Preferably use low spectrum display magnify settings. Accuracy is lower for very very weak and very very strong signals. | 
 | **dBm calibrate**             (                         MENU_DBM_CALIBRATE) | dBm display calibration. Just an offset (in dB) that is added to the internally calculated dBm or dBm/Hz value. | 
-| **S-Meter**                   (                               MENU_S_METER) | Select the S-Meter measurement style. In old school mode, the RF Gain influences the displayed S-Meter value, higher RFG values increase the S-Meter value. In all other settings, the S-Meter is based on the dBm measurement and is thus a more accurate and objective reflection of the signal strength. | 
 
 
 ## CW Mode Settings (`MENU_CW`)
@@ -294,6 +293,7 @@ generated at  2017-10-29T12:21:02  by "./ui_menu_structure_mdtable.py"
 | **NR delay**                  (                       MENU_DEBUG_ANR_DELAY) | Delay length of leaky LMS noise reduction      | 
 | **NR gain**                   (                        MENU_DEBUG_ANR_GAIN) | Gain of leaky LMS noise reduction              | 
 | **NR leak**                   (                        MENU_DEBUG_ANR_LEAK) | Leak of leaky LMS noise reduction              | 
+| **Si5351a PLL Reset**         (             MENU_DEBUG_OSC_SI5351_PLLRESET) | Debug Setting: Select when the Si5351a does a PLL RESET | 
 
 
 [//]: # ( EOFILE                                                                       )

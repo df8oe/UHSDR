@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-10-29T12:20:57  by "./ui_menu_structure_graph.py"
+#  generated at  2017-11-04T15:44:05  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-10-29T12:20:57  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-04T15:44:05  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -667,11 +667,6 @@
              shape = record
              ];
         
-        "MENU_S_METER" [
-             label = "MENU_S_METER | S-Meter"
-             shape = record
-             ];
-        
         "MENU_KEYER_MODE" [
              label = "MENU_KEYER_MODE | CW Keyer Mode"
              shape = record
@@ -1272,6 +1267,11 @@
              shape = record
              ];
         
+        "MENU_DEBUG_OSC_SI5351_PLLRESET" [
+             label = "MENU_DEBUG_OSC_SI5351_PLLRESET | Si5351a PLL Reset"
+             shape = record
+             ];
+        
         "0" [
              label = "0 | M0NKA  (Chris) founder of mcHF"
              shape = record
@@ -1857,6 +1857,8 @@
             
             MENU_DEBUG -> MENU_DEBUG_ANR_LEAK
             
+            MENU_DEBUG -> MENU_DEBUG_OSC_SI5351_PLLRESET
+            
         }  ## END subgraph MENU_HALL_OF_FAME
     
         #  -  -  -  -
@@ -1944,8 +1946,6 @@
             MENU_DISPLAY -> MENU_DBM_DISPLAY
             
             MENU_DISPLAY -> MENU_DBM_CALIBRATE
-            
-            MENU_DISPLAY -> MENU_S_METER
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
