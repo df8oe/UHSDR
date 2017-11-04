@@ -1443,10 +1443,10 @@ static void UiSpectrum_CalculateDBm()
     // the dBm/Hz display gives an absolute measure of the signal strength of the sum of all signals inside the passband of the filter
     // we take the FFT-magnitude values of the spectrum display FFT for this purpose (which are already calculated for the spectrum display),
     // so the additional processor load and additional RAM usage should be close to zero
-    // this code also calculates the basis for the S-Meter (in sm.dbm and sm.dbmhz), if not in old school S-Meter mode
+    // this code also calculates the basis for the S-Meter (in sm.dbm and sm.dbmhz)
     //
     {
-        if( ts.txrx_mode == TRX_MODE_RX && ((ts.s_meter != DISPLAY_S_METER_STD) || (ts.display_dbm != DISPLAY_S_METER_STD )))
+        if( ts.txrx_mode == TRX_MODE_RX)
         {
             const float32_t slope = 19.8; // 19.6; --> empirical values derived from measurements by DL8MBY, 2016/06/30, Thanks!
             const float32_t cons = ts.dbm_constant - 225; // -225; //- 227.0;

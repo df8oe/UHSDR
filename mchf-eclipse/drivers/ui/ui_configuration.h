@@ -526,7 +526,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_DISPLAY_DBM					359		// dbm display
 #define EEPROM_BASS_GAIN					360		// bass gain lowShelf filter
 #define EEPROM_TREBLE_GAIN					361		// treble gain highShelf filter
-#define	EEPROM_S_METER						362		// S-Meter configuration
+//#define	EEPROM_S_METER						362		// S-Meter configuration
 #define EEPROM_TX_FILTER					363		// TX_Filter configuration
 #define EEPROM_TX_BASS_GAIN					364		// TX bass gain lowShelf filter
 #define EEPROM_TX_TREBLE_GAIN				365		// TX treble gain highShelf filter
