@@ -970,7 +970,7 @@ typedef struct TransceiverState
 	int agc_wdsp_tau_decay[6];
 	int agc_wdsp_tau_hang_decay;
 
-#define DISPLAY_S_METER_STD   0
+//#define DISPLAY_S_METER_STD   0
 #define DISPLAY_S_METER_DBM   1
 #define DISPLAY_S_METER_DBMHZ 2
 

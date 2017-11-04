@@ -4343,21 +4343,9 @@ static void UiDriver_HandleSMeter()
 		{
 			static bool         clip_indicate = 0;
 
-			if (ts.s_meter == DISPLAY_S_METER_STD) // oldschool (os) S-meter scheme
-			{
-				sm.gain_calc = AGC_GAIN_CAL/(ads.agc_val * ads.codec_gain_calc);
-				// AGC gain calibration factor divided by (AGC loop gain setting * known A/D gain setting)
-			}
-			else if (ts.s_meter == DISPLAY_S_METER_DBM) // based on dBm calculation
-			{
-				sm.gain_calc = sm.dbm;
-			}
-			else // based on dBm/Hz calculation
-			{
-				sm.gain_calc = sm.dbmhz;
-			}
+			sm.gain_calc = sm.dbm;
 
-			const float *S_Meter_Cal_Ptr = (ts.s_meter == DISPLAY_S_METER_STD)?  S_Meter_Cal : S_Meter_Cal_dbm;
+			const float *S_Meter_Cal_Ptr = S_Meter_Cal_dbm;
 
 			// find corresponding signal level
 			for (

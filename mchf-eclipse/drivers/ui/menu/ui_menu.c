@@ -1214,11 +1214,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             {
             case 1:       //
                 txt_ptr = "    WDSP AGC";        //
-                if(ts.s_meter == 0) // old school S-Meter does not work with WDSP AGC, so we switch to dBm S-Meter in that case!
-                    {
-                        ts.s_meter = 1;
-                    }
-                break;
+            break;
             default:
                 txt_ptr = "Standard AGC";        //
             }
@@ -2232,27 +2228,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 
-       case    MENU_S_METER:
-           var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.s_meter,
-                                                 0,
-                                                 2,
-                                                 0,
-                                                 1
-                                                );
-
-          switch(ts.s_meter)
-           {
-           case DISPLAY_S_METER_DBM:        //
-               txt_ptr = "    based on dBm";        // dbm S-Meter
-               break;
-           case DISPLAY_S_METER_DBMHZ:  //
-               txt_ptr = " based on dBm/Hz";        // dbm/Hz display and old school S-Meter
-               break;
-           default:
-           txt_ptr =  "old school style";       // oldschool S-Meter
-            break;
-           }
-           break;
     case MENU_METER_COLOUR_UP:              // upper meter colour
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.meter_colour_up,
                                               0,
