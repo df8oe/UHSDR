@@ -3783,6 +3783,30 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case CONFIG_CAT_PTT_RTS:
         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_ptt_rts,0,options,&clr);
         break;
+
+    case MENU_DEBUG_OSC_SI5351_PLLRESET:
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.debug_si5351a_pllreset,
+                0,
+                3,
+                0,
+                1);
+        switch(ts.stream_tx_audio)
+        {
+        case 0:
+            txt_ptr = "    Always";
+            break;
+        case 1:
+            txt_ptr = "   Divider";
+            break;
+        case 2:
+            txt_ptr = "IQ Divider";
+            break;
+        case 3:
+            txt_ptr = "      Never";
+            break;
+        }
+        break;
+
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

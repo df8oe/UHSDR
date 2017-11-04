@@ -101,6 +101,7 @@ typedef struct
 	uint8_t  multisynth_rdiv;
 	uint32_t pll_mult;
 	bool phasedOutput;
+	bool pllreset;
 
 } Si5351a_Config_t;
 
@@ -272,6 +273,24 @@ static bool Si5351a_CalculateConfig(uint32_t frequency, Si5351a_Config_t* new_co
 		new_config->multisynth_divider = 0;
 	}
 
+	switch(ts.debug_si5351a_pllreset)
+	{
+	case 0:
+		new_config->pllreset = true;
+		break;
+	case 1:
+		new_config->pllreset = cur_config->multisynth_divider != new_config->multisynth_divider;
+		break;
+	case 2:
+		if (new_config->phasedOutput)
+		{
+			new_config->pllreset = cur_config->multisynth_divider != new_config->multisynth_divider;
+		}
+		break;
+	case 3:
+		new_config->pllreset = false;
+	}
+
 	return retval;
 }
 
@@ -303,7 +322,11 @@ static bool Si5351a_ApplyConfig(Si5351a_Config_t* config)
 
 		Si5351a_WriteRegister( SI5351_CLK0_CONTROL, SI5351_OUTPUT_ON);
 		Si5351a_WriteRegister( SI5351_CLK1_CONTROL, config->phasedOutput?SI5351_OUTPUT_ON:SI5351_OUTPUT_OFF);
-		Si5351a_WriteRegister( SI5351_PLL_RESET, SI5351_PLLA_RESET);
+
+		if (config->pllreset)
+		{
+			Si5351a_WriteRegister( SI5351_PLL_RESET, SI5351_PLLA_RESET);
+		}
 	}
 
 	return result;

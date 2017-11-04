@@ -1034,6 +1034,8 @@ typedef struct TransceiverState
 	bool stereo_enable; // enable/disable stereo demodulation (only in special hardware, NOT in mcHF)
 #endif
 	bool enable_leaky_LMS;
+
+	uint8_t debug_si5351a_pllreset;
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
