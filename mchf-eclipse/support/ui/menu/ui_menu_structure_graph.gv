@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-11-04T16:47:04  by "./ui_menu_structure_graph.py"
+#  generated at  2017-11-04T21:56:35  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-04T16:47:04  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-04T21:56:35  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -559,11 +559,6 @@
         
         "MENU_SPECTRUM_CENTER_LINE_COLOUR" [
              label = "MENU_SPECTRUM_CENTER_LINE_COLOUR | TX Carrier Colour"
-             shape = record
-             ];
-        
-        "CONFIG_SPECTRUM_FFT_WINDOW_TYPE" [
-             label = "CONFIG_SPECTRUM_FFT_WINDOW_TYPE | Spectrum FFT Wind."
              shape = record
              ];
         
@@ -1879,8 +1874,6 @@
             MENU_DISPLAY -> MENU_SPECTRUM_FREQSCALE_COLOUR
             
             MENU_DISPLAY -> MENU_SPECTRUM_CENTER_LINE_COLOUR
-            
-            MENU_DISPLAY -> CONFIG_SPECTRUM_FFT_WINDOW_TYPE
             
             MENU_DISPLAY -> MENU_SCOPE_LIGHT_ENABLE
             
