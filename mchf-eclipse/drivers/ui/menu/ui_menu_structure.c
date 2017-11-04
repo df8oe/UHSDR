@@ -399,6 +399,7 @@ const MenuDescriptor debugGroup[] =
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_DELAY, NULL,"NR delay", UiMenuDesc("Delay length of leaky LMS noise reduction") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_GAIN, NULL,"NR gain", UiMenuDesc("Gain of leaky LMS noise reduction") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_LEAK, NULL,"NR leak", UiMenuDesc("Leak of leaky LMS noise reduction") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_OSC_SI5351_PLLRESET, NULL,"Si5351a PLL Reset", UiMenuDesc("Debug Setting: Select when the Si5351a does a PLL RESET") },
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
