@@ -538,7 +538,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_SAM_FADE_LEVELER             371
 #define EEPROM_LINEOUT_GAIN                 372
 #define EEPROM_IQ_AUTO_CORRECTION           373     // Receive IQ auto correction ON/OFF
-#define EEPROM_AGC_WDSP_SWITCH              374
+//#define EEPROM_AGC_WDSP_SWITCH              374
 #define EEPROM_AGC_WDSP_MODE                375
 #define EEPROM_AGC_WDSP_THRESH              376
 #define EEPROM_AGC_WDSP_SLOPE               377
