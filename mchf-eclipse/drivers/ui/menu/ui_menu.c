@@ -3771,7 +3771,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 3,
                 0,
                 1);
-        switch(ts.stream_tx_audio)
+        switch(ts.debug_si5351a_pllreset)
         {
         case 0:
             txt_ptr = "    Always";
