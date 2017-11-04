@@ -1674,4 +1674,3 @@ static int quisk_cfInterpDecim(COMP * cSamples, int count, struct quisk_cfFilter
     }
     return nOut;
 }
-

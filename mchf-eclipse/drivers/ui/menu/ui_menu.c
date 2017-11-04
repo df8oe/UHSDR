@@ -3331,7 +3331,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 break;
             }
             break;
-
+#if 0
     case CONFIG_SPECTRUM_FFT_WINDOW_TYPE:   // set step size of of waterfall display?
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.fft_window_type,
                                               0,
@@ -3367,7 +3367,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             break;
         }
         break;
-    case CONFIG_RESET_SER_EEPROM:
+#endif
+        case CONFIG_RESET_SER_EEPROM:
         if(SerialEEPROM_24xx_Exists() == false)
         {
             txt_ptr = "   n/a";
