@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-11-04T16:09:13  by "./ui_menu_structure_graph.py"
+#  generated at  2017-11-04T16:47:04  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-04T16:09:13  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-04T16:47:04  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -289,11 +289,6 @@
         
         "CONFIG_MAX_VOLUME" [
              label = "CONFIG_MAX_VOLUME | Max Volume"
-             shape = record
-             ];
-        
-        "CONFIG_MAX_RX_GAIN" [
-             label = "CONFIG_MAX_RX_GAIN | Max RX Gain (0=Max)"
              shape = record
              ];
         
@@ -1336,8 +1331,6 @@
             MENU_CONF -> CONFIG_TXRX_SWITCH_AUDIO_MUTE
             
             MENU_CONF -> CONFIG_MAX_VOLUME
-            
-            MENU_CONF -> CONFIG_MAX_RX_GAIN
             
             MENU_CONF -> CONFIG_LINEOUT_GAIN
             

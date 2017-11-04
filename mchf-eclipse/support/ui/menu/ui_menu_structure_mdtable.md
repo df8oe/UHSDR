@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-11-04T16:09:19  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-11-04T16:47:07  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-11-04T16:09:19  by "./ui_menu_structure_mdtable.py"
+generated at  2017-11-04T16:47:07  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -68,7 +68,6 @@ generated at  2017-11-04T16:09:19  by "./ui_menu_structure_mdtable.py"
 | **TX Mute LineOut**           (                    CONFIG_MUTE_LINE_OUT_TX) | During transmission with frequency translation off, line out will carry one of the two signal channels. Good for CW but not very useful otherwise. You may switch this signal off here. | 
 | **TX Initial Muting Time**    (              CONFIG_TXRX_SWITCH_AUDIO_MUTE) | When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. There are now several minimum times for muting defined in the firmware:<br/><br/> Input from Mic: 40ms<br/> Input from Line In: 40ms<br/> Digital Inputs (CW, USB): less than 1ms.<br/><br/> If the user defined 'TX Initial Muting Time' is set to more than zero, the maximum of both fixed input time and user defined time is used. Your microphone PTT switch is a potential source of noise if Mic is input! You need to increase the delay or change switches! | 
 | **Max Volume**                (                          CONFIG_MAX_VOLUME) | Set maximum speaker&headphone volume.          | 
-| **Max RX Gain (0=Max)**       (                         CONFIG_MAX_RX_GAIN) | Here you can set maximum gain for RX. A good choice is 3...5. If set to 0 RX is too sensitive in most working conditions. | 
 | **Lineout Gain**              (                        CONFIG_LINEOUT_GAIN) | Set the constant gain level for the analog lineout jack | 
 | **Key Beep**                  (                         CONFIG_BEEP_ENABLE) | If ON each keypress will generate a short beep | 
 | **Beep Frequency**            (                           CONFIG_BEEP_FREQ) | Set beep frequency in Hz.                      | 
