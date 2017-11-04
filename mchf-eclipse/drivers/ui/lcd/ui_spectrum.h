@@ -109,7 +109,7 @@ enum
     FFT_WINDOW_MAX
 };
 
-#define FFT_WINDOW_DEFAULT                  FFT_WINDOW_BLACKMAN
+//#define FFT_WINDOW_DEFAULT                  FFT_WINDOW_BLACKMAN
 
 #define SPECTRUM_SIZE_DEFAULT               SPECTRUM_NORMAL
 
