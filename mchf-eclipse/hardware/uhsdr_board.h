@@ -896,7 +896,7 @@ typedef struct TransceiverState
     uint8_t	spectrum_scheduler;		// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
     uint8_t	spectrum_scope_nosig_adjust;		// Adjustment for no signal adjustment conditions for spectrum scope
     uint8_t	spectrum_size;				// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
-    uint8_t	fft_window_type;			// type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
+//    uint8_t	fft_window_type;			// type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
     bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
     uint8_t	txrx_switch_audio_muting_timing;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
     uint32_t	audio_dac_muting_timer;			// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"

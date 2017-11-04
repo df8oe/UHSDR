@@ -903,9 +903,11 @@ static void UiSpectrum_RedrawSpectrum()
     // Apply gain to collected IQ samples and then do FFT
     case 1:		// Scale input according to A/D gain and apply Window function
     {
-        // with the new FFT lib arm_cfft we need to put the input and output samples into one buffer, therefore
-        // UiDriverFFTWindowFunction was changed
-        UiSpectrum_FFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
+    	//        UiSpectrum_FFTWindowFunction(ts.fft_window_type);		// do windowing function on input data to get less "Bin Leakage" on FFT data
+        // fixed window type to Hann Window, because it provides excellent bin leakage behaviour AND
+    	// it corresponds very well with the coefficients in the quadratic interpolation algorithm that is used
+    	// for the SNAP carrier function
+    	UiSpectrum_FFTWindowFunction(FFT_WINDOW_HANN);
 
         sd.state++;
         break;
