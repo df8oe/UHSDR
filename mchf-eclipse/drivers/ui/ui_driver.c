@@ -3450,21 +3450,13 @@ static void UiDriver_CheckEncoderTwo()
 
 					// Update DSP/NB setting
 				case ENC_TWO_MODE_SIG_PROC:
-					if(ts.agc_wdsp == 0)
-					{
-						if(is_dsp_nb())	 	// is it in noise blanker mode?
-						{
-							ts.nb_setting = (uchar)change_and_limit_uint(ts.nb_setting,pot_diff_step,0,MAX_NB_SETTING);
-						}
 						// Signal processor setting
-					}
-					else
-					{
+
 						//                    ts.agc_wdsp_tau_decay = change_and_limit_int(ts.agc_wdsp_tau_decay,pot_diff_step * 100,100,5000);
 						ts.agc_wdsp_mode = change_and_limit_uint(ts.agc_wdsp_mode,pot_diff_step,0,5);
 						ts.agc_wdsp_switch_mode = 1; // set flag, so that mode switching really takes place in AGC_prep
 						AudioDriver_SetupAgcWdsp();
-					}
+
 					UiDriver_DisplayNoiseBlanker(1);
 					break;
 				case ENC_TWO_MODE_NR:
@@ -4127,12 +4119,10 @@ static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
 	char	temp[5];
 	const char *label, *val_txt;
 	int32_t value = 0;
-	bool is_active = false;
+//	bool is_active = false;
 	label = "NB";
 	//    label = "DEC";
-	if(ts.agc_wdsp == 0)
-	{
-
+#if 0
 		//
 		// Noise blanker settings display
 		//
@@ -4163,10 +4153,7 @@ static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
 			snprintf(temp,5,"%3ld",value);
 			val_txt = temp;
 		}
-
-	}
-	else
-	{
+#endif
 		switch(ts.agc_wdsp_mode)
 		{
 		case 0:
@@ -4194,7 +4181,6 @@ static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
 		value = (int32_t)(ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode] / 10.0);
 		snprintf(temp,5,"%3ld",value);
 		val_txt = temp;
-	}
 	UiDriver_EncoderDisplay(1,1,label, encoder_active, val_txt, color);
 }
 
@@ -6609,8 +6595,7 @@ void UiDriver_MainHandler()
 				const char* txt = "   ";
 				uint16_t AGC_bg_clr = Black;
 				uint16_t AGC_fg_clr = Black;
-				if(ts.agc_wdsp == 1)
-				{
+
 					if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
 					{
 						AGC_bg_clr = White;
@@ -6625,7 +6610,7 @@ void UiDriver_MainHandler()
 					{
 						txt = "AGC";
 					}
-				}
+
 				UiLcdHy28_PrintTextCentered(POS_DEMOD_MODE_MASK_X - 41,POS_DEMOD_MODE_MASK_Y,POS_DEMOD_MODE_MASK_W-6,txt,AGC_fg_clr,AGC_bg_clr,0);
 				// display CW decoder WPM speed
 				if(ts.cw_decoder_enable && ts.dmod_mode == DEMOD_CW)
