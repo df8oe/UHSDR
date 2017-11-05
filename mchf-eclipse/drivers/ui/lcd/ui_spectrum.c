@@ -261,6 +261,13 @@ static void UiSpectrum_CreateDrawArea()
 {
     uint32_t clr;
 
+    //TODO: following ifdef is only for test, there should be MENU option to allow change of direction.
+#ifdef USE_DISP_480_320
+    sd.wfall_DrawDirection=1;
+#else
+    sd.wfall_DrawDirection=0;
+#endif
+
     // get grid colour of all but center line
     UiMenu_MapColors(ts.scope_grid_colour,NULL, &sd.scope_grid_colour_active);
     // Get color of center vertical line of spectrum scope
@@ -828,6 +835,14 @@ static void UiSpectrum_DrawWaterfall()
 
     if(!sd.wfall_line_update)                               // if it's count is zero, it's time to move the waterfall up
     {
+    	if(sd.wfall_DrawDirection==1)
+    	{
+    		lptr--; //top line is the newest
+    		if(lptr==0xffff)
+    		{
+    			lptr=sd.wfall_size-1;		//moving back to top (modulo somewhat doesn't work like this)
+    		}
+    	}
 
         lptr %= sd.wfall_size;      // do modulus limit of spectrum high
 
@@ -865,7 +880,19 @@ static void UiSpectrum_DrawWaterfall()
             	UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, SPECTRUM_WIDTH);
             }
 #endif
-            lptr++;                                 // point to next line in circular display buffer
+            // point to next/prev line in circular display buffer:
+            if(sd.wfall_DrawDirection==1)
+            {
+            	lptr--;							//moving downward (this is exactly meaning of waterfall word :)
+            	if(lptr==0xffff)
+            	{
+            		lptr=sd.wfall_size-1;		//moving back to top (modulo somewhat doesn't work like this)
+            	}
+            }
+            else
+            {
+            	lptr++;                         //moving upward (water fountain, "normal" in 320x240)
+            }
             lptr %= sd.wfall_size;              // clip to display height
         }
         UiLcdHy28_BulkPixel_CloseWrite();                   // we are done updating the display - return to normal full-screen mode
