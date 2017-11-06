@@ -1,26 +1,51 @@
 # DF8OE Bootloader Usage (Bootloader 3.3.0 and newer)
 
 
-The DF8OE bootloader is responsible for starting the firmware of the TRX. It is also able to flash new firmware and bootloader.
-The bootloader supports two different ways to install new software on the TRX, via USB drive or via DFU Upload. 
-In most cases, the most convenient way is to use a USB drive to install new firmware with the USB drive connected to the (big) USB-A socket. 
-To install a new bootloader (or new firmware) the alternate method is to run a DFU upload using a PC connected via USB cable to the small (Mini USB connector) and an appropriate DFU upload tool (e.g. Windows: DFUSe, Linux: dfu-util). 
+The DF8OE bootloader is responsible for starting the firmware of the TRX. It is also used to flash new firmware AND bootloader.
+
+Firmware can be installed via a USB drive or via USB cable using DFU Upgrade. The bootloader can only be installed via USB cable using DFU Upgrade, __not__ via USB drive.
+
+This document describes both, upgrades via USB drive and via USB cable, each in its own section in this document. This document assumes you have a bootloader with version 3.3.0 or newer installed. If not, see information below how to upgraded older bootloaders. 
+ 
+For firmware, the most convenient way is to use a USB drive to install new firmware with the USB drive connected to the (big) USB-A socket. 
+To install a new bootloader (or new firmware) the alternate method is to run a DFU upgrade using a PC connected via USB cable to the small (Mini USB connector) and an appropriate DFU upgrade tool (e.g. Windows: DFUSe, Linux: dfu-util). 
 
 The bootloader uses the two leds and the display to interact with the user. If the display is connected correctly, you will see instructions and messages on screen, otherwise you will have to watch the leds.
 
-### Documentation for older bootloaders
+### Documentation For Older Bootloader Versions
 
-The documentation is stored with the source code in the corresponding release archives ( in mchf-eclipse/useful\_docs/bootloader_doc.md) or in the github (even for not released bootloaders).  
+This documentation is stored with the source code in the corresponding release archives ( in mchf-eclipse/useful\_docs/bootloader_doc.md) or in the github (even for not released bootloaders). So for older bootloaders, please use the Git/GitHub history function. 
 
-### Installing The Bootloader
+## Getting The Newest Bootloader Installed
+If you already have the newest bootloader installed, you can skip this section. The method to upgrade to the newest bootloader differs depending on if an bootloader at all and which bootloader is installed. See find the section matching your scenario below and follow instructions given there.
 
-The procedure to install the DF8OE bootloader in its DFU form bl-<trx_id>.dfu (e.g. bl-mchf.dfu for the mcHF ) is the same as for the M0NKA bootloader (using DFUSe). See bootloader\_install.odt or bootloader\_install.pdf 
-If you own a ST-Link, you can simply flash the bl-<trx_id>.bin/bl-<trx_id>.hex/bl-<trx_id>.elf using your favorite ST flash tool at address 0x08000000.
+### Installing The Bootloader For The First Time On A New TRX
+
+#### The Normal Way: P6-Jumper Method
+
+The procedure to install any bootloader on machine without a bootloader is the same as described for the M0NKA bootloader (using DfuSeDemo/dfu-util). See [bootloader_install.pdf](bootloader_install.pdf) or [bootloader_install.odt](bootloader_install.odt) in this directory for instructions. This is the method that requires the famous P6 jumper to be closed and requires the DFU form bl-<trx_id>.dfu (e.g. bl-mchf.dfu for the mcHF). 
+ 
+#### For ST-Link Owners: Using the Debug Connection
+If you own a ST-Link and have the debug headers installed on the UI board (not available on mcHF version 0.5), you can simply flash the bl-<trx_id>.bin/bl-<trx_id>.hex/bl-<trx_id>.elf using your favorite ST flash tool at address 0x08000000. 
+
+### Upgrading An Older UHSDR/DF8OE Bootloader or A M0NKA Bootloader  
+To findout which bootloader version is installed, watch the bootscreen or go to the bootloader version in the system information menu.
+
+#### Prior Version 2.2.3 or M0NKA bootloader installed
+
+The procedure to upgrade an older bootloader to a version equal or above 2.2.3 is identical to the procedure for first time bootloader installation, see section above. 
+
+#### UHSDR/DF8OE Bootloader Version 2.3.3 Or Newer But Prior 3.3.0
+Basically identical to the instructions for DFU upgrade given below but slightly different LED codes and no LCD display. 
+Of course, also the P6-Jumper method as described in the section above also works.
+
+#### UHSDR/DF8OE Bootloader Version 3.3.0 Or Newer
+See DFU upgrade given below. Of course, also the P6-Jumper method as described in the section above also works.
 
 
 ## Firmware Update Procedures Using a USB Drive
 
-The USB drive approach can be used to upload new firmware without any need for special software. 
+The USB drive approach can be used to upgrade new firmware without any need for special software. 
 
 ### Prerequisites 
 
@@ -28,8 +53,7 @@ The USB drive approach can be used to upload new firmware without any need for s
 1. You need USB drive formatted with a single partition with the filesystem FAT or FAT32 (not exFAT, NTFS or anything else!). Normal USB pen drives formatted under Windows or Linux fulfill this criteria.
 
 
-For the firmware-upgrade you must plug the USB-key into the TRX
-big USB-A plug.
+For the firmware-upgrade you must plug the USB-key into the TRX big USB-A plug.
 
 ### Flashing New Firmware And Saving Old Firmware 
 
@@ -53,21 +77,22 @@ big USB-A plug.
 
 
 ### Error Handling and Codes
+
+#### No Valid Firmware Installed (Yet)
 During normal operation of the bootloader (by just pressing the power button), a flashing backlight indicates 
 that the bootloader did not identify a valid firmware in flash. This can happen either because you 
 never flashed one, or the flashed binary was not a valid firmware binary for your TRX, or you erased the flash memory (e.g. 
 with an external debugger tool like the ST-Link), or in the worst case, you could have a defect in the processor 
 flash memory.
 
+#### No Usable USB Drive Detected
 If during firmware update mode the LCD backlight remains on with a slowly blinking green LED, your USB drive was not detected.
 You can remove the USB drive and try to plug it in again, or you can try another key. Remember to follow the steps in "Flashing New Firmware and Saving Old Firmware" as shown above when plugging in the drive if you want to upgrade your firmware. Do not just press BAND- button as only the old firmware is written to your drive.
 
+#### Bootloader is Not DF8OE Bootloader
 If in firmware update mode (start with Band- pressed) right after starting the TRX you see a black screen with one or more LEDs turned on or blinking, you don't have the DF8OE bootloader but most likely the mcHF M0NKA bootloader installed. See his pages for instructions how to use it or replace the bootloader with this one. The M0NKA bootloader needs a Windows software to flash the image and it uses the small Mini-USB port.
 
-If everything else seems to be ok, your USB key is incompatible. Try another key. 
-Keys manufactured by "SanDisk" are widely distributed, easy to purchase and seem 
-to work well. 
-
+#### Errors During the Installation Process
 For the firmware update mode there are a number of error conditions reported through a visual code.
 If firmware reading/writing process ends in an error this is shown by turning off the LCD backlight then
 turning the green LED off, blinking the red LED in bursts, then turning the LCD backlight on and off again (green LED remains off) and repeating the red LED flash bursts. This will stop if you press Power for a little while, which turns the TRX off.
@@ -87,16 +112,16 @@ The red LED is flashing in bursts of:
 |8		|STM32F4 flash write protected			|
 
 
-## Firmware and Bootload Update Procedures Using an USB Cable and DFU Upload
+## Firmware and Bootloader Upgrade Procedures Using an USB Cable and DFU Upgrade
 
-Both firmware and bootloader can be updated using the DFU Upload method. You will need a PC with proper STM DFU software installed. On Windows, the DfuSE tool from STM will do the job, on Linux install the dfu-util package.
+Both, firmware and bootloader, can be updated using the DFU Upgrade method. You will need a PC with proper STM DFU software installed. On Windows, the DfuSeDemo tool from STM will do the job, on Linux install the dfu-util package.
 
 ### Prerequisites 
 
-1. You need the DF8OE bootloader to be installed (once) on your TRX
-1. Install the DFU software on your PC including the provided driver if necessary. 
+1. You need a DF8OE bootloader with version 3.3.0 or newer installed on your TRX. If you have an older bootloader, please upgrade. See inital section for links to instructions.
+1. Install the DFU software (DfuSeDemo on Window, dfu-util on Linux, see below) on your PC including the provided driver if necessary. 
 1. Connect PC and TRX using the small USB connector with a Mini-USB cable.
-1. Get the appropriate DFU file (__bl-<trx_id>.dfu__ or __fw-<trx_id>.dfu__)
+1. Get the appropriate DFU file (__bl-<trx_id>.dfu__ or __fw-<trx_id>.dfu__). As an example we use the firmware/bootloader filenames for the mcHF below. 
 
 ### Starting The TRX in DFU mode
 
@@ -109,18 +134,20 @@ Both firmware and bootloader can be updated using the DFU Upload method. You wil
 
 #### Windows DfuSE Instructions
 
-1. Start the DFU applicaton (if not already started) and upload as instructed. For the correct use of DfuSE see the bootloader_install.pdf. You don't have to do the first steps (since you started in the DFU using the bootloader) but then you need to follow the steps (A) to (D).
+1. Start the DfuSeDemo application (if not already started) and operate as instructed below. For the correct use of DfuSE with screenshots, see the [bootloader_install.pdf] also located in this folder in the git repository. You don't have to do the first steps, i.e. you don't need to close jumper P6 (since you started in the DFU using the bootloader). But then, after the TRX has entered DFU mode, you need to follow the steps (A) to (D).
 1. (A) Make sure you see "STM Device in DFU Mode"
-1. (B) Select the file to upload using "Choose". 
+1. (B) Select the file to upgrade using "Choose". Use __bl-mchf.dfu__ or __fw-mchf.dfu__, not the files with .bin.
 1. (C) Select checkbox "Verify after Download"
 1. (D) Press "Upgrade". __DO NOT USE__ "Upload". 
-1. After successful flashing you can let go of the Power button, not earlier. If you interrupt power during the upload of a new firmware.bin, no problem. However, if you do this during the upload of a new bootloader, you may temporarily brick your TRX and you have to install the bootloader using the P6 jumper method described in the aformentioned bootloader_install.pdf.
+1. After successful flashing you can let go of the Power button, not earlier. If you interrupt power during the upgrade of a new firmware.bin, no problem. However, if you do this during the upgrade of a new bootloader, you may temporarily brick your TRX and you have to install the bootloader using the P6 jumper method described in the aformentioned bootloader_install.pdf.
 
  
 #### Linux dfu-util
 
-1. "dfu-util -D fw-mchf.dfu -a 0" or "dfu-util -D bl-mchf.dfu -a 0"
-After successful flashing you can let go of the Power button, not earlier. If you interrupt power during the upload of a new firmware.bin, no problem. However, if you do this during the upload of a new bootloader, you may temporarily brick your TRX and you have to install the bootloader using the P6 jumper method described in the aformentioned bootloader_install.pdf.
+1. Make sure your TRX is in DFU mode and connected to your linux machine. You can verify that by using `lsusb` 
+1. To install/upgrade the firmware use `dfu-util -D fw-mchf.dfu -a 0` or with other TRX the respectively named fw-<trx_id.dfu> file
+1. To install/upgrade the bootloader use `dfu-util -D bl-mchf.dfu -a 0` or with other TRX the respectively named bl-<trx_id.dfu> file
+After successful flashing you can let go of the Power button, not earlier. If you interrupt power during the upgrade of a new firmware.bin, no problem. However, if you do this during the upgrade of a new bootloader, you may temporarily brick your TRX and you have to install the bootloader using the P6 jumper method described in the aformentioned bootloader_install.pdf.
 
   
     
