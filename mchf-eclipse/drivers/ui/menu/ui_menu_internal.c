@@ -457,8 +457,11 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
     uint32_t  m_clr;
     m_clr = Yellow;
     char out[40];
+#ifdef USE_DISP_480_320
+    const char blank[40] = "                                     ";
+#else
     const char blank[34] = "                               ";
-
+#endif
     if (entry != NULL && (entry->kind == MENU_ITEM || entry->kind == MENU_GROUP || entry->kind == MENU_INFO || entry->kind == MENU_TEXT) )
     {
         if (mode == MENU_RENDER_ONLY)
@@ -477,7 +480,11 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
             // uint16_t labellen = strlen(entry->id)+strlen(entry->label) + 1;
             uint16_t labellen = level+strlen(entry->label);
             // snprintf(out,34,"%s-%s%s",entry->id,entry->label,(&blank[labellen>33?33:labellen]));
+#ifdef USE_DISP_480_320
+            snprintf(out,40,"%s%s%s",(&blank[level>5?37-5:37-level]),entry->label,(&blank[labellen>39?39:labellen]));
+#else
             snprintf(out,34,"%s%s%s",(&blank[level>5?31-5:31-level]),entry->label,(&blank[labellen>33?33:labellen]));
+#endif
             UiMenu_DisplayLabel(out,m_clr,pos);
         }
         switch(entry->kind)

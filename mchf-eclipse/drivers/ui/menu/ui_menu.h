@@ -68,7 +68,19 @@ enum MENU_INFO_ITEM
 };
 
 const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item);
+#ifdef USE_DISP_480_320
+//
+#define	MENUSIZE							12		// number of menu items per page/screen
 
+//
+// Starting position of configuration menu
+//
+#define POS_MENU_IND_X                      80      // X position of description of menu item being changed
+#define POS_MENU_IND_Y                      110     // Y position of first (top) item being changed
+#define POS_MENU_CHANGE_X                   280     // Position of variable being changed
+#define POS_MENU_CURSOR_X                   360     // Position of cursor used to indicate selected item
+
+#else
 //
 #define	MENUSIZE							6		// number of menu items per page/screen
 
@@ -79,5 +91,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item);
 #define POS_MENU_IND_Y                      128     // Y position of first (top) item being changed
 #define POS_MENU_CHANGE_X                   244     // Position of variable being changed
 #define POS_MENU_CURSOR_X                   311     // Position of cursor used to indicate selected item
-
 #endif
+
+
+#endif //__UI_MENU_H

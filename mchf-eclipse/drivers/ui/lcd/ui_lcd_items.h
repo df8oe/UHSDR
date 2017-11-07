@@ -17,14 +17,16 @@
 // Spectrum draw params
 //
 // Spectrum display
-#define POS_SPECTRUM_IND_X					60
-#define POS_SPECTRUM_IND_Y					150
+#define POS_SPECTRUM_IND_X					0
+#define POS_SPECTRUM_IND_Y					120
 #define POS_SPECTRUM_IND_H					80
 #define POS_SPECTRUM_IND_W                  258
 
-#define	POS_SPECTRUM_FREQ_BAR_Y				64	// reducing value moves upwards
+#define	POS_SPECTRUM_FREQ_BAR_Y				0	// reducing value moves upwards
+#define	POS_SPECTRUM_FREQ_BAR_H				16	//height of freq text bar
 #define	POS_SPECTRUM_FILTER_WIDTH_BAR_Y		61
 #define COL_SPECTRUM_GRAD					0x40
+//#define POS_SPECTRUM_INFO_BAR_H             16  //height of description bar (in normal size mode)
 
 #define     SPECTRUM_SCOPE_GRID_HORIZ 16
 #define     SPECTRUM_SCOPE_GRID_VERT  32
@@ -46,17 +48,21 @@
 #define SPECTRUM_HEIGHT			(POS_SPECTRUM_IND_H - 10)
 
 
+
 // How much larger than the NORMAL spectrum display should the BIG Spectrum display be?
 #define SPEC_LIGHT_MORE_POINTS 15
 
 
 #define     POS_SPECTRUM_GRID_VERT_START (POS_SPECTRUM_IND_X-1)
-#define     POS_SPECTRUM_GRID_HORIZ_START (POS_SPECTRUM_IND_Y + 11 + 32)
+#define     POS_SPECTRUM_GRID_HORIZ_START (POS_SPECTRUM_IND_Y + 11 + 32 + POS_SPECTRUM_FREQ_BAR_H)
+
+//location of BW filter indicator
+#define POS_FILTER_BW_Y (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y+POS_SPECTRUM_FREQ_BAR_H)
 
 #define WATERFALL_MAX_SIZE (SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL)
 
-	#define WATERFALL_START_Y 240
-	#define WATERFALL_HEIGHT 60
+	#define WATERFALL_START_Y (POS_SPECTRUM_IND_Y+POS_SPECTRUM_IND_H)//240
+	#define WATERFALL_HEIGHT 70
 
 
 // Dark grey colour used for spectrum scope grid
@@ -167,7 +173,6 @@
 #define POS_DEBUG_X							0
 #define POS_LOAD_X							280
 
-
 //
 // Location of numerical FWD/REV power indicator
 //
@@ -226,6 +231,9 @@
 
 #define     POS_SPECTRUM_GRID_VERT_START (POS_SPECTRUM_IND_X-1)
 #define     POS_SPECTRUM_GRID_HORIZ_START (POS_SPECTRUM_IND_Y + 11 + 32)
+
+//location of BW filter indicator
+#define POS_FILTER_BW_H (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y)
 
 #define WATERFALL_MAX_SIZE (SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL)
 
@@ -333,7 +341,6 @@
 #define POS_LOADANDDEBUG_Y					95
 #define POS_DEBUG_X							0
 #define POS_LOAD_X							280
-
 
 //
 // Location of numerical FWD/REV power indicator
