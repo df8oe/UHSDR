@@ -506,7 +506,7 @@ void UiDriver_TextMsgClear()
 	}
 	ui_txt_msg_buffer[fillcnt]='\0';
 
-    UiLcdHy28_PrintText(POS_TextMsgLine_X,POS_TextMsgLine_Y, ui_txt_msg_buffer,Yellow,Black,4);
+    UiLcdHy28_PrintText(POS_TextMsgLine_X,POS_TextMsgLine_Y, ui_txt_msg_buffer,Yellow,Black,ui_txt_msg_font);
     ui_txt_msg_idx = 0;
     ui_txt_msg_update = true;
 }
@@ -528,7 +528,7 @@ void UiDriver_TextMsgDisplay()
 
         //const char* txt_ptr = ui_txt_msg_idx == 0? ui_txt_empty_line:ui_txt_msg_buffer;
         //UiLcdHy28_PrintText(POS_TextMsgLine_X,POS_TextMsgLine_Y,txt_ptr,Yellow,Black,4);
-        UiLcdHy28_PrintText(POS_TextMsgLine_X,POS_TextMsgLine_Y, ui_txt_msg_buffer,Yellow,Black,4);
+        UiLcdHy28_PrintText(POS_TextMsgLine_X,POS_TextMsgLine_Y, ui_txt_msg_buffer,Yellow,Black,ui_txt_msg_font);
     }
 }
 
@@ -6501,7 +6501,7 @@ void UiDriver_MainHandler()
 
 					char str[20];
 					snprintf(str,20,"%2u:%02u:%02u",sTime.Hours,sTime.Minutes,sTime.Seconds);
-					UiLcdHy28_PrintText(0,POS_RTC,str,White,Black,0);
+					UiLcdHy28_PrintText(POS_RTC_X,POS_RTC_Y,str,White,Black,0);
 				}
 			}
 			break;

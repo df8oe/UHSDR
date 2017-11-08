@@ -18,7 +18,7 @@
 //
 // Spectrum display
 #define POS_SPECTRUM_IND_X					0
-#define POS_SPECTRUM_IND_Y					120
+#define POS_SPECTRUM_IND_Y					130
 #define POS_SPECTRUM_IND_H					80
 #define POS_SPECTRUM_IND_W                  258
 
@@ -113,7 +113,11 @@
 //#define POS_RADIO_MODE_Y            		5
 
 // Bottom bar
-#define POS_BOTTOM_BAR_X            		32
+#ifdef UI_BRD_OVI40
+	#define POS_BOTTOM_BAR_X            		0
+#else
+	#define POS_BOTTOM_BAR_X            		32
+#endif
 #define POS_BOTTOM_BAR_Y            		308
 #define POS_BOTTOM_BAR_BUTTON_W         	74
 #define POS_BOTTOM_BAR_BUTTON_H         	16
@@ -167,28 +171,30 @@
 #define POS_TEMP_IND_Y              		64
 
 // RTC
-#define POS_RTC								79
+#define POS_RTC_X							415
+#define POS_RTC_Y							80
 
-#define POS_LOADANDDEBUG_Y					95
+#define POS_LOADANDDEBUG_Y					96
 #define POS_DEBUG_X							0
 #define POS_LOAD_X							280
 
 //
 // Location of numerical FWD/REV power indicator
 //
-#define	POS_PWR_NUM_IND_X					1
-#define	POS_PWR_NUM_IND_Y					80
+#define	POS_PWR_NUM_IND_X					320
+#define	POS_PWR_NUM_IND_Y					96
 
-#define POS_CW_DECODER_WPM_X 	205
-#define POS_CW_DECODER_WPM_Y 	 38 // 116 --> above DSP box //79 --> this collides with the RTC!
+#define POS_CW_DECODER_WPM_X 	420 //205
+#define POS_CW_DECODER_WPM_Y 	290 //38 // 116 --> above DSP box //79 --> this collides with the RTC!
 
-#define CW_SNAP_CARRIER_X	232 // central position of variable freq marker
-#define CW_SNAP_CARRIER_Y	52 // position of variable freq marker
+#define CW_SNAP_CARRIER_X	242 //232 // central position of variable freq marker
+#define CW_SNAP_CARRIER_Y	29  //96 //52 // position of variable freq marker
 
 //coordinates for text line (CW decoder or freedv output)
-#define POS_TextMsgLine_X 						205
-#define POS_TextMsgLine_Y 						28
-#define ui_txt_msg_buffer_max 39 // no more space on single screen line
+#define POS_TextMsgLine_X 						0   //205
+#define POS_TextMsgLine_Y 						290 //28
+#define ui_txt_msg_buffer_max 50 // no more space on single screen line
+#define ui_txt_msg_font 0
 // POSITIONS END
 
 #else
@@ -336,7 +342,8 @@
 #define POS_TEMP_IND_Y              		0
 
 // RTC
-#define POS_RTC								79
+#define POS_RTC_X							0
+#define POS_RTC_Y							79
 
 #define POS_LOADANDDEBUG_Y					95
 #define POS_DEBUG_X							0
@@ -358,7 +365,7 @@
 #define POS_TextMsgLine_X 						5
 #define POS_TextMsgLine_Y 						92
 #define ui_txt_msg_buffer_max 44 // no more space on single screen line
-
+#define ui_txt_msg_font 4
 //remove it!!
 
 	#define WATERFALL_START_Y 240

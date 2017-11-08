@@ -20,6 +20,9 @@
 #endif
 #if defined(STM32F7) || defined(STM32H7)
     #define USE_SPI_HAL
+	#ifdef USE_GFX_ILI9486
+	USE_DISPLAY_SPI
+	#endif
 #endif
 
 

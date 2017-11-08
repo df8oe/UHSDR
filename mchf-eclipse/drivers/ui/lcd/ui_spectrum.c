@@ -399,7 +399,7 @@ static void UiSpectrum_CreateDrawArea()
 void UiSpectrum_Clear()
 {
 #ifdef USE_DISP_480_320
-    UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X, (POS_SPECTRUM_IND_Y - SPEC_LIGHT_MORE_POINTS), (POS_SPECTRUM_IND_H + WATERFALL_HEIGHT + POS_SPECTRUM_FREQ_BAR_H + 2), MAX_X, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
+    UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X, (POS_SPECTRUM_IND_Y - 22), (POS_SPECTRUM_IND_H + WATERFALL_HEIGHT + POS_SPECTRUM_FREQ_BAR_H + 2 +5), MAX_X, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 #else
     UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X - 2, (POS_SPECTRUM_IND_Y - 22), 94, 264, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 #endif
