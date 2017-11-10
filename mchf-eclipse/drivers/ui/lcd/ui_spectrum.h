@@ -23,6 +23,7 @@ void UiSpectrum_Init();
 void UiSpectrum_Clear();
 void UiSpectrum_Redraw();
 void UiSpectrum_WaterfallClearData();
+void UiSpectrum_CalculateDisplayFilterBW(float32_t* width_pixel_, float32_t* left_filter_border_pos_);
 void UiSpectrum_DisplayFilterBW();
 
 void UiSpectrum_InitCwSnapDisplay (bool visible);

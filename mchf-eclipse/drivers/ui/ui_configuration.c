@@ -219,6 +219,8 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     UI_C_EEPROM_BAND_FULL_PF(14,2200,m)
     UI_C_EEPROM_BAND_FULL_PF(15,630,m)
     UI_C_EEPROM_BAND_FULL_PF(16,160,m)
+	{ ConfigEntry_UInt8, EEPROM_Scope_TRACE_HL_BW,&ts.scope_trace_BW_colour,SPEC_COLOUR_TRACEBW_DEFAULT,0,SPEC_MAX_COLOUR},
+	{ ConfigEntry_UInt8, EEPROM_Scope_TRACE_HL_BW_BGR,&ts.scope_backgr_BW_colour,SPEC_COLOUR_BACKGRBW_DEFAULT,0,100},
     // the entry below MUST be the last entry, and only at the last position Stop is allowed
     {
         ConfigEntry_Stop

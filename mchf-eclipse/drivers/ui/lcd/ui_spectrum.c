@@ -256,11 +256,104 @@ static void UiSpectrum_SpectrumTopBar_GetText(char* wfbartext)
     sprintf(wfbartext,"%s < Magnify %2ux >",lefttext, (1<<sd.magnify));
 }
 
+/**
+ * tells us if x is on a vertical grid line. Called for all SPECTRUM_WIDTH lines
+ */
+static bool UiSpectrum_Draw_XposIsOnVertGrid(const uint16_t x)
+{
+    bool repaint_v_grid = false;
+
+#if 0
+    int k;
+    // Enumerate all saved x positions
+    for(k = 0; k < 7; k++)
+    {
+        // Exit on match
+        if(x == sd.vert_grid_id[k])
+        {
+            repaint_v_grid = true;
+            break;
+            // leave loop, found match
+        }
+        else if (sd.vert_grid_id[k]>x)
+        {
+            // leave loop, no need to look further, we passed the area where x could have hit a vertical grid line.
+            // assume low to high order in sd.vert_grid_id
+            break;
+        }
+    }
+#else
+    // this should be faster in case of power of 2 vert grid distance than the generic lookup code above
+    // since the compiler should detect that module power 2 means just masking the higher bits
+    // we have special check if we are on the rightmost pixel, this one is not a vertical line.
+    return ((x - POS_SPECTRUM_GRID_VERT_START) % SPECTRUM_SCOPE_GRID_VERT == 0) && (x != (POS_SPECTRUM_GRID_VERT_START + SPECTRUM_WIDTH)) ;
+#endif
+    return repaint_v_grid;
+}
+
+static void UiSpectrum_DrawLine(uint16_t x, uint16_t y_pos_prev, uint16_t y_pos, uint16_t clr)
+{
+
+    if(y_pos - y_pos_prev > 1) // && x !=(SPECTRUM_START_X + x_offset))
+    { // plot line upwards
+        UiLcdHy28_DrawStraightLine(x, y_pos_prev + 1, y_pos -  y_pos_prev,LCD_DIR_VERTICAL, clr);
+    }
+    else if (y_pos - y_pos_prev < -1) // && x !=(SPECTRUM_START_X + x_offset))
+    { // plot line downwards
+        UiLcdHy28_DrawStraightLine(x, y_pos, y_pos_prev - y_pos,LCD_DIR_VERTICAL, clr);
+    }
+    else
+    {
+        UiLcdHy28_DrawStraightLine(x, y_pos,1,LCD_DIR_VERTICAL, clr);
+    }
+
+}
+
+static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t y_old_pos, uint16_t y_new_pos, uint16_t clr_scope, uint16_t clr_bgr, bool is_carrier_line)
+{
+    // normal scope
+    if(y_old_pos > y_new_pos)
+    {
+        // is old line going to be overwritten by new line, anyway?
+        UiLcdHy28_DrawStraightLine(x, y_new_pos,y_old_pos-y_new_pos, LCD_DIR_VERTICAL, clr_scope);
+    }
+    else if (y_old_pos < y_new_pos )
+    {
+        // is old line is longer than the new line?
+
+        // repaint the vertical grid
+        bool repaint_v_grid = UiSpectrum_Draw_XposIsOnVertGrid(x);
+
+        // we need to delete by overwriting with background color or grid color if we are on a vertical grid line
+        uint16_t clr_bg =
+                is_carrier_line?
+                        sd.scope_centre_grid_colour_active
+                        :
+                        ( repaint_v_grid ? sd.scope_grid_colour_active : clr_bgr )
+                        ;
+
+        UiLcdHy28_DrawStraightLine(x,y_old_pos,y_new_pos-y_old_pos,LCD_DIR_VERTICAL,clr_bg);
+
+        if (!repaint_v_grid && is_carrier_line == false)
+        {
+            // now we repaint the deleted points of the horizontal grid lines
+            // but only if we are not on a vertical grid line, we already painted that in this case
+            for(uint16_t k = 0; k < sd.upper_horiz_gridline && y_old_pos <= sd.horz_grid_id[k]; k++)
+            { // we run if pixel positions are inside of deleted area (i.e. not lower than y_old_pos) or if there are no more lines
+
+                if(y_old_pos <= sd.horz_grid_id[k] && sd.horz_grid_id[k] < y_new_pos )
+                {
+                    UiLcdHy28_DrawStraightLine(x,sd.horz_grid_id[k],1,LCD_DIR_HORIZONTAL, sd.scope_grid_colour_active);
+                }
+            }
+        }
+    }
+}
 
 static void UiSpectrum_CreateDrawArea()
 {
     uint32_t clr;
-
+    const bool is_scope_light = (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) != 0;
     // get grid colour of all but center line
     UiMenu_MapColors(ts.scope_grid_colour,NULL, &sd.scope_grid_colour_active);
     // Get color of center vertical line of spectrum scope
@@ -394,6 +487,38 @@ static void UiSpectrum_CreateDrawArea()
                 RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
     }
 
+    //show highlighted filter bandwidth on the spectrum
+
+    uint32_t clr_scope_fltr, clr_scope_fltrbg;
+    float32_t right_filter_border_pos_;                          // calculate width of BW highlight in pixels
+    float32_t left_filter_border_pos_;				// first pixel of filter
+
+    uint16_t right_filter_border_pos,left_filter_border_pos;
+    UiSpectrum_CalculateDisplayFilterBW(&right_filter_border_pos_,&left_filter_border_pos_);
+    right_filter_border_pos=(uint16_t)right_filter_border_pos_;
+    left_filter_border_pos=(uint16_t)left_filter_border_pos_;
+    right_filter_border_pos+=left_filter_border_pos; //convert width to right boundary
+
+    UiMenu_MapColors(ts.scope_trace_BW_colour, NULL, &clr_scope_fltr);//calculate the colours of highlight
+    uint16_t BWHbgr=ts.scope_backgr_BW_colour;
+    BWHbgr<<=8;
+    BWHbgr/=100;
+    clr_scope_fltrbg=RGB(BWHbgr,BWHbgr,BWHbgr);	//color of the active demodulation filter highlight background
+    const uint16_t spec_top_y = sd.scope_ystart + sd.scope_size;
+    const uint16_t spec_height_limit = sd.scope_size - 7;
+
+    for(uint16_t x=left_filter_border_pos;x<=right_filter_border_pos;x++)
+    {
+    	if (is_scope_light)
+    	{
+    		UiSpectrum_DrawLine(x, spec_top_y, spec_top_y-spec_height_limit, clr_scope_fltrbg);
+    	}
+    	else
+    	{
+    		UiSpectrum_ScopeStandard_UpdateVerticalDataLine(x, spec_top_y-spec_height_limit, spec_top_y, clr_scope_fltr, clr_scope_fltrbg, false);
+    	}
+    }
+
 }
 
 void UiSpectrum_Clear()
@@ -405,101 +530,7 @@ void UiSpectrum_Clear()
 #endif
 }
 
-/**
- * tells us if x is on a vertical grid line. Called for all SPECTRUM_WIDTH lines
- */
-static bool UiSpectrum_Draw_XposIsOnVertGrid(const uint16_t x)
-{
-    bool repaint_v_grid = false;
 
-#if 0
-    int k;
-    // Enumerate all saved x positions
-    for(k = 0; k < 7; k++)
-    {
-        // Exit on match
-        if(x == sd.vert_grid_id[k])
-        {
-            repaint_v_grid = true;
-            break;
-            // leave loop, found match
-        }
-        else if (sd.vert_grid_id[k]>x)
-        {
-            // leave loop, no need to look further, we passed the area where x could have hit a vertical grid line.
-            // assume low to high order in sd.vert_grid_id
-            break;
-        }
-    }
-#else
-    // this should be faster in case of power of 2 vert grid distance than the generic lookup code above
-    // since the compiler should detect that module power 2 means just masking the higher bits
-    // we have special check if we are on the rightmost pixel, this one is not a vertical line.
-    return ((x - POS_SPECTRUM_GRID_VERT_START) % SPECTRUM_SCOPE_GRID_VERT == 0) && (x != (POS_SPECTRUM_GRID_VERT_START + SPECTRUM_WIDTH)) ;
-#endif
-    return repaint_v_grid;
-}
-
-
-static void UiSpectrum_DrawLine(uint16_t x, uint16_t y_pos_prev, uint16_t y_pos, uint16_t clr)
-{
-
-    if(y_pos - y_pos_prev > 1) // && x !=(SPECTRUM_START_X + x_offset))
-    { // plot line upwards
-        UiLcdHy28_DrawStraightLine(x, y_pos_prev + 1, y_pos -  y_pos_prev,LCD_DIR_VERTICAL, clr);
-    }
-    else if (y_pos - y_pos_prev < -1) // && x !=(SPECTRUM_START_X + x_offset))
-    { // plot line downwards
-        UiLcdHy28_DrawStraightLine(x, y_pos, y_pos_prev - y_pos,LCD_DIR_VERTICAL, clr);
-    }
-    else
-    {
-        UiLcdHy28_DrawStraightLine(x, y_pos,1,LCD_DIR_VERTICAL, clr);
-    }
-
-}
-
-
-static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t y_old_pos, uint16_t y_new_pos, uint16_t clr_scope, bool is_carrier_line)
-{
-    // normal scope
-    if(y_old_pos > y_new_pos)
-    {
-        // is old line going to be overwritten by new line, anyway?
-        UiLcdHy28_DrawStraightLine(x, y_new_pos,y_old_pos-y_new_pos, LCD_DIR_VERTICAL, clr_scope);
-    }
-    else if (y_old_pos < y_new_pos )
-    {
-        // is old line is longer than the new line?
-
-        // repaint the vertical grid
-        bool repaint_v_grid = UiSpectrum_Draw_XposIsOnVertGrid(x);
-
-        // we need to delete by overwriting with background color or grid color if we are on a vertical grid line
-        uint16_t clr_bg =
-                is_carrier_line?
-                        sd.scope_centre_grid_colour_active
-                        :
-                        ( repaint_v_grid ? sd.scope_grid_colour_active : Black )
-                        ;
-
-        UiLcdHy28_DrawStraightLine(x,y_old_pos,y_new_pos-y_old_pos,LCD_DIR_VERTICAL,clr_bg);
-
-        if (!repaint_v_grid && is_carrier_line == false)
-        {
-            // now we repaint the deleted points of the horizontal grid lines
-            // but only if we are not on a vertical grid line, we already painted that in this case
-            for(uint16_t k = 0; k < sd.upper_horiz_gridline && y_old_pos <= sd.horz_grid_id[k]; k++)
-            { // we run if pixel positions are inside of deleted area (i.e. not lower than y_old_pos) or if there are no more lines
-
-                if(y_old_pos <= sd.horz_grid_id[k] && sd.horz_grid_id[k] < y_new_pos )
-                {
-                    UiLcdHy28_DrawStraightLine(x,sd.horz_grid_id[k],1,LCD_DIR_HORIZONTAL, sd.scope_grid_colour_active);
-                }
-            }
-        }
-    }
-}
 
 
 // This version of "Draw Scope" is revised from the original in that it interleaves the erasure with the drawing
@@ -521,10 +552,30 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     const uint16_t spec_height_limit = sd.scope_size - 7;
     const uint16_t spec_top_y = sd.scope_ystart + sd.scope_size;
 
-    uint32_t clr_scope;
-    UiMenu_MapColors(ts.scope_trace_colour, NULL, &clr_scope);
+    uint32_t clr_scope, clr_scope_normal, clr_scope_fltr, clr_scope_fltrbg;
+    uint16_t clr_bg;
+
+    float32_t right_filter_border_pos_;                          // calculate width of BW highlight in pixels
+    float32_t left_filter_border_pos_;				// first pixel of filter
+    uint16_t right_filter_border_pos,left_filter_border_pos;
+    UiSpectrum_CalculateDisplayFilterBW(&right_filter_border_pos_,&left_filter_border_pos_);
+    right_filter_border_pos=(uint16_t)right_filter_border_pos_;
+    left_filter_border_pos=(uint16_t)left_filter_border_pos_;
+    right_filter_border_pos+=left_filter_border_pos; //convert width to right boundary
+
+    UiMenu_MapColors(ts.scope_trace_colour, NULL, &clr_scope_normal);
+    //TODO: make it configurable by display menu
+    //clr_scope_fltr=RGB(0xff,0xff,0xff);		//color of the active demodulation filter highlight
+    UiMenu_MapColors(ts.scope_trace_BW_colour, NULL, &clr_scope_fltr);//calculate the colours of highlight
+    uint16_t BWHbgr=ts.scope_backgr_BW_colour;
+    BWHbgr<<=8;
+    BWHbgr/=100;
+    clr_scope_fltrbg=RGB(BWHbgr,BWHbgr,BWHbgr);	//color of the active demodulation filter highlight background
 
     uint16_t marker_line_pos[SPECTRUM_MAX_MARKER];
+
+    clr_scope=clr_scope_normal;
+    clr_bg=Black;
 
     for (uint16_t idx = 0; idx < SPECTRUM_MAX_MARKER; idx++)
     {
@@ -553,7 +604,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
                             sd.marker_line_pos_prev[idx],
                             spec_top_y - spec_height_limit /* old = max pos */ ,
                             spec_top_y /* new = min pos */,
-                            clr_scope,
+                            clr_scope, Black,	//TODO: add highlight color here
                             false);
 
                     // we erase the memory for this location, so that it is fully redrawn
@@ -593,6 +644,17 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     uint16_t marker_lines_togo = sd.marker_num;
     for(uint16_t x = SPECTRUM_START_X, idx = 0; idx < SPECTRUM_WIDTH; x++, idx++)
     {
+        if((x>=left_filter_border_pos)&&(x<=right_filter_border_pos)) //BW highlight control
+        {
+        	clr_scope=clr_scope_fltr;
+        	clr_bg=clr_scope_fltrbg;
+        }
+        else
+        {
+            clr_scope=clr_scope_normal;
+            clr_bg=Black;
+        }
+
         // averaged FFT data scaled to height and (if necessary) limited here to current max height
         uint16_t y_height = (fft_new[idx] < spec_height_limit ? fft_new[idx] : spec_height_limit);
 
@@ -624,7 +686,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
             // x position is not on vertical center line (the one that indicates the tx carrier frequency)
             // we draw a line if y_new_pos and the last drawn pixel (y_old_pos) are more than 1 pixel apart in the vertical axis
             // makes the spectrum display look more complete . . .
-            uint16_t clr_bg = Black;
+           // uint16_t clr_bg = Black;
 
             // TODO: we  could find out the lowest marker_line and do not process search before that line
             for (uint16_t marker_idx = 0; marker_lines_togo > 0 && marker_idx < sd.marker_num; marker_idx++)
@@ -655,7 +717,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 
             // we just draw our vertical line in a optimized fashion here
             // handles also the grid (re)drawing if necessary
-            UiSpectrum_ScopeStandard_UpdateVerticalDataLine(x, y_old_pos, y_new_pos, clr_scope, is_marker_line);
+            UiSpectrum_ScopeStandard_UpdateVerticalDataLine(x, y_old_pos, y_new_pos, clr_scope, clr_bg, is_marker_line);
         }
     }
 }
@@ -1063,9 +1125,56 @@ static void UiSpectrum_RedrawSpectrum()
 void UiSpectrum_Init()
 {
     UiSpectrum_Clear();			// clear display under spectrum scope
-    UiSpectrum_CreateDrawArea();
     UiSpectrum_InitSpectrumDisplayData();
+    UiSpectrum_CreateDrawArea();
     UiSpectrum_DisplayFilterBW();	// Update on-screen indicator of filter bandwidth
+}
+/**
+ * @brief Calculate parameters for display filter bar. This function is used also for spectrum BW highlight.
+ */
+void UiSpectrum_CalculateDisplayFilterBW(float32_t* width_pixel_, float32_t* left_filter_border_pos_)
+{
+
+    const FilterPathDescriptor* path_p = &FilterPathInfo[ts.filter_path];
+    const FilterDescriptor* filter_p = &FilterInfo[path_p->id];
+    const float32_t width = filter_p->width;
+    const float32_t offset = path_p->offset!=0 ? path_p->offset : width/2;
+
+    UiSpectrum_UpdateSpectrumPixelParameters(); // before accessing pixel parameters, request update according to configuration
+
+    float32_t width_pixel = width/sd.pixel_per_hz;                          // calculate width of line in pixels
+
+    float32_t offset_pixel = offset/sd.pixel_per_hz;                            // calculate filter center frequency offset in pixels
+
+    float32_t left_filter_border_pos;
+
+    if(RadioManagement_UsesBothSidebands(ts.dmod_mode))     // special cases - AM, SAM and FM, which are double-sidebanded
+    {
+        left_filter_border_pos = sd.rx_carrier_pos - width_pixel;                   // line starts "width" below center
+        width_pixel *= 2;                       // the width is double in AM & SAM, above and below center
+    }
+    else if(RadioManagement_LSBActive(ts.dmod_mode))    // not AM, but LSB:  calculate position of line, compensating for both width and the fact that SSB/CW filters are not centered
+    {
+        left_filter_border_pos = sd.rx_carrier_pos - (offset_pixel + (width_pixel/2));  // if LSB it will be below zero Hz
+    }
+    else                // USB mode
+    {
+        left_filter_border_pos = sd.rx_carrier_pos + (offset_pixel - (width_pixel/2));          // if USB it will be above zero Hz
+    }
+
+    if(left_filter_border_pos < 0) // prevents line to leave left border
+     {
+         width_pixel = width_pixel + left_filter_border_pos;
+         left_filter_border_pos = 0;
+     }
+
+     if(left_filter_border_pos + width_pixel > SPECTRUM_WIDTH) // prevents line to leave right border
+     {
+         width_pixel = (float32_t)SPECTRUM_WIDTH - left_filter_border_pos;
+     }
+
+    *width_pixel_=width_pixel;
+    *left_filter_border_pos_=left_filter_border_pos;
 }
 
 /**
@@ -1078,6 +1187,11 @@ void UiSpectrum_DisplayFilterBW()
     {// bail out if in menu mode
         // Update screen indicator - first get the width and center-frequency offset of the currently-selected filter
 
+        float32_t width_pixel;                          // calculate width of line in pixels
+        float32_t left_filter_border_pos;
+        UiSpectrum_CalculateDisplayFilterBW(&width_pixel,&left_filter_border_pos);
+
+    	/*
         const FilterPathDescriptor* path_p = &FilterPathInfo[ts.filter_path];
         const FilterDescriptor* filter_p = &FilterInfo[path_p->id];
         const float32_t width = filter_p->width;
@@ -1107,7 +1221,7 @@ void UiSpectrum_DisplayFilterBW()
         }
 
         //  erase old line by clearing whole area
-        UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X), POS_FILTER_BW_Y, SPECTRUM_WIDTH, LCD_DIR_HORIZONTAL, Black);
+
 
         if(left_filter_border_pos < 0) // prevents line to leave left border
         {
@@ -1119,7 +1233,9 @@ void UiSpectrum_DisplayFilterBW()
         {
             width_pixel = (float32_t)SPECTRUM_WIDTH - left_filter_border_pos;
         }
+  */
 
+        UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X), POS_FILTER_BW_Y, SPECTRUM_WIDTH, LCD_DIR_HORIZONTAL, Black);
         uint32_t clr;
         // get color for line
         UiMenu_MapColors(ts.filter_disp_colour,NULL, &clr);

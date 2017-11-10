@@ -214,6 +214,8 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_SPEED, NULL, "Scope 1/Speed", UiMenuDesc("Lower Values: Higher refresh rate. Set to 0 to disable scope.") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_AGC_ADJUST, NULL, "Scope AGC Adj.", UiMenuDesc("Adjusting of scope / waterfall AGC for fitting graphs to screen") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_COLOUR, NULL, "Scope Trace Colour", UiMenuDesc("Set colour of scope") },
+	{ MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_TRACE_HL_COLOUR, NULL, "Scope BW Trace Colour", UiMenuDesc("Set colour of highlighted BW scope") },
+	{ MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_BACKGROUND_HL_COLOUR, NULL, "Scope BW BCKgr Colour", UiMenuDesc("Set colour of highlighted BW background") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_GRID_COLOUR, NULL, "Scope Grid Colour", UiMenuDesc("Set colour of scope grid") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_DB_DIVISION, NULL, "Scope Div.", UiMenuDesc("Set rf range for scope") },
     { MENU_DISPLAY, MENU_ITEM, MENU_SCOPE_NOSIG_ADJUST, NULL, "Scope NoSig Adj.", UiMenuDesc("Set scope line corresponding to NO SIGNAL") },

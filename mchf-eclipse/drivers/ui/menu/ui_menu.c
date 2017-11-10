@@ -2060,6 +2060,24 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                              );
         UiMenu_MapColors(ts.scope_trace_colour,options,&clr);
         break;
+    case MENU_SCOPE_TRACE_HL_COLOUR: //spectrum highlighted bandwidth colour
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_trace_BW_colour,
+                                              0,
+                                              SPEC_MAX_COLOUR,
+											  SPEC_COLOUR_TRACEBW_DEFAULT,
+                                              1
+                                             );
+        UiMenu_MapColors(ts.scope_trace_BW_colour,options,&clr);
+        break;
+    case MENU_SCOPE_BACKGROUND_HL_COLOUR:  // set step size of of waterfall display?
+         UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_backgr_BW_colour,
+                                     0,
+                                     100,
+									 SPEC_COLOUR_BACKGRBW_DEFAULT,
+                                     10
+                                    );
+         snprintf(options,32, "  %u%%", ts.scope_backgr_BW_colour);
+         break;
     case MENU_SCOPE_GRID_COLOUR:    // spectrum scope grid colour
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_grid_colour,
                                               0,

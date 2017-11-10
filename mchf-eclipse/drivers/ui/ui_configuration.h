@@ -130,6 +130,8 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 
 
 #define SPEC_COLOUR_TRACE_DEFAULT   SPEC_WHITE
+#define SPEC_COLOUR_TRACEBW_DEFAULT SPEC_WHITE
+#define SPEC_COLOUR_BACKGRBW_DEFAULT 20
 #define SPEC_COLOUR_GRID_DEFAULT    SPEC_GREY4
 #define SPEC_COLOUR_SCALE_DEFAULT   SPEC_GREY4
 #define FILTER_DISP_COLOUR_DEFAULT  SPEC_GREY4
@@ -555,7 +557,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_LOW_POWER_CONFIG          387
 #define EEPROM_CW_KEYER_WEIGHT           388
 #define EEPROM_DIGI_MODE_CONF			 389
-#define EEPROM_FIRST_UNUSED 				390		// change this if new value ids are introduced
+#define EEPROM_Scope_TRACE_HL_BW			 390
+#define EEPROM_Scope_TRACE_HL_BW_BGR			 391
+#define EEPROM_FIRST_UNUSED 				392		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
