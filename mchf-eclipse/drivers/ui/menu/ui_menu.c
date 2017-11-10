@@ -437,7 +437,7 @@ const ColorNameValue MchfColor_Id2ValueName[SPEC_MAX_COLOUR] =
         { Blue,     "Blue"},
         { Red,      "Red1"},
         { Red2,     "Red2"},
-        { Red3,     "Red2"},
+        { Red3,     "Red3"},
         { Magenta,  "Mgnt"},
         { Green,    "Gren"},
         { Cyan,     "Cyan"},
