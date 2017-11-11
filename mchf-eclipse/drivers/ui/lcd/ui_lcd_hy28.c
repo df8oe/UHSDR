@@ -874,7 +874,7 @@ static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 #ifdef USE_DRIVER_RA8875
     UiLcdRa8875_WriteReg_16bit(0x46, Xpos);
     UiLcdRa8875_WriteReg_16bit(0x48, Ypos);
-#elif defined(ILI932x)
+#elif defined(USE_GFX_ILI932x)
     UiLcdHy28_WriteReg(0x20, Ypos );
     UiLcdHy28_WriteReg(0x21, Xpos );
 #endif    

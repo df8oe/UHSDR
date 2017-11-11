@@ -573,11 +573,11 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 
         	if (is_scope_light)
         	{
-        		UiSpectrum_DrawLine(xh, spec_top_y, spec_top_y-spec_height_limit, clr_bg);
+        		UiSpectrum_DrawLine(xh+SPECTRUM_START_X, spec_top_y, spec_top_y-spec_height_limit, clr_bg);
         	}
         	else
         	{
-        		UiSpectrum_ScopeStandard_UpdateVerticalDataLine(xh, spec_top_y-spec_height_limit, spec_top_y, clr_scope, clr_bg, false);
+        		UiSpectrum_ScopeStandard_UpdateVerticalDataLine(xh+SPECTRUM_START_X, spec_top_y-spec_height_limit, spec_top_y, clr_scope, clr_bg, false);
         	}
         	old_pos[xh]=spec_top_y;
     	}
