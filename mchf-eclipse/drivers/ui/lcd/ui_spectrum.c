@@ -353,7 +353,7 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
 static void UiSpectrum_CreateDrawArea()
 {
     uint32_t clr;
-    const bool is_scope_light = (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) != 0;
+    //const bool is_scope_light = (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) != 0;
     // get grid colour of all but center line
     UiMenu_MapColors(ts.scope_grid_colour,NULL, &sd.scope_grid_colour_active);
     // Get color of center vertical line of spectrum scope
@@ -488,37 +488,8 @@ static void UiSpectrum_CreateDrawArea()
     }
 
     //show highlighted filter bandwidth on the spectrum
-
-    uint32_t clr_scope_fltr, clr_scope_fltrbg;
-    float32_t right_filter_border_pos_;                          // calculate width of BW highlight in pixels
-    float32_t left_filter_border_pos_;				// first pixel of filter
-
-    uint16_t right_filter_border_pos,left_filter_border_pos;
-    UiSpectrum_CalculateDisplayFilterBW(&right_filter_border_pos_,&left_filter_border_pos_);
-    right_filter_border_pos=(uint16_t)right_filter_border_pos_;
-    left_filter_border_pos=(uint16_t)left_filter_border_pos_;
-    right_filter_border_pos+=left_filter_border_pos; //convert width to right boundary
-
-    UiMenu_MapColors(ts.scope_trace_BW_colour, NULL, &clr_scope_fltr);//calculate the colours of highlight
-    uint16_t BWHbgr=ts.scope_backgr_BW_colour;
-    BWHbgr<<=8;
-    BWHbgr/=100;
-    clr_scope_fltrbg=RGB(BWHbgr,BWHbgr,BWHbgr);	//color of the active demodulation filter highlight background
-    const uint16_t spec_top_y = sd.scope_ystart + sd.scope_size;
-    const uint16_t spec_height_limit = sd.scope_size - 7;
-
-    for(uint16_t x=left_filter_border_pos;x<=right_filter_border_pos;x++)
-    {
-    	if (is_scope_light)
-    	{
-    		UiSpectrum_DrawLine(x, spec_top_y, spec_top_y-spec_height_limit, clr_scope_fltrbg);
-    	}
-    	else
-    	{
-    		UiSpectrum_ScopeStandard_UpdateVerticalDataLine(x, spec_top_y-spec_height_limit, spec_top_y, clr_scope_fltr, clr_scope_fltrbg, false);
-    	}
-    }
-
+    sd.old_left_filter_border_pos=0;
+    sd.old_right_filter_border_pos=sd.scope_size;
 }
 
 void UiSpectrum_Clear()
@@ -564,18 +535,68 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     right_filter_border_pos+=left_filter_border_pos; //convert width to right boundary
 
     UiMenu_MapColors(ts.scope_trace_colour, NULL, &clr_scope_normal);
-    //TODO: make it configurable by display menu
-    //clr_scope_fltr=RGB(0xff,0xff,0xff);		//color of the active demodulation filter highlight
     UiMenu_MapColors(ts.scope_trace_BW_colour, NULL, &clr_scope_fltr);//calculate the colours of highlight
     uint16_t BWHbgr=ts.scope_backgr_BW_colour;
     BWHbgr<<=8;
     BWHbgr/=100;
-    clr_scope_fltrbg=RGB(BWHbgr,BWHbgr,BWHbgr);	//color of the active demodulation filter highlight background
+    clr_scope_fltrbg=RGB(BWHbgr,BWHbgr,BWHbgr);	//background color of the active demodulation filter highlight
+
+
+    if((sd.old_left_filter_border_pos!=left_filter_border_pos ) || (sd.old_right_filter_border_pos!=right_filter_border_pos ))
+    {
+    	//BW changed so we must refresh the highlighted spectrum
+    	uint16_t x_start=sd.old_left_filter_border_pos;
+    	uint16_t x_end=sd.old_right_filter_border_pos;
+    	if(sd.old_left_filter_border_pos>left_filter_border_pos)
+    	{
+    		x_start=left_filter_border_pos;
+    	}
+    	if(sd.old_right_filter_border_pos<right_filter_border_pos)
+    	{
+    		x_end=right_filter_border_pos;
+    	}
+
+    	uint16_t xh;
+
+    	for(xh=x_start;xh<=x_end;xh++)
+    	{
+            if((xh>=left_filter_border_pos)&&(xh<=right_filter_border_pos)) //BW highlight control
+            {
+            	clr_scope=clr_scope_fltr;
+            	clr_bg=clr_scope_fltrbg;
+            }
+            else
+            {
+                clr_scope=clr_scope_normal;
+                clr_bg=Black;
+            }
+
+        	if (is_scope_light)
+        	{
+        		UiSpectrum_DrawLine(xh, spec_top_y, spec_top_y-spec_height_limit, clr_bg);
+        	}
+        	else
+        	{
+        		UiSpectrum_ScopeStandard_UpdateVerticalDataLine(xh, spec_top_y-spec_height_limit, spec_top_y, clr_scope, clr_bg, false);
+        	}
+        	old_pos[xh]=spec_top_y;
+    	}
+
+    	//causing of redraw all marker lines
+    	for (uint16_t idx = 0; idx < SPECTRUM_MAX_MARKER; idx++)
+    	{
+    		sd.marker_line_pos_prev[idx]=65535;
+    	}
+
+
+    }
+    sd.old_left_filter_border_pos=left_filter_border_pos;
+    sd.old_right_filter_border_pos=right_filter_border_pos;
 
     uint16_t marker_line_pos[SPECTRUM_MAX_MARKER];
 
-    clr_scope=clr_scope_normal;
-    clr_bg=Black;
+    //clr_scope=clr_scope_normal;
+    //clr_bg=Black;
 
     for (uint16_t idx = 0; idx < SPECTRUM_MAX_MARKER; idx++)
     {
@@ -588,6 +609,16 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
         {
             if (sd.marker_line_pos_prev[idx] < SPECTRUM_START_X + SPECTRUM_WIDTH)
             {
+            	if((sd.marker_line_pos_prev[idx]>=left_filter_border_pos)&&(sd.marker_line_pos_prev[idx]<=right_filter_border_pos)) //BW highlight control
+            	{
+            		clr_bg=clr_scope_fltrbg;
+            	}
+            	else
+            	{
+            		clr_bg=Black;
+            	}
+
+
                 // delete old line if previously inside screen limits
 
                 if(is_scope_light)
@@ -596,7 +627,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
                             spec_top_y - spec_height_limit,
                             spec_height_limit,
                             LCD_DIR_VERTICAL,
-                            Black);
+							clr_bg);
                 }
                 else
                 {
@@ -604,7 +635,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
                             sd.marker_line_pos_prev[idx],
                             spec_top_y - spec_height_limit /* old = max pos */ ,
                             spec_top_y /* new = min pos */,
-                            clr_scope, Black,	//TODO: add highlight color here
+                            clr_scope, clr_bg,	//TODO: add highlight color here
                             false);
 
                     // we erase the memory for this location, so that it is fully redrawn
