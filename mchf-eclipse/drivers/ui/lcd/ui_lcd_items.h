@@ -12,7 +12,6 @@
 
 //new hVGA lcd definitions
 #ifdef USE_DISP_480_320
-//#ifdef USE_DISP_none		//this is only for debug purpose, tocheck that at 320x240 everything is ok
 // ----------------------------------------------------------
 // Spectrum draw params
 //
@@ -54,7 +53,7 @@
 
 
 #define     POS_SPECTRUM_GRID_VERT_START (POS_SPECTRUM_IND_X-1)
-#define     POS_SPECTRUM_GRID_HORIZ_START (POS_SPECTRUM_IND_Y + 11 + 32 + POS_SPECTRUM_FREQ_BAR_H)
+#define     POS_SPECTRUM_GRID_HORIZ_START (POS_SPECTRUM_IND_Y + 11 + 34 + POS_SPECTRUM_FREQ_BAR_H)
 
 //location of BW filter indicator
 #define POS_FILTER_BW_Y (POS_SPECTRUM_IND_Y + POS_SPECTRUM_FILTER_WIDTH_BAR_Y+POS_SPECTRUM_FREQ_BAR_H)

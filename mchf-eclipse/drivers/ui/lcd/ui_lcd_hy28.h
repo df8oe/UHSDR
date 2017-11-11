@@ -23,8 +23,14 @@
 	#define MAX_X  800
 	#define MAX_Y  480
 #else
-	#define MAX_X  320
-	#define MAX_Y  240
+	#ifdef Simulate320_240_on_480_320
+		#define MAX_X  480
+		#define MAX_Y  320
+	#else
+		#define MAX_X  320
+		#define MAX_Y  240
+	#endif
+
 #endif
 
 #ifdef TimeDebug

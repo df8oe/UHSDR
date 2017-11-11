@@ -488,8 +488,8 @@ static void UiSpectrum_CreateDrawArea()
     }
 
     //show highlighted filter bandwidth on the spectrum
-    sd.old_left_filter_border_pos=0;
-    sd.old_right_filter_border_pos=sd.scope_size;
+    sd.old_left_filter_border_pos=SPECTRUM_START_X;;
+    sd.old_right_filter_border_pos=sd.scope_size+SPECTRUM_START_X;
 }
 
 void UiSpectrum_Clear()
@@ -541,6 +541,8 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     BWHbgr/=100;
     clr_scope_fltrbg=RGB(BWHbgr,BWHbgr,BWHbgr);	//background color of the active demodulation filter highlight
 
+    left_filter_border_pos+=SPECTRUM_START_X;
+    right_filter_border_pos+=SPECTRUM_START_X;
 
     if((sd.old_left_filter_border_pos!=left_filter_border_pos ) || (sd.old_right_filter_border_pos!=right_filter_border_pos ))
     {
@@ -555,9 +557,10 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     	{
     		x_end=right_filter_border_pos;
     	}
+    	//x_start+=SPECTRUM_START_X;
+    	//x_end+=SPECTRUM_START_X;
 
     	uint16_t xh;
-
     	for(xh=x_start;xh<=x_end;xh++)
     	{
             if((xh>=left_filter_border_pos)&&(xh<=right_filter_border_pos)) //BW highlight control
@@ -573,13 +576,13 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 
         	if (is_scope_light)
         	{
-        		UiSpectrum_DrawLine(xh+SPECTRUM_START_X, spec_top_y, spec_top_y-spec_height_limit, clr_bg);
+        		UiSpectrum_DrawLine(xh, spec_top_y, spec_top_y-spec_height_limit, clr_bg);
         	}
         	else
         	{
-        		UiSpectrum_ScopeStandard_UpdateVerticalDataLine(xh+SPECTRUM_START_X, spec_top_y-spec_height_limit, spec_top_y, clr_scope, clr_bg, false);
+        		UiSpectrum_ScopeStandard_UpdateVerticalDataLine(xh, spec_top_y-spec_height_limit, spec_top_y, clr_scope, clr_bg, false);
         	}
-        	old_pos[xh]=spec_top_y;
+        	old_pos[xh-SPECTRUM_START_X]=spec_top_y;
     	}
 
     	//causing of redraw all marker lines

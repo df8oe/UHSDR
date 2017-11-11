@@ -36,9 +36,13 @@
 //#define USE_GFX_ILI932x
 // ALTERNATIVE GROUP END USE_GFX
 
+//next line allows simulation layout of old 2.8" lcd on 480x320 display (for debug purposes)
+//#define Simulate320_240_on_480_320
+
+
 // DEFAULT GRAPHICS DRIVER
 #if !defined(USE_GFX_ILI9486) && !defined(USE_GFX_RA8875) && !defined(USE_GFX_ILI932x)
-	#define USE_GFX_ILI932x)
+	#define USE_GFX_ILI932x
 #endif
 
 
@@ -48,7 +52,12 @@
 
 // ALTERNATIVE GROUP START USE_DISP
 #ifdef USE_GFX_ILI9486
-	#define USE_DISP_480_320
+	//
+	#ifdef Simulate320_240_on_480_320
+		#define USE_DISP_320_240
+	#else
+		#define USE_DISP_480_320
+	#endif
 #endif
 #ifdef USE_DRIVER_RA8875
 	#define USE_DISP_800_480
