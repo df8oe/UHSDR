@@ -38,6 +38,7 @@
 #include "drivers/ui/lcd/ui_lcd_hy28.h"
 #include "drivers/ui/menu/ui_menu.h"
 #include "drivers/ui/oscillator/osc_interface.h"
+#include "drivers/ui/oscillator/osc_si5351a.h"
 #include "drivers/audio/codec/codec.h"
 #include "misc/profiling.h"
 // Keyboard Driver
@@ -430,6 +431,12 @@ int mchfMain(void)
 
     // UI HW init
     UiDriver_Init();
+
+	// Si5351a only present at OVI40 and supports VLF...2m
+	if (Si5351a_IsPresent()) {
+		ts.rfmod_present = true;
+		ts.vhfuhfmod_present = true;
+	}
 
     // we now reinit the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!
     mchf_hw_i2c1_init();
