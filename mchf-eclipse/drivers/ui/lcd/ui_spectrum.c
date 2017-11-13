@@ -526,6 +526,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     uint32_t clr_scope, clr_scope_normal, clr_scope_fltr, clr_scope_fltrbg;
     uint16_t clr_bg;
 
+    //calculations of bandwidth highlight parameters and colours
     float32_t right_filter_border_pos_;                          // calculate width of BW highlight in pixels
     float32_t left_filter_border_pos_;				// first pixel of filter
     uint16_t right_filter_border_pos,left_filter_border_pos;
@@ -534,15 +535,25 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     left_filter_border_pos=(uint16_t)left_filter_border_pos_;
     right_filter_border_pos+=left_filter_border_pos; //convert width to right boundary
 
-    UiMenu_MapColors(ts.scope_trace_colour, NULL, &clr_scope_normal);
-    UiMenu_MapColors(ts.scope_trace_BW_colour, NULL, &clr_scope_fltr);//calculate the colours of highlight
+    //mapping the colours of highlighted bandwidth
+    //foreground of highlighted bandwidth is one of predefined colours selected fromm array, so simply map it
+    //background is the percentage of foreground, so we must disassemly the rgb data(16 bit) into seperate RGB channels,
+    //then scale it and assembly to 16 bit
+    UiMenu_MapColors(ts.scope_trace_colour, NULL, &clr_scope_normal); //foreground colour
+    UiMenu_MapColors(ts.scope_trace_BW_colour, NULL, &clr_scope_fltr);//background colour of highlight
     uint16_t BWHbgr=ts.scope_backgr_BW_colour;
     BWHbgr<<=8;
     BWHbgr/=100;
-    clr_scope_fltrbg=RGB(BWHbgr,BWHbgr,BWHbgr);	//background color of the active demodulation filter highlight
+    uint16_t colR=(clr_scope_fltr>>8)&0xf8;
+    uint16_t colG=(clr_scope_fltr>>3)&0xfc;
+    uint16_t colB=(clr_scope_fltr<<3)&0xf8;
+    colR=(colR*BWHbgr)>>8;
+    colG=(colG*BWHbgr)>>8;
+    colB=(colB*BWHbgr)>>8;
+    clr_scope_fltrbg=RGB(colR,colG,colB);	//background color of the active demodulation filter highlight
 
-    left_filter_border_pos+=SPECTRUM_START_X;
-    right_filter_border_pos+=SPECTRUM_START_X;
+    left_filter_border_pos+=SPECTRUM_START_X;		//left boundary of highlighted spectrum in absolute pixels
+    right_filter_border_pos+=SPECTRUM_START_X;		//right boundary of highlighted spectrum in absolute pixels
 
     if((sd.old_left_filter_border_pos!=left_filter_border_pos ) || (sd.old_right_filter_border_pos!=right_filter_border_pos ))
     {
@@ -557,8 +568,6 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     	{
     		x_end=right_filter_border_pos;
     	}
-    	//x_start+=SPECTRUM_START_X;
-    	//x_end+=SPECTRUM_START_X;
 
     	uint16_t xh;
     	for(xh=x_start;xh<=x_end;xh++)
@@ -585,7 +594,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
         	old_pos[xh-SPECTRUM_START_X]=spec_top_y;
     	}
 
-    	//causing of redraw all marker lines
+    	//causing the redraw of all marker lines
     	for (uint16_t idx = 0; idx < SPECTRUM_MAX_MARKER; idx++)
     	{
     		sd.marker_line_pos_prev[idx]=65535;
@@ -598,8 +607,6 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 
     uint16_t marker_line_pos[SPECTRUM_MAX_MARKER];
 
-    //clr_scope=clr_scope_normal;
-    //clr_bg=Black;
 
     for (uint16_t idx = 0; idx < SPECTRUM_MAX_MARKER; idx++)
     {
