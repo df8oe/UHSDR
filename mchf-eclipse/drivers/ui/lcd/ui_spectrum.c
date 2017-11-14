@@ -1152,7 +1152,7 @@ static void UiSpectrum_RedrawSpectrum()
         //scale the fft output to width of the spectrum (needed when window width is different from fft size
 
         {
-        	float32_t d_freq=(float32_t)SPECTRUM_WIDTH/(float32_t)SPEC_BUFF_LEN;
+        	float32_t d_freq=(float32_t)SPEC_BUFF_LEN/(float32_t)SPECTRUM_WIDTH;
         	float32_t idx_freq=0;
         	float32_t data,new_data;
         	uint16_t new_idx,old_idx;
