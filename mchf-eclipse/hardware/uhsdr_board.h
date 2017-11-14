@@ -57,6 +57,7 @@
 		#define USE_DISP_320_240
 	#else
 		#define USE_DISP_480_320
+		#define USE_FFT_1024
 	#endif
 #endif
 #ifdef USE_DRIVER_RA8875

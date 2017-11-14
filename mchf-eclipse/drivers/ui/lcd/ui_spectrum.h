@@ -116,9 +116,6 @@ enum
 #define SPECTRUM_SIZE_DEFAULT               SPECTRUM_NORMAL
 
 
-// Dependent on FFT samples,but should be less than control width!
-#define SPECTRUM_WIDTH          256
-
 // Spectrum scope operational constants
 
 #define SPECTRUM_SCOPE_SPEED_MIN			1	// minimum spectrum scope speed
@@ -154,6 +151,7 @@ typedef struct SpectrumDisplay
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN];
     float32_t   FFT_MagData[SPEC_BUFF_LEN];
     float32_t   FFT_AVGData[SPEC_BUFF_LEN];     // IIR low-pass filtered FFT buffer data
+    float32_t   FFT_SamplesUnscalled[FFT_IQ_BUFF_LEN];
 
     // scope pixel data
     uint16_t    Old_PosData[SPECTRUM_WIDTH];
@@ -162,7 +160,7 @@ typedef struct SpectrumDisplay
     ulong   samp_ptr;
 
     // Addresses of vertical grid lines on x axis
-    ushort  vert_grid_id[7];
+    ushort  vert_grid_id[SPECTRUM_SCOPE_GRID_VERT_COUNT-1];
 
     // Addresses of horizontal grid lines on x axis
     ushort  horz_grid_id[5];

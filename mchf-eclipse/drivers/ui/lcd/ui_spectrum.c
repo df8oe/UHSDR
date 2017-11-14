@@ -461,7 +461,7 @@ static void UiSpectrum_CreateDrawArea()
         // Vertical grid lines
         // array must be filled from low to higher x coordinates
         // the lookup code for a match counts on this.
-        for(int i = 1; i < 8; i++)
+        for(int i = 1; i < SPECTRUM_SCOPE_GRID_VERT_COUNT; i++)
         {
             clr = sd.scope_grid_colour_active;
             // Save x position for repaint
@@ -903,7 +903,21 @@ static void UiSpectrum_InitSpectrumDisplayData()
 
 void UiSpectrum_WaterfallClearData()
 {
-    for(int i = 0; i < WATERFALL_MAX_SIZE; i++)   // clear old wf lines if changing magnify
+	uint32_t Wfall_size;
+#ifdef USE_DISP_480_320
+	if(ts.ramsize<256)
+	{
+		Wfall_size=WATERFALL_HEIGHT/2;
+	}
+	else
+	{
+		Wfall_size=WATERFALL_HEIGHT;
+	}
+#else
+	Wfall_size=WATERFALL_MAX_SIZE;
+#endif
+
+    for(int i = 0; i < Wfall_size; i++)   // clear old wf lines if changing magnify
     {
         for(int j = 0; j < SPECTRUM_WIDTH; j++)
         {
@@ -931,7 +945,8 @@ static void UiSpectrum_DrawWaterfall()
     }
 
     // After the above manipulation, clip the result to make sure that it is within the range of the palette table
-    for(uint16_t i = 0; i < SPEC_BUFF_LEN; i++)
+    //for(uint16_t i = 0; i < SPEC_BUFF_LEN; i++)
+    for(uint16_t i = 0; i < SPECTRUM_WIDTH; i++)
     {
         if(sd.FFT_Samples[i] >= NUMBER_WATERFALL_COLOURS)   // is there an illegal color value?
         {
@@ -1065,8 +1080,11 @@ static void UiSpectrum_RedrawSpectrum()
     }
     case 2:		// Do FFT and calculate complex magnitude
     {
+#ifdef USE_FFT_1024
+        arm_cfft_f32(&arm_cfft_sR_f32_len512, sd.FFT_Samples,0,1);	// Do FFT
+#else
         arm_cfft_f32(&arm_cfft_sR_f32_len256, sd.FFT_Samples,0,1);	// Do FFT
-
+#endif
         // Calculate magnitude
         arm_cmplx_mag_f32( sd.FFT_Samples, sd.FFT_MagData ,SPEC_BUFF_LEN);
 
@@ -1108,7 +1126,56 @@ static void UiSpectrum_RedrawSpectrum()
     case 4:
     {
         float32_t	min1=100000;
+#ifdef USE_DISP_480_320
+        // De-linearize data with dB/division
+        // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
+        // TODO: if we would use a different data structure here (e.g. q15), we could speed up collection of enough samples in driver
+        // we could let it run as soon as last FFT_Samples read has been done here
+        for(uint16_t i = 0; i < (SPEC_BUFF_LEN/2); i++)
+        {
+            sd.FFT_SamplesUnscalled[SPEC_BUFF_LEN - i - 1] = UiSpectrum_ScaleFFT(sd.FFT_AVGData[i + SPEC_BUFF_LEN/2], &min1);
+            // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+            // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
+        }
 
+        for(uint16_t i = (SPEC_BUFF_LEN/2); i < (SPEC_BUFF_LEN); i++)
+        {
+            // build right half of spectrum data
+            sd.FFT_SamplesUnscalled[SPEC_BUFF_LEN - i - 1] = UiSpectrum_ScaleFFT(sd.FFT_AVGData[i - SPEC_BUFF_LEN/2], &min1);
+            // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+            // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
+        }
+
+        // Adjust the sliding window so that the lowest signal is always black
+        sd.display_offset -= sd.agc_rate*min1/5;
+
+        //scale the fft output to width of the spectrum (needed when window width is different from fft size
+
+        {
+        	float32_t d_freq=(float32_t)SPECTRUM_WIDTH/(float32_t)SPEC_BUFF_LEN;
+        	float32_t idx_freq=0;
+        	float32_t data,new_data;
+        	uint16_t new_idx,old_idx;
+        	old_idx=0;
+        	for(uint16_t x=0;x<SPECTRUM_WIDTH;x++)
+        	{
+        		new_idx=(int)idx_freq;
+        		if(new_idx!=old_idx)
+        		{
+        			data=0.0f;
+        		}
+
+        		new_data=sd.FFT_SamplesUnscalled[new_idx];
+        		if(new_data>data)
+        		{
+        			data=new_data;
+        		}
+        		old_idx=new_idx;
+        		sd.FFT_Samples[x]=data;
+        		idx_freq+=d_freq;
+        	}
+        }
+#else
         // De-linearize data with dB/division
         // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
         // TODO: if we would use a different data structure here (e.g. q15), we could speed up collection of enough samples in driver
@@ -1120,6 +1187,7 @@ static void UiSpectrum_RedrawSpectrum()
             // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
         }
 
+
         for(uint16_t i = (SPEC_BUFF_LEN/2); i < (SPEC_BUFF_LEN); i++)
         {
             // build right half of spectrum data
@@ -1130,6 +1198,9 @@ static void UiSpectrum_RedrawSpectrum()
 
         // Adjust the sliding window so that the lowest signal is always black
         sd.display_offset -= sd.agc_rate*min1/5;
+#endif
+
+
 
         sd.state++;
         break;
@@ -1329,18 +1400,32 @@ static void UiSpectrum_DrawFrequencyBar()
 
         int16_t centerIdx = -100; // UiSpectrum_GetGridCenterLine(0);
 
-        // remainder of frequency/graticule markings
-        const static int idx2pos[2][9] = {{0,26,58,90,122,154,186,218, 242},{0,26,58,90,122,154,186,209, 229} };
-
 #ifdef USE_DISP_480_320
         int16_t AddPosY=-SPEC_LIGHT_MORE_POINTS;
         if(ts.spectrum_size==SPECTRUM_NORMAL)
         	AddPosY=0;
+
+        // remainder of frequency/graticule markings
+        uint16_t idx2pos[SPECTRUM_SCOPE_GRID_VERT_COUNT+1];
+        for(int i=1;i<SPECTRUM_SCOPE_GRID_VERT_COUNT;i++)
+        {
+        	idx2pos[i]=sd.vert_grid_id[i-1];
+        }
+        idx2pos[0]=0;
+        idx2pos[8]=SPECTRUM_WIDTH-15;
+
+#else
+        // remainder of frequency/graticule markings
+        const static int idx2pos[2][9] = {{0,26,58,90,122,154,186,218, 242},{0,26,58,90,122,154,186,209, 229} };
 #endif
 
         for (int idx = -4; idx < 5; idx += (sd.magnify < 2) ? 1 : 2 )
         {
+#ifdef USE_DISP_480_320
+            int pos = idx2pos[idx+4];
+#else
             int pos = idx2pos[sd.magnify < 2? 0 : 1][idx+4];
+#endif
 
             if (idx != centerIdx)
             {
@@ -1754,9 +1839,11 @@ static void UiSpectrum_CalculateDBm()
             {
                 Lbin = 0;
             }
-            if (Ubin > 255)
+            //if (Ubin > 255)
+            if (Ubin > (SPEC_BUFF_LEN-1))
             {
-                Ubin = 255;
+                //Ubin = 255;
+            	Ubin = SPEC_BUFF_LEN-1;
             }
 
             for(int32_t i = 0; i < (buff_len_int/4); i++)

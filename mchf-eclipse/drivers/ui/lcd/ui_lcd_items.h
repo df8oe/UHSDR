@@ -15,11 +15,14 @@
 // ----------------------------------------------------------
 // Spectrum draw params
 //
+// Dependent on FFT samples,but should be less than control width!
+#define SPECTRUM_WIDTH          480
+
 // Spectrum display
 #define POS_SPECTRUM_IND_X					0
 #define POS_SPECTRUM_IND_Y					130
 #define POS_SPECTRUM_IND_H					80
-#define POS_SPECTRUM_IND_W                  258
+#define POS_SPECTRUM_IND_W                  480
 
 #define	POS_SPECTRUM_FREQ_BAR_Y				0	// reducing value moves upwards
 #define	POS_SPECTRUM_FREQ_BAR_H				16	//height of freq text bar
@@ -28,7 +31,8 @@
 //#define POS_SPECTRUM_INFO_BAR_H             16  //height of description bar (in normal size mode)
 
 #define     SPECTRUM_SCOPE_GRID_HORIZ 16
-#define     SPECTRUM_SCOPE_GRID_VERT  32
+#define     SPECTRUM_SCOPE_GRID_VERT_COUNT  8
+#define     SPECTRUM_SCOPE_GRID_VERT  (SPECTRUM_WIDTH/SPECTRUM_SCOPE_GRID_VERT_COUNT)
 
 
 #define SPECTRUM_SCOPE_TOP_LIMIT            5   // Top limit of spectrum scope magnitude
@@ -200,6 +204,8 @@
 // ----------------------------------------------------------
 // Spectrum draw params
 //
+// Dependent on FFT samples,but should be less than control width!
+#define SPECTRUM_WIDTH          256
 // Spectrum display
 #define POS_SPECTRUM_IND_X					60
 #define POS_SPECTRUM_IND_Y					150
@@ -211,6 +217,7 @@
 #define COL_SPECTRUM_GRAD					0x40
 
 #define     SPECTRUM_SCOPE_GRID_HORIZ 16
+#define     SPECTRUM_SCOPE_GRID_VERT_COUNT  8
 #define     SPECTRUM_SCOPE_GRID_VERT  32
 
 

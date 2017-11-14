@@ -19,6 +19,7 @@
 #include "arm_math.h"
 #include "softdds.h"
 #include "uhsdr_hw_i2s.h"
+#include "uhsdr_board.h"
 
 // 16 or 24 bits from Codec
 // 24 bits are not supported anywhere in the recent code!
@@ -34,7 +35,12 @@
 
 // -----------------------------
 // FFT buffer, this is double the size of the length of the FFT used for spectrum display and waterfall spectrum
-#define FFT_IQ_BUFF_LEN		512
+#ifdef USE_FFT_1024
+	#define FFT_IQ_BUFF_LEN		1024
+#else
+	#define FFT_IQ_BUFF_LEN		512
+#endif
+
 #define SPEC_BUFF_LEN (FFT_IQ_BUFF_LEN/2)
 
 //
