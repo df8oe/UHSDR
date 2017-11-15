@@ -353,13 +353,14 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
 static void UiSpectrum_CreateDrawArea()
 {
     uint32_t clr;
+    UiSpectrum_UpdateSpectrumPixelParameters();
     //const bool is_scope_light = (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) != 0;
     // get grid colour of all but center line
     UiMenu_MapColors(ts.scope_grid_colour,NULL, &sd.scope_grid_colour_active);
     // Get color of center vertical line of spectrum scope
     UiMenu_MapColors(ts.spectrum_centre_line_colour,NULL, &sd.scope_centre_grid_colour_active);
 
-    UiSpectrum_UpdateSpectrumPixelParameters();
+
 
     uint16_t GridPosY=POS_SPECTRUM_IND_Y;
 #ifdef USE_DISP_480_320
@@ -396,8 +397,7 @@ static void UiSpectrum_CreateDrawArea()
 
 
 
-    // Draw Frequency bar text
-    UiSpectrum_DrawFrequencyBar();
+
 
 
     if(ts.spectrum_size == SPECTRUM_NORMAL)		//don't draw text bar when size is BIG
@@ -487,6 +487,8 @@ static void UiSpectrum_CreateDrawArea()
                 RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
     }
 
+    // Draw Frequency bar text
+    UiSpectrum_DrawFrequencyBar();
     //show highlighted filter bandwidth on the spectrum
     sd.old_left_filter_border_pos=SPECTRUM_START_X;;
     sd.old_right_filter_border_pos=sd.scope_size+SPECTRUM_START_X;
@@ -773,6 +775,9 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
  */
 static void UiSpectrum_InitSpectrumDisplayData()
 {
+	//init colour of markers
+	UiMenu_MapColors(ts.spectrum_centre_line_colour,NULL, &sd.scope_centre_grid_colour_active);
+
     // Init publics
     sd.state 		= 0;
     sd.samp_ptr 	= 0;
