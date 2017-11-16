@@ -13,7 +13,7 @@
  ************************************************************************************/
 #include "freedv_uhsdr.h"
 #include "ui_driver.h"
-
+#include "ui_lcd_items.h"
 
 
 #include "profiling.h"
@@ -242,11 +242,6 @@ typedef struct {
     int32_t count;
 } flex_buffer;
 
-#define POS_FREEDV_X 5
-#define POS_FREEDV_SNR_Y 116
-#define POS_FREEDV_BER_Y 104
-#define FREEDV_UI_FONT 4
-
 static uint16_t freedv_display_x_offset;
 
 
@@ -258,7 +253,7 @@ static void FreeDv_DisplayBer()
 
     ber = 1000*freedv_get_total_bit_errors(f_FREEDV)/freedv_get_total_bits(f_FREEDV);
     snprintf(ber_string,12,"0.%03d",ber);  //calculate and display the bit error rate
-    UiLcdHy28_PrintText(POS_FREEDV_X+ freedv_display_x_offset,POS_FREEDV_BER_Y,ber_string,Yellow,Black, FREEDV_UI_FONT);
+    UiLcdHy28_PrintText(POS_FREEDV_BER_X+ freedv_display_x_offset,POS_FREEDV_BER_Y,ber_string,Yellow,Black, FREEDV_UI_FONT);
 
 }
 
@@ -274,21 +269,21 @@ static void FreeDv_DisplaySnr()
     SNR = 0.95*SNR + 0.05 * SNR_est; //some averaging to keep it more calm
     if (SNR<0) SNR=0.0;
     snprintf(SNR_string,12,"%02d",(int)(SNR+0.5));  //Display the current SNR and round it up to the next int
-    UiLcdHy28_PrintText(POS_FREEDV_X+ freedv_display_x_offset, POS_FREEDV_SNR_Y,SNR_string,Yellow,Black, FREEDV_UI_FONT);
+    UiLcdHy28_PrintText(POS_FREEDV_SNR_X+ freedv_display_x_offset, POS_FREEDV_SNR_Y,SNR_string,Yellow,Black, FREEDV_UI_FONT);
 }
 
 void FreeDv_DisplayClear()
 {
-    UiLcdHy28_PrintText(POS_FREEDV_X,POS_FREEDV_SNR_Y,"            ",Yellow,Black,FREEDV_UI_FONT);
-    UiLcdHy28_PrintText(POS_FREEDV_X,POS_FREEDV_BER_Y,"            ",Yellow,Black,FREEDV_UI_FONT);
+    UiLcdHy28_PrintText(POS_FREEDV_SNR_X,POS_FREEDV_SNR_Y,"            ",Yellow,Black,FREEDV_UI_FONT);
+    UiLcdHy28_PrintText(POS_FREEDV_BER_X,POS_FREEDV_BER_Y,"            ",Yellow,Black,FREEDV_UI_FONT);
     UiDriver_TextMsgClear();
 }
 
 void FreeDv_DisplayPrepare()
 {
 	freedv_display_x_offset = UiLcdHy28_TextWidth("SNR=", FREEDV_UI_FONT);
-    UiLcdHy28_PrintText(POS_FREEDV_X,POS_FREEDV_SNR_Y,"SNR=",Yellow,Black, FREEDV_UI_FONT);
-    UiLcdHy28_PrintText(POS_FREEDV_X,POS_FREEDV_BER_Y,"BER=",Yellow,Black, FREEDV_UI_FONT);
+    UiLcdHy28_PrintText(POS_FREEDV_SNR_X,POS_FREEDV_SNR_Y,"SNR=",Yellow,Black, FREEDV_UI_FONT);
+    UiLcdHy28_PrintText(POS_FREEDV_BER_X,POS_FREEDV_BER_Y,"BER=",Yellow,Black, FREEDV_UI_FONT);
     UiDriver_TextMsgClear();
 }
 

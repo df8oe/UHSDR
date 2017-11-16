@@ -352,7 +352,9 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
 
 static void UiSpectrum_CreateDrawArea()
 {
-    uint32_t clr;
+	//Since we have now highlighted spectrum, the grid is to be drawn in UiSpectrum_DrawScope().
+	//Here we only calculate positions of grid and write it to appropriate arrays
+	//Also the vertical grid array is used for frequency labels in freq ruler
     UiSpectrum_UpdateSpectrumPixelParameters();
     //const bool is_scope_light = (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) != 0;
     // get grid colour of all but center line
@@ -367,7 +369,7 @@ static void UiSpectrum_CreateDrawArea()
     GridPosY+=POS_SPECTRUM_FREQ_BAR_H;
     sd.wfall_DrawDirection=1;
     // Clear screen where frequency information will be under graticule
-    UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, POS_SPECTRUM_IND_Y, "                                 ", Black, Black, 0);
+    UiLcdHy28_PrintText(POS_SPECTRUM_IND_X, POS_SPECTRUM_IND_Y, "                                 ", Black, Black, 0);
 
     // Frequency bar separator
     //UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y-SPEC_LIGHT_MORE_POINTS-2),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
@@ -402,78 +404,50 @@ static void UiSpectrum_CreateDrawArea()
 
     if(ts.spectrum_size == SPECTRUM_NORMAL)		//don't draw text bar when size is BIG
     {
-        // Draw top band = grey box in which text is printed
-        for(int i = 0; i < 16; i++)
-        {
-            UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y - 20 + i),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
-        }
+    	// Draw top band = grey box in which text is printed
+    	for(int i = 0; i < 16; i++)
+    	{
+    		UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y - 20 + i),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
+    	}
 
-        char bartext[34];
+    	char bartext[34];
 
-        // Top band text - middle caption
-        UiSpectrum_SpectrumTopBar_GetText(bartext);
-        UiLcdHy28_PrintTextCentered(
-                POS_SPECTRUM_IND_X,
-                (POS_SPECTRUM_IND_Y - 18),
-                POS_SPECTRUM_IND_W,
-                bartext,
-                White,
-                RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
+    	// Top band text - middle caption
+    	UiSpectrum_SpectrumTopBar_GetText(bartext);
+    	UiLcdHy28_PrintTextCentered(
+    			POS_SPECTRUM_IND_X,
+				(POS_SPECTRUM_IND_Y - 18),
+				POS_SPECTRUM_IND_W,
+				bartext,
+				White,
+				RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
     }
 
-
-
-
-    // Is (scope enabled AND NOT scope light)
-    // draw grid
-    if ( is_waterfallmode() == false && (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) == false)
+    // Horizontal grid lines
+    if(ts.spectrum_size)		//set range big/normal
     {
-        // Horizontal grid lines
-        uint8_t y_add;
-        if(ts.spectrum_size)		//set range big/normal
-        {
-            sd.upper_horiz_gridline = 5;
-            y_add = SPECTRUM_SCOPE_GRID_HORIZ;
-            // 16 lines is the actual added space, which is one more segment,
-            // but in order to generate also a upper closing bar, we add two grid lines
-        }
-        else
-        {
-            sd.upper_horiz_gridline = 3;
-            y_add = 0;
-        }
+    	sd.upper_horiz_gridline = 5;
+    }
+    else
+    {
+    	sd.upper_horiz_gridline = 3;
+    }
 
-        // array must be filled from higher to the y coordinates
-        // the lookup code for a match counts on this.
-        for(int i = 0; i < sd.upper_horiz_gridline; i++)
-        {
-            // Save y position for repaint
-            sd.horz_grid_id[i] = (POS_SPECTRUM_GRID_HORIZ_START - i * SPECTRUM_SCOPE_GRID_HORIZ);
+    // array must be filled from higher to the y coordinates
+    // the lookup code for a match counts on this.
+    for(int i = 0; i < sd.upper_horiz_gridline; i++)
+    {
+    	// Save y position for grid draw and repaint
+    	sd.horz_grid_id[i] = (POS_SPECTRUM_GRID_HORIZ_START - i * SPECTRUM_SCOPE_GRID_HORIZ);
+    }
 
-            // Draw
-            UiLcdHy28_DrawStraightLine(	POS_SPECTRUM_IND_X,
-                    sd.horz_grid_id[i],
-                    SPECTRUM_WIDTH,
-                    LCD_DIR_HORIZONTAL,
-                    sd.scope_grid_colour_active);
-        }
-
-        // Vertical grid lines
-        // array must be filled from low to higher x coordinates
-        // the lookup code for a match counts on this.
-        for(int i = 1; i < SPECTRUM_SCOPE_GRID_VERT_COUNT; i++)
-        {
-            clr = sd.scope_grid_colour_active;
-            // Save x position for repaint
-            sd.vert_grid_id[i - 1] = (POS_SPECTRUM_GRID_VERT_START + i*SPECTRUM_SCOPE_GRID_VERT);
-
-            // Draw
-            UiLcdHy28_DrawStraightLine(	sd.vert_grid_id[i - 1],
-                    (GridPosY -  4 - y_add),
-                    (POS_SPECTRUM_IND_H - 16 + y_add),
-                    LCD_DIR_VERTICAL,
-                    clr);
-        }
+    // Vertical grid lines
+    // array must be filled from low to higher x coordinates
+    // the lookup code for a match counts on this.
+    for(int i = 1; i < SPECTRUM_SCOPE_GRID_VERT_COUNT; i++)
+    {
+    	// Save x position for grid draw and repaint
+    	sd.vert_grid_id[i - 1] = (POS_SPECTRUM_GRID_VERT_START + i*SPECTRUM_SCOPE_GRID_VERT);
     }
 
     if ((is_waterfallmode() && (!ts.waterfall.speed)) || (is_waterfallmode() == false && (!ts.scope_speed)))
@@ -487,11 +461,11 @@ static void UiSpectrum_CreateDrawArea()
                 RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
     }
 
-    // Draw Frequency bar text
+    // Draw Frequency bar text after arrays with coordinates are set
     UiSpectrum_DrawFrequencyBar();
     //show highlighted filter bandwidth on the spectrum
     sd.old_left_filter_border_pos=SPECTRUM_START_X;;
-    sd.old_right_filter_border_pos=sd.scope_size+SPECTRUM_START_X;
+    sd.old_right_filter_border_pos=SPECTRUM_WIDTH+SPECTRUM_START_X;
 }
 
 void UiSpectrum_Clear()
@@ -1417,7 +1391,13 @@ static void UiSpectrum_DrawFrequencyBar()
         	idx2pos[i]=sd.vert_grid_id[i-1];
         }
         idx2pos[0]=0;
-        idx2pos[8]=SPECTRUM_WIDTH-15;
+        idx2pos[SPECTRUM_SCOPE_GRID_VERT_COUNT]=SPECTRUM_WIDTH-15;
+
+        if(sd.magnify > 2)
+        {
+        	idx2pos[SPECTRUM_SCOPE_GRID_VERT_COUNT]-=15;
+        	idx2pos[SPECTRUM_SCOPE_GRID_VERT_COUNT-1]-=9;
+        }
 
 #else
         // remainder of frequency/graticule markings

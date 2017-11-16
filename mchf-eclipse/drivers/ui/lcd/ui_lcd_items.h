@@ -198,6 +198,14 @@
 #define POS_TextMsgLine_Y 						290 //28
 #define ui_txt_msg_buffer_max 50 // no more space on single screen line
 #define ui_txt_msg_font 0
+
+//freeDV coordinates for status display
+#define POS_FREEDV_SNR_X 280
+#define POS_FREEDV_BER_X 380
+#define POS_FREEDV_SNR_Y 28
+#define POS_FREEDV_BER_Y 28
+#define FREEDV_UI_FONT 4
+
 // POSITIONS END
 
 #else
@@ -376,6 +384,13 @@
 
 	#define WATERFALL_START_Y 240
 	#define WATERFALL_HEIGHT 60
+
+//freeDV coordinates for status display
+#define POS_FREEDV_SNR_X 5
+#define POS_FREEDV_BER_X 5
+#define POS_FREEDV_SNR_Y 116
+#define POS_FREEDV_BER_Y 104
+#define FREEDV_UI_FONT 4
 // POSITIONS END
 #endif
 
