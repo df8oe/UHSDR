@@ -1039,7 +1039,7 @@ static float32_t  UiSpectrum_ScaleFFT(const float32_t value, float32_t* min_p)
  * should not be called directly, go through UiSpectrum_Redraw which implements a rate limiter
  * it relies on the audio driver implementing the first stage of data collection.
  */
-static void UiSpectrum_RedrawSpectrum()
+static void UiSpectrum_RedrawSpectrum(void)
 {
     // Process implemented as state machine
     switch(sd.state)
@@ -1186,19 +1186,18 @@ static void UiSpectrum_RedrawSpectrum()
     }
     case 5:	// rescale waterfall horizontally, apply brightness/contrast, process pallate and put vertical line on screen, if enabled.
     {
-        if(is_waterfallmode())
-        {
-            UiSpectrum_DrawWaterfall();
-        }
-        else
-        {
-        	//Marker_ON
-            UiSpectrum_DrawScope(sd.Old_PosData, sd.FFT_Samples);
-        	//Marker_OFF
-#ifdef USE_DISP_480_320
-            UiSpectrum_DrawWaterfall();
-#endif
-        }
+    	if(sd.RedrawType&Redraw_SPECTRUM)
+    	{
+    		UiSpectrum_DrawScope(sd.Old_PosData, sd.FFT_Samples);
+    	}
+
+    	if(sd.RedrawType&Redraw_WATERFALL)
+    	{
+    		UiSpectrum_DrawWaterfall();
+    	}
+
+    	sd.RedrawType=0;
+
         sd.state = 0;
         break;
 
@@ -1438,8 +1437,59 @@ static void UiSpectrum_DrawFrequencyBar()
     }
 }
 
+
+
 void UiSpectrum_Redraw()
 {
+#ifdef USE_DISP_480_320
+    // Only in RX mode and NOT while powering down or in menu mode or if displaying memory information
+    if (
+            (ts.spectrum_scheduler == 0)
+            && (ts.txrx_mode == TRX_MODE_RX)
+            && (ts.menu_mode == false)
+            && (ts.powering_down == false)
+            && (ts.mem_disp == false)
+            && (sd.enabled == true)
+            && (ts.lcd_blanking_flag == false)
+    )
+    {
+
+
+        if(ts.spectrum_scheduler==0)   // is waterfall mode enabled?
+        {
+            if(ts.scope_speed > 0)  // is it time to update the scan, or is this scope to be disabled?
+            {
+                ts.spectrum_scheduler = (ts.scope_speed-1)*2;
+                sd.RedrawType|=Redraw_SPECTRUM;
+            }
+#ifdef USE_DISP_480_320
+            //waterfall draw schedule time is effect of division of scope redraw
+            //not quite happy with this, but no idea how to do it separatelly (calling Redraw function causes calculation of fft
+            //which is the same for wfall and scope.
+            if(sd.state==5)
+            {
+            	if(ts.waterfall_scheduler)		// update thread timer if non-zero
+            	{
+            		ts.waterfall_scheduler--;
+            	}
+            }
+#endif
+        }
+
+        if(ts.waterfall_scheduler==0)   // is waterfall mode enabled?
+        {
+            if(ts.waterfall.speed > 0)  // is it time to update the scan, or is this scope to be disabled?
+            {
+                ts.waterfall_scheduler = (ts.waterfall.speed-1)*2;
+                sd.RedrawType|=Redraw_WATERFALL;
+            }
+        }
+
+        UiSpectrum_RedrawSpectrum();
+
+    }
+
+#else
     // Only in RX mode and NOT while powering down or in menu mode or if displaying memory information
     if (
             (ts.spectrum_scheduler == 0)
@@ -1456,7 +1506,7 @@ void UiSpectrum_Redraw()
             if(ts.waterfall.speed > 0)  // is it time to update the scan, or is this scope to be disabled?
             {
                 ts.spectrum_scheduler = (ts.waterfall.speed-1)*2;
-
+                sd.RedrawType=Redraw_WATERFALL;
                 UiSpectrum_RedrawSpectrum();   // yes - call waterfall update instead
             }
         }
@@ -1465,10 +1515,12 @@ void UiSpectrum_Redraw()
             if(ts.scope_speed > 0)  // is it time to update the scan, or is this scope to be disabled?
             {
                 ts.spectrum_scheduler = (ts.scope_speed-1)*2;
-                UiSpectrum_RedrawSpectrum();;    // Spectrum Display enabled - do that!
+                sd.RedrawType=Redraw_SPECTRUM;
+                UiSpectrum_RedrawSpectrum();    // Spectrum Display enabled - do that!
             }
         }
     }
+#endif
 }
 
 static void UiSpectrum_DisplayDbm()

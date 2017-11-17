@@ -911,6 +911,9 @@ typedef struct TransceiverState
     ulong	voltmeter_calibrate;			// used to calibrate the voltmeter
 	struct mchf_waterfall waterfall;
     uint8_t	spectrum_scheduler;		// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
+#ifdef USE_DISP_480_320
+    uint8_t	waterfall_scheduler;	// timer for scheduling the next update of the waterfall update, updated at DMA rate
+#endif
     uint8_t	spectrum_scope_nosig_adjust;		// Adjustment for no signal adjustment conditions for spectrum scope
     uint8_t	spectrum_size;				// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
 //    uint8_t	fft_window_type;			// type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved

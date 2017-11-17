@@ -111,6 +111,11 @@ enum
     FFT_WINDOW_MAX
 };
 
+enum
+{
+	Redraw_SPECTRUM=1,
+	Redraw_WATERFALL=2
+};
 //#define FFT_WINDOW_DEFAULT                  FFT_WINDOW_BLACKMAN
 
 #define SPECTRUM_SIZE_DEFAULT               SPECTRUM_NORMAL
@@ -211,6 +216,7 @@ typedef struct SpectrumDisplay
 
     uint16_t old_left_filter_border_pos;	//previous BW highlight left border
     uint16_t old_right_filter_border_pos;	//previous BW highlight right border
+    uint8_t RedrawType;
 } SpectrumDisplay;
 
 // Spectrum display

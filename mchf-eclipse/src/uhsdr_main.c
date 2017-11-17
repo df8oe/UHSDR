@@ -253,6 +253,9 @@ void TransceiverStateInit(void)
 #endif
     ts.waterfall.contrast = WATERFALL_CONTRAST_DEFAULT;		// contrast setting for waterfall display
     ts.spectrum_scheduler = 0;				// timer for scheduling the next update of the spectrum update
+#ifdef USE_DISP_480_320
+    ts.waterfall_scheduler=0;
+#endif
     ts.spectrum_scope_nosig_adjust = SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for spectrum scope
 #if 0
     ts.waterfall.nosig_adjust = WATERFALL_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for waterfall
