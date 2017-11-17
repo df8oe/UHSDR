@@ -171,7 +171,7 @@ bool MchfRtc_SetPpm(int16_t ppm)
         if (ppm2pulses <= 0.0) // important, we must make sure to not set calp if 0ppm
         {
             calm = - ppm2pulses;
-            calp = 0;
+            calp = RTC_SMOOTHCALIB_PLUSPULSES_RESET;
         }
         else
         {
@@ -180,7 +180,7 @@ bool MchfRtc_SetPpm(int16_t ppm)
             {
                 calm = 0;
             }
-            calp = 1;
+            calp = RTC_SMOOTHCALIB_PLUSPULSES_SET;
         }
         HAL_RTCEx_SetSmoothCalib(&hrtc,RTC_SMOOTHCALIB_PERIOD_32SEC,calp,calm);
 
