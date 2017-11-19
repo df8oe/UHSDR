@@ -800,6 +800,22 @@ void spectral_noise_reduction (float* in_buffer)
 // overlap-add
 // audio should be totally unchanged
 
+    if(NR_first_time)
+    { // TODO: properly initialize all the variables
+        for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+              {
+                  NR_E[bindx][NR_E_pointer] = NR_X[bindx][0];
+                  NR_M[bindx] = 0.0;
+					NR_X[bindx][1] = 0.0;
+					NR_SNR_post[bindx] = 0.0;
+					NR_SNR_prio[bindx] = 0.0;
+					NR_last_sample_buffer_L[bindx] = 0.0;
+					NR_last_sample_buffer_L[bindx + NR_FFT_L / 2] = 0.0;
+
+              }
+        NR_first_time = 0;
+    }
+
 	for(int k = 0; k < 2; k++)
 	{
 
@@ -894,15 +910,6 @@ void spectral_noise_reduction (float* in_buffer)
 	                    // this is magnitude for the current frame
 	                    NR_X[bindx][0] = sqrtf(NR_FFT_buffer[bindx * 2] * NR_FFT_buffer[bindx * 2] + NR_FFT_buffer[bindx * 2 + 1] * NR_FFT_buffer[bindx * 2 + 1]);
 	                }
-
-	          if(NR_first_time)
-	          {
-	              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
-	                    {
-	                        NR_E[bindx][NR_E_pointer] = NR_X[bindx][0];
-	                    }
-	              NR_first_time = 0;
-	          }
 
 
 	    // 2b.) voice activity detector
@@ -1019,9 +1026,13 @@ void spectral_noise_reduction (float* in_buffer)
 	                   // calculate Hk
 
 	    // 5    finally calculate the weighting function for each bin: Hk(n, bin[i]) = 1 / SNRpost(n, [i]) * sqrtf(0.7212 * vk + vk * vk) (eq. 26 of Romanin et al. 2009)
-	                    if(NR_Gts[bindx][0] > 0.0) // prevent sqrtf of negatives
+	                    if(NR_Gts[bindx][0] > 0.0 && NR_SNR_post[bindx] != 0.0) // prevent sqrtf of negatives
 	                    {
 	                        NR_G[bindx] = 1.0 / NR_SNR_post[bindx] * sqrtf(0.7212 * NR_Gts[bindx][0] + NR_Gts[bindx][0] * NR_Gts[bindx][0]);
+	                    }
+	                    else
+	                    {
+	                    	NR_G[bindx] = 1.0;
 	                    }
 	                // save Hk for next time
 	                    NR_Hk_old[bindx] = NR_G[bindx];
@@ -1050,7 +1061,7 @@ void spectral_noise_reduction (float* in_buffer)
 	          {
 	        //    ++NR_E_pointer
 	              NR_E_pointer = NR_E_pointer + 1;
-	              if(NR_E_pointer >= NR_N_frames)
+	              if(NR_E_pointer >= NR_N_frames - 1)
 	              {
 	                  NR_E_pointer = 0;
 	              }
@@ -1095,7 +1106,7 @@ void spectral_noise_reduction (float* in_buffer)
 
 	      for(int i = 0; i < NR_FFT_L; i++)
 	      {
-	          in_buffer [i] = NR_output_audio_buffer[i];
+	          in_buffer [i] = NR_output_audio_buffer[i] * 0.5;
 	          //float_buffer_R [i] = float_buffer_L [i];
 	      }
 
