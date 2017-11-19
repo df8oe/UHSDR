@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-11-18T07:05:20  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-11-19T21:20:28  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-11-18T07:05:20  by "./ui_menu_structure_mdtable.py"
+generated at  2017-11-19T21:20:28  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -132,6 +132,8 @@ generated at  2017-11-18T07:05:20  by "./ui_menu_structure_mdtable.py"
 | **Scope 1/Speed**             (                           MENU_SCOPE_SPEED) | Lower Values: Higher refresh rate. Set to 0 to disable scope. | 
 | **Scope AGC Adj.**            (                      MENU_SCOPE_AGC_ADJUST) | Adjusting of scope / waterfall AGC for fitting graphs to screen | 
 | **Scope Trace Colour**        (                    MENU_SCOPE_TRACE_COLOUR) | Set colour of scope                            | 
+| **Scope BW Trace Colour**     (                 MENU_SCOPE_TRACE_HL_COLOUR) | Set colour of highlighted BW scope             | 
+| **Scope BW BCKgr Colour**     (            MENU_SCOPE_BACKGROUND_HL_COLOUR) | Set colour of highlighted BW background        | 
 | **Scope Grid Colour**         (                     MENU_SCOPE_GRID_COLOUR) | Set colour of scope grid                       | 
 | **Scope Div.**                (                     MENU_SCOPE_DB_DIVISION) | Set rf range for scope                         | 
 | **Scope NoSig Adj.**          (                    MENU_SCOPE_NOSIG_ADJUST) | Set scope line corresponding to NO SIGNAL      | 

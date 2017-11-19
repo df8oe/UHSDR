@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-11-18T07:05:15  by "./ui_menu_structure_graph.py"
+#  generated at  2017-11-19T21:20:26  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-18T07:05:15  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-19T21:20:26  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -579,6 +579,16 @@
         
         "MENU_SCOPE_TRACE_COLOUR" [
              label = "MENU_SCOPE_TRACE_COLOUR | Scope Trace Colour"
+             shape = record
+             ];
+        
+        "MENU_SCOPE_TRACE_HL_COLOUR" [
+             label = "MENU_SCOPE_TRACE_HL_COLOUR | Scope BW Trace Colour"
+             shape = record
+             ];
+        
+        "MENU_SCOPE_BACKGROUND_HL_COLOUR" [
+             label = "MENU_SCOPE_BACKGROUND_HL_COLOUR | Scope BW BCKgr Colour"
              shape = record
              ];
         
@@ -1307,6 +1317,11 @@
              shape = record
              ];
         
+        "0" [
+             label = "0 | SP9BSL (Slawek)"
+             shape = record
+             ];
+        
         #  -  -  -  -
 
         subgraph "MENU_CONF" {
@@ -1853,6 +1868,8 @@
             
             MENU_HALL_OF_FAME -> 0
             
+            MENU_HALL_OF_FAME -> 0
+            
         }  ## END subgraph MENU_HALL_OF_FAME
     
         #  -  -  -  -
@@ -1882,6 +1899,10 @@
             MENU_DISPLAY -> MENU_SCOPE_AGC_ADJUST
             
             MENU_DISPLAY -> MENU_SCOPE_TRACE_COLOUR
+            
+            MENU_DISPLAY -> MENU_SCOPE_TRACE_HL_COLOUR
+            
+            MENU_DISPLAY -> MENU_SCOPE_BACKGROUND_HL_COLOUR
             
             MENU_DISPLAY -> MENU_SCOPE_GRID_COLOUR
             
