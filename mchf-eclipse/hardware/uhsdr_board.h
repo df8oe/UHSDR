@@ -1049,6 +1049,9 @@ typedef struct TransceiverState
 	bool stereo_enable; // enable/disable stereo demodulation (only in special hardware, NOT in mcHF)
 #endif
 	bool enable_leaky_LMS;
+//	float32_t nr_alpha; // alpha smoothing constant for spectral noise reduction
+//	float32_t nr_beta; // beta smoothing constant for spectral noise reduction
+//	float32_t nr_vad_thresh; // threshold for voice activity detector in spectral noise reduction
 
 	uint8_t debug_si5351a_pllreset;
 } TransceiverState;

@@ -14,6 +14,8 @@
 #include "freedv_uhsdr.h"
 #include "ui_driver.h"
 #include "ui_lcd_items.h"
+#include "arm_const_structs.h"
+
 
 
 #include "profiling.h"
@@ -724,16 +726,20 @@ void alternateNR_handle()
 }
 
 
-
+#define SPECTRAL_NR
 
 void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 {
 
+#ifndef SPECTRAL_NR
     float32_t* Energy=0;
+#endif
 
-
-
+#ifdef SPECTRAL_NR
+    spectral_noise_reduction(inputsamples);
+#else
     alt_noise_blanking(inputsamples,NR_FFT_SIZE,Energy);
+#endif
 
     for (int k=0; k < NR_FFT_SIZE;  k++)
     {
@@ -741,6 +747,360 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
     }
 
 }
+
+#define NR_FFT_L NR_FFT_SIZE
+
+static float32_t NR_output_audio_buffer [NR_FFT_L];
+static float32_t NR_last_iFFT_result [NR_FFT_L];
+static float32_t NR_last_sample_buffer_L [NR_FFT_L];
+float32_t NR_FFT_buffer[NR_FFT_L * 2];
+float32_t NR_iFFT_buffer[NR_FFT_L * 2];
+
+//	float32_t NR_sum = 0.0;
+//	uint8_t NR_L_frames = 6; // default 3 //4 //3//2 //4
+uint8_t NR_N_frames = 8; // default 24 //40 //12 //20 //18//12 //20
+//	float32_t NR_PSI = 3.0; // default 3.0, range of 2.5 - 3.5 ?; 6.0 leads to strong reverb effects
+//float32_t NR_alpha = 0.99; // default 0.99 --> range 0.98 - 0.9999; 0.95 acts much too hard: reverb effects
+float32_t NR_alpha = 0.98; // default 0.99 --> range 0.98 - 0.9999; 0.95 acts much too hard: reverb effects
+float32_t NR_onemalpha = 0.02;
+//float32_t NR_beta = 0.25;
+float32_t NR_beta = 0.85;
+//	float32_t NR_onemtwobeta = (1.0 - (2.0 * NR_beta));
+float32_t NR_onembeta = 0.15;
+//	float32_t NR_G_bin_m_1 = 0.0;
+//	float32_t NR_G_bin_p_1 = 0.0;
+//	int8_t NR_first_block = 1;
+//	uint32_t NR_X_pointer = 0;
+static uint32_t NR_E_pointer = 0;
+//	float32_t NR_T;
+static float32_t NR_X[NR_FFT_L / 2][2]; // magnitudes (fabs) of the last four values of FFT results for 128 frequency bins
+static float32_t NR_E[NR_FFT_L / 2][8]; // averaged (over the last four values) X values for the last 20 FFT frames
+static float32_t NR_M[NR_FFT_L / 2]; // minimum of the 20 last values of E
+static float32_t NR_Gts[NR_FFT_L / 2][2]; // time smoothed gain factors (current and last) for each of the 128 bins
+static float32_t NR_G[NR_FFT_L / 2]; // preliminary gain factors (before time smoothing) and after that contains the frequency smoothed gain factors
+
+static float32_t NR_SNR_prio[NR_FFT_L / 2];
+static float32_t NR_SNR_post[NR_FFT_L / 2];
+static float32_t NR_SNR_post_pos[NR_FFT_L / 2];
+static float32_t NR_Hk_old[NR_FFT_L / 2];
+uint8_t NR_VAD_enable = 0;
+float32_t NR_VAD = 0.0;
+float32_t NR_VAD_thresh = 8.0; // no idea how large this should be !?
+static uint8_t NR_first_time = 1;
+
+
+
+
+void spectral_noise_reduction (float* in_buffer)
+{
+// at the moment, this is only doing a convolution & pass thru
+// half-overlapping input buffers (= overlap 50%)
+// Hann window on 128 samples
+// FFT128 - inverse FFT128
+// overlap-add
+// audio should be totally unchanged
+
+	for(int k = 0; k < 2; k++)
+	{
+
+	// NR_FFT_buffer is 256 floats big
+	// interleaved r, i, r, i . . .
+
+	// fill first half of FFT_buffer with last events audio samples
+	      for(int i = 0; i < NR_FFT_L / 2; i++)
+	      {
+	        NR_FFT_buffer[i * 2] = NR_last_sample_buffer_L[i]; // real
+	        NR_FFT_buffer[i * 2 + 1] = 0.0; // imaginary
+	      }
+
+	// copy recent samples to last_sample_buffer for next time!
+	      for(int i = 0; i < NR_FFT_L  / 2; i++)
+	      {
+	         NR_last_sample_buffer_L [i] = in_buffer[i + k * (NR_FFT_L / 2)];
+	      }
+
+	// now fill recent audio samples into second half of FFT_buffer
+	      for(int i = 0; i < NR_FFT_L / 2; i++)
+	      {
+	          NR_FFT_buffer[NR_FFT_L + i * 2] = in_buffer[i+ k * (NR_FFT_L / 2)]; // real
+	          NR_FFT_buffer[NR_FFT_L + i * 2 + 1] = 0.0;
+	      }
+
+	/////////////////////////////////7
+
+	// WINDOWING
+	#if 1
+
+	// perform windowing on 256 real samples in the NR_FFT_buffer
+	      for (int idx = 0; idx < NR_FFT_L; idx++)
+	      {     // Hann window
+	         float32_t temp_sample = 0.5 * (float32_t)(1.0 - (cosf(PI* 2.0 * (float32_t)idx / (float32_t)((NR_FFT_L) - 1))));
+	         NR_FFT_buffer[idx * 2] *= temp_sample;
+	      }
+	#endif
+
+	// NR_FFT 256
+	// calculation is performed in-place the FFT_buffer [re, im, re, im, re, im . . .]
+	      arm_cfft_f32(&arm_cfft_sR_f32_len128, NR_FFT_buffer, 0, 1);
+
+
+	// pass-thru
+//	    arm_copy_f32(NR_FFT_buffer, NR_iFFT_buffer, NR_FFT_L * 2);
+
+	    /*****************************************************************
+	     * NOISE REDUCTION CODE STARTS HERE
+	     *****************************************************************/
+	    // the following implementation has two options:
+	    // OPTION a.) is a mixture of Schmitt et al. 2002 and Romanin et al. 2009
+	    // we strictly follow the algorithm by Schmitt et al. 2002 (minimum detection, NO voice activity detection)
+	    // but substitute the very processor-intense calculation of the gain factors (= weights) Hk (Ephraim-Malah-derive MMSE or MMSE-LSA)
+	    // with the approximation given in Romanin et al. 2009 --> Hk(n, bin[i]) = 1 / SNRpost(n, [i]) * sqrtf(0.7212 * vk + vk * vk) (eq. 26 of Romanin et al. 2009)
+	    // OPTION b.) VAD = voice activity detector is used (following Sohn et al. 2002),
+	    // so that the noise estimate is only updated with the average noise value of frames where there is NO speech present
+	    //
+	    // advantage of option 2: saves at least 16 kbytes of RAM usage !
+
+	    // ALGORITHM DESCRIPTION
+	    // 1    estimate the noise power spectrum in each bin by applying an exponential averager with beta = 0.85:
+	    //      Nest(n, bin[i]) = beta * Nest(n-1, bin[i]) + X(n, bin[i]) * (1 - beta)
+	    //      (eq. 5 of Schmitt et al. 2002, eq. 12 of Romanin et al. 2009)
+	    //      we take magnitude squared
+	    // 2a.) minimum detection in the noise power spectrum:
+	    //      search for minimum noise power in N frames
+	    //      apply overestimation factor 1.5
+	    // 2b.) VAD = voice activity detector
+	    //      only if VAD detects "no speech" == "noise" in the current frame,
+	    //      the noise estimate is updated
+	    // 3    calculate SNRpost: SNRpost (n, bin[i]) = (X(n, bin[i])^2 / Nest(n, bin[i])^2) - 1 (eq. 13 of Schmitt et al. 2002)
+	    // 4    calculate SNRprio: SNRprio (n, bin[i]) = (1 - alpha) * Q(SNRpost(n, bin[i]) + alpha * (Hk(n - 1, bin[i])
+	    //                         * X(n - 1, bin[i])^2 / Nest(n, bin[i])^2
+	    //                         (eq. 14 of Schmitt et al. 2002, eq. 13 of Romanin et al. 2009) [Q[x] = x if x>=0, else Q[x] = 0]
+	    // 5    calculate vk: vk = SNRprio(n, bin[i]) / (SNRprio(n, bin[i]) + 1) * SNRpost(n, bin[i]) (eq. 12 of Schmitt et al. 2002, eq. 9 of Romanin et al. 2009)
+	    // 6    calculate weighting function = gain = Hk: Hk(n, bin[i]) = 1 / SNRpost(n, [i]) * sqrtf(0.7212 * vk + vk * vk) (eq. 26 of Romanin et al. 2009)
+	    // 7    apply spectral weighting with gains Hk[bin] under the assumption of conjugate symmetric FFT results
+
+	    // unklar ist, was in den papers mit "magnitude", "power spectral density", Nmin^2, |M|^2 etc. gemeint ist . . .
+	    // meine jetzige Interpretation ist (so implementiert am 15.11.2017):
+	    // magnitude ist sqrtf(real * real + imag * imag)
+	    // |M|^2 / Nmin^2 ist NICHT das Quadrat aus den Minimumwerten, sondern das Minimum der o.g. magnitudes
+	    // siehe Kommentare unten in den einzelnen Zeilen des codes
+
+	    // 1    estimate the noise power spectrum in each bin by applying an exponential averager with beta = 0.85:
+	    //      Nest(n, bin[i]) = beta * Nest(n-1, bin[i]) + X(n, bin[i]) * (1 - beta)
+	    //      (eq. 5 of Schmitt et al. 2002, eq. 12 of Romanin et al. 2009)
+	    //      we take the standard definition of magnitude = sqrtf(real * real + imag * imag)
+	          for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+	                {
+	                    // this is magnitude for the current frame
+	                    NR_X[bindx][0] = sqrtf(NR_FFT_buffer[bindx * 2] * NR_FFT_buffer[bindx * 2] + NR_FFT_buffer[bindx * 2 + 1] * NR_FFT_buffer[bindx * 2 + 1]);
+	                }
+
+	          if(NR_first_time)
+	          {
+	              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+	                    {
+	                        NR_E[bindx][NR_E_pointer] = NR_X[bindx][0];
+	                    }
+	              NR_first_time = 0;
+	          }
+
+
+	    // 2b.) voice activity detector
+	          if(NR_VAD_enable == 1)
+	          {
+	              // voice activity detector
+	              // following Bhatnagar et al. 2001 and Romanin et al. 2009
+	              float32_t NR_temp_sum = 0.0;
+	              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
+	              { // again: squared or not squared ???
+	    //              float32_t D_squared = NR_E[bindx][NR_E_pointer] * NR_E[bindx][NR_E_pointer];
+	                  float32_t D_squared = NR_E[bindx][NR_E_pointer];
+	                  NR_temp_sum += (NR_X[bindx][0] / (D_squared) ) - logf((NR_X[bindx][0] / (D_squared) )) - 1.0;
+	              }
+	              NR_VAD = NR_temp_sum / (NR_FFT_L / 2);
+	                  //Serial.println("was in VAD calculation");
+	                  if(NR_VAD < NR_VAD_thresh)
+	                  {
+	                      // noise estimation with exponential averager
+	                      for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+	                            {   // exponential averager for current noise estimate
+	                                // = D k (bin)
+	    //                            NR_E[bindx][NR_E_pointer] = NR_onembeta * NR_X[bindx][0] + NR_beta * NR_X[bindx][1];
+	                                NR_M[bindx] = NR_onembeta * NR_X[bindx][0] + NR_beta * NR_X[bindx][1];
+	                                // save "last" frames noise estimate for next time
+	    //                            NR_X[bindx][1] = NR_E[bindx][NR_E_pointer];
+	                                NR_X[bindx][1] = NR_M[bindx];
+	                            }
+	                  }
+	          }
+
+	          else
+	    // 2.a) noise estimation
+	          //calculate noise estimate, if VAD disabled
+	          {
+	          // noise estimation with exponential averager
+	          for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+	                {   // exponential averager for current noise estimate
+	                    // = D k (bin)
+	                    NR_E[bindx][NR_E_pointer] = NR_onembeta * NR_X[bindx][0] + NR_beta * NR_X[bindx][1];
+	                    // save "last" frames noise estimate for next time
+	                    NR_X[bindx][1] = NR_E[bindx][NR_E_pointer];
+	                }
+
+
+	    // 2a   minimum detection in the noise power spectrum:
+	    //      search for minimum noise power in NR_N_frames
+	            for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // take first 128 bin values of the FFT result
+	            {
+	              // if the current unsmoothed magnitude value is very small, we should update the minimum very fast:
+	              // we do this by setting the minimum to the current magnitude value (unsmoothed) for the first value
+	              // --> eq. 6 in Schmitt et al. 2002
+	              // hmm, does not work properly . . .
+	                  NR_M[bindx] = NR_E[bindx][0];
+	    //            NR_M[bindx] = NR_X[bindx][0];
+	                // then we start to search in all the NR_N_frames smoothed magnitude values for a smaller value
+	                for(uint8_t j = 1; j < NR_N_frames; j++)
+	    //            for(uint8_t j = 0; j < NR_N_frames; j++)
+	                {   //
+	                    if(NR_E[bindx][j] < NR_M[bindx])
+	                    {
+	                        NR_M[bindx] = NR_E[bindx][j];
+	                    }
+	                }
+	                // overestimation factor 1.5
+	                NR_M[bindx] = NR_M[bindx] * 1.5;
+	            }
+	        }
+
+	    // 3    calculate SNRpost (n, bin[i]) = (X(n, bin[i])^2 / Nest(n, bin[i])^2) - 1 (eq. 13 of Schmitt et al. 2002)
+	          for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+	                {
+	                    // calculate SNRpost = lambda k[bin]
+	                    // magnitude squared / noise estimate
+	                    // (Yk)^2 / Dk (eq 11, Romanin et al. 2009)
+	                    if(NR_M[bindx] != 0.0)
+	                    {   // do we have to square the noise estimate NR_M[bindx] or not? Schmitt says yes, Romanin says no . . .
+	                        // I think its a problem of nomenclature, we squared already when we determined the power
+	    //                    NR_SNR_post[bindx] = NR_X[bindx][0] / (NR_M[bindx] * NR_M[bindx]);
+	                        // for the calculation we take the unsmoothed current magnitude value NR_X[bindx][0]
+	                        // --> eq. 13 in Schmitt et al. 2002
+	                        // but compare with equation 11 in Romanin et al. 2009, where there is no minus one . . .
+	                        // THIS SEEMS TO BE IT: NO MUSICAL TONES !
+	                       NR_SNR_post[bindx] = NR_X[bindx][0] / (NR_M[bindx]);
+	                        // the following sounds awful
+	    //                      NR_SNR_post[bindx] = (NR_X[bindx][0] / (NR_M[bindx])) - 1.0;
+	                          // or do they mean this: ???
+	                          // musical tones !
+	    //                      NR_SNR_post[bindx] = (NR_X[bindx][0] / (NR_M[bindx] * NR_M[bindx])) - 1.0;
+	                    }
+	                    // "half-wave rectification" of NR_SR_post_pos --> always >= 0
+	                    if(NR_SNR_post[bindx] >= 0.0)
+	                    {
+	                        NR_SNR_post_pos[bindx] = NR_SNR_post[bindx];
+	                    }
+	                    else
+	                    {
+	                        NR_SNR_post_pos[bindx] = 0.0;
+	                    }
+
+	    // 3    calculate SNRprio (n, bin[i]) = (1 - alpha) * Q(SNRpost(n, bin[i]) + alpha * (Hk(n - 1, bin[i]) * X(n - 1, bin[i])^2 / Nest(n, bin[i])^2 (eq. 14 of Schmitt et al. 2002, eq. 13 of Romanin et al. 2009) [Q[x] = x if x>=0, else Q[x] = 0]
+	    // again: do we have to square the noise estimate NR_M[bindx] or not? Schmitt says yes, Romanin says no . . .
+	                    if(NR_M[bindx] != 0.0)
+	                    {
+	                        NR_SNR_prio[bindx] = NR_onemalpha * NR_SNR_post_pos[bindx] +
+	    //                                         NR_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1]) / (NR_M[bindx] * NR_M[bindx]));
+	    //                                         NR_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1]) / (NR_M[bindx])); // reverb
+	    //                                         NR_alpha * ((NR_Hk_old[bindx] * NR_X[bindx][1]) / (NR_M[bindx])); // no effect
+	                                             NR_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1] * NR_X[bindx][1]) / (NR_M[bindx])); // YES !
+	                    }
+
+	    // 4    calculate vk = SNRprio(n, bin[i]) / (SNRprio(n, bin[i]) + 1) * SNRpost(n, bin[i]) (eq. 12 of Schmitt et al. 2002, eq. 9 of Romanin et al. 2009)
+	                    NR_Gts[bindx][0] =  NR_SNR_post[bindx] * NR_SNR_prio[bindx] / (1.0 + NR_SNR_prio[bindx]);
+	                   // calculate Hk
+
+	    // 5    finally calculate the weighting function for each bin: Hk(n, bin[i]) = 1 / SNRpost(n, [i]) * sqrtf(0.7212 * vk + vk * vk) (eq. 26 of Romanin et al. 2009)
+	                    if(NR_Gts[bindx][0] > 0.0) // prevent sqrtf of negatives
+	                    {
+	                        NR_G[bindx] = 1.0 / NR_SNR_post[bindx] * sqrtf(0.7212 * NR_Gts[bindx][0] + NR_Gts[bindx][0] * NR_Gts[bindx][0]);
+	                    }
+	                // save Hk for next time
+	                    NR_Hk_old[bindx] = NR_G[bindx];
+	                }
+	    /*
+	    // for debugging
+	          for(int bindx = 20; bindx < 25; bindx++)
+	                {
+	                    Serial.print(NR_SNR_prio[bindx] * 1000.0);
+	                    Serial.print("      ");
+	                }
+	                Serial.println("-------------------------");
+	      */
+
+	    // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 128 bins with the 128 bin-specific gain factors G
+
+	          for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
+	          {
+	              NR_iFFT_buffer[bindx * 2] = NR_FFT_buffer [bindx * 2] * NR_G[bindx]; // real part
+	              NR_iFFT_buffer[bindx * 2 + 1] = NR_FFT_buffer [bindx * 2 + 1] * NR_G[bindx]; // imag part
+	              NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2] * NR_G[bindx]; // real part conjugate symmetric
+	              NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2 + 1] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 + 1] * NR_G[bindx]; // imag part conjugate symmetric
+	          }
+
+	          if(NR_VAD_enable == 0)
+	          {
+	        //    ++NR_E_pointer
+	              NR_E_pointer = NR_E_pointer + 1;
+	              if(NR_E_pointer >= NR_N_frames)
+	              {
+	                  NR_E_pointer = 0;
+	              }
+	          }
+	    /*****************************************************************
+	     * NOISE REDUCTION CODE ENDS HERE
+	     *****************************************************************/
+
+
+#if 0
+  for(int idx = 1; idx < 20; idx++)
+  // bins 2 to 29 attenuated
+  // set real values to 0.1 of their original value
+  {
+      NR_iFFT_buffer[idx * 2] *= 0.1;
+      NR_iFFT_buffer[NR_FFT_L * 2 - ((idx + 1) * 2)] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
+      NR_iFFT_buffer[idx * 2 + 1] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
+      NR_iFFT_buffer[NR_FFT_L * 2 - ((idx + 1) * 2) + 1] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
+  }
+#endif
+
+
+
+	// NR_iFFT
+	// perform iFFT (in-place)
+	     arm_cfft_f32(&arm_cfft_sR_f32_len128, NR_iFFT_buffer, 1, 1);
+
+	// do the overlap & add
+
+	      for(int i = 0; i < NR_FFT_L / 2; i++)
+	      { // take real part of first half of current iFFT result and add to 2nd half of last iFFT_result
+	          NR_output_audio_buffer[i + k * (NR_FFT_L / 2)] = NR_iFFT_buffer[i * 2] + NR_last_iFFT_result[i];
+	      }
+
+	      for(int i = 0; i < NR_FFT_L / 2; i++)
+	      {
+	          NR_last_iFFT_result[i] = NR_iFFT_buffer[NR_FFT_L + i * 2];
+	      }
+
+	   // end of "for" loop which repeats the FFT_iFFT_chain two times !!!
+	}
+
+	      for(int i = 0; i < NR_FFT_L; i++)
+	      {
+	          in_buffer [i] = NR_output_audio_buffer[i];
+	          //float_buffer_R [i] = float_buffer_L [i];
+	      }
+
+}
+
 
 
 //alt noise blanking is trying to localize some impulse noise within the samples and after that

@@ -334,6 +334,9 @@ void TransceiverStateInit(void)
     ts.FDV_TX_out_start_pt=0;
     ts.FDV_TX_in_start_pt=0;
 	ts.new_nb = false;	// new nb OFF at poweron
+//	ts.nr_alpha = 0.9; // spectral noise reduction
+//	ts.nr_beta = 0.85;
+//	ts.nr_vad_thresh = 600.0;
 
     // development setting for DF8OE
     if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
