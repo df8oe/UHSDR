@@ -783,7 +783,7 @@ static float32_t NR_SNR_prio[NR_FFT_L / 2];
 static float32_t NR_SNR_post[NR_FFT_L / 2];
 static float32_t NR_SNR_post_pos[NR_FFT_L / 2];
 static float32_t NR_Hk_old[NR_FFT_L / 2];
-uint8_t NR_VAD_enable = 0;
+uint8_t NR_VAD_enable = 1;
 float32_t NR_VAD = 0.0;
 float32_t NR_VAD_thresh = 8.0; // no idea how large this should be !?
 static uint8_t NR_first_time = 1;
@@ -1042,8 +1042,8 @@ void spectral_noise_reduction (float* in_buffer)
 	          {
 	              NR_iFFT_buffer[bindx * 2] = NR_FFT_buffer [bindx * 2] * NR_G[bindx]; // real part
 	              NR_iFFT_buffer[bindx * 2 + 1] = NR_FFT_buffer [bindx * 2 + 1] * NR_G[bindx]; // imag part
-	              NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2] * NR_G[bindx]; // real part conjugate symmetric
-	              NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2 + 1] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 + 1] * NR_G[bindx]; // imag part conjugate symmetric
+	              NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] * NR_G[bindx]; // real part conjugate symmetric
+	              NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] * NR_G[bindx]; // imag part conjugate symmetric
 	          }
 
 	          if(NR_VAD_enable == 0)
