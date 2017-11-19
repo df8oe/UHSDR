@@ -31,7 +31,7 @@
 // New lcd defines, ONLY ONE MAY BE SET AT COMPILE TIME
 
 // ALTERNATIVE GROUP START USE_GFX
-#define USE_GFX_ILI9486
+//#define USE_GFX_ILI9486
 //#define USE_DRIVER_RA8875
 //#define USE_GFX_ILI932x
 // ALTERNATIVE GROUP END USE_GFX
@@ -157,7 +157,6 @@
 
 #include "comp.h"
 #include "dac.h"
-//
 
 #include "uhsdr_board_config.h"
 
