@@ -590,8 +590,10 @@ inline void UiLcdHy28_SpiLcdCsEnable() {
     GPIO_ResetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
 
-void UiLcdHy28_ParallelInit()
+static void UiLcdHy28_ParallelInit()
 {
+    MEM_Init();
+
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -601,8 +603,13 @@ void UiLcdHy28_ParallelInit()
     HAL_GPIO_Init(LCD_RESET_PIO, &GPIO_InitStructure);
 }
 
+static void UiLcdHy28_ParallelDeInit()
+{
+    HAL_SRAM_DeInit(&hsram1);
 
-void UiLcdHy28_Reset()
+}
+
+static void UiLcdHy28_Reset()
 {
     // Reset
     GPIO_SetBits(LCD_RESET_PIO, LCD_RESET);
@@ -616,10 +623,6 @@ void UiLcdHy28_Reset()
 }
 
 
-void UiLcdHy28_FSMCConfig()
-{
-    MEM_Init();
-}
 
 #if 0
 static inline void UiLcdHy28_SpiSendByteOld(uint8_t byte)
@@ -713,24 +716,23 @@ uint8_t UiLcdHy28_SpiReadByteFast()
 void UiLcdHy28_WriteIndexSpi(unsigned char index)
 {
     UiLcdHy28_SpiLcdCsEnable();
+
 #ifdef USE_GFX_ILI9486
-
     GPIO_ResetBits(LCD_RS_PIO, LCD_RS);
-    UiLcdHy28_SpiSendByte(0);
-    UiLcdHy28_SpiSendByte(index);
-
 #else
     UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
+#endif
+
     UiLcdHy28_SpiSendByte(0);
     UiLcdHy28_SpiSendByte(index);
 
     UiLcdHy28_LcdSpiFinishTransfer();
-#endif
 }
 
 static inline void UiLcdHy28_WriteDataSpiStart()
 {
     UiLcdHy28_SpiLcdCsEnable();
+
 #ifdef USE_GFX_ILI9486
     GPIO_SetBits(LCD_RS_PIO, LCD_RS);
 #else
@@ -953,32 +955,27 @@ void UiLcdHy28_SetActiveWindow(uint16_t XLeft, uint16_t XRight, uint16_t YTop,
 static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
 {
 
+// if we are not using SPI DMA, we send the data as it comes
+// if we are using SPI DMA, we do this only if we are NOT using SPI
+#ifdef USE_SPI_DMA
     if(UiLcdHy28_SpiDisplayUsed() == false)
+#endif
     {
-        uint32_t i = len;
-        for (; i; i--)
+        for (uint32_t i = len; i; i--)
         {
             UiLcdHy28_WriteDataOnly(*(pixel++));
         }
     }
+#ifdef USE_SPI_DMA
     else
     {
-#ifdef USE_SPI_DMA
-        uint32_t i;
-        for (i = 0; i < len; i++)
+        for (uint32_t i = 0; i < len; i++)
         {
             pixel[i] = __REV16(pixel[i]); // reverse byte order;
         }
         UiLcdHy28_SpiDmaStart((uint8_t*)pixel,len*2);
-#else
-        uint32_t i = len;
-        for (; i; i--)
-        {
-            UiLcdHy28_WriteDataOnly(*(pixel++));
-        }
-#endif
     }
-
+#endif
 
 }
 
@@ -1697,7 +1694,6 @@ static uint16_t UiLcdHy28_InitA(uint32_t display_type)
 
         // Parallel init
         UiLcdHy28_ParallelInit();
-        UiLcdHy28_FSMCConfig();
         break;
     }
 
@@ -1753,7 +1749,6 @@ uint8_t UiLcdHy28_Init()
 
     // Parallel init
     UiLcdHy28_ParallelInit();
-    UiLcdHy28_FSMCConfig();
 
     //UiLcdRA8875_InitLCD();
 
@@ -1767,15 +1762,15 @@ uint8_t UiLcdHy28_Init()
     mchf_display.lcd_cs_pio = LCD_CS_PIO;
 
     //first checking the parallel configuration, if it fails then go SPI mode
-    UiLcdHy28_FSMCConfig();
     UiLcdHy28_ParallelInit();
     UiLcdHy28_Reset();
 
-    uint16_t LcdCtrlType;
-    LcdCtrlType=UiLcdHy28_ReadReg(0xd3);
+
+    uint16_t LcdCtrlType=UiLcdHy28_ReadReg(0xd3);
     LcdCtrlType=LCD_RAM;	//first dummy read
     LcdCtrlType=(LCD_RAM&0xff)<<8;
     LcdCtrlType|=LCD_RAM&0xff;
+
     if((LcdCtrlType==0x9486) || (LcdCtrlType==0x9488))
     {
     	mchf_display.use_spi = false;
@@ -1783,6 +1778,7 @@ uint8_t UiLcdHy28_Init()
     }
     else
     {
+        UiLcdHy28_ParallelDeInit();
     	mchf_display.use_spi = true;
         UiLcdHy28_SpiInit(HY28BHISPEED);
         UiLcdHy28_Reset();
