@@ -357,6 +357,7 @@ void TransceiverStateInit(void)
     }
     ts.buffered_tx = false;
     ts.cw_text_entry = false;
+    ts.debug_si5351a_pllreset = 2;		//start with "reset on IQ Divider"
 }
 
 void MiscInit(void)
