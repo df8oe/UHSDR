@@ -1826,7 +1826,7 @@ uint8_t UiLcdHy28_Init()
     {
         UiLcdHy28_ParallelDeInit();
     	mchf_display.use_spi = true;
-        UiLcdHy28_SpiInit(HY28BHISPEED);
+        UiLcdHy28_SpiInit(true);
         UiLcdHy28_Reset();
         mchf_display.DeviceCode=0x9486;
         // the "spi" interface is write-only, so we have to do an educated guess here
