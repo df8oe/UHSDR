@@ -1,16 +1,16 @@
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
-**                                                                                 **
-**                               mcHF QRP Transceiver                              **
-**                             K Atanassov - M0NKA 2014                            **
-**                                                                                 **
-**---------------------------------------------------------------------------------**
-**                                                                                 **
-**  File name: uhsdr_version.h                                                      **
-**  Description: this file carries version number                                  **
-**  Last Modified:                                                                 **
-**  Licence:		GNU GPLv3                                                      **
-************************************************************************************/
+ **                                                                                 **
+ **                                        UHSDR                                    **
+ **               a powerful firmware for STM32 based SDR transceivers              **
+ **                                                                                 **
+ **---------------------------------------------------------------------------------**
+ **                                                                                 **
+ **  File name:                                                                     **
+ **  Description:                                                                   **
+ **  Last Modified:                                                                 **
+ **  Licence:		GNU GPLv3                                                      **
+ ************************************************************************************/
 
 #define 	UHSDR_VER_MAJOR			"2"
 #define 	UHSDR_VER_MINOR			"7"

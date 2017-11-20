@@ -22,7 +22,7 @@ ifndef BUILDFOR
   BUILDFOR=F4
 endif
 
-ROOTLOC=.
+ ROOTLOC=.
 VPATH=$(ROOTLOC)
 
 # you can set these environment to your individual values here or via environment variables
@@ -32,6 +32,9 @@ ifndef TRX_ID
 endif
 ifndef TRX_NAME
   TRX_NAME='mcHF QRP'
+endif
+ifndef LCD_TYPE
+  LCD_TYPE=0
 endif
 
 # If you want to hold different toolchains on Linux in /opt you can get them from
@@ -62,13 +65,13 @@ endif
 # identifying of "official builds by DF8OE"
 ifneq (,$(wildcard ../DF8OE))
   COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
-	-DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" -DOFFICIAL_BUILD=\"1\" \
+	-DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" -DLCD_TYPE=$(LCD_TYPE) -DOFFICIAL_BUILD=\"1\" \
 	-ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function
 else
   COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
-	  -DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" \
+	  -DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" -DLCD_TYPE=$(LCD_TYPE) \
 	  -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function
-endif
+ endif
 
 # compilation options
 MACHFLAGS_F4 := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -DARM_MATH_CM4 -DCORTEX_M4 -DSTM32F407xx -D__FPU_PRESENT=1U
