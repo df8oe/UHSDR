@@ -46,6 +46,7 @@
 #include "usbd_core.h"
 #include "usbd_desc.h"
 #include "usbd_conf.h"
+#include "uhsdr_board.h"
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
   * @{
