@@ -25,6 +25,7 @@
 #include "ui_menu.h"
 #include "uhsdr_rtc.h"
 #include "adc.h"
+#include "drivers/ui/oscillator/osc_si5351a.h"
 //
 //
 #include "ui.h"
@@ -5433,17 +5434,19 @@ void UiDriver_StartUpScreenFinish()
 	uint32_t hold_time;
 
 	UiDriver_StartupScreen_LogIfProblem(osc->isPresent() == false, "Local Oscillator NOT Detected!");
-	UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
-
+	if(!Si5351a_IsPresent()) {
+		UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
+	}
 	if(ts.ee_init_stat != HAL_OK)                                   // problem with EEPROM init
 	{
 		snprintf(tx,100, "EEPROM Init Error Code: %d", ts.ee_init_stat);
 		UiDriver_StartupScreen_LogIfProblem(true, tx);
 	}
 
-	UiDriver_StartupScreen_LogIfProblem((HAL_ADC_GetValue(&hadc2) > MAX_VSWR_MOD_VALUE) && (HAL_ADC_GetValue(&hadc3) > MAX_VSWR_MOD_VALUE),
+	if(!Si5351a_IsPresent()) {
+	  UiDriver_StartupScreen_LogIfProblem((HAL_ADC_GetValue(&hadc2) > MAX_VSWR_MOD_VALUE) && (HAL_ADC_GetValue(&hadc3) > MAX_VSWR_MOD_VALUE),
 			"SWR Bridge resistor mod NOT completed!");
-
+	}
 	if (UiDriver_FirmwareVersionCheck())
 	{
 		hold_time = 10000; // 15s
