@@ -30,6 +30,7 @@
 
 #define USE_SPI_DMA
 
+
 // #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
 
 #include "spi.h"
@@ -114,213 +115,217 @@ typedef struct  {
     uint16_t val;
 } RegisterValue_t;
 
+#define REGVAL_DATA (0xffff) // we indicate that the value is to be written using WriteData instead of WriteReg
+#define REGVAL_DELAY (0x0000) // we indicate that the value is to be used as delay in ms instead of WriteReg
+
+
 #ifdef USE_GFX_ILI932x
 static const RegisterValue_t ili9320[] =
 {
-        {0xE5,0x8000},   // Set the internal vcore voltage
-        {0x00,  0x0001},    // Start internal OSC.
+        { 0xE5, 0x8000},   // Set the internal vcore voltage
+        { REGVAL_DELAY,  0x0001},    // Start internal OSC.
 
         // Direction related
-        {0x01,  0x0100},    // set SS and SM bit
+        { 0x01, 0x0100},    // set SS and SM bit
 
-        {0x02,  0x0700},    // set 1 line inversionc
-        {0x03,  0x1038},    // set GRAM write direction and BGR=1 and ORG = 1.
-        {0x04,  0x0000},    // Resize register
-        {0x08,  0x0202},    // set the back porch and front porch
-        {0x09,  0x0000},    // set non-display area refresh cycle ISC[3:0]
-        {0x0A, 0x0000},    // FMARK function
-        {0x0C, 0x0000},    // RGB interface setting
-        {0x0D, 0x0000},    // Frame marker Position
-        {0x0F, 0x0000},    // RGB interface polarity
+        { 0x02, 0x0700},    // set 1 line inversionc
+        { 0x03, 0x1038},    // set GRAM write direction and BGR=1 and ORG = 1.
+        { 0x04, 0x0000},    // Resize register
+        { 0x08, 0x0202},    // set the back porch and front porch
+        { 0x09, 0x0000},    // set non-display area refresh cycle ISC[3:0]
+        { 0x0A, 0x0000},    // FMARK function
+        { 0x0C, 0x0000},    // RGB interface setting
+        { 0x0D, 0x0000},    // Frame marker Position
+        { 0x0F, 0x0000},    // RGB interface polarity
 
         // Power On sequence
-        {0x10, 0x0000},    // SAP, BT[3:0], AP, DSTB, SLP, STB
-        {0x11, 0x0000},    // DC1[2:0], DC0[2:0], VC[2:0]
-        {0x12, 0x0000},    // VREG1OUT voltage
-        {0x13, 0x0000},    // VDV[4:0] for VCOM amplitude
-        {0x00, 300},            // Dis-charge capacitor power voltage (300ms)
-        {0x10, 0x17B0},    // SAP, BT[3:0], AP, DSTB, SLP, STB
-        {0x11, 0x0137},    // DC1[2:0], DC0[2:0], VC[2:0]
-        {0x00, 100},             // Delay 100 ms
-        {0x12, 0x0139},    // VREG1OUT voltage
-        {0x00, 100},             // Delay 100 ms
-        {0x13, 0x1d00},    // VDV[4:0] for VCOM amplitude
-        {0x29, 0x0013},    // VCM[4:0] for VCOMH
-        {0x00, 100},             // Delay 100 ms
-        {0x20, 0x0000},    // GRAM horizontal Address
-        {0x21, 0x0000},    // GRAM Vertical Address
+        { 0x10, 0x0000},    // SAP, BT[3:0], AP, DSTB, SLP, STB
+        { 0x11, 0x0000},    // DC1[2:0], DC0[2:0], VC[2:0]
+        { 0x12, 0x0000},    // VREG1OUT voltage
+        { 0x13, 0x0000},    // VDV[4:0] for VCOM amplitude
+        { REGVAL_DELAY, 300},            // Dis-charge capacitor power voltage (300ms)
+        { 0x10, 0x17B0},    // SAP, BT[3:0], AP, DSTB, SLP, STB
+        { 0x11, 0x0137},    // DC1[2:0], DC0[2:0], VC[2:0]
+        { REGVAL_DELAY, 100},             // Delay 100 ms
+        { 0x12, 0x0139},    // VREG1OUT voltage
+        { REGVAL_DELAY, 100},             // Delay 100 ms
+        { 0x13, 0x1d00},    // VDV[4:0] for VCOM amplitude
+        { 0x29, 0x0013},    // VCM[4:0] for VCOMH
+        { REGVAL_DELAY, 100},             // Delay 100 ms
+        { 0x20, 0x0000},    // GRAM horizontal Address
+        { 0x21, 0x0000},    // GRAM Vertical Address
 
         // Adjust the Gamma Curve
-        {0x30, 0x0007},
-        {0x31, 0x0007},
-        {0x32, 0x0007},
-        {0x35, 0x0007},
-        {0x36, 0x0007},
-        {0x37, 0x0700},
-        {0x38, 0x0700},
-        {0x39, 0x0700},
-        {0x3C, 0x0700},
-        {0x3D, 0x1F00},
+        { 0x30, 0x0007},
+        { 0x31, 0x0007},
+        { 0x32, 0x0007},
+        { 0x35, 0x0007},
+        { 0x36, 0x0007},
+        { 0x37, 0x0700},
+        { 0x38, 0x0700},
+        { 0x39, 0x0700},
+        { 0x3C, 0x0700},
+        { 0x3D, 0x1F00},
 
         // Set GRAM area
-        {0x50, 0x0000},    // Horizontal GRAM Start Address
-        {0x51, 0x00EF},    // Horizontal GRAM End Address
-        {0x52, 0x0000},    // Vertical GRAM Start Address
-        {0x53, 0x013F},    // Vertical GRAM End Address
+        { 0x50, 0x0000},    // Horizontal GRAM Start Address
+        { 0x51, 0x00EF},    // Horizontal GRAM End Address
+        { 0x52, 0x0000},    // Vertical GRAM Start Address
+        { 0x53, 0x013F},    // Vertical GRAM End Address
 
         // Direction related
-        {0x60,  0xA700},    // Gate Scan Line
-        {0x61,  0x0001},    // NDL,VLE, REV
+        { 0x60, 0xA700},    // Gate Scan Line
+        { 0x61, 0x0001},    // NDL,VLE, REV
 
-        {0x6A, 0x0000},    // set scrolling line
+        { 0x6A, 0x0000},    // set scrolling line
 
         // Partial Display Control
-        {0x80, 0x0000},
-        {0x81, 0x0000},
-        {0x82, 0x0000},
-        {0x83, 0x0000},
-        {0x84, 0x0000},
-        {0x85, 0x0000},
+        { 0x80, 0x0000},
+        { 0x81, 0x0000},
+        { 0x82, 0x0000},
+        { 0x83, 0x0000},
+        { 0x84, 0x0000},
+        { 0x85, 0x0000},
 
         // Panel Control
-        {0x90, 0x0010},
-        {0x92, 0x0000},
-        {0x93, 0x0003},
-        {0x95, 0x0110},
-        {0x97, 0x0000},
-        {0x98, 0x0000},
+        { 0x90, 0x0010},
+        { 0x92, 0x0000},
+        { 0x93, 0x0003},
+        { 0x95, 0x0110},
+        { 0x97, 0x0000},
+        { 0x98, 0x0000},
 
         // Set GRAM write direction
-        {0x03, 0x1038},
+        { 0x03, 0x1038},
 
         // 262K color and display ON
-        {0x07, 0x0173},
+        { 0x07, 0x0173},
 
         // delay 50 ms
-        {0x00, 50},
+        { REGVAL_DELAY, 50},
 
 };
 
 static const RegisterValue_t spdfd5408b[] =
 {
 
-    {0x01,0x0000},   // (SS bit 8) - 0x0100 will flip 180 degree
-    {0x02,0x0700},   // LCD Driving Waveform Contral
-    {0x03,0x1038},   // Entry Mode (AM bit 3)
+    { 0x01, 0x0000},   // (SS bit 8) - 0x0100 will flip 180 degree
+    { 0x02, 0x0700},   // LCD Driving Waveform Contral
+    { 0x03, 0x1038},   // Entry Mode (AM bit 3)
 
-    {0x04,0x0000},   // Scaling Control register
-    {0x08,0x0207},   // Display Control 2
-    {0x09,0x0000},   // Display Control 3
-    {0x0A,0x0000},   // Frame Cycle Control
-    {0x0C,0x0000},   // External Display Interface Control 1
-    {0x0D,0x0000},    // Frame Maker Position
-    {0x0F,0x0000},   // External Display Interface Control 2
-    {0x00, 50},
-    {0x07,0x0101},   // Display Control
-    {0x00, 50},
-    {0x10,0x16B0},    // Power Control 1
-    {0x11,0x0001},    // Power Control 2
-    {0x17,0x0001},    // Power Control 3
-    {0x12,0x0138},    // Power Control 4
-    {0x13,0x0800},    // Power Control 5
-    {0x29,0x0009},   // NVM read data 2
-    {0x2a,0x0009},   // NVM read data 3
-    {0xa4,0x0000},
-    {0x50,0x0000},
-    {0x51,0x00EF},
-    {0x52,0x0000},
-    {0x53,0x013F},
+    { 0x04, 0x0000},   // Scaling Control register
+    { 0x08, 0x0207},   // Display Control 2
+    { 0x09, 0x0000},   // Display Control 3
+    { 0x0A, 0x0000},   // Frame Cycle Control
+    { 0x0C, 0x0000},   // External Display Interface Control 1
+    { 0x0D, 0x0000},    // Frame Maker Position
+    { 0x0F, 0x0000},   // External Display Interface Control 2
+    { REGVAL_DELAY, 50},
+    { 0x07, 0x0101},   // Display Control
+    { REGVAL_DELAY, 50},
+    { 0x10, 0x16B0},    // Power Control 1
+    { 0x11, 0x0001},    // Power Control 2
+    { 0x17, 0x0001},    // Power Control 3
+    { 0x12, 0x0138},    // Power Control 4
+    { 0x13, 0x0800},    // Power Control 5
+    { 0x29, 0x0009},   // NVM read data 2
+    { 0x2a, 0x0009},   // NVM read data 3
+    { 0xa4, 0x0000},
+    { 0x50, 0x0000},
+    { 0x51, 0x00EF},
+    { 0x52, 0x0000},
+    { 0x53, 0x013F},
 
-    {0x60,0x2700},   // Driver Output Control (GS bit 15)
+    { 0x60, 0x2700},   // Driver Output Control (GS bit 15)
 
-    {0x61,0x0003},   // Driver Output Control
-    {0x6A,0x0000},   // Vertical Scroll Control
+    { 0x61, 0x0003},   // Driver Output Control
+    { 0x6A, 0x0000},   // Vertical Scroll Control
 
-    {0x80,0x0000},   // Display Position ?C Partial Display 1
-    {0x81,0x0000},   // RAM Address Start ?C Partial Display 1
-    {0x82,0x0000},   // RAM address End - Partial Display 1
-    {0x83,0x0000},   // Display Position ?C Partial Display 2
-    {0x84,0x0000},   // RAM Address Start ?C Partial Display 2
-    {0x85,0x0000},   // RAM address End ?C Partail Display2
-    {0x90,0x0013},   // Frame Cycle Control
-    {0x92,0x0000},    // Panel Interface Control 2
-    {0x93,0x0003},   // Panel Interface control 3
-    {0x95,0x0110},   // Frame Cycle Control
-    {0x07,0x0173},
+    { 0x80, 0x0000},   // Display Position ?C Partial Display 1
+    { 0x81, 0x0000},   // RAM Address Start ?C Partial Display 1
+    { 0x82, 0x0000},   // RAM address End - Partial Display 1
+    { 0x83, 0x0000},   // Display Position ?C Partial Display 2
+    { 0x84, 0x0000},   // RAM Address Start ?C Partial Display 2
+    { 0x85, 0x0000},   // RAM address End ?C Partail Display2
+    { 0x90, 0x0013},   // Frame Cycle Control
+    { 0x92, 0x0000},    // Panel Interface Control 2
+    { 0x93, 0x0003},   // Panel Interface control 3
+    { 0x95, 0x0110},   // Frame Cycle Control
+    { 0x07, 0x0173},
 };
 
 static const RegisterValue_t ili932x[] =
 {
-    // NPI: {0xE5, 0x78F0},   // set SRAM internal timing I guess this is the relevant line for getting LCDs to work which are "out-of-specs"...
-    {0x01,0x0000},    // set SS and SM bit
-    {0x02,0x0700},    // set 1 line inversion
-    {0x03,0x1038},    // set GRAM write direction and BGR=1 and ORG = 1
-    {0x04,0x0000},    // resize register
-    {0x08,0x0207},    // set the back porch and front porch
-    {0x09,0x0000},    // set non-display area refresh cycle
-    {0x0a,0x0000},    // FMARK function
-    {0x0c,0x0001},    // RGB interface setting
-    // NPI: {0x0c,0x0000},    // RGB interface setting
-    {0x0d,0x0000},    // frame marker position
-    {0x0f,0x0000},    // RGB interface polarity
+    // NPI: { 0xE5, 0x78F0},   // set SRAM internal timing I guess this is the relevant line for getting LCDs to work which are "out-of-specs"...
+    { 0x01, 0x0000},    // set SS and SM bit
+    { 0x02, 0x0700},    // set 1 line inversion
+    { 0x03, 0x1038},    // set GRAM write direction and BGR=1 and ORG = 1
+    { 0x04, 0x0000},    // resize register
+    { 0x08, 0x0207},    // set the back porch and front porch
+    { 0x09, 0x0000},    // set non-display area refresh cycle
+    { 0x0a, 0x0000},    // FMARK function
+    { 0x0c, 0x0001},    // RGB interface setting
+    // NPI: { 0x0c, 0x0000},    // RGB interface setting
+    { 0x0d, 0x0000},    // frame marker position
+    { 0x0f, 0x0000},    // RGB interface polarity
 
     // Power On sequence
-    {0x10,0x0000},    // SAP, BT[3:0], AP, DSTB, SLP, STB
-    {0x11,0x0007},    // DC1[2:0], DC0[2:0], VC[2:0]
-    {0x12,0x0000},    // VREG1OUT voltage
-    {0x13,0x0000},    // VDV[4:0] for VCOM amplitude
-    // NPI: {0x0c,0x0001},    // RGB interface setting
-    {0x00, 200},         // delay 200 ms
-    {0x10,0x1590},    // SAP, BT[3:0], AP, DSTB, SLP, STB
-    // NPI: {0x10, 0x1090}, // SAP, BT[3:0], AP, DSTB, SLP, STB
-    {0x11,0x0227},    // set DC1[2:0], DC0[2:0], VC[2:0]
-    {0x00, 50},              // delay 50 ms
-    {0x12,0x009c},    // internal reference voltage init
-    // NPI: {0x12, 0x001F},
-    {0x00, 50},              // delay 50 ms
-    {0x13,0x1900},    // set VDV[4:0] for VCOM amplitude
-    // NPI: {0x13, 0x1500},
-    {0x29,0x0023},    // VCM[5:0] for VCOMH
-    // NPI: {0x29,0x0027},    // VCM[5:0] for VCOMH
-    {0x2b,0x000d},    // set frame rate: changed from 0e to 0d on 03/28/2016
-    {0x00, 50},              // delay 50 ms
-    {0x20,0x0000},    // GRAM horizontal address
-    {0x21,0x0000},    // GRAM vertical address
+    { 0x10, 0x0000},    // SAP, BT[3:0], AP, DSTB, SLP, STB
+    { 0x11, 0x0007},    // DC1[2:0], DC0[2:0], VC[2:0]
+    { 0x12, 0x0000},    // VREG1OUT voltage
+    { 0x13, 0x0000},    // VDV[4:0] for VCOM amplitude
+    // NPI: { 0x0c, 0x0001},    // RGB interface setting
+    { REGVAL_DELAY, 200},         // delay 200 ms
+    { 0x10, 0x1590},    // SAP, BT[3:0], AP, DSTB, SLP, STB
+    // NPI: { 0x10, 0x1090}, // SAP, BT[3:0], AP, DSTB, SLP, STB
+    { 0x11, 0x0227},    // set DC1[2:0], DC0[2:0], VC[2:0]
+    { REGVAL_DELAY, 50},              // delay 50 ms
+    { 0x12, 0x009c},    // internal reference voltage init
+    // NPI: { 0x12, 0x001F},
+    { REGVAL_DELAY, 50},              // delay 50 ms
+    { 0x13, 0x1900},    // set VDV[4:0] for VCOM amplitude
+    // NPI: { 0x13, 0x1500},
+    { 0x29, 0x0023},    // VCM[5:0] for VCOMH
+    // NPI: { 0x29, 0x0027},    // VCM[5:0] for VCOMH
+    { 0x2b, 0x000d},    // set frame rate: changed from 0e to 0d on 03/28/2016
+    { REGVAL_DELAY, 50},              // delay 50 ms
+    { 0x20, 0x0000},    // GRAM horizontal address
+    { 0x21, 0x0000},    // GRAM vertical address
 
 //        /* NPI:
      // ----------- Adjust the Gamma Curve ----------
-    {0x30, 0x0000},
-    {0x31, 0x0707},
-    {0x32, 0x0307},
-    {0x35, 0x0200},
-    {0x36, 0x0008},
-    {0x37, 0x0004},
-    {0x38, 0x0000},
-    {0x39, 0x0707},
-    {0x3C, 0x0002},
-    {0x3D, 0x1D04},
+    { 0x30, 0x0000},
+    { 0x31, 0x0707},
+    { 0x32, 0x0307},
+    { 0x35, 0x0200},
+    { 0x36, 0x0008},
+    { 0x37, 0x0004},
+    { 0x38, 0x0000},
+    { 0x39, 0x0707},
+    { 0x3C, 0x0002},
+    { 0x3D, 0x1D04},
 //        */
 
-    {0x50,0x0000},    // horizontal GRAM start address
-    {0x51,0x00ef},    // horizontal GRAM end address
-    {0x52,0x0000},    // vertical GRAM start address
-    {0x53,0x013f},    // vertical GRAM end address
-    {0x60,0xa700},    // gate scan line
-    {0x61,0x0001},    // NDL, VLE, REV
-    {0x6a,0x0000},    // set scrolling line
+    { 0x50, 0x0000},    // horizontal GRAM start address
+    { 0x51, 0x00ef},    // horizontal GRAM end address
+    { 0x52, 0x0000},    // vertical GRAM start address
+    { 0x53, 0x013f},    // vertical GRAM end address
+    { 0x60, 0xa700},    // gate scan line
+    { 0x61, 0x0001},    // NDL, VLE, REV
+    { 0x6a, 0x0000},    // set scrolling line
     // partial display control
-    {0x80,0x0000},
-    {0x81,0x0000},
-    {0x82,0x0000},
-    {0x83,0x0000},
-    {0x84,0x0000},
-    {0x85,0x0000},
+    { 0x80, 0x0000},
+    { 0x81, 0x0000},
+    { 0x82, 0x0000},
+    { 0x83, 0x0000},
+    { 0x84, 0x0000},
+    { 0x85, 0x0000},
     // panel control
-    {0x90,0x0010},
-    {0x92,0x0000},
-    // NPI: {0x92, 0x0600},
+    { 0x90, 0x0010},
+    { 0x92, 0x0000},
+    // NPI: { 0x92, 0x0600},
     // activate display using 262k colours
-    {0x07,0x0133},
+    { 0x07, 0x0133},
 };
 
 
@@ -329,45 +334,45 @@ static const RegisterValue_t ili932x[] =
 #ifdef USE_DRIVER_RA8875
 static const RegisterValue_t ra8875[] =
 {
-        { 0x01, 0x01 }, // Software reset the LCD
-        { 0x01, 0x00 },
-        { 0x88, 0x0a },
-        { 0x89, 0x02 },
-        { 0x10, 0x0F },   // 65K 16 bit 8080 mpu interface
-        { 0x04, 0x80 },   // 00b: PCLK period = System Clock period.
+        { 0x01, 0x01}, // Software reset the LCD
+        { 0x01, 0x00},
+        { 0x88, 0x0a},
+        { 0x89, 0x02},
+        { 0x10, 0x0F},   // 65K 16 bit 8080 mpu interface
+        { 0x04, 0x80},   // 00b: PCLK period = System Clock period.
         //Horizontal set
-        { 0x14, 0x63 }, //Horizontal display width(pixels) = (HDWR + 1)*8
-        { 0x15, 0x00 }, //Horizontal Non-Display Period Fine Tuning(HNDFT) [3:0]
-        { 0x16, 0x03 }, //Horizontal Non-Display Period (pixels) = (HNDR + 1)*8
-        { 0x17, 0x03 }, //HSYNC Start Position(PCLK) = (HSTR + 1)*8
-        { 0x18, 0x0B }, //HSYNC Width [4:0]   HSYNC Pulse width(PCLK) = (HPWR + 1)*8
+        { 0x14, 0x63}, //Horizontal display width(pixels) = (HDWR + 1)*8
+        { 0x15, 0x00}, //Horizontal Non-Display Period Fine Tuning(HNDFT) [3:0]
+        { 0x16, 0x03}, //Horizontal Non-Display Period (pixels) = (HNDR + 1)*8
+        { 0x17, 0x03}, //HSYNC Start Position(PCLK) = (HSTR + 1)*8
+        { 0x18, 0x0B}, //HSYNC Width [4:0]   HSYNC Pulse width(PCLK) = (HPWR + 1)*8
         //Vertical set
-        { 0x19, 0xdf }, //Vertical pixels = VDHR + 1
-        { 0x1a, 0x01 }, //Vertical pixels = VDHR + 1
-        { 0x1b, 0x20 }, //Vertical Non-Display area = (VNDR + 1)
-        { 0x1c, 0x00 }, //Vertical Non-Display area = (VNDR + 1)
-        { 0x1d, 0x16 }, //VSYNC Start Position(PCLK) = (VSTR + 1)
-        { 0x1e, 0x00 }, //VSYNC Start Position(PCLK) = (VSTR + 1)
-        { 0x1f, 0x01 }, //VSYNC Pulse Width(PCLK) = (VPWR + 1)
+        { 0x19, 0xdf}, //Vertical pixels = VDHR + 1
+        { 0x1a, 0x01}, //Vertical pixels = VDHR + 1
+        { 0x1b, 0x20}, //Vertical Non-Display area = (VNDR + 1)
+        { 0x1c, 0x00}, //Vertical Non-Display area = (VNDR + 1)
+        { 0x1d, 0x16}, //VSYNC Start Position(PCLK) = (VSTR + 1)
+        { 0x1e, 0x00}, //VSYNC Start Position(PCLK) = (VSTR + 1)
+        { 0x1f, 0x01}, //VSYNC Pulse Width(PCLK) = (VPWR + 1)
         // setting active window 0,799,0,479
-        { 0x30, 0x00 },
-        { 0x31, 0x00 },
-        { 0x34, 0x1f },
-        { 0x35, 0x03 },
-        { 0x32, 0x00 },
-        { 0x33, 0x00 },
-        { 0x37, 0xDF },
-        { 0x37, 0x01 },
-        { 0x8a, 0x80 },
-        { 0x8a, 0x81 }, //open PWM
-        { 0x8b, 0x1f }, //Brightness parameter 0xff-0x00
-        { 0x01, 0x80 }, //display on
+        { 0x30, 0x00},
+        { 0x31, 0x00},
+        { 0x34, 0x1f},
+        { 0x35, 0x03},
+        { 0x32, 0x00},
+        { 0x33, 0x00},
+        { 0x37, 0xDF},
+        { 0x37, 0x01},
+        { 0x8a, 0x80},
+        { 0x8a, 0x81}, //open PWM
+        { 0x8b, 0x1f}, //Brightness parameter 0xff-0x00
+        { 0x01, 0x80}, //display on
 
         //UiLcdHy28_WriteReg(LCD_DPCR,0b00001111}, // rotacion 180º
 
-        { 0x60, 0x00 }, /* ra8875_red */
-        { 0x61, 0x00 }, /* ra8875_green */
-        { 0x62, 0x00 }, /* ra8875_blue */
+        { 0x60, 0x00}, /* ra8875_red */
+        { 0x61, 0x00}, /* ra8875_green */
+        { 0x62, 0x00}, /* ra8875_blue */
 
         { 0x8E, 0x80},
 };
@@ -375,14 +380,103 @@ static const RegisterValue_t ra8875[] =
 
 #endif
 
+#ifdef USE_GFX_ILI9486
+static const RegisterValue_t ili9486[] =
+{
+		{ 0xB0,0},
 
-const uint8_t touchscreentable [] = {0x07,0x09,
-        0x0c,0x0d,0x0e,0x0f,0x12,0x13,0x14,0x15,0x16,0x18,
-        0x1c,0x1d,0x1e,0x1f,0x22,0x23,0x24,0x25,0x26,0x27,
-        0x2c,0x2d,0x2e,0x30,0x32,0x34,0x35,0x36,0x3a,0x3c,
-        0x40,0x42,0x44,0x45,0x46,0x47,0x4c,0x4d,0x4e,0x52,
-        0x54,0x55,0x56,0x5c,0x5d,0x60,0x62,0x64,0x65,0x66,
-        0x67,0x6c,0x6d,0x6e,0x74,0x75,0x76,0x77,0x7c,0x7d
+		{ 0x11,0},
+		{ REGVAL_DELAY, 250},
+
+		{ 0x3A, 0x55},      // COLMOD_PIXEL_FORMAT_SET 16 bit pixel
+
+		{ 0xC0, 0x0f},
+		{ REGVAL_DATA, 0x0f},
+
+		{ 0xC1, 0x42},
+		{ 0xC2, 0x22},
+
+		{ 0xC5, 0x01},
+		{ REGVAL_DATA, 0x29}, //4D
+		{ REGVAL_DATA, 0x80},
+
+		{ 0xB6, 0x00},
+		{ REGVAL_DATA, 0x02}, //42
+		{ REGVAL_DATA, 0x3b},
+
+		{ 0xB1, 0xB0},
+		{ REGVAL_DATA, 0x11},
+
+		{ 0xB4, 0x02},
+
+		{ 0xE0, 0x0f},
+		{ REGVAL_DATA, 0x1F},
+		{ REGVAL_DATA, 0x1C},
+		{ REGVAL_DATA, 0x0C},
+		{ REGVAL_DATA, 0x0F},
+		{ REGVAL_DATA, 0x08},
+		{ REGVAL_DATA, 0x48},
+		{ REGVAL_DATA, 0x98},
+		{ REGVAL_DATA, 0x37},
+		{ REGVAL_DATA, 0x0a},
+		{ REGVAL_DATA, 0x13},
+		{ REGVAL_DATA, 0x04},
+		{ REGVAL_DATA, 0x11},
+		{ REGVAL_DATA, 0x0d},
+		{ REGVAL_DATA, 0x00},
+
+		{ 0xE1, 0x0f},
+		{ REGVAL_DATA, 0x32},
+		{ REGVAL_DATA, 0x2e},
+		{ REGVAL_DATA, 0x0b},
+		{ REGVAL_DATA, 0x0d},
+		{ REGVAL_DATA, 0x05},
+		{ REGVAL_DATA, 0x47},
+		{ REGVAL_DATA, 0x75},
+		{ REGVAL_DATA, 0x37},
+		{ REGVAL_DATA, 0x06},
+		{ REGVAL_DATA, 0x10},
+		{ REGVAL_DATA, 0x03},
+		{ REGVAL_DATA, 0x24},
+		{ REGVAL_DATA, 0x20},
+		{ REGVAL_DATA, 0x00},
+
+		{ 0xE2, 0x0f},
+		{ REGVAL_DATA, 0x32},
+		{ REGVAL_DATA, 0x2e},
+		{ REGVAL_DATA, 0x0b},
+		{ REGVAL_DATA, 0x0d},
+		{ REGVAL_DATA, 0x05},
+		{ REGVAL_DATA, 0x47},
+		{ REGVAL_DATA, 0x75},
+		{ REGVAL_DATA, 0x37},
+		{ REGVAL_DATA, 0x06},
+		{ REGVAL_DATA, 0x10},
+		{ REGVAL_DATA, 0x03},
+		{ REGVAL_DATA, 0x24},
+		{ REGVAL_DATA, 0x20},		{ REGVAL_DATA, 0x00},
+
+		{ 0x13, 0x00},    //normal display mode ON
+		{ 0x20, 0x00},    //display inversion off
+
+		{ 0x36, 0x028},
+
+		{ 0x11, 0x00},
+		{ REGVAL_DELAY, 250},
+
+		{ 0x29, 0x00},
+		{ REGVAL_DELAY, 250},
+};
+#endif
+
+
+const uint8_t touchscreentable [] = { 0x07, 0x09,
+        0x0c, 0x0d, 0x0e, 0x0f, 0x12, 0x13, 0x14, 0x15, 0x16, 0x18,
+        0x1c, 0x1d, 0x1e, 0x1f, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
+        0x2c, 0x2d, 0x2e, 0x30, 0x32, 0x34, 0x35, 0x36, 0x3a, 0x3c,
+        0x40, 0x42, 0x44, 0x45, 0x46, 0x47, 0x4c, 0x4d, 0x4e, 0x52,
+        0x54, 0x55, 0x56, 0x5c, 0x5d, 0x60, 0x62, 0x64, 0x65, 0x66,
+        0x67, 0x6c, 0x6d, 0x6e, 0x74, 0x75, 0x76, 0x77, 0x7c, 0x7d
 };
 
 typedef struct
@@ -467,40 +561,6 @@ void UiLcdHy28_SpiInit(bool hispeed)
     // the main init is already done earlier, we need this if we want to use our own code to access SPI
     __HAL_SPI_ENABLE(&hspi2);
 
-#if 0
-
-    // Common SPI settings
-    GPIO_InitStructure.Mode  = GPIO_MODE_AF_PP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-    GPIO_InitStructure.Pull = GPIO_NOPULL;
-    GPIO_InitStructure.Alternate = GPIO_AF5_SPI2;
-
-    // SPI SCK pin configuration
-    GPIO_InitStructure.Pin = LCD_SCK;
-    HAL_GPIO_Init(LCD_SCK_PIO, &GPIO_InitStructure);
-
-    // SPI  MOSI pins configuration
-    GPIO_InitStructure.Pin =  LCD_MOSI;
-    HAL_GPIO_Init(LCD_MOSI_PIO, &GPIO_InitStructure);
-
-    // SPI  MISO pins configuration
-    GPIO_InitStructure.Pin =  LCD_MISO;
-    HAL_GPIO_Init(LCD_MISO_PIO, &GPIO_InitStructure);
-
-
-    // SPI configuration
-    SPI_Handle.Init.Direction		= SPI_DIRECTION_2LINES;
-    SPI_Handle.Init.DataSize		= SPI_DATASIZE_8BIT;
-    SPI_Handle.Init.CLKPolarity	= SPI_POLARITY_HIGH;
-    SPI_Handle.Init.CLKPhase		= SPI_PHASE_2EDGE;
-    SPI_Handle.Init.NSS			= SPI_NSS_SOFT;
-    SPI_Handle.Init.BaudRatePrescaler	= lcd_spi_prescaler;   // max speed presc_8 with 50Mhz GPIO, max 4 with 100 Mhz
-    SPI_Handle.Init.FirstBit		= SPI_FIRSTBIT_MSB;
-    SPI_Handle.Init.Mode			= SPI_MODE_MASTER;
-    SPI_Handle.Instance            = SPI2;
-    HAL_SPI_DeInit(&SPI_Handle);
-    HAL_SPI_Init(&SPI_Handle);
-#endif
     // Common misc pins settings
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -565,28 +625,17 @@ void UiLcdHy28_SpiDeInit()
     GPIO_InitStructure.Speed	= GPIO_SPEED_FREQ_LOW;
     GPIO_InitStructure.Pull		= GPIO_NOPULL;
 
-#if 0
-    // SPI SCK pin configuration
-    GPIO_InitStructure.Pin		= LCD_SCK;
-    HAL_GPIO_Init(LCD_SCK_PIO, &GPIO_InitStructure);
-
-    // SPI  MOSI pins configuration
-    GPIO_InitStructure.Pin		=  LCD_MOSI;
-    HAL_GPIO_Init(LCD_MOSI_PIO, &GPIO_InitStructure);
-
-    // SPI  MISO pins configuration
-    GPIO_InitStructure.Pin		=  LCD_MISO;
-    HAL_GPIO_Init(LCD_MISO_PIO, &GPIO_InitStructure);
-#endif
-    // Configure GPIO PIN for Chip select
+    // Deconfigure GPIO PIN for Chip select
     GPIO_InitStructure.Pin		= mchf_display.lcd_cs;
     HAL_GPIO_Init(mchf_display.lcd_cs_pio, &GPIO_InitStructure);
 }
 
-inline void UiLcdHy28_SpiLcdCsDisable() {
+inline void UiLcdHy28_SpiLcdCsDisable()
+{
     GPIO_SetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
-inline void UiLcdHy28_SpiLcdCsEnable() {
+inline void UiLcdHy28_SpiLcdCsEnable()
+{
     GPIO_ResetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
 
@@ -1638,24 +1687,25 @@ uint16_t UiLcdHy28_PrintTextCentered(const uint16_t XposStart,const uint16_t Ypo
     return YposCurrent;
 }
 
-#ifndef USE_GFX_ILI9486
 static void UiLcdHy28_SendRegisters(const RegisterValue_t* regvals, uint16_t count)
 {
     for (uint16_t idx = 0; idx < count; idx++)
     {
-        if (regvals[idx].reg == 0)
-        {
+    	switch(regvals[idx].reg)
+    	{
+    	case REGVAL_DELAY:
             HAL_Delay(regvals[idx].val);
-        }
-        else
-        {
+            break;
+    	case REGVAL_DATA:
+    		UiLcdHy28_WriteData(regvals[idx].val);
+    		break;
+    	default:
             // TODO: Decide how we handle 16 vs. 8 bit writes here
             // I would propose either per register setting or per register set setting
             UiLcdHy28_WriteReg(regvals[idx].reg, regvals[idx].val);
         }
     }
 }
-#endif
 
 #ifdef USE_GFX_ILI932x
 static uint16_t UiLcdHy28_InitA(uint32_t display_type)
@@ -1783,10 +1833,14 @@ uint8_t UiLcdHy28_Init()
         UiLcdHy28_SpiInit(HY28BHISPEED);
         UiLcdHy28_Reset();
         mchf_display.DeviceCode=0x9486;
+        // the "spi" interface is write-only, so we have to do an educated guess here
+        // this is in fact a specialty of the RPi board not the controller itself, which also
+        // supports proper SPI, but board uses a simple shift register
     }
 
 
-    UiLcdHy28_ILI9486init();
+	UiLcdHy28_SendRegisters(ili9486, sizeof(ili9486)/sizeof(RegisterValue_t));
+
     uint8_t retval;
 
     if(mchf_display.use_spi)
@@ -1837,6 +1891,10 @@ uint8_t UiLcdHy28_Init()
         if(mchf_display.DeviceCode != 0x0000)
         {
             retval = DISPLAY_HY28B_PARALLEL;
+        }
+        else
+        {
+        	UiLcdHy28_ParallelDeInit();
         }
     }
 
@@ -2105,99 +2163,3 @@ void UiLcdHy28_TouchscreenInit(uint8_t mirror)
     mchf_touchscreen.mirrored = mirror;
     mchf_touchscreen.present = UiLcdHy28_TouchscreenPresenceDetection();
 }
-
-#ifdef USE_GFX_ILI9486
-/**
- * @brief parallel and serial init of ILI9486
- */
-void UiLcdHy28_ILI9486init(void)
-{
-
-		UiLcdHy28_WriteReg(0xB0,0);
-
-		UiLcdHy28_WriteReg(0x11,0);
-		HAL_Delay(250);
-
-		UiLcdHy28_WriteReg(0x3A,0x55);      // COLMOD_PIXEL_FORMAT_SET 16 bit pixel
-
-		UiLcdHy28_WriteReg(0xC0,0x0f);
-		UiLcdHy28_WriteData(0x0f);
-
-		UiLcdHy28_WriteReg(0xC1,0x42);
-
-		UiLcdHy28_WriteReg(0xC2,0x22);
-
-		UiLcdHy28_WriteReg(0xC5,0x01);
-		UiLcdHy28_WriteData(0x29); //4D
-		UiLcdHy28_WriteData(0x80);
-
-		UiLcdHy28_WriteReg(0xB6,0x00);
-		UiLcdHy28_WriteData(0x02); //42
-		UiLcdHy28_WriteData(0x3b);
-
-		UiLcdHy28_WriteReg(0xB1,0xB0);
-		UiLcdHy28_WriteData(0x11);
-
-		UiLcdHy28_WriteReg(0xB4,0x02);
-
-		UiLcdHy28_WriteReg(0xE0,0x0f);
-		UiLcdHy28_WriteData(0x1F);
-		UiLcdHy28_WriteData(0x1C);
-		UiLcdHy28_WriteData(0x0C);
-		UiLcdHy28_WriteData(0x0F);
-		UiLcdHy28_WriteData(0x08);
-		UiLcdHy28_WriteData(0x48);
-		UiLcdHy28_WriteData(0x98);
-		UiLcdHy28_WriteData(0x37);
-		UiLcdHy28_WriteData(0x0a);
-		UiLcdHy28_WriteData(0x13);
-		UiLcdHy28_WriteData(0x04);
-		UiLcdHy28_WriteData(0x11);
-		UiLcdHy28_WriteData(0x0d);
-		UiLcdHy28_WriteData(0x00);
-
-		UiLcdHy28_WriteReg(0xE1,0x0f);
-		UiLcdHy28_WriteData(0x32);
-		UiLcdHy28_WriteData(0x2e);
-		UiLcdHy28_WriteData(0x0b);
-		UiLcdHy28_WriteData(0x0d);
-		UiLcdHy28_WriteData(0x05);
-		UiLcdHy28_WriteData(0x47);
-		UiLcdHy28_WriteData(0x75);
-		UiLcdHy28_WriteData(0x37);
-		UiLcdHy28_WriteData(0x06);
-		UiLcdHy28_WriteData(0x10);
-		UiLcdHy28_WriteData(0x03);
-		UiLcdHy28_WriteData(0x24);
-		UiLcdHy28_WriteData(0x20);
-		UiLcdHy28_WriteData(0x00);
-
-		UiLcdHy28_WriteReg(0xE2,0x0f);
-		UiLcdHy28_WriteData(0x32);
-		UiLcdHy28_WriteData(0x2e);
-		UiLcdHy28_WriteData(0x0b);
-		UiLcdHy28_WriteData(0x0d);
-		UiLcdHy28_WriteData(0x05);
-		UiLcdHy28_WriteData(0x47);
-		UiLcdHy28_WriteData(0x75);
-		UiLcdHy28_WriteData(0x37);
-		UiLcdHy28_WriteData(0x06);
-		UiLcdHy28_WriteData(0x10);
-		UiLcdHy28_WriteData(0x03);
-		UiLcdHy28_WriteData(0x24);
-		UiLcdHy28_WriteData(0x20);
-		UiLcdHy28_WriteData(0x00);
-
-		UiLcdHy28_WriteReg(0x13,0x00);    //normal display mode ON
-		UiLcdHy28_WriteReg(0x20,0x00);    //display inversion off
-
-		UiLcdHy28_WriteReg(0x36,0x028);
-
-		UiLcdHy28_WriteReg(0x11,0x00);
-		HAL_Delay(250);
-
-		UiLcdHy28_WriteReg(0x29,0x00);
-		HAL_Delay(250);
-
-}
-#endif
