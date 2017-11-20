@@ -478,14 +478,6 @@ void __attribute__ ((noinline)) UiDriverMenuMapStrings(char* output, uint32_t va
 }
 
 
-
-static const char* display_types[] = {
-     "No Display",
-     "HY28A SPI",
-     "HY28B SPI",
-     "HY28A/B Para."
- };
-
 /**
  * @returns: information for requested item as string. Do not write to this string.
  */
@@ -501,7 +493,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     {
     case INFO_DISPLAY:
     {
-        outs = display_types[ts.display->display_type];
+        outs = display_infos[ts.display->display_type].name;
         break;
     }
     case INFO_DISPLAY_CTRL:

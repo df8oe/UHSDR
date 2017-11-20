@@ -399,21 +399,22 @@ void Board_InitMinimal()
 void Board_InitFull()
 {
 
-#ifdef STM32F4
-    // on a STM32F4 we can have the internal RTC only if there is an SPI display.
-    if (ts.display->display_type == DISPLAY_HY28A_SPI || ts.display->display_type == DISPLAY_HY28B_SPI)
+#ifdef UI_BRD_MCHF
+    // on a STM32F4 MCHF UI we can have the internal RTC only if there is an SPI display.
+    if (ts.display->use_spi == true)
 #endif
     {
         ts.rtc_present = MchfRtc_enabled();
     }
+#ifdef UI_BRD_MCHF
     // we need to find out which keyboard layout before we init the GPIOs to use it.
     // at this point we have to have called the display init and the rtc init
     // in order to know which one to use.
-    // parallel display never has a STM32 based rtc, so we do not need to check for RTC
-    if ((ts.display->display_type == DISPLAY_HY28A_SPI || ts.display->display_type == DISPLAY_HY28B_SPI) && ts.rtc_present)
+    if (ts.rtc_present)
     {
         buttons.map = &bm_sets[1][0];
     }
+#endif
 
     // Init keypad hw based on button map bm
     mchf_board_keypad_init(buttons.map);

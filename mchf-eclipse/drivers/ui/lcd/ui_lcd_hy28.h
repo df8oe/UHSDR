@@ -106,10 +106,37 @@
 typedef enum
 {
     DISPLAY_NONE = 0,
+#ifdef USE_GFX_ILI932x
     DISPLAY_HY28A_SPI,
     DISPLAY_HY28B_SPI,
-    DISPLAY_HY28B_PARALLEL
+    DISPLAY_HY28B_PARALLEL,
+#endif
+#ifdef USE_GFX_RA8875
+    DISPLAY_RA8875_SPI,
+    DISPLAY_RA8875_PARALLEL,
+
+#endif
+#ifdef USE_GFX_ILI9486
+    DISPLAY_ILI9486_PARALLEL,
+    // ATTENTION: SINCE WE HAVE NO WAY OF CHECKING IF THE DISPLAY IS REALLY THERE
+    // THIS NEEDS TO BE LAST IN THE LIST OF CHECKS AND WILL, IF ENABLED, ALWAYS "SUCCEED"
+    DISPLAY_RPI_SPI,
+#endif
+	// keep this always at the end of the enum
+	DISPLAY_NUM
 } mchf_display_types_t;
+
+typedef struct
+{
+    mchf_display_types_t display_type;
+    const char* name;
+    GPIO_TypeDef* spi_cs_port;
+    uint16_t      spi_cs_pin;
+    uint16_t      is_spi:1;
+    uint16_t      spi_speed:1;
+} uhsdr_display_info_t;
+
+extern const uhsdr_display_info_t display_infos[];
 
 
 typedef struct
