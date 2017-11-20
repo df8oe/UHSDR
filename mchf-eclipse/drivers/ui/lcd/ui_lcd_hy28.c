@@ -15,21 +15,17 @@
 // Common
 #include "uhsdr_board_config.h"
 
+
 #ifdef UI_BRD_MCHF
-    #define USE_DISPLAY_SPI
+  #define USE_SPI_DMA
 #endif
+
 #if defined(STM32F7) || defined(STM32H7)
     #define USE_SPI_HAL
-	#ifdef USE_GFX_ILI9486
-	#define USE_DISPLAY_SPI
-	#endif
 #endif
 
-
+#define USE_DISPLAY_SPI
 #define USE_DISPLAY_PAR
-
-#define USE_SPI_DMA
-
 
 // #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
 
