@@ -543,6 +543,7 @@ void UiLcdHy28_SpiInit(bool hispeed)
 
 	#if defined(STM32F7)
 	  	  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+	  	  lcd_spi_prescaler=SPI_BAUDRATEPRESCALER_4;
 	#else
 	  	  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
 	#endif
