@@ -18,6 +18,7 @@
 #include "uhsdr_types.h"
 
 
+
 #define RGB(red,green,blue)(uint16_t)(((red>>3)<<11)|((green>>2)<<5)|(blue>> 3))
 
 // Colors definitions, go to http://www.color-hex.com/
@@ -89,6 +90,12 @@ typedef struct
 {
     mchf_display_types_t display_type;
     const char* name;
+    void (*SetActiveWindow) (uint16_t XLeft, uint16_t XRight, uint16_t YTop, uint16_t YBottom);
+    void (*SetCursorA)( unsigned short Xpos, unsigned short Ypos );
+    void (*WriteRAM_Prepare) ();
+    void (*WriteDataSpiStart_Prepare)();
+    void (*WriteIndexSpi_Prepare)();
+
     GPIO_TypeDef* spi_cs_port;
     uint16_t      spi_cs_pin;
     uint16_t      is_spi:1;
@@ -103,6 +110,11 @@ typedef struct
     bool use_spi;
     int16_t lcd_cs;
     GPIO_TypeDef* lcd_cs_pio;
+    void (*SetActiveWindow) (uint16_t XLeft, uint16_t XRight, uint16_t YTop, uint16_t YBottom);
+    void (*SetCursorA)( unsigned short Xpos, unsigned short Ypos );
+    void (*WriteRAM_Prepare) ();
+    void (*WriteDataSpiStart_Prepare)();
+    void (*WriteIndexSpi_Prepare)();
 } mchf_display_t;
 
 extern mchf_display_t mchf_display;
@@ -165,5 +177,26 @@ void    UiLcdHy28_TouchscreenDetectPress();
 void 	UiLcdHy28_TouchscreenReadCoordinates();
 bool    UiLcdHy28_TouchscreenHasProcessableCoordinates();
 void    UiLcdHy28_TouchscreenInit(uint8_t mirror);
+
+
+
+// FIXME: THIS MUST BE HANDLED DIFFERENTLY, IT DOES NOT ALWAYS SEES
+// THE CONFIGURATION FROM uhsdr_board.h but due to dependency issues, we cannot include
+// uhsdr_board.h at the top
+#ifdef USE_DISP_480_320
+    #define MAX_X  480
+    #define MAX_Y  320
+#elif defined(USE_DISP_800_480)
+    #define MAX_X  800
+    #define MAX_Y  480
+#else
+    #ifdef Simulate320_240_on_480_320
+        #define MAX_X  480
+        #define MAX_Y  320
+    #else
+        #define MAX_X  320
+        #define MAX_Y  240
+    #endif
+#endif
 
 #endif
