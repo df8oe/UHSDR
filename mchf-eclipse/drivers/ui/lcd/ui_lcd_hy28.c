@@ -13,7 +13,15 @@
  ************************************************************************************/
 
 // Common
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "uhsdr_board.h"
 #include "uhsdr_board_config.h"
+
+#include "ui_lcd_hy28_fonts.h"
+#include "ui_lcd_hy28.h"
+
 
 
 #ifdef UI_BRD_MCHF
@@ -24,7 +32,10 @@
     #define USE_SPI_HAL
 #endif
 
-#define USE_DISPLAY_SPI
+#if !defined(USE_GFX_ILI932x) && defined(UI_BRD_OVI40)
+    #define USE_DISPLAY_SPI
+#endif
+
 #define USE_DISPLAY_PAR
 
 // #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
@@ -59,12 +70,37 @@
     #endif
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
+#ifdef USE_DISP_480_320
+    #define MAX_X  480
+    #define MAX_Y  320
+#elif defined(USE_DISP_800_480)
+    #define MAX_X  800
+    #define MAX_Y  480
+#else
+    #ifdef Simulate320_240_on_480_320
+        #define MAX_X  480
+        #define MAX_Y  320
+    #else
+        #define MAX_X  320
+        #define MAX_Y  240
+    #endif
 
-#include "ui_lcd_hy28_fonts.h"
-#include "uhsdr_board.h"
-#include "ui_lcd_hy28.h"
+#endif
+
+#ifdef TimeDebug
+#define MARKER LCD_D0
+#define MARKER_PIO LCD_D0_PIO
+
+#define Marker_ON  MARKER_PIO->BSRR=MARKER;
+#define Marker_OFF MARKER_PIO->BSRR=MARKER<<16;
+#endif
+
+#define SPI_START   (0x70)              /* Start byte for SPI transfer        */
+#define SPI_RD      (0x01)              /* WR bit 1 within start              */
+#define SPI_WR      (0x00)              /* WR bit 0 within start              */
+#define SPI_DATA    (0x02)              /* RS bit 1 within start byte         */
+#define SPI_INDEX   (0x00)              /* RS bit 0 within start byte         */
+
 
 mchf_display_t mchf_display;
 
@@ -74,13 +110,19 @@ mchf_display_t mchf_display;
 const uhsdr_display_info_t display_infos[] = {
         { DISPLAY_NONE,  "No Display", false },
 #ifdef USE_GFX_ILI932x
+#ifdef UI_BRD_MCHF
         { DISPLAY_HY28A_SPI, "HY28A SPI", LCD_D11_PIO, LCD_D11, true, false },
+#endif
         { DISPLAY_HY28B_SPI, "HY28B SPI", LCD_CSA_PIO, LCD_CSA, true, false },
         { DISPLAY_HY28B_PARALLEL, "HY28A/B Para.", false },
 #endif
 #ifdef USE_GFX_RA8875
-        { DISPLAY_RA8875_SPI, "RA8875 SPI", LCD_CSA_PIO, LCD_CSA, true, false },
+        // Due to currently missing detection algorithm the first RA8875 is
+        // always "detected", i.e. the code will never check if the other RA8875
+        // display type is present. We need to fix that once we are starting to
+        // work seriously with the RA8875
         { DISPLAY_RA8875_PARALLEL, "RA8875 Para.", false},
+        { DISPLAY_RA8875_SPI, "RA8875 SPI", LCD_CSA_PIO, LCD_CSA, true, false },
 #endif
 #ifdef USE_GFX_ILI9486
         { DISPLAY_ILI9486_PARALLEL, "ILI9486 Para.", false, false},
@@ -553,8 +595,11 @@ static uint16_t lcd_spi_prescaler;
 
 void UiLcdHy28_SpiInit(bool hispeed)
 {
-
-    lcd_spi_prescaler = hispeed?SPI_BAUDRATEPRESCALER_2:SPI_BAUDRATEPRESCALER_4;
+#ifdef STM32F7
+    lcd_spi_prescaler = SPI_BAUDRATEPRESCALER_4; // we cannot go higher than this on STM32F7
+#else
+    lcd_spi_prescaler = hispeed?SPI_BAUDRATEPRESCALER_2:SPI_BAUDRATEPRESCALER_4; // some displays work with /2, most with /4
+#endif
 
     GPIO_InitTypeDef GPIO_InitStructure;
 #ifdef USE_GFX_ILI9486
@@ -562,11 +607,7 @@ void UiLcdHy28_SpiInit(bool hispeed)
 	  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
 	  hspi2.Init.NSS = SPI_NSS_SOFT;
 
-	#if defined(STM32F7)
-	  	  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
-	#else
-	  	  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-	#endif
+	  hspi2.Init.BaudRatePrescaler = lcd_spi_prescaler;
 
 	  if (HAL_SPI_Init(&hspi2) != HAL_OK)
 	  {
@@ -1725,12 +1766,10 @@ static void UiLcdHy28_SendRegisters(const RegisterValue_t* regvals, uint16_t cou
     }
 }
 
-static uint16_t UiLcdHy28_InitA(uint32_t display_type)
+static uint16_t UiLcdHy28_DetectController(const uhsdr_display_info_t* disp_info_ptr)
 {
 
     uint16_t retval = 0;
-
-    const uhsdr_display_info_t* disp_info_ptr = UiLcdHy28_DisplayInfoGet(display_type);
 
     if (disp_info_ptr != NULL)
     {
@@ -1740,7 +1779,9 @@ static uint16_t UiLcdHy28_InitA(uint32_t display_type)
 
         if (mchf_display.use_spi == true)
         {
+#ifdef USE_DISPLAY_SPI
             UiLcdHy28_SpiInit(disp_info_ptr->spi_speed);
+#endif
         }
         else
         {
@@ -1749,7 +1790,7 @@ static uint16_t UiLcdHy28_InitA(uint32_t display_type)
 
         UiLcdHy28_Reset();
 
-        switch(display_type)
+        switch(disp_info_ptr->display_type)
         {
 #ifdef USE_GFX_ILI9486
         case DISPLAY_ILI9486_PARALLEL:
@@ -1766,6 +1807,12 @@ static uint16_t UiLcdHy28_InitA(uint32_t display_type)
 #ifdef USE_GFX_ILI932x
         default:
             retval = UiLcdHy28_ReadReg(0x00);
+            break;
+#endif
+#ifdef USE_GFX_RA8875
+        default:
+            retval = 0x8875; // currently no detection routine implmented
+            // FIXME: Implement detection for RA8875
             break;
 #endif
         }
@@ -1797,6 +1844,15 @@ static uint16_t UiLcdHy28_InitA(uint32_t display_type)
             }
         else
 #endif
+#ifdef USE_GFX_RA8875
+        if((retval == 0x8875)
+            {
+                // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
+                UiLcdHy28_SendRegisters(ra8875, sizeof(ilira8875)/sizeof(RegisterValue_t));
+            }
+        else
+#endif
+
         {
             retval = 0x0000; // any value not detected previously will be overwritten!
         }
@@ -1833,33 +1889,15 @@ uint8_t UiLcdHy28_Init()
     mchf_display.DeviceCode = 0x0000;
     UiLcdHy28_BacklightInit();
 
-#ifdef  USE_GFX_RA8875
-
-    retval = DISPLAY_RA8875_PARALLEL;
-
-    mchf_display.use_spi = false;
-
-
-    // Parallel init
-    UiLcdHy28_ParallelInit();
-
-    //UiLcdRA8875_InitLCD();
-
-    UiLcdHy28_Reset();
-    UiLcdHy28_SendRegisters(ra8875, sizeof(ra8875) / sizeof(RegisterValue_t));
-#else
-
-    for (uint16_t disp_id = 1; retval == DISPLAY_NONE && disp_id < DISPLAY_NUM; disp_id++)
+    for (uint16_t disp_idx = 1; retval == DISPLAY_NONE && display_infos[disp_idx].display_type != DISPLAY_NUM; disp_idx++)
     {
-        mchf_display.DeviceCode = UiLcdHy28_InitA(disp_id);
+        mchf_display.DeviceCode = UiLcdHy28_DetectController(&display_infos[disp_idx]);
 
         if(mchf_display.DeviceCode != 0x0000)
         {
-            retval = disp_id;
+            retval = display_infos[disp_idx].display_type;
         }
     }
-
-#endif
 
     mchf_display.display_type = retval;
     return retval;
@@ -1867,23 +1905,15 @@ uint8_t UiLcdHy28_Init()
 }
 
 
-/*
- * @brief Called to run the touch detection state machine, results are stored in ts structure
- */
-#ifndef STM32H7
-typedef uint16_t spi_reg_t;
-#else
-typedef uint32_t spi_reg_t;
-#endif
 
-static inline void UiLcdHy28_SetSpiPrescaler(const uint32_t baudrate_prescaler)
+static inline void UiLcdHy28_SetSpiPrescaler(uint32_t baudrate_prescaler)
 {
     /*---------------------------- SPIx CR1 Configuration ------------------------*/
     /* Get the SPIx CR1 value */
 
-    spi_reg_t tmpreg = SPI2->CR1;
-    tmpreg &= ~(spi_reg_t)(SPI_BAUDRATEPRESCALER_256);
-    tmpreg |= (spi_reg_t)(baudrate_prescaler);
+    uint32_t tmpreg = SPI2->CR1;
+    tmpreg &= ~SPI_BAUDRATEPRESCALER_256;
+    tmpreg |= baudrate_prescaler;
 
     /* Write to SPIx CR1 */
     SPI2->CR1 = tmpreg;
@@ -1891,6 +1921,9 @@ static inline void UiLcdHy28_SetSpiPrescaler(const uint32_t baudrate_prescaler)
 
 mchf_touchscreen_t mchf_touchscreen;
 
+/*
+ * @brief Called to run the touch detection state machine, results are stored in ts structure
+ */
 void UiLcdHy28_TouchscreenDetectPress()
 {
     if (mchf_touchscreen.present)

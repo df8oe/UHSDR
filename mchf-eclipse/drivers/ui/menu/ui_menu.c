@@ -493,7 +493,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     {
     case INFO_DISPLAY:
     {
-        outs = display_infos[ts.display->display_type].name;
+        outs = UiLcdHy28_DisplayInfoGet(ts.display->display_type)->name;
         break;
     }
     case INFO_DISPLAY_CTRL:
