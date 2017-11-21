@@ -16,40 +16,7 @@
 #define __UI_LCD_HY28_H
 
 #include "uhsdr_types.h"
-#ifdef USE_DISP_480_320
-	#define MAX_X  480
-	#define MAX_Y  320
-#elif defined(USE_DISP_800_480)
-	#define MAX_X  800
-	#define MAX_Y  480
-#else
-	#ifdef Simulate320_240_on_480_320
-		#define MAX_X  480
-		#define MAX_Y  320
-	#else
-		#define MAX_X  320
-		#define MAX_Y  240
-	#endif
 
-#endif
-
-#ifdef TimeDebug
-#define MARKER LCD_D0
-#define MARKER_PIO LCD_D0_PIO
-
-#define Marker_ON  MARKER_PIO->BSRR=MARKER;
-#define Marker_OFF MARKER_PIO->BSRR=MARKER<<16;
-#endif
-
-#ifndef HY28BHISPEED
-#define HY28BHISPEED false
-#endif
-
-#define SPI_START   (0x70)              /* Start byte for SPI transfer        */
-#define SPI_RD      (0x01)              /* WR bit 1 within start              */
-#define SPI_WR      (0x00)              /* WR bit 0 within start              */
-#define SPI_DATA    (0x02)              /* RS bit 1 within start byte         */
-#define SPI_INDEX   (0x00)              /* RS bit 0 within start byte         */
 
 #define RGB(red,green,blue)(uint16_t)(((red>>3)<<11)|((green>>2)<<5)|(blue>> 3))
 
@@ -106,22 +73,14 @@
 typedef enum
 {
     DISPLAY_NONE = 0,
-#ifdef USE_GFX_ILI932x
     DISPLAY_HY28A_SPI,
     DISPLAY_HY28B_SPI,
     DISPLAY_HY28B_PARALLEL,
-#endif
-#ifdef USE_GFX_RA8875
     DISPLAY_RA8875_SPI,
     DISPLAY_RA8875_PARALLEL,
-
-#endif
-#ifdef USE_GFX_ILI9486
     DISPLAY_ILI9486_PARALLEL,
-    // ATTENTION: SINCE WE HAVE NO WAY OF CHECKING IF THE DISPLAY IS REALLY THERE
-    // THIS NEEDS TO BE LAST IN THE LIST OF CHECKS AND WILL, IF ENABLED, ALWAYS "SUCCEED"
     DISPLAY_RPI_SPI,
-#endif
+
 	// keep this always at the end of the enum
 	DISPLAY_NUM
 } mchf_display_types_t;
@@ -136,8 +95,6 @@ typedef struct
     uint16_t      spi_speed:1;
 } uhsdr_display_info_t;
 
-extern const uhsdr_display_info_t display_infos[];
-
 
 typedef struct
 {
@@ -150,7 +107,8 @@ typedef struct
 
 extern mchf_display_t mchf_display;
 
-// ----------------------------------------------------------
+const uhsdr_display_info_t* UiLcdHy28_DisplayInfoGet(mchf_display_types_t display_type);
+
 void 	UiLcdHy28_LcdClear(ushort Color);
 
 uint16_t UiLcdHy28_PrintText(uint16_t Xpos, uint16_t Ypos, const char *str,const uint32_t Color, const uint32_t bkColor, uchar font);
