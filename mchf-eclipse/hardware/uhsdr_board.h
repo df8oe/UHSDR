@@ -56,8 +56,11 @@
   #define USE_GFX_ILI9486
   #define USE_DISP_320_240
 #elif LCD_TYPE == 3
-  #define USE_DRIVER_RA8875
+  #define USE_GFX_RA8875
   #define USE_DISP_800_480
+  #define USE_FFT_1024
+#else
+  #error "Unsupported LCD_TYPE"
 #endif
 
 // OPTION
