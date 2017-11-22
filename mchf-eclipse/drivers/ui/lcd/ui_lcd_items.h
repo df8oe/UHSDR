@@ -13,6 +13,10 @@
 //new hVGA lcd definitions
 #ifdef USE_DISP_480_320
 // ----------------------------------------------------------
+//Splash Screen location
+#define StartUpScreen_START_X 80
+#define StartUpScreen_START_Y 60
+
 // Spectrum draw params
 //
 // Dependent on FFT samples,but should be less than control width!
@@ -210,6 +214,10 @@
 
 #else
 // ----------------------------------------------------------
+//Splash Screen location
+#define StartUpScreen_START_X 0
+#define StartUpScreen_START_Y 10
+
 // Spectrum draw params
 //
 // Dependent on FFT samples,but should be less than control width!
