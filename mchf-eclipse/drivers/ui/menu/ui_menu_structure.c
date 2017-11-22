@@ -392,6 +392,9 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEOUT, NULL,"FT817 Clone Transmit", UiMenuDesc("Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NEW_NB, NULL,"New Noiseblanker", UiMenuDesc("New noiseblanker for testing purposes") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_ALPHA, NULL,"NR alpha", UiMenuDesc("time constant alpha for spectral noise reduction") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_THRESH, NULL,"NR thresh", UiMenuDesc("threshold for spectral noise reduction voice activity detector") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_BETA, NULL,"NR beta", UiMenuDesc("time constant beta for spectral noise reduction, leave at 0.85") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_RTTY_ATC, NULL,"RTTY ATC Enable", UiMenuDesc("Enable automatic threshold correction ATC for RTTY decoding") },
 #ifdef USE_TWO_CHANNEL_AUDIO
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ENABLE_STEREO, NULL,"STEREO Enable", UiMenuDesc("Enable stereo demodulation modes") },

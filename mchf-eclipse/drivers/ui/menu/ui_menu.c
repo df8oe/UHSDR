@@ -3691,6 +3691,51 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         break;
 
+        case MENU_DEBUG_NR_ALPHA:      //
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_alpha_int,
+                    700,
+                    999,
+                    920,
+                    2
+            );
+            if(var_change)
+            {
+            	ts.nr_alpha = (float32_t)ts.nr_alpha_int / 1000.0;
+            }
+            snprintf(options, 32, " %3u",(unsigned int)ts.nr_alpha_int);
+
+        break;
+
+        case MENU_DEBUG_NR_THRESH:      //
+            var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.nr_vad_thresh_int,
+                    100,
+                    20000,
+                    6000,
+                    100
+            );
+            if(var_change)
+            {
+            	ts.nr_vad_thresh = (float32_t)ts.nr_vad_thresh_int / 1000.0;
+            }
+            snprintf(options, 32, " %5u",(unsigned int)ts.nr_vad_thresh);
+
+        break;
+
+        case MENU_DEBUG_NR_BETA:      //
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_beta_int,
+                    700,
+                    999,
+                    850,
+                    2
+            );
+            if(var_change)
+            {
+            	ts.nr_beta = (float32_t)ts.nr_beta_int / 1000.0;
+            }
+            snprintf(options, 32, " %3u",(unsigned int)ts.nr_beta_int);
+
+        break;
+
         case MENU_DEBUG_CLONEOUT:
         txt_ptr = " Do it!";
         clr = White;
