@@ -136,7 +136,7 @@ typedef struct  {
     uint16_t val;
 } RegisterValue_t;
 
-typedef struct  {
+typedef struct  RegisterValueSetInfo_s {
     const RegisterValue_t* addr;
     size_t size;
 } RegisterValueSetInfo_t;
@@ -582,13 +582,13 @@ void UiLcdHy28_BacklightEnable(bool on)
 #define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_8)
 #endif
 
-static uint16_t lcd_spi_prescaler = SPI_PRESCALE_LCD_DEFAULT;
+volatile uint16_t lcd_spi_prescaler = SPI_PRESCALE_LCD_DEFAULT;
 
 // static SPI_HandleTypeDef SPI_Handle;
 
 void UiLcdHy28_SpiInit(bool hispeed, mchf_display_types_t display_type)
 {
-    lcd_spi_prescaler = hispeed?SPI_PRESCALE_LCD_DEFAULT:SPI_PRESCALE_LCD_HIGH;
+    lcd_spi_prescaler = hispeed?SPI_PRESCALE_LCD_HIGH:SPI_PRESCALE_LCD_DEFAULT;
 
 #ifdef USE_GFX_ILI9486
     if (display_type == DISPLAY_RPI_SPI)
