@@ -5354,7 +5354,7 @@ void UiDriver_StartupScreen_LogIfProblem(bool isProblem, const char* txt)
 {
 	if (isProblem)
 	{
-		startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(0,startUpScreen_nextLineY,320,txt,Black,Red3,0);
+		startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(StartUpScreen_START_X,startUpScreen_nextLineY,320,txt,Black,Red3,0);
 		startUpError = true;
 	}
 }
@@ -5401,22 +5401,22 @@ void UiDriver_StartUpScreenInit()
 	uint32_t clr;
 	// Clear all
 	UiLcdHy28_LcdClear(Black);
-	uint16_t nextY = 10;
+	uint16_t nextY = StartUpScreen_START_Y;
 	snprintf(tx,100,"%s",DEVICE_STRING);
-	nextY = UiLcdHy28_PrintTextCentered(0, nextY, 320, tx, Cyan, Black, 1);
+	nextY = UiLcdHy28_PrintTextCentered(StartUpScreen_START_X, nextY, 320, tx, Cyan, Black, 1);
 
 #ifdef TRX_HW_LIC
 	snprintf(tx,100,"Hardware License: %s",TRX_HW_LIC);
-	nextY = UiLcdHy28_PrintTextCentered(0, nextY + 3, 320, tx, White,Black, 0);
+	nextY = UiLcdHy28_PrintTextCentered(StartUpScreen_START_X, nextY + 3, 320, tx, White,Black, 0);
 #endif
 #ifdef TRX_HW_CREATOR
-	nextY = UiLcdHy28_PrintTextCentered(0, nextY, 320, TRX_HW_CREATOR, White,Black, 0);
+	nextY = UiLcdHy28_PrintTextCentered(StartUpScreen_START_X, nextY, 320, TRX_HW_CREATOR, White,Black, 0);
 #endif
 
 	snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
-	nextY = UiLcdHy28_PrintTextCentered(0, nextY + 8, 320, tx, Yellow, Black, 1);
+	nextY = UiLcdHy28_PrintTextCentered(StartUpScreen_START_X, nextY + 8, 320, tx, Yellow, Black, 1);
 
-	nextY = UiLcdHy28_PrintTextCentered(0, nextY + 3, 320, "Firmware License: " UHSDR_LICENCE "\n" UHSDR_REPO, White, Black, 0);
+	nextY = UiLcdHy28_PrintTextCentered(StartUpScreen_START_X, nextY + 3, 320, "Firmware License: " UHSDR_LICENCE "\n" UHSDR_REPO, White, Black, 0);
 
 	// show important error status
 	startUpScreen_nextLineY = nextY + 8; // reset y coord to first line of error messages
@@ -5451,7 +5451,7 @@ void UiDriver_StartUpScreenFinish()
 	{
 		hold_time = 10000; // 15s
 		txp = "Firmware change detected!\nPlease review settings!";
-		startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(0,startUpScreen_nextLineY + 10,320,txp,White,Black,0);
+		startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(StartUpScreen_START_X,startUpScreen_nextLineY + 10,320,txp,White,Black,0);
 
 		UiDriver_FirmwareVersionUpdateConfig();
 	}
@@ -5471,7 +5471,7 @@ void UiDriver_StartUpScreenFinish()
 		fg_clr = Green;
 	}
 
-	UiLcdHy28_PrintTextCentered(0,startUpScreen_nextLineY + 10,320,txp,fg_clr,clr,0);
+	UiLcdHy28_PrintTextCentered(StartUpScreen_START_X,startUpScreen_nextLineY + 10,320,txp,fg_clr,clr,0);
 
 	HAL_Delay(hold_time);
 
