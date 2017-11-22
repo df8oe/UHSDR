@@ -42,7 +42,7 @@
 
 // default graphics driver ILI932x
 #ifndef LCD_TYPE
-  #define LCD_TYPE 0
+  #define LCD_TYPE 2
 #endif
 
 #if LCD_TYPE == 0
@@ -53,6 +53,7 @@
   #define USE_DISP_480_320
   #define USE_FFT_1024
 #elif LCD_TYPE == 2
+  #define USE_GFX_ILI932x
   #define USE_GFX_ILI9486
   #define USE_DISP_320_240
 #elif LCD_TYPE == 3
