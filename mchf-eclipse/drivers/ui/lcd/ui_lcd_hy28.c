@@ -242,6 +242,11 @@ typedef struct  {
     uint16_t val;
 } RegisterValue_t;
 
+typedef struct  {
+    const RegisterValue_t* addr;
+    size_t size;
+} RegisterValueSetInfo_t;
+
 #define REGVAL_DATA (0xffff) // we indicate that the value is to be written using WriteData instead of WriteReg
 #define REGVAL_DELAY (0x0000) // we indicate that the value is to be used as delay in ms instead of WriteReg
 
@@ -333,6 +338,11 @@ static const RegisterValue_t ili9320[] =
 
 };
 
+static const RegisterValueSetInfo_t ili9320_regs =
+{
+    ili9320, sizeof(ili9320)/sizeof(RegisterValue_t)
+};
+
 static const RegisterValue_t spdfd5408b[] =
 {
 
@@ -379,6 +389,11 @@ static const RegisterValue_t spdfd5408b[] =
     { 0x93, 0x0003},   // Panel Interface control 3
     { 0x95, 0x0110},   // Frame Cycle Control
     { 0x07, 0x0173},
+};
+
+static const RegisterValueSetInfo_t spdfd5408b_regs =
+{
+    spdfd5408b, sizeof(spdfd5408b)/sizeof(RegisterValue_t)
 };
 
 static const RegisterValue_t ili932x[] =
@@ -455,6 +470,11 @@ static const RegisterValue_t ili932x[] =
     { 0x07, 0x0133},
 };
 
+static const RegisterValueSetInfo_t ili932x_regs =
+{
+    ili932x, sizeof(ili932x)/sizeof(RegisterValue_t)
+};
+
 
 #endif
  
@@ -504,6 +524,11 @@ static const RegisterValue_t ra8875[] =
         { 0x8E, 0x80},
 };
  
+static const RegisterValueSetInfo_t ra8875_regs =
+{
+    ra8875, sizeof(ra8875)/sizeof(RegisterValue_t)
+};
+
 
 #endif
 
@@ -594,6 +619,12 @@ static const RegisterValue_t ili9486[] =
 		{ 0x29, 0x00},
 		{ REGVAL_DELAY, 250},
 };
+
+static const RegisterValueSetInfo_t ili9486_regs =
+{
+    ili9486, sizeof(ili9486)/sizeof(RegisterValue_t)
+};
+
 #endif
 
 
@@ -893,29 +924,6 @@ uint8_t UiLcdHy28_SpiReadByteFast()
 }
 
 
-#ifdef USE_GFX_ILI9486
-static inline void UiLcdHy28_WriteDataSpiStart_Prepare_ILI9486()
-{
-    GPIO_SetBits(LCD_RS_PIO, LCD_RS);
-}
-void UiLcdHy28_WriteIndexSpi_Prepare_ILI9486()
-{
-    GPIO_ResetBits(LCD_RS_PIO, LCD_RS);
-}
-#endif
-
-#ifdef USE_GFX_ILI932x
-static inline void UiLcdHy28_WriteDataSpiStart_Prepare_ILI932x()
-{
-    UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
-}
-void UiLcdHy28_WriteIndexSpi_Prepare_ILI932x()
-{
-    UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
-}
-#endif
-
-
 // TODO: Function Per Controller Group
 void UiLcdHy28_WriteIndexSpi(unsigned char index)
 {
@@ -1016,6 +1024,7 @@ void UiLcdHy28_RA8875_WaitReady()
 void UiLcdHy28_WriteReg(unsigned short LCD_Reg, unsigned short LCD_RegValue)
 {
 
+    // FIXME: Factor out so that it can be used with other controller drivers enabled
 #ifdef USE_GFX_RA8875
     UiLcdHy28_RA8875_WaitReady();
 #endif
@@ -1068,29 +1077,6 @@ unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
     return retval;
 }
 
-#ifdef USE_GFX_RA8875
-static void UiLcdHy28_SetCursorA_RA8875( unsigned short Xpos, unsigned short Ypos )
-{
-    UiLcdRa8875_WriteReg_16bit(0x46, Xpos);
-    UiLcdRa8875_WriteReg_16bit(0x48, Ypos);
-    UiLcdHy28_WriteReg(0x20, Ypos );
-    UiLcdHy28_WriteReg(0x21, Xpos );
-}
-#endif    
-
-#ifdef  USE_GFX_ILI932x
-static void UiLcdHy28_SetCursorA_ILI932x( unsigned short Xpos, unsigned short Ypos )
-{
-    UiLcdHy28_WriteReg(0x20, Ypos );
-    UiLcdHy28_WriteReg(0x21, Xpos );
-}
-#endif
-#ifdef USE_GFX_ILI9486
-static void UiLcdHy28_SetCursorA_ILI9486( unsigned short Xpos, unsigned short Ypos )
-{
-}
-#endif
-
 static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 {
     mchf_display.SetCursorA(Xpos, Ypos);
@@ -1110,24 +1096,7 @@ static void UiLcdHy28_WriteRAM_Prepare_Index(uint16_t wr_prep_reg)
     }
 }
 
-#ifdef USE_GFX_ILI9486
-static void UiLcdHy28_WriteRAM_Prepare_ILI9486()
-{
-    UiLcdHy28_WriteRAM_Prepare_Index(0x2c);
-}
-#endif
-#ifdef USE_GFX_ILI932x
-static void UiLcdHy28_WriteRAM_Prepare_ILI932x()
-{
-    UiLcdHy28_WriteRAM_Prepare_Index(0x22);
-}
-#endif
-#ifdef USE_DRIVER_RA8875
-static void UiLcdHy28_WriteRAM_Prepare_RA8875()
-{
-    UiLcdHy28_WriteRAM_Prepare_Index(0x02);
-}
-#endif
+
 
 static void UiLcdHy28_WriteRAM_Prepare()
 {
@@ -1135,9 +1104,27 @@ static void UiLcdHy28_WriteRAM_Prepare()
     mchf_display.WriteRAM_Prepare();
 }
 
+/*********************************************************************
+ *
+ * Controller Specific Functions Go Here (
+ * These functions are used via mchf_display.func(...)
+ * Each controller gets one single section here, guarded with USE_GFX_...
+ *
+ * *******************************************************************/
 
+#ifdef USE_DRIVER_RA8875
+static void UiLcdHy28_SetCursorA_RA8875( unsigned short Xpos, unsigned short Ypos )
+{
+    UiLcdRa8875_WriteReg_16bit(0x46, Xpos);
+    UiLcdRa8875_WriteReg_16bit(0x48, Ypos);
+    UiLcdHy28_WriteReg(0x20, Ypos );
+    UiLcdHy28_WriteReg(0x21, Xpos );
+}
 
-#ifdef USE_GFX_RA8875
+static void UiLcdHy28_WriteRAM_Prepare_RA8875()
+{
+    UiLcdHy28_WriteRAM_Prepare_Index(0x02);
+}
 
 void UiLcdRA8875_SetForegroundColor(uint16_t Color)
 {
@@ -1146,9 +1133,6 @@ void UiLcdRA8875_SetForegroundColor(uint16_t Color)
     UiLcdRa8875_WriteReg_8bit(0x65, (uint16_t) (Color)); /* ra8875_blue */
 }
 
-#endif
-
-#ifdef USE_GFX_RA8875
 static void UiLcdHy28_SetActiveWindow_RA8875(uint16_t XLeft, uint16_t XRight, uint16_t YTop,
         uint16_t YBottom)
 {
@@ -1163,6 +1147,24 @@ static void UiLcdHy28_SetActiveWindow_RA8875(uint16_t XLeft, uint16_t XRight, ui
 #endif
 
 #ifdef USE_GFX_ILI9486
+static inline void UiLcdHy28_WriteDataSpiStart_Prepare_ILI9486()
+{
+    GPIO_SetBits(LCD_RS_PIO, LCD_RS);
+}
+void UiLcdHy28_WriteIndexSpi_Prepare_ILI9486()
+{
+    GPIO_ResetBits(LCD_RS_PIO, LCD_RS);
+}
+
+static void UiLcdHy28_SetCursorA_ILI9486( unsigned short Xpos, unsigned short Ypos )
+{
+}
+
+static void UiLcdHy28_WriteRAM_Prepare_ILI9486()
+{
+    UiLcdHy28_WriteRAM_Prepare_Index(0x2c);
+}
+
 static void UiLcdHy28_SetActiveWindow_ILI9486(uint16_t XLeft, uint16_t XRight, uint16_t YTop,
         uint16_t YBottom)
 {
@@ -1179,6 +1181,28 @@ static void UiLcdHy28_SetActiveWindow_ILI9486(uint16_t XLeft, uint16_t XRight, u
 #endif
 
 #ifdef USE_GFX_ILI932x
+
+static inline void UiLcdHy28_WriteDataSpiStart_Prepare_ILI932x()
+{
+    UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
+}
+
+void UiLcdHy28_WriteIndexSpi_Prepare_ILI932x()
+{
+    UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
+}
+
+static void UiLcdHy28_SetCursorA_ILI932x( unsigned short Xpos, unsigned short Ypos )
+{
+    UiLcdHy28_WriteReg(0x20, Ypos );
+    UiLcdHy28_WriteReg(0x21, Xpos );
+}
+
+static void UiLcdHy28_WriteRAM_Prepare_ILI932x()
+{
+    UiLcdHy28_WriteRAM_Prepare_Index(0x22);
+}
+
 static void UiLcdHy28_SetActiveWindow_ILI932x(uint16_t XLeft, uint16_t XRight, uint16_t YTop,
         uint16_t YBottom)
 {
@@ -1190,39 +1214,11 @@ static void UiLcdHy28_SetActiveWindow_ILI932x(uint16_t XLeft, uint16_t XRight, u
 }
 #endif
 
+
 void UiLcdHy28_SetActiveWindow(uint16_t XLeft, uint16_t XRight, uint16_t YTop,
         uint16_t YBottom)
 {
     mchf_display.SetActiveWindow(XLeft, XRight, YTop, YBottom);
-#if 0
-#ifdef USE_GFX_RA8875
-    /* setting active window X */
-    UiLcdRa8875_WriteReg_16bit(0x30, XLeft);
-    UiLcdRa8875_WriteReg_16bit(0x34, XRight);
-
-    /* setting active window Y */
-    UiLcdRa8875_WriteReg_16bit(0x32, YTop);
-    UiLcdRa8875_WriteReg_16bit(0x36, YBottom);
-
-#elif defined(USE_GFX_ILI9486)
-	UiLcdHy28_WriteReg(0x2a,XLeft>>8);
-	UiLcdHy28_WriteData(XLeft&0xff);
-	UiLcdHy28_WriteData((XRight)>>8);
-	UiLcdHy28_WriteData((XRight)&0xff);
-
-	UiLcdHy28_WriteReg(0x2b,YTop>>8);
-	UiLcdHy28_WriteData(YTop&0xff);
-	UiLcdHy28_WriteData((YBottom)>>8);
-	UiLcdHy28_WriteData((YBottom)&0xff);
-
-#else
-    UiLcdHy28_WriteReg(0x52, XLeft);    // Horizontal GRAM Start Address
-    UiLcdHy28_WriteReg(0x53, XRight);    // Horizontal GRAM End Address  -1
-
-    UiLcdHy28_WriteReg(0x50, YTop);    // Vertical GRAM Start Address
-    UiLcdHy28_WriteReg(0x51, YBottom);    // Vertical GRAM End Address    -1
-#endif
-#endif
 }
 
 static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
@@ -1911,22 +1907,22 @@ uint16_t UiLcdHy28_PrintTextCentered(const uint16_t XposStart,const uint16_t Ypo
     return YposCurrent;
 }
 
-static void UiLcdHy28_SendRegisters(const RegisterValue_t* regvals, uint16_t count)
+static void UiLcdHy28_SendRegisters(const RegisterValueSetInfo_t* reg_info)
 {
-    for (uint16_t idx = 0; idx < count; idx++)
+    for (uint16_t idx = 0; idx < reg_info->size; idx++)
     {
-    	switch(regvals[idx].reg)
+    	switch(reg_info->addr[idx].reg)
     	{
     	case REGVAL_DELAY:
-            HAL_Delay(regvals[idx].val);
+            HAL_Delay(reg_info->addr[idx].val);
             break;
     	case REGVAL_DATA:
-    		UiLcdHy28_WriteData(regvals[idx].val);
+    		UiLcdHy28_WriteData(reg_info->addr[idx].val);
     		break;
     	default:
             // TODO: Decide how we handle 16 vs. 8 bit writes here
             // I would propose either per register setting or per register set setting
-            UiLcdHy28_WriteReg(regvals[idx].reg, regvals[idx].val);
+            UiLcdHy28_WriteReg(reg_info->addr[idx].reg, reg_info->addr[idx].val);
         }
     }
 }
@@ -1981,51 +1977,46 @@ static uint16_t UiLcdHy28_DetectController(const uhsdr_display_info_t* disp_info
 #endif
 
 #ifdef USE_GFX_RA8875
-            retval = 0x8875; // currently no detection routine implmented
+            retval = 0x8875; // currently no detection routine implemented
             // FIXME: Implement detection for RA8875
 #endif
             break;
 
         }
 
-
+        const RegisterValueSetInfo_t* reg_info = NULL;
+        switch (retval)
+        {
 #ifdef USE_GFX_ILI932x
-        if(retval == 0x9320)
-        {
-            // HY28A - SPI interface only (ILI9320 controller)
-            UiLcdHy28_SendRegisters(ili9320, sizeof(ili9320)/sizeof(RegisterValue_t));
-        }
-        else if(retval == 0x5408)
-        {
-            // HY28A - Parallel interface only (SPFD5408B controller)
-            UiLcdHy28_SendRegisters(spdfd5408b, sizeof(spdfd5408b)/sizeof(RegisterValue_t));
-        }
-        else if((retval == 0x9325) || (retval == 0x9328))
-        {
-            // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
-            UiLcdHy28_SendRegisters(ili932x, sizeof(ili932x)/sizeof(RegisterValue_t));
-        }
-        else
+        case 0x9320: // HY28A - SPI interface only (ILI9320 controller)
+            reg_info = &ili9320_regs;
+            break;
+        case 0x5408: // HY28A - Parallel interface only (SPFD5408B controller)
+            reg_info = &spdfd5408b_regs;
+            break;
+        case 0x9325:
+        case 0x9328: // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
+            reg_info = &ili932x_regs;
+            break;
 #endif
 #ifdef USE_GFX_ILI9486
-        if((retval == 0x9486) || (retval == 0x9488))
-            {
-                // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
-                UiLcdHy28_SendRegisters(ili9486, sizeof(ili9486)/sizeof(RegisterValue_t));
-            }
-        else
+        case 0x9486:
+        case 0x9488: // ILI9486 - Parallel & Serial interface
+            reg_info  = &ili9486_regs;
+            break;
 #endif
 #ifdef USE_GFX_RA8875
-        if((retval == 0x8875)
-            {
-                // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
-                UiLcdHy28_SendRegisters(ra8875, sizeof(ilira8875)/sizeof(RegisterValue_t));
-            }
-        else
+        case 0x8875:
+            reg_info = &ra8875_regs;
+            break;
 #endif
-
-        {
+        default:
             retval = 0x0000; // any value not detected previously will be overwritten!
+        }
+
+        if (reg_info != NULL)
+        {
+            UiLcdHy28_SendRegisters(reg_info);
         }
 
         if (retval == 0)
