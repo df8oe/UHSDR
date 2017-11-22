@@ -94,6 +94,7 @@ void MX_FSMC_Init(void)
 }
 
 static uint32_t FSMC_Initialized = 0;
+static uint32_t FSMC_DeInitialized = 0;
 
 static void HAL_FSMC_MspInit(void){
   /* USER CODE BEGIN FSMC_MspInit 0 */
@@ -104,6 +105,7 @@ static void HAL_FSMC_MspInit(void){
     return;
   }
   FSMC_Initialized = 1;
+  FSMC_DeInitialized = 0;
   /* Peripheral clock enable */
   __HAL_RCC_FSMC_CLK_ENABLE();
   
@@ -166,7 +168,6 @@ void HAL_SRAM_MspInit(SRAM_HandleTypeDef* sramHandle){
   /* USER CODE END SRAM_MspInit 1 */
 }
 
-static uint32_t FSMC_DeInitialized = 0;
 
 static void HAL_FSMC_MspDeInit(void){
   /* USER CODE BEGIN FSMC_MspDeInit 0 */
@@ -176,6 +177,7 @@ static void HAL_FSMC_MspDeInit(void){
     return;
   }
   FSMC_DeInitialized = 1;
+  FSMC_Initialized = 0;
   /* Peripheral clock enable */
   __HAL_RCC_FSMC_CLK_DISABLE();
   
