@@ -1055,6 +1055,7 @@ typedef struct TransceiverState
 	int16_t nr_beta_int;
 	float32_t nr_vad_thresh; // threshold for voice activity detector in spectral noise reduction
 	uint32_t nr_vad_thresh_int;
+	bool nr_enable; // enable spectral noise reduction
 
 	uint8_t debug_si5351a_pllreset;
 } TransceiverState;

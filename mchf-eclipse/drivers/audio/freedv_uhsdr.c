@@ -726,21 +726,20 @@ void alternateNR_handle()
 }
 
 
-#define SPECTRAL_NR
-
 void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 {
 
-#ifndef SPECTRAL_NR
     float32_t* Energy=0;
-#endif
 
-#ifdef SPECTRAL_NR
-    spectral_noise_reduction(inputsamples);
-#else
-    alt_noise_blanking(inputsamples,NR_FFT_SIZE,Energy);
-#endif
+    if(ts.new_nb)
+    {
+        alt_noise_blanking(inputsamples,NR_FFT_SIZE,Energy);
+    }
 
+    if(ts.nr_enable)
+    {
+        spectral_noise_reduction(inputsamples);
+    }
     for (int k=0; k < NR_FFT_SIZE;  k++)
     {
         outputsamples[k] = inputsamples[k];
@@ -757,18 +756,6 @@ float32_t NR_iFFT_buffer[NR_FFT_L * 2];
 //    float32_t NR_sum = 0.0;
 //    uint8_t NR_L_frames = 6; // default 3 //4 //3//2 //4
 uint8_t NR_N_frames = 8; // default 24 //40 //12 //20 //18//12 //20
-//    float32_t NR_PSI = 3.0; // default 3.0, range of 2.5 - 3.5 ?; 6.0 leads to strong reverb effects
-//float32_t NR_alpha = 0.99; // default 0.99 --> range 0.98 - 0.9999; 0.95 acts much too hard: reverb effects
-float32_t NR_alpha = 0.96; // default 0.99 --> range 0.98 - 0.9999; 0.95 acts much too hard: reverb effects
-float32_t NR_onemalpha = 0.04;
-//float32_t NR_beta = 0.25;
-float32_t NR_beta = 0.85;
-//    float32_t NR_onemtwobeta = (1.0 - (2.0 * NR_beta));
-float32_t NR_onembeta = 0.15;
-//    float32_t NR_G_bin_m_1 = 0.0;
-//    float32_t NR_G_bin_p_1 = 0.0;
-//    int8_t NR_first_block = 1;
-//    uint32_t NR_X_pointer = 0;
 static uint32_t NR_E_pointer = 0;
 //    float32_t NR_T;
 static float32_t NR_X[NR_FFT_L / 2][2]; // magnitudes (fabs) of the last four values of FFT results for 128 frequency bins
@@ -787,12 +774,11 @@ static uint8_t NR_first_time = 1;
 
 void spectral_noise_reduction (float* in_buffer)
 {
-// at the moment, this is only doing a convolution & pass thru
 // half-overlapping input buffers (= overlap 50%)
 // Hann window on 128 samples
 // FFT128 - inverse FFT128
 // overlap-add
-// audio should be totally unchanged
+
     if(NR_first_time == 1)
     { // TODO: properly initialize all the variables
         for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)

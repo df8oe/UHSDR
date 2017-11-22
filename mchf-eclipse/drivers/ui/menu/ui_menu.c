@@ -3717,7 +3717,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             {
             	ts.nr_vad_thresh = (float32_t)ts.nr_vad_thresh_int / 1000.0;
             }
-            snprintf(options, 32, " %5u",(unsigned int)ts.nr_vad_thresh);
+            snprintf(options, 32, " %5u",(unsigned int)ts.nr_vad_thresh_int);
 
         break;
 
@@ -3760,6 +3760,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
      case MENU_DEBUG_NEW_NB:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
+         break;
+     case MENU_DEBUG_NR_ENABLE:
+             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_enable,0,options,&clr);
          break;
 
      case MENU_DEBUG_RTTY_ATC:

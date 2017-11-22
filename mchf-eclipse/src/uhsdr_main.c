@@ -340,6 +340,7 @@ void TransceiverStateInit(void)
 	ts.nr_beta_int = 850;
 	ts.nr_vad_thresh = 6.0;
 	ts.nr_vad_thresh_int = 6000;
+	ts.nr_enable = false;
 
     // development setting for DF8OE
     if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
