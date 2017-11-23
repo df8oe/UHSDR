@@ -754,10 +754,10 @@ static float32_t NR_last_iFFT_result [NR_FFT_L / 2];
 static float32_t NR_last_sample_buffer_L [NR_FFT_L / 2];
 float32_t NR_FFT_buffer[NR_FFT_L * 2];
 float32_t NR_iFFT_buffer[NR_FFT_L * 2];
-static float32_t NR_X[NR_FFT_L / 2][2]; // magnitudes of the last two FFT results for 128 frequency bins
-static float32_t NR_M[NR_FFT_L / 2][2]; //
-static float32_t NR_Gts[NR_FFT_L / 2]; // time smoothed gain factors for each of the 64 bins
-static float32_t NR_G[NR_FFT_L / 2]; // preliminary gain factors (before time smoothing) and after that contains the frequency smoothed gain factors
+static float32_t NR_X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
+static float32_t NR_Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
+static float32_t NR_vk[NR_FFT_L / 2]; //
+static float32_t NR_Hk[NR_FFT_L / 2]; // gain factors
 static float32_t NR_SNR_prio[NR_FFT_L / 2];
 static float32_t NR_SNR_post[NR_FFT_L / 2];
 static float32_t NR_SNR_post_pos[NR_FFT_L / 2];
@@ -768,8 +768,9 @@ static uint8_t NR_first_time = 1;
 void spectral_noise_reduction (float* in_buffer)
 {
 // Frank DD4WH & Michael DL2FW, November 2017
-// detailed technical description of the implemented algorithm
+// NOISE REDUCTION BASED ON SPECTRAL SUBTRACTION
 // following Romanin et al. 2009 on the basis of Ephraim & Malah 1984 and Hu et al. 2001
+// detailed technical description of the implemented algorithm
 // can be found in our WIKI
 // https://github.com/df8oe/UHSDR/wiki/Noise-reduction
 //
@@ -784,8 +785,8 @@ void spectral_noise_reduction (float* in_buffer)
         {
             NR_last_sample_buffer_L[bindx] = 20.0;
             NR_Hk_old[bindx] = 0.1; // old gain
-            NR_M[bindx][0] = 500.0;
-            NR_M[bindx][1] = 400.0;
+            NR_Nest[bindx][0] = 500.0;
+            NR_Nest[bindx][1] = 400.0;
             NR_X[bindx][1] = 20.0;
             NR_SNR_post[bindx] = 2.0;
             NR_SNR_prio[bindx] = 1.0;
@@ -837,7 +838,7 @@ void spectral_noise_reduction (float* in_buffer)
                   float32_t NR_temp_sum = 0.0;
                   for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
                   {
-                      float32_t D_squared = NR_M[bindx][0] * NR_M[bindx][0]; //
+                      float32_t D_squared = NR_Nest[bindx][0] * NR_Nest[bindx][0]; //
                       NR_temp_sum += (NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] / (D_squared) )) - 1.0;
                   }
                   NR_VAD = NR_temp_sum / (NR_FFT_L / 2);
@@ -846,8 +847,8 @@ void spectral_noise_reduction (float* in_buffer)
                           // noise estimation with exponential averager
                           for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
                                 {   // exponential averager for current noise estimate
-                                    NR_M[bindx][0] = (1.0 - ts.nr_beta) * NR_X[bindx][0] + ts.nr_beta * NR_M[bindx][1]; //
-                                    NR_M[bindx][1] = NR_M[bindx][0];
+									  NR_Nest[bindx][0] = (1.0 - ts.nr_beta) * NR_X[bindx][0] + ts.nr_beta * NR_Nest[bindx][1]; //
+									  NR_Nest[bindx][1] = NR_Nest[bindx][0];
                                 }
                           NR_first_time = 0;
                       }
@@ -857,9 +858,9 @@ void spectral_noise_reduction (float* in_buffer)
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
                     {
                         // (Yk)^2 / Dk (eq 11, Romanin et al. 2009)
-                        if(NR_M[bindx][0] != 0.0)
+                        if(NR_Nest[bindx][0] != 0.0)
                         {   // do we have to square the noise estimate NR_M[bindx] or not? Schmitt says yes, Romanin says no . . .
-                           NR_SNR_post[bindx] = NR_X[bindx][0] / (NR_M[bindx][0]);
+                           NR_SNR_post[bindx] = NR_X[bindx][0] / (NR_Nest[bindx][0]);
                         }
                         // "half-wave rectification" of NR_SR_post_pos --> always >= 0
                         if(NR_SNR_post[bindx] >= 0.0)
@@ -872,34 +873,34 @@ void spectral_noise_reduction (float* in_buffer)
                         }
         // 3    calculate SNRprio (n, bin[i]) = (1 - alpha) * Q(SNRpost(n, bin[i]) + alpha * (Hk(n - 1, bin[i]) * X(n - 1, bin[i])^2 / Nest(n, bin[i])^2 (eq. 14 of Schmitt et al. 2002, eq. 13 of Romanin et al. 2009) [Q[x] = x if x>=0, else Q[x] = 0]
         // again: do we have to square the noise estimate NR_M[bindx] or not? Schmitt says yes, Romanin says no . . .
-                        if(NR_M[bindx][0] != 0.0)
+                        if(NR_Nest[bindx][0] != 0.0)
                         {
                             NR_SNR_prio[bindx] = (1.0 - ts.nr_alpha) * NR_SNR_post_pos[bindx] +
-                                                 ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1]) / (NR_M[bindx][0])); //
+                                                 ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1]) / (NR_Nest[bindx][0])); //
                         }
         // 4    calculate vk = SNRprio(n, bin[i]) / (SNRprio(n, bin[i]) + 1) * SNRpost(n, bin[i]) (eq. 12 of Schmitt et al. 2002, eq. 9 of Romanin et al. 2009)
-                        NR_Gts[bindx] =  NR_SNR_post[bindx] * NR_SNR_prio[bindx] / (1.0 + NR_SNR_prio[bindx]);
+                        NR_vk[bindx] =  NR_SNR_post[bindx] * NR_SNR_prio[bindx] / (1.0 + NR_SNR_prio[bindx]);
                        // calculate Hk
         // 5    finally calculate the weighting function for each bin: Hk(n, bin[i]) = 1 / SNRpost(n, [i]) * sqrtf(0.7212 * vk + vk * vk) (eq. 26 of Romanin et al. 2009)
-                        if(NR_Gts[bindx] > 0.0 && NR_SNR_post[bindx] != 0.0) // prevent sqrtf of negatives
+                        if(NR_vk[bindx] > 0.0 && NR_SNR_post[bindx] != 0.0) // prevent sqrtf of negatives
                         {
-                            NR_G[bindx] = 1.0 / NR_SNR_post[bindx] * sqrtf(0.7212 * NR_Gts[bindx] + NR_Gts[bindx] * NR_Gts[bindx]);
+                        	NR_Hk[bindx] = 1.0 / NR_SNR_post[bindx] * sqrtf(0.7212 * NR_vk[bindx] + NR_vk[bindx] * NR_vk[bindx]);
                         }
                         else
                         {
-                            NR_G[bindx] = 1.0;
+                        	NR_Hk[bindx] = 1.0;
                         }
-                        NR_Hk_old[bindx] = NR_G[bindx];
+                        NR_Hk_old[bindx] = NR_Hk[bindx];
                         NR_X[bindx][1] = NR_X[bindx][0];
                     }
 
         // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 128 bins with the 128 bin-specific gain factors G
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
               {
-                  NR_iFFT_buffer[bindx * 2] = NR_FFT_buffer [bindx * 2] * NR_G[bindx]; // real part
-                  NR_iFFT_buffer[bindx * 2 + 1] = NR_FFT_buffer [bindx * 2 + 1] * NR_G[bindx]; // imag part
-                  NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] * NR_G[bindx]; // real part conjugate symmetric
-                  NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] * NR_G[bindx]; // imag part conjugate symmetric
+                  NR_iFFT_buffer[bindx * 2] = NR_FFT_buffer [bindx * 2] * NR_Hk[bindx]; // real part
+                  NR_iFFT_buffer[bindx * 2 + 1] = NR_FFT_buffer [bindx * 2 + 1] * NR_Hk[bindx]; // imag part
+                  NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] * NR_Hk[bindx]; // real part conjugate symmetric
+                  NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] * NR_Hk[bindx]; // imag part conjugate symmetric
               }
 
 
