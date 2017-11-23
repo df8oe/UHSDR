@@ -1871,6 +1871,11 @@ static void UiSpectrum_CalculateDBm()
             float32_t Lbin = (float32_t)posbin + roundf(bw_LOWER / bin_BW);
             float32_t Ubin = (float32_t)posbin + roundf(bw_UPPER / bin_BW); // the bin on the upper sideband side
 
+            if(ts.dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_USB) // workaround to make SNAP and carrier offaet display work with sideband-selected SAM
+            {
+            	Lbin = Lbin - 1.0;
+            }
+
             // take care of filter bandwidths that are larger than the displayed FFT bins
             if(Lbin < 0)
             {
@@ -1901,7 +1906,7 @@ static void UiSpectrum_CalculateDBm()
 
             float32_t sum_db = 0.0;
             // determine the sum of all the bin values in the passband
-            for (int c = Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
+            for (int c = (int)Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
             {
                 sum_db = sum_db + sd.FFT_Samples[c]; // / (float32_t)(1<<sd.magnify);
             }

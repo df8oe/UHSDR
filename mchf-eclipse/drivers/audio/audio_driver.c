@@ -3710,7 +3710,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
                 //
 
-                if (ts.new_nb==true) //start of new nb
+                if (ts.new_nb==true || ts.nr_enable == true) //start of new nb
                 {
                     // NR_in and _out buffers are using the same physical space than the freedv_iq_buffer
                     // the freedv_iq_buffer  consist of an array of 320 complex (2*float) samples

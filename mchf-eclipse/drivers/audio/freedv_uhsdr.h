@@ -58,6 +58,7 @@ void alternateNR_handle();
 
 void do_alternate_NR();
 void alt_noise_blanking();
+void spectral_noise_reduction();
 
 #endif
 #endif
