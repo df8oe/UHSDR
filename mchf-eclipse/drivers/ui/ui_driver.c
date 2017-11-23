@@ -5000,8 +5000,16 @@ static void UiDriver_KeyTestScreen()
 	char txt_buf[40];
 	const char* txt;
 
+	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
+	{
+	    // touchscreen was pressed:
+	    // wait a little and see if touch is still pressed
+	    // some TRX seem to see touchscreen events even if not pressed
+	    HAL_Delay(500);
+	}
 	for(i = 0; i < buttons.num ; i++)	 			// scan all buttons
 	{
+
 		if(UiDriver_IsButtonPressed(i))	 		// is one button being pressed?
 		{
 			stat |= 1<<i;						// yes - remember which one
