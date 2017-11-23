@@ -5002,6 +5002,7 @@ static void UiDriver_KeyTestScreen()
 
 	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
 	{
+	    UiLcdHy28_TouchscreenHasProcessableCoordinates();
 	    // touchscreen was pressed:
 	    // wait a little and see if touch is still pressed
 	    // some TRX seem to see touchscreen events even if not pressed
