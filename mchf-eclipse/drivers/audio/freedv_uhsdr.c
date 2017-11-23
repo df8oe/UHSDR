@@ -769,7 +769,13 @@ static uint8_t NR_first_time = 1;
 
 void spectral_noise_reduction (float* in_buffer)
 {
-// half-overlapping input buffers (= overlap 50%)
+// Frank DD4WH & Michael DL2FW, November 2017
+// detailed technical description of the implemented algorithm
+// following Romanin et al. 2009 on the basis of Ephraim & Malah 1984 and Hu et al. 2001
+// can be found in our WIKI
+// https://github.com/df8oe/UHSDR/wiki/Noise-reduction
+//
+//	half-overlapping input buffers (= overlap 50%)
 // Hann window on 128 samples
 // FFT128 - inverse FFT128
 // overlap-add
