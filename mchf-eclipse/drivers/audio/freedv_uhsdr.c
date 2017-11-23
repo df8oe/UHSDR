@@ -740,6 +740,7 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
     {
         spectral_noise_reduction(inputsamples);
     }
+
     for (int k=0; k < NR_FFT_SIZE;  k++)
     {
         outputsamples[k] = inputsamples[k];
