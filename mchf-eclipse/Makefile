@@ -34,7 +34,7 @@ ifndef TRX_NAME
   TRX_NAME='mcHF QRP'
 endif
 ifndef LCD_TYPE
-  LCD_TYPE=0
+  LCD_TYPE=2
 endif
 
 # If you want to hold different toolchains on Linux in /opt you can get them from
