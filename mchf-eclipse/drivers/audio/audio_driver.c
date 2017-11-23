@@ -2868,7 +2868,7 @@ static void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, f
 static void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
 {
 
-    if(sd.state == 0)
+    if(sd.state == 0 && sd.fft_iq_len > 0)
     {
         if(sd.magnify == 0)        //
         {
@@ -2881,7 +2881,7 @@ static void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
                 sd.samp_ptr++;
 
                 // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
-                if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) //*2)
+                if(sd.samp_ptr >= sd.fft_iq_len-1) //*2)
                 {
                     sd.samp_ptr = 0;
                     sd.state    = 1;
@@ -2892,7 +2892,7 @@ static void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
 }
 static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
 {
-    if(sd.state == 0)
+    if(sd.state == 0 && sd.fft_iq_len > 0)
     {
         if(sd.magnify != 0)        //
             // magnify 2, 4, 8, 16, or 32
@@ -2944,7 +2944,7 @@ static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
                 sd.samp_ptr++;
 
                 // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
-                if(sd.samp_ptr >= FFT_IQ_BUFF_LEN-1) //*2)
+                if(sd.samp_ptr >= sd.fft_iq_len-1) //*2)
                 {
                     sd.samp_ptr = 0;
                     sd.state    = 1;
