@@ -156,9 +156,7 @@ typedef struct SpectrumDisplay
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN];
     float32_t   FFT_MagData[SPEC_BUFF_LEN];
     float32_t   FFT_AVGData[SPEC_BUFF_LEN];     // IIR low-pass filtered FFT buffer data
-#ifdef USE_DISP_480_320
-    float32_t   FFT_SamplesUnscalled[FFT_IQ_BUFF_LEN];
-#endif
+
     // scope pixel data
     uint16_t    Old_PosData[SPECTRUM_WIDTH];
 

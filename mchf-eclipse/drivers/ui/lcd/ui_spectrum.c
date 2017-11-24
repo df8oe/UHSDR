@@ -13,6 +13,7 @@
  ************************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "ui_spectrum.h"
 #include "ui_lcd_hy28.h"
 // For spectrum display struct
@@ -1064,6 +1065,46 @@ static void UiSpectrum_ScaleFFT(float32_t dest[], float32_t source[], float32_t*
     }
 
 }
+
+/**
+ * @brief simple algorithm to scale down in place to a fractional scale
+ */
+static void UiSpectrum_ScaleFFT2SpectrumWidth(float32_t samples[], uint16_t from_len, uint16_t to_len)
+{
+
+    assert(from_len >= to_len);
+
+    float32_t full_amount = (float32_t)from_len/(float32_t)to_len;
+    float32_t reci_full_amount = 1.0/full_amount;
+    float32_t amount = full_amount;
+    uint16_t idx_new = 0;
+    uint16_t idx_old = 0;
+    float32_t remainder = 0;
+    float32_t value = 0;
+
+    do
+    {
+        value = remainder;
+        while (amount >=1)
+        {
+            value += samples[idx_old];
+            idx_old++;
+            amount-= 1.0;
+        }
+
+        value += amount * samples[idx_old];
+        samples[idx_new] = value * reci_full_amount;
+        idx_new++;
+        if (idx_new < to_len)
+        {
+            remainder  = (1-amount) * samples[idx_old];
+            idx_old++;
+            amount = full_amount - (1-amount);
+        }
+    }
+    while(idx_new < to_len);
+}
+
 // Spectrum Display code rewritten by C. Turner, KA7OEI, September 2014, May 2015
 // Waterfall Display code written by C. Turner, KA7OEI, May 2015 entirely from "scratch"
 // - which is to say that I did not borrow any of it
@@ -1139,37 +1180,13 @@ static void UiSpectrum_RedrawSpectrum(void)
         // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
         // TODO: if we would use a different data structure here (e.g. q15), we could speed up collection of enough samples in driver
         // we could let it run as soon as last FFT_Samples read has been done here
-#ifdef USE_DISP_320_240
         UiSpectrum_ScaleFFT(sd.FFT_Samples,sd.FFT_AVGData,&min1);
-#else
-        UiSpectrum_ScaleFFT(sd.FFT_SamplesUnscalled,sd.FFT_AVGData,&min1);
 
-        //scale the fft output to width of the spectrum (needed when window width is different from fft size
+        if (sd.spec_len != SPECTRUM_WIDTH)
         {
-            float32_t d_freq=(float32_t)sd.spec_len/(float32_t)SPECTRUM_WIDTH;
-            float32_t idx_freq=0;
-            float32_t data,new_data;
-            uint16_t new_idx,old_idx;
-            old_idx=0;
-            for(uint16_t x=0;x<SPECTRUM_WIDTH;x++)
-            {
-                new_idx=(int)idx_freq;
-                if(new_idx!=old_idx)
-                {
-                    data=0.0f;
-                }
-
-                new_data=sd.FFT_SamplesUnscalled[new_idx];
-                if(new_data>data)
-                {
-                    data=new_data;
-                }
-                old_idx=new_idx;
-                sd.FFT_Samples[x]=data;
-                idx_freq+=d_freq;
-            }
+            // in place downscaling (!)
+            UiSpectrum_ScaleFFT2SpectrumWidth(sd.FFT_Samples,sd.spec_len, SPECTRUM_WIDTH);
         }
-#endif
 
         // Adjust the sliding window so that the lowest signal is always black
         sd.display_offset -= sd.agc_rate*min1/5;
