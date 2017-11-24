@@ -308,10 +308,11 @@ void spectral_noise_reduction (float* in_buffer)
                   for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
                   {
                       float32_t D_squared = NR_Nest[bindx][0] * NR_Nest[bindx][0]; //
-                      NR_temp_sum += (NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] / (D_squared) )) - 1.0;
+//                      NR_temp_sum += (NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] / (D_squared) )) - 1.0; // unpredictable behaviour
+                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] * NR_X[bindx][0] / (D_squared) )) - 1.0; //nice behaviour
                   }
                   NR_VAD = NR_temp_sum / (NR_FFT_L / 2);
-                      if(NR_VAD < ts.nr_vad_thresh || NR_first_time == 2)
+                      if((NR_VAD < ts.nr_vad_thresh) || NR_first_time == 2)
                       {
                           // noise estimation with exponential averager
                           for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
@@ -320,6 +321,11 @@ void spectral_noise_reduction (float* in_buffer)
                                       NR_Nest[bindx][1] = NR_Nest[bindx][0];
                                 }
                           NR_first_time = 0;
+                      	  Board_RedLed(LED_STATE_OFF);
+                      }
+                      else
+                      {
+                    		Board_RedLed(LED_STATE_ON);
                       }
 
 
@@ -328,8 +334,9 @@ void spectral_noise_reduction (float* in_buffer)
                     {
                         // (Yk)^2 / Dk (eq 11, Romanin et al. 2009)
                         if(NR_Nest[bindx][0] != 0.0)
-                        {   // do we have to square the noise estimate NR_M[bindx] or not? Schmitt says yes, Romanin says no . . .
-                           NR_SNR_post[bindx] = NR_X[bindx][0] / (NR_Nest[bindx][0]);
+                        {   // do we have to square the noise estimate NR_Nest[bindx] or not? Schmitt says yes, Romanin says no . . .
+                        	//                           NR_SNR_post[bindx] = NR_X[bindx][0] / (NR_Nest[bindx][0] * NR_Nest[bindx][0]); // audio crushed
+                           NR_SNR_post[bindx] = NR_X[bindx][0] / (NR_Nest[bindx][0]); //
                         }
                         // "half-wave rectification" of NR_SR_post_pos --> always >= 0
                         if(NR_SNR_post[bindx] >= 0.0)
@@ -345,7 +352,10 @@ void spectral_noise_reduction (float* in_buffer)
                         if(NR_Nest[bindx][0] != 0.0)
                         {
                             NR_SNR_prio[bindx] = (1.0 - ts.nr_alpha) * NR_SNR_post_pos +
-                                                 ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1]) / (NR_Nest[bindx][0])); //
+//                                                 ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1]) / (NR_Nest[bindx][0])); // no NR effect
+//                                    ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1] * NR_X[bindx][1]) / (NR_Nest[bindx][0])); // no NR effect
+//                                    ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1] * NR_X[bindx][1]) / (NR_Nest[bindx][0] * NR_Nest[bindx][0])); // very strong, but strange effect
+                                                 ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1]) / (NR_Nest[bindx][0])); // working
                         }
         // 4    calculate vk = SNRprio(n, bin[i]) / (SNRprio(n, bin[i]) + 1) * SNRpost(n, bin[i]) (eq. 12 of Schmitt et al. 2002, eq. 9 of Romanin et al. 2009)
                         NR_vk =  NR_SNR_post[bindx] * NR_SNR_prio[bindx] / (1.0 + NR_SNR_prio[bindx]);
@@ -403,12 +413,6 @@ void spectral_noise_reduction (float* in_buffer)
           }
        // end of "for" loop which repeats the FFT_iFFT_chain two times !!!
     }
-
-    /*      for(int i = 0; i < NR_FFT_L; i++)
-          {
-              in_buffer [i] = NR_output_audio_buffer[i];
-              //float_buffer_R [i] = float_buffer_L [i];
-          }*/
 }
 
 

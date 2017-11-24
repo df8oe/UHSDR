@@ -3708,16 +3708,16 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         case MENU_DEBUG_NR_THRESH:      //
             var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.nr_vad_thresh_int,
-                    100,
-                    20000,
-                    6000,
-                    100
+                    10,
+                    2000,
+                    600,
+                    20
             );
             if(var_change)
             {
-            	ts.nr_vad_thresh = (float32_t)ts.nr_vad_thresh_int / 1000.0;
+            	ts.nr_vad_thresh = (float32_t)ts.nr_vad_thresh_int / 100.0;
             }
-            snprintf(options, 32, " %5u",(unsigned int)ts.nr_vad_thresh_int);
+            snprintf(options, 32, " %4u",(unsigned int)ts.nr_vad_thresh_int);
 
         break;
 
