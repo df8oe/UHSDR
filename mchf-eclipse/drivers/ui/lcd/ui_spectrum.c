@@ -186,57 +186,58 @@ static void UiSpectrum_FFTWindowFunction(char mode)
 {
     // Information on these windowing functions may be found on the internet - check the Wikipedia article "Window Function"
     // KA7OEI - 20150602
+    const uint16_t  fft_iq_m1_half = (sd.fft_iq_len-1)/2;
 
     switch(mode)
     {
     case FFT_WINDOW_RECTANGULAR:	// No processing at all
         break;
     case FFT_WINDOW_COSINE:			// Sine window function (a.k.a. "Cosine Window").  Kind of wide...
-        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < sd.fft_iq_len; i++)
         {
-            sd.FFT_Samples[i] = arm_sin_f32((PI * (float32_t)i)/FFT_IQ_BUFF_LEN - 1) * sd.FFT_Samples[i];
+            sd.FFT_Samples[i] = arm_sin_f32((PI * (float32_t)i)/sd.fft_iq_len - 1) * sd.FFT_Samples[i];
         }
         break;
     case FFT_WINDOW_BARTLETT:		// a.k.a. "Triangular" window - Bartlett (or Fej?r) window is special case where demonimator is "N-1". Somewhat better-behaved than Rectangular
-        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < sd.fft_iq_len; i++)
         {
-            sd.FFT_Samples[i] = (1 - fabs(i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF) * sd.FFT_Samples[i];
+            sd.FFT_Samples[i] = (1 - fabs(i - ((float32_t)fft_iq_m1_half))/(float32_t)fft_iq_m1_half) * sd.FFT_Samples[i];
         }
         break;
     case FFT_WINDOW_WELCH:			// Parabolic window function, fairly wide, comparable to Bartlett
-        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < sd.fft_iq_len; i++)
         {
-            sd.FFT_Samples[i] = (1 - ((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)*((i - ((float32_t)FFT_IQ_BUFF_M1_HALF))/(float32_t)FFT_IQ_BUFF_M1_HALF)) * sd.FFT_Samples[i];
+            sd.FFT_Samples[i] = (1 - ((i - ((float32_t)fft_iq_m1_half))/(float32_t)fft_iq_m1_half)*((i - ((float32_t)fft_iq_m1_half))/(float32_t)fft_iq_m1_half)) * sd.FFT_Samples[i];
         }
         break;
     case FFT_WINDOW_HANN:			// Raised Cosine Window (non zero-phase version) - This has the best sidelobe rejection of what is here, but not as narrow as Hamming.
-        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < sd.fft_iq_len; i++)
         {
-            sd.FFT_Samples[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i]);
+            sd.FFT_Samples[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(sd.fft_iq_len-1)))) * sd.FFT_Samples[i]);
         }
         break;
     case FFT_WINDOW_HAMMING:		// Another Raised Cosine window - This is the narrowest with reasonably good sidelobe rejection.
-        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < sd.fft_iq_len; i++)
         {
-            sd.FFT_Samples[i] = (0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(FFT_IQ_BUFF_LEN-1)))) * sd.FFT_Samples[i];
+            sd.FFT_Samples[i] = (0.53836 - (0.46164 * arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(sd.fft_iq_len-1)))) * sd.FFT_Samples[i];
         }
         break;
     case FFT_WINDOW_BLACKMAN:		// Approx. same "narrowness" as Hamming but not as good sidelobe rejection - probably best for "default" use.
-        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < sd.fft_iq_len; i++)
         {
-            sd.FFT_Samples[i] = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Samples[i];
+            sd.FFT_Samples[i] = (0.42659 - (0.49656*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)sd.fft_iq_len-1)) + (0.076849*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)sd.fft_iq_len-1))) * sd.FFT_Samples[i];
         }
         break;
     case FFT_WINDOW_NUTTALL:		// Slightly wider than Blackman, comparable sidelobe rejection.
-        for(int i = 0; i < FFT_IQ_BUFF_LEN; i++)
+        for(int i = 0; i < sd.fft_iq_len; i++)
         {
-            sd.FFT_Samples[i] = (0.355768 - (0.487396*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) + (0.144232*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1)) - (0.012604*arm_cos_f32((6*PI*(float32_t)i)/(float32_t)FFT_IQ_BUFF_LEN-1))) * sd.FFT_Samples[i];
+            sd.FFT_Samples[i] = (0.355768 - (0.487396*arm_cos_f32((2*PI*(float32_t)i)/(float32_t)sd.fft_iq_len-1)) + (0.144232*arm_cos_f32((4*PI*(float32_t)i)/(float32_t)sd.fft_iq_len-1)) - (0.012604*arm_cos_f32((6*PI*(float32_t)i)/(float32_t)sd.fft_iq_len-1))) * sd.FFT_Samples[i];
         }
         break;
     }
 
     float32_t gcalc = 1.0/ads.codec_gain_calc;                // Get gain setting of codec and convert to multiplier factor
-    arm_scale_f32(sd.FFT_Samples,gcalc, sd.FFT_Samples, FFT_IQ_BUFF_LEN);
+    arm_scale_f32(sd.FFT_Samples,gcalc, sd.FFT_Samples, sd.fft_iq_len);
 
 }
 
@@ -758,6 +759,18 @@ static void UiSpectrum_InitSpectrumDisplayData()
     sd.enabled		= 0;
     ts.dial_moved	= 0;
 
+#ifdef USE_DISP_320_240
+    sd.spec_len = 256;
+    sd.fft_iq_len = 512;
+    sd.cfft_instance = &arm_cfft_sR_f32_len256;
+#endif
+#ifdef USE_DISP_480_329
+    sd.spec_len = 512;
+    sd.fft_iq_len = 1024;
+    sd.cfft_instance = &arm_cfft_sR_f32_len512;
+#endif
+
+
     sd.agc_rate = ((float32_t)ts.scope_agc_rate) / SPECTRUM_AGC_SCALING;	// calculate agc rate
     //
     sd.wfall_line_update = 0;		// init count used for incrementing number of lines for each vertical waterfall screen update
@@ -800,7 +813,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
     	j = 0;					// init count of lines on display
     	k = sd.wfall_line;		// start with line currently displayed in buffer
     	while(j < SPECTRUM_HEIGHT)	{		// loop number of times of buffer
-    		for(i = 0; i < SPEC_BUFF_LEN; i++)	{		// do this all of the way across, horizonally
+    		for(i = 0; i < sd.spec_len; i++)	{		// do this all of the way across, horizonally
     			sd.waterfall[k][i] = (SPECTRUM_HEIGHT - j) % SPECTRUM_HEIGHT;	// place the color of the palette, indexed to vertical position
     		}
     		j++;		// update line count
@@ -877,6 +890,8 @@ static void UiSpectrum_InitSpectrumDisplayData()
         sd.marker_line_pos_prev[marker_idx] = 0xffff; // off screen
     }
     // Ready
+    //
+
     sd.enabled		= 1;
 }
 
@@ -911,7 +926,7 @@ static void UiSpectrum_DrawWaterfall()
     sd.wfall_line %= sd.wfall_size; // make sure that the circular buffer is clipped to the size of the display area
 
     // Contrast:  100 = 1.00 multiply factor:  125 = multiply by 1.25 - "sd.wfall_contrast" already converted to 100=1.00
-    arm_scale_f32(sd.FFT_Samples, sd.wfall_contrast, sd.FFT_Samples, SPEC_BUFF_LEN);
+    arm_scale_f32(sd.FFT_Samples, sd.wfall_contrast, sd.FFT_Samples, sd.spec_len);
 
 
     UiSpectrum_UpdateSpectrumPixelParameters(); // before accessing pixel parameters, request update according to configuration
@@ -924,7 +939,7 @@ static void UiSpectrum_DrawWaterfall()
     }
 
     // After the above manipulation, clip the result to make sure that it is within the range of the palette table
-    //for(uint16_t i = 0; i < SPEC_BUFF_LEN; i++)
+    //for(uint16_t i = 0; i < sd.spec_len; i++)
     for(uint16_t i = 0; i < SPECTRUM_WIDTH; i++)
     {
         if(sd.FFT_Samples[i] >= NUMBER_WATERFALL_COLOURS)   // is there an illegal color value?
@@ -1017,7 +1032,7 @@ static void UiSpectrum_DrawWaterfall()
     }
 }
 
-static float32_t  UiSpectrum_ScaleFFT(const float32_t value, float32_t* min_p)
+static float32_t  UiSpectrum_ScaleFFTValue(const float32_t value, float32_t* min_p)
 {
     float32_t sig = sd.display_offset + log10f_fast(value) * sd.db_scale;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
     // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
@@ -1030,6 +1045,25 @@ static float32_t  UiSpectrum_ScaleFFT(const float32_t value, float32_t* min_p)
     return  (sig < 1)? 1 : sig;
 }
 
+static void UiSpectrum_ScaleFFT(float32_t dest[], float32_t source[], float32_t* min_p )
+{
+    for(uint16_t i = 0; i < (sd.spec_len/2); i++)
+    {
+        dest[sd.spec_len - i - 1] = UiSpectrum_ScaleFFTValue(source[i + sd.spec_len/2], min_p);
+        // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+        // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
+    }
+
+
+    for(uint16_t i = (sd.spec_len/2); i < (sd.spec_len); i++)
+    {
+        // build right half of spectrum data
+        dest[sd.spec_len - i - 1] = UiSpectrum_ScaleFFTValue(source[i - sd.spec_len/2], min_p);
+        // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+        // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
+    }
+
+}
 // Spectrum Display code rewritten by C. Turner, KA7OEI, September 2014, May 2015
 // Waterfall Display code written by C. Turner, KA7OEI, May 2015 entirely from "scratch"
 // - which is to say that I did not borrow any of it
@@ -1059,13 +1093,9 @@ static void UiSpectrum_RedrawSpectrum(void)
     }
     case 2:		// Do FFT and calculate complex magnitude
     {
-#ifdef USE_FFT_1024
-        arm_cfft_f32(&arm_cfft_sR_f32_len512, sd.FFT_Samples,0,1);	// Do FFT
-#else
-        arm_cfft_f32(&arm_cfft_sR_f32_len256, sd.FFT_Samples,0,1);	// Do FFT
-#endif
+        arm_cfft_f32(sd.cfft_instance, sd.FFT_Samples,0,1);	// Do FFT
         // Calculate magnitude
-        arm_cmplx_mag_f32( sd.FFT_Samples, sd.FFT_MagData ,SPEC_BUFF_LEN);
+        arm_cmplx_mag_f32( sd.FFT_Samples, sd.FFT_MagData ,sd.spec_len);
 
         sd.state++;
         break;
@@ -1082,12 +1112,12 @@ static void UiSpectrum_RedrawSpectrum(void)
             UiSpectrum_DrawFrequencyBar();	// redraw frequency bar on the bottom of the display
         }
 
-        arm_scale_f32(sd.FFT_AVGData, filt_factor, sd.FFT_Samples, SPEC_BUFF_LEN);	// get scaled version of previous data
-        arm_sub_f32(sd.FFT_AVGData, sd.FFT_Samples, sd.FFT_AVGData, SPEC_BUFF_LEN);	// subtract scaled information from old, average data
-        arm_scale_f32(sd.FFT_MagData, filt_factor, sd.FFT_Samples, SPEC_BUFF_LEN);	// get scaled version of new, input data
-        arm_add_f32(sd.FFT_Samples, sd.FFT_AVGData, sd.FFT_AVGData, SPEC_BUFF_LEN);	// add portion new, input data into average
+        arm_scale_f32(sd.FFT_AVGData, filt_factor, sd.FFT_Samples, sd.spec_len);	// get scaled version of previous data
+        arm_sub_f32(sd.FFT_AVGData, sd.FFT_Samples, sd.FFT_AVGData, sd.spec_len);	// subtract scaled information from old, average data
+        arm_scale_f32(sd.FFT_MagData, filt_factor, sd.FFT_Samples, sd.spec_len);	// get scaled version of new, input data
+        arm_add_f32(sd.FFT_Samples, sd.FFT_AVGData, sd.FFT_AVGData, sd.spec_len);	// add portion new, input data into average
 
-        for(uint32_t i = 0; i < SPEC_BUFF_LEN; i++)	 		// guarantee that the result will always be >= 0
+        for(uint32_t i = 0; i < sd.spec_len; i++)	 		// guarantee that the result will always be >= 0
         {
             if(sd.FFT_AVGData[i] < 1)
             {
@@ -1105,81 +1135,44 @@ static void UiSpectrum_RedrawSpectrum(void)
     case 4:
     {
         float32_t	min1=100000;
-#ifdef USE_DISP_480_320
         // De-linearize data with dB/division
         // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
         // TODO: if we would use a different data structure here (e.g. q15), we could speed up collection of enough samples in driver
         // we could let it run as soon as last FFT_Samples read has been done here
-        for(uint16_t i = 0; i < (SPEC_BUFF_LEN/2); i++)
-        {
-            sd.FFT_SamplesUnscalled[SPEC_BUFF_LEN - i - 1] = UiSpectrum_ScaleFFT(sd.FFT_AVGData[i + SPEC_BUFF_LEN/2], &min1);
-            // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
-            // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
-        }
-
-        for(uint16_t i = (SPEC_BUFF_LEN/2); i < (SPEC_BUFF_LEN); i++)
-        {
-            // build right half of spectrum data
-            sd.FFT_SamplesUnscalled[SPEC_BUFF_LEN - i - 1] = UiSpectrum_ScaleFFT(sd.FFT_AVGData[i - SPEC_BUFF_LEN/2], &min1);
-            // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
-            // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
-        }
-
-        // Adjust the sliding window so that the lowest signal is always black
-        sd.display_offset -= sd.agc_rate*min1/5;
+#ifdef USE_DISP_320_240
+        UiSpectrum_ScaleFFT(sd.FFT_Samples,sd.FFT_AVGData,&min1);
+#else
+        UiSpectrum_ScaleFFT(sd.FFT_SamplesUnscalled,sd.FFT_AVGData,&min1);
 
         //scale the fft output to width of the spectrum (needed when window width is different from fft size
-
         {
-        	float32_t d_freq=(float32_t)SPEC_BUFF_LEN/(float32_t)SPECTRUM_WIDTH;
-        	float32_t idx_freq=0;
-        	float32_t data,new_data;
-        	uint16_t new_idx,old_idx;
-        	old_idx=0;
-        	for(uint16_t x=0;x<SPECTRUM_WIDTH;x++)
-        	{
-        		new_idx=(int)idx_freq;
-        		if(new_idx!=old_idx)
-        		{
-        			data=0.0f;
-        		}
+            float32_t d_freq=(float32_t)sd.spec_len/(float32_t)SPECTRUM_WIDTH;
+            float32_t idx_freq=0;
+            float32_t data,new_data;
+            uint16_t new_idx,old_idx;
+            old_idx=0;
+            for(uint16_t x=0;x<SPECTRUM_WIDTH;x++)
+            {
+                new_idx=(int)idx_freq;
+                if(new_idx!=old_idx)
+                {
+                    data=0.0f;
+                }
 
-        		new_data=sd.FFT_SamplesUnscalled[new_idx];
-        		if(new_data>data)
-        		{
-        			data=new_data;
-        		}
-        		old_idx=new_idx;
-        		sd.FFT_Samples[x]=data;
-        		idx_freq+=d_freq;
-        	}
+                new_data=sd.FFT_SamplesUnscalled[new_idx];
+                if(new_data>data)
+                {
+                    data=new_data;
+                }
+                old_idx=new_idx;
+                sd.FFT_Samples[x]=data;
+                idx_freq+=d_freq;
+            }
         }
-#else
-        // De-linearize data with dB/division
-        // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
-        // TODO: if we would use a different data structure here (e.g. q15), we could speed up collection of enough samples in driver
-        // we could let it run as soon as last FFT_Samples read has been done here
-        for(uint16_t i = 0; i < (SPEC_BUFF_LEN/2); i++)
-        {
-            sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = UiSpectrum_ScaleFFT(sd.FFT_AVGData[i + SPEC_BUFF_LEN/2], &min1);
-            // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
-            // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
-        }
-
-
-        for(uint16_t i = (SPEC_BUFF_LEN/2); i < (SPEC_BUFF_LEN); i++)
-        {
-            // build right half of spectrum data
-            sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = UiSpectrum_ScaleFFT(sd.FFT_AVGData[i - SPEC_BUFF_LEN/2], &min1);
-            // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
-            // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
-        }
+#endif
 
         // Adjust the sliding window so that the lowest signal is always black
         sd.display_offset -= sd.agc_rate*min1/5;
-#endif
-
-
 
         sd.state++;
         break;
@@ -1792,7 +1785,7 @@ static void UiSpectrum_CalculateDBm()
         {
             const float32_t slope = 19.8; // 19.6; --> empirical values derived from measurements by DL8MBY, 2016/06/30, Thanks!
             const float32_t cons = ts.dbm_constant - 225; // -225; //- 227.0;
-            const int buff_len_int = FFT_IQ_BUFF_LEN;
+            const int buff_len_int = sd.fft_iq_len;
             const float32_t buff_len = buff_len_int;
 
             // width of a 256 tap FFT bin = 187.5Hz
@@ -1882,19 +1875,19 @@ static void UiSpectrum_CalculateDBm()
                 Lbin = 0;
             }
             //if (Ubin > 255)
-            if (Ubin > (SPEC_BUFF_LEN-1))
+            if (Ubin > (sd.spec_len-1))
             {
                 //Ubin = 255;
-            	Ubin = SPEC_BUFF_LEN-1;
+            	Ubin = sd.spec_len-1;
             }
 
             for(int32_t i = 0; i < (buff_len_int/4); i++)
             {
-                sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i + buff_len_int/4] * SCOPE_PREAMP_GAIN;	// get data
+                sd.FFT_Samples[sd.spec_len - i - 1] = sd.FFT_MagData[i + buff_len_int/4] * SCOPE_PREAMP_GAIN;	// get data
             }
             for(int32_t i = buff_len_int/4; i < (buff_len_int/2); i++)
             {
-                sd.FFT_Samples[SPEC_BUFF_LEN - i - 1] = sd.FFT_MagData[i - buff_len_int/4] * SCOPE_PREAMP_GAIN;	// get data
+                sd.FFT_Samples[sd.spec_len - i - 1] = sd.FFT_MagData[i - buff_len_int/4] * SCOPE_PREAMP_GAIN;	// get data
             }
 
             // here would be the right place to start with the SNAP mode!

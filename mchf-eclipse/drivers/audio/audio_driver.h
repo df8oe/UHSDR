@@ -40,16 +40,8 @@
 #else
 	#define FFT_IQ_BUFF_LEN		512
 #endif
-
 #define SPEC_BUFF_LEN (FFT_IQ_BUFF_LEN/2)
 
-//
-// Useful DEFINEs for windowing functions
-//
-#define	FFT_IQ_BUFF_M1_HALF		(FFT_IQ_BUFF_LEN-1)/2
-#define	FFT_IQ_BUFF_P1_HALF		(FFT_IQ_BUFF_LEN+1)/2
-//
-//
 //
 // -----------------------------
 // Half of total buffer

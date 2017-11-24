@@ -156,8 +156,9 @@ typedef struct SpectrumDisplay
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN];
     float32_t   FFT_MagData[SPEC_BUFF_LEN];
     float32_t   FFT_AVGData[SPEC_BUFF_LEN];     // IIR low-pass filtered FFT buffer data
+#ifdef USE_DISP_480_320
     float32_t   FFT_SamplesUnscalled[FFT_IQ_BUFF_LEN];
-
+#endif
     // scope pixel data
     uint16_t    Old_PosData[SPECTRUM_WIDTH];
 
@@ -179,6 +180,10 @@ typedef struct SpectrumDisplay
 
     // Variables used in spectrum display AGC
     uint8_t   magnify;          // 2^magnify == zoom factor, max is 5
+
+    uint16_t    spec_len;
+    uint16_t    fft_iq_len;
+    const arm_cfft_instance_f32 * cfft_instance;
 
     float   display_offset;     // "vertical" offset for spectral scope, gain adjust for waterfall
     float   agc_rate;           // this holds AGC rate for the Spectrum Display

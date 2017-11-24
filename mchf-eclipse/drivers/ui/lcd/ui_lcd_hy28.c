@@ -582,7 +582,7 @@ void UiLcdHy28_BacklightEnable(bool on)
 #define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_8)
 #endif
 
-volatile uint16_t lcd_spi_prescaler = SPI_PRESCALE_LCD_DEFAULT;
+static uint16_t lcd_spi_prescaler = SPI_PRESCALE_LCD_DEFAULT;
 
 // static SPI_HandleTypeDef SPI_Handle;
 
