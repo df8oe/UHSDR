@@ -51,8 +51,15 @@ int32_t fdv_audio_has_data();
 int32_t fdv_audio_has_room();
 
 #endif
+#if defined(USE_FREEDV) || defined(USE_ALTERNATE_NR)
 
-#ifdef alternate_NR
+#define FDV_BUFFER_IQ_FIFO_SIZE (FDV_BUFFER_IQ_NUM+1)
+extern FDV_IQ_Buffer __MCHF_SPECIALMEM fdv_iq_buff[FDV_BUFFER_IQ_NUM];
+
+// we allow for one more pointer to a buffer as we have buffers
+// why? because our implementation will only fill up the fifo only to N-1 elements
+#endif
+#ifdef USE_ALTERNATE_NR
 
 void alternateNR_handle();
 

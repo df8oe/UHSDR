@@ -807,24 +807,6 @@ static void UiSpectrum_InitSpectrumDisplayData()
     // Load "top" color of palette (the 65th) with that to be used for the center grid color
     sd.waterfall_colours[NUMBER_WATERFALL_COLOURS] = sd.scope_centre_grid_colour_active;
 
-    /*
-    	//
-    	// Load waterfall data with "splash" showing palette
-    	//
-    	j = 0;					// init count of lines on display
-    	k = sd.wfall_line;		// start with line currently displayed in buffer
-    	while(j < SPECTRUM_HEIGHT)	{		// loop number of times of buffer
-    		for(i = 0; i < sd.spec_len; i++)	{		// do this all of the way across, horizonally
-    			sd.waterfall[k][i] = (SPECTRUM_HEIGHT - j) % SPECTRUM_HEIGHT;	// place the color of the palette, indexed to vertical position
-    		}
-    		j++;		// update line count
-    		k++;		// update position within circular buffer - which also is used to calculate color
-    		k %= SPECTRUM_HEIGHT;	// limit to modulus count of circular buffer size
-    	}
-    	//
-     */
-
-
     if (is_waterfallmode())
     {
         sd.db_scale = scope_scaling_factors[DB_DIV_10].value;
@@ -838,6 +820,16 @@ static void UiSpectrum_InitSpectrumDisplayData()
         }
         sd.db_scale = scope_scaling_factors[ts.spectrum_db_scale].value;
     }
+
+    // if we later scale the spectrum width from the fft width, we incorporate
+    // the required negative gain for the downsampling here.
+    // makes spectrum_width float32_t multiplications less per waterfall update
+
+    if (sd.spec_len != SPECTRUM_WIDTH)
+    {
+        sd.db_scale *= (float32_t)SPECTRUM_WIDTH/(float32_t)sd.spec_len;
+    }
+
 #ifdef USE_DISP_480_320
     if(ts.spectrum_size == SPECTRUM_NORMAL)	 						// waterfall the same size as spectrum scope
     {
@@ -890,8 +882,6 @@ static void UiSpectrum_InitSpectrumDisplayData()
     {
         sd.marker_line_pos_prev[marker_idx] = 0xffff; // off screen
     }
-    // Ready
-    //
 
     sd.enabled		= 1;
 }
@@ -1048,6 +1038,9 @@ static float32_t  UiSpectrum_ScaleFFTValue(const float32_t value, float32_t* min
 
 static void UiSpectrum_ScaleFFT(float32_t dest[], float32_t source[], float32_t* min_p )
 {
+    // not an in-place algorithm
+    assert(dest != source);
+
     for(uint16_t i = 0; i < (sd.spec_len/2); i++)
     {
         dest[sd.spec_len - i - 1] = UiSpectrum_ScaleFFTValue(source[i + sd.spec_len/2], min_p);
@@ -1068,23 +1061,28 @@ static void UiSpectrum_ScaleFFT(float32_t dest[], float32_t source[], float32_t*
 
 /**
  * @brief simple algorithm to scale down in place to a fractional scale
+ * Please note, that there is no gain correction in this algorithm,
+ * We rely on the gain correction taking place elsewhere!
+ * required gain correction is (float32_t)to_len/(float32_t)from_len
  */
 static void UiSpectrum_ScaleFFT2SpectrumWidth(float32_t samples[], uint16_t from_len, uint16_t to_len)
 {
 
     assert(from_len >= to_len);
 
-    float32_t full_amount = (float32_t)from_len/(float32_t)to_len;
-    float32_t reci_full_amount = 1.0/full_amount;
+    const float32_t full_amount = (float32_t)from_len/(float32_t)to_len;
+
+
+    // init loop values
     float32_t amount = full_amount;
     uint16_t idx_new = 0;
     uint16_t idx_old = 0;
-    float32_t remainder = 0;
     float32_t value = 0;
 
+
+    // iterate over both arrays from index 0 towards (to_len-1) or (from_len-1)
     do
     {
-        value = remainder;
         while (amount >=1)
         {
             value += samples[idx_old];
@@ -1092,12 +1090,14 @@ static void UiSpectrum_ScaleFFT2SpectrumWidth(float32_t samples[], uint16_t from
             amount-= 1.0;
         }
 
-        value += amount * samples[idx_old];
-        samples[idx_new] = value * reci_full_amount;
+        float32_t for_next = (1-amount) * samples[idx_old];
+
+        value += samples[idx_old] - for_next;
         idx_new++;
+
         if (idx_new < to_len)
         {
-            remainder  = (1-amount) * samples[idx_old];
+            value  = for_next;
             idx_old++;
             amount = full_amount - (1-amount);
         }

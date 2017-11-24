@@ -122,6 +122,7 @@ drivers/audio/codec/codec.c \
 drivers/audio/codec/uhsdr_hw_i2s.c \
 drivers/audio/audio_driver.c \
 drivers/audio/audio_filter.c \
+drivers/audio/audio_nr.c \
 drivers/audio/audio_management.c \
 drivers/audio/freedv_uhsdr.c \
 drivers/audio/freedv_test_data.c \

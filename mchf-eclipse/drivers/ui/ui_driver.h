@@ -259,7 +259,7 @@ extern const ulong tune_steps[T_STEP_MAX_STEPS];
 
 
 
-#ifdef alternate_NR
+#ifdef USE_ALTERNATE_NR
 
 int NR_in_buffer_peek(FDV_IQ_Buffer** c_ptr);
 int NR_in_buffer_remove(FDV_IQ_Buffer** c_ptr);

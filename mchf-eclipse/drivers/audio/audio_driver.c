@@ -3461,7 +3461,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 #endif
     float post_agc_gain_scaling;
 
-#ifdef alternate_NR
+#ifdef USE_ALTERNATE_NR
     static int trans_count_in=0;
     static int outbuff_count=0;
     static int NR_fill_in_pt=0;
@@ -3709,7 +3709,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     }
                 }
                 //
-
+#ifdef USE_ALTERNATE_NR
                 if (ts.new_nb==true || ts.nr_enable == true) //start of new nb
                 {
                     // NR_in and _out buffers are using the same physical space than the freedv_iq_buffer
@@ -3773,7 +3773,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     }
 
                 } // end of new nb
-
+#endif
 
                 // Calculate scaling based on decimation rate since this affects the audio gain
                 if ((FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_12KHZ)
