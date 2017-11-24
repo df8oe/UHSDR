@@ -218,11 +218,11 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 }
 
 #define NR_FFT_L NR_FFT_SIZE
-static float32_t NR_output_audio_buffer [NR_FFT_L];
+//static float32_t NR_output_audio_buffer [NR_FFT_L];
 static float32_t NR_last_iFFT_result [NR_FFT_L / 2];
 static float32_t NR_last_sample_buffer_L [NR_FFT_L / 2];
 float32_t NR_FFT_buffer[NR_FFT_L * 2];
-//float32_t NR_iFFT_buffer[NR_FFT_L * 2];
+//float32_t NR_iFFT_buffer[NR_FFT_L * 2]; // saved 1kbyte RAM :-)
 static float32_t NR_X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
 static float32_t NR_Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
 static float32_t NR_vk[NR_FFT_L / 2]; //
@@ -394,7 +394,8 @@ void spectral_noise_reduction (float* in_buffer)
     // do the overlap & add
           for(int i = 0; i < NR_FFT_L / 2; i++)
           { // take real part of first half of current iFFT result and add to 2nd half of last iFFT_result
-              NR_output_audio_buffer[i + k * (NR_FFT_L / 2)] = NR_FFT_buffer[i * 2] + NR_last_iFFT_result[i];
+        	  //              NR_output_audio_buffer[i + k * (NR_FFT_L / 2)] = NR_FFT_buffer[i * 2] + NR_last_iFFT_result[i];
+        	  in_buffer[i + k * (NR_FFT_L / 2)] = NR_FFT_buffer[i * 2] + NR_last_iFFT_result[i];
           }
           for(int i = 0; i < NR_FFT_L / 2; i++)
           {
@@ -402,11 +403,12 @@ void spectral_noise_reduction (float* in_buffer)
           }
        // end of "for" loop which repeats the FFT_iFFT_chain two times !!!
     }
-          for(int i = 0; i < NR_FFT_L; i++)
+
+    /*      for(int i = 0; i < NR_FFT_L; i++)
           {
               in_buffer [i] = NR_output_audio_buffer[i];
               //float_buffer_R [i] = float_buffer_L [i];
-          }
+          }*/
 }
 
 
