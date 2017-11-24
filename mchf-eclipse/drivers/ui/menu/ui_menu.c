@@ -3627,7 +3627,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 #endif
-
+#ifdef USE_LEAKY_LMS
         case MENU_DEBUG_LEAKY_LMS:
             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_leaky_LMS,0,options,&clr);
             break;
@@ -3690,7 +3690,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             snprintf(options, 32, " %3u",(unsigned int)leakyLMS.delay);
 
         break;
-
+#endif
         case MENU_DEBUG_NR_ALPHA:      //
             var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_alpha_int,
                     700,

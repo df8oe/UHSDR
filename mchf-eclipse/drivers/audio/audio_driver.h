@@ -601,6 +601,7 @@ typedef struct SnapCarrier
 
 extern SnapCarrier sc;
 
+#ifdef USE_LEAKY_LMS
 #define LEAKYLMSDLINE_SIZE 256 //512 // was 256 //2048   // dline_size
 // 1024 funktioniert nicht
 typedef struct
@@ -635,5 +636,6 @@ typedef struct
 } lLMS;
 
 extern lLMS leakyLMS;
+#endif
 
 #endif

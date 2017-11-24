@@ -225,7 +225,7 @@ float32_t NR_FFT_buffer[NR_FFT_L * 2];
 //float32_t NR_iFFT_buffer[NR_FFT_L * 2]; // saved 1kbyte RAM :-)
 static float32_t NR_X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
 static float32_t NR_Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
-static float32_t NR_vk[NR_FFT_L / 2]; //
+static float32_t NR_vk; // saved 0.24kbytes
 static float32_t NR_Hk[NR_FFT_L / 2]; // gain factors
 static float32_t NR_SNR_prio[NR_FFT_L / 2];
 static float32_t NR_SNR_post[NR_FFT_L / 2];
@@ -348,12 +348,12 @@ void spectral_noise_reduction (float* in_buffer)
                                                  ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1]) / (NR_Nest[bindx][0])); //
                         }
         // 4    calculate vk = SNRprio(n, bin[i]) / (SNRprio(n, bin[i]) + 1) * SNRpost(n, bin[i]) (eq. 12 of Schmitt et al. 2002, eq. 9 of Romanin et al. 2009)
-                        NR_vk[bindx] =  NR_SNR_post[bindx] * NR_SNR_prio[bindx] / (1.0 + NR_SNR_prio[bindx]);
+                        NR_vk =  NR_SNR_post[bindx] * NR_SNR_prio[bindx] / (1.0 + NR_SNR_prio[bindx]);
                        // calculate Hk
         // 5    finally calculate the weighting function for each bin: Hk(n, bin[i]) = 1 / SNRpost(n, [i]) * sqrtf(0.7212 * vk + vk * vk) (eq. 26 of Romanin et al. 2009)
-                        if(NR_vk[bindx] > 0.0 && NR_SNR_post[bindx] != 0.0) // prevent sqrtf of negatives
+                        if(NR_vk > 0.0 && NR_SNR_post[bindx] != 0.0) // prevent sqrtf of negatives
                         {
-                            NR_Hk[bindx] = 1.0 / NR_SNR_post[bindx] * sqrtf(0.7212 * NR_vk[bindx] + NR_vk[bindx] * NR_vk[bindx]);
+                            NR_Hk[bindx] = 1.0 / NR_SNR_post[bindx] * sqrtf(0.7212 * NR_vk + NR_vk * NR_vk);
                         }
                         else
                         {

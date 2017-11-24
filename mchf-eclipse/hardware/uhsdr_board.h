@@ -1049,7 +1049,9 @@ typedef struct TransceiverState
 #ifdef USE_TWO_CHANNEL_AUDIO
 	bool stereo_enable; // enable/disable stereo demodulation (only in special hardware, NOT in mcHF)
 #endif
+#ifdef USE_LEAKY_LMS
 	bool enable_leaky_LMS;
+#endif
 	float32_t nr_alpha; // alpha smoothing constant for spectral noise reduction
 	int16_t nr_alpha_int;
 	float32_t nr_beta; // beta smoothing constant for spectral noise reduction
