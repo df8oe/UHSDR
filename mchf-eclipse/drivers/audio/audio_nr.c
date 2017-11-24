@@ -222,7 +222,7 @@ static float32_t NR_output_audio_buffer [NR_FFT_L];
 static float32_t NR_last_iFFT_result [NR_FFT_L / 2];
 static float32_t NR_last_sample_buffer_L [NR_FFT_L / 2];
 float32_t NR_FFT_buffer[NR_FFT_L * 2];
-float32_t NR_iFFT_buffer[NR_FFT_L * 2];
+//float32_t NR_iFFT_buffer[NR_FFT_L * 2];
 static float32_t NR_X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
 static float32_t NR_Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
 static float32_t NR_vk[NR_FFT_L / 2]; //
@@ -366,10 +366,10 @@ void spectral_noise_reduction (float* in_buffer)
         // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 128 bins with the 128 bin-specific gain factors G
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
               {
-                  NR_iFFT_buffer[bindx * 2] = NR_FFT_buffer [bindx * 2] * NR_Hk[bindx]; // real part
-                  NR_iFFT_buffer[bindx * 2 + 1] = NR_FFT_buffer [bindx * 2 + 1] * NR_Hk[bindx]; // imag part
-                  NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] * NR_Hk[bindx]; // real part conjugate symmetric
-                  NR_iFFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] * NR_Hk[bindx]; // imag part conjugate symmetric
+                  NR_FFT_buffer[bindx * 2] = NR_FFT_buffer [bindx * 2] * NR_Hk[bindx]; // real part
+                  NR_FFT_buffer[bindx * 2 + 1] = NR_FFT_buffer [bindx * 2 + 1] * NR_Hk[bindx]; // imag part
+                  NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] * NR_Hk[bindx]; // real part conjugate symmetric
+                  NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] * NR_Hk[bindx]; // imag part conjugate symmetric
               }
 
 
@@ -390,15 +390,15 @@ void spectral_noise_reduction (float* in_buffer)
 
     // NR_iFFT
     // perform iFFT (in-place)
-         arm_cfft_f32(&arm_cfft_sR_f32_len128, NR_iFFT_buffer, 1, 1);
+         arm_cfft_f32(&arm_cfft_sR_f32_len128, NR_FFT_buffer, 1, 1);
     // do the overlap & add
           for(int i = 0; i < NR_FFT_L / 2; i++)
           { // take real part of first half of current iFFT result and add to 2nd half of last iFFT_result
-              NR_output_audio_buffer[i + k * (NR_FFT_L / 2)] = NR_iFFT_buffer[i * 2] + NR_last_iFFT_result[i];
+              NR_output_audio_buffer[i + k * (NR_FFT_L / 2)] = NR_FFT_buffer[i * 2] + NR_last_iFFT_result[i];
           }
           for(int i = 0; i < NR_FFT_L / 2; i++)
           {
-              NR_last_iFFT_result[i] = NR_iFFT_buffer[NR_FFT_L + i * 2];
+              NR_last_iFFT_result[i] = NR_FFT_buffer[NR_FFT_L + i * 2];
           }
        // end of "for" loop which repeats the FFT_iFFT_chain two times !!!
     }
