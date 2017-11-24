@@ -321,11 +321,11 @@ void spectral_noise_reduction (float* in_buffer)
                                       NR_Nest[bindx][1] = NR_Nest[bindx][0];
                                 }
                           NR_first_time = 0;
-                      	  Board_RedLed(LED_STATE_OFF);
+                      	  //Board_RedLed(LED_STATE_OFF);
                       }
                       else
                       {
-                    		Board_RedLed(LED_STATE_ON);
+                    		//Board_RedLed(LED_STATE_ON);
                       }
 
 
