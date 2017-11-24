@@ -764,7 +764,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
     sd.fft_iq_len = 512;
     sd.cfft_instance = &arm_cfft_sR_f32_len256;
 #endif
-#ifdef USE_DISP_480_329
+#ifdef USE_DISP_480_320
     sd.spec_len = 512;
     sd.fft_iq_len = 1024;
     sd.cfft_instance = &arm_cfft_sR_f32_len512;
