@@ -218,7 +218,7 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 }
 
 #define NR_FFT_L NR_FFT_SIZE
-//static float32_t NR_output_audio_buffer [NR_FFT_L];
+//static float32_t NR_output_audio_buffer [NR_FFT_L]; // saved 0.5kbytes RAM
 static float32_t NR_last_iFFT_result [NR_FFT_L / 2];
 static float32_t NR_last_sample_buffer_L [NR_FFT_L / 2];
 float32_t NR_FFT_buffer[NR_FFT_L * 2];
@@ -229,7 +229,7 @@ static float32_t NR_vk[NR_FFT_L / 2]; //
 static float32_t NR_Hk[NR_FFT_L / 2]; // gain factors
 static float32_t NR_SNR_prio[NR_FFT_L / 2];
 static float32_t NR_SNR_post[NR_FFT_L / 2];
-static float32_t NR_SNR_post_pos[NR_FFT_L / 2];
+static float32_t NR_SNR_post_pos; // saved 0.24kbytes
 static float32_t NR_Hk_old[NR_FFT_L / 2];
 static float32_t NR_VAD = 0.0;
 static uint8_t NR_first_time = 1;
@@ -334,17 +334,17 @@ void spectral_noise_reduction (float* in_buffer)
                         // "half-wave rectification" of NR_SR_post_pos --> always >= 0
                         if(NR_SNR_post[bindx] >= 0.0)
                         {
-                            NR_SNR_post_pos[bindx] = NR_SNR_post[bindx];
+                            NR_SNR_post_pos = NR_SNR_post[bindx];
                         }
                         else
                         {
-                            NR_SNR_post_pos[bindx] = 0.0;
+                            NR_SNR_post_pos = 0.0;
                         }
         // 3    calculate SNRprio (n, bin[i]) = (1 - alpha) * Q(SNRpost(n, bin[i]) + alpha * (Hk(n - 1, bin[i]) * X(n - 1, bin[i])^2 / Nest(n, bin[i])^2 (eq. 14 of Schmitt et al. 2002, eq. 13 of Romanin et al. 2009) [Q[x] = x if x>=0, else Q[x] = 0]
         // again: do we have to square the noise estimate NR_M[bindx] or not? Schmitt says yes, Romanin says no . . .
                         if(NR_Nest[bindx][0] != 0.0)
                         {
-                            NR_SNR_prio[bindx] = (1.0 - ts.nr_alpha) * NR_SNR_post_pos[bindx] +
+                            NR_SNR_prio[bindx] = (1.0 - ts.nr_alpha) * NR_SNR_post_pos +
                                                  ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1]) / (NR_Nest[bindx][0])); //
                         }
         // 4    calculate vk = SNRprio(n, bin[i]) / (SNRprio(n, bin[i]) + 1) * SNRpost(n, bin[i]) (eq. 12 of Schmitt et al. 2002, eq. 9 of Romanin et al. 2009)
