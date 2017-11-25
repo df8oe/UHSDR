@@ -24,9 +24,7 @@
 
 
 
-#ifdef UI_BRD_MCHF
-  #define USE_SPI_DMA
-#endif
+#define USE_SPI_DMA
 
 #if defined(STM32F7) || defined(STM32H7)
     #define USE_SPI_HAL

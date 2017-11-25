@@ -64,13 +64,10 @@ static const char*  bl_help[] =
 
 static void BL_DisplayInit()
 {
-#ifdef STM32F4
     MX_DMA_Init();
     MX_SPI2_Init();
-#endif
     MX_GPIO_Init();
 
-#ifdef STM32F4
     // we need to set the touch screen CS signal to high, otherwise SPI displays
     // will not be detectable
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -83,7 +80,6 @@ static void BL_DisplayInit()
     HAL_GPIO_Init(TP_CS_PIO, &GPIO_InitStructure);
 
     GPIO_SetBits(TP_CS_PIO, TP_CS);
-#endif
 
     UiLcdHy28_Init();
     UiLcdHy28_LcdClear(Black);
