@@ -219,20 +219,20 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 
 #define NR_FFT_L NR_FFT_SIZE
 //static float32_t NR_output_audio_buffer [NR_FFT_L]; // saved 0.5kbytes RAM
-static float32_t NR_last_iFFT_result [NR_FFT_L / 2];
-static float32_t NR_last_sample_buffer_L [NR_FFT_L / 2];
-float32_t NR_FFT_buffer[NR_FFT_L * 2];
+static float32_t __MCHF_SPECIALMEM NR_last_iFFT_result [NR_FFT_L / 2];
+static float32_t __MCHF_SPECIALMEM NR_last_sample_buffer_L [NR_FFT_L / 2];
+float32_t __MCHF_SPECIALMEM NR_FFT_buffer[NR_FFT_L * 2];
 //float32_t NR_iFFT_buffer[NR_FFT_L * 2]; // saved 1kbyte RAM :-)
-static float32_t NR_X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
-static float32_t NR_Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
-static float32_t NR_vk; // saved 0.24kbytes
-static float32_t NR_Hk[NR_FFT_L / 2]; // gain factors
-static float32_t NR_SNR_prio[NR_FFT_L / 2];
-static float32_t NR_SNR_post[NR_FFT_L / 2];
-static float32_t NR_SNR_post_pos; // saved 0.24kbytes
-static float32_t NR_Hk_old[NR_FFT_L / 2];
-static float32_t NR_VAD = 0.0;
-static uint8_t NR_first_time = 1;
+static float32_t __MCHF_SPECIALMEM NR_X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
+static float32_t __MCHF_SPECIALMEM NR_Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
+static float32_t __MCHF_SPECIALMEM NR_vk; // saved 0.24kbytes
+static float32_t __MCHF_SPECIALMEM NR_Hk[NR_FFT_L / 2]; // gain factors
+static float32_t __MCHF_SPECIALMEM NR_SNR_prio[NR_FFT_L / 2];
+static float32_t __MCHF_SPECIALMEM NR_SNR_post[NR_FFT_L / 2];
+static float32_t __MCHF_SPECIALMEM NR_SNR_post_pos; // saved 0.24kbytes
+static float32_t __MCHF_SPECIALMEM NR_Hk_old[NR_FFT_L / 2];
+static float32_t __MCHF_SPECIALMEM NR_VAD = 0.0;
+static uint8_t __MCHF_SPECIALMEM NR_first_time = 1;
 
 void spectral_noise_reduction (float* in_buffer)
 {
