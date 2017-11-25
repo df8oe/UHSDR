@@ -287,14 +287,25 @@ void spectral_noise_reduction (float* in_buffer)
     /////////////////////////////////7
     // WINDOWING
     #if 1
-    // perform windowing on 256 real samples in the NR_FFT_buffer
+    // perform windowing on 128 real samples in the NR_FFT_buffer
           for (int idx = 0; idx < NR_FFT_L; idx++)
           {     // Hann window
              float32_t temp_sample = 0.5 * (float32_t)(1.0 - (cosf(PI* 2.0 * (float32_t)idx / (float32_t)((NR_FFT_L) - 1))));
              NR_FFT_buffer[idx * 2] *= temp_sample;
           }
     #endif
-    // NR_FFT 256
+	#if 0
+// perform windowing on 128 real samples in the NR_FFT_buffer
+      for (int idx = 0; idx < NR_FFT_L; idx++)
+      {
+          // SIN^2 window
+                    float32_t SINF = (sinf(PI * (float32_t)idx / (float32_t)(NR_FFT_L - 1)));
+                    SINF = (SINF * SINF);
+                    NR_FFT_buffer[idx * 2] *= SINF;
+      }
+	#endif
+
+    // NR_FFT
     // calculation is performed in-place the FFT_buffer [re, im, re, im, re, im . . .]
           arm_cfft_f32(&arm_cfft_sR_f32_len128, NR_FFT_buffer, 0, 1);
 
@@ -372,7 +383,20 @@ void spectral_noise_reduction (float* in_buffer)
                         NR_Hk_old[bindx] = NR_Hk[bindx];
                         NR_X[bindx][1] = NR_X[bindx][0];
                     }
+              if(ts.nr_gain_smooth_enable)
+              {
+// we hear considerable distortion in the end result
+// this can be healed significantly by frequency smoothing the gain values
+// this is a trial for smoothing among the gain values
+				  for(int bindx = 1; bindx < (NR_FFT_L / 2) - 1; bindx++)
+				  {
+					  NR_Hk[bindx] = ts.nr_gain_smooth_alpha * NR_Hk[bindx - 1] + (1.0 - 2.0 * ts.nr_gain_smooth_alpha) * NR_Hk[bindx] + ts.nr_gain_smooth_alpha * NR_Hk[bindx + 1];
 
+				  }
+				  NR_Hk[0] = (1.0 - ts.nr_gain_smooth_alpha) * NR_Hk[0] + ts.nr_gain_smooth_alpha * NR_Hk[1];
+				  NR_Hk[(NR_FFT_L / 2) - 1] = (1.0 - ts.nr_gain_smooth_alpha) * NR_Hk[(NR_FFT_L / 2) - 1] + ts.nr_gain_smooth_alpha * NR_Hk[(NR_FFT_L / 2) - 2];
+              }
+              #if 1
         // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 128 bins with the 128 bin-specific gain factors G
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
               {
@@ -382,19 +406,25 @@ void spectral_noise_reduction (float* in_buffer)
                   NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] * NR_Hk[bindx]; // imag part conjugate symmetric
               }
 
-
+#endif
         /*****************************************************************
          * NOISE REDUCTION CODE ENDS HERE
          *****************************************************************/
+// very interesting!
+// if I leave the FFT_buffer as is and just multiply the 19 bins below with 0.1, the audio
+// is distorted a little bit !
+// To me, this is an indicator of a problem with windowing . . .
+//
+
 #if 0
-  for(int idx = 1; idx < 20; idx++)
+  for(int bindx = 1; bindx < 20; bindx++)
   // bins 2 to 29 attenuated
   // set real values to 0.1 of their original value
   {
-      NR_iFFT_buffer[idx * 2] *= 0.1;
-      NR_iFFT_buffer[NR_FFT_L * 2 - ((idx + 1) * 2)] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
-      NR_iFFT_buffer[idx * 2 + 1] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
-      NR_iFFT_buffer[NR_FFT_L * 2 - ((idx + 1) * 2) + 1] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
+      NR_FFT_buffer[bindx * 2] *= 0.1;
+//      NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
+      NR_FFT_buffer[bindx * 2 + 1] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
+//      NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
   }
 #endif
 
@@ -406,6 +436,8 @@ void spectral_noise_reduction (float* in_buffer)
           { // take real part of first half of current iFFT result and add to 2nd half of last iFFT_result
         	  //              NR_output_audio_buffer[i + k * (NR_FFT_L / 2)] = NR_FFT_buffer[i * 2] + NR_last_iFFT_result[i];
         	  in_buffer[i + k * (NR_FFT_L / 2)] = NR_FFT_buffer[i * 2] + NR_last_iFFT_result[i];
+// FIXME: take out scaling !
+//        	  in_buffer[i + k * (NR_FFT_L / 2)] *= 0.3;
           }
           for(int i = 0; i < NR_FFT_L / 2; i++)
           {
