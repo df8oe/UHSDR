@@ -232,7 +232,7 @@ static float32_t __MCHF_SPECIALMEM NR_SNR_post[NR_FFT_L / 2];
 static float32_t __MCHF_SPECIALMEM NR_SNR_post_pos; // saved 0.24kbytes
 static float32_t __MCHF_SPECIALMEM NR_Hk_old[NR_FFT_L / 2];
 static float32_t __MCHF_SPECIALMEM NR_VAD = 0.0;
-static uint8_t __MCHF_SPECIALMEM NR_first_time = 1;
+static uint8_t NR_first_time = 1; // FIXME: don't put in CCM on F4, we don't init this memory area correctly
 
 void spectral_noise_reduction (float* in_buffer)
 {
