@@ -233,6 +233,7 @@ static float32_t __MCHF_SPECIALMEM NR_SNR_post_pos; // saved 0.24kbytes
 static float32_t __MCHF_SPECIALMEM NR_Hk_old[NR_FFT_L / 2];
 static float32_t __MCHF_SPECIALMEM NR_VAD = 0.0;
 static uint8_t NR_first_time = 1; // FIXME: don't put in CCM on F4, we don't init this memory area correctly
+static float32_t __MCHF_SPECIALMEM NR_long_tone[NR_FFT_L / 2][2];
 
 void spectral_noise_reduction (float* in_buffer)
 {
@@ -314,7 +315,16 @@ void spectral_noise_reduction (float* in_buffer)
                         // this is magnitude for the current frame
                         NR_X[bindx][0] = sqrtf(NR_FFT_buffer[bindx * 2] * NR_FFT_buffer[bindx * 2] + NR_FFT_buffer[bindx * 2 + 1] * NR_FFT_buffer[bindx * 2 + 1]);
                     }
-        // 2b.) voice activity detector
+              if(ts.nr_long_tone_enable)
+              {
+// detection of long tones
+              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+                    {
+            	  	  	NR_long_tone[bindx][0] = (1.0 - ts.nr_long_tone_alpha) * NR_long_tone[bindx][0] + ts.nr_long_tone_alpha * NR_X[bindx][0]; //
+            	  	  	NR_long_tone[bindx][1] = NR_long_tone[bindx][0];
+                    }
+              }
+              // 2b.) voice activity detector
                   float32_t NR_temp_sum = 0.0;
                   for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
                   {
@@ -332,11 +342,11 @@ void spectral_noise_reduction (float* in_buffer)
                                       NR_Nest[bindx][1] = NR_Nest[bindx][0];
                                 }
                           NR_first_time = 0;
-                      	  //Board_RedLed(LED_STATE_OFF);
+                      	  Board_RedLed(LED_STATE_OFF);
                       }
                       else
                       {
-                    		//Board_RedLed(LED_STATE_ON);
+                    		Board_RedLed(LED_STATE_ON);
                       }
 
 
@@ -383,6 +393,19 @@ void spectral_noise_reduction (float* in_buffer)
                         NR_Hk_old[bindx] = NR_Hk[bindx];
                         NR_X[bindx][1] = NR_X[bindx][0];
                     }
+
+              if(ts.nr_long_tone_enable)
+              {
+// long tone attenuation = automatic notch filter
+              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+                    {
+            	  	  	  if(NR_long_tone[bindx][0] > (float32_t)ts.nr_long_tone_thresh)
+            	  	  	  {
+            	  	  		  NR_Hk[bindx] *= 0.1;
+            	  	  	  }
+                    }
+              }
+
               if(ts.nr_gain_smooth_enable)
               {
 // we hear considerable distortion in the end result
