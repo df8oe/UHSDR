@@ -393,18 +393,22 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CLONEIN, NULL,"FT817 Clone Receive", UiMenuDesc("Will in future get memory data from an FT817 Clone Info (to be used with CHIRP).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NEW_NB, NULL,"New Noiseblanker", UiMenuDesc("New noiseblanker for testing purposes") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_ENABLE, NULL,"Spectral NR", UiMenuDesc("enable spectral noise reduction for testing purposes") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_ALPHA, NULL,"NR alpha", UiMenuDesc("time constant alpha for spectral noise reduction") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE, NULL,"SNR gain smooth", UiMenuDesc("enable bin gain smoothing for spectral noise reduction for testing purposes") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA, NULL,"SNR gain smooth alpha", UiMenuDesc("alpha = smoothing constant for spectral noise reduction for testing purposes") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_ALPHA, NULL,"NR alpha", UiMenuDesc("time constant alpha for spectral noise reduction") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_THRESH, NULL,"NR thresh", UiMenuDesc("threshold for spectral noise reduction voice activity detector") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_BETA, NULL,"NR beta", UiMenuDesc("time constant beta for spectral noise reduction, leave at 0.85") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_RTTY_ATC, NULL,"RTTY ATC Enable", UiMenuDesc("Enable automatic threshold correction ATC for RTTY decoding") },
 #ifdef USE_TWO_CHANNEL_AUDIO
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ENABLE_STEREO, NULL,"STEREO Enable", UiMenuDesc("Enable stereo demodulation modes") },
 #endif
+#ifdef USE_LEAKY_LMS
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_LEAKY_LMS, NULL,"leaky LMS", UiMenuDesc("Use leaky LMS noise reduction instead of built-in CMSIS LMS algorithm") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_TAPS, NULL,"NR no taps", UiMenuDesc("Number of taps of leaky LMS noise reduction") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_DELAY, NULL,"NR delay", UiMenuDesc("Delay length of leaky LMS noise reduction") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_GAIN, NULL,"NR gain", UiMenuDesc("Gain of leaky LMS noise reduction") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_LEAK, NULL,"NR leak", UiMenuDesc("Leak of leaky LMS noise reduction") },
+#endif
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_OSC_SI5351_PLLRESET, NULL,"Si5351a PLL Reset", UiMenuDesc("Debug Setting: Select when the Si5351a does a PLL RESET") },
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };

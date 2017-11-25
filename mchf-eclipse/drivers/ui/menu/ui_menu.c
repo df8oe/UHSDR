@@ -3627,7 +3627,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
 #endif
-
+#ifdef USE_LEAKY_LMS
         case MENU_DEBUG_LEAKY_LMS:
             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_leaky_LMS,0,options,&clr);
             break;
@@ -3690,7 +3690,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             snprintf(options, 32, " %3u",(unsigned int)leakyLMS.delay);
 
         break;
-
+#endif
         case MENU_DEBUG_NR_ALPHA:      //
             var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_alpha_int,
                     700,
@@ -3706,12 +3706,27 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         break;
 
+        case MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA:      //
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_gain_smooth_alpha_int,
+                    100,
+                    990,
+                    250,
+                    2
+            );
+            if(var_change)
+            {
+            	ts.nr_gain_smooth_alpha = (float32_t)ts.nr_gain_smooth_alpha_int / 1000.0;
+            }
+            snprintf(options, 32, " %3u",(unsigned int)ts.nr_gain_smooth_alpha_int);
+
+        break;
+
         case MENU_DEBUG_NR_THRESH:      //
             var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.nr_vad_thresh_int,
                     100,
                     20000,
                     6000,
-                    100
+                    200
             );
             if(var_change)
             {
@@ -3763,6 +3778,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
          break;
      case MENU_DEBUG_NR_ENABLE:
              var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_enable,0,options,&clr);
+         break;
+     case MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE:
+             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_gain_smooth_enable,0,options,&clr);
          break;
 
      case MENU_DEBUG_RTTY_ATC:

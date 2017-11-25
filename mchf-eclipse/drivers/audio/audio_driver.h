@@ -582,25 +582,12 @@ extern __IO SMeter              sm;
 
 typedef struct SnapCarrier
 {
-    // FFT state
-//    arm_rfft_instance_f32           S; // old, depricated FFT routine, do not use
-//    arm_cfft_radix4_instance_f32    S_CFFT;  // old, depricated FFT routine, do not use
-// 	  this was responsible for the initial inaccuracy of the snap carrier routine!
-
-//	arm_rfft_fast_instance_f32           S; // new and faster real FFT routine
-
-    // Current data ptr
-//    ulong   samp_ptr;
-//    int8_t FFT_number;
-//    int16_t counter;
-    // State machine current state
-//    uchar   state;
     bool	snap;
-
 } SnapCarrier;
 
 extern SnapCarrier sc;
 
+#ifdef USE_LEAKY_LMS
 #define LEAKYLMSDLINE_SIZE 256 //512 // was 256 //2048   // dline_size
 // 1024 funktioniert nicht
 typedef struct
@@ -635,5 +622,6 @@ typedef struct
 } lLMS;
 
 extern lLMS leakyLMS;
+#endif
 
 #endif

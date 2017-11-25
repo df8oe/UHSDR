@@ -1049,7 +1049,9 @@ typedef struct TransceiverState
 #ifdef USE_TWO_CHANNEL_AUDIO
 	bool stereo_enable; // enable/disable stereo demodulation (only in special hardware, NOT in mcHF)
 #endif
+#ifdef USE_LEAKY_LMS
 	bool enable_leaky_LMS;
+#endif
 	float32_t nr_alpha; // alpha smoothing constant for spectral noise reduction
 	int16_t nr_alpha_int;
 	float32_t nr_beta; // beta smoothing constant for spectral noise reduction
@@ -1057,6 +1059,9 @@ typedef struct TransceiverState
 	float32_t nr_vad_thresh; // threshold for voice activity detector in spectral noise reduction
 	uint32_t nr_vad_thresh_int;
 	bool nr_enable; // enable spectral noise reduction
+	bool nr_gain_smooth_enable; // enable gain smoothing
+	float32_t nr_gain_smooth_alpha; // smoothing constant for gain smoothing in the spectral noise reduction
+	int16_t nr_gain_smooth_alpha_int;
 
 	uint8_t debug_si5351a_pllreset;
 } TransceiverState;
