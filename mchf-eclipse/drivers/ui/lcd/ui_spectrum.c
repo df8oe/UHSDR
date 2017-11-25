@@ -1093,6 +1093,7 @@ static void UiSpectrum_ScaleFFT2SpectrumWidth(float32_t samples[], uint16_t from
         float32_t for_next = (1-amount) * samples[idx_old];
 
         value += samples[idx_old] - for_next;
+        samples[idx_new] = value;
         idx_new++;
 
         if (idx_new < to_len)
