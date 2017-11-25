@@ -233,7 +233,10 @@ static float32_t __MCHF_SPECIALMEM NR_SNR_post_pos; // saved 0.24kbytes
 static float32_t __MCHF_SPECIALMEM NR_Hk_old[NR_FFT_L / 2];
 static float32_t __MCHF_SPECIALMEM NR_VAD = 0.0;
 static uint8_t NR_first_time = 1; // FIXME: don't put in CCM on F4, we don't init this memory area correctly
-static float32_t __MCHF_SPECIALMEM NR_long_tone[NR_FFT_L / 2][2];
+static float32_t NR_long_tone[NR_FFT_L / 2][2];
+//static uint32_t NR_long_tone_counter[NR_FFT_L / 2];
+static float32_t NR_long_tone_gain[NR_FFT_L / 2];
+#define NR_LONG_TONE_ROUNDS 1
 
 void spectral_noise_reduction (float* in_buffer)
 {
@@ -255,12 +258,21 @@ void spectral_noise_reduction (float* in_buffer)
         {
             NR_last_sample_buffer_L[bindx] = 20.0;
             NR_Hk_old[bindx] = 0.1; // old gain
-            NR_Nest[bindx][0] = 500.0;
-            NR_Nest[bindx][1] = 400.0;
-            NR_X[bindx][1] = 20.0;
+            NR_Nest[bindx][0] = 50000.0;
+            NR_Nest[bindx][1] = 40000.0;
+            NR_X[bindx][1] = 15000.0;
             NR_SNR_post[bindx] = 2.0;
             NR_SNR_prio[bindx] = 1.0;
             NR_first_time = 2;
+            //NR_long_tone_counter[bindx] = 0;
+        }
+    }
+    if(ts.nr_long_tone_reset)
+    {
+        for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+        {
+        	NR_long_tone_gain[bindx] = 1.0;
+        	ts.nr_long_tone_reset = false;
         }
     }
 
@@ -320,7 +332,7 @@ void spectral_noise_reduction (float* in_buffer)
 // detection of long tones
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
                     {
-            	  	  	NR_long_tone[bindx][0] = (1.0 - ts.nr_long_tone_alpha) * NR_long_tone[bindx][0] + ts.nr_long_tone_alpha * NR_X[bindx][0]; //
+            	  	  	NR_long_tone[bindx][0] = (ts.nr_long_tone_alpha) * NR_long_tone[bindx][1] + (1.0 - ts.nr_long_tone_alpha) * NR_X[bindx][0]; //
             	  	  	NR_long_tone[bindx][1] = NR_long_tone[bindx][0];
                     }
               }
@@ -401,7 +413,53 @@ void spectral_noise_reduction (float* in_buffer)
                     {
             	  	  	  if(NR_long_tone[bindx][0] > (float32_t)ts.nr_long_tone_thresh)
             	  	  	  {
-            	  	  		  NR_Hk[bindx] *= 0.02;
+            	  	  			  NR_long_tone_gain[bindx] = NR_long_tone_gain[bindx] / 1.5;
+            	  	  			  if(bindx != 0)
+            	  	  			  {
+            	  	  				  NR_long_tone_gain[bindx - 1] = NR_long_tone_gain[bindx - 1] / 1.25;
+                	  	  			  if(NR_long_tone_gain[bindx - 1] < 0.01)
+                	  	  			  {
+                	  	  				NR_long_tone_gain[bindx - 1] = 0.01;
+                	  	  			  }
+            	  	  			  }
+            	  	  			  else
+            	  	  			  if(bindx != (NR_FFT_L / 2 - 1))
+            	  	  			  {
+            	  	  				  NR_long_tone_gain[bindx + 1] = NR_long_tone_gain[bindx + 1] / 1.25;
+                	  	  			  if(NR_long_tone_gain[bindx + 1] < 0.01)
+                	  	  			  {
+                	  	  				NR_long_tone_gain[bindx + 1] = 0.01;
+                	  	  			  }
+            	  	  			  }
+            	  	  			  if(NR_long_tone_gain[bindx] < 0.01)
+            	  	  			  {
+            	  	  				NR_long_tone_gain[bindx] = 0.01;
+            	  	  			  }
+            	  	  	  }
+            	  	  	  else
+            	  	  	  {
+            	  	  		  NR_long_tone_gain[bindx] *= 1.2;
+        	  	  			  if(bindx != 0)
+        	  	  			  {
+        	  	  				  NR_long_tone_gain[bindx - 1] = NR_long_tone_gain[bindx - 1] * 1.05;
+            	  	  			  if(NR_long_tone_gain[bindx - 1] > 1.0)
+            	  	  			  {
+            	  	  				NR_long_tone_gain[bindx - 1] = 1.0;
+            	  	  			  }
+        	  	  			  }
+        	  	  			  else
+        	  	  			  if(bindx != (NR_FFT_L / 2 - 1))
+        	  	  			  {
+        	  	  				  NR_long_tone_gain[bindx + 1] = NR_long_tone_gain[bindx + 1] * 1.05;
+            	  	  			  if(NR_long_tone_gain[bindx + 1] > 1.0)
+            	  	  			  {
+            	  	  				NR_long_tone_gain[bindx + 1] = 1.0;
+            	  	  			  }
+        	  	  			  }
+        	  	  			  if(NR_long_tone_gain[bindx] > 1.0)
+        	  	  			  {
+        	  	  				NR_long_tone_gain[bindx] = 1.0;
+        	  	  			  }
             	  	  	  }
                     }
               }
@@ -423,10 +481,10 @@ void spectral_noise_reduction (float* in_buffer)
         // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 128 bins with the 128 bin-specific gain factors G
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
               {
-                  NR_FFT_buffer[bindx * 2] = NR_FFT_buffer [bindx * 2] * NR_Hk[bindx]; // real part
-                  NR_FFT_buffer[bindx * 2 + 1] = NR_FFT_buffer [bindx * 2 + 1] * NR_Hk[bindx]; // imag part
-                  NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] * NR_Hk[bindx]; // real part conjugate symmetric
-                  NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] * NR_Hk[bindx]; // imag part conjugate symmetric
+                  NR_FFT_buffer[bindx * 2] = NR_FFT_buffer [bindx * 2] * NR_Hk[bindx] * NR_long_tone_gain[bindx]; // real part
+                  NR_FFT_buffer[bindx * 2 + 1] = NR_FFT_buffer [bindx * 2 + 1] * NR_Hk[bindx] * NR_long_tone_gain[bindx]; // imag part
+                  NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] * NR_Hk[bindx] * NR_long_tone_gain[bindx]; // real part conjugate symmetric
+                  NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] = NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] * NR_Hk[bindx] * NR_long_tone_gain[bindx]; // imag part conjugate symmetric
               }
 
 #endif

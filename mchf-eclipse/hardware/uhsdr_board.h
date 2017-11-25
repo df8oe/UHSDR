@@ -1066,6 +1066,7 @@ typedef struct TransceiverState
 	float32_t nr_long_tone_alpha; // time constant for long tone detection
 	uint32_t nr_long_tone_alpha_int; // time constant for long tone detection
 	int16_t nr_long_tone_thresh; // threshold for long tone detection
+	bool nr_long_tone_reset; // used to reset gains of the long tone detection to 1.0
 
 	uint8_t debug_si5351a_pllreset;
 } TransceiverState;
