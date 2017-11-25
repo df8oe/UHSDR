@@ -401,7 +401,7 @@ void spectral_noise_reduction (float* in_buffer)
                     {
             	  	  	  if(NR_long_tone[bindx][0] > (float32_t)ts.nr_long_tone_thresh)
             	  	  	  {
-            	  	  		  NR_Hk[bindx] *= 0.1;
+            	  	  		  NR_Hk[bindx] *= 0.02;
             	  	  	  }
                     }
               }

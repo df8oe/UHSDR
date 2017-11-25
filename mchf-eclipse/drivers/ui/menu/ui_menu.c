@@ -3722,15 +3722,15 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 
         case MENU_DEBUG_NR_LONG_TONE_ALPHA:      //
-            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_long_tone_alpha_int,
-                    9000,
-                    9999,
-                    9990,
-                    1
+            var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.nr_long_tone_alpha_int,
+                    90000,
+                    99999,
+                    99900,
+                    10
             );
             if(var_change)
             {
-            	ts.nr_long_tone_alpha = (float32_t)ts.nr_long_tone_alpha_int / 10000.0;
+            	ts.nr_long_tone_alpha = (float32_t)ts.nr_long_tone_alpha_int / 100000.0;
             }
             snprintf(options, 32, " %5u",(unsigned int)ts.nr_long_tone_alpha_int);
 

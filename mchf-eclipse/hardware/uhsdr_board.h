@@ -1064,7 +1064,7 @@ typedef struct TransceiverState
 	int16_t nr_gain_smooth_alpha_int;
 	bool nr_long_tone_enable; // enable elimination of long tones in the spectral NR algorithm
 	float32_t nr_long_tone_alpha; // time constant for long tone detection
-	int16_t nr_long_tone_alpha_int; // time constant for long tone detection
+	uint32_t nr_long_tone_alpha_int; // time constant for long tone detection
 	int16_t nr_long_tone_thresh; // threshold for long tone detection
 
 	uint8_t debug_si5351a_pllreset;
