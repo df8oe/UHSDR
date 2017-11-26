@@ -209,7 +209,7 @@ struct mchf_waterfall
     ulong	contrast;			// contrast setting for waterfall display
 	uint8_t	speed;	// speed of update of the waterfall
 	// uint8_t	nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
-	uint8_t scheduler;
+	uint16_t scheduler;
 };
 
 // -----------------------------------------------------------------------------
@@ -759,7 +759,7 @@ typedef struct TransceiverState
     uint8_t spectrum_db_scale;  // db/Division scale setting on spectrum scope
     //  uint8_t   fft_window_type;            // type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
 
-    uint8_t scope_scheduler;        // timer for scheduling the next update of the spectrum scope update, updated at DMA rate
+    uint16_t scope_scheduler;        // timer for scheduling the next update of the spectrum scope update, updated at DMA rate
     uint8_t scope_speed;    // update rate for spectrum scope
     uint8_t	scope_trace_colour;	// color of spectrum scope trace;
     uint8_t	scope_grid_colour;	// saved color of spectrum scope grid;
