@@ -236,6 +236,10 @@ static uint8_t NR_first_time = 1; // FIXME: don't put in CCM on F4, we don't ini
 static float32_t NR_long_tone[NR_FFT_L / 2][2];
 //static uint32_t NR_long_tone_counter[NR_FFT_L / 2];
 static float32_t NR_long_tone_gain[NR_FFT_L / 2];
+static uint8_t NR_VAD_delay=0;
+static uint8_t NR_VAD_duration=0; //takes the duration of the last vowel
+
+
 #define NR_LONG_TONE_ROUNDS 1
 
 void spectral_noise_reduction (float* in_buffer)
@@ -348,18 +352,35 @@ void spectral_noise_reduction (float* in_buffer)
                       if((NR_VAD < ts.nr_vad_thresh) || NR_first_time == 2)
                       {
                           // noise estimation with exponential averager
-                          for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+                         NR_VAD_duration=0;
+
+                	 if (NR_VAD_delay == 0) //update noise level after Speech is really over
+                	   {
+                	     for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
                                 {   // exponential averager for current noise estimate
                                       NR_Nest[bindx][0] = (1.0 - ts.nr_beta) * NR_X[bindx][0] + ts.nr_beta * NR_Nest[bindx][1]; //
                                       NR_Nest[bindx][1] = NR_Nest[bindx][0];
                                 }
-                          NR_first_time = 0;
-                      	  Board_RedLed(LED_STATE_OFF);
+                	     NR_first_time = 0;
+                	     Board_RedLed(LED_STATE_OFF);
+                	   }
+                	 else // we wait a little until the last vowel has vanished
+                	   {
+
+                	     if (NR_VAD_delay > 0) NR_VAD_delay--;
+
+                	   }
                       }
                       else
-                      {
+                	{
                     		Board_RedLed(LED_STATE_ON);
-                      }
+                    		NR_VAD_duration++;
+                    		if (NR_VAD_duration > 1) //a vowel should be longer than app. 20ms
+                    		  {
+                    		   NR_VAD_delay=1; // we wait 1 times app.  10ms before we start updating the noisefloor
+                    		  }
+                	}
+
 
 
         // 3    calculate SNRpost (n, bin[i]) = (X(n, bin[i])^2 / Nest(n, bin[i])^2) - 1 (eq. 13 of Schmitt et al. 2002)
