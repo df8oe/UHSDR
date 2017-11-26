@@ -344,6 +344,11 @@ void TransceiverStateInit(void)
 	ts.nr_gain_smooth_enable = false;
 	ts.nr_gain_smooth_alpha = 0.25;
 	ts.nr_gain_smooth_alpha_int = 250;
+	ts.nr_long_tone_enable = false;
+	ts.nr_long_tone_alpha_int = 99900;
+	ts.nr_long_tone_alpha = 0.999;
+	ts.nr_long_tone_thresh = 15000;
+	ts.nr_long_tone_reset = true;
 
     // development setting for DF8OE
     if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
