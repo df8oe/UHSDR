@@ -209,6 +209,7 @@ struct mchf_waterfall
     ulong	contrast;			// contrast setting for waterfall display
 	uint8_t	speed;	// speed of update of the waterfall
 	// uint8_t	nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
+	uint8_t scheduler;
 };
 
 // -----------------------------------------------------------------------------
@@ -750,18 +751,24 @@ typedef struct TransceiverState
 
     // Spectrum Scope config - placed here since "sd." not defined at time of init
 
-    uint8_t	scope_speed;	// update rate for spectrum scope
-
+    uint8_t spectrum_size;              // size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
     uint8_t	spectrum_filter;	// strength of filter in spectrum scope
+    uint8_t spectrum_centre_line_colour;    // color of center line of scope grid
+    uint8_t spectrum_freqscale_colour;  // color of spectrum scope frequency scale
+    uint8_t spectrum_agc_rate;      // agc rate on the 'scope
+    uint8_t spectrum_db_scale;  // db/Division scale setting on spectrum scope
+    //  uint8_t   fft_window_type;            // type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
 
+    uint8_t scope_scheduler;        // timer for scheduling the next update of the spectrum scope update, updated at DMA rate
+    uint8_t scope_speed;    // update rate for spectrum scope
     uint8_t	scope_trace_colour;	// color of spectrum scope trace;
     uint8_t	scope_grid_colour;	// saved color of spectrum scope grid;
     uint8_t scope_trace_BW_colour;	// color of BW highlighted spectrum scope trace
     uint8_t scope_backgr_BW_colour; // color of BW highlighted background of spectrum scope (% of white)
-    uint8_t	spectrum_centre_line_colour;	// color of center line of scope grid
-    uint8_t	spectrum_freqscale_colour;	// color of spectrum scope frequency scale
-    uint8_t	scope_agc_rate;		// agc rate on the 'scope
-    uint8_t	spectrum_db_scale;	// db/Division scale setting on spectrum scope
+    // uint8_t  spectrum_scope_nosig_adjust;        // Adjustment for no signal adjustment conditions for spectrum scope
+
+    struct mchf_waterfall waterfall;
+
     //
     bool	radio_config_menu_enable;	// TRUE if radio configuration menu is to be visible
     //
@@ -905,14 +912,8 @@ typedef struct TransceiverState
     // LSB+6 (0x40):  0 = VFO A, 1 = VFO B
     // LSB+7 (0x80): 0 = normal mode, 1 = Split mode (e.g. LSB=0:  RX=A, TX=B;  LSB=1:  RX=B, TX=A)
     ulong	voltmeter_calibrate;			// used to calibrate the voltmeter
-	struct mchf_waterfall waterfall;
-    uint8_t	spectrum_scheduler;		// timer for scheduling the next update of the spectrum scope update, updated at DMA rate
-#ifdef USE_DISP_480_320
-    uint8_t	waterfall_scheduler;	// timer for scheduling the next update of the waterfall update, updated at DMA rate
-#endif
-    uint8_t	spectrum_scope_nosig_adjust;		// Adjustment for no signal adjustment conditions for spectrum scope
-    uint8_t	spectrum_size;				// size of waterfall display (and other parameters) - size setting is in lower nybble, upper nybble/byte reserved
-//    uint8_t	fft_window_type;			// type of windowing function applied to scope/waterfall.  At the moment, only lower 4 bits are used - upper 4 bits are reserved
+
+
     bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
     uint8_t	txrx_switch_audio_muting_timing;			// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
     uint32_t	audio_dac_muting_timer;			// timer value used for muting TX audio when keying PTT to suppress "click" or "thump"
@@ -1264,8 +1265,22 @@ inline bool is_splitmode()
     return (ts.vfo_mem_mode & VFO_MEM_MODE_SPLIT) != 0;
 }
 
+inline bool is_scopemode()
+{
+#ifdef USE_DISP_320_240
+    return (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) == 0;
+#else
+    return true;
+#endif
+}
+
 inline bool is_waterfallmode()
 {
+#ifdef USE_DISP_320_240
     return (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) != 0;
+#else
+    return true;
+#endif
 }
+
 #endif

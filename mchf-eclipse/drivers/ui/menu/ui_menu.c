@@ -2020,7 +2020,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
     case MENU_SCOPE_SPEED:  // spectrum scope speed
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_speed,
-                                              0,
+                                              SPECTRUM_SCOPE_SPEED_MIN,
                                               SPECTRUM_SCOPE_SPEED_MAX,
                                               SPECTRUM_SCOPE_SPEED_DEFAULT,
                                               1
@@ -2120,7 +2120,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         UiDriver_SpectrumZoomChangeLevel();
         break;
     case MENU_SCOPE_AGC_ADJUST: // Spectrum scope AGC adjust
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.scope_agc_rate,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_agc_rate,
                                               SPECTRUM_SCOPE_AGC_MIN,
                                               SPECTRUM_SCOPE_AGC_MAX,
                                               SPECTRUM_SCOPE_AGC_DEFAULT,
@@ -2129,10 +2129,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         if(var_change)          // update system variable if rate changed
         {
-            sd.agc_rate = (float)ts.scope_agc_rate; // calculate agc rate
+            sd.agc_rate = (float)ts.spectrum_agc_rate; // calculate agc rate
             sd.agc_rate = sd.agc_rate/SPECTRUM_AGC_SCALING;
         }
-        snprintf(options,32, "  %u", ts.scope_agc_rate);
+        snprintf(options,32, "  %u", ts.spectrum_agc_rate);
         break;
     case MENU_SCOPE_DB_DIVISION:    // Adjustment of dB/division of spectrum scope
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_db_scale,
@@ -2186,10 +2186,16 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case MENU_SPECTRUM_MODE:
         var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_WFALL_SCOPE_TOGGLE);
 
-        txt_ptr = (is_waterfallmode())?"WFALL":"SCOPE";
-        // is waterfall mode active?
-        // yes - indicate waterfall mode
-
+        if (is_waterfallmode() &&  is_scopemode())
+        {
+            txt_ptr = "BOTH";
+        }
+        else
+        {
+            txt_ptr = (is_waterfallmode())?"WFALL":"SCOPE";
+            // is waterfall mode active?
+            // yes - indicate waterfall mode
+        }
         break;
     case MENU_WFALL_COLOR_SCHEME:   // Adjustment of dB/division of spectrum scope
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall.color_scheme,
@@ -2399,6 +2405,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             txt_ptr = "OFF";
         }
         break;
+#if 0
     case MENU_SCOPE_NOSIG_ADJUST:   // set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_scope_nosig_adjust,
                                     SPECTRUM_SCOPE_NOSIG_ADJUST_MIN,
@@ -2408,7 +2415,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                    );
         snprintf(options,32, "  %u", ts.spectrum_scope_nosig_adjust);
         break;
-#if 0
     case MENU_WFALL_NOSIG_ADJUST:   // set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall.nosig_adjust,
                                     WATERFALL_NOSIG_ADJUST_MIN,
