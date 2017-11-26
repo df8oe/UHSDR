@@ -27,9 +27,6 @@ void UiSpectrum_CalculateDisplayFilterBW(float32_t* width_pixel_, float32_t* lef
 void UiSpectrum_DisplayFilterBW();
 
 void UiSpectrum_InitCwSnapDisplay (bool visible);
-#ifdef USE_DISP_480_320
-void UiSpectrum_SetWaterfallMemoryPointer(uint16_t ramsize);
-#endif
 
 // Settings for dB/division for spectrum display
 enum
@@ -78,7 +75,7 @@ enum
 #define WATERFALL_CONTRAST_MAX              225
 #define WATERFALL_CONTRAST_DEFAULT          120
 //
-#define WATERFALL_SPEED_MIN                 1
+#define WATERFALL_SPEED_MIN                 0
 #define WATERFALL_SPEED_MAX                 30
 #define WATERFALL_SPEED_DEFAULT 10
 //
@@ -113,7 +110,7 @@ enum
 
 enum
 {
-	Redraw_SPECTRUM=1,
+	Redraw_SCOPE=1,
 	Redraw_WATERFALL=2
 };
 //#define FFT_WINDOW_DEFAULT                  FFT_WINDOW_BLACKMAN
@@ -123,8 +120,8 @@ enum
 
 // Spectrum scope operational constants
 
-#define SPECTRUM_SCOPE_SPEED_MIN			1	// minimum spectrum scope speed
-#define SPECTRUM_SCOPE_SPEED_MAX			25	// maximum spectrum scope speed
+#define SPECTRUM_SCOPE_SPEED_MIN			0	// minimum spectrum scope speed
+#define SPECTRUM_SCOPE_SPEED_MAX			30	// maximum spectrum scope speed
 #define SPECTRUM_SCOPE_SPEED_DEFAULT		5
 //
 #define SPECTRUM_FILTER_MIN			1	// minimum filter setting
@@ -147,6 +144,19 @@ enum
 #define INIT_SPEC_AGC_LEVEL					-80	// Initial offset for AGC level for spectrum/waterfall display
 
 #define	NUMBER_WATERFALL_COLOURS			64		// number of colors in the waterfall table
+
+
+#ifdef USE_DISP_480_320
+    #ifdef STM32F7
+        #define WATERFALL_MAX_LINES WATERFALL_HEIGHT
+    #endif
+    #ifdef STM32F4
+        #define WATERFALL_MAX_LINES (WATERFALL_HEIGHT/2)
+    #endif
+#endif
+#ifdef USE_DISP_320_240
+    #define WATERFALL_MAX_LINES WATERFALL_MAX_SIZE
+#endif
 
 
 // Spectrum display
@@ -191,12 +201,9 @@ typedef struct SpectrumDisplay
     float   wfall_contrast;     // used to adjust the contrast of the waterfall display
 
     uint16_t waterfall_colours[NUMBER_WATERFALL_COLOURS+1];  // palette of colors for waterfall data
-#ifdef USE_DISP_480_320
-    uint8_t (*waterfall)[SPECTRUM_WIDTH];	//pointer to waterfall memory
+    // uint8_t (*waterfall)[SPECTRUM_WIDTH];	//pointer to waterfall memory
     uint8_t doubleWaterfallLine;				//line doubling control state
-#else
-    uint8_t  waterfall[WATERFALL_MAX_SIZE][SPECTRUM_WIDTH];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
-#endif
+    uint8_t  waterfall[WATERFALL_MAX_LINES][SPECTRUM_WIDTH];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
     uint8_t wfall_DrawDirection;	//0=upward (water fountain), 1=downward (real waterfall)
     uint16_t wfall_line;        // pointer to current line of waterfall data
     uint16_t wfall_size;        // vertical size of the waterfall

@@ -4971,9 +4971,14 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
         }
     }
 
-    if(ts.spectrum_scheduler)		// update thread timer if non-zero
+    if(ts.scope_scheduler)		// update thread timer if non-zero
     {
-        ts.spectrum_scheduler--;
+        ts.scope_scheduler--;
+    }
+
+    if(ts.waterfall.scheduler)      // update thread timer if non-zero
+    {
+        ts.waterfall.scheduler--;
     }
 
     if(ts.show_debug_info)

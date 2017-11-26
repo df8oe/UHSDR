@@ -25,6 +25,32 @@
 #include "rtty.h"
 #include "cw_decoder.h"
 
+#define POS_SPECTRUM_DRAW_Y_TOP (POS_SPECTRUM_IND_Y - 22)
+#define SPECTRUM_BIG_HEIGHT (SPECTRUM_HEIGHT + SPEC_LIGHT_MORE_POINTS)
+
+#ifdef USE_DISP_480_320
+#define POS_SPECTRUM_DRAW_X_LEFT (POS_SPECTRUM_IND_X)
+#define POS_SPECTRUM_DRAW_HEIGHT (POS_SPECTRUM_IND_H + WATERFALL_HEIGHT + POS_SPECTRUM_FREQ_BAR_H + 2 +5)
+#define POS_SPECTRUM_DRAW_WIDTH (MAX_X)
+
+#define POS_SPECTRUM_NORMAL_START_Y (SPECTRUM_START_Y + POS_SPECTRUM_FREQ_BAR_H)
+#define POS_SPECTRUM_BIG_START_Y (SPECTRUM_START_Y - SPEC_LIGHT_MORE_POINTS + POS_SPECTRUM_FREQ_BAR_H)
+
+///SPECTRUM_START_Y + SPECTRUM_SCOPE_TOP_LIMIT
+#define POS_SPECTRUM_GRATICULE_Y (POS_SPECTRUM_IND_Y)
+#endif
+#ifdef USE_DISP_320_240
+#define POS_SPECTRUM_DRAW_X_LEFT (POS_SPECTRUM_IND_X - 2)
+#define POS_SPECTRUM_DRAW_HEIGHT (94)
+#define POS_SPECTRUM_DRAW_WIDTH (262)
+
+
+#define POS_SPECTRUM_NORMAL_START_Y (SPECTRUM_START_Y)
+#define POS_SPECTRUM_BIG_START_Y (SPECTRUM_START_Y - SPEC_LIGHT_MORE_POINTS)
+
+#define POS_SPECTRUM_GRATICULE_Y (POS_SPECTRUM_IND_Y + 60)
+#endif
+
 
 // ------------------------------------------------
 // Spectrum display public
@@ -32,16 +58,6 @@ SpectrumDisplay  __MCHF_SPECIALMEM       sd;
 // this data structure is now located in the Core Connected Memory of the STM32F4
 // this is highly hardware specific code. This data structure nicely fills the 64k with roughly 60k.
 // If this data structure is being changed,  be aware of the 64k limit. See linker script arm-gcc-link.ld
-
-
-#ifdef USE_DISP_480_320
-	//Waterfall memory for low memory F4 devices (with 192kB of RAM).
-	//For higher memory capacity (256kB) devices, malloc() is used instead. But this memory is reserved always.
-	uint8_t __MCHF_SPECIALMEM WaterfallShortArray[WATERFALL_HEIGHT/2][SPECTRUM_WIDTH];
-#endif
-
-
-
 //
 // scaling factors for the various dB/division settings
 //
@@ -364,27 +380,24 @@ static void UiSpectrum_CreateDrawArea()
     // Get color of center vertical line of spectrum scope
     UiMenu_MapColors(ts.spectrum_centre_line_colour,NULL, &sd.scope_centre_grid_colour_active);
 
-
-
     uint16_t GridPosY=POS_SPECTRUM_IND_Y;
+
+    // Clear screen where frequency information will be under graticule
+    UiLcdHy28_DrawFullRect(POS_SPECTRUM_DRAW_X_LEFT, POS_SPECTRUM_GRATICULE_Y, UiLcdHy28_TextHeight(0), POS_SPECTRUM_DRAW_WIDTH, Black);    // Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 #ifdef USE_DISP_480_320
     GridPosY+=POS_SPECTRUM_FREQ_BAR_H;
     sd.wfall_DrawDirection=1;
-    // Clear screen where frequency information will be under graticule
-    UiLcdHy28_PrintText(POS_SPECTRUM_IND_X, POS_SPECTRUM_IND_Y, "                                 ", Black, Black, 0);
-
-    // Frequency bar separator
-    //UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y-SPEC_LIGHT_MORE_POINTS-2),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
 #else
     sd.wfall_DrawDirection=0;
-    // Clear screen where frequency information will be under graticule
-    UiLcdHy28_PrintText(POS_SPECTRUM_IND_X - 2, POS_SPECTRUM_IND_Y + 60, "                                 ", Black, Black, 0);
+#endif
 
+// was used on 320x240, we may reactivate that at some point for all resolutions
+#if 0
     // Frequency bar separator
     UiLcdHy28_DrawHorizLineWithGrad(POS_SPECTRUM_IND_X,(POS_SPECTRUM_IND_Y + POS_SPECTRUM_IND_H - 20),POS_SPECTRUM_IND_W,COL_SPECTRUM_GRAD);
 
     // Draw control left and right border
-    UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_IND_X - 2),
+    UiLcdHy28_DrawStraightLineDouble((POS_SPECTRUM_DRAW_X_LEFT),
     		(POS_SPECTRUM_IND_Y - 20),
 			(POS_SPECTRUM_IND_H + 12),
 			LCD_DIR_VERTICAL,
@@ -398,7 +411,6 @@ static void UiSpectrum_CreateDrawArea()
 			//									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
 			sd.scope_grid_colour_active);
 #endif
-
 
 
 
@@ -452,7 +464,7 @@ static void UiSpectrum_CreateDrawArea()
     	sd.vert_grid_id[i - 1] = (POS_SPECTRUM_GRID_VERT_START + i*SPECTRUM_SCOPE_GRID_VERT);
     }
 
-    if ((is_waterfallmode() && (!ts.waterfall.speed)) || (is_waterfallmode() == false && (!ts.scope_speed)))
+    if ((is_waterfallmode() && (!ts.waterfall.speed)) || (is_scopemode() && (!ts.scope_speed)))
     {
         // print "disabled" in the middle of the screen if the waterfall or scope was disabled
         UiLcdHy28_PrintText(
@@ -472,11 +484,7 @@ static void UiSpectrum_CreateDrawArea()
 
 void UiSpectrum_Clear()
 {
-#ifdef USE_DISP_480_320
-    UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X, (POS_SPECTRUM_IND_Y - 22), (POS_SPECTRUM_IND_H + WATERFALL_HEIGHT + POS_SPECTRUM_FREQ_BAR_H + 2 +5), MAX_X, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
-#else
-    UiLcdHy28_DrawFullRect(POS_SPECTRUM_IND_X - 2, (POS_SPECTRUM_IND_Y - 22), 94, 264, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
-#endif
+    UiLcdHy28_DrawFullRect(POS_SPECTRUM_DRAW_X_LEFT, POS_SPECTRUM_DRAW_Y_TOP, POS_SPECTRUM_DRAW_HEIGHT, POS_SPECTRUM_DRAW_WIDTH, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 }
 
 
@@ -759,6 +767,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
     sd.samp_ptr 	= 0;
     sd.enabled		= 0;
     ts.dial_moved	= 0;
+    sd.RedrawType   = 0;
 
 #ifdef USE_DISP_320_240
     sd.spec_len = 256;
@@ -772,7 +781,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
 #endif
 
 
-    sd.agc_rate = ((float32_t)ts.scope_agc_rate) / SPECTRUM_AGC_SCALING;	// calculate agc rate
+    sd.agc_rate = ((float32_t)ts.spectrum_agc_rate) / SPECTRUM_AGC_SCALING;	// calculate agc rate
     //
     sd.wfall_line_update = 0;		// init count used for incrementing number of lines for each vertical waterfall screen update
     //
@@ -830,45 +839,43 @@ static void UiSpectrum_InitSpectrumDisplayData()
         sd.db_scale *= (float32_t)SPECTRUM_WIDTH/(float32_t)sd.spec_len;
     }
 
-#ifdef USE_DISP_480_320
     if(ts.spectrum_size == SPECTRUM_NORMAL)	 						// waterfall the same size as spectrum scope
     {
-        sd.scope_ystart = SPECTRUM_START_Y + POS_SPECTRUM_FREQ_BAR_H;
+        sd.scope_ystart = POS_SPECTRUM_NORMAL_START_Y;
         sd.scope_size = SPECTRUM_HEIGHT;
+
     }																	// waterfall larger, covering the word "Waterfall Display"
     else if(ts.spectrum_size == SPECTRUM_BIG)
     {
-        sd.scope_ystart = SPECTRUM_START_Y - SPEC_LIGHT_MORE_POINTS + POS_SPECTRUM_FREQ_BAR_H;
-        sd.scope_size = SPECTRUM_HEIGHT + SPEC_LIGHT_MORE_POINTS;
+        sd.scope_ystart = POS_SPECTRUM_BIG_START_Y;
+        sd.scope_size = SPECTRUM_BIG_HEIGHT;
     }
 
+#ifdef USE_DISP_480_320
+    sd.wfall_ystart = WATERFALL_START_Y;
 
-        sd.wfall_ystart = WATERFALL_START_Y;
-        if(ts.ramsize<256)
-        {
-        	sd.wfall_size = WATERFALL_HEIGHT/2;
-        	sd.doubleWaterfallLine = 1;
-        }
-        else
-        {
-        	sd.wfall_size = WATERFALL_HEIGHT;
-        	sd.doubleWaterfallLine = 0;
-        }
+    if(WATERFALL_MAX_LINES < WATERFALL_HEIGHT)
+    {
+        sd.wfall_size = WATERFALL_HEIGHT/2;
+        sd.doubleWaterfallLine = 1;
+    }
+    else
+    {
+        sd.wfall_size = WATERFALL_HEIGHT;
+        sd.doubleWaterfallLine = 0;
+    }
+
 #else
-        if(ts.spectrum_size == SPECTRUM_NORMAL)	 						// waterfall the same size as spectrum scope
-        {
-        	sd.wfall_ystart = SPECTRUM_START_Y + SPECTRUM_SCOPE_TOP_LIMIT;
-        	sd.wfall_size = SPECTRUM_HEIGHT - SPECTRUM_SCOPE_TOP_LIMIT;
-        	sd.scope_ystart = SPECTRUM_START_Y;
-        	sd.scope_size = SPECTRUM_HEIGHT;
-        }																	// waterfall larger, covering the word "Waterfall Display"
-        else if(ts.spectrum_size == SPECTRUM_BIG)
-        {
-        	sd.wfall_ystart = SPECTRUM_START_Y - WFALL_MEDIUM_ADDITIONAL;
-        	sd.wfall_size = SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL;
-        	sd.scope_ystart = SPECTRUM_START_Y - SPEC_LIGHT_MORE_POINTS;
-        	sd.scope_size = SPECTRUM_HEIGHT + SPEC_LIGHT_MORE_POINTS;
-        }
+    if(ts.spectrum_size == SPECTRUM_NORMAL)	 						// waterfall the same size as spectrum scope
+    {
+        sd.wfall_ystart = SPECTRUM_START_Y + SPECTRUM_SCOPE_TOP_LIMIT;
+        sd.wfall_size = SPECTRUM_HEIGHT - SPECTRUM_SCOPE_TOP_LIMIT;
+    }																	// waterfall larger, covering the word "Waterfall Display"
+    else if(ts.spectrum_size == SPECTRUM_BIG)
+    {
+        sd.wfall_ystart = SPECTRUM_START_Y - WFALL_MEDIUM_ADDITIONAL;
+        sd.wfall_size = SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL;
+    }
 #endif
 
     for (uint16_t idx = 0; idx < SPECTRUM_WIDTH; idx++)
@@ -888,21 +895,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
 
 void UiSpectrum_WaterfallClearData()
 {
-	uint32_t Wfall_size;
-#ifdef USE_DISP_480_320
-	if(ts.ramsize<256)
-	{
-		Wfall_size=WATERFALL_HEIGHT/2;
-	}
-	else
-	{
-		Wfall_size=WATERFALL_HEIGHT;
-	}
-#else
-	Wfall_size=WATERFALL_MAX_SIZE;
-#endif
-
-    for(int i = 0; i < Wfall_size; i++)   // clear old wf lines if changing magnify
+    for(int i = 0; i < sd.wfall_size; i++)   // clear old wf lines if changing magnify
     {
         for(int j = 0; j < SPECTRUM_WIDTH; j++)
         {
@@ -975,18 +968,9 @@ static void UiSpectrum_DrawWaterfall()
         // the location of any of the display data - as long as we "blindly" write precisely the correct number of pixels per
         // line and the number of lines.
 
-#ifdef USE_DISP_480_320
-        if(sd.doubleWaterfallLine)
-        {
-        	UiLcdHy28_BulkPixel_OpenWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_size*2);
-        }
-        else
-        {
-        	UiLcdHy28_BulkPixel_OpenWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_size);
-        }
-#else
-        UiLcdHy28_BulkPixel_OpenWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), sd.wfall_size);
-#endif
+        uint16_t wfall_disp_lines = sd.wfall_size * (sd.doubleWaterfallLine==true? 2:1);
+
+        UiLcdHy28_BulkPixel_OpenWrite(SPECTRUM_START_X, SPECTRUM_WIDTH, (sd.wfall_ystart + 1), wfall_disp_lines);
 
         uint16_t spectrum_pixel_buf[SPECTRUM_WIDTH];
 
@@ -998,12 +982,12 @@ static void UiSpectrum_DrawWaterfall()
             }
 
             UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, SPECTRUM_WIDTH);
-#ifdef USE_DISP_480_320
+
             if(sd.doubleWaterfallLine)
             {
-            	UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, SPECTRUM_WIDTH);
+                UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, SPECTRUM_WIDTH);
             }
-#endif
+
             // point to next/prev line in circular display buffer:
             if(sd.wfall_DrawDirection==1)
             {
@@ -1197,7 +1181,7 @@ static void UiSpectrum_RedrawSpectrum(void)
     }
     case 5:	// rescale waterfall horizontally, apply brightness/contrast, process pallate and put vertical line on screen, if enabled.
     {
-    	if(sd.RedrawType&Redraw_SPECTRUM)
+    	if(sd.RedrawType&Redraw_SCOPE)
     	{
     		UiSpectrum_DrawScope(sd.Old_PosData, sd.FFT_Samples);
     	}
@@ -1389,10 +1373,14 @@ static void UiSpectrum_DrawFrequencyBar()
 
         int16_t centerIdx = -100; // UiSpectrum_GetGridCenterLine(0);
 
+        int16_t AddPosY=0;
+
 #ifdef USE_DISP_480_320
-        int16_t AddPosY=-SPEC_LIGHT_MORE_POINTS;
-        if(ts.spectrum_size==SPECTRUM_NORMAL)
-        	AddPosY=0;
+
+        if(ts.spectrum_size==SPECTRUM_BIG)
+        {
+            AddPosY=-SPEC_LIGHT_MORE_POINTS;
+        }
 
         // remainder of frequency/graticule markings
         uint16_t idx2pos[SPECTRUM_SCOPE_GRID_VERT_COUNT+1];
@@ -1438,11 +1426,7 @@ static void UiSpectrum_DrawFrequencyBar()
                     snprintf(txt,16, " %u.%02u ", bignum, smallnum);   // build string for middle-left frequency (10Hz precision)
                     c = &txt[strlen(txt)-5];  // point at 5th character from the end
                 }
-#ifdef USE_DISP_480_320
                 UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y+ AddPosY),c,clr,Black,4);
-#else
-                UiLcdHy28_PrintText((POS_SPECTRUM_IND_X +  pos),(POS_SPECTRUM_IND_Y + POS_SPECTRUM_FREQ_BAR_Y),c,clr,Black,4);
-#endif
             }
         }
     }
@@ -1452,10 +1436,9 @@ static void UiSpectrum_DrawFrequencyBar()
 
 void UiSpectrum_Redraw()
 {
-#ifdef USE_DISP_480_320
     // Only in RX mode and NOT while powering down or in menu mode or if displaying memory information
     if (
-            (ts.spectrum_scheduler == 0)
+            (ts.scope_scheduler == 0 || ts.waterfall.scheduler == 0  )
             && (ts.txrx_mode == TRX_MODE_RX)
             && (ts.menu_mode == false)
             && (ts.powering_down == false)
@@ -1464,74 +1447,25 @@ void UiSpectrum_Redraw()
             && (ts.lcd_blanking_flag == false)
     )
     {
-
-
-        if(ts.spectrum_scheduler==0)   // is waterfall mode enabled?
-        {
-            if(ts.scope_speed > 0)  // is it time to update the scan, or is this scope to be disabled?
-            {
-                ts.spectrum_scheduler = (ts.scope_speed-1)*2;
-                sd.RedrawType|=Redraw_SPECTRUM;
-            }
-#ifdef USE_DISP_480_320
-            //waterfall draw schedule time is effect of division of scope redraw
-            //not quite happy with this, but no idea how to do it separatelly (calling Redraw function causes calculation of fft
-            //which is the same for wfall and scope.
-            if(sd.state==5)
-            {
-            	if(ts.waterfall_scheduler)		// update thread timer if non-zero
-            	{
-            		ts.waterfall_scheduler--;
-            	}
-            }
-#endif
-        }
-
-        if(ts.waterfall_scheduler==0)   // is waterfall mode enabled?
+        if(ts.waterfall.scheduler == 0 && is_waterfallmode())   // is waterfall mode enabled?
         {
             if(ts.waterfall.speed > 0)  // is it time to update the scan, or is this scope to be disabled?
             {
-                ts.waterfall_scheduler = (ts.waterfall.speed-1)*2;
+                ts.waterfall.scheduler = (ts.waterfall.speed-1)*50;
                 sd.RedrawType|=Redraw_WATERFALL;
             }
         }
 
-        UiSpectrum_RedrawSpectrum();
-
-    }
-
-#else
-    // Only in RX mode and NOT while powering down or in menu mode or if displaying memory information
-    if (
-            (ts.spectrum_scheduler == 0)
-            && (ts.txrx_mode == TRX_MODE_RX)
-            && (ts.menu_mode == false)
-            && (ts.powering_down == false)
-            && (ts.mem_disp == false)
-            && (sd.enabled == true)
-            && (ts.lcd_blanking_flag == false)
-    )
-    {
-        if(is_waterfallmode())   // is waterfall mode enabled?
-        {
-            if(ts.waterfall.speed > 0)  // is it time to update the scan, or is this scope to be disabled?
-            {
-                ts.spectrum_scheduler = (ts.waterfall.speed-1)*2;
-                sd.RedrawType=Redraw_WATERFALL;
-                UiSpectrum_RedrawSpectrum();   // yes - call waterfall update instead
-            }
-        }
-        else
+        if(ts.scope_scheduler == 0 && is_scopemode())   // is waterfall mode enabled?
         {
             if(ts.scope_speed > 0)  // is it time to update the scan, or is this scope to be disabled?
             {
-                ts.spectrum_scheduler = (ts.scope_speed-1)*2;
-                sd.RedrawType=Redraw_SPECTRUM;
-                UiSpectrum_RedrawSpectrum();    // Spectrum Display enabled - do that!
+                ts.scope_scheduler = (ts.scope_speed-1)*50;
+                sd.RedrawType|=Redraw_SCOPE;
             }
         }
+        UiSpectrum_RedrawSpectrum();
     }
-#endif
 }
 
 static void UiSpectrum_DisplayDbm()
@@ -1979,14 +1913,14 @@ static void UiSpectrum_CalculateDBm()
     }
 }
 
-#ifdef USE_DISP_480_320
+#ifdef X_USE_DISP_480_320
 //Waterfall memory pointer allocation.
 //It sets memory pointer to Height/2 array located in CCM for f4 devices with low ram amount. For all rest allocates memory by calling malloc.
 void UiSpectrum_SetWaterfallMemoryPointer(uint16_t ramsize)
 {
 	if(ramsize<256)
 	{
-		sd.waterfall=WaterfallShortArray;	//CCM memory for devices with low ram amount. Used with each line doubled.
+		sd.waterfall=sd.waterfall_mem;	//CCM memory for devices with low ram amount. Used with each line doubled.
 	}
 	else
 	{

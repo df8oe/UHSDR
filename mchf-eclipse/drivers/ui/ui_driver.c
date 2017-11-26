@@ -889,10 +889,6 @@ void UiDriver_Init()
 	UiDriver_LcdBlankingStartTimer();			// init timing for LCD blanking
 	ts.lcd_blanking_time = ts.sysclock + LCD_STARTUP_BLANKING_TIME;
 	ts.low_power_shutdown_time = ts.sysclock + LOW_POWER_SHUTDOWN_DELAY_TIME;
-
-#ifdef USE_DISP_480_320
-	UiSpectrum_SetWaterfallMemoryPointer(ts.ramsize);
-#endif
 }
 
 #define BOTTOM_BAR_LABEL_W (56)
@@ -5603,17 +5599,21 @@ static void UiAction_ChangeFrequencyToNextKhz()
 
 static void UiAction_ToggleWaterfallScopeDisplay()
 {
-	if(is_waterfallmode())
-	{
-		// is the waterfall mode active?
-		ts.flags1 &=  ~FLAGS1_WFALL_SCOPE_TOGGLE;     // yes, turn it off
-	}
-	else
-	{
-		// waterfall mode was turned off
-		ts.flags1 |=  FLAGS1_WFALL_SCOPE_TOGGLE;          // turn it on
-	}
-	UiSpectrum_Init();   // init spectrum display
+    // if both modes are active, don't switch
+    if (is_waterfallmode() != is_scopemode())
+    {
+        if(is_waterfallmode())
+        {
+            // is the waterfall mode active?
+            ts.flags1 &=  ~FLAGS1_WFALL_SCOPE_TOGGLE;     // yes, turn it off
+        }
+        else
+        {
+            // waterfall mode was turned off
+            ts.flags1 |=  FLAGS1_WFALL_SCOPE_TOGGLE;          // turn it on
+        }
+        UiSpectrum_Init();   // init spectrum display
+    }
 }
 
 static void UiAction_ChangeDemodMode()
