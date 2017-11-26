@@ -146,6 +146,10 @@ enum
 #define	NUMBER_WATERFALL_COLOURS			64		// number of colors in the waterfall table
 
 
+#ifdef USE_DISP_320_240
+    #define WATERFALL_MAX_LINES WATERFALL_MAX_SIZE
+#endif
+
 #ifdef USE_DISP_480_320
     #ifdef STM32F7
         #define WATERFALL_MAX_LINES WATERFALL_HEIGHT
@@ -154,10 +158,16 @@ enum
         #define WATERFALL_MAX_LINES (WATERFALL_HEIGHT/2)
     #endif
 #endif
-#ifdef USE_DISP_320_240
-    #define WATERFALL_MAX_LINES WATERFALL_MAX_SIZE
-#endif
 
+// FIXME: This is a temporary hack
+// this needs to be as long at the longest scope width (in case of multiple resolutions)
+// list highest resolution first
+
+#ifdef USE_DISP_480_320
+    #define SPECTRUM_WIDTH_MAX 480
+#elif defined(USE_DISP_320_240)
+    #define SPECTRUM_WIDTH_MAX 480
+#endif
 
 // Spectrum display
 typedef struct SpectrumDisplay
@@ -168,7 +178,7 @@ typedef struct SpectrumDisplay
     float32_t   FFT_AVGData[SPEC_BUFF_LEN];     // IIR low-pass filtered FFT buffer data
 
     // scope pixel data
-    uint16_t    Old_PosData[SPECTRUM_WIDTH];
+    uint16_t    Old_PosData[SPECTRUM_WIDTH_MAX];
 
     // Current data ptr
     ulong   samp_ptr;
@@ -203,7 +213,8 @@ typedef struct SpectrumDisplay
     uint16_t waterfall_colours[NUMBER_WATERFALL_COLOURS+1];  // palette of colors for waterfall data
     // uint8_t (*waterfall)[SPECTRUM_WIDTH];	//pointer to waterfall memory
     uint8_t doubleWaterfallLine;				//line doubling control state
-    uint8_t  waterfall[WATERFALL_MAX_LINES][SPECTRUM_WIDTH];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
+    // uint8_t  waterfall[WATERFALL_MAX_LINES*SPECTRUM_WIDTH];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
+    uint8_t  waterfall[(WATERFALL_HEIGHT+10)*256];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
     uint8_t wfall_DrawDirection;	//0=upward (water fountain), 1=downward (real waterfall)
     uint16_t wfall_line;        // pointer to current line of waterfall data
     uint16_t wfall_size;        // vertical size of the waterfall
