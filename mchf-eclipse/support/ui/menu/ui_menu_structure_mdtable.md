@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-11-25T09:50:13  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-11-26T09:44:50  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-11-25T09:50:13  by "./ui_menu_structure_mdtable.py"
+generated at  2017-11-26T09:44:50  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -136,7 +136,6 @@ generated at  2017-11-25T09:50:13  by "./ui_menu_structure_mdtable.py"
 | **Scope BW BCKgr Colour**     (            MENU_SCOPE_BACKGROUND_HL_COLOUR) | Set colour of highlighted BW background        | 
 | **Scope Grid Colour**         (                     MENU_SCOPE_GRID_COLOUR) | Set colour of scope grid                       | 
 | **Scope Div.**                (                     MENU_SCOPE_DB_DIVISION) | Set rf range for scope                         | 
-| **Scope NoSig Adj.**          (                    MENU_SCOPE_NOSIG_ADJUST) | Set scope line corresponding to NO SIGNAL      | 
 | **Wfall 1/Speed**             (                           MENU_WFALL_SPEED) | Lower Values: Higher refresh rate. Set to 0 to disable waterfall. | 
 | **Wfall Colours**             (                    MENU_WFALL_COLOR_SCHEME) | Select colour scheme for waterfall display.    | 
 | **Wfall Step Size**           (                       MENU_WFALL_STEP_SIZE) | How many lines are moved in a single screen update | 
@@ -283,6 +282,9 @@ generated at  2017-11-25T09:50:13  by "./ui_menu_structure_mdtable.py"
 | **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 
 | **New Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | New noiseblanker for testing purposes          | 
 | **Spectral NR**               (                       MENU_DEBUG_NR_ENABLE) | enable spectral noise reduction for testing purposes | 
+| **Long tone**                 (             MENU_DEBUG_NR_LONG_TONE_ENABLE) | enable long tone detection in spectral noise reduction for testing purposes | 
+| **Long tone alpha**           (              MENU_DEBUG_NR_LONG_TONE_ALPHA) | time constant alpha for long tone detection in spectral noise reduction | 
+| **Long tone thresh**          (             MENU_DEBUG_NR_LONG_TONE_THRESH) | threshold for long tone detection in spectral noise reduction | 
 | **SNR gain smooth**           (           MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE) | enable bin gain smoothing for spectral noise reduction for testing purposes | 
 | **SNR gain smooth alpha**     (            MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA) | alpha = smoothing constant for spectral noise reduction for testing purposes | 
 | **NR alpha**                  (                        MENU_DEBUG_NR_ALPHA) | time constant alpha for spectral noise reduction | 

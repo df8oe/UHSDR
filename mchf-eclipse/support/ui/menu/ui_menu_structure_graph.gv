@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-11-25T09:50:10  by "./ui_menu_structure_graph.py"
+#  generated at  2017-11-26T09:44:45  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-25T09:50:10  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-26T09:44:45  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -599,11 +599,6 @@
         
         "MENU_SCOPE_DB_DIVISION" [
              label = "MENU_SCOPE_DB_DIVISION | Scope Div."
-             shape = record
-             ];
-        
-        "MENU_SCOPE_NOSIG_ADJUST" [
-             label = "MENU_SCOPE_NOSIG_ADJUST | Scope NoSig Adj."
              shape = record
              ];
         
@@ -1214,6 +1209,21 @@
         
         "MENU_DEBUG_NR_ENABLE" [
              label = "MENU_DEBUG_NR_ENABLE | Spectral NR"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_NR_LONG_TONE_ENABLE" [
+             label = "MENU_DEBUG_NR_LONG_TONE_ENABLE | Long tone"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_NR_LONG_TONE_ALPHA" [
+             label = "MENU_DEBUG_NR_LONG_TONE_ALPHA | Long tone alpha"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_NR_LONG_TONE_THRESH" [
+             label = "MENU_DEBUG_NR_LONG_TONE_THRESH | Long tone thresh"
              shape = record
              ];
         
@@ -1850,6 +1860,12 @@
             
             MENU_DEBUG -> MENU_DEBUG_NR_ENABLE
             
+            MENU_DEBUG -> MENU_DEBUG_NR_LONG_TONE_ENABLE
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_LONG_TONE_ALPHA
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_LONG_TONE_THRESH
+            
             MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE
             
             MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA
@@ -1949,8 +1965,6 @@
             MENU_DISPLAY -> MENU_SCOPE_GRID_COLOUR
             
             MENU_DISPLAY -> MENU_SCOPE_DB_DIVISION
-            
-            MENU_DISPLAY -> MENU_SCOPE_NOSIG_ADJUST
             
             MENU_DISPLAY -> MENU_WFALL_SPEED
             
