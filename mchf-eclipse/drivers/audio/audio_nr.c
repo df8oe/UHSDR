@@ -538,7 +538,8 @@ void spectral_noise_reduction (float* in_buffer)
               }
               #if 1
         // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 128 bins with the 128 bin-specific gain factors G
-              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
+//              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
+                for(int bindx = VAD_low; bindx < VAD_high; bindx++) // try 128:
               {
                   NR_FFT_buffer[bindx * 2] = NR_FFT_buffer [bindx * 2] * NR_Hk[bindx] * NR_long_tone_gain[bindx]; // real part
                   NR_FFT_buffer[bindx * 2 + 1] = NR_FFT_buffer [bindx * 2 + 1] * NR_Hk[bindx] * NR_long_tone_gain[bindx]; // imag part
