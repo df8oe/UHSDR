@@ -341,15 +341,52 @@ void spectral_noise_reduction (float* in_buffer)
                     }
               }
               // 2b.) voice activity detector
+              // we restrict the calculation of the VAD to the bins in the filter bandwidth
                   float32_t NR_temp_sum = 0.0;
-                  for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
+                  float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+                  float32_t offset = FilterPathInfo[ts.filter_path].offset;
+
+                  if (offset == 0)
+                  {
+                      offset = width/2;
+                  }
+
+                  float32_t lf_freq = (offset - width/2) / 93.75; // bin BW is 93.75Hz [12000Hz / 128 bins]
+                  float32_t uf_freq = (offset + width/2) / 93.75;
+                  int VAD_low = (int)lf_freq;
+                  int VAD_high = (int)uf_freq;
+                  if(VAD_low == VAD_high)
+                  {
+                	  VAD_high++;
+                  }
+                  if(VAD_low < 1)
+                  {
+                	  VAD_low = 1;
+                  }
+                  else
+                	  if(VAD_low > NR_FFT_L / 2 - 2)
+                	  {
+                		  VAD_low = NR_FFT_L / 2 - 2;
+                	  }
+                  if(VAD_high < 1)
+                  {
+                	  VAD_high = 1;
+                  }
+                  else
+                	  if(VAD_high > NR_FFT_L / 2)
+                	  {
+                		  VAD_high = NR_FFT_L / 2;
+                	  }
+
+
+                  for(int bindx = VAD_low; bindx < VAD_high + 1; bindx++) // try 128:
                   {
                       float32_t D_squared = NR_Nest[bindx][0] * NR_Nest[bindx][0]; //
 //                      NR_temp_sum += (NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] / (D_squared) )) - 1.0; // unpredictable behaviour
 //                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] * NR_X[bindx][0] / (D_squared) )) - 1.0; //nice behaviour
-                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ) - 1.0; // try without log
+                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ); // try without log
                   }
-                  NR_VAD = NR_temp_sum / (NR_FFT_L / 2);
+                  NR_VAD = NR_temp_sum / (VAD_high - VAD_low);
                       if((NR_VAD < ts.nr_vad_thresh) || ts.nr_first_time == 2)
                       {
 							  // noise estimation with exponential averager
