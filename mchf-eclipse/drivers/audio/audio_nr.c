@@ -232,7 +232,7 @@ static float32_t __MCHF_SPECIALMEM NR_SNR_post[NR_FFT_L / 2];
 static float32_t __MCHF_SPECIALMEM NR_SNR_post_pos; // saved 0.24kbytes
 static float32_t __MCHF_SPECIALMEM NR_Hk_old[NR_FFT_L / 2];
 static float32_t __MCHF_SPECIALMEM NR_VAD = 0.0;
-static uint8_t NR_first_time = 1; // FIXME: don't put in CCM on F4, we don't init this memory area correctly
+//static uint8_t NR_first_time = 1; // FIXME: don't put in CCM on F4, we don't init this memory area correctly
 static float32_t NR_long_tone[NR_FFT_L / 2][2];
 //static uint32_t NR_long_tone_counter[NR_FFT_L / 2];
 static float32_t NR_long_tone_gain[NR_FFT_L / 2];
@@ -256,7 +256,7 @@ void spectral_noise_reduction (float* in_buffer)
 // FFT128 - inverse FFT128
 // overlap-add
 
-    if(NR_first_time == 1)
+    if(ts.nr_first_time == 1)
     { // TODO: properly initialize all the variables
         for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
         {
@@ -267,7 +267,7 @@ void spectral_noise_reduction (float* in_buffer)
             NR_X[bindx][1] = 15000.0;
             NR_SNR_post[bindx] = 2.0;
             NR_SNR_prio[bindx] = 1.0;
-            NR_first_time = 2;
+            ts.nr_first_time = 2;
             //NR_long_tone_counter[bindx] = 0;
         }
     }
@@ -346,10 +346,11 @@ void spectral_noise_reduction (float* in_buffer)
                   {
                       float32_t D_squared = NR_Nest[bindx][0] * NR_Nest[bindx][0]; //
 //                      NR_temp_sum += (NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] / (D_squared) )) - 1.0; // unpredictable behaviour
-                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] * NR_X[bindx][0] / (D_squared) )) - 1.0; //nice behaviour
+//                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] * NR_X[bindx][0] / (D_squared) )) - 1.0; //nice behaviour
+                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ) - 1.0; // try without log
                   }
                   NR_VAD = NR_temp_sum / (NR_FFT_L / 2);
-                      if((NR_VAD < ts.nr_vad_thresh) || NR_first_time == 2)
+                      if((NR_VAD < ts.nr_vad_thresh) || ts.nr_first_time == 2)
                       {
 							  // noise estimation with exponential averager
 							 NR_VAD_duration=0;
@@ -361,7 +362,7 @@ void spectral_noise_reduction (float* in_buffer)
 										  NR_Nest[bindx][0] = (1.0 - ts.nr_beta) * NR_X[bindx][0] + ts.nr_beta * NR_Nest[bindx][1]; //
 										  NR_Nest[bindx][1] = NR_Nest[bindx][0];
 									}
-							 NR_first_time = 0;
+							 ts.nr_first_time = 0;
 							 Board_RedLed(LED_STATE_OFF);
 						   }
 						 else // we wait a little until the last vowel has vanished

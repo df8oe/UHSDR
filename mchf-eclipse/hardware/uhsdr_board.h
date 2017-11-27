@@ -1060,6 +1060,7 @@ typedef struct TransceiverState
 	float32_t nr_vad_thresh; // threshold for voice activity detector in spectral noise reduction
 	uint32_t nr_vad_thresh_int;
 	bool nr_enable; // enable spectral noise reduction
+	uint8_t nr_first_time; // set to 1 for initialization of the NR variables
 	bool nr_gain_smooth_enable; // enable gain smoothing
 	float32_t nr_gain_smooth_alpha; // smoothing constant for gain smoothing in the spectral noise reduction
 	int16_t nr_gain_smooth_alpha_int;
