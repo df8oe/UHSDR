@@ -381,7 +381,7 @@ void spectral_noise_reduction (float* in_buffer)
 
                   for(int bindx = VAD_low; bindx < VAD_high + 1; bindx++) // try 128:
                   {
-                      float32_t D_squared = NR_Nest[bindx][0] * NR_Nest[bindx][0]; //
+                      float32_t D_squared = NR_Nest[bindx][0] * NR_Nest[bindx][0];
 //                      NR_temp_sum += (NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] / (D_squared) )) - 1.0; // unpredictable behaviour
 //                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] * NR_X[bindx][0] / (D_squared) )) - 1.0; //nice behaviour
                       NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ); // try without log
