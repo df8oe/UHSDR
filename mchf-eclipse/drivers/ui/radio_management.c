@@ -978,6 +978,7 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
 
     if  (ads.af_disabled) { ads.af_disabled--; }
     if (ts.dsp_inhibit) { ts.dsp_inhibit--; }
+    ts.nr_first_time = 1; // re-initialize spectral noise reduction, when dmod_mode was changed
 
 }
 

@@ -232,12 +232,12 @@ static float32_t __MCHF_SPECIALMEM NR_SNR_post[NR_FFT_L / 2];
 static float32_t __MCHF_SPECIALMEM NR_SNR_post_pos; // saved 0.24kbytes
 static float32_t __MCHF_SPECIALMEM NR_Hk_old[NR_FFT_L / 2];
 static float32_t __MCHF_SPECIALMEM NR_VAD = 0.0;
-static uint8_t NR_first_time = 1; // FIXME: don't put in CCM on F4, we don't init this memory area correctly
+//static uint8_t NR_first_time = 1; // FIXME: don't put in CCM on F4, we don't init this memory area correctly
 static float32_t NR_long_tone[NR_FFT_L / 2][2];
 //static uint32_t NR_long_tone_counter[NR_FFT_L / 2];
 static float32_t NR_long_tone_gain[NR_FFT_L / 2];
-static uint8_t NR_VAD_delay=0;
-static uint8_t NR_VAD_duration=0; //takes the duration of the last vowel
+static int NR_VAD_delay = 0;
+static int NR_VAD_duration = 0; //takes the duration of the last vowel
 
 
 #define NR_LONG_TONE_ROUNDS 1
@@ -256,7 +256,7 @@ void spectral_noise_reduction (float* in_buffer)
 // FFT128 - inverse FFT128
 // overlap-add
 
-    if(NR_first_time == 1)
+    if(ts.nr_first_time == 1)
     { // TODO: properly initialize all the variables
         for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
         {
@@ -267,7 +267,7 @@ void spectral_noise_reduction (float* in_buffer)
             NR_X[bindx][1] = 15000.0;
             NR_SNR_post[bindx] = 2.0;
             NR_SNR_prio[bindx] = 1.0;
-            NR_first_time = 2;
+            ts.nr_first_time = 2;
             //NR_long_tone_counter[bindx] = 0;
         }
     }
@@ -341,45 +341,83 @@ void spectral_noise_reduction (float* in_buffer)
                     }
               }
               // 2b.) voice activity detector
+              // we restrict the calculation of the VAD to the bins in the filter bandwidth
                   float32_t NR_temp_sum = 0.0;
-                  for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
+                  float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+                  float32_t offset = FilterPathInfo[ts.filter_path].offset;
+
+                  if (offset == 0)
                   {
-                      float32_t D_squared = NR_Nest[bindx][0] * NR_Nest[bindx][0]; //
-//                      NR_temp_sum += (NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] / (D_squared) )) - 1.0; // unpredictable behaviour
-                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] * NR_X[bindx][0] / (D_squared) )) - 1.0; //nice behaviour
+                      offset = width/2;
                   }
-                  NR_VAD = NR_temp_sum / (NR_FFT_L / 2);
-                      if((NR_VAD < ts.nr_vad_thresh) || NR_first_time == 2)
+
+                  float32_t lf_freq = (offset - width/2) / 93.75; // bin BW is 93.75Hz [12000Hz / 128 bins]
+                  float32_t uf_freq = (offset + width/2) / 93.75;
+                  int VAD_low = (int)lf_freq;
+                  int VAD_high = (int)uf_freq;
+                  if(VAD_low == VAD_high)
+                  {
+                	  VAD_high++;
+                  }
+                  if(VAD_low < 1)
+                  {
+                	  VAD_low = 1;
+                  }
+                  else
+                	  if(VAD_low > NR_FFT_L / 2 - 2)
+                	  {
+                		  VAD_low = NR_FFT_L / 2 - 2;
+                	  }
+                  if(VAD_high < 1)
+                  {
+                	  VAD_high = 1;
+                  }
+                  else
+                	  if(VAD_high > NR_FFT_L / 2)
+                	  {
+                		  VAD_high = NR_FFT_L / 2;
+                	  }
+
+
+                  for(int bindx = VAD_low; bindx < VAD_high; bindx++) // try 128:
+                  {
+                      float32_t D_squared = NR_Nest[bindx][0] * NR_Nest[bindx][0];
+//                      NR_temp_sum += (NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] / (D_squared) )) - 1.0; // unpredictable behaviour
+//                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] * NR_X[bindx][0] / (D_squared) )) - 1.0; //nice behaviour
+                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ); // try without log
+                  }
+                  NR_VAD = NR_temp_sum / (VAD_high - VAD_low);
+                      if((NR_VAD < ts.nr_vad_thresh) || ts.nr_first_time == 2)
                       {
-                          // noise estimation with exponential averager
-                         NR_VAD_duration=0;
+							  // noise estimation with exponential averager
+							 NR_VAD_duration=0;
 
-                	 if (NR_VAD_delay == 0) //update noise level after Speech is really over
-                	   {
-                	     for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
-                                {   // exponential averager for current noise estimate
-                                      NR_Nest[bindx][0] = (1.0 - ts.nr_beta) * NR_X[bindx][0] + ts.nr_beta * NR_Nest[bindx][1]; //
-                                      NR_Nest[bindx][1] = NR_Nest[bindx][0];
-                                }
-                	     NR_first_time = 0;
-                	     Board_RedLed(LED_STATE_OFF);
-                	   }
-                	 else // we wait a little until the last vowel has vanished
-                	   {
+						 if (NR_VAD_delay == 0) //update noise level after Speech is really over
+						   {
+							 for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+									{   // exponential averager for current noise estimate
+										  NR_Nest[bindx][0] = (1.0 - ts.nr_beta) * NR_X[bindx][0] + ts.nr_beta * NR_Nest[bindx][1]; //
+										  NR_Nest[bindx][1] = NR_Nest[bindx][0];
+									}
+							 ts.nr_first_time = 0;
+							 Board_RedLed(LED_STATE_OFF);
+						   }
+						 else // we wait a little until the last vowel has vanished
+						   {
 
-                	     if (NR_VAD_delay > 0) NR_VAD_delay--;
+							 if (NR_VAD_delay > 0) NR_VAD_delay--;
 
-                	   }
+						   }
                       }
                       else
-                	{
+                	  {
                     		Board_RedLed(LED_STATE_ON);
                     		NR_VAD_duration++;
                     		if (NR_VAD_duration > 1) //a vowel should be longer than app. 20ms
                     		  {
-                    		   NR_VAD_delay=1; // we wait 1 times app.  10ms before we start updating the noisefloor
+                    		     NR_VAD_delay = 1; // we wait 1 times app.  10ms before we start updating the noisefloor
                     		  }
-                	}
+                	  }
 
 
 
@@ -500,7 +538,8 @@ void spectral_noise_reduction (float* in_buffer)
               }
               #if 1
         // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 128 bins with the 128 bin-specific gain factors G
-              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
+//              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
+                for(int bindx = VAD_low; bindx < VAD_high; bindx++) // try 128:
               {
                   NR_FFT_buffer[bindx * 2] = NR_FFT_buffer [bindx * 2] * NR_Hk[bindx] * NR_long_tone_gain[bindx]; // real part
                   NR_FFT_buffer[bindx * 2 + 1] = NR_FFT_buffer [bindx * 2 + 1] * NR_Hk[bindx] * NR_long_tone_gain[bindx]; // imag part
