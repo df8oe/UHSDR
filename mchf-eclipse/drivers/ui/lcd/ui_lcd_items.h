@@ -229,6 +229,7 @@
 #define POS_SPECTRUM_IND_W                  258
 
 #define	POS_SPECTRUM_FREQ_BAR_Y				64	// reducing value moves upwards
+#define POS_SPECTRUM_FREQ_BAR_H             16  //height of freq text bar
 #define	POS_SPECTRUM_FILTER_WIDTH_BAR_Y		61
 #define COL_SPECTRUM_GRAD					0x40
 

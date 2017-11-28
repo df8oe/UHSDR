@@ -1077,25 +1077,6 @@ extern __IO TransceiverState ts;
 
 //DL2FW UGLY test for FREEDV - some globals :-(
 
-#define FDV_BUFFER_SIZE     320
-#define FDV_RX_AUDIO_SIZE_MAX     360
-
-// this is kind of variable unfortunately, see freedv_api.h/.c for FREEDV1600 it is 360
-#define FDV_BUFFER_AUDIO_NUM   3
-#define FDV_BUFFER_IQ_NUM  3
-
-typedef struct {
-    int16_t samples[FDV_BUFFER_SIZE]; // this is kind of variable unfortunately, see freedv_api.h/.c for FREEDV1600 it is 360
-}  FDV_Audio_Buffer;
-
-typedef struct {
-   COMP samples[FDV_BUFFER_SIZE];
-}  FDV_IQ_Buffer;
-
-
-extern struct freedv *f_FREEDV;
-extern FDV_Audio_Buffer fdv_audio_buff[FDV_BUFFER_AUDIO_NUM];
-extern FDV_IQ_Buffer fdv_iq_buff[FDV_BUFFER_IQ_NUM];
 
 
 //end DL2FW UGLY test for FREEDV - some globals :-(

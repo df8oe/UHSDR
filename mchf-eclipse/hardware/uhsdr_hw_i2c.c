@@ -84,7 +84,7 @@ void MchfHw_I2C_ChangeSpeed(I2C_HandleTypeDef* hi2c)
 void MchfHw_I2C_Reset(I2C_HandleTypeDef* hi2c)
 {
     MchfHw_I2C_ChangeSpeed(hi2c);
-};
+}
 
 /*
  * @brief full init of I2C1 including GPIO and bus clock
