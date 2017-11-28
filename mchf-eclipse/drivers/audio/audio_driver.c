@@ -15,6 +15,7 @@
 // Common
 #include <assert.h>
 #include "uhsdr_board.h"
+#include "ui_driver.h"
 #include "profiling.h"
 
 #include <stdio.h>
@@ -27,6 +28,7 @@
 #include "softdds.h"
 
 #include "audio_driver.h"
+#include "audio_nr.h"
 #include "audio_management.h"
 #include "radio_management.h"
 #include "usbd_audio_if.h"
@@ -34,7 +36,6 @@
 #include "filters.h"
 #include "ui_lcd_hy28.h"
 #include "ui_configuration.h"
-#include "ui_driver.h"
 #include "uhsdr_hw_i2s.h"
 #include "rtty.h"
 #include "psk.h"
@@ -551,9 +552,6 @@ float32_t		iir_FreeDV_RX_state[IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES];
 
 // S meter public
 __IO SMeter					sm;
-
-// Keypad driver publics
-extern __IO	KeypadState				ks;
 
 // ATTENTION: These data structures have been placed in CCM Memory (64k)
 // IF THE SIZE OF  THE DATA STRUCTURE GROWS IT WILL QUICKLY BE OUT OF SPACE IN CCM
@@ -1707,13 +1705,13 @@ static bool AudioDriver_RxProcessorFreeDV (AudioSample_t * const src, float32_t 
 
                 if (lsb_active == true)
                 {
-                    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.q_buffer[k]);
-                    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.i_buffer[k]);
+                    mmb.fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.q_buffer[k]);
+                    mmb.fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.i_buffer[k]);
                 }
                 else
                 {
-                    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.q_buffer[k]);
-                    fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.i_buffer[k]);
+                    mmb.fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = ((int32_t)adb.q_buffer[k]);
+                    mmb.fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = ((int32_t)adb.i_buffer[k]);
                 }
 
                 trans_count_in++;
@@ -1727,7 +1725,7 @@ static bool AudioDriver_RxProcessorFreeDV (AudioSample_t * const src, float32_t 
         {
             //we have enough samples ready to start the FreeDV encoding
 
-            fdv_iq_buffer_add(&fdv_iq_buff[FDV_TX_fill_in_pt]);
+            fdv_iq_buffer_add(&mmb.fdv_iq_buff[FDV_TX_fill_in_pt]);
             //handshake to external function in ui.driver_thread
             trans_count_in = 0;
 
@@ -3468,7 +3466,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     static int trans_count_in=0;
     static int outbuff_count=0;
     static int NR_fill_in_pt=0;
-    static FDV_IQ_Buffer* out_buffer = NULL;
+    static NR_Buffer* out_buffer = NULL;
     //#define NR_FFT_SIZE   128
 #endif
 
@@ -3721,8 +3719,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 #ifdef USE_ALTERNATE_NR
                 if (ts.new_nb==true || ts.nr_enable == true) //start of new nb
                 {
-                    // NR_in and _out buffers are using the same physical space than the freedv_iq_buffer
-                    // the freedv_iq_buffer  consist of an array of 320 complex (2*float) samples
+                    // NR_in and _out buffers are using the same physical space than the freedv_iq_buffer in a
+                    // shared MultiModeBuffer union.
                     // for NR reduction we use a maximum of 256 real samples
                     // so we use the freedv_iq buffers in a way, that we use the first half of each array for the input
                     // and the second half for the output
@@ -3733,8 +3731,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     {
                         for (int k = 0; k < blockSizeDecim; k=k+2) //transfer our noisy audio to our NR-input buffer
                         {
-                            fdv_iq_buff[NR_fill_in_pt].samples[trans_count_in].real=adb.a_buffer[k];
-                            fdv_iq_buff[NR_fill_in_pt].samples[trans_count_in].imag=adb.a_buffer[k+1];
+                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].real=adb.a_buffer[k];
+                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].imag=adb.a_buffer[k+1];
                             //trans_count_in++;
                             trans_count_in++; // count the samples towards FFT-size  -  2 samples per loop
                         }
@@ -3742,10 +3740,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         if (trans_count_in >= (NR_FFT_SIZE/2))  // buffer limited to 320!! as in FreeDV used
                             //NR_FFT_SIZE has to be an integer mult. of blockSizeDecim!!!
                         {
-                            NR_in_buffer_add(&fdv_iq_buff[NR_fill_in_pt]); // save pointer to full buffer
+                            NR_in_buffer_add(&mmb.nr_audio_buff[NR_fill_in_pt]); // save pointer to full buffer
                             trans_count_in=0;                              // set counter to 0
                             NR_fill_in_pt++;                               // increase pointer index
-                            NR_fill_in_pt %= FDV_BUFFER_IQ_NUM;            // make sure, that index stays in range
+                            NR_fill_in_pt %= NR_BUFFER_NUM;            // make sure, that index stays in range
 
                             //at this point we have transfered one complete block of 128 (?) samples to one buffer
                         }

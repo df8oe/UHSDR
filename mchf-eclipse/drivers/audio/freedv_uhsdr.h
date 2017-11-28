@@ -16,6 +16,36 @@
  ************************************************************************************/
 #include "uhsdr_board.h"
 
+
+#define FDV_BUFFER_SIZE     320
+#define FDV_RX_AUDIO_SIZE_MAX     360
+
+// this is kind of variable unfortunately, see freedv_api.h/.c for FREEDV1600 it is 360
+#define FDV_BUFFER_AUDIO_NUM   3
+#define FDV_BUFFER_IQ_NUM  3 // 3*320*8 = 7680
+
+#define NR_BUFFER_NUM  4
+#define NR_BUFFER_SIZE     256 // 4*256*8 -> 8192
+
+typedef struct {
+    int16_t samples[FDV_BUFFER_SIZE]; // this is kind of variable unfortunately, see freedv_api.h/.c for FREEDV1600 it is 360
+}  FDV_Audio_Buffer;
+
+typedef struct {
+   COMP samples[FDV_BUFFER_SIZE];
+}  FDV_IQ_Buffer;
+
+typedef struct {
+   COMP samples[NR_BUFFER_SIZE];
+}  NR_Buffer;
+
+typedef union
+{
+    FDV_IQ_Buffer fdv_iq_buff[FDV_BUFFER_IQ_NUM];
+    NR_Buffer nr_audio_buff[NR_BUFFER_NUM];
+} MultiModeBuffer_t;
+
+
 #ifdef USE_FREEDV
 #ifdef DEBUG_FREEDV
     #define  FREEDV_TEST_BUFFER_FRAME_COUNT 50
@@ -53,19 +83,19 @@ int32_t fdv_audio_has_room();
 #endif
 #if defined(USE_FREEDV) || defined(USE_ALTERNATE_NR)
 
-#define FDV_BUFFER_IQ_FIFO_SIZE (FDV_BUFFER_IQ_NUM+1)
-extern FDV_IQ_Buffer __MCHF_SPECIALMEM fdv_iq_buff[FDV_BUFFER_IQ_NUM];
+
+extern MultiModeBuffer_t mmb;
 
 // we allow for one more pointer to a buffer as we have buffers
 // why? because our implementation will only fill up the fifo only to N-1 elements
-#endif
-#ifdef USE_ALTERNATE_NR
+#define FDV_BUFFER_IQ_FIFO_SIZE (FDV_BUFFER_IQ_NUM+1)
+#define NR_BUFFER_FIFO_SIZE (NR_BUFFER_NUM+1)
 
-void alternateNR_handle();
 
-void do_alternate_NR();
-void alt_noise_blanking();
-void spectral_noise_reduction();
+extern FDV_Audio_Buffer fdv_audio_buff[FDV_BUFFER_AUDIO_NUM];
 
+
+// we allow for one more pointer to a buffer as we have buffers
+// why? because our implementation will only fill up the fifo only to N-1 elements
 #endif
 #endif
