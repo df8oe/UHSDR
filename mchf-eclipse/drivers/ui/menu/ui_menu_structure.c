@@ -400,7 +400,9 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA, NULL,"SNR gain smooth alpha", UiMenuDesc("alpha = smoothing constant for spectral noise reduction for testing purposes") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_ALPHA, NULL,"NR alpha", UiMenuDesc("time constant alpha for spectral noise reduction") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_THRESH, NULL,"NR thresh", UiMenuDesc("threshold for spectral noise reduction voice activity detector") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_BETA, NULL,"NR beta", UiMenuDesc("time constant beta for spectral noise reduction, leave at 0.85") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_VAD_DELAY, NULL,"NR VAD delay", UiMenuDesc("delay for spectral noise reduction voice activity detector") },
+
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_BETA, NULL,"NR beta", UiMenuDesc("time constant beta for spectral noise reduction, leave at 0.85") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_RTTY_ATC, NULL,"RTTY ATC Enable", UiMenuDesc("Enable automatic threshold correction ATC for RTTY decoding") },
 #ifdef USE_TWO_CHANNEL_AUDIO
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ENABLE_STEREO, NULL,"STEREO Enable", UiMenuDesc("Enable stereo demodulation modes") },
