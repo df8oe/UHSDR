@@ -24,6 +24,7 @@
 #include "radio_management.h"
 #include "rtty.h"
 #include "cw_decoder.h"
+#include "audio_nr.h"
 
 #if defined(USE_DISP_480_320) || defined(USE_EXPERIMENTAL_MULTIRES)
 #define USE_DISP_480_320_SPEC
@@ -1265,7 +1266,23 @@ static void UiSpectrum_RedrawSpectrum(void)
         arm_cfft_f32(sd.cfft_instance, sd.FFT_Samples,0,1);	// Do FFT
         // Calculate magnitude
         arm_cmplx_mag_f32( sd.FFT_Samples, sd.FFT_MagData ,sd.spec_len);
-
+        // FIXME:
+#if 0
+        // just for debugging purposes
+        // display the spectral noise reduction bin gain values in the second 64 pixels of the spectrum display
+        if(ts.nr_enable)
+        {
+        	for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+        	{
+        		//        		sd.FFT_MagData[bindx] = NR.Hk[bindx] * 150.0;
+        		sd.FFT_MagData[(NR_FFT_L / 2 - 1) - bindx] = NR.long_tone_gain[bindx] * 150.0;
+        	}
+        	for(int bindx = NR_FFT_L / 2; bindx < sd.spec_len; bindx++)
+        	{
+        		sd.FFT_MagData[bindx] = 10.0;
+        	}
+        }
+#endif
         sd.state++;
         break;
     }

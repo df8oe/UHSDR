@@ -20,6 +20,33 @@
 #ifdef USE_ALTERNATE_NR
 #include "freedv_uhsdr.h"
 
+#define NR_FFT_L NR_FFT_SIZE
+
+typedef struct NoiseReduction
+{
+	float32_t __MCHF_SPECIALMEM last_iFFT_result [NR_FFT_L / 2];
+	float32_t __MCHF_SPECIALMEM last_sample_buffer_L [NR_FFT_L / 2];
+	float32_t __MCHF_SPECIALMEM Hk[NR_FFT_L / 2]; // gain factors
+	float32_t __MCHF_SPECIALMEM FFT_buffer[NR_FFT_L * 2];
+	float32_t 					X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
+	float32_t __MCHF_SPECIALMEM Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
+	float32_t __MCHF_SPECIALMEM vk; // saved 0.24kbytes
+	float32_t __MCHF_SPECIALMEM SNR_prio[NR_FFT_L / 2];
+	float32_t __MCHF_SPECIALMEM SNR_post[NR_FFT_L / 2];
+	float32_t __MCHF_SPECIALMEM SNR_post_pos; // saved 0.24kbytes
+	float32_t __MCHF_SPECIALMEM Hk_old[NR_FFT_L / 2];
+	float32_t __MCHF_SPECIALMEM VAD;
+	float32_t 					long_tone_gain[NR_FFT_L / 2];
+	float32_t 					long_tone[NR_FFT_L / 2][2];
+	int 						VAD_delay;
+	int 						VAD_duration; //takes the duration of the last vowel
+	uint32_t 					VAD_crash_detector; // this is counted upwards during speech detection, if noise is detected, it is reset to zero
+	// if it exceeds a certain limit, noise estimate is done irrespective of the VAD value
+	// this helps to get the noise estimate out of a very low position --> "VAD crash"
+} NoiseReduction;
+
+NoiseReduction NR;
+
 void alternateNR_handle();
 
 void do_alternate_NR();
