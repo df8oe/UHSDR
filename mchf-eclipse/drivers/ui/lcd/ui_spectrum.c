@@ -997,11 +997,24 @@ static void UiSpectrum_InitSpectrumDisplayData()
 
     // now make sure we fit in
     // please note, this works only if we have enough memory for have the lines
-    // that is not checked here
+    // otherwise we will reduce size of displayed waterfall
     if(sd.wfall_size * pos_spectrum->WIDTH > sizeof(sd.waterfall))
     {
-        sd.wfall_size = pos_spectrum->NORMAL_WATERFALL_HEIGHT/2;
         sd.doubleWaterfallLine = 1;
+
+        if (sd.wfall_size/2 * pos_spectrum->WIDTH > sizeof(sd.waterfall))
+        {
+            // we caculate how many lines we can do with the amount of memory
+            // and adjust displayed line count accordingly.
+            sd.wfall_size = sizeof(sd.waterfall)/(pos_spectrum->WIDTH);
+            // FIXME: Notify user of issue
+            // if memory is too small even with doubled
+            // lines
+        }
+        else
+        {
+            sd.wfall_size = pos_spectrum->NORMAL_WATERFALL_HEIGHT/2;
+        }
     }
     else
     {
