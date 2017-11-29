@@ -22,13 +22,12 @@
 
 #define NR_FFT_L NR_FFT_SIZE
 
-typedef struct NoiseReduction
+typedef struct __MCHF_SPECIALMEM NoiseReduction
 {
 	float32_t 					last_iFFT_result [NR_FFT_L / 2];
 	float32_t 					last_sample_buffer_L [NR_FFT_L / 2];
 	float32_t 					Hk[NR_FFT_L / 2]; // gain factors
 	float32_t 					FFT_buffer[NR_FFT_L * 2];
-	float32_t 					X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
 	float32_t 					Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
 	float32_t 					vk; // saved 0.24kbytes
 	float32_t 					SNR_prio[NR_FFT_L / 2];
@@ -36,6 +35,18 @@ typedef struct NoiseReduction
 	float32_t 					SNR_post_pos; // saved 0.24kbytes
 	float32_t 					Hk_old[NR_FFT_L / 2];
 	float32_t 					VAD;
+	int16_t						gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
+	//											 3 = display bin gain multiplied with long_tone_gain
+} NoiseReduction;
+
+NoiseReduction NR;
+
+// we need another struct, because of the need for strict allocation of memory for users of the
+// mcHF hardware with small RAM (192 kb)
+//
+typedef struct NoiseReduction2
+{
+	float32_t 					X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
 	float32_t 					long_tone_gain[NR_FFT_L / 2];
 	float32_t 					long_tone[NR_FFT_L / 2][2];
 	int 						VAD_delay;
@@ -43,11 +54,9 @@ typedef struct NoiseReduction
 	uint32_t 					VAD_crash_detector; // this is counted upwards during speech detection, if noise is detected, it is reset to zero
 	// if it exceeds a certain limit, noise estimate is done irrespective of the VAD value
 	// this helps to get the noise estimate out of a very low position --> "VAD crash"
-	int16_t						gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
-	//											 3 = display bin gain multiplied with long_tone_gain
-} NoiseReduction;
+} NoiseReduction2;
 
-NoiseReduction NR;
+NoiseReduction2 NR2;
 
 void alternateNR_handle();
 

@@ -240,7 +240,7 @@ void spectral_noise_reduction (float* in_buffer)
             NR.Hk_old[bindx] = 0.1; // old gain
             NR.Nest[bindx][0] = 50000.0;
             NR.Nest[bindx][1] = 40000.0;
-            NR.X[bindx][1] = 15000.0;
+            NR2.X[bindx][1] = 15000.0;
             NR.SNR_post[bindx] = 2.0;
             NR.SNR_prio[bindx] = 1.0;
             ts.nr_first_time = 2;
@@ -251,7 +251,7 @@ void spectral_noise_reduction (float* in_buffer)
     {
         for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
         {
-        	NR.long_tone_gain[bindx] = 1.0;
+        	NR2.long_tone_gain[bindx] = 1.0;
         	ts.nr_long_tone_reset = false;
         }
     }
@@ -305,15 +305,15 @@ void spectral_noise_reduction (float* in_buffer)
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
                     {
                         // this is magnitude for the current frame
-                        NR.X[bindx][0] = sqrtf(NR.FFT_buffer[bindx * 2] * NR.FFT_buffer[bindx * 2] + NR.FFT_buffer[bindx * 2 + 1] * NR.FFT_buffer[bindx * 2 + 1]);
+                        NR2.X[bindx][0] = sqrtf(NR.FFT_buffer[bindx * 2] * NR.FFT_buffer[bindx * 2] + NR.FFT_buffer[bindx * 2 + 1] * NR.FFT_buffer[bindx * 2 + 1]);
                     }
               if(ts.nr_long_tone_enable)
               {
 // detection of long tones
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
                     {
-            	  	  	NR.long_tone[bindx][0] = (ts.nr_long_tone_alpha) * NR.long_tone[bindx][1] + (1.0 - ts.nr_long_tone_alpha) * NR.X[bindx][0]; //
-            	  	  	NR.long_tone[bindx][1] = NR.long_tone[bindx][0];
+            	  	  	NR2.long_tone[bindx][0] = (ts.nr_long_tone_alpha) * NR2.long_tone[bindx][1] + (1.0 - ts.nr_long_tone_alpha) * NR2.X[bindx][0]; //
+            	  	  	NR2.long_tone[bindx][1] = NR2.long_tone[bindx][0];
                     }
               }
               // 2b.) voice activity detector
@@ -360,20 +360,20 @@ void spectral_noise_reduction (float* in_buffer)
                       float32_t D_squared = NR.Nest[bindx][0] * NR.Nest[bindx][0];
 //                      NR_temp_sum += (NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] / (D_squared) )) - 1.0; // unpredictable behaviour
 //                      NR_temp_sum += (NR_X[bindx][0] * NR_X[bindx][0]/ (D_squared) ) - logf((NR_X[bindx][0] * NR_X[bindx][0] / (D_squared) )) - 1.0; //nice behaviour
-                      NR_temp_sum += (NR.X[bindx][0] * NR.X[bindx][0]/ (D_squared) ); // try without log
+                      NR_temp_sum += (NR2.X[bindx][0] * NR2.X[bindx][0]/ (D_squared) ); // try without log
                   }
                   NR.VAD = NR_temp_sum / (VAD_high - VAD_low);
                       if((NR.VAD < ts.nr_vad_thresh) || ts.nr_first_time == 2)
                       { // VAD has detected NOISE
 							  // noise estimation with exponential averager
-							 NR.VAD_duration=0;
-							 NR.VAD_crash_detector = 0;
+							 NR2.VAD_duration=0;
+							 NR2.VAD_crash_detector = 0;
 
-						 if (NR.VAD_delay == 0) //update noise level after Speech is really over
+						 if (NR2.VAD_delay == 0) //update noise level after Speech is really over
 						   {
 							 for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
 									{   // exponential averager for current noise estimate
-										  NR.Nest[bindx][0] = (1.0 - ts.nr_beta) * NR.X[bindx][0] + ts.nr_beta * NR.Nest[bindx][1]; //
+										  NR.Nest[bindx][0] = (1.0 - ts.nr_beta) * NR2.X[bindx][0] + ts.nr_beta * NR.Nest[bindx][1]; //
 										  NR.Nest[bindx][1] = NR.Nest[bindx][0];
 									}
 							 ts.nr_first_time = 0;
@@ -382,28 +382,28 @@ void spectral_noise_reduction (float* in_buffer)
 						 else // we wait a little until the last vowel has vanished
 						   {
 
-							 if (NR.VAD_delay > 0) NR.VAD_delay--;
+							 if (NR2.VAD_delay > 0) NR2.VAD_delay--;
 
 						   }
                       }
                       else // VAD has detected speech
                 	  {
-                    	    NR.VAD_crash_detector++;
-                    		NR.VAD_duration++;
-                    		if (NR.VAD_duration > 1) //a vowel should be longer than app. 20ms
+                    	    NR2.VAD_crash_detector++;
+                    		NR2.VAD_duration++;
+                    		if (NR2.VAD_duration > 1) //a vowel should be longer than app. 20ms
                     		  {
-                    		     NR.VAD_delay = ts.nr_vad_delay; // we wait 1 times app.  10ms before we start updating the noisefloor
+                    		     NR2.VAD_delay = ts.nr_vad_delay; // we wait 1 times app.  10ms before we start updating the noisefloor
                     		     Board_RedLed(LED_STATE_ON);
                     		  }
                 	  }
                       // this helps to get the noise estimate out of a deep depression
                       // sometimes the VAD is not possible to become lower than VAD_thresh, because Nest is too small
                       // this helps avoiding this
-                      if(NR.VAD_crash_detector > 100)
+                      if(NR2.VAD_crash_detector > 100)
                       {
 							 for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
 									{   // increase noise estimate
-										  NR.Nest[bindx][0] = NR.X[bindx][0] * 1.2; //
+										  NR.Nest[bindx][0] = NR2.X[bindx][0] * 1.2; //
 										  NR.Nest[bindx][1] = NR.Nest[bindx][0];
 									}
                       }
@@ -416,7 +416,7 @@ void spectral_noise_reduction (float* in_buffer)
                         if(NR.Nest[bindx][0] != 0.0)
                         {   // do we have to square the noise estimate NR_Nest[bindx] or not? Schmitt says yes, Romanin says no . . .
                         	//                           NR_SNR_post[bindx] = NR_X[bindx][0] / (NR_Nest[bindx][0] * NR_Nest[bindx][0]); // audio crushed
-                           NR.SNR_post[bindx] = NR.X[bindx][0] / (NR.Nest[bindx][0]); //
+                           NR.SNR_post[bindx] = NR2.X[bindx][0] / (NR.Nest[bindx][0]); //
                         }
                         // "half-wave rectification" of NR_SR_post_pos --> always >= 0
                         if(NR.SNR_post[bindx] >= 0.0)
@@ -435,7 +435,7 @@ void spectral_noise_reduction (float* in_buffer)
 //                                                 ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1]) / (NR_Nest[bindx][0])); // no NR effect
 //                                    ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1] * NR_X[bindx][1]) / (NR_Nest[bindx][0])); // no NR effect
 //                                    ts.nr_alpha * ((NR_Hk_old[bindx] * NR_Hk_old[bindx] * NR_X[bindx][1] * NR_X[bindx][1]) / (NR_Nest[bindx][0] * NR_Nest[bindx][0])); // very strong, but strange effect
-                                                 ts.nr_alpha * ((NR.Hk_old[bindx] * NR.Hk_old[bindx] * NR.X[bindx][1]) / (NR.Nest[bindx][0])); // working
+                                                 ts.nr_alpha * ((NR.Hk_old[bindx] * NR.Hk_old[bindx] * NR2.X[bindx][1]) / (NR.Nest[bindx][0])); // working
                         }
         // 4    calculate vk = SNRprio(n, bin[i]) / (SNRprio(n, bin[i]) + 1) * SNRpost(n, bin[i]) (eq. 12 of Schmitt et al. 2002, eq. 9 of Romanin et al. 2009)
                         NR.vk =  NR.SNR_post[bindx] * NR.SNR_prio[bindx] / (1.0 + NR.SNR_prio[bindx]);
@@ -450,7 +450,7 @@ void spectral_noise_reduction (float* in_buffer)
                             NR.Hk[bindx] = 1.0;
                         }
                         NR.Hk_old[bindx] = NR.Hk[bindx];
-                        NR.X[bindx][1] = NR.X[bindx][0];
+                        NR2.X[bindx][1] = NR2.X[bindx][0];
                     }
 
               if(ts.nr_long_tone_enable)
@@ -458,54 +458,54 @@ void spectral_noise_reduction (float* in_buffer)
 // long tone attenuation = automatic notch filter
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
                     {
-            	  	  	  if(NR.long_tone[bindx][0] > (float32_t)ts.nr_long_tone_thresh)
+            	  	  	  if(NR2.long_tone[bindx][0] > (float32_t)ts.nr_long_tone_thresh)
             	  	  	  {
-            	  	  			  NR.long_tone_gain[bindx] = NR.long_tone_gain[bindx] / 1.5;
+            	  	  			  NR2.long_tone_gain[bindx] = NR2.long_tone_gain[bindx] / 1.5;
             	  	  			  if(bindx != 0)
             	  	  			  {
-            	  	  				  NR.long_tone_gain[bindx - 1] = NR.long_tone_gain[bindx - 1] / 1.25;
-                	  	  			  if(NR.long_tone_gain[bindx - 1] < 0.1)
+            	  	  				  NR2.long_tone_gain[bindx - 1] = NR2.long_tone_gain[bindx - 1] / 1.25;
+                	  	  			  if(NR2.long_tone_gain[bindx - 1] < 0.1)
                 	  	  			  {
-                	  	  				NR.long_tone_gain[bindx - 1] = 0.1;
+                	  	  				NR2.long_tone_gain[bindx - 1] = 0.1;
                 	  	  			  }
             	  	  			  }
             	  	  			  else
             	  	  			  if(bindx != (NR_FFT_L / 2 - 1))
             	  	  			  {
-            	  	  				  NR.long_tone_gain[bindx + 1] = NR.long_tone_gain[bindx + 1] / 1.25;
-                	  	  			  if(NR.long_tone_gain[bindx + 1] < 0.1)
+            	  	  				  NR2.long_tone_gain[bindx + 1] = NR2.long_tone_gain[bindx + 1] / 1.25;
+                	  	  			  if(NR2.long_tone_gain[bindx + 1] < 0.1)
                 	  	  			  {
-                	  	  				NR.long_tone_gain[bindx + 1] = 0.1;
+                	  	  				NR2.long_tone_gain[bindx + 1] = 0.1;
                 	  	  			  }
             	  	  			  }
-            	  	  			  if(NR.long_tone_gain[bindx] < 0.1)
+            	  	  			  if(NR2.long_tone_gain[bindx] < 0.1)
             	  	  			  {
-            	  	  				NR.long_tone_gain[bindx] = 0.1;
+            	  	  				NR2.long_tone_gain[bindx] = 0.1;
             	  	  			  }
             	  	  	  }
             	  	  	  else
             	  	  	  {
-            	  	  		  NR.long_tone_gain[bindx] *= 1.2;
+            	  	  		  NR2.long_tone_gain[bindx] *= 1.2;
         	  	  			  if(bindx != 0)
         	  	  			  {
-        	  	  				  NR.long_tone_gain[bindx - 1] = NR.long_tone_gain[bindx - 1] * 1.05;
-            	  	  			  if(NR.long_tone_gain[bindx - 1] > 1.0)
+        	  	  				  NR2.long_tone_gain[bindx - 1] = NR2.long_tone_gain[bindx - 1] * 1.05;
+            	  	  			  if(NR2.long_tone_gain[bindx - 1] > 1.0)
             	  	  			  {
-            	  	  				NR.long_tone_gain[bindx - 1] = 1.0;
+            	  	  				NR2.long_tone_gain[bindx - 1] = 1.0;
             	  	  			  }
         	  	  			  }
         	  	  			  else
         	  	  			  if(bindx != (NR_FFT_L / 2 - 1))
         	  	  			  {
-        	  	  				  NR.long_tone_gain[bindx + 1] = NR.long_tone_gain[bindx + 1] * 1.05;
-            	  	  			  if(NR.long_tone_gain[bindx + 1] > 1.0)
+        	  	  				  NR2.long_tone_gain[bindx + 1] = NR2.long_tone_gain[bindx + 1] * 1.05;
+            	  	  			  if(NR2.long_tone_gain[bindx + 1] > 1.0)
             	  	  			  {
-            	  	  				NR.long_tone_gain[bindx + 1] = 1.0;
+            	  	  				NR2.long_tone_gain[bindx + 1] = 1.0;
             	  	  			  }
         	  	  			  }
-        	  	  			  if(NR.long_tone_gain[bindx] > 1.0)
+        	  	  			  if(NR2.long_tone_gain[bindx] > 1.0)
         	  	  			  {
-        	  	  				NR.long_tone_gain[bindx] = 1.0;
+        	  	  				NR2.long_tone_gain[bindx] = 1.0;
         	  	  			  }
             	  	  	  }
                     }
@@ -529,10 +529,10 @@ void spectral_noise_reduction (float* in_buffer)
 //              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
                 for(int bindx = VAD_low; bindx < VAD_high; bindx++) // try 128:
               {
-                  NR.FFT_buffer[bindx * 2] = NR.FFT_buffer [bindx * 2] * NR.Hk[bindx] * NR.long_tone_gain[bindx]; // real part
-                  NR.FFT_buffer[bindx * 2 + 1] = NR.FFT_buffer [bindx * 2 + 1] * NR.Hk[bindx] * NR.long_tone_gain[bindx]; // imag part
-                  NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] = NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] * NR.Hk[bindx] * NR.long_tone_gain[bindx]; // real part conjugate symmetric
-                  NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] = NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] * NR.Hk[bindx] * NR.long_tone_gain[bindx]; // imag part conjugate symmetric
+                  NR.FFT_buffer[bindx * 2] = NR.FFT_buffer [bindx * 2] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // real part
+                  NR.FFT_buffer[bindx * 2 + 1] = NR.FFT_buffer [bindx * 2 + 1] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // imag part
+                  NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] = NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // real part conjugate symmetric
+                  NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] = NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // imag part conjugate symmetric
               }
 
 #endif
