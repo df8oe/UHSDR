@@ -223,7 +223,7 @@ static float32_t __MCHF_SPECIALMEM NR_last_iFFT_result [NR_FFT_L / 2];
 static float32_t __MCHF_SPECIALMEM NR_last_sample_buffer_L [NR_FFT_L / 2];
 float32_t __MCHF_SPECIALMEM NR_FFT_buffer[NR_FFT_L * 2];
 //float32_t NR_iFFT_buffer[NR_FFT_L * 2]; // saved 1kbyte RAM :-)
-static float32_t __MCHF_SPECIALMEM NR_X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
+static float32_t NR_X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
 static float32_t __MCHF_SPECIALMEM NR_Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
 static float32_t __MCHF_SPECIALMEM NR_vk; // saved 0.24kbytes
 static float32_t __MCHF_SPECIALMEM NR_Hk[NR_FFT_L / 2]; // gain factors
