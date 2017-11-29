@@ -26,6 +26,7 @@
 #include "uhsdr_rtc.h"
 #include "adc.h"
 #include "drivers/ui/oscillator/osc_si5351a.h"
+#include "audio_nr.h"
 //
 //
 #include "ui.h"
