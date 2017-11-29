@@ -238,6 +238,9 @@ static float32_t NR_long_tone[NR_FFT_L / 2][2];
 static float32_t NR_long_tone_gain[NR_FFT_L / 2];
 static int NR_VAD_delay = 0;
 static int NR_VAD_duration = 0; //takes the duration of the last vowel
+static uint32_t NR_VAD_crash_detector = 0; // this is counted upwards during speech detection, if noise is detected, it is reset to zero
+// if it exceeds a certain limit, noise estimate is done irrespective of the VAD value
+// this helps to get the noise estimate out of a very low position --> "VAD crash"
 
 
 #define NR_LONG_TONE_ROUNDS 1
@@ -388,9 +391,10 @@ void spectral_noise_reduction (float* in_buffer)
                   }
                   NR_VAD = NR_temp_sum / (VAD_high - VAD_low);
                       if((NR_VAD < ts.nr_vad_thresh) || ts.nr_first_time == 2)
-                      {
+                      { // VAD has detected NOISE
 							  // noise estimation with exponential averager
 							 NR_VAD_duration=0;
+							 NR_VAD_crash_detector = 0;
 
 						 if (NR_VAD_delay == 0) //update noise level after Speech is really over
 						   {
@@ -409,16 +413,24 @@ void spectral_noise_reduction (float* in_buffer)
 
 						   }
                       }
-                      else
+                      else // VAD has detected speech
                 	  {
-                    		Board_RedLed(LED_STATE_ON);
+                    	    NR_VAD_crash_detector++;
                     		NR_VAD_duration++;
                     		if (NR_VAD_duration > 1) //a vowel should be longer than app. 20ms
                     		  {
-                    		     NR_VAD_delay = 1; // we wait 1 times app.  10ms before we start updating the noisefloor
+                    		     NR_VAD_delay = ts.nr_vad_delay; // we wait 1 times app.  10ms before we start updating the noisefloor
+                    		     Board_RedLed(LED_STATE_ON);
                     		  }
                 	  }
-
+                      if(NR_VAD_crash_detector > 100)
+                      {
+							 for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+									{   // increase noise estimate
+										  NR_Nest[bindx][0] = NR_X[bindx][0] * 1.2; //
+										  NR_Nest[bindx][1] = NR_Nest[bindx][0];
+									}
+                      }
 
 
         // 3    calculate SNRpost (n, bin[i]) = (X(n, bin[i])^2 / Nest(n, bin[i])^2) - 1 (eq. 13 of Schmitt et al. 2002)

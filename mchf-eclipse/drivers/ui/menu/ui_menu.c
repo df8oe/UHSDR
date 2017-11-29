@@ -3786,6 +3786,21 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         break;
 
+        case MENU_DEBUG_NR_VAD_DELAY:      //
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_vad_delay,
+                    0,
+                    20,
+                    2,
+                    1
+            );
+            if(var_change)
+            {
+
+            }
+            snprintf(options, 32, " %2u",(unsigned int)ts.nr_vad_delay);
+
+        break;
+
         case MENU_DEBUG_CLONEOUT:
         txt_ptr = " Do it!";
         clr = White;
