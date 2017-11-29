@@ -37,6 +37,8 @@
 #include "osc_si5351a.h"
 #include "osc_si570.h"
 
+#include "audio_nr.h"
+
 #define CLR_OR_SET_BITMASK(cond,value,mask) ((value) = (((cond))? ((value) | (mask)): ((value) & ~(mask))))
 
 void float2fixedstr(char* buf, int maxchar, float32_t f, uint16_t digitsBefore, uint16_t digitsAfter)
@@ -3709,6 +3711,31 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             	ts.nr_alpha = (float32_t)ts.nr_alpha_int / 1000.0;
             }
             snprintf(options, 32, " %3u",(unsigned int)ts.nr_alpha_int);
+
+        break;
+
+        case MENU_DEBUG_NR_GAIN_SHOW:      //
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &NR.gain_display,
+                    0,
+                    3,
+                    0,
+                    1
+            );
+            switch(NR.gain_display)
+            {
+            case 0:
+                txt_ptr = "        OFF";
+                break;
+            case 1:
+                txt_ptr = "        Hk";
+                break;
+            case 2:
+                txt_ptr = "     notch";
+                break;
+            case 3:
+                txt_ptr = "HK & notch";
+                break;
+            }
 
         break;
 
