@@ -1267,22 +1267,41 @@ static void UiSpectrum_RedrawSpectrum(void)
         // Calculate magnitude
         arm_cmplx_mag_f32( sd.FFT_Samples, sd.FFT_MagData ,sd.spec_len);
         // FIXME:
-#if 0
+
         // just for debugging purposes
         // display the spectral noise reduction bin gain values in the second 64 pixels of the spectrum display
-        if(ts.nr_enable)
+        if(ts.nr_enable && NR.gain_display != 0)
         {
+        	if(NR.gain_display == 1)
+        	{
         	for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
         	{
-        		//        		sd.FFT_MagData[bindx] = NR.Hk[bindx] * 150.0;
-        		sd.FFT_MagData[(NR_FFT_L / 2 - 1) - bindx] = NR.long_tone_gain[bindx] * 150.0;
+        		sd.FFT_MagData[(NR_FFT_L / 2 - 1) - bindx] = NR.Hk[bindx] * 150.0;
         	}
+        	}
+        	else
+        	if(NR.gain_display == 2)
+        	{
+            	for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+            	{
+            		sd.FFT_MagData[(NR_FFT_L / 2 - 1) - bindx] = NR.long_tone_gain[bindx] * 150.0;
+            	}
+        	}
+        	else
+        	if(NR.gain_display == 3)
+        	{
+            	for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+            	{
+            		sd.FFT_MagData[(NR_FFT_L / 2 - 1) - bindx] = NR.Hk[bindx] * NR.long_tone_gain[bindx] * 150.0;
+            	}
+        	}
+        	// set all other pixels to a low value
         	for(int bindx = NR_FFT_L / 2; bindx < sd.spec_len; bindx++)
         	{
         		sd.FFT_MagData[bindx] = 10.0;
         	}
         }
-#endif
+
         sd.state++;
         break;
     }

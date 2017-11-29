@@ -394,6 +394,8 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NEW_NB, NULL,"New Noiseblanker", UiMenuDesc("New noiseblanker for testing purposes") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_ENABLE, NULL,"Spectral NR", UiMenuDesc("enable spectral noise reduction for testing purposes") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_LONG_TONE_ENABLE, NULL,"Long tone", UiMenuDesc("enable long tone detection in spectral noise reduction for testing purposes") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SHOW, NULL,"Show gains", UiMenuDesc("Debugging: show gains of spectral noise reduction") },
+
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_LONG_TONE_ALPHA, NULL,"Long tone alpha", UiMenuDesc("time constant alpha for long tone detection in spectral noise reduction") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_LONG_TONE_THRESH, NULL,"Long tone thresh", UiMenuDesc("threshold for long tone detection in spectral noise reduction") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE, NULL,"SNR gain smooth", UiMenuDesc("enable bin gain smoothing for spectral noise reduction for testing purposes") },

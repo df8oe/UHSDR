@@ -43,6 +43,8 @@ typedef struct NoiseReduction
 	uint32_t 					VAD_crash_detector; // this is counted upwards during speech detection, if noise is detected, it is reset to zero
 	// if it exceeds a certain limit, noise estimate is done irrespective of the VAD value
 	// this helps to get the noise estimate out of a very low position --> "VAD crash"
+	int16_t						gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
+	//											 3 = display bin gain multiplied with long_tone_gain
 } NoiseReduction;
 
 NoiseReduction NR;
