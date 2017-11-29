@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-11-29T05:57:59  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-11-29T20:50:37  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-11-29T05:57:59  by "./ui_menu_structure_mdtable.py"
+generated at  2017-11-29T20:50:37  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -283,6 +283,7 @@ generated at  2017-11-29T05:57:59  by "./ui_menu_structure_mdtable.py"
 | **New Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | New noiseblanker for testing purposes          | 
 | **Spectral NR**               (                       MENU_DEBUG_NR_ENABLE) | enable spectral noise reduction for testing purposes | 
 | **Long tone**                 (             MENU_DEBUG_NR_LONG_TONE_ENABLE) | enable long tone detection in spectral noise reduction for testing purposes | 
+| **Show gains**                (                    MENU_DEBUG_NR_GAIN_SHOW) | Debugging: show gains of spectral noise reduction | 
 | **Long tone alpha**           (              MENU_DEBUG_NR_LONG_TONE_ALPHA) | time constant alpha for long tone detection in spectral noise reduction | 
 | **Long tone thresh**          (             MENU_DEBUG_NR_LONG_TONE_THRESH) | threshold for long tone detection in spectral noise reduction | 
 | **SNR gain smooth**           (           MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE) | enable bin gain smoothing for spectral noise reduction for testing purposes | 
