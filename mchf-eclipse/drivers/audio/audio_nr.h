@@ -22,7 +22,7 @@
 
 #define NR_FFT_L NR_FFT_SIZE
 
-typedef struct NoiseReduction
+typedef struct __MCHF_SPECIALMEM NoiseReduction
 {
 	float32_t 					last_iFFT_result [NR_FFT_L / 2];
 	float32_t 					last_sample_buffer_L [NR_FFT_L / 2];
