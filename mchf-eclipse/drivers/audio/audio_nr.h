@@ -24,18 +24,18 @@
 
 typedef struct NoiseReduction
 {
-	float32_t __MCHF_SPECIALMEM last_iFFT_result [NR_FFT_L / 2];
-	float32_t __MCHF_SPECIALMEM last_sample_buffer_L [NR_FFT_L / 2];
-	float32_t __MCHF_SPECIALMEM Hk[NR_FFT_L / 2]; // gain factors
-	float32_t __MCHF_SPECIALMEM FFT_buffer[NR_FFT_L * 2];
+	float32_t 					last_iFFT_result [NR_FFT_L / 2];
+	float32_t 					last_sample_buffer_L [NR_FFT_L / 2];
+	float32_t 					Hk[NR_FFT_L / 2]; // gain factors
+	float32_t 					FFT_buffer[NR_FFT_L * 2];
 	float32_t 					X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
-	float32_t __MCHF_SPECIALMEM Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
-	float32_t __MCHF_SPECIALMEM vk; // saved 0.24kbytes
-	float32_t __MCHF_SPECIALMEM SNR_prio[NR_FFT_L / 2];
-	float32_t __MCHF_SPECIALMEM SNR_post[NR_FFT_L / 2];
-	float32_t __MCHF_SPECIALMEM SNR_post_pos; // saved 0.24kbytes
-	float32_t __MCHF_SPECIALMEM Hk_old[NR_FFT_L / 2];
-	float32_t __MCHF_SPECIALMEM VAD;
+	float32_t 					Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
+	float32_t 					vk; // saved 0.24kbytes
+	float32_t 					SNR_prio[NR_FFT_L / 2];
+	float32_t 					SNR_post[NR_FFT_L / 2];
+	float32_t 					SNR_post_pos; // saved 0.24kbytes
+	float32_t 					Hk_old[NR_FFT_L / 2];
+	float32_t 					VAD;
 	float32_t 					long_tone_gain[NR_FFT_L / 2];
 	float32_t 					long_tone[NR_FFT_L / 2][2];
 	int 						VAD_delay;

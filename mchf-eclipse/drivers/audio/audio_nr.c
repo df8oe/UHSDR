@@ -464,23 +464,23 @@ void spectral_noise_reduction (float* in_buffer)
             	  	  			  if(bindx != 0)
             	  	  			  {
             	  	  				  NR.long_tone_gain[bindx - 1] = NR.long_tone_gain[bindx - 1] / 1.25;
-                	  	  			  if(NR.long_tone_gain[bindx - 1] < 0.01)
+                	  	  			  if(NR.long_tone_gain[bindx - 1] < 0.1)
                 	  	  			  {
-                	  	  				NR.long_tone_gain[bindx - 1] = 0.01;
+                	  	  				NR.long_tone_gain[bindx - 1] = 0.1;
                 	  	  			  }
             	  	  			  }
             	  	  			  else
             	  	  			  if(bindx != (NR_FFT_L / 2 - 1))
             	  	  			  {
             	  	  				  NR.long_tone_gain[bindx + 1] = NR.long_tone_gain[bindx + 1] / 1.25;
-                	  	  			  if(NR.long_tone_gain[bindx + 1] < 0.01)
+                	  	  			  if(NR.long_tone_gain[bindx + 1] < 0.1)
                 	  	  			  {
-                	  	  				NR.long_tone_gain[bindx + 1] = 0.01;
+                	  	  				NR.long_tone_gain[bindx + 1] = 0.1;
                 	  	  			  }
             	  	  			  }
-            	  	  			  if(NR.long_tone_gain[bindx] < 0.01)
+            	  	  			  if(NR.long_tone_gain[bindx] < 0.1)
             	  	  			  {
-            	  	  				NR.long_tone_gain[bindx] = 0.01;
+            	  	  				NR.long_tone_gain[bindx] = 0.1;
             	  	  			  }
             	  	  	  }
             	  	  	  else
