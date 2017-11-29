@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-11-26T09:44:45  by "./ui_menu_structure_graph.py"
+#  generated at  2017-11-29T05:57:55  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-26T09:44:45  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-29T05:57:55  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1247,6 +1247,11 @@
              shape = record
              ];
         
+        "MENU_DEBUG_NR_VAD_DELAY" [
+             label = "MENU_DEBUG_NR_VAD_DELAY | NR VAD delay"
+             shape = record
+             ];
+        
         "MENU_DEBUG_NR_BETA" [
              label = "MENU_DEBUG_NR_BETA | NR beta"
              shape = record
@@ -1873,6 +1878,8 @@
             MENU_DEBUG -> MENU_DEBUG_NR_ALPHA
             
             MENU_DEBUG -> MENU_DEBUG_NR_THRESH
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_VAD_DELAY
             
             MENU_DEBUG -> MENU_DEBUG_NR_BETA
             
