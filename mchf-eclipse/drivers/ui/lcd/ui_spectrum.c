@@ -614,7 +614,7 @@ void UiSpectrum_Clear()
     // this is the extra waterfall area, we have to clear this as well
     if (disp_resolution == RESOLUTION_480_320)
     {
-        UiLcdHy28_DrawFullRect(pos_spectrum->START_X, pos_spectrum->WIDTH, (sd.wfall_ystart + 1), sd.wfall_disp_lines, Black);
+        UiLcdHy28_DrawFullRect(pos_spectrum->START_X, (sd.wfall_ystart + 1), sd.wfall_disp_lines, pos_spectrum->WIDTH, Black);
     }
 #endif
 
