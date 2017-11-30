@@ -3226,6 +3226,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options,32, "  %u", ts.dsp_notch_numtaps);
         break;
+/*
     case CONFIG_AGC_TIME_CONSTANT:      // Adjustment of Noise Blanker AGC Time Constant
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.nb_agc_time_const,
                                               0,
@@ -3239,6 +3240,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         snprintf(options,32, "  %u", ts.nb_agc_time_const);
         break;
+*/
     case CONFIG_AM_TX_FILTER_DISABLE:   // Enable/disable AM TX audio filter
         temp_var_u8 = !(ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE);
         var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);

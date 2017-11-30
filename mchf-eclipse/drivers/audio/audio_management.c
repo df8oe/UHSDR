@@ -98,6 +98,8 @@ void AudioManagement_CalcAGCVals(void)
     // TODO: Why is here always ts.max_rf_gain used? Shouldn't it be max_rf_gain too?
 }
 #endif
+
+
 //
 //
 //*----------------------------------------------------------------------------
@@ -107,6 +109,7 @@ void AudioManagement_CalcAGCVals(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
+/*
 void AudioManagement_CalcNB_AGC(void)
 {
     float temp_float;
@@ -121,6 +124,7 @@ void AudioManagement_CalcNB_AGC(void)
     ads.nb_sig_filt = log10f(temp_float);           // de-linearize and save in "new signal" contribution parameter
     ads.nb_agc_filt = 1 - ads.nb_sig_filt;          // calculate parameter for recyling "old" AGC value
 }
+*/
 //
 
 static float AudioManagement_CalcAdjustInFreqRangeHelper(float32_t adj_low, float32_t adj_high, float32_t freq, float32_t scaling)

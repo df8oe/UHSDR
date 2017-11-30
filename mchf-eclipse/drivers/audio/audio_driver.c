@@ -674,7 +674,7 @@ void AudioDriver_Init(void)
     //
 //    AudioManagement_CalcAGCVals();	// calculate AGC internal values from user settings
     //
-    AudioManagement_CalcNB_AGC();		// set up noise blanker AGC values
+//    AudioManagement_CalcNB_AGC();		// set up noise blanker AGC values
     //
     ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();	// set up CW sideband mode setting
     //
@@ -1421,6 +1421,7 @@ static void AudioDriver_InitFilters(void)
 
 }
 
+#if 0
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_noise_blanker [KA7OEI]
 //* Object              : noise blanker
@@ -1486,6 +1487,7 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
         }
     }
 }
+#endif
 
 //
 //*----------------------------------------------------------------------------
@@ -3485,7 +3487,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
     if (ads.af_disabled == 0 )
     {
-        AudioDriver_NoiseBlanker(src, blockSize);     // do noise blanker function
+        // AudioDriver_NoiseBlanker(src, blockSize);     // do noise blanker function
         // ------------------------
         // Split stereo channels
         for(uint32_t i = 0; i < blockSize; i++)
@@ -3717,7 +3719,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
                 //
 #ifdef USE_ALTERNATE_NR
-                if (ts.new_nb==true || ts.nr_enable == true) //start of new nb
+                //                if (ts.new_nb==true || ts.nr_enable == true) //start of new nb
+                if (ts.nb_setting > 0 || ts.nr_enable == true) //start of new nb
                 {
                     // NR_in and _out buffers are using the same physical space than the freedv_iq_buffer in a
                     // shared MultiModeBuffer union.

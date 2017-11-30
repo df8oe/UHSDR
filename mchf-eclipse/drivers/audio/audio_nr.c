@@ -202,7 +202,7 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 
     float32_t* Energy=0;
 
-    if(ts.new_nb)
+    if(ts.nb_setting > 0)
     {
         alt_noise_blanking(inputsamples,NR_FFT_SIZE,Energy);
     }
@@ -923,7 +923,7 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
     arm_power_f32(lpcs,order,&lpc_power);  // calculate the sum of the squares (the "power") of the lpc's
 
-    impulse_threshold = 2.5 * sqrtf(sigma2 * lpc_power);  //set a detection level (3 is not really a final setting)
+    impulse_threshold = (float32_t)ts.nb_setting * 0.5 * sqrtf(sigma2 * lpc_power);  //set a detection level (3 is not really a final setting)
 
     //if ((nr_setting > 20) && (nr_setting <51))
     //    impulse_threshold = impulse_threshold / (0.9 + (nr_setting-20.0)/10);  //scaling the threshold by 1 ... 0.26

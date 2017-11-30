@@ -346,7 +346,7 @@ bool is_vfo_b()
 
 inline bool is_dsp_nb()
 {
-	return (ts.dsp_active & DSP_NB_ENABLE) != 0;
+	return (ts.nb_setting > 0);
 }
 
 inline bool is_dsp_nr()
@@ -2906,13 +2906,14 @@ static void UiDriver_TimeScheduler()
 	{
 		startup_done_flag = true;                  // set flag so that we do this only once
 
-		// TODO: Get this away by fixing the startup of the noise blanker
+/*		// TODO: Get this away by fixing the startup of the noise blanker
 		if(ts.temp_nb < 0x80)       // load NB setting after processing first audio data
 		{
 			ts.nb_setting = ts.temp_nb;
 			UiDriver_DisplayEncoderTwoMode();
 			ts.temp_nb = 0xf0;
 		}
+		*/
 		ts.dsp_inhibit = 0;                 // allow DSP to function
 
 
@@ -4073,9 +4074,9 @@ static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
 	const char *label, *val_txt;
 	int32_t value = 0;
 //	bool is_active = false;
-	label = "NB";
+	//label = "NB";
 	//    label = "DEC";
-#if 0
+//#if 0
 		//
 		// Noise blanker settings display
 		//
@@ -4094,47 +4095,42 @@ static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
 			}
 			label = "NB";
 			value = ts.nb_setting;
-			is_active = true;
-		}
-
-		if (is_active == false)
-		{
-			val_txt = "off";
-		}
-		else
-		{
 			snprintf(temp,5,"%3ld",value);
 			val_txt = temp;
 		}
-#endif
-		switch(ts.agc_wdsp_mode)
+
+		else
 		{
-		case 0:
-			label = "vLO";
-			break;
-		case 1:
-			label = "LON";
-			break;
-		case 2:
-			label = "SLO";
-			break;
-		case 3:
-			label = "MED";
-			break;
-		case 4:
-			label = "FAS";
-			break;
-		case 5:
-			label = "OFF";
-			break;
-		default:
-			label = "???";
-			break;
+//#endif
+			switch(ts.agc_wdsp_mode)
+			{
+			case 0:
+				label = "vLO";
+				break;
+			case 1:
+				label = "LON";
+				break;
+			case 2:
+				label = "SLO";
+				break;
+			case 3:
+				label = "MED";
+				break;
+			case 4:
+				label = "FAS";
+				break;
+			case 5:
+				label = "OFF";
+				break;
+			default:
+				label = "???";
+				break;
+			}
+			value = (int32_t)(ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode] / 10.0);
+			snprintf(temp,5,"%3ld",value);
+			val_txt = temp;
 		}
-		value = (int32_t)(ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode] / 10.0);
-		snprintf(temp,5,"%3ld",value);
-		val_txt = temp;
-	UiDriver_EncoderDisplay(1,1,label, encoder_active, val_txt, color);
+		UiDriver_EncoderDisplay(1,1,label, encoder_active, val_txt, color);
 }
 
 #define NOTCH_DELTA_Y (2*ENC_ROW_H)
