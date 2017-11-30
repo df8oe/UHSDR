@@ -98,8 +98,8 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, NULL, "DSP NR Strength", UiMenuDesc("Set the Noise Reduction Strength. Higher values mean more agressive noise reduction but also higher CPU load. Use with extreme care. Also changeable using Encoder 2 if DSP is active.") }, // via knob
     { MENU_BASE, MENU_ITEM, MENU_TCXO_MODE, NULL, "TCXO Off/On/Stop", UiMenuDesc("The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement).") },
     { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F, NULL, "TCXO Temp. (C/F)", UiMenuDesc("Show the measure TCXO temperature in Celsius or Fahrenheit.") },
-    { MENU_BASE, MENU_ITEM, MENU_LOW_POWER_SHUTDOWN, NULL, "Low Voltage Shutdown", UiMenuDesc("Shutdown automatically when supply voltage is below threshold for 60 seconds (only in RX).") },
     { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG, NULL, "Backup Config", UiMenuDesc("Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
+    { MENU_BASE, MENU_ITEM, MENU_LOW_POWER_SHUTDOWN, NULL, "Low Voltage Shutdown", UiMenuDesc("Shutdown automatically when supply voltage is below threshold for 60 seconds (only in RX).") },
     { MENU_BASE, MENU_ITEM, MENU_RESTORE_CONFIG, NULL, "Restore Config", UiMenuDesc("Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
 
     { MENU_BASE, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
@@ -188,7 +188,7 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_CONVERGE_RATE, NULL, "DSP Notch ConvRate", UiMenuDesc("DSP LMS automatic notch filter: ") },
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH, NULL, "DSP Notch BufLen", UiMenuDesc("DSP LMS automatic notch filter: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better -and the slower- the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources.") },
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_FFT_NUMTAPS, NULL, "DSP Notch FIRNumTap", UiMenuDesc("DSP LMS automatic notch filter: Number of taps in the DSP automatic notch FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT, NULL, "NB AGC T/C (<=Slow)", UiMenuDesc("Noise Blanker AGC time constant adjustment: Lower values are equivalent with slower Noise blanker AGC. While the menu is displayed, the noise blanker is switched OFF, so in order to test the effect of adjusting this parameter, leave the menu.") },
+//    { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT, NULL, "NB AGC T/C (<=Slow)", UiMenuDesc("Noise Blanker AGC time constant adjustment: Lower values are equivalent with slower Noise blanker AGC. While the menu is displayed, the noise blanker is switched OFF, so in order to test the effect of adjusting this parameter, leave the menu.") },
 
 //    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_TAUR, NULL, "SAM PLL tauR", UiMenuDesc(":soon:") },
 //    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_TAUI, NULL, "SAM PLL tauI", UiMenuDesc(":soon:") },
