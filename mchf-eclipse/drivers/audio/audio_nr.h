@@ -22,7 +22,7 @@
 
 #define NR_FFT_L NR_FFT_SIZE
 
-typedef struct __MCHF_SPECIALMEM NoiseReduction
+typedef struct NoiseReduction
 {
 	float32_t 					last_iFFT_result [NR_FFT_L / 2];
 	float32_t 					last_sample_buffer_L [NR_FFT_L / 2];
@@ -39,7 +39,7 @@ typedef struct __MCHF_SPECIALMEM NoiseReduction
 	//											 3 = display bin gain multiplied with long_tone_gain
 } NoiseReduction;
 
-NoiseReduction NR;
+NoiseReduction __MCHF_SPECIALMEM NR;
 
 // we need another struct, because of the need for strict allocation of memory for users of the
 // mcHF hardware with small RAM (192 kb)

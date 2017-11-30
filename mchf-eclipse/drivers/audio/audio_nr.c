@@ -227,7 +227,7 @@ void spectral_noise_reduction (float* in_buffer)
 // can be found in our WIKI
 // https://github.com/df8oe/UHSDR/wiki/Noise-reduction
 //
-//  half-overlapping input buffers (= overlap 50%)
+// half-overlapping input buffers (= overlap 50%)
 // Hann window on 128 samples
 // FFT128 - inverse FFT128
 // overlap-add
@@ -460,35 +460,36 @@ void spectral_noise_reduction (float* in_buffer)
                     {
             	  	  	  if(NR2.long_tone[bindx][0] > (float32_t)ts.nr_long_tone_thresh)
             	  	  	  {
-            	  	  			  NR2.long_tone_gain[bindx] = NR2.long_tone_gain[bindx] / 1.5;
+            	  	  			  NR2.long_tone_gain[bindx] = NR2.long_tone_gain[bindx] * 0.99;
+
             	  	  			  if(bindx != 0)
             	  	  			  {
-            	  	  				  NR2.long_tone_gain[bindx - 1] = NR2.long_tone_gain[bindx - 1] / 1.25;
-                	  	  			  if(NR2.long_tone_gain[bindx - 1] < 0.1)
+            	  	  				  NR2.long_tone_gain[bindx - 1] = NR2.long_tone_gain[bindx - 1] * 0.9995;
+                	  	  			  if(NR2.long_tone_gain[bindx - 1] < 0.2)
                 	  	  			  {
-                	  	  				NR2.long_tone_gain[bindx - 1] = 0.1;
+                	  	  				NR2.long_tone_gain[bindx - 1] = 0.2;
                 	  	  			  }
             	  	  			  }
             	  	  			  else
             	  	  			  if(bindx != (NR_FFT_L / 2 - 1))
             	  	  			  {
-            	  	  				  NR2.long_tone_gain[bindx + 1] = NR2.long_tone_gain[bindx + 1] / 1.25;
-                	  	  			  if(NR2.long_tone_gain[bindx + 1] < 0.1)
+            	  	  				  NR2.long_tone_gain[bindx + 1] = NR2.long_tone_gain[bindx + 1] * 0.9995;
+                	  	  			  if(NR2.long_tone_gain[bindx + 1] < 0.2)
                 	  	  			  {
-                	  	  				NR2.long_tone_gain[bindx + 1] = 0.1;
+                	  	  				NR2.long_tone_gain[bindx + 1] = 0.2;
                 	  	  			  }
             	  	  			  }
-            	  	  			  if(NR2.long_tone_gain[bindx] < 0.1)
+            	  	  			  if(NR2.long_tone_gain[bindx] < 0.05)
             	  	  			  {
-            	  	  				NR2.long_tone_gain[bindx] = 0.1;
+            	  	  				NR2.long_tone_gain[bindx] = 0.05;
             	  	  			  }
             	  	  	  }
             	  	  	  else
             	  	  	  {
-            	  	  		  NR2.long_tone_gain[bindx] *= 1.2;
+            	  	  		  NR2.long_tone_gain[bindx] *= 1.01;
         	  	  			  if(bindx != 0)
         	  	  			  {
-        	  	  				  NR2.long_tone_gain[bindx - 1] = NR2.long_tone_gain[bindx - 1] * 1.05;
+        	  	  				  NR2.long_tone_gain[bindx - 1] = NR2.long_tone_gain[bindx - 1] * 1.0005;
             	  	  			  if(NR2.long_tone_gain[bindx - 1] > 1.0)
             	  	  			  {
             	  	  				NR2.long_tone_gain[bindx - 1] = 1.0;
@@ -497,7 +498,7 @@ void spectral_noise_reduction (float* in_buffer)
         	  	  			  else
         	  	  			  if(bindx != (NR_FFT_L / 2 - 1))
         	  	  			  {
-        	  	  				  NR2.long_tone_gain[bindx + 1] = NR2.long_tone_gain[bindx + 1] * 1.05;
+        	  	  				  NR2.long_tone_gain[bindx + 1] = NR2.long_tone_gain[bindx + 1] * 1.0005;
             	  	  			  if(NR2.long_tone_gain[bindx + 1] > 1.0)
             	  	  			  {
             	  	  				NR2.long_tone_gain[bindx + 1] = 1.0;
