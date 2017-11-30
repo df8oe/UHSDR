@@ -36,7 +36,7 @@
 // 3 RA8875 @800x600
 
 //for manual setting adjust following #define
-//#define LCD_TYPE 0
+//#define LCD_TYPE 1
 
 // ALTERNATIVE GROUP START USE_GFX
 
@@ -52,6 +52,7 @@
   #define USE_GFX_ILI9486
   #define USE_DISP_480_320
   #define USE_FFT_1024
+  #define USE_HIRES_TOUCH
 #elif LCD_TYPE == 2
   #define USE_GFX_ILI932x
   #define USE_GFX_ILI9486

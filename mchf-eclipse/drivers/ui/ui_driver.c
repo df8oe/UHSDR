@@ -5198,7 +5198,7 @@ static void UiDriver_KeyTestScreen()
 
 static bool UiDriver_TouchscreenCalibration()
 {
-
+#ifdef USE_HIRES_TOUCH
 	bool retval = false;
 
 	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
@@ -5326,6 +5326,135 @@ static bool UiDriver_TouchscreenCalibration()
 			ts.menu_var_changed = true;
 		}
 	}
+#else
+	bool retval = false;
+
+	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
+	{
+
+		uint32_t clr_fg, clr_bg;
+		clr_bg = Magenta;
+		clr_fg = White;
+
+		char cross1[2] = {3,55};
+		char cross2[2] = {56,55};
+		char cross3[2] = {3,4};
+		char cross4[2] = {56,4};
+		char cross5[2] = {25,32};
+
+		char x_corr[1], y_corr[1];
+		float diffx,diffy;
+
+		*x_corr = 0;
+		*y_corr = 0;
+
+		UiLcdHy28_LcdClear(clr_bg);							// clear the screen
+		//											// now do all of the warnings, blah, blah...
+		UiLcdHy28_PrintText(0,05,"  TOUCH CALIBRATION",clr_fg,clr_bg,1);
+		UiLcdHy28_PrintTextCentered(2, 70, 316, "If you don't want to do this\n"
+				"press POWER button to start normally.\n"
+				"press and hold BAND+ AND BAND-.\n"
+				" Settings will be saved at POWEROFF"
+				,clr_fg,clr_bg,0);
+		//
+		// On screen delay									// delay a bit...
+		HAL_Delay(5000);
+
+		// add this for emphasis
+		UiLcdHy28_PrintTextCentered(2, 195, 316, "Press BAND+ and BAND-\n"
+				"to start calibration",clr_fg,clr_bg,0);
+
+		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
+		{
+			HAL_Delay(10);
+		}
+
+
+		if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
+		{
+			UiLcdHy28_LcdClear(Black);							// clear the screen
+			UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
+			HAL_Delay(3000);
+			retval = false;
+		}
+		else
+		{
+			UiLcdHy28_LcdClear(clr_bg);							// clear the screen
+			UiLcdHy28_PrintTextCentered(2,70, 316,
+					"On the next screen crosses will appear.\n"
+					"Touch as exact as you can on the middle\n"
+					"of each cross. After three valid\n"
+					"samples position of cross changes.\n"
+					"Repeat until the five test positions\n"
+					"are finished.",clr_fg,clr_bg,0);
+
+			UiLcdHy28_PrintText(35,195,"Touch at any position to start.",clr_fg,clr_bg,0);
+
+			while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
+			{
+				HAL_Delay(40);
+			}
+			UiLcdHy28_TouchscreenReadCoordinates();
+			ts.tp->state = TP_DATASETS_NONE;
+
+			UiLcdHy28_LcdClear(clr_bg);							// clear the screen
+			UiLcdHy28_PrintText(10,10,"+",clr_fg,clr_bg,1);
+
+
+			UiDriver_DoCrossCheck(cross1, x_corr, y_corr);
+
+			UiLcdHy28_LcdClear(clr_bg);
+			clr_fg = White;
+			UiLcdHy28_PrintText(10,10,"                  +",clr_fg,clr_bg,1);
+
+			//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/3, *y_corr/3);
+			//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
+
+			UiDriver_DoCrossCheck(cross2, x_corr, y_corr);
+
+			UiLcdHy28_LcdClear(clr_bg);
+			clr_fg = White;
+			UiLcdHy28_PrintText(10,210,"+",clr_fg,clr_bg,1);
+
+			//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/6, *y_corr/6);
+			//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
+
+			UiDriver_DoCrossCheck(cross3, x_corr, y_corr);
+
+			UiLcdHy28_LcdClear(clr_bg);
+			clr_fg = White;
+			UiLcdHy28_PrintText(10,210,"                  +",clr_fg,clr_bg,1);
+
+			//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/9, *y_corr/9);
+			//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
+
+			UiDriver_DoCrossCheck(cross4, x_corr, y_corr);
+
+			UiLcdHy28_LcdClear(clr_bg);
+			clr_fg = White;
+			UiLcdHy28_PrintText(10,110,"         +",clr_fg,clr_bg,1);
+
+			//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/12, *y_corr/12);
+			//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
+
+			UiDriver_DoCrossCheck(cross5, x_corr, y_corr);
+
+			diffx = roundf(*x_corr / 15);
+			diffy = roundf(*y_corr / 15);
+			*x_corr = diffx;
+			*y_corr = diffy;
+
+			UiLcdHy28_LcdClear(clr_bg);
+
+			//    sprintf(txt_buf,"correction is  : %d/%d", *x_corr, *y_corr);
+			//    UiLcdHy28_PrintText(10,55,txt_buf,clr_fg,clr_bg,0);
+
+			HAL_Delay(4000);
+			retval = true;
+			ts.menu_var_changed = true;
+		}
+	}
+#endif
 	return retval;
 }
 
@@ -6234,8 +6363,17 @@ static void UiDriver_HandleTouchScreen()
 	{
 		if (ts.show_debug_info)					// show coordinates for coding purposes
 		{
+
+#ifdef USE_HIRES_TOUCH
+
+			UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
+
+			char text[14];
+			snprintf(text,14,"%04d%s%04d%s",ts.tp->hr_x," : ",ts.tp->hr_y,"  ");
+#else
 			char text[10];
 			snprintf(text,10,"%02d%s%02d%s",ts.tp->x," : ",ts.tp->y,"  ");
+#endif
 			UiLcdHy28_PrintText(0,POS_LOADANDDEBUG_Y,text,White,Black,0);
 		}
 

@@ -2083,8 +2083,12 @@ void UiLcdHy28_TouchscreenDetectPress()
 
         if(HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state == TP_DATASETS_PROCESSED)     // clear statemachine when data is processed
         {
-            mchf_touchscreen.state = 0;
+            mchf_touchscreen.state = TP_DATASETS_NONE;
+#ifdef USE_HIRES_TOUCH
+            mchf_touchscreen.hr_x = mchf_touchscreen.hr_y = 0xffff;
+#else
             mchf_touchscreen.x = mchf_touchscreen.y = 0xff;
+#endif
         }
     }
 }
@@ -2098,6 +2102,10 @@ bool UiLcdHy28_TouchscreenHasProcessableCoordinates() {
     if(mchf_touchscreen.state > TP_DATASETS_WAIT && mchf_touchscreen.state != TP_DATASETS_PROCESSED)
     {
         mchf_touchscreen.state = TP_DATASETS_NONE;     // tp data processed
+#ifdef USE_HIRES_TOUCH
+        mchf_touchscreen.xraw_avgBuff=0;
+        mchf_touchscreen.yraw_avgBuff=0;
+#endif
         retval = true;
     }
     return retval;
@@ -2181,6 +2189,8 @@ const uint8_t touchscreentable [] = { 0x07, 0x09,
         0x67, 0x6c, 0x6d, 0x6e, 0x74, 0x75, 0x76, 0x77, 0x7c, 0x7d
 };
 
+#define HIRES_TOUCH_MaxDeltaX 32
+#define HIRES_TOUCH_MaxDeltaY 32
 
 void UiLcdHy28_TouchscreenReadCoordinates()
 {
@@ -2193,13 +2203,91 @@ void UiLcdHy28_TouchscreenReadCoordinates()
     TP_DATASETS_PROCESSED 0xff = data was already processed by calling function
      */
 
+
+#ifdef USE_HIRES_TOUCH
     if(mchf_touchscreen.state < TP_DATASETS_VALID)	// no valid data ready or data ready to process
     {
         if(mchf_touchscreen.state > TP_DATASETS_NONE && mchf_touchscreen.state < TP_DATASETS_VALID)	// first pass finished, get data
         {
 
             UiLcdHy28_TouchscreenReadData(&mchf_touchscreen.xraw,&mchf_touchscreen.yraw);
+            int16_t TS_dx,TS_dy;
+            TS_dx=mchf_touchscreen.xraw_prev-mchf_touchscreen.xraw;
+            TS_dy=mchf_touchscreen.yraw_prev-mchf_touchscreen.yraw;
+            if(TS_dx<0)
+            {
+            	TS_dx=-TS_dx;
+            }
 
+            if(TS_dy<0)
+            {
+            	TS_dy=-TS_dy;
+            }
+            if((TS_dx<=HIRES_TOUCH_MaxDeltaX) && (TS_dx<=HIRES_TOUCH_MaxDeltaY))
+            {
+            	//if the calculated new delta is within the tolerance, average it
+            	mchf_touchscreen.xraw_avgBuff+=mchf_touchscreen.xraw;	//add new data to sum
+            	mchf_touchscreen.yraw_avgBuff+=mchf_touchscreen.yraw;
+            	mchf_touchscreen.state++;						// touch data valid
+            	if(mchf_touchscreen.state==TP_DATASETS_VALID)
+            	{
+            		//that was the last data aquire
+            		uint16_t x,y;
+            		x=mchf_touchscreen.xraw_avgBuff/(TP_DATASETS_VALID-1);		//calculate the average from collected summed coordinates
+            		y=mchf_touchscreen.yraw_avgBuff/(TP_DATASETS_VALID-1);
+
+            		if(ts.flags2 & FLAGS2_TOUCHSCREEN_FLIP_XY)
+            		{
+            			uint16_t temp = x;
+            			x = y;
+            			y = temp;
+            		}
+
+
+
+            		//TODO: make here the scalling according to calibration
+
+            		x=(x*MAX_X)/4095;
+            		y=(y*MAX_Y)/4095;
+
+
+            		if(ts.flags1 & FLAGS1_REVERSE_X_TOUCHSCREEN)
+            		{
+            			x=MAX_X-x;
+            		}
+
+            		if(ts.flags1 & FLAGS1_REVERSE_Y_TOUCHSCREEN)
+            		{
+            			y=MAX_Y-y;
+            		}
+
+            		mchf_touchscreen.hr_x=x;
+            		mchf_touchscreen.hr_y=y;
+            		mchf_touchscreen.xraw_avgBuff=0;
+            		mchf_touchscreen.yraw_avgBuff=0;
+            	}
+            }
+            else
+            {
+                mchf_touchscreen.state = TP_DATASETS_WAIT;		// restart machine
+            	mchf_touchscreen.xraw_avgBuff=0;
+            	mchf_touchscreen.yraw_avgBuff=0;
+            }
+        	mchf_touchscreen.xraw_prev=mchf_touchscreen.xraw;	//save current coordinates for next delta calculation
+        	mchf_touchscreen.yraw_prev=mchf_touchscreen.yraw;
+        }
+        else
+        {
+        	mchf_touchscreen.state = TP_DATASETS_WAIT;		// restart machine
+        }
+    }
+#else
+    if(mchf_touchscreen.state < TP_DATASETS_VALID)	// no valid data ready or data ready to process
+    {
+        if(mchf_touchscreen.state > TP_DATASETS_NONE && mchf_touchscreen.state < TP_DATASETS_VALID)	// first pass finished, get data
+        {
+
+            UiLcdHy28_TouchscreenReadData(&mchf_touchscreen.xraw,&mchf_touchscreen.yraw);
             uint8_t x,y;
 
             uint8_t xraw = mchf_touchscreen.xraw >> 5;
@@ -2281,7 +2369,9 @@ void UiLcdHy28_TouchscreenReadCoordinates()
         {
             mchf_touchscreen.state = TP_DATASETS_WAIT;			// do next first data read
         }
+
     }
+#endif
 }
 
 bool UiLcdHy28_TouchscreenPresenceDetection()
