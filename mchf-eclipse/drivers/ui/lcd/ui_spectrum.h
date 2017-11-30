@@ -217,7 +217,8 @@ typedef struct SpectrumDisplay
     uint8_t  waterfall[(WATERFALL_HEIGHT+10)*256];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
     uint8_t wfall_DrawDirection;	//0=upward (water fountain), 1=downward (real waterfall)
     uint16_t wfall_line;        // pointer to current line of waterfall data
-    uint16_t wfall_size;        // vertical size of the waterfall
+    uint16_t wfall_size;        // vertical size of the waterfall data (number of stored fft results)
+    uint16_t wfall_disp_lines;        // vertical size of the waterfall on display
     uint16_t wfall_ystart;
 
     uint16_t scope_size;

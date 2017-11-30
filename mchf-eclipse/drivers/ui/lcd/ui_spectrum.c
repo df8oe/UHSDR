@@ -610,6 +610,14 @@ static void UiSpectrum_CreateDrawArea()
 void UiSpectrum_Clear()
 {
     UiLcdHy28_DrawFullRect(pos_spectrum->DRAW_X_LEFT, pos_spectrum->DRAW_Y_TOP, pos_spectrum->DRAW_HEIGHT, pos_spectrum->DRAW_WIDTH, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
+#ifdef USE_DISP_480_320_SPEC
+    // this is the extra waterfall area, we have to clear this as well
+    if (disp_resolution == RESOLUTION_480_320)
+    {
+        UiLcdHy28_DrawFullRect(pos_spectrum->START_X, pos_spectrum->WIDTH, (sd.wfall_ystart + 1), sd.wfall_disp_lines, Black);
+    }
+#endif
+
 }
 
 
@@ -996,6 +1004,8 @@ static void UiSpectrum_InitSpectrumDisplayData()
         sd.wfall_size = pos_spectrum->BIG_WATERFALL_HEIGHT;
     }
 
+    sd.wfall_disp_lines = sd.wfall_size * (sd.doubleWaterfallLine==true? 2:1);
+
     // now make sure we fit in
     // please note, this works only if we have enough memory for have the lines
     // otherwise we will reduce size of displayed waterfall
@@ -1103,9 +1113,9 @@ static void UiSpectrum_DrawWaterfall()
         // the location of any of the display data - as long as we "blindly" write precisely the correct number of pixels per
         // line and the number of lines.
 
-        const uint16_t wfall_disp_lines = sd.wfall_size * (sd.doubleWaterfallLine==true? 2:1);
 
-        UiLcdHy28_BulkPixel_OpenWrite(pos_spectrum->START_X, pos_spectrum->WIDTH, (sd.wfall_ystart + 1), wfall_disp_lines);
+
+        UiLcdHy28_BulkPixel_OpenWrite(pos_spectrum->START_X, pos_spectrum->WIDTH, (sd.wfall_ystart + 1), sd.wfall_disp_lines);
 
         uint16_t spectrum_pixel_buf[pos_spectrum->WIDTH];
 
