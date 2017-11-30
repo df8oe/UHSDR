@@ -230,7 +230,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
     if (sd.magnify != old_magnify || force_update)
     {
         old_magnify = sd.magnify;
-        sd.pixel_per_hz = IQ_SAMPLE_RATE_F/((1 << sd.magnify) * pos_spectrum->WIDTH);     // magnify mode is on
+        sd.hz_per_pixel = IQ_SAMPLE_RATE_F/((1 << sd.magnify) * pos_spectrum->WIDTH);     // magnify mode is on
         force_update = true;
     }
 
@@ -241,7 +241,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
 
         if(!sd.magnify)     // is magnify mode on?
         {
-            sd.rx_carrier_pos = pos_spectrum->WIDTH/2 - 0.5 - (AudioDriver_GetTranslateFreq()/sd.pixel_per_hz);
+            sd.rx_carrier_pos = pos_spectrum->WIDTH/2 - 0.5 - (AudioDriver_GetTranslateFreq()/sd.hz_per_pixel);
         }
         else        // magnify mode is on
         {
@@ -255,7 +255,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
         old_dmod_mode = ts.dmod_mode;
         old_digital_mode = ts.digital_mode;
 
-        float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())/TUNE_MULT))/sd.pixel_per_hz;
+        float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())/TUNE_MULT))/sd.hz_per_pixel;
 
         // FIXME: DOES NOT WORK PROPERLY IN SPLIT MODE
         sd.marker_num_prev = sd.marker_num;
@@ -263,7 +263,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
         switch(ts.dmod_mode)
         {
         case DEMOD_CW:
-            mode_marker_offset[0] =(ts.cw_lsb?-1.0:1.0)*((float32_t)ts.cw_sidetone_freq / sd.pixel_per_hz);
+            mode_marker_offset[0] =(ts.cw_lsb?-1.0:1.0)*((float32_t)ts.cw_sidetone_freq / sd.hz_per_pixel);
             sd.marker_num = 1;
             break;
         case DEMOD_DIGI:
@@ -293,7 +293,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
 
             for (uint16_t idx; idx < sd.marker_num; idx++)
             {
-                mode_marker_offset[idx] = (ts.digi_lsb?-1.0:1.0)*(mode_marker[idx] / sd.pixel_per_hz);
+                mode_marker_offset[idx] = (ts.digi_lsb?-1.0:1.0)*(mode_marker[idx] / sd.hz_per_pixel);
             }
         }
         break;
@@ -1076,15 +1076,8 @@ static void UiSpectrum_DrawWaterfall()
         waterfallline_ptr[i] = sd.FFT_Samples[i]; // save the manipulated value in the circular waterfall buffer
     }
 
-    for (uint16_t idx = 0; idx < sd.marker_num; idx ++)
-    {
-        // Place center line marker on screen:  Location [64] (the 65th) of the palette is reserved is a special color reserved for this
-        if (marker_line_pixel_pos[idx] < pos_spectrum->WIDTH)
-        {
-            waterfallline_ptr[marker_line_pixel_pos[idx]] = NUMBER_WATERFALL_COLOURS;
-        }
-    }
 
+    // Draw lines from buffer
     sd.wfall_line++;        // bump to the next line in the circular buffer for next go-around
 
     uint16_t lptr = sd.wfall_line;      // get current line of "bottom" of waterfall in circular buffer
@@ -1110,20 +1103,74 @@ static void UiSpectrum_DrawWaterfall()
         // the location of any of the display data - as long as we "blindly" write precisely the correct number of pixels per
         // line and the number of lines.
 
-        uint16_t wfall_disp_lines = sd.wfall_size * (sd.doubleWaterfallLine==true? 2:1);
+        const uint16_t wfall_disp_lines = sd.wfall_size * (sd.doubleWaterfallLine==true? 2:1);
 
         UiLcdHy28_BulkPixel_OpenWrite(pos_spectrum->START_X, pos_spectrum->WIDTH, (sd.wfall_ystart + 1), wfall_disp_lines);
 
         uint16_t spectrum_pixel_buf[pos_spectrum->WIDTH];
 
+        const int32_t cur_center_hz = 50000;
+
+
         for(uint16_t lcnt = 0;lcnt < sd.wfall_size; lcnt++)                 // set up counter for number of lines defining height of waterfall
         {
             uint8_t  * const waterfallline_ptr = &sd.waterfall[lptr*pos_spectrum->WIDTH];
 
-            for(uint16_t i = 0; i < pos_spectrum->WIDTH; i++)      // scan to copy one line of spectral data - "unroll" to optimize for ARM processor
+
+            // here we actually create a single line pixel by pixel.
+            const int32_t line_center_hz = 50000; // temporary fixed to offset 0, will replace with line by line buffer
+
+            // if our old_center is lower than cur_center_hz -> find start idx in waterfall_line, end_idx is line end, and pad with black pixels;
+            // if our old_center is higher than cur_center_hz -> find start pixel x in end_idx is line end, first pad with black pixels until this point and then use pixel buffer;
+            // if identical -> well, no padding.
+            const int32_t diff_centers = (line_center_hz - cur_center_hz);
+            const int32_t offset_pixel = diff_centers/sd.hz_per_pixel;
+            uint16_t pixel_start, pixel_count, left_padding_count, right_padding_count;
+
+            if (offset_pixel <= 0)
             {
-                spectrum_pixel_buf[i] = sd.waterfall_colours[waterfallline_ptr[i]];    // write to memory using waterfall color from palette
+                                // we have to start -offset_pixel later and then pad with black
+                left_padding_count = 0;
+                pixel_start = -offset_pixel;
+                right_padding_count = -offset_pixel;
+                pixel_count = pos_spectrum->WIDTH + offset_pixel;
+            } else
+            {
+                // we to start with offset_pixel black padding  and then draw the pixels until we reach spectrum width
+                left_padding_count = offset_pixel;
+                pixel_start = 0;
+                right_padding_count = 0;
+                pixel_count = pos_spectrum->WIDTH - offset_pixel;
             }
+
+
+            uint16_t* pixel_buf_ptr = &spectrum_pixel_buf[0];
+            // fill from the left border with black pixels
+            for(uint16_t i = 0; i < left_padding_count; i++)
+            {
+                *pixel_buf_ptr++ = Black;
+            }
+
+            for(uint16_t idx = pixel_start, i = 0; i < pixel_count; i++,idx++)
+            {
+                *pixel_buf_ptr++ = sd.waterfall_colours[waterfallline_ptr[idx]];    // write to memory using waterfall color from palette
+            }
+
+            // fill to the right border with black pixels
+            for(uint16_t i = 0; i < right_padding_count; i++)
+            {
+                *pixel_buf_ptr++ = Black;
+            }
+
+            for (uint16_t idx = 0; idx < sd.marker_num; idx ++)
+            {
+                // Place center line marker on screen:  Location [64] (the 65th) of the palette is reserved is a special color reserved for this
+                if (marker_line_pixel_pos[idx] < pos_spectrum->WIDTH)
+                {
+                    spectrum_pixel_buf[marker_line_pixel_pos[idx]] = sd.waterfall_colours[NUMBER_WATERFALL_COLOURS];
+                }
+            }
+
 
             UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, pos_spectrum->WIDTH);
 
@@ -1149,6 +1196,7 @@ static void UiSpectrum_DrawWaterfall()
         }
         UiLcdHy28_BulkPixel_CloseWrite();                   // we are done updating the display - return to normal full-screen mode
     }
+
 }
 
 static float32_t  UiSpectrum_ScaleFFTValue(const float32_t value, float32_t* min_p)
@@ -1421,9 +1469,9 @@ void UiSpectrum_CalculateDisplayFilterBW(float32_t* width_pixel_, float32_t* lef
 
     UiSpectrum_UpdateSpectrumPixelParameters(); // before accessing pixel parameters, request update according to configuration
 
-    float32_t width_pixel = width/sd.pixel_per_hz;                          // calculate width of line in pixels
+    float32_t width_pixel = width/sd.hz_per_pixel;                          // calculate width of line in pixels
 
-    float32_t offset_pixel = offset/sd.pixel_per_hz;                            // calculate filter center frequency offset in pixels
+    float32_t offset_pixel = offset/sd.hz_per_pixel;                            // calculate filter center frequency offset in pixels
 
     float32_t left_filter_border_pos;
 

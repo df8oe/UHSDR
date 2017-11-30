@@ -223,7 +223,7 @@ typedef struct SpectrumDisplay
     uint16_t scope_size;
     uint16_t scope_ystart;
 
-    float32_t pixel_per_hz;        // how many Hertz is one pixel in the spectrum
+    float32_t hz_per_pixel;        // how many Hertz is one pixel in the spectrum
     float32_t rx_carrier_pos;      // where is the current receiving frequency carrier (in pixels)
     float32_t marker_offset[SPECTRUM_MAX_MARKER];   // how is the current transmitting frequency carrier offset from rx carrier (in pixels)
 
