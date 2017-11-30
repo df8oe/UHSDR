@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-11-29T20:50:37  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-11-30T17:27:54  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-11-29T20:50:37  by "./ui_menu_structure_mdtable.py"
+generated at  2017-11-30T17:27:54  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -290,9 +290,9 @@ generated at  2017-11-29T20:50:37  by "./ui_menu_structure_mdtable.py"
 | **SNR gain smooth alpha**     (            MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA) | alpha = smoothing constant for spectral noise reduction for testing purposes | 
 | **NR alpha**                  (                        MENU_DEBUG_NR_ALPHA) | time constant alpha for spectral noise reduction | 
 | **NR thresh**                 (                       MENU_DEBUG_NR_THRESH) | threshold for spectral noise reduction voice activity detector | 
+| **NR VAD type**               (                     MENU_DEBUG_NR_VAD_TYPE) | VAD type for spectral noise reduction voice activity detector | 
 | **NR VAD delay**              (                    MENU_DEBUG_NR_VAD_DELAY) | delay for spectral noise reduction voice activity detector | 
 | **NR beta**                   (                         MENU_DEBUG_NR_BETA) | time constant beta for spectral noise reduction, leave at 0.85 | 
-| **RTTY ATC Enable**           (                        MENU_DEBUG_RTTY_ATC) | Enable automatic threshold correction ATC for RTTY decoding | 
 | **STEREO Enable**             (                   MENU_DEBUG_ENABLE_STEREO) | Enable stereo demodulation modes               | 
 | **leaky LMS**                 (                       MENU_DEBUG_LEAKY_LMS) | Use leaky LMS noise reduction instead of built-in CMSIS LMS algorithm | 
 | **NR no taps**                (                        MENU_DEBUG_ANR_TAPS) | Number of taps of leaky LMS noise reduction    | 

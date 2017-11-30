@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-11-29T20:50:34  by "./ui_menu_structure_graph.py"
+#  generated at  2017-11-30T17:27:51  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-29T20:50:34  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-30T17:27:51  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1252,6 +1252,11 @@
              shape = record
              ];
         
+        "MENU_DEBUG_NR_VAD_TYPE" [
+             label = "MENU_DEBUG_NR_VAD_TYPE | NR VAD type"
+             shape = record
+             ];
+        
         "MENU_DEBUG_NR_VAD_DELAY" [
              label = "MENU_DEBUG_NR_VAD_DELAY | NR VAD delay"
              shape = record
@@ -1259,11 +1264,6 @@
         
         "MENU_DEBUG_NR_BETA" [
              label = "MENU_DEBUG_NR_BETA | NR beta"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_RTTY_ATC" [
-             label = "MENU_DEBUG_RTTY_ATC | RTTY ATC Enable"
              shape = record
              ];
         
@@ -1886,11 +1886,11 @@
             
             MENU_DEBUG -> MENU_DEBUG_NR_THRESH
             
+            MENU_DEBUG -> MENU_DEBUG_NR_VAD_TYPE
+            
             MENU_DEBUG -> MENU_DEBUG_NR_VAD_DELAY
             
             MENU_DEBUG -> MENU_DEBUG_NR_BETA
-            
-            MENU_DEBUG -> MENU_DEBUG_RTTY_ATC
             
             MENU_DEBUG -> MENU_DEBUG_ENABLE_STEREO
             
