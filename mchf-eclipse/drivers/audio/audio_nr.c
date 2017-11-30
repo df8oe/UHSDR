@@ -219,9 +219,74 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 
 }
 
+// debugging switches
+//#define NR_NOTCHTEST
+//#define NR_FFT_256 // if you change this, also change NR_FFT_L in audio_nr.h
+#ifdef NR_FFT_256
+int NR_FFT_LOOP_NO = 1;
+#else
+int NR_FFT_LOOP_NO = 2;
+#endif
+
+// window switches
+// choose exactly ONE window
+#define NR_WINDOW_HANN
+//#define NR_WINDOW_SIN2
+//#define NR_WINDOW_SIN4
 
 void spectral_noise_reduction (float* in_buffer)
 {
+////////////////////////////////////////////////////////////////////////////////////////
+#ifdef NR_NOTCHTEST
+	// Result of the test: I cannot find a combination of
+	// bin gains, where the distortion is away
+	// the brizzling sound is always there
+	// more pronounced, when gain combination along the bins is steeper
+
+
+	// bin width is 12000ksps / 128 bins = 93.75Hz
+	  // bin_c = 11 is a notch centred at 10 * 93.75Hz + 93.75Hz / 2 = 984.38 Hz
+#ifdef NR_FFT_256
+	const uint8_t bin_c = 22; // centre_bin to be notched
+#else
+	const uint8_t bin_c = 11; // centre_bin to be notched
+#endif
+	  const uint8_t bin_p1 = bin_c + 1;
+	  const uint8_t bin_p2 = bin_c + 2;
+	  const uint8_t bin_p3 = bin_c + 3;
+	  const uint8_t bin_p4 = bin_c + 4;
+	  const uint8_t bin_m1 = bin_c - 1;
+	  const uint8_t bin_m2 = bin_c - 2;
+	  const uint8_t bin_m3 = bin_c - 3;
+	  const uint8_t bin_m4 = bin_c - 4;
+	  const float32_t bin1_att = 0.0; // -24dB
+	  const float32_t bin2_att = 0.15; // -12dB
+	  const float32_t bin3_att = 0.3; // -6.0dB
+	  const float32_t bin4_att = 0.55; // -2.5dB
+	  const float32_t bin5_att = 0.7; // -2.5dB
+
+//	  const float32_t bin1_att = 0.05; // -26dB
+//	  const float32_t bin2_att = 0.15; // -16.5dB
+//	  const float32_t bin3_att = 0.45; // -10.5dB
+	  // linear gains mean logarithmic bin powers
+	  // the best
+//	  const float32_t bin1_att = 0.001; // -24dB
+//	  const float32_t bin2_att = 0.25; // -12dB
+//	  const float32_t bin3_att = 0.5; // -6.0dB
+//	  const float32_t bin4_att = 0.75; // -2.5dB
+	  // one of the best combinations so far
+//	  const float32_t bin1_att = 0.01; // -40dB
+//	  const float32_t bin2_att = 0.25; // dB
+//	  const float32_t bin3_att = 0.5; // dB
+//	  const float32_t bin4_att = 0.75; // dB
+	  // GOOD!
+//	  const float32_t bin1_att = 0.1; // dB
+//	  const float32_t bin2_att = 0.2; // dB
+//	  const float32_t bin3_att = 0.3; // dB
+//	  const float32_t bin4_att = 0.4; // dB
+#endif
+////////////////////////////////////////////////////////////////////////////////////////
+
 // Frank DD4WH & Michael DL2FW, November 2017
 // NOISE REDUCTION BASED ON SPECTRAL SUBTRACTION
 // following Romanin et al. 2009 on the basis of Ephraim & Malah 1984 and Hu et al. 2001
@@ -258,7 +323,7 @@ void spectral_noise_reduction (float* in_buffer)
         }
     }
 
-    for(int k = 0; k < 2; k++)
+    for(int k = 0; k < NR_FFT_LOOP_NO; k++)
     {
     // NR_FFT_buffer is 256 floats big
     // interleaved r, i, r, i . . .
@@ -281,7 +346,7 @@ void spectral_noise_reduction (float* in_buffer)
           }
     /////////////////////////////////7
     // WINDOWING
-    #if 1
+    #ifdef NR_WINDOW_HANN
     // perform windowing on 128 real samples in the NR_FFT_buffer
           for (int idx = 0; idx < NR_FFT_L; idx++)
           {     // Hann window
@@ -289,7 +354,7 @@ void spectral_noise_reduction (float* in_buffer)
              NR.FFT_buffer[idx * 2] *= temp_sample;
           }
     #endif
-	#if 0
+	#ifdef NR_WINDOW_SIN2
 // perform windowing on 128 real samples in the NR_FFT_buffer
       for (int idx = 0; idx < NR_FFT_L; idx++)
       {
@@ -299,11 +364,26 @@ void spectral_noise_reduction (float* in_buffer)
                     NR.FFT_buffer[idx * 2] *= SINF;
       }
 	#endif
-
+#ifdef NR_WINDOW_SIN4
+// perform windowing on 128 real samples in the NR_FFT_buffer
+  for (int idx = 0; idx < NR_FFT_L; idx++)
+  {
+      // SIN^2 window
+                float32_t SINF = (sinf(PI * (float32_t)idx / (float32_t)(NR_FFT_L - 1)));
+                SINF *= SINF;
+                SINF *= SINF;
+                NR.FFT_buffer[idx * 2] *= SINF;
+  }
+#endif
     // NR_FFT
     // calculation is performed in-place the FFT_buffer [re, im, re, im, re, im . . .]
-          arm_cfft_f32(&arm_cfft_sR_f32_len128, NR.FFT_buffer, 0, 1);
+#ifdef NR_FFT_256
+	  arm_cfft_f32(&arm_cfft_sR_f32_len256, NR.FFT_buffer, 0, 1);
+#else
+  	  arm_cfft_f32(&arm_cfft_sR_f32_len128, NR.FFT_buffer, 0, 1);
+#endif
 
+#ifndef NR_NOTCHTEST
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
                     {
                         // this is magnitude for the current frame
@@ -329,8 +409,8 @@ void spectral_noise_reduction (float* in_buffer)
                       offset = width/2;
                   }
 
-                  float32_t lf_freq = (offset - width/2) / 93.75; // bin BW is 93.75Hz [12000Hz / 128 bins]
-                  float32_t uf_freq = (offset + width/2) / 93.75;
+                  float32_t lf_freq = (offset - width/2) / (12000 / NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
+                  float32_t uf_freq = (offset + width/2) / (12000 / NR_FFT_L);
                   int VAD_low = (int)lf_freq;
                   int VAD_high = (int)uf_freq;
                   if(VAD_low == VAD_high)
@@ -539,7 +619,9 @@ void spectral_noise_reduction (float* in_buffer)
               }
 
 #endif
-        /*****************************************************************
+
+#endif
+                /*****************************************************************
          * NOISE REDUCTION CODE ENDS HERE
          *****************************************************************/
 // very interesting!
@@ -561,9 +643,63 @@ void spectral_noise_reduction (float* in_buffer)
   }
 #endif
 
+#ifdef NR_NOTCHTEST  // this is a test of a smoother notch filter
+	  // centre bin to be notched
+  	  NR.FFT_buffer[				bin_c * 2] 		*= bin1_att; // real
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_c * 2 - 2]	*= bin1_att; // imaginary
+      NR.FFT_buffer[				bin_c * 2 + 1] 	*= bin1_att; // real conjugate symmetric
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_c * 2 - 1] 	*= bin1_att; // imaginary conjugate symmetric
+      // centre_bin + 1 to be notched
+  	  NR.FFT_buffer[				bin_p1 * 2] 	*= bin2_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p1 * 2 - 2]	*= bin2_att;
+      NR.FFT_buffer[				bin_p1 * 2 + 1] *= bin2_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p1 * 2 - 1] *= bin2_att;
+      // centre_bin - 1 to be notched
+  	  NR.FFT_buffer[				bin_m1 * 2] 	*= bin2_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m1 * 2 - 2]	*= bin2_att;
+      NR.FFT_buffer[				bin_m1 * 2 + 1] *= bin2_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m1 * 2 - 1] *= bin2_att;
+      // centre_bin + 2 to be notched
+  	  NR.FFT_buffer[				bin_p2 * 2] 	*= bin3_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p2 * 2 - 2]	*= bin3_att;
+      NR.FFT_buffer[				bin_p2 * 2 + 1] *= bin3_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p2 * 2 - 1] *= bin3_att;
+      // centre_bin - 2 to be notched
+  	  NR.FFT_buffer[				bin_m2 * 2] 	*= bin3_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m2 * 2 - 2]	*= bin3_att;
+      NR.FFT_buffer[				bin_m2 * 2 + 1] *= bin3_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m2 * 2 - 1] *= bin3_att;
+      // centre_bin + 3 to be notched
+  	  NR.FFT_buffer[				bin_p3 * 2] 	*= bin4_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p3 * 2 - 2]	*= bin4_att;
+      NR.FFT_buffer[				bin_p3 * 2 + 1] *= bin4_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p3 * 2 - 1] *= bin4_att;
+      // centre_bin - 3 to be notched
+  	  NR.FFT_buffer[				bin_m3 * 2] 	*= bin4_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m3 * 2 - 2]	*= bin4_att;
+      NR.FFT_buffer[				bin_m3 * 2 + 1] *= bin4_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m3 * 2 - 1] *= bin4_att;
+      // centre_bin + 4 to be notched
+  	  NR.FFT_buffer[				bin_p4 * 2] 	*= bin5_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p4 * 2 - 2]	*= bin5_att;
+      NR.FFT_buffer[				bin_p4 * 2 + 1] *= bin5_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p4 * 2 - 1] *= bin5_att;
+      // centre_bin - 4 to be notched
+  	  NR.FFT_buffer[				bin_m4 * 2] 	*= bin5_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m4 * 2 - 2]	*= bin5_att;
+      NR.FFT_buffer[				bin_m4 * 2 + 1] *= bin5_att;
+      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m4 * 2 - 1] *= bin5_att;
+#endif
+
+
     // NR_iFFT
     // perform iFFT (in-place)
-         arm_cfft_f32(&arm_cfft_sR_f32_len128, NR.FFT_buffer, 1, 1);
+#ifdef NR_FFT_256
+	  arm_cfft_f32(&arm_cfft_sR_f32_len256, NR.FFT_buffer, 1, 1);
+#else
+  	  arm_cfft_f32(&arm_cfft_sR_f32_len128, NR.FFT_buffer, 1, 1);
+#endif
+
     // do the overlap & add
           for(int i = 0; i < NR_FFT_L / 2; i++)
           { // take real part of first half of current iFFT result and add to 2nd half of last iFFT_result
