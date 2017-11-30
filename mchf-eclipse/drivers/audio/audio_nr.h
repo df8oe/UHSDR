@@ -22,7 +22,7 @@
 
 #define NR_FFT_L NR_FFT_SIZE
 
-typedef struct __MCHF_SPECIALMEM NoiseReduction
+typedef struct NoiseReduction // declaration
 {
 	float32_t 					last_iFFT_result [NR_FFT_L / 2];
 	float32_t 					last_sample_buffer_L [NR_FFT_L / 2];
@@ -39,12 +39,10 @@ typedef struct __MCHF_SPECIALMEM NoiseReduction
 	//											 3 = display bin gain multiplied with long_tone_gain
 } NoiseReduction;
 
-NoiseReduction NR;
-
 // we need another struct, because of the need for strict allocation of memory for users of the
 // mcHF hardware with small RAM (192 kb)
 //
-typedef struct NoiseReduction2
+typedef struct NoiseReduction2 // declaration
 {
 	float32_t 					X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
 	float32_t 					long_tone_gain[NR_FFT_L / 2];
@@ -56,7 +54,9 @@ typedef struct NoiseReduction2
 	// this helps to get the noise estimate out of a very low position --> "VAD crash"
 } NoiseReduction2;
 
-NoiseReduction2 NR2;
+extern NoiseReduction __MCHF_SPECIALMEM 	NR; // declaration, definition is in audio_nr.c
+extern NoiseReduction2 						NR2; // declaration, definition is in audio_nr.c
+
 
 void alternateNR_handle();
 
