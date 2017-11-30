@@ -467,12 +467,6 @@ int mchfMain(void)
     mchf_hw_i2c1_init();
     mchf_hw_i2c2_init();
 
-
-    // temporarily remember the setting until dsp is going to be activated
-    // TODO: Needs to be checked, if this is the best way to get the noise blanker to work properly
-    ts.temp_nb = ts.nb_setting;
-    ts.nb_setting = 0;
-
 	// disable rx iq settings in menu when autocorr is enabled
 	if(ts.iq_auto_correction == 1)
 	{
