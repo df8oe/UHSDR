@@ -346,7 +346,7 @@ bool is_vfo_b()
 
 inline bool is_dsp_nb()
 {
-	return (ts.nb_setting > 0);
+	return (ts.nb_setting > 0); // noise blanker ON
 }
 
 inline bool is_dsp_nr()
@@ -3696,7 +3696,8 @@ static void UiDriver_DisplayEncoderTwoMode()
 		break;
 	case ENC_TWO_MODE_SIG_PROC:
 		UiDriver_DisplayRfGain(0);
-		UiDriver_DisplayNoiseBlanker(inactive);
+		//		UiDriver_DisplayNoiseBlanker(inactive);
+		UiDriver_DisplayNoiseBlanker(1);
 		UiDriver_DisplayDSPMode(0);
 		break;
 	case ENC_TWO_MODE_PEAK_F:

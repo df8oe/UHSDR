@@ -3718,7 +3718,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     }
                 }
                 //
-#ifdef USE_ALTERNATE_NR
                 //                if (ts.new_nb==true || ts.nr_enable == true) //start of new nb
                 if (ts.nb_setting > 0 || ts.nr_enable == true) //start of new nb
                 {
@@ -3783,7 +3782,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     }
 
                 } // end of new nb
-#endif
 
                 // Calculate scaling based on decimation rate since this affects the audio gain
                 if ((FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_12KHZ)
