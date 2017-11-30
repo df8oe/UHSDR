@@ -36,6 +36,7 @@ typedef struct NoiseReduction // declaration
 	float32_t 					SNR_post_pos; // saved 0.24kbytes
 	float32_t 					Hk_old[NR_FFT_L / 2];
 	float32_t 					VAD;
+	float32_t					VAD_Esch; // holds the VAD sum for the Esh & Vary 2009 type of VAD
 	int16_t						gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
 	//											 3 = display bin gain multiplied with long_tone_gain
 } NoiseReduction;
@@ -53,6 +54,7 @@ typedef struct NoiseReduction2 // declaration
 	uint32_t 					VAD_crash_detector; // this is counted upwards during speech detection, if noise is detected, it is reset to zero
 	// if it exceeds a certain limit, noise estimate is done irrespective of the VAD value
 	// this helps to get the noise estimate out of a very low position --> "VAD crash"
+	uint8_t						VAD_type; // 0 = Sohn et al. VAD, 1 = Esch & Vary 2009 VAD
 } NoiseReduction2;
 
 extern NoiseReduction __MCHF_SPECIALMEM 	NR; // declaration, definition is in audio_nr.c

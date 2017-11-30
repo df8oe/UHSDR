@@ -3787,8 +3787,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.nr_vad_thresh_int,
                     100,
                     20000,
-                    6000,
-                    200
+                    1000,
+                    50
             );
             if(var_change)
             {
@@ -3863,13 +3863,30 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             	 ts.nr_long_tone_reset = true;
              }
          break;
+     case MENU_DEBUG_NR_VAD_TYPE:
+         var_change = UiDriverMenuItemChangeUInt8(var, mode, &NR2.VAD_type,
+                 0,
+                 1,
+                 0,
+                 1);
+         switch(NR2.VAD_type)
+         {
+         case 0:
+             txt_ptr = "       Sohn";
+             break;
+         case 1:
+             txt_ptr = "Esch & Vary";
+             break;
+         }
+         break;
+
      case MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE:
              var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_gain_smooth_enable,0,options,&clr);
          break;
 
-     case MENU_DEBUG_RTTY_ATC:
-         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.rtty_atc_enable,0,options,&clr);
-         break;
+//     case MENU_DEBUG_RTTY_ATC:
+//         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.rtty_atc_enable,0,options,&clr);
+//         break;
 
      case MENU_CW_DECODER:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.cw_decoder_enable,0,options,&clr);

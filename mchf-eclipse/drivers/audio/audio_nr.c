@@ -228,6 +228,8 @@ int NR_FFT_LOOP_NO = 1;
 int NR_FFT_LOOP_NO = 2;
 #endif
 
+
+
 // window switches
 // choose exactly ONE window
 #define NR_WINDOW_HANN
@@ -236,6 +238,7 @@ int NR_FFT_LOOP_NO = 2;
 
 void spectral_noise_reduction (float* in_buffer)
 {
+
 ////////////////////////////////////////////////////////////////////////////////////////
 #ifdef NR_NOTCHTEST
 	// Result of the test: I cannot find a combination of
@@ -445,7 +448,17 @@ void spectral_noise_reduction (float* in_buffer)
                       NR_temp_sum += (NR2.X[bindx][0] * NR2.X[bindx][0]/ (D_squared) ); // try without log
                   }
                   NR.VAD = NR_temp_sum / (VAD_high - VAD_low);
-                      if((NR.VAD < ts.nr_vad_thresh) || ts.nr_first_time == 2)
+                  float32_t NR_VAD_temp;
+                  if(NR2.VAD_type == 0)
+                	  {
+                	  	  NR_VAD_temp = NR.VAD;
+                	  }
+                  else
+                  if(NR2.VAD_type == 1)
+                  {
+                	  NR_VAD_temp = NR.VAD_Esch;
+                  }
+                      if((NR_VAD_temp < ts.nr_vad_thresh) || ts.nr_first_time == 2)
                       { // VAD has detected NOISE
 							  // noise estimation with exponential averager
 							 NR2.VAD_duration=0;
@@ -619,6 +632,22 @@ void spectral_noise_reduction (float* in_buffer)
               }
 
 #endif
+                // this is another VAD
+                // following Esh & Vary 2009
+                // https://pdfs.semanticscholar.org/8fdb/fef3bac889a4f7f5ac382377fa7e1a2b8a7f.pdf
+
+                if(NR2.VAD_type == 1)
+                {
+					NR_temp_sum = 0;
+					float32_t NR_temp_sum2 = 0;
+					for(int bindx = VAD_low; bindx < VAD_high; bindx++)
+					{
+						NR_temp_sum += NR.Hk[bindx] * NR2.X[bindx][0];
+						NR_temp_sum2 += NR2.X[bindx][0];
+					}
+					NR.VAD_Esch = NR_temp_sum / NR_temp_sum2;
+                }
+
 
 #endif
                 /*****************************************************************
