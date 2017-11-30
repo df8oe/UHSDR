@@ -15,6 +15,8 @@
 
 #ifdef USE_ALTERNATE_NR
 
+NoiseReduction __MCHF_SPECIALMEM 	NR; // definition
+NoiseReduction2 					NR2; // definition
 
 __IO int32_t NR_in_head = 0;
 __IO int32_t NR_in_tail = 0;
