@@ -57,6 +57,13 @@
 #define POS_SPECTRUM_GRATICULE_Y (POS_SPECTRUM_IND_Y + 60)
 #endif
 
+typedef struct {
+    uint16_t x;
+    uint16_t y;
+    uint16_t w;
+    uint16_t h;
+} UiArea_t;
+
 typedef struct
 {
     const int16_t WIDTH;
@@ -85,6 +92,65 @@ typedef struct
     const int16_t BIG_WATERFALL_START_Y;
     const int16_t BIG_WATERFALL_HEIGHT;
 } pos_spectrum_display_t;
+
+
+typedef struct
+{
+    UiArea_t full;
+    UiArea_t draw;
+    UiArea_t title;
+    UiArea_t scope;
+    UiArea_t graticule;
+    UiArea_t wfall;
+} SpectrumAreas_t;
+
+SpectrumAreas_t slayout;
+
+// full area =      x[const]=58,                y[const]= 128,                          w[const]= 262,                  h[const]=94
+// draw area =      x[const]=full_area.x +2,    y[const]=full_area.y + 2,               w[const]=full_area.w - (2 + 2), h[const]=full_area.h - (2 + 2)
+// title area =     x[const]=draw_area.x,       y[const]=draw_area.y,                   w[const]=draw_area.w,           h[var]=big?0:16
+// scope area =     x[const]=draw_area.x,       y[var]=title_area.y+title_area.h,       w[const]=draw_area.w,           h[var]=scope_disabled?0:(draw_area.h - title_area.h - graticule_area.h)/(wfall_disabled?1:2)
+// graticule area = x[const]=draw_area.x,       y[var]=scope_area.y+scope_area.h,       w[const]=draw_area.w,           h[const]=16
+// wfall area =     x[const]=draw_area.x,       y[var]=graticule_area.y + graticule.h,  w[const]=draw_area.w,           h[var]=wfall_disabled?0:(draw_area.h - title_area.h - graticule_area.h)/(scope_disabled?1:2)
+
+/*
+ * @brief Implements the full calculation of coordinates for a variable sized spectrum display
+ * This algorithm can also be used to calculate the layout statically offline (we don't do this yet).
+ */
+void UiSpectrum_CalculateLayout(bool is_big, bool scope_enabled, bool wfall_enabled, UiArea_t* full_ptr, uint16_t padding)
+{
+    slayout.full.x = full_ptr->x;
+    slayout.full.y = full_ptr->y;
+    slayout.full.w = full_ptr->w;
+    slayout.full.h = full_ptr->h;
+
+    slayout.draw.x = slayout.full.x + padding;
+    slayout.draw.y = slayout.full.y + padding;
+    slayout.draw.w = slayout.full.w - 2*padding;
+    slayout.draw.h = slayout.full.h - 2*padding;
+
+    slayout.title.x = slayout.draw.x;
+    slayout.title.y = slayout.draw.y;
+    slayout.title.w = slayout.draw.w;
+    slayout.title.h = is_big?0:16; // hide title if big
+
+    slayout.graticule.h = 16;
+
+    slayout.scope.x = slayout.draw.x;
+    slayout.scope.y = slayout.title.y + slayout.title.h;
+    slayout.scope.w = slayout.draw.w;
+    slayout.scope.h = scope_enabled?(slayout.draw.h - slayout.title.h - slayout.graticule.h)/(wfall_enabled?2:1) : 0;
+
+    slayout.graticule.x = slayout.draw.x;
+    slayout.graticule.y = slayout.scope.y + slayout.scope.h;
+    slayout.graticule.w = slayout.draw.w;
+
+    slayout.wfall.x = slayout.draw.x;
+    slayout.wfall.y = slayout.graticule.y + slayout.graticule.h;
+    slayout.wfall.w = slayout.draw.w;
+    slayout.wfall.h = wfall_enabled?(slayout.draw.h - slayout.title.h - slayout.graticule.h)/(scope_enabled?2:1) : 0;
+}
+
 
 const pos_spectrum_display_t pos_spectrum_set[] =
 {
@@ -208,8 +274,6 @@ static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM] =
         { DB_SCALING_S2,            "SC(2S-Unit/div)" },
         { DB_SCALING_S3,            "SC(3S-Unit/div)" }
 };
-
-
 
 static void     UiSpectrum_DrawFrequencyBar();
 static void		UiSpectrum_CalculateDBm();
@@ -983,27 +1047,16 @@ static void UiSpectrum_InitSpectrumDisplayData()
     {
         sd.scope_ystart = pos_spectrum->NORMAL_START_Y;
         sd.scope_size = pos_spectrum->NORMAL_HEIGHT;
-
+        sd.wfall_ystart = pos_spectrum->NORMAL_WATERFALL_START_Y;
+        sd.wfall_size = pos_spectrum->NORMAL_WATERFALL_HEIGHT;
     }																	// waterfall larger, covering the word "Waterfall Display"
     else if(ts.spectrum_size == SPECTRUM_BIG)
     {
         sd.scope_ystart = pos_spectrum->BIG_START_Y;
         sd.scope_size = pos_spectrum->BIG_HEIGHT;
-    }
-
-
-
-    if(ts.spectrum_size == SPECTRUM_NORMAL)                         // waterfall the same size as spectrum scope
-    {
-        sd.wfall_ystart = pos_spectrum->NORMAL_WATERFALL_START_Y;
-        sd.wfall_size = pos_spectrum->NORMAL_WATERFALL_HEIGHT;
-    }                                                                   // waterfall larger, covering the word "Waterfall Display"
-    else if(ts.spectrum_size == SPECTRUM_BIG)
-    {
         sd.wfall_ystart = pos_spectrum->BIG_WATERFALL_START_Y;
         sd.wfall_size = pos_spectrum->BIG_WATERFALL_HEIGHT;
     }
-
 
     // now make sure we fit in
     // please note, this works only if we have enough memory for have the lines
@@ -1023,7 +1076,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
         }
         else
         {
-            sd.wfall_size = pos_spectrum->NORMAL_WATERFALL_HEIGHT/2;
+            sd.wfall_size /= 2;
         }
     }
     else
@@ -1054,6 +1107,7 @@ void UiSpectrum_WaterfallClearData()
 {
     // this assume sd.watefall being an array, not a pointer to one!
     memset(sd.waterfall,0, sizeof(sd.waterfall));
+    memset(sd.waterfall_frequencies,0,sizeof(sd.waterfall_frequencies));
 }
 
 
@@ -1088,6 +1142,8 @@ static void UiSpectrum_DrawWaterfall()
         waterfallline_ptr[i] = sd.FFT_Samples[i]; // save the manipulated value in the circular waterfall buffer
     }
 
+    sd.waterfall_frequencies[sd.wfall_line] = sd.FFT_frequency;
+
 
     // Draw lines from buffer
     sd.wfall_line++;        // bump to the next line in the circular buffer for next go-around
@@ -1101,11 +1157,9 @@ static void UiSpectrum_DrawWaterfall()
     {
     	if(sd.wfall_DrawDirection==1)
     	{
-    		lptr--; //top line is the newest
-    		if(lptr==0xffff)
-    		{
-    			lptr=sd.wfall_size-1;		//moving back to top (modulo somewhat doesn't work like this)
-    		}
+    	    // can't use modulo here, doesn't work if we use uint16_t,
+    	    // since it 0-1 == 65536 and not -1 (it is an unsigned integer after all)
+    	    lptr = lptr?lptr-1 : sd.wfall_size-1;
     	}
 
         lptr %= sd.wfall_size;      // do modulus limit of spectrum high
@@ -1121,7 +1175,7 @@ static void UiSpectrum_DrawWaterfall()
 
         uint16_t spectrum_pixel_buf[pos_spectrum->WIDTH];
 
-        const int32_t cur_center_hz = 50000;
+        const int32_t cur_center_hz = sd.FFT_frequency;
 
 
         for(uint16_t lcnt = 0;lcnt < sd.wfall_size; lcnt++)                 // set up counter for number of lines defining height of waterfall
@@ -1129,16 +1183,22 @@ static void UiSpectrum_DrawWaterfall()
             uint8_t  * const waterfallline_ptr = &sd.waterfall[lptr*pos_spectrum->WIDTH];
 
 
-            // here we actually create a single line pixel by pixel.
-            const int32_t line_center_hz = 50000; // temporary fixed to offset 0, will replace with line by line buffer
+            const int32_t line_center_hz = sd.waterfall_frequencies[lptr];
 
             // if our old_center is lower than cur_center_hz -> find start idx in waterfall_line, end_idx is line end, and pad with black pixels;
             // if our old_center is higher than cur_center_hz -> find start pixel x in end_idx is line end, first pad with black pixels until this point and then use pixel buffer;
             // if identical -> well, no padding.
             const int32_t diff_centers = (line_center_hz - cur_center_hz);
-            const int32_t offset_pixel = diff_centers/sd.hz_per_pixel;
+            int32_t offset_pixel = diff_centers/sd.hz_per_pixel;
             uint16_t pixel_start, pixel_count, left_padding_count, right_padding_count;
 
+
+            // here we actually create a single line pixel by pixel.
+
+            if (offset_pixel >= pos_spectrum->WIDTH || offset_pixel <= -pos_spectrum->WIDTH)
+            {
+                offset_pixel = pos_spectrum->WIDTH-1;
+            }
             if (offset_pixel <= 0)
             {
                                 // we have to start -offset_pixel later and then pad with black
@@ -1194,11 +1254,7 @@ static void UiSpectrum_DrawWaterfall()
             // point to next/prev line in circular display buffer:
             if(sd.wfall_DrawDirection==1)
             {
-            	lptr--;							//moving downward (this is exactly meaning of waterfall word :)
-            	if(lptr==0xffff)
-            	{
-            		lptr=sd.wfall_size-1;		//moving back to top (modulo somewhat doesn't work like this)
-            	}
+                lptr = lptr?lptr-1 : sd.wfall_size-1;
             }
             else
             {
@@ -1715,7 +1771,7 @@ void UiSpectrum_Redraw()
         {
             if(ts.waterfall.speed > 0)  // is it time to update the scan, or is this scope to be disabled?
             {
-                ts.waterfall.scheduler = (ts.waterfall.speed-1)*50;
+                ts.waterfall.scheduler = (ts.waterfall.speed-1)*(sd.doubleWaterfallLine?100:50); // we need to use half the speed if in double line drawing mode
                 sd.RedrawType|=Redraw_WATERFALL;
             }
         }

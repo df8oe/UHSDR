@@ -137,7 +137,7 @@ typedef struct
 
 
 
-float32_t	__MCHF_SPECIALMEM audio_delay_buffer	[AUDIO_DELAY_BUFSIZE];
+static float32_t	__MCHF_SPECIALMEM audio_delay_buffer	[AUDIO_DELAY_BUFSIZE];
 
 static void AudioDriver_ClearAudioDelayBuffer()
 {
@@ -2888,6 +2888,7 @@ static void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
                 {
                     sd.samp_ptr = 0;
                     sd.state    = 1;
+                    sd.FFT_frequency = (ts.tune_freq / TUNE_MULT); // spectrum shows all, LO is center frequency;
                 }
             }
         }
@@ -2951,6 +2952,7 @@ static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
                 {
                     sd.samp_ptr = 0;
                     sd.state    = 1;
+                    sd.FFT_frequency = (ts.tune_freq / TUNE_MULT) + AudioDriver_GetTranslateFreq(); // spectrum shows center at translate frequency, LO + Translate Freq  is center frequency;
                 }
             } // end for
 
