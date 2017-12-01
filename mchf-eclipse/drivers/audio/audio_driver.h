@@ -153,8 +153,8 @@ typedef struct AudioDriverState
 //    ulong					agc_delay_buflen;		// AGC delay buffer length
 //    float					agc_decimation_scaling;	// used to adjust AGC timing based on sample rate
     //
-    float					nb_agc_filt;			// used for the filtering/determination of the noise blanker AGC level
-    float					nb_sig_filt;
+//    float					nb_agc_filt;			// used for the filtering/determination of the noise blanker AGC level
+//    float					nb_sig_filt;
     ulong					dsp_zero_count;			// used for detecting zero output from DSP which can occur if it crashes
     float					dsp_nr_sample;			// used for detecting a problem with the DSP (e.g. crashing)
     //
@@ -272,54 +272,54 @@ typedef struct SMeter
 #define	AM_SCALING		1.0		// was 2.0 // Amount of gain multiplication to apply to audio and AGC to make recovery equal to that of SSB
 #define	AM_AUDIO_SCALING	1.4	// was 1.4 // Additional correction factor applied to audio demodulation to make amplitude equal to that of SSB demodulation
 //
-#define	AGC_GAIN_CAL	155000.0//22440		// multiplier value (linear, not DB) to calibrate the S-Meter reading to the AGC value
+//#define	AGC_GAIN_CAL	155000.0//22440		// multiplier value (linear, not DB) to calibrate the S-Meter reading to the AGC value
 //
 #define	AUTO_RFG_DECREASE_LOCKOUT	1
 #define	AUTO_RFG_INCREASE_TIMER		5//10
 //
-#define	AGC_SLOW			0		// Mode setting for slow AGC
-#define	AGC_MED				1		// Mode setting for medium AGC
-#define	AGC_FAST			2		// Mode setting for fast AGC
-#define	AGC_CUSTOM			3		// Mode setting for custom AGC
-#define	AGC_OFF				4		// Mode setting for AGC off
-#define	AGC_MAX_MODE		4		// Maximum for mode setting for AGC
-#define	AGC_DEFAULT			AGC_MED	// Default!
+//#define	AGC_SLOW			0		// Mode setting for slow AGC
+//#define	AGC_MED				1		// Mode setting for medium AGC
+//#define	AGC_FAST			2		// Mode setting for fast AGC
+//#define	AGC_CUSTOM			3		// Mode setting for custom AGC
+//#define	AGC_OFF				4		// Mode setting for AGC off
+//#define	AGC_MAX_MODE		4		// Maximum for mode setting for AGC
+//#define	AGC_DEFAULT			AGC_MED	// Default!
 //
-#define	AGC_CUSTOM_MAX		30		// Maximum (slowest) setting for custom AGC
-#define	AGC_CUSTOM_DEFAULT	12		// Default custom AGC setting (approx. equal to "medium")
-#define AGC_CUSTOM_FAST_WARNING	2	// Value at or below which setting the custom AGC is likely to degrade audio
+//#define	AGC_CUSTOM_MAX		30		// Maximum (slowest) setting for custom AGC
+//#define	AGC_CUSTOM_DEFAULT	12		// Default custom AGC setting (approx. equal to "medium")
+//#define AGC_CUSTOM_FAST_WARNING	2	// Value at or below which setting the custom AGC is likely to degrade audio
 //
 #define	MAX_RF_GAIN_MAX		30		// Maximum setting for "Max RF gain"
 #define	MAX_RF_GAIN_DEFAULT	10
 //
 // Noise blanker constants
 //
-#define	NBLANK_AGC_ATTACK	0.33	// Attack time multiplier for AGC
+//#define	NBLANK_AGC_ATTACK	0.33	// Attack time multiplier for AGC
 //
-#define NBLANK_AGC_DECAY	0.002	// Decay rate multiplier for "Fast" AGC
+//#define NBLANK_AGC_DECAY	0.002	// Decay rate multiplier for "Fast" AGC
 //
-#define	MAX_NB_SETTING		20
+#define	MAX_NB_SETTING		40
 #define	NB_WARNING1_SETTING	8		// setting at or above which NB warning1 (yellow) is given
 #define	NB_WARNING2_SETTING	12		// setting at or above which NB warning2 (orange) is given
 #define	NB_WARNING3_SETTING	16		// setting at or above which NB warning3 (red) is given
-#define	NB_DURATION			4
+//#define	NB_DURATION			4
 //
-#define	NB_AGC_FILT			0.999	// Component of IIR filter for recyling previous AGC value
-#define	NB_SIG_FILT			0.001	// Component of IIR filter for present signal value's contribution to AGC
+//#define	NB_AGC_FILT			0.999	// Component of IIR filter for recyling previous AGC value
+//#define	NB_SIG_FILT			0.001	// Component of IIR filter for present signal value's contribution to AGC
 //
-#define	NB_AVG_WEIGHT		0.80	// Weighting applied to average based on past signal for NB2
-#define	NB_SIG_WEIGHT		0.20	// Weighting applied to present signal for NB2
+//#define	NB_AVG_WEIGHT		0.80	// Weighting applied to average based on past signal for NB2
+//#define	NB_SIG_WEIGHT		0.20	// Weighting applied to present signal for NB2
 //
 //
-#define	NB_MAX_AGC_SETTING	35		// maximum setting for noise blanker setting
-#define	NB_AGC_DEFAULT		20		// Default setting for noise blanker AGC time constant adjust
+//#define	NB_MAX_AGC_SETTING	35		// maximum setting for noise blanker setting
+//#define	NB_AGC_DEFAULT		20		// Default setting for noise blanker AGC time constant adjust
 //
 // Values used for "custom" AGC settings
 //
-#define	MIN_CUST_AGC_VAL	10	// Minimum and maximum RF gain settings
-#define	MAX_CUST_AGC_VAL	30
-#define	CUST_AGC_OFFSET_VAL	30	// RF Gain offset value used in calculations
-#define	CUST_AGC_VAL_DEFAULT	17.8	// Value for "medium" AGC value
+//#define	MIN_CUST_AGC_VAL	10	// Minimum and maximum RF gain settings
+//#define	MAX_CUST_AGC_VAL	30
+//#define	CUST_AGC_OFFSET_VAL	30	// RF Gain offset value used in calculations
+//#define	CUST_AGC_VAL_DEFAULT	17.8	// Value for "medium" AGC value
 //
 #define	LINE_OUT_SCALING_FACTOR	10 // was 10		// multiplication of audio for fixed LINE out level (nominally 1vpp)
 //
