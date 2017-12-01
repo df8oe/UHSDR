@@ -207,7 +207,7 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
         alt_noise_blanking(inputsamples,NR_FFT_SIZE,Energy);
     }
 
-    if(ts.nr_enable)
+    if(ts.dsp_active & DSP_NR_ENABLE)
     {
         spectral_noise_reduction(inputsamples);
     }

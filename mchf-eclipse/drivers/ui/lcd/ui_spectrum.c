@@ -1330,7 +1330,7 @@ static void UiSpectrum_RedrawSpectrum(void)
 
         // just for debugging purposes
         // display the spectral noise reduction bin gain values in the second 64 pixels of the spectrum display
-        if(ts.nr_enable && NR.gain_display != 0)
+        if((ts.dsp_active & DSP_NR_ENABLE) && NR.gain_display != 0)
         {
         	if(NR.gain_display == 1)
         	{

@@ -3469,7 +3469,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     static int outbuff_count=0;
     static int NR_fill_in_pt=0;
     static NR_Buffer* out_buffer = NULL;
-    //#define NR_FFT_SIZE   128
 #endif
 
 
@@ -3675,7 +3674,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         else
 #endif
                         {
+#ifdef OBSOLETE_NR
                         	AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);     //
+#endif
                         }
                     }
 
@@ -3714,12 +3715,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     else
 #endif
                     {
+#ifdef OBSOLETE_NR
                     	AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);     //
+#endif
                     }
                 }
                 //
                 //                if (ts.new_nb==true || ts.nr_enable == true) //start of new nb
-                if (ts.nb_setting > 0 || ts.nr_enable == true) //start of new nb
+                if (ts.nb_setting > 0 || (dsp_active & DSP_NR_ENABLE)) //start of new nb or new noise reduction
                 {
                     // NR_in and _out buffers are using the same physical space than the freedv_iq_buffer in a
                     // shared MultiModeBuffer union.

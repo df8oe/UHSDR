@@ -346,7 +346,8 @@ bool is_vfo_b()
 
 inline bool is_dsp_nb()
 {
-	return (ts.nb_setting > 0); // noise blanker ON
+	return (ts.dsp_active & DSP_NB_ENABLE) != 0;
+//	return (ts.nb_setting > 0); // noise blanker ON
 }
 
 inline bool is_dsp_nr()
@@ -3407,10 +3408,10 @@ static void UiDriver_CheckEncoderTwo()
 						}
 						else // AGC mode setting
 						{
-						//                    ts.agc_wdsp_tau_decay = change_and_limit_int(ts.agc_wdsp_tau_decay,pot_diff_step * 100,100,5000);
-						ts.agc_wdsp_mode = change_and_limit_uint(ts.agc_wdsp_mode,pot_diff_step,0,5);
-						ts.agc_wdsp_switch_mode = 1; // set flag, so that mode switching really takes place in AGC_prep
-						AudioDriver_SetupAgcWdsp();
+							//                    ts.agc_wdsp_tau_decay = change_and_limit_int(ts.agc_wdsp_tau_decay,pot_diff_step * 100,100,5000);
+							ts.agc_wdsp_mode = change_and_limit_uint(ts.agc_wdsp_mode,pot_diff_step,0,5);
+							ts.agc_wdsp_switch_mode = 1; // set flag, so that mode switching really takes place in AGC_prep
+							AudioDriver_SetupAgcWdsp();
 						}
 					UiDriver_DisplayNoiseBlanker(1);
 					break;
@@ -6409,7 +6410,7 @@ void UiDriver_MainHandler()
 #endif // USE_FREEDV
 
 #ifdef USE_ALTERNATE_NR
-	if ((ts.new_nb == true || ts.nr_enable == true) && (ads.decimation_rate == 4))
+	if ((ts.new_nb == true || (ts.dsp_active & DSP_NR_ENABLE)) && (ads.decimation_rate == 4))
 	{
 
 		alternateNR_handle();
