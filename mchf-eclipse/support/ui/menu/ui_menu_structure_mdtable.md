@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-12-01T11:40:10  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-12-01T21:03:22  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-12-01T11:40:10  by "./ui_menu_structure_mdtable.py"
+generated at  2017-12-01T21:03:22  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -280,7 +280,6 @@ generated at  2017-12-01T11:40:10  by "./ui_menu_structure_mdtable.py"
 | **FT817 Clone Transmit**      (                        MENU_DEBUG_CLONEOUT) | Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP). | 
 | **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 
 | **New Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | New noiseblanker for testing purposes          | 
-| **Spectral NR**               (                       MENU_DEBUG_NR_ENABLE) | enable spectral noise reduction for testing purposes | 
 | **Long tone**                 (             MENU_DEBUG_NR_LONG_TONE_ENABLE) | enable long tone detection in spectral noise reduction for testing purposes | 
 | **Show gains**                (                    MENU_DEBUG_NR_GAIN_SHOW) | Debugging: show gains of spectral noise reduction | 
 | **Long tone alpha**           (              MENU_DEBUG_NR_LONG_TONE_ALPHA) | time constant alpha for long tone detection in spectral noise reduction | 
