@@ -6410,7 +6410,7 @@ void UiDriver_MainHandler()
 #endif // USE_FREEDV
 
 #ifdef USE_ALTERNATE_NR
-	if ((ts.new_nb == true || ts.nr_enable == true) && (ads.decimation_rate == 4))
+	if ((ts.new_nb == true || (ts.dsp_active & DSP_NR_ENABLE)) && (ads.decimation_rate == 4))
 	{
 
 		alternateNR_handle();

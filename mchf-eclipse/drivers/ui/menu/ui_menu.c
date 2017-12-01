@@ -3855,9 +3855,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
      case MENU_DEBUG_NEW_NB:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
          break;
-     case MENU_DEBUG_NR_ENABLE:
-             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_enable,0,options,&clr);
-         break;
+//     case MENU_DEBUG_NR_ENABLE:
+//             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_enable,0,options,&clr);
+//         break;
      case MENU_DEBUG_NR_LONG_TONE_ENABLE:
              var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_long_tone_enable,0,options,&clr);
              if(var_change)

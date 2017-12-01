@@ -471,7 +471,7 @@ enum	{
 //
 // Noise reduction
 //
-#define	LMS_NR_DELAYBUF_SIZE_MAX		512	// maximum size of LMS delay buffer for the noise reduction
+#define	LMS_NR_DELAYBUF_SIZE_MAX		256 //512	// maximum size of LMS delay buffer for the noise reduction
 //
 //
 #define	DSP_NR_STRENGTH_MAX		55//35	// Maximum menu setting for DSP "Strength"
