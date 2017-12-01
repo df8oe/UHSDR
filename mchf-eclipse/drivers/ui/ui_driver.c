@@ -2910,10 +2910,13 @@ static void UiDriver_TimeScheduler()
 		if(ts.temp_nb < 0x80)       // load NB setting after processing first audio data
 		{
 			ts.nb_setting = ts.temp_nb;
-			UiDriver_DisplayEncoderTwoMode();
+
 			ts.temp_nb = 0xf0;
 		}
 		*/
+		// display noise blanker, if active
+		UiDriver_DisplayEncoderTwoMode();
+
 		ts.dsp_inhibit = 0;                 // allow DSP to function
 
 
