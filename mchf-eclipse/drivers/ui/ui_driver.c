@@ -2906,14 +2906,9 @@ static void UiDriver_TimeScheduler()
 	{
 		startup_done_flag = true;                  // set flag so that we do this only once
 
-/*		// TODO: Get this away by fixing the startup of the noise blanker
-		if(ts.temp_nb < 0x80)       // load NB setting after processing first audio data
-		{
-			ts.nb_setting = ts.temp_nb;
-			UiDriver_DisplayEncoderTwoMode();
-			ts.temp_nb = 0xf0;
-		}
-		*/
+		//
+		UiDriver_DisplayEncoderTwoMode();
+
 		ts.dsp_inhibit = 0;                 // allow DSP to function
 
 
@@ -3405,12 +3400,18 @@ static void UiDriver_CheckEncoderTwo()
 					// Update DSP/NB setting
 				case ENC_TWO_MODE_SIG_PROC:
 						// Signal processor setting
-
+						// this is AGC setting OR noise blanker setting
+						if(is_dsp_nb()) // noise blanker is active (ts.nb_setting > 0)
+						{
+							ts.nb_setting = change_and_limit_uint(ts.nb_setting,pot_diff_step,0,MAX_NB_SETTING);
+						}
+						else // AGC mode setting
+						{
 						//                    ts.agc_wdsp_tau_decay = change_and_limit_int(ts.agc_wdsp_tau_decay,pot_diff_step * 100,100,5000);
 						ts.agc_wdsp_mode = change_and_limit_uint(ts.agc_wdsp_mode,pot_diff_step,0,5);
 						ts.agc_wdsp_switch_mode = 1; // set flag, so that mode switching really takes place in AGC_prep
 						AudioDriver_SetupAgcWdsp();
-
+						}
 					UiDriver_DisplayNoiseBlanker(1);
 					break;
 				case ENC_TWO_MODE_NR:
