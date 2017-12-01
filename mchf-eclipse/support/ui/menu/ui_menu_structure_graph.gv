@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-11-30T17:27:51  by "./ui_menu_structure_graph.py"
+#  generated at  2017-12-01T11:40:07  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-11-30T17:27:51  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-12-01T11:40:07  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -242,13 +242,13 @@
              shape = record
              ];
         
-        "MENU_LOW_POWER_SHUTDOWN" [
-             label = "MENU_LOW_POWER_SHUTDOWN | Low Voltage Shutdown"
+        "MENU_BACKUP_CONFIG" [
+             label = "MENU_BACKUP_CONFIG | Backup Config"
              shape = record
              ];
         
-        "MENU_BACKUP_CONFIG" [
-             label = "MENU_BACKUP_CONFIG | Backup Config"
+        "MENU_LOW_POWER_SHUTDOWN" [
+             label = "MENU_LOW_POWER_SHUTDOWN | Low Voltage Shutdown"
              shape = record
              ];
         
@@ -514,11 +514,6 @@
         
         "CONFIG_DSP_NOTCH_FFT_NUMTAPS" [
              label = "CONFIG_DSP_NOTCH_FFT_NUMTAPS | DSP Notch FIRNumTap"
-             shape = record
-             ];
-        
-        "CONFIG_AGC_TIME_CONSTANT" [
-             label = "CONFIG_AGC_TIME_CONSTANT | NB AGC T/C (\<=Slow)"
              shape = record
              ];
         
@@ -1482,8 +1477,6 @@
             
             MENU_CONF -> CONFIG_DSP_NOTCH_FFT_NUMTAPS
             
-            MENU_CONF -> CONFIG_AGC_TIME_CONSTANT
-            
             MENU_CONF -> CONFIG_RESET_SER_EEPROM
             
         }  ## END subgraph MENU_HALL_OF_FAME
@@ -1596,9 +1589,9 @@
             
             MENU_BASE -> MENU_TCXO_C_F
             
-            MENU_BASE -> MENU_LOW_POWER_SHUTDOWN
-            
             MENU_BASE -> MENU_BACKUP_CONFIG
+            
+            MENU_BASE -> MENU_LOW_POWER_SHUTDOWN
             
             MENU_BASE -> MENU_RESTORE_CONFIG
             
