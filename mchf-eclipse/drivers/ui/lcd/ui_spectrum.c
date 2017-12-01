@@ -1004,7 +1004,6 @@ static void UiSpectrum_InitSpectrumDisplayData()
         sd.wfall_size = pos_spectrum->BIG_WATERFALL_HEIGHT;
     }
 
-    sd.wfall_disp_lines = sd.wfall_size * (sd.doubleWaterfallLine==true? 2:1);
 
     // now make sure we fit in
     // please note, this works only if we have enough memory for have the lines
@@ -1031,6 +1030,9 @@ static void UiSpectrum_InitSpectrumDisplayData()
     {
         sd.doubleWaterfallLine = 0;
     }
+
+
+    sd.wfall_disp_lines = sd.wfall_size * (sd.doubleWaterfallLine==true? 2:1);
 
 
     for (uint16_t idx = 0; idx < pos_spectrum->WIDTH; idx++)
@@ -1461,8 +1463,8 @@ void UiSpectrum_Init()
     UiSpectrum_WaterfallClearData();
 #endif
 
-    UiSpectrum_Clear();			// clear display under spectrum scope
     UiSpectrum_InitSpectrumDisplayData();
+    UiSpectrum_Clear();         // clear display under spectrum scope
     UiSpectrum_CreateDrawArea();
     UiSpectrum_DisplayFilterBW();	// Update on-screen indicator of filter bandwidth
 }
