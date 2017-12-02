@@ -2186,28 +2186,30 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr,FLAGS1_SCOPE_LIGHT_ENABLE);
         break;
     case MENU_SPECTRUM_MODE:
-        temp_var_u8 = (ts.flags1 & (FLAGS1_WFALL_ENABLED|FLAGS1_SCOPE_ENABLED)) >> 7;
+        temp_var_u8 = UiDriver_GetSpectrumMode();
 
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
-                                    1,
-                                    3,
-                                    3,
+                                    SPECTRUM_WATERFALL,
+                                    SPECTRUM_DUAL,
+                                    SPECTRUM_DUAL,
                                     1
                                    );
         switch(temp_var_u8)
         {
-        case 3:
+        case SPECTRUM_DUAL:
             txt_ptr = " DUAL";
             break;
-        case 2:
+        case SPECTRUM_SCOPE:
             txt_ptr = "SCOPE";
             break;
-        case 1:
+        case SPECTRUM_WATERFALL:
             txt_ptr = "WFALL";
             break;
+        case SPECTRUM_BLANK:
+            txt_ptr = "  OFF";
+            break;
         }
-        ts.flags1 = (ts.flags1 & ~(FLAGS1_WFALL_ENABLED|FLAGS1_SCOPE_ENABLED)) | ((uint16_t)temp_var_u8) << 7;
-
+        UiDriver_SetSpectrumMode(temp_var_u8);
         break;
     case MENU_WFALL_COLOR_SCHEME:   // Adjustment of dB/division of spectrum scope
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall.color_scheme,

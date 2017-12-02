@@ -1705,6 +1705,15 @@ static void UiDriver_CreateFunctionButtons(bool full_repaint)
 	UiDriver_FButton_F5Tune();
 }
 
+void UiDriver_SetSpectrumMode(SpectrumMode_t mode)
+{
+    ts.flags1 = (ts.flags1 & ~(3 << 7)) |(mode << 7);
+}
+SpectrumMode_t UiDriver_GetSpectrumMode()
+{
+    return (ts.flags1 >> 7) & 0x3;
+}
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverDrawSMeter
@@ -1732,6 +1741,11 @@ static void UiDriver_CreateDesktop()
 
 	// S-meter
 	UiDriver_CreateMeters();
+
+	if (UiDriver_GetSpectrumMode() == SPECTRUM_BLANK)
+	{
+	    UiDriver_SetSpectrumMode(SPECTRUM_DUAL);
+	}
 
 	// Spectrum scope
 	UiSpectrum_Init();
