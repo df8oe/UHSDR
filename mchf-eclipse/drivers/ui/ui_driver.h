@@ -161,6 +161,13 @@ typedef struct PowerMeter
     bool        undervoltage_detected;
 } PowerMeter;
 
+typedef enum
+{
+    SPECTRUM_BLANK = 0,
+    SPECTRUM_SCOPE = 1,
+    SPECTRUM_WATERFALL = 2,
+    SPECTRUM_DUAL = 3
+} SpectrumMode_t;
 
 
 //
@@ -203,6 +210,9 @@ void UiDriver_TextMsgPutSign(const char *s);
 void UiDriver_TextMsgDisplay();
 void UiDriver_TextMsgClear();
 
+
+void UiDriver_SetSpectrumMode(SpectrumMode_t mode);
+SpectrumMode_t UiDriver_GetSpectrumMode();
 
 
 //
