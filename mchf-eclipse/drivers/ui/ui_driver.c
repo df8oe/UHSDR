@@ -5599,21 +5599,19 @@ static void UiAction_ChangeFrequencyToNextKhz()
 
 static void UiAction_ToggleWaterfallScopeDisplay()
 {
-    // if both modes are active, don't switch
-    if (is_waterfallmode() != is_scopemode())
+    uint16_t temp = (ts.flags1 & (FLAGS1_WFALL_ENABLED|FLAGS1_SCOPE_ENABLED)) >> 7;
+
+    if (temp != 0)
     {
-        if(is_waterfallmode())
-        {
-            // is the waterfall mode active?
-            ts.flags1 &=  ~FLAGS1_WFALL_SCOPE_TOGGLE;     // yes, turn it off
-        }
-        else
-        {
-            // waterfall mode was turned off
-            ts.flags1 |=  FLAGS1_WFALL_SCOPE_TOGGLE;          // turn it on
-        }
-        UiSpectrum_Init();   // init spectrum display
+        // we want range 0 - 2 instead of the normal 1 - 3
+        temp--;
     }
+    temp++;
+    temp%=3;
+    temp++;
+    temp <<= 7;
+    ts.flags1 = (ts.flags1 & ~(FLAGS1_WFALL_ENABLED|FLAGS1_SCOPE_ENABLED)) | temp;
+    UiSpectrum_Init();   // init spectrum display
 }
 
 static void UiAction_ChangeDemodMode()

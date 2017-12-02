@@ -30,33 +30,6 @@
 #define USE_DISP_480_320_SPEC
 #endif
 
-#define POS_SPECTRUM_DRAW_Y_TOP (POS_SPECTRUM_IND_Y - 22)
-#define SPECTRUM_BIG_HEIGHT (SPECTRUM_HEIGHT + SPEC_LIGHT_MORE_POINTS)
-
-
-#ifdef USE_DISP_480_320
-#define POS_SPECTRUM_DRAW_X_LEFT (POS_SPECTRUM_IND_X)
-#define POS_SPECTRUM_DRAW_HEIGHT (POS_SPECTRUM_IND_H + WATERFALL_HEIGHT + POS_SPECTRUM_FREQ_BAR_H + 2 +5)
-#define POS_SPECTRUM_DRAW_WIDTH (MAX_X)
-
-#define POS_SPECTRUM_NORMAL_START_Y (SPECTRUM_START_Y + POS_SPECTRUM_FREQ_BAR_H)
-#define POS_SPECTRUM_BIG_START_Y (SPECTRUM_START_Y - SPEC_LIGHT_MORE_POINTS + POS_SPECTRUM_FREQ_BAR_H)
-
-///SPECTRUM_START_Y + SPECTRUM_SCOPE_TOP_LIMIT
-#define POS_SPECTRUM_GRATICULE_Y (POS_SPECTRUM_IND_Y)
-#endif
-#ifdef USE_DISP_320_240
-#define POS_SPECTRUM_DRAW_X_LEFT (POS_SPECTRUM_IND_X - 2)
-#define POS_SPECTRUM_DRAW_HEIGHT (94)
-#define POS_SPECTRUM_DRAW_WIDTH (262)
-
-
-#define POS_SPECTRUM_NORMAL_START_Y (SPECTRUM_START_Y)
-#define POS_SPECTRUM_BIG_START_Y (SPECTRUM_START_Y - SPEC_LIGHT_MORE_POINTS)
-
-#define POS_SPECTRUM_GRATICULE_Y (POS_SPECTRUM_IND_Y + 60)
-#endif
-
 typedef struct {
     uint16_t x;
     uint16_t y;
@@ -66,31 +39,8 @@ typedef struct {
 
 typedef struct
 {
-    const int16_t WIDTH;
-    const int16_t DRAW_Y_TOP;
-    const int16_t NORMAL_HEIGHT;
-    const int16_t BIG_HEIGHT;
-    const int16_t DRAW_X_LEFT;
-    const int16_t DRAW_HEIGHT;
-    const int16_t DRAW_WIDTH;
-    const int16_t NORMAL_START_Y;
-    const int16_t BIG_START_Y;
-    const int16_t GRATICULE_Y;
-    const int16_t GRID_VERT_START;
-    const int16_t GRID_HORIZ_START;
-    const int16_t SCOPE_GRID_VERT;
-    const int16_t SCOPE_GRID_HORIZ;
-    const int16_t IND_Y;
-    const int16_t IND_X;
-    const int16_t IND_W;
-    const int16_t START_X;
-    const int16_t FREQ_BAR_Y;
-    const int16_t FREQ_BAR_H;
     const int16_t SCOPE_GRID_VERT_COUNT;
-    const int16_t NORMAL_WATERFALL_START_Y;
-    const int16_t NORMAL_WATERFALL_HEIGHT;
-    const int16_t BIG_WATERFALL_START_Y;
-    const int16_t BIG_WATERFALL_HEIGHT;
+    const int16_t SCOPE_GRID_HORIZ;
 } pos_spectrum_display_t;
 
 
@@ -117,7 +67,7 @@ SpectrumAreas_t slayout;
  * @brief Implements the full calculation of coordinates for a variable sized spectrum display
  * This algorithm can also be used to calculate the layout statically offline (we don't do this yet).
  */
-void UiSpectrum_CalculateLayout(bool is_big, bool scope_enabled, bool wfall_enabled, UiArea_t* full_ptr, uint16_t padding)
+void UiSpectrum_CalculateLayout(const bool is_big, const bool scope_enabled, const bool wfall_enabled, const UiArea_t* full_ptr, const uint16_t padding)
 {
     slayout.full.x = full_ptr->x;
     slayout.full.y = full_ptr->y;
@@ -156,6 +106,7 @@ const pos_spectrum_display_t pos_spectrum_set[] =
 {
 #ifdef USE_DISP_320_240
         {
+#if 0
                 .WIDTH = 256,
                 .DRAW_Y_TOP = POS_SPECTRUM_DRAW_Y_TOP,
                 .NORMAL_HEIGHT = SPECTRUM_HEIGHT,
@@ -166,52 +117,30 @@ const pos_spectrum_display_t pos_spectrum_set[] =
                 .NORMAL_START_Y= (SPECTRUM_START_Y),
                 .BIG_START_Y= (SPECTRUM_START_Y - SPEC_LIGHT_MORE_POINTS),
                 .GRATICULE_Y = (POS_SPECTRUM_IND_Y + 60),
-                .GRID_VERT_START = POS_SPECTRUM_GRID_VERT_START,
-                .GRID_HORIZ_START = POS_SPECTRUM_GRID_HORIZ_START,
-                .SCOPE_GRID_VERT = SPECTRUM_SCOPE_GRID_VERT,
+#endif
+                // .GRID_VERT_START = POS_SPECTRUM_GRID_VERT_START,
+                // .GRID_HORIZ_START = POS_SPECTRUM_GRID_HORIZ_START,
+                // .SCOPE_GRID_VERT = SPECTRUM_SCOPE_GRID_VERT,
+                .SCOPE_GRID_VERT_COUNT = SPECTRUM_SCOPE_GRID_VERT_COUNT,
                 .SCOPE_GRID_HORIZ = SPECTRUM_SCOPE_GRID_HORIZ,
+#if 0
                 .IND_Y = POS_SPECTRUM_IND_Y,
                 .IND_X = POS_SPECTRUM_IND_X,
                 .START_X = POS_SPECTRUM_IND_X, // (SPECTRUM_START_X) seems to be a duplicate; used for waterfall left x
                 .IND_W = POS_SPECTRUM_IND_W,
                 .FREQ_BAR_Y = POS_SPECTRUM_FREQ_BAR_Y,
                 .FREQ_BAR_H = POS_SPECTRUM_FREQ_BAR_H,
-                .SCOPE_GRID_VERT_COUNT = SPECTRUM_SCOPE_GRID_VERT_COUNT,
                 .NORMAL_WATERFALL_START_Y = (SPECTRUM_START_Y + SPECTRUM_SCOPE_TOP_LIMIT),
                 .NORMAL_WATERFALL_HEIGHT = (SPECTRUM_HEIGHT - SPECTRUM_SCOPE_TOP_LIMIT),
                 .BIG_WATERFALL_START_Y = SPECTRUM_START_Y - WFALL_MEDIUM_ADDITIONAL,
                 .BIG_WATERFALL_HEIGHT = SPECTRUM_HEIGHT + WFALL_MEDIUM_ADDITIONAL,
-
+#endif
         },
 #endif
 #ifdef USE_DISP_480_320_SPEC
-        {
-                .WIDTH = 480,
-                .DRAW_Y_TOP = (130 - 22), // POS_SPECTRUM_DRAW_Y_TOP,
-                .NORMAL_HEIGHT = 70, // SPECTRUM_HEIGHT,
-                .BIG_HEIGHT= (85), // (SPECTRUM_HEIGHT + SPEC_LIGHT_MORE_POINTS),
-                .DRAW_X_LEFT= 0, // (POS_SPECTRUM_IND_X),
-                .DRAW_HEIGHT= 153, // (POS_SPECTRUM_IND_H + WATERFALL_HEIGHT + POS_SPECTRUM_FREQ_BAR_H + 2 +5),
-                .DRAW_WIDTH= 480, // (MAX_X),
-                .NORMAL_START_Y= 136, // (SPECTRUM_START_Y + POS_SPECTRUM_FREQ_BAR_H),
-                .BIG_START_Y= 121, // (SPECTRUM_START_Y - SPEC_LIGHT_MORE_POINTS + POS_SPECTRUM_FREQ_BAR_H),
-                .GRATICULE_Y= 130, // (POS_SPECTRUM_IND_Y),
-                .GRID_VERT_START = -1, // POS_SPECTRUM_GRID_VERT_START,
-                .GRID_HORIZ_START = 191, // POS_SPECTRUM_GRID_HORIZ_START,
-                .SCOPE_GRID_VERT = (480/8), // SPECTRUM_SCOPE_GRID_VERT,
+         {
                 .SCOPE_GRID_HORIZ = 16, // SPECTRUM_SCOPE_GRID_HORIZ,
-                .IND_Y = 130, // POS_SPECTRUM_IND_Y,
-                .IND_X = 0, // POS_SPECTRUM_IND_X,
-                .START_X = 0, // (SPECTRUM_START_X) seems to be a duplicate; used for waterfall left x
-                .IND_W = 480, // POS_SPECTRUM_IND_W,
-                .FREQ_BAR_Y = 0, // POS_SPECTRUM_FREQ_BAR_Y,
-                .FREQ_BAR_H = 16, // POS_SPECTRUM_FREQ_BAR_H,
                 .SCOPE_GRID_VERT_COUNT = 8, // SPECTRUM_SCOPE_GRID_VERT_COUNT,
-                .NORMAL_WATERFALL_START_Y = 210, // (POS_SPECTRUM_IND_Y+POS_SPECTRUM_IND_H),
-                .NORMAL_WATERFALL_HEIGHT = 70, // WATERFALL_HEIGHT,
-                .BIG_WATERFALL_START_Y = 210, // WATERFALL_START_Y,
-                .BIG_WATERFALL_HEIGHT = 70, // WATERFALL_HEIGHT,
-
         },
 #endif
 };
@@ -261,7 +190,7 @@ typedef struct
     const char* label;
 } scope_scaling_info_t;
 
-static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM] =
+static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM+1] =
 {
         // scaling factors for the various dB/division settings
         { 0,                        "Waterfall      " }, // just a small trick, the scope will never use scaling index 0
@@ -272,7 +201,8 @@ static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM] =
         { DB_SCALING_20,            "SC(20dB/div)   " },
         { DB_SCALING_S1,            "SC(1S-Unit/div)" },
         { DB_SCALING_S2,            "SC(2S-Unit/div)" },
-        { DB_SCALING_S3,            "SC(3S-Unit/div)" }
+        { DB_SCALING_S3,            "SC(3S-Unit/div)" },
+        { 0,                        "Dual (10dB/div)" }, // just a small trick, the scope will never use scaling index SCOPE_SCALE_NUM
 };
 
 static void     UiSpectrum_DrawFrequencyBar();
@@ -294,7 +224,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
     if (sd.magnify != old_magnify || force_update)
     {
         old_magnify = sd.magnify;
-        sd.hz_per_pixel = IQ_SAMPLE_RATE_F/((1 << sd.magnify) * pos_spectrum->WIDTH);     // magnify mode is on
+        sd.hz_per_pixel = IQ_SAMPLE_RATE_F/((1 << sd.magnify) * slayout.scope.w);     // magnify mode is on
         force_update = true;
     }
 
@@ -305,11 +235,11 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
 
         if(!sd.magnify)     // is magnify mode on?
         {
-            sd.rx_carrier_pos = pos_spectrum->WIDTH/2 - 0.5 - (AudioDriver_GetTranslateFreq()/sd.hz_per_pixel);
+            sd.rx_carrier_pos = slayout.scope.w/2 - 0.5 - (AudioDriver_GetTranslateFreq()/sd.hz_per_pixel);
         }
         else        // magnify mode is on
         {
-            sd.rx_carrier_pos = pos_spectrum->WIDTH/2 -0.5;                                // line is always in center in "magnify" mode
+            sd.rx_carrier_pos = slayout.scope.w/2 -0.5;                                // line is always in center in "magnify" mode
         }
     }
     if (ts.cw_lsb != old_cw_lsb || ts.cw_sidetone_freq != old_cw_sidetone_freq || ts.dmod_mode != old_dmod_mode || ts.digital_mode != old_digital_mode || force_update)
@@ -374,7 +304,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
         for (uint16_t idx = sd.marker_num; idx < SPECTRUM_MAX_MARKER; idx++)
         {
         	sd.marker_offset[idx] = 0;
-        	sd.marker_pos[idx] = pos_spectrum->WIDTH; // this is an invalid position out of screen
+        	sd.marker_pos[idx] = slayout.scope.w; // this is an invalid position out of screen
         }
 
     }
@@ -443,7 +373,11 @@ static void UiSpectrum_SpectrumTopBar_GetText(char* wfbartext)
 {
     const char* lefttext;
 
-    if(is_waterfallmode())           //waterfall
+    if(is_waterfallmode() && is_scopemode())           // dual waterfall
+    {
+        lefttext = scope_scaling_factors[SCOPE_SCALE_NUM].label; // a small trick, we use the empty location of index SCOPE_SCALE_NUM in the table
+    }
+    else if(is_waterfallmode())           //waterfall
     {
         lefttext = scope_scaling_factors[0].label; // a small trick, we use the empty location of index 0 in the table
     }
@@ -456,7 +390,7 @@ static void UiSpectrum_SpectrumTopBar_GetText(char* wfbartext)
 }
 
 /**
- * tells us if x is on a vertical grid line. Called for all pos_spectrum->WIDTH lines
+ * tells us if x is on a vertical grid line. Called for all slayout.scope.w lines
  */
 static bool UiSpectrum_Draw_XposIsOnVertGrid(const uint16_t x)
 {
@@ -485,7 +419,7 @@ static bool UiSpectrum_Draw_XposIsOnVertGrid(const uint16_t x)
     // this should be faster in case of power of 2 vert grid distance than the generic lookup code above
     // since the compiler should detect that module power 2 means just masking the higher bits
     // we have special check if we are on the rightmost pixel, this one is not a vertical line.
-    return ((x - pos_spectrum->GRID_VERT_START) % pos_spectrum->SCOPE_GRID_VERT == 0) && (x != (pos_spectrum->GRID_VERT_START + pos_spectrum->WIDTH)) ;
+    return ((x + 1) % sd.vert_grid == 0) && (x != (slayout.scope.w - 1));
 #endif
     return repaint_v_grid;
 }
@@ -521,7 +455,7 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
         // is old line is longer than the new line?
 
         // repaint the vertical grid
-        bool repaint_v_grid = UiSpectrum_Draw_XposIsOnVertGrid(x);
+        bool repaint_v_grid = UiSpectrum_Draw_XposIsOnVertGrid(x - slayout.scope.x);
 
         // we need to delete by overwriting with background color or grid color if we are on a vertical grid line
         uint16_t clr_bg =
@@ -561,24 +495,10 @@ static void UiSpectrum_CreateDrawArea()
     // Get color of center vertical line of spectrum scope
     UiMenu_MapColors(ts.spectrum_centre_line_colour,NULL, &sd.scope_centre_grid_colour_active);
 
-    uint16_t GridPosY=pos_spectrum->IND_Y;
-
     // Clear screen where frequency information will be under graticule
-    UiLcdHy28_DrawFullRect(pos_spectrum->DRAW_X_LEFT, pos_spectrum->GRATICULE_Y, UiLcdHy28_TextHeight(0), pos_spectrum->DRAW_WIDTH, Black);    // Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
-    switch(disp_resolution)
-    {
-#ifdef USE_DISP_480_320_SPEC
-    case RESOLUTION_480_320:
-        GridPosY+=pos_spectrum->FREQ_BAR_H;
-        sd.wfall_DrawDirection=1;
-        break;
-#endif
-#ifdef USE_DISP_320_240
-    case RESOLUTION_320_240:
-        sd.wfall_DrawDirection=0;
-        break;
-#endif
-    }
+    UiLcdHy28_DrawFullRect(slayout.graticule.x, slayout.graticule.x, slayout.graticule.h, slayout.graticule.w, Black);    // Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
+
+    sd.wfall_DrawDirection=1;
 
 // was used on 320x240, we may reactivate that at some point for all resolutions
 #if 0
@@ -602,86 +522,83 @@ static void UiSpectrum_CreateDrawArea()
 #endif
 
 
-
-
-
-    if(ts.spectrum_size == SPECTRUM_NORMAL)		//don't draw text bar when size is BIG
+    if(slayout.title.h != 0)		//don't draw text bar if there is no space allocated for it
     {
     	// Draw top band = grey box in which text is printed
     	for(int i = 0; i < 16; i++)
     	{
-    		UiLcdHy28_DrawHorizLineWithGrad(pos_spectrum->IND_X,(pos_spectrum->IND_Y - 20 + i),pos_spectrum->IND_W,COL_SPECTRUM_GRAD);
+    		UiLcdHy28_DrawHorizLineWithGrad(slayout.title.x,slayout.title.y + i, slayout.title.w, COL_SPECTRUM_GRAD);
     	}
 
     	char bartext[34];
 
     	// Top band text - middle caption
     	UiSpectrum_SpectrumTopBar_GetText(bartext);
+
     	UiLcdHy28_PrintTextCentered(
-    			pos_spectrum->IND_X,
-				(pos_spectrum->IND_Y - 18),
-				pos_spectrum->IND_W,
+    			slayout.title.x,
+    			slayout.title.y + (slayout.title.h - UiLcdHy28_TextHeight(0))/2,
+    			slayout.title.w,
 				bartext,
 				White,
-				RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
+				RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),
+				0);
     }
 
     // Horizontal grid lines
-    if(ts.spectrum_size)		//set range big/normal
-    {
-    	sd.upper_horiz_gridline = 5;
-    }
-    else
-    {
-    	sd.upper_horiz_gridline = 3;
-    }
+    sd.upper_horiz_gridline = slayout.scope.h / pos_spectrum->SCOPE_GRID_HORIZ;
 
     // array must be filled from higher to the y coordinates
     // the lookup code for a match counts on this.
     for(int i = 0; i < sd.upper_horiz_gridline; i++)
     {
-    	// Save y position for grid draw and repaint
-    	sd.horz_grid_id[i] = (pos_spectrum->GRID_HORIZ_START - i * pos_spectrum->SCOPE_GRID_HORIZ);
+        // Save y position for grid draw and repaint
+        sd.horz_grid_id[i] = (slayout.scope.y + slayout.scope.h  - ((i+1) * pos_spectrum->SCOPE_GRID_HORIZ));
     }
 
     // Vertical grid lines
     // array must be filled from low to higher x coordinates
     // the lookup code for a match counts on this.
+    sd.vert_grid = slayout.scope.w / pos_spectrum->SCOPE_GRID_VERT_COUNT;
     for(int i = 1; i < pos_spectrum->SCOPE_GRID_VERT_COUNT; i++)
     {
-    	// Save x position for grid draw and repaint
-    	sd.vert_grid_id[i - 1] = (pos_spectrum->GRID_VERT_START + i*pos_spectrum->SCOPE_GRID_VERT);
+        // Save x position for grid draw and repaint
+        sd.vert_grid_id[i - 1] = (i*sd.vert_grid - 1);
     }
 
-    if ((is_waterfallmode() && (!ts.waterfall.speed)) || (is_scopemode() && (!ts.scope_speed)))
+
+    if (is_waterfallmode() == true && ts.waterfall.speed == 0)
     {
         // print "disabled" in the middle of the screen if the waterfall or scope was disabled
-        UiLcdHy28_PrintText(
-                (pos_spectrum->IND_X + 72),
-                (GridPosY + 18),
-                "   DISABLED   ",
-                Grey,
-                RGB((COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2),(COL_SPECTRUM_GRAD*2)),0);
+        UiLcdHy28_PrintTextCentered(
+                slayout.wfall.x,
+                slayout.wfall.y + (slayout.scope.h - UiLcdHy28_TextHeight(0))/2 ,
+                slayout.wfall.w,
+                "DISABLED",
+                Grey, Black,0);
+    }
+
+    if (is_scopemode() == true && ts.scope_speed == 0)
+    {
+        // print "disabled" in the middle of the screen if the waterfall or scope was disabled
+        UiLcdHy28_PrintTextCentered(
+                slayout.scope.x,
+                slayout.scope.y + (slayout.scope.h - UiLcdHy28_TextHeight(0))/2 ,
+                slayout.scope.w,
+                "DISABLED",
+                Grey, Black,0);
     }
 
     // Draw Frequency bar text after arrays with coordinates are set
     UiSpectrum_DrawFrequencyBar();
     //show highlighted filter bandwidth on the spectrum
-    sd.old_left_filter_border_pos=pos_spectrum->START_X;;
-    sd.old_right_filter_border_pos=pos_spectrum->WIDTH+pos_spectrum->START_X;
+    sd.old_left_filter_border_pos=slayout.scope.x;
+    sd.old_right_filter_border_pos=slayout.scope.w+slayout.scope.x;
 }
 
 void UiSpectrum_Clear()
 {
-    UiLcdHy28_DrawFullRect(pos_spectrum->DRAW_X_LEFT, pos_spectrum->DRAW_Y_TOP, pos_spectrum->DRAW_HEIGHT, pos_spectrum->DRAW_WIDTH, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
-#ifdef USE_DISP_480_320_SPEC
-    // this is the extra waterfall area, we have to clear this as well
-    if (disp_resolution == RESOLUTION_480_320)
-    {
-        UiLcdHy28_DrawFullRect(pos_spectrum->START_X, (sd.wfall_ystart + 1), sd.wfall_disp_lines, pos_spectrum->WIDTH, Black);
-    }
-#endif
-
+    UiLcdHy28_DrawFullRect(slayout.full.x, slayout.full.y, slayout.full.h, slayout.full.w, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 }
 
 
@@ -703,20 +620,24 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     UiSpectrum_UpdateSpectrumPixelParameters();
 
     const bool is_scope_light = (ts.flags1 & FLAGS1_SCOPE_LIGHT_ENABLE) != 0;
-    const uint16_t spec_height_limit = sd.scope_size - 7;
+    const uint16_t spec_height_limit = sd.scope_size - 1;
     const uint16_t spec_top_y = sd.scope_ystart + sd.scope_size;
 
     uint32_t clr_scope, clr_scope_normal, clr_scope_fltr, clr_scope_fltrbg;
     uint16_t clr_bg;
 
     //calculations of bandwidth highlight parameters and colours
-    float32_t right_filter_border_pos_;                          // calculate width of BW highlight in pixels
+    float32_t filter_width_;                          // calculate width of BW highlight in pixels
     float32_t left_filter_border_pos_;				// first pixel of filter
-    uint16_t right_filter_border_pos,left_filter_border_pos;
-    UiSpectrum_CalculateDisplayFilterBW(&right_filter_border_pos_,&left_filter_border_pos_);
-    right_filter_border_pos=(uint16_t)right_filter_border_pos_;
-    left_filter_border_pos=(uint16_t)left_filter_border_pos_;
-    right_filter_border_pos+=left_filter_border_pos; //convert width to right boundary
+
+    UiSpectrum_CalculateDisplayFilterBW(&filter_width_,&left_filter_border_pos_);
+    uint16_t left_filter_border_pos=left_filter_border_pos_;
+    uint16_t right_filter_border_pos=left_filter_border_pos_+filter_width_;
+
+    if (right_filter_border_pos >= slayout.scope.w)
+    {
+        right_filter_border_pos = slayout.scope.w - 1;
+    }
 
     //mapping the colours of highlighted bandwidth
     //foreground of highlighted bandwidth is one of predefined colours selected fromm array, so simply map it
@@ -735,8 +656,8 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     colB=(colB*BWHbgr)>>8;
     clr_scope_fltrbg=RGB(colR,colG,colB);	//background color of the active demodulation filter highlight
 
-    left_filter_border_pos+=pos_spectrum->START_X;		//left boundary of highlighted spectrum in absolute pixels
-    right_filter_border_pos+=pos_spectrum->START_X;		//right boundary of highlighted spectrum in absolute pixels
+    left_filter_border_pos+=slayout.scope.x;		//left boundary of highlighted spectrum in absolute pixels
+    right_filter_border_pos+=slayout.scope.x;		//right boundary of highlighted spectrum in absolute pixels
 
     if((sd.old_left_filter_border_pos!=left_filter_border_pos ) || (sd.old_right_filter_border_pos!=right_filter_border_pos ))
     {
@@ -774,7 +695,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
         	{
         		UiSpectrum_ScopeStandard_UpdateVerticalDataLine(xh, spec_top_y-spec_height_limit, spec_top_y, clr_scope, clr_bg, false);
         	}
-        	old_pos[xh-pos_spectrum->START_X]=spec_top_y;
+        	old_pos[xh-slayout.scope.x]=spec_top_y;
     	}
 
     	//causing the redraw of all marker lines
@@ -793,14 +714,14 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 
     for (uint16_t idx = 0; idx < SPECTRUM_MAX_MARKER; idx++)
     {
-        marker_line_pos[idx] = pos_spectrum->START_X + sd.marker_pos[idx];
+        marker_line_pos[idx] = slayout.scope.x + sd.marker_pos[idx];
 
         // this is the tx carrier line, we redraw only if line changes place around,
         // init code must take care to reset prev position to 0xffff in order to get initialization done after clean start
 
         if (marker_line_pos[idx] != sd.marker_line_pos_prev[idx])
         {
-            if (sd.marker_line_pos_prev[idx] < pos_spectrum->START_X + pos_spectrum->WIDTH)
+            if (sd.marker_line_pos_prev[idx] < slayout.scope.x + slayout.scope.w)
             {
             	if((sd.marker_line_pos_prev[idx]>=left_filter_border_pos)&&(sd.marker_line_pos_prev[idx]<=right_filter_border_pos)) //BW highlight control
             	{
@@ -832,14 +753,14 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
                             false);
 
                     // we erase the memory for this location, so that it is fully redrawn
-                    if (sd.marker_line_pos_prev[idx] < pos_spectrum->START_X + pos_spectrum->WIDTH)
+                    if (sd.marker_line_pos_prev[idx] < slayout.scope.x + slayout.scope.w)
                     {
-                        old_pos[sd.marker_line_pos_prev[idx] - pos_spectrum->START_X] = spec_top_y;
+                        old_pos[sd.marker_line_pos_prev[idx] - slayout.scope.x] = spec_top_y;
                     }
                 }
             }
 
-            if (marker_line_pos[idx] < pos_spectrum->START_X + pos_spectrum->WIDTH)
+            if (marker_line_pos[idx] < slayout.scope.x + slayout.scope.w)
             {
 
                 // draw new line if inside screen limits
@@ -853,9 +774,9 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
                 if (is_scope_light == false)
                 {
                     // we erase the memory for this location, so that it is fully redrawn
-                    if (marker_line_pos[idx] < pos_spectrum->START_X + pos_spectrum->WIDTH)
+                    if (marker_line_pos[idx] < slayout.scope.x + slayout.scope.w)
                     {
-                        old_pos[marker_line_pos[idx] - pos_spectrum->START_X] = spec_top_y;
+                        old_pos[marker_line_pos[idx] - slayout.scope.x] = spec_top_y;
                     }
                 }
             }
@@ -866,7 +787,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     }
 
     uint16_t marker_lines_togo = sd.marker_num;
-    for(uint16_t x = pos_spectrum->START_X, idx = 0; idx < pos_spectrum->WIDTH; x++, idx++)
+    for(uint16_t x = slayout.scope.x, idx = 0; idx < slayout.scope.w; x++, idx++)
     {
         if((x>=left_filter_border_pos)&&(x<=right_filter_border_pos)) //BW highlight control
         {
@@ -1038,38 +959,28 @@ static void UiSpectrum_InitSpectrumDisplayData()
     // the required negative gain for the downsampling here.
     // makes spectrum_width float32_t multiplications less per waterfall update
 
-    if (sd.spec_len != pos_spectrum->WIDTH)
+    if (sd.spec_len != slayout.scope.w)
     {
-        sd.db_scale *= (float32_t)pos_spectrum->WIDTH/(float32_t)sd.spec_len;
+        sd.db_scale *= (float32_t)slayout.scope.w/(float32_t)sd.spec_len;
     }
 
-    if(ts.spectrum_size == SPECTRUM_NORMAL)	 						// waterfall the same size as spectrum scope
-    {
-        sd.scope_ystart = pos_spectrum->NORMAL_START_Y;
-        sd.scope_size = pos_spectrum->NORMAL_HEIGHT;
-        sd.wfall_ystart = pos_spectrum->NORMAL_WATERFALL_START_Y;
-        sd.wfall_size = pos_spectrum->NORMAL_WATERFALL_HEIGHT;
-    }																	// waterfall larger, covering the word "Waterfall Display"
-    else if(ts.spectrum_size == SPECTRUM_BIG)
-    {
-        sd.scope_ystart = pos_spectrum->BIG_START_Y;
-        sd.scope_size = pos_spectrum->BIG_HEIGHT;
-        sd.wfall_ystart = pos_spectrum->BIG_WATERFALL_START_Y;
-        sd.wfall_size = pos_spectrum->BIG_WATERFALL_HEIGHT;
-    }
+    sd.scope_ystart = slayout.scope.y;
+    sd.scope_size = slayout.scope.h;
+    sd.wfall_ystart = slayout.wfall.y;
+    sd.wfall_size = slayout.wfall.h;
 
     // now make sure we fit in
     // please note, this works only if we have enough memory for have the lines
     // otherwise we will reduce size of displayed waterfall
-    if(sd.wfall_size * pos_spectrum->WIDTH > sizeof(sd.waterfall))
+    if(sd.wfall_size * slayout.scope.w > sizeof(sd.waterfall))
     {
         sd.doubleWaterfallLine = 1;
 
-        if (sd.wfall_size/2 * pos_spectrum->WIDTH > sizeof(sd.waterfall))
+        if (sd.wfall_size/2 * slayout.scope.w > sizeof(sd.waterfall))
         {
             // we caculate how many lines we can do with the amount of memory
             // and adjust displayed line count accordingly.
-            sd.wfall_size = sizeof(sd.waterfall)/(pos_spectrum->WIDTH);
+            sd.wfall_size = sizeof(sd.waterfall)/(slayout.scope.w);
             // FIXME: Notify user of issue
             // if memory is too small even with doubled
             // lines
@@ -1088,7 +999,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
     sd.wfall_disp_lines = sd.wfall_size * (sd.doubleWaterfallLine==true? 2:1);
 
 
-    for (uint16_t idx = 0; idx < pos_spectrum->WIDTH; idx++)
+    for (uint16_t idx = 0; idx < slayout.scope.w; idx++)
     {
         sd.Old_PosData[idx] = sd.scope_ystart + sd.scope_size;
     }
@@ -1130,9 +1041,9 @@ static void UiSpectrum_DrawWaterfall()
 
     // After the above manipulation, clip the result to make sure that it is within the range of the palette table
     //for(uint16_t i = 0; i < sd.spec_len; i++)
-    uint8_t  * const waterfallline_ptr = &sd.waterfall[sd.wfall_line*pos_spectrum->WIDTH];
+    uint8_t  * const waterfallline_ptr = &sd.waterfall[sd.wfall_line*slayout.wfall.w];
 
-    for(uint16_t i = 0; i < pos_spectrum->WIDTH; i++)
+    for(uint16_t i = 0; i < slayout.wfall.w; i++)
     {
         if(sd.FFT_Samples[i] >= NUMBER_WATERFALL_COLOURS)   // is there an illegal color value?
         {
@@ -1171,16 +1082,16 @@ static void UiSpectrum_DrawWaterfall()
 
 
 
-        UiLcdHy28_BulkPixel_OpenWrite(pos_spectrum->START_X, pos_spectrum->WIDTH, (sd.wfall_ystart + 1), sd.wfall_disp_lines);
+        UiLcdHy28_BulkPixel_OpenWrite(slayout.wfall.x, slayout.wfall.w, (sd.wfall_ystart), sd.wfall_disp_lines);
 
-        uint16_t spectrum_pixel_buf[pos_spectrum->WIDTH];
+        uint16_t spectrum_pixel_buf[slayout.wfall.w];
 
         const int32_t cur_center_hz = sd.FFT_frequency;
 
 
         for(uint16_t lcnt = 0;lcnt < sd.wfall_size; lcnt++)                 // set up counter for number of lines defining height of waterfall
         {
-            uint8_t  * const waterfallline_ptr = &sd.waterfall[lptr*pos_spectrum->WIDTH];
+            uint8_t  * const waterfallline_ptr = &sd.waterfall[lptr*slayout.wfall.w];
 
 
             const int32_t line_center_hz = sd.waterfall_frequencies[lptr];
@@ -1195,9 +1106,9 @@ static void UiSpectrum_DrawWaterfall()
 
             // here we actually create a single line pixel by pixel.
 
-            if (offset_pixel >= pos_spectrum->WIDTH || offset_pixel <= -pos_spectrum->WIDTH)
+            if (offset_pixel >= slayout.wfall.w || offset_pixel <= -slayout.wfall.w)
             {
-                offset_pixel = pos_spectrum->WIDTH-1;
+                offset_pixel = slayout.wfall.w-1;
             }
             if (offset_pixel <= 0)
             {
@@ -1205,14 +1116,14 @@ static void UiSpectrum_DrawWaterfall()
                 left_padding_count = 0;
                 pixel_start = -offset_pixel;
                 right_padding_count = -offset_pixel;
-                pixel_count = pos_spectrum->WIDTH + offset_pixel;
+                pixel_count = slayout.wfall.w + offset_pixel;
             } else
             {
                 // we to start with offset_pixel black padding  and then draw the pixels until we reach spectrum width
                 left_padding_count = offset_pixel;
                 pixel_start = 0;
                 right_padding_count = 0;
-                pixel_count = pos_spectrum->WIDTH - offset_pixel;
+                pixel_count = slayout.wfall.w - offset_pixel;
             }
 
 
@@ -1237,18 +1148,18 @@ static void UiSpectrum_DrawWaterfall()
             for (uint16_t idx = 0; idx < sd.marker_num; idx ++)
             {
                 // Place center line marker on screen:  Location [64] (the 65th) of the palette is reserved is a special color reserved for this
-                if (marker_line_pixel_pos[idx] < pos_spectrum->WIDTH)
+                if (marker_line_pixel_pos[idx] < slayout.wfall.w)
                 {
                     spectrum_pixel_buf[marker_line_pixel_pos[idx]] = sd.waterfall_colours[NUMBER_WATERFALL_COLOURS];
                 }
             }
 
 
-            UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, pos_spectrum->WIDTH);
+            UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, slayout.wfall.w);
 
             if(sd.doubleWaterfallLine)
             {
-                UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, pos_spectrum->WIDTH);
+                UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, slayout.wfall.w);
             }
 
             // point to next/prev line in circular display buffer:
@@ -1462,10 +1373,10 @@ static void UiSpectrum_RedrawSpectrum(void)
         // we could let it run as soon as last FFT_Samples read has been done here
         UiSpectrum_ScaleFFT(sd.FFT_Samples,sd.FFT_AVGData,&min1);
 
-        if (sd.spec_len != pos_spectrum->WIDTH)
+        if (sd.spec_len != slayout.scope.w)
         {
             // in place downscaling (!)
-            UiSpectrum_ScaleFFT2SpectrumWidth(sd.FFT_Samples,sd.spec_len, pos_spectrum->WIDTH);
+            UiSpectrum_ScaleFFT2SpectrumWidth(sd.FFT_Samples,sd.spec_len, slayout.scope.w);
         }
 
         // Adjust the sliding window so that the lowest signal is always black
@@ -1519,6 +1430,27 @@ void UiSpectrum_Init()
     UiSpectrum_WaterfallClearData();
 #endif
 
+
+    switch(disp_resolution)
+    {
+#ifdef USE_DISP_480_320
+    case RESOLUTION_480_320:
+    {
+        const UiArea_t area_480_320 = { .x = 0, .y = 98, .w = 480, .h = 184 };
+        UiSpectrum_CalculateLayout(ts.spectrum_size == SPECTRUM_BIG, is_scopemode(), is_waterfallmode(), &area_480_320, 0);
+        break;
+    }
+#endif
+#ifdef USE_DISP_320_240
+    case RESOLUTION_320_240:
+        {
+            const UiArea_t area_320_240 = { .x = 58, .y = 128, .w = 260, .h = 94 };
+            UiSpectrum_CalculateLayout(ts.spectrum_size == SPECTRUM_BIG, is_scopemode(), is_waterfallmode(), &area_320_240, 2);
+            break;
+        }
+#endif
+    }
+
     UiSpectrum_InitSpectrumDisplayData();
     UiSpectrum_Clear();         // clear display under spectrum scope
     UiSpectrum_CreateDrawArea();
@@ -1563,9 +1495,9 @@ void UiSpectrum_CalculateDisplayFilterBW(float32_t* width_pixel_, float32_t* lef
          left_filter_border_pos = 0;
      }
 
-     if(left_filter_border_pos + width_pixel > pos_spectrum->WIDTH) // prevents line to leave right border
+     if(left_filter_border_pos + width_pixel > slayout.scope.w) // prevents line to leave right border
      {
-         width_pixel = (float32_t)pos_spectrum->WIDTH - left_filter_border_pos;
+         width_pixel = (float32_t)slayout.scope.w - left_filter_border_pos;
      }
 
     *width_pixel_=width_pixel;
@@ -1586,56 +1518,14 @@ void UiSpectrum_DisplayFilterBW()
         float32_t left_filter_border_pos;
         UiSpectrum_CalculateDisplayFilterBW(&width_pixel,&left_filter_border_pos);
 
-    	/*
-        const FilterPathDescriptor* path_p = &FilterPathInfo[ts.filter_path];
-        const FilterDescriptor* filter_p = &FilterInfo[path_p->id];
-        const float32_t width = filter_p->width;
-        const float32_t offset = path_p->offset!=0 ? path_p->offset : width/2;
+        uint16_t pos_bw_y = slayout.graticule.y + slayout.graticule.h - 2;
 
-        UiSpectrum_UpdateSpectrumPixelParameters(); // before accessing pixel parameters, request update according to configuration
-
-
-        float32_t width_pixel = width/sd.pixel_per_hz;                          // calculate width of line in pixels
-
-        float32_t offset_pixel = offset/sd.pixel_per_hz;                            // calculate filter center frequency offset in pixels
-
-        float32_t left_filter_border_pos;
-
-        if(RadioManagement_UsesBothSidebands(ts.dmod_mode))     // special cases - AM, SAM and FM, which are double-sidebanded
-        {
-            left_filter_border_pos = sd.rx_carrier_pos - width_pixel;                   // line starts "width" below center
-            width_pixel *= 2;                       // the width is double in AM & SAM, above and below center
-        }
-        else if(RadioManagement_LSBActive(ts.dmod_mode))    // not AM, but LSB:  calculate position of line, compensating for both width and the fact that SSB/CW filters are not centered
-        {
-            left_filter_border_pos = sd.rx_carrier_pos - (offset_pixel + (width_pixel/2));  // if LSB it will be below zero Hz
-        }
-        else                // USB mode
-        {
-            left_filter_border_pos = sd.rx_carrier_pos + (offset_pixel - (width_pixel/2));          // if USB it will be above zero Hz
-        }
-
-        //  erase old line by clearing whole area
-
-
-        if(left_filter_border_pos < 0) // prevents line to leave left border
-        {
-            width_pixel = width_pixel + left_filter_border_pos;
-            left_filter_border_pos = 0;
-        }
-
-        if(left_filter_border_pos + width_pixel > pos_spectrum->WIDTH) // prevents line to leave right border
-        {
-            width_pixel = (float32_t)pos_spectrum->WIDTH - left_filter_border_pos;
-        }
-  */
-
-        UiLcdHy28_DrawStraightLineDouble((pos_spectrum->IND_X), POS_FILTER_BW_Y, pos_spectrum->WIDTH, LCD_DIR_HORIZONTAL, Black);
+        UiLcdHy28_DrawStraightLineDouble(slayout.graticule.x, pos_bw_y, slayout.graticule.w, LCD_DIR_HORIZONTAL, Black);
         uint32_t clr;
         // get color for line
         UiMenu_MapColors(ts.filter_disp_colour,NULL, &clr);
         // draw line
-        UiLcdHy28_DrawStraightLineDouble(((float32_t)pos_spectrum->IND_X + roundf(left_filter_border_pos)), POS_FILTER_BW_Y, roundf(width_pixel), LCD_DIR_HORIZONTAL, clr);
+        UiLcdHy28_DrawStraightLineDouble(((float32_t)slayout.graticule.x + roundf(left_filter_border_pos)), pos_bw_y, roundf(width_pixel), LCD_DIR_HORIZONTAL, clr);
     }
 }
 
@@ -1683,53 +1573,29 @@ static void UiSpectrum_DrawFrequencyBar()
 
         int16_t centerIdx = -100; // UiSpectrum_GetGridCenterLine(0);
 
-        int16_t AddPosY=0;
+        uint16_t idx2pos[pos_spectrum->SCOPE_GRID_VERT_COUNT+1];
 
-
-        const uint16_t *idx2pos;
-
-#ifdef USE_DISP_480_320_SPEC
-        uint16_t idx2pos_480[pos_spectrum->SCOPE_GRID_VERT_COUNT+1];
-#endif
-#ifdef USE_DISP_320_240
-        const static uint16_t idx2pos_320[2][9] = {{0,26,58,90,122,154,186,218, 242},{0,26,58,90,122,154,186,209, 229} };
-#endif
-        switch(disp_resolution)
+        // remainder of frequency/graticule markings
+        for(int i=1;i<pos_spectrum->SCOPE_GRID_VERT_COUNT;i++)
         {
-#ifdef USE_DISP_480_320_SPEC
-        case RESOLUTION_480_320:
-            if(ts.spectrum_size==SPECTRUM_BIG)
-            {
-                AddPosY=-SPEC_LIGHT_MORE_POINTS;
-            }
-            // remainder of frequency/graticule markings
-            for(int i=1;i<pos_spectrum->SCOPE_GRID_VERT_COUNT;i++)
-            {
-                idx2pos_480[i]=sd.vert_grid_id[i-1];
-            }
-            idx2pos_480[0]=0;
-            idx2pos_480[pos_spectrum->SCOPE_GRID_VERT_COUNT]=pos_spectrum->WIDTH-15;
-
-            if(sd.magnify > 2)
-            {
-                idx2pos_480[pos_spectrum->SCOPE_GRID_VERT_COUNT]-=15;
-                idx2pos_480[pos_spectrum->SCOPE_GRID_VERT_COUNT-1]-=9;
-            }
-            idx2pos = idx2pos_480;
-            break;
-#endif
-#ifdef USE_DISP_320_240
-        case RESOLUTION_320_240:
-            // remainder of frequency/graticule markings
-            idx2pos = &idx2pos_320[sd.magnify < 2? 0 : 1][0];
-            break;
-#endif
+            idx2pos[i]=sd.vert_grid_id[i-1];
         }
 
+        idx2pos[0]=0;
+        idx2pos[pos_spectrum->SCOPE_GRID_VERT_COUNT]=slayout.scope.w-1;
+
+        if(sd.magnify > 2)
+        {
+            idx2pos[pos_spectrum->SCOPE_GRID_VERT_COUNT-1]-=9;
+        }
+
+       // FIXME: This code expect 8 vertical lines)
         for (int idx = -4; idx < 5; idx += (sd.magnify < 2) ? 1 : 2 )
         {
             int pos = idx2pos[idx+4];
-
+            const uint8_t graticule_font = 4;
+            const uint16_t number_width = UiLcdHy28_TextWidth("    ",graticule_font);
+            const uint16_t pos_number_y = (slayout.graticule.y +  (slayout.graticule.h - UiLcdHy28_TextHeight(graticule_font))/2);
             if (idx != centerIdx)
             {
                 char *c;
@@ -1743,10 +1609,22 @@ static void UiSpectrum_DrawFrequencyBar()
                     float32_t disp_freq = freq_calc+(idx*grat);
                     int bignum = disp_freq;
                     int smallnum = roundf((disp_freq-bignum)*100);
-                    snprintf(txt,16, " %u.%02u ", bignum, smallnum);   // build string for middle-left frequency (10Hz precision)
-                    c = &txt[strlen(txt)-5];  // point at 5th character from the end
+                    snprintf(txt,16, " %u.%02u", bignum, smallnum);   // build string for middle-left frequency (10Hz precision)
+                    c = &txt[strlen(txt)-4];  // point at 5th character from the end
                 }
-                UiLcdHy28_PrintText((pos_spectrum->IND_X +  pos),(pos_spectrum->IND_Y + pos_spectrum->FREQ_BAR_Y+ AddPosY),c,clr,Black,4);
+                if (idx == -4) // left border
+                {
+                    UiLcdHy28_PrintText( slayout.graticule.x + pos, pos_number_y,c,clr,Black,graticule_font);
+                }
+                else if (idx == 4) // right border
+                {
+                    UiLcdHy28_PrintTextRight( slayout.graticule.x + pos, pos_number_y,c,clr,Black,graticule_font);
+                }
+
+                else
+                {
+                    UiLcdHy28_PrintTextCentered(slayout.graticule.x +  pos - number_width/2,pos_number_y, number_width,c,clr,Black,graticule_font);
+                }
             }
         }
     }
@@ -1877,14 +1755,6 @@ void UiSpectrum_InitCwSnapDisplay (bool visible)
             8,
             LCD_DIR_VERTICAL,
             color);
-#if 0
-    UiLcdHy28_DrawStraightLineDouble(((float32_t)pos_spectrum->IND_X + roundf(left_filter_border_pos)), (pos_spectrum->IND_Y + pos_spectrum->FILTER_WIDTH_BAR_Y), roundf(width_pixel), LCD_DIR_HORIZONTAL, clr);
-    UiLcdHy28_DrawStraightLine( marker_line_pos[idx],
-            spec_top_y - spec_height_limit,
-            spec_height_limit,
-            LCD_DIR_VERTICAL,
-            sd.scope_centre_grid_colour_active);
-#endif
 }
 
 void UiSpectrum_CwSnapDisplay (float32_t delta)
