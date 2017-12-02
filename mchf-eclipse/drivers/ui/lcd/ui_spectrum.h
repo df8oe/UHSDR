@@ -176,7 +176,7 @@ typedef struct SpectrumDisplay
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN];
     float32_t   FFT_MagData[SPEC_BUFF_LEN];
     float32_t   FFT_AVGData[SPEC_BUFF_LEN];     // IIR low-pass filtered FFT buffer data
-
+    uint32_t    FFT_frequency; // center frequency of stored FFT
     // scope pixel data
     uint16_t    Old_PosData[SPECTRUM_WIDTH_MAX];
 
@@ -215,6 +215,7 @@ typedef struct SpectrumDisplay
     uint8_t doubleWaterfallLine;				//line doubling control state
     // uint8_t  waterfall[WATERFALL_MAX_LINES*SPECTRUM_WIDTH];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
     uint8_t  waterfall[(WATERFALL_HEIGHT+10)*256];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
+    uint32_t waterfall_frequencies[(WATERFALL_HEIGHT+10)]; // we reserve hopefully enough frequency stores here. We store for each line in waterfall the center frequency of it.
     uint8_t wfall_DrawDirection;	//0=upward (water fountain), 1=downward (real waterfall)
     uint16_t wfall_line;        // pointer to current line of waterfall data
     uint16_t wfall_size;        // vertical size of the waterfall data (number of stored fft results)
@@ -239,6 +240,7 @@ typedef struct SpectrumDisplay
     uint16_t old_left_filter_border_pos;	//previous BW highlight left border
     uint16_t old_right_filter_border_pos;	//previous BW highlight right border
     uint8_t RedrawType;
+
 } SpectrumDisplay;
 
 // Spectrum display
