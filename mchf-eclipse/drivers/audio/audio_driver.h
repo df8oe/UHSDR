@@ -465,6 +465,8 @@ enum	{
 #define	RX_DECIMATION_RATE_12KHZ		4		// Decimation/Interpolation rate in receive function for 12 kHz sample rate
 #define	RX_DECIMATION_RATE_24KHZ		2		// Decimation/Interpolation rate in receive function for 24 kHz sample rate
 #define RX_DECIMATION_RATE_48KHZ		1		// Deimcation/Interpolation rate in receive function for 48 kHz sample rate (e.g. no decimation!)
+
+#ifdef OBSOLETE_NR
 //
 // ************
 // DSP system parameters
@@ -511,6 +513,7 @@ enum	{
 //
 #define	DSP_NOTCH_MU_MAX		40		// maximum "strength" (convergence) setting for the notch
 #define	DSP_NOTCH_MU_DEFAULT	25		// default convergence setting for the notch
+#endif
 
 #define DSP_SWITCH_OFF				0
 #define DSP_SWITCH_NR				1

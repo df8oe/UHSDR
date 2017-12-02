@@ -781,9 +781,14 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_nr_strength,
                                               0,
+#ifdef OBSOLETE_NR
                                               DSP_NR_STRENGTH_MAX,
                                               DSP_NR_STRENGTH_DEFAULT,
-                                              1
+#else
+											  100,
+											  0,
+#endif
+											  1
                                              );
         if(var_change)
         {
@@ -793,6 +798,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
+#ifdef OBSOLETE_NR
         //
         if(!(ts.dsp_active & DSP_NR_ENABLE))    // make red if DSP not active
         {
@@ -807,6 +813,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             else if(ts.dsp_nr_strength >= DSP_STRENGTH_YELLOW)
                 clr = Yellow;
         }
+#endif
         //
         snprintf(options,32, "  %u", ts.dsp_nr_strength);
         break;
@@ -3092,6 +3099,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case CONFIG_REDUCE_POWER_ON_HIGH_BANDS:
         var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags2,0,options,&clr, FLAGS2_HIGH_BAND_BIAS_REDUCE);
         break;
+#ifdef OBSOLETE_NR
     case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:      // Adjustment of DSP noise reduction de-correlation delay buffer length
         ts.dsp_nr_delaybuf_len &= 0xfff0;   // mask bottom nybble to enforce 16-count boundary
         var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.dsp_nr_delaybuf_len,
@@ -3251,6 +3259,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %u", ts.nb_agc_time_const);
         break;
 */
+#endif
+
     case CONFIG_AM_TX_FILTER_DISABLE:   // Enable/disable AM TX audio filter
         temp_var_u8 = !(ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE);
         var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);

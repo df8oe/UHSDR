@@ -203,11 +203,13 @@ void TransceiverStateInit(void)
     //    ts.dsp_active		= 0;					// if this line is enabled win peaks issue is present when starting mcHF with activated NB
     ts.digital_mode		= DigitalMode_None;					// digital modes OFF by default
     ts.dsp_active_toggle	= 0xff;					// used to hold the button G2 "toggle" setting.
-    ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
     ts.dsp_nr_strength	= 0;					// "Strength" of DSP noise reduction (0 = weak)
+#ifdef OBSOLETE_NR
+    ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
     ts.dsp_nr_numtaps 	= DSP_NR_NUMTAPS_DEFAULT;		// default for number of FFT taps for noise reduction
     ts.dsp_notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;		// default for number of FFT taps for notch filter
     ts.dsp_notch_delaybuf_len =	DSP_NOTCH_DELAYBUF_DEFAULT;
+#endif
     ts.dsp_inhibit		= 1;					// TRUE if DSP is to be inhibited - power up with DSP disabled
 
     ts.lcd_backlight_brightness = 0;			// = 0 full brightness

@@ -207,7 +207,7 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
         alt_noise_blanking(inputsamples,NR_FFT_SIZE,Energy);
     }
 
-    if(ts.dsp_active & DSP_NR_ENABLE)
+    if((ts.dsp_active & DSP_NR_ENABLE) || (ts.dsp_active & DSP_NOTCH_ENABLE))
     {
 	profileTimedEventStart(ProfileTP8);
 
@@ -439,7 +439,7 @@ void spectral_noise_reduction (float* in_buffer)
 
   	  arm_cmplx_mag_f32(&NR.FFT_buffer[0],&NR2.X[0][0],NR_FFT_L/2);
 
-              if(ts.nr_long_tone_enable)
+              if((ts.dsp_active & DSP_NOTCH_ENABLE))
               {
 // detection of long tones
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
@@ -591,11 +591,15 @@ void spectral_noise_reduction (float* in_buffer)
                         {
                             NR.Hk[bindx] = 1.0;
                         }
+                        if(!(ts.dsp_active & DSP_NR_ENABLE)) // if NR is not enabled (but notch is enabled !)
+                        {
+                        	NR.Hk[bindx] = 1.0;
+                        }
                         NR.Hk_old[bindx] = NR.Hk[bindx];
                         NR2.X[bindx][1] = NR2.X[bindx][0];
                     }
 
-              if(ts.nr_long_tone_enable)
+              if((ts.dsp_active & DSP_NOTCH_ENABLE))
               {
 // long tone attenuation = automatic notch filter
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
