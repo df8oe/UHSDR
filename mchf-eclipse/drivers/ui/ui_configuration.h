@@ -342,11 +342,13 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_STEP_SIZE_CONFIG				159     // TRUE if there is to be a line under the frequency digit indicating step size
 //
 #define EEPROM_DSP_MODE						160     // Stores the DSP operational mode
+#ifdef OBSOLETE_NR
 #define EEPROM_DSP_NR_STRENGTH				161     // Stores the DSP Noise Reduction operational strength
 #define EEPROM_DSP_NR_DECOR_BUFLEN			162     // DSP Noise Reduction De-correlator buffer length
 #define EEPROM_DSP_NR_FFT_NUMTAPS			163     // DSP Noise Reduction FFT number of taps
 #define EEPROM_DSP_NOTCH_DECOR_BUFLEN		164     // DSP Notch De-correlator buffer length
 #define EEPROM_DSP_NOTCH_CONV_RATE			165     // DSP Notch convergence rate
+#endif
 //
 //#define EEPROM_MAX_RX_GAIN					166     // Maximum RX gain - adjusts maximum allowed AGC gain in S-units
 #define EEPROM_TX_AUDIO_COMPRESS			167     // TX audio compressor setting, used to calculate other values

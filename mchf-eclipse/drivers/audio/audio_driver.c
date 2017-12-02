@@ -115,6 +115,7 @@ typedef struct {
 
 static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize);
 
+#ifdef OBSOLETE_NR
 typedef struct
 {
 
@@ -134,7 +135,7 @@ typedef struct
     float32_t	                lms2NormCoeff_f32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
     float32_t	                lms2_nr_delay[LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN];
 } LMSData;
-
+#endif
 
 
 static float32_t	__MCHF_SPECIALMEM audio_delay_buffer	[AUDIO_DELAY_BUFSIZE];
@@ -162,10 +163,6 @@ float log10f_fast(float X) {
     Y += E;
     return(Y * 0.3010299956639812f);
 }
-
-
-//static   float32_t               NR_FFT_buffer[2048];
-//static   float32_t               NR_iFFT_buffer[2048];
 
 //
 // Audio RX - Decimator
@@ -558,7 +555,9 @@ __IO SMeter					sm;
 // Be careful! Check mchf-eclipse.map for current allocation
 AudioDriverState   __MCHF_SPECIALMEM ads;
 AudioDriverBuffer  __MCHF_SPECIALMEM adb;
+#ifdef OBSOLETE_NR
 LMSData            __MCHF_SPECIALMEM lmsData;
+#endif
 
 #ifdef USE_LEAKY_LMS
 lLMS leakyLMS;
@@ -1045,9 +1044,9 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // WARNING:  You CANNOT reliably use the built-in IIR and FIR "init" functions when using CONST-based coefficient tables!  If you do so, you risk filters
     //  not initializing properly!  If you use the "init" functions, you MUST copy CONST-based coefficient tables to RAM first!
     //  This information is from recommendations by online references for using ARM math/DSP functions
-
+#ifdef OBSOLETE_NR
     float	mu_calc;
-
+#endif
     ts.dsp_inhibit++;
     ads.af_disabled++;
 
@@ -1173,6 +1172,9 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     IIR_Squelch_HPF.pState = iir_squelch_rx_state;                  // point to state array for IIR filter
     arm_fill_f32(0.0,iir_squelch_rx_state,IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES);
 
+    ts.nr_long_tone_reset = true; // reset information about existing notches in filter passband
+
+#ifdef OBSOLETE_NR
     // Initialize LMS (DSP Noise reduction) filter
     // It is (sort of) initalized "twice" since this it what it seems to take for the LMS function to
     // start reliably and consistently!
@@ -1261,6 +1263,12 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
         ts.dsp_nr_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
     }
     // AUTO NOTCH INIT END
+#endif
+
+    // convert user setting of noise reduction to alpha NR parameter
+    // alpha ranges from 0.895 to 0.995 [float32_t]
+    // dsp_nr_strength is from 0 to 100 [uint8_t]
+    ts.nr_alpha = 0.895 + ((float32_t)ts.dsp_nr_strength / 1000.0);
 
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
@@ -2763,7 +2771,7 @@ static void AudioDriver_DemodFM(const int16_t blockSize)
 	}
 }
 
-
+#ifdef OBSOLETE_NR
 //
 //
 //*----------------------------------------------------------------------------
@@ -2792,6 +2800,9 @@ static void AudioDriver_NotchFilter(int16_t blockSize, float32_t *notchbuffer)
     lms2_outbuf %= ts.dsp_notch_delaybuf_len;
     //
 }
+#endif
+
+
 #ifdef OBSOLETE_NR
 //
 //
@@ -3661,7 +3672,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         else
 #endif
                         {
-                        	  AudioDriver_NotchFilter(blockSizeDecim, adb.a_buffer);     // Do notch filter
+#ifdef OBSOLETE_NR
+                        	AudioDriver_NotchFilter(blockSizeDecim, adb.a_buffer);     // Do notch filter
+#endif
                         }
                     }
 
