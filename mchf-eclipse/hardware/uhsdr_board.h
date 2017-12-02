@@ -857,8 +857,8 @@ typedef struct TransceiverState
 #define FLAGS1_SWAP_FWDREV_SENSE		0x10    // if FWD/REV A/D inputs from RF power detectors are to be reversed
 #define FLAGS1_FREQ_LIMIT_RELAX			0x20    // if Frequency tuning is to be relaxed
 #define FLAGS1_SSB_TX_FILTER_DISABLE	0x40    // if SSB TX has transmit filter DISABLED
-#define FLAGS1_WFALL_SCOPE_TOGGLE		0x80    // 0 = Spectrum Scope (analyzer), 1 = Waterfall display
-#define FLAGS1_PREVIOUSLY_CAT_ENABLE	0x100
+#define FLAGS1_WFALL_ENABLED		    0x80    // 1 = Waterfall display
+#define FLAGS1_SCOPE_ENABLED	        0x100   // 1 = Scope display
 #define FLAGS1_DYN_TUNE_ENABLE			0x200   // 0 = dynamic tune is disabled, 1 = dynamic tune is enabled
 #define FLAGS1_SAM_ENABLE				0x400   // 0 = SAM mode is disabled, 1 = SAM mode is enabled
 #define FLAGS1_CAT_IN_SANDBOX			0x800   // 0 = CAT works on band storage, 1 = CAT works in sandbox
@@ -869,7 +869,7 @@ typedef struct TransceiverState
 
 #ifdef UI_BRD_MCHF
     // the default screen needs no reversed touch
-#define FLAGS1_CONFIG_DEFAULT (0x0000)
+#define FLAGS1_CONFIG_DEFAULT (FLAGS1_WFALL_ENABLED|FLAGS1_SCOPE_ENABLED)
 #define TOUCHSCREEN_DF_MIRROR	TOUCHSCREEN_NO_MIRROR_NOFLIP
 #endif
 #ifdef UI_BRD_OVI40
@@ -887,7 +887,6 @@ typedef struct TransceiverState
 #define FLAGS2_FREQ_MEM_LIMIT_RELAX 	0x10    // 1 if memory-save versus frequency restrictions are to be relaxed
 #define FLAGS2_TOUCHSCREEN_FLIP_XY	 	0x20    // 1 if touchscreen x and y are flipped
 #define FLAGS2_HIGH_BAND_BIAS_REDUCE    0x40    // 1 if bias values for higher bands  above 8Mhz have lower influence factor
-
 #define FLAGS2_CONFIG_DEFAULT (FLAGS2_HIGH_BAND_BIAS_REDUCE|FLAGS2_LOW_BAND_BIAS_REDUCE)
 
     uint32_t	sysclock;				// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
@@ -1250,20 +1249,12 @@ inline bool is_splitmode()
 
 inline bool is_scopemode()
 {
-#ifdef USE_DISP_320_240
-    return (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) == 0;
-#else
-    return true;
-#endif
+    return (ts.flags1 & FLAGS1_SCOPE_ENABLED) != 0;
 }
 
 inline bool is_waterfallmode()
 {
-#ifdef USE_DISP_320_240
-    return (ts.flags1 & FLAGS1_WFALL_SCOPE_TOGGLE) != 0;
-#else
-    return true;
-#endif
+    return (ts.flags1 & FLAGS1_WFALL_ENABLED) != 0;
 }
 
 #endif

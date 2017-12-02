@@ -2792,6 +2792,7 @@ static void AudioDriver_NotchFilter(int16_t blockSize, float32_t *notchbuffer)
     lms2_outbuf %= ts.dsp_notch_delaybuf_len;
     //
 }
+#ifdef OBSOLETE_NR
 //
 //
 //*----------------------------------------------------------------------------
@@ -2830,7 +2831,7 @@ static void AudioDriver_NoiseReduction(int16_t blockSize, float32_t *nrbuffer)
     lms1_inbuf %= ts.dsp_nr_delaybuf_len;
     lms1_outbuf %= ts.dsp_nr_delaybuf_len;
 }
-
+#endif
 
 static void AudioDriver_Mix(float32_t* src, float32_t* dst, float32_t scaling, const uint16_t blockSize)
 {

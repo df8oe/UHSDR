@@ -185,9 +185,10 @@ typedef struct SpectrumDisplay
 
     // Addresses of vertical grid lines on x axis
     ushort  vert_grid_id[SPECTRUM_SCOPE_GRID_VERT_COUNT-1];
+    uint16_t vert_grid; // distance between vert grid lines
 
     // Addresses of horizontal grid lines on x axis
-    ushort  horz_grid_id[5];
+    ushort  horz_grid_id[16];
     uint8_t upper_horiz_gridline;  // how many grid lines to use
 
     // State machine current state
