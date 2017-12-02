@@ -627,13 +627,17 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     uint16_t clr_bg;
 
     //calculations of bandwidth highlight parameters and colours
-    float32_t right_filter_border_pos_;                          // calculate width of BW highlight in pixels
+    float32_t filter_width_;                          // calculate width of BW highlight in pixels
     float32_t left_filter_border_pos_;				// first pixel of filter
-    uint16_t right_filter_border_pos,left_filter_border_pos;
-    UiSpectrum_CalculateDisplayFilterBW(&right_filter_border_pos_,&left_filter_border_pos_);
-    right_filter_border_pos=(uint16_t)right_filter_border_pos_;
-    left_filter_border_pos=(uint16_t)left_filter_border_pos_;
-    right_filter_border_pos+=left_filter_border_pos; //convert width to right boundary
+
+    UiSpectrum_CalculateDisplayFilterBW(&filter_width_,&left_filter_border_pos_);
+    uint16_t left_filter_border_pos=left_filter_border_pos_;
+    uint16_t right_filter_border_pos=left_filter_border_pos_+filter_width_;
+
+    if (right_filter_border_pos >= slayout.scope.w)
+    {
+        right_filter_border_pos = slayout.scope.w - 1;
+    }
 
     //mapping the colours of highlighted bandwidth
     //foreground of highlighted bandwidth is one of predefined colours selected fromm array, so simply map it
