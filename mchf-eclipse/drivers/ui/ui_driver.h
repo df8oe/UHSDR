@@ -196,7 +196,11 @@ void UiDriver_SetDemodMode(uint8_t new_mode);
 void UiDriver_StartUpScreenInit();
 void UiDriver_StartUpScreenFinish();
 
+#ifdef  USE_HIRES_TOUCH
+void UiDriver_DoCrossCheck(int16_t cross[]);
+#else
 void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
+#endif
 void UiAction_ToggleVfoAB();
 void UiDriver_SetSplitMode(bool mode_active);
 

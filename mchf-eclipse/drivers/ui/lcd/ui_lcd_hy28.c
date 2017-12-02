@@ -2085,7 +2085,7 @@ void UiLcdHy28_TouchscreenDetectPress()
         {
             mchf_touchscreen.state = TP_DATASETS_NONE;
 #ifdef USE_HIRES_TOUCH
-            mchf_touchscreen.hr_x = mchf_touchscreen.hr_y = 0xffff;
+            mchf_touchscreen.hr_x = mchf_touchscreen.hr_y = 0x7fff;
 #else
             mchf_touchscreen.x = mchf_touchscreen.y = 0xff;
 #endif
