@@ -5190,6 +5190,7 @@ static void UiDriver_KeyTestScreen()
 		}
 	}
 }
+#ifdef USE_HIRES_TOUCH
 //cross size definitions, must be odd
 #define CrossSizeH 11
 #define CrossSizeV 11
@@ -5198,6 +5199,7 @@ static void DrawCross(int16_t* coord,uint16_t color)
 	UiLcdHy28_DrawStraightLine(coord[0]-(CrossSizeH/2), coord[1],CrossSizeH,        LCD_DIR_HORIZONTAL,color);
 	UiLcdHy28_DrawStraightLine(coord[0], coord[1]-(CrossSizeV/2),CrossSizeV,        LCD_DIR_VERTICAL,color);
 }
+#endif
 
 /*
  * @brief Touchscreen Calibration function
