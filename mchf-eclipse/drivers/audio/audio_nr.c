@@ -183,11 +183,11 @@ void alternateNR_handle()
         // but starting at an offset of NR_FFT_SIZE as we are using the same buffer for in and out
         // here is the only place where we are referring to fdv_iq... as this is the name of the used freedv buffer
 
-        profileTimedEventStart(ProfileTP8);
+        //profileTimedEventStart(ProfileTP8);
 
         do_alternate_NR(&input_buf->samples[0].real,&mmb.nr_audio_buff[NR_current_buffer_idx].samples[NR_FFT_SIZE].real);
 
-        profileTimedEventStop(ProfileTP8);
+        //profileTimedEventStop(ProfileTP8);
 
         NR_out_buffer_add(&mmb.nr_audio_buff[NR_current_buffer_idx]);
         NR_current_buffer_idx++;
@@ -209,7 +209,11 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 
     if(ts.dsp_active & DSP_NR_ENABLE)
     {
-        spectral_noise_reduction(inputsamples);
+	profileTimedEventStart(ProfileTP8);
+
+	  spectral_noise_reduction(inputsamples);
+
+        profileTimedEventStop(ProfileTP8);
     }
 
     for (int k=0; k < NR_FFT_SIZE;  k++)
@@ -232,12 +236,16 @@ int NR_FFT_LOOP_NO = 2;
 
 // window switches
 // choose exactly ONE window
-#define NR_WINDOW_HANN
+//#define NR_WINDOW_HANN
 //#define NR_WINDOW_SIN2
 //#define NR_WINDOW_SIN4
+#define NR_WINDOW_HANN_CONST
 
 void spectral_noise_reduction (float* in_buffer)
 {
+
+//  arm_rfft_fast_instance_f32 fftInstance;
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 #ifdef NR_NOTCHTEST
@@ -302,6 +310,27 @@ void spectral_noise_reduction (float* in_buffer)
 // FFT128 - inverse FFT128
 // overlap-add
 
+	  const float32_t v_hann_window[128]= {0 , 0.0006117919, 0.0024456704, 0.0054971478, 0.0097587564 ,0.0152200676, 0.0218677165, 0.0296854352, 0.0386540925,
+	  0.0487517405, 0.0599536686, 0.0722324638 ,0.0855580779, 0.0998979008, 0.1152168405, 0.1314774092, 0.1486398144,
+	  0.1666620568 ,0.1855000331, 0.2051076434, 0.2254369048, 0.2464380681, 0.2680597399, 0.2902490084, 0.3129515727,
+	  0.3361118759, 0.3596732407, 0.3835780087, 0.4077676808, 0.4321830608, 0.4567644003, 0.4814515445, 0.5061840798,
+	  0.5309014817, 0.5555432625, 0.5800491196, 0.6043590832, 0.6284136625, 0.6521539921, 0.6755219754, 0.698460427,
+	  0.7209132127, 0.7428253867, 0.7641433263, 0.7848148629, 0.8047894099, 0.8240180861, 0.8424538357, 0.8600515434,
+	  0.8767681446, 0.8925627311, 0.9073966507, 0.9212336025, 0.9340397251, 0.9457836798, 0.956436727, 0.9659727972,
+	  0.9743685538, 0.981603451, 0.987659784, 0.9925227317, 0.9961803937, 0.9986238192, 0.9998470286, 0.9998470286,
+	  0.9986238192, 0.9961803937, 0.9925227317, 0.987659784, 0.981603451, 0.9743685538, 0.9659727972, 0.956436727,
+	  0.9457836798, 0.9340397251, 0.9212336025, 0.9073966507, 0.8925627311, 0.8767681446, 0.8600515434, 0.8424538357,
+	  0.8240180861, 0.8047894099, 0.7848148629, 0.7641433263, 0.7428253867, 0.7209132127, 0.698460427, 0.6755219754,
+	  0.6521539921, 0.6284136625, 0.6043590832, 0.5800491196, 0.5555432625, 0.5309014817, 0.5061840798, 0.4814515445,
+	  0.4567644003, 0.4321830608, 0.4077676808, 0.3835780087, 0.3596732407, 0.3361118759, 0.3129515727, 0.2902490084,
+	  0.2680597399, 0.2464380681, 0.2254369048, 0.2051076434, 0.1855000331, 0.1666620568, 0.1486398144, 0.1314774092,
+	  0.1152168405, 0.0998979008, 0.0855580779, 0.0722324638, 0.0599536686, 0.0487517405, 0.0386540925, 0.0296854352,
+	  0.0218677165, 0.0152200676, 0.0097587564, 0.0054971478, 0.0024456704, 0.0006117919, 0};
+
+
+
+
+
     if(ts.nr_first_time == 1)
     { // TODO: properly initialize all the variables
         for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
@@ -315,6 +344,7 @@ void spectral_noise_reduction (float* in_buffer)
             NR.SNR_prio[bindx] = 1.0;
             ts.nr_first_time = 2;
             //NR_long_tone_counter[bindx] = 0;
+  //          arm_rfft_fast_init_f32(&fftInstance, 128);
         }
     }
     if(ts.nr_long_tone_reset)
@@ -349,6 +379,15 @@ void spectral_noise_reduction (float* in_buffer)
           }
     /////////////////////////////////7
     // WINDOWING
+    #ifdef NR_WINDOW_HANN_CONST
+
+          for (int idx = 0; idx < NR_FFT_L; idx++)
+              {
+                NR.FFT_buffer[idx * 2] *= v_hann_window[idx];
+              }
+
+    #endif
+
     #ifdef NR_WINDOW_HANN
     // perform windowing on 128 real samples in the NR_FFT_buffer
           for (int idx = 0; idx < NR_FFT_L; idx++)
@@ -384,14 +423,22 @@ void spectral_noise_reduction (float* in_buffer)
 	  arm_cfft_f32(&arm_cfft_sR_f32_len256, NR.FFT_buffer, 0, 1);
 #else
   	  arm_cfft_f32(&arm_cfft_sR_f32_len128, NR.FFT_buffer, 0, 1);
+
+ //	  arm_rfft_fast_f32(&fftInstance,NR.FFT_buffer,NR.FFT_X_buffer,0);
+
+
+
 #endif
 
 #ifndef NR_NOTCHTEST
-              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
-                    {
-                        // this is magnitude for the current frame
-                        NR2.X[bindx][0] = sqrtf(NR.FFT_buffer[bindx * 2] * NR.FFT_buffer[bindx * 2] + NR.FFT_buffer[bindx * 2 + 1] * NR.FFT_buffer[bindx * 2 + 1]);
-                    }
+//              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+//                    {
+//                        // this is magnitude for the current frame
+//                        NR2.X[bindx][0] = sqrtf(NR.FFT_buffer[bindx * 2] * NR.FFT_buffer[bindx * 2] + NR.FFT_buffer[bindx * 2 + 1] * NR.FFT_buffer[bindx * 2 + 1]);
+//                    }
+
+  	  arm_cmplx_mag_f32(&NR.FFT_buffer[0],&NR2.X[0][0],NR_FFT_L/2);
+
               if(ts.nr_long_tone_enable)
               {
 // detection of long tones
@@ -456,7 +503,7 @@ void spectral_noise_reduction (float* in_buffer)
                   else
                   if(NR2.VAD_type == 1)
                   {
-                	  NR_VAD_temp = NR.VAD_Esch;
+                	  NR_VAD_temp = 10.0 * NR.VAD_Esch;
                   }
                       if((NR_VAD_temp < ts.nr_vad_thresh) || ts.nr_first_time == 2)
                       { // VAD has detected NOISE
