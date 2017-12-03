@@ -115,8 +115,9 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt32_16, EEPROM_ALC_POSTFILT_TX_GAIN,&ts.alc_tx_postfilt_gain,ALC_POSTFILT_GAIN_DEFAULT, ALC_POSTFILT_GAIN_MIN, ALC_POSTFILT_GAIN_MAX},
     { ConfigEntry_UInt16, EEPROM_STEP_SIZE_CONFIG,&ts.freq_step_config,0,0,255},
     { ConfigEntry_UInt8, EEPROM_DSP_MODE,&ts.dsp_active,0,0,255},
-#ifdef OBSOLETE_NR
 	{ ConfigEntry_UInt8, EEPROM_DSP_NR_STRENGTH,&ts.dsp_nr_strength,DSP_NR_STRENGTH_DEFAULT,0, DSP_NR_STRENGTH_MAX},
+
+	#ifdef OBSOLETE_NR
     { ConfigEntry_UInt32_16, EEPROM_DSP_NR_DECOR_BUFLEN,&ts.dsp_nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT, DSP_NR_BUFLEN_MIN, DSP_NR_BUFLEN_MAX},
     { ConfigEntry_UInt8, EEPROM_DSP_NR_FFT_NUMTAPS,&ts.dsp_nr_numtaps,DSP_NR_NUMTAPS_DEFAULT, DSP_NR_NUMTAPS_MIN, DSP_NOTCH_NUMTAPS_MAX},
     { ConfigEntry_UInt8, EEPROM_DSP_NOTCH_DECOR_BUFLEN,&ts.dsp_notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT,DSP_NOTCH_BUFLEN_MIN,DSP_NOTCH_BUFLEN_MAX},

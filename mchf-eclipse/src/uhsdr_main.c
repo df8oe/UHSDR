@@ -203,7 +203,7 @@ void TransceiverStateInit(void)
     //    ts.dsp_active		= 0;					// if this line is enabled win peaks issue is present when starting mcHF with activated NB
     ts.digital_mode		= DigitalMode_None;					// digital modes OFF by default
     ts.dsp_active_toggle	= 0xff;					// used to hold the button G2 "toggle" setting.
-    ts.dsp_nr_strength	= 0;					// "Strength" of DSP noise reduction (0 = weak)
+    ts.dsp_nr_strength	= 50;					// "Strength" of DSP noise reduction (50 = medium)
 #ifdef OBSOLETE_NR
     ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
     ts.dsp_nr_numtaps 	= DSP_NR_NUMTAPS_DEFAULT;		// default for number of FFT taps for noise reduction
@@ -344,8 +344,8 @@ void TransceiverStateInit(void)
 	ts.nr_alpha_int = 940;
 	ts.nr_beta = 0.85;
 	ts.nr_beta_int = 850;
-	ts.nr_vad_thresh = 6.0;
-	ts.nr_vad_thresh_int = 6000;
+	ts.nr_vad_thresh = 4.0;
+	ts.nr_vad_thresh_int = 4000;
 	ts.nr_enable = false;
 	ts.nr_gain_smooth_enable = false;
 	ts.nr_gain_smooth_alpha = 0.25;
@@ -353,10 +353,10 @@ void TransceiverStateInit(void)
 	ts.nr_long_tone_enable = false;
 	ts.nr_long_tone_alpha_int = 99900;
 	ts.nr_long_tone_alpha = 0.999;
-	ts.nr_long_tone_thresh = 12000;
+	ts.nr_long_tone_thresh = 10000;
 	ts.nr_long_tone_reset = true;
 	ts.nr_first_time = 1;
-	ts.nr_vad_delay = 2;
+	ts.nr_vad_delay = 7;
 
     // development setting for DF8OE
     if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
