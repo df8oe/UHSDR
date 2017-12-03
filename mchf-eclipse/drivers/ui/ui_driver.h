@@ -164,8 +164,8 @@ typedef struct PowerMeter
 typedef enum
 {
     SPECTRUM_BLANK = 0,
-    SPECTRUM_SCOPE = 1,
-    SPECTRUM_WATERFALL = 2,
+    SPECTRUM_WATERFALL = 1,
+    SPECTRUM_SCOPE = 2,
     SPECTRUM_DUAL = 3
 } SpectrumMode_t;
 
