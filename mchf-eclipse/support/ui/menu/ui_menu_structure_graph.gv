@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2017-12-02T18:46:09  by "./ui_menu_structure_graph.py"
+#  generated at  2017-12-03T11:55:57  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-12-02T18:46:09  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2017-12-03T11:55:57  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1202,11 +1202,6 @@
              shape = record
              ];
         
-        "MENU_DEBUG_NR_LONG_TONE_ENABLE" [
-             label = "MENU_DEBUG_NR_LONG_TONE_ENABLE | Long tone"
-             shape = record
-             ];
-        
         "MENU_DEBUG_NR_GAIN_SHOW" [
              label = "MENU_DEBUG_NR_GAIN_SHOW | Show gains"
              shape = record
@@ -1229,11 +1224,6 @@
         
         "MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA" [
              label = "MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA | SNR gain smooth alpha"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_NR_ALPHA" [
-             label = "MENU_DEBUG_NR_ALPHA | NR alpha"
              shape = record
              ];
         
@@ -1856,8 +1846,6 @@
             
             MENU_DEBUG -> MENU_DEBUG_NEW_NB
             
-            MENU_DEBUG -> MENU_DEBUG_NR_LONG_TONE_ENABLE
-            
             MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SHOW
             
             MENU_DEBUG -> MENU_DEBUG_NR_LONG_TONE_ALPHA
@@ -1867,8 +1855,6 @@
             MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE
             
             MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_ALPHA
             
             MENU_DEBUG -> MENU_DEBUG_NR_THRESH
             

@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-12-02T18:46:12  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-12-03T11:56:01  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-12-02T18:46:12  by "./ui_menu_structure_mdtable.py"
+generated at  2017-12-03T11:56:01  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -280,13 +280,11 @@ generated at  2017-12-02T18:46:12  by "./ui_menu_structure_mdtable.py"
 | **FT817 Clone Transmit**      (                        MENU_DEBUG_CLONEOUT) | Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP). | 
 | **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 
 | **New Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | New noiseblanker for testing purposes          | 
-| **Long tone**                 (             MENU_DEBUG_NR_LONG_TONE_ENABLE) | enable long tone detection in spectral noise reduction for testing purposes | 
 | **Show gains**                (                    MENU_DEBUG_NR_GAIN_SHOW) | Debugging: show gains of spectral noise reduction | 
 | **Long tone alpha**           (              MENU_DEBUG_NR_LONG_TONE_ALPHA) | time constant alpha for long tone detection in spectral noise reduction | 
 | **Long tone thresh**          (             MENU_DEBUG_NR_LONG_TONE_THRESH) | threshold for long tone detection in spectral noise reduction | 
 | **SNR gain smooth**           (           MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE) | enable bin gain smoothing for spectral noise reduction for testing purposes | 
 | **SNR gain smooth alpha**     (            MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA) | alpha = smoothing constant for spectral noise reduction for testing purposes | 
-| **NR alpha**                  (                        MENU_DEBUG_NR_ALPHA) | time constant alpha for spectral noise reduction | 
 | **NR thresh**                 (                       MENU_DEBUG_NR_THRESH) | threshold for spectral noise reduction voice activity detector | 
 | **NR VAD type**               (                     MENU_DEBUG_NR_VAD_TYPE) | VAD type for spectral noise reduction voice activity detector | 
 | **NR VAD delay**              (                    MENU_DEBUG_NR_VAD_DELAY) | delay for spectral noise reduction voice activity detector | 
