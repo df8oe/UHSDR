@@ -781,13 +781,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_nr_strength,
                                               0,
-#ifdef OBSOLETE_NR
                                               DSP_NR_STRENGTH_MAX,
                                               DSP_NR_STRENGTH_DEFAULT,
-#else
-											  100,
-											  0,
-#endif
 											  1
                                              );
         if(var_change)
@@ -3723,7 +3718,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         break;
 #endif
-        case MENU_DEBUG_NR_ALPHA:      //
+
+// this is now adjusted by ts.dsp_nr_strength
+/*        case MENU_DEBUG_NR_ALPHA:      //
             var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_alpha_int,
                     700,
                     999,
@@ -3737,7 +3734,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             snprintf(options, 32, " %3u",(unsigned int)ts.nr_alpha_int);
 
         break;
-
+*/
         case MENU_DEBUG_NR_GAIN_SHOW:      //
             var_change = UiDriverMenuItemChangeInt16(var, mode, &NR.gain_display,
                     0,

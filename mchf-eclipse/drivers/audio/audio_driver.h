@@ -466,6 +466,8 @@ enum	{
 #define	RX_DECIMATION_RATE_24KHZ		2		// Decimation/Interpolation rate in receive function for 24 kHz sample rate
 #define RX_DECIMATION_RATE_48KHZ		1		// Deimcation/Interpolation rate in receive function for 48 kHz sample rate (e.g. no decimation!)
 
+#define	DSP_NR_STRENGTH_MAX		99	// Maximum menu setting for DSP "Strength"
+#define	DSP_NR_STRENGTH_DEFAULT	50	// Default setting
 #ifdef OBSOLETE_NR
 //
 // ************
@@ -476,8 +478,7 @@ enum	{
 #define	LMS_NR_DELAYBUF_SIZE_MAX		256 //512	// maximum size of LMS delay buffer for the noise reduction
 //
 //
-#define	DSP_NR_STRENGTH_MAX		55//35	// Maximum menu setting for DSP "Strength"
-#define	DSP_NR_STRENGTH_DEFAULT	15	// Default setting
+
 //
 #define	DSP_STRENGTH_YELLOW		25	// Threshold at and above which DSP number is yellow
 #define	DSP_STRENGTH_ORANGE		35	// Threshold at and above which DSP number is orange

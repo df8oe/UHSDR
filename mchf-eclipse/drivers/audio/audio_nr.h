@@ -39,6 +39,11 @@ typedef struct NoiseReduction // declaration
 	float32_t					VAD_Esch; // holds the VAD sum for the Esh & Vary 2009 type of VAD
 	int16_t						gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
 	//											 3 = display bin gain multiplied with long_tone_gain
+	float32_t					notch1_f;
+	bool						notch1_enable;
+	float32_t					notch2_f;
+	bool						notch2_enable;
+	ulong						long_tone_counter;
 } NoiseReduction;
 
 // we need another struct, because of the need for strict allocation of memory for users of the

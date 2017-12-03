@@ -342,8 +342,8 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_STEP_SIZE_CONFIG				159     // TRUE if there is to be a line under the frequency digit indicating step size
 //
 #define EEPROM_DSP_MODE						160     // Stores the DSP operational mode
-#ifdef OBSOLETE_NR
 #define EEPROM_DSP_NR_STRENGTH				161     // Stores the DSP Noise Reduction operational strength
+#ifdef OBSOLETE_NR
 #define EEPROM_DSP_NR_DECOR_BUFLEN			162     // DSP Noise Reduction De-correlator buffer length
 #define EEPROM_DSP_NR_FFT_NUMTAPS			163     // DSP Noise Reduction FFT number of taps
 #define EEPROM_DSP_NOTCH_DECOR_BUFLEN		164     // DSP Notch De-correlator buffer length

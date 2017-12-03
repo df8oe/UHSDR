@@ -224,6 +224,7 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 }
 
 // debugging switches
+#define OLD_LONG_TONE_DETECTION
 //#define NR_NOTCHTEST
 //#define NR_FFT_256 // if you change this, also change NR_FFT_L in audio_nr.h
 #ifdef NR_FFT_256
@@ -347,6 +348,7 @@ void spectral_noise_reduction (float* in_buffer)
   //          arm_rfft_fast_init_f32(&fftInstance, 128);
         }
     }
+
     if(ts.nr_long_tone_reset)
     {
         for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
@@ -599,6 +601,7 @@ void spectral_noise_reduction (float* in_buffer)
                         NR2.X[bindx][1] = NR2.X[bindx][0];
                     }
 
+#ifdef OLD_LONG_TONE_DETECTION
               if((ts.dsp_active & DSP_NOTCH_ENABLE))
               {
 // long tone attenuation = automatic notch filter
@@ -657,6 +660,44 @@ void spectral_noise_reduction (float* in_buffer)
             	  	  	  }
                     }
               }
+#else
+              if((ts.dsp_active & DSP_NOTCH_ENABLE))
+              {
+// long tone attenuation = automatic notch filter
+              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+                    {
+						  if(NR2.long_tone[bindx][0] > (float32_t)ts.nr_long_tone_thresh)
+						  {
+							  NR.long_tone_counter[bindx]++;
+						  }
+						  else
+						  {
+							  NR.long_tone_counter[bindx]--;
+						  }
+						  if(NR.long_tone_counter[bindx] > 20)
+						  {
+							  NR.notch1_enable[bindx] = true;
+						    	AudioDriver_CalcNotch(coeffs, NR.notch1_f, 100, FSdec);
+						        AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[15],coeffs,coeffs[A0]);
+						  }
+						  else
+						  {
+							  NR.notch1_enable[bindx] = false;
+    					        AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[15],biquad_passthrough,1);
+						  }
+						  if(NR.long_tone_counter[bindx] < 0)
+						  {
+							  NR.long_tone_counter[bindx] = 0;
+						  }
+						  else if (NR.long_tone_counter[bindx] > 200)
+						  {
+							  NR.long_tone_counter[bindx] = 200;
+						  }
+                    }
+              }
+#endif
+
+
 
               if(ts.nr_gain_smooth_enable)
               {
@@ -671,10 +712,12 @@ void spectral_noise_reduction (float* in_buffer)
 				  NR.Hk[0] = (1.0 - ts.nr_gain_smooth_alpha) * NR.Hk[0] + ts.nr_gain_smooth_alpha * NR.Hk[1];
 				  NR.Hk[(NR_FFT_L / 2) - 1] = (1.0 - ts.nr_gain_smooth_alpha) * NR.Hk[(NR_FFT_L / 2) - 1] + ts.nr_gain_smooth_alpha * NR.Hk[(NR_FFT_L / 2) - 2];
               }
-              #if 1
-        // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 128 bins with the 128 bin-specific gain factors G
-//              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // try 128:
-                for(int bindx = VAD_low; bindx < VAD_high; bindx++) // try 128:
+#if 1
+        // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 64 bins with the 64 bin-specific gain factors
+              // only do this for the bins inside the filter passband
+              // if you do this for all the bins, you will get distorted audio: plopping !
+              //              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++) // plopping !!!!
+                for(int bindx = VAD_low; bindx < VAD_high; bindx++) // no plopping
               {
                   NR.FFT_buffer[bindx * 2] = NR.FFT_buffer [bindx * 2] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // real part
                   NR.FFT_buffer[bindx * 2 + 1] = NR.FFT_buffer [bindx * 2 + 1] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // imag part
