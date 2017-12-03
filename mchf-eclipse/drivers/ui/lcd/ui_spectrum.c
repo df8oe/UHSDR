@@ -496,7 +496,7 @@ static void UiSpectrum_CreateDrawArea()
     UiMenu_MapColors(ts.spectrum_centre_line_colour,NULL, &sd.scope_centre_grid_colour_active);
 
     // Clear screen where frequency information will be under graticule
-    UiLcdHy28_DrawFullRect(slayout.graticule.x, slayout.graticule.x, slayout.graticule.h, slayout.graticule.w, Black);    // Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
+    UiLcdHy28_DrawFullRect(slayout.graticule.x, slayout.graticule.y, slayout.graticule.h, slayout.graticule.w, Black);    // Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 
     sd.wfall_DrawDirection=1;
 
@@ -1436,7 +1436,8 @@ void UiSpectrum_Init()
 #ifdef USE_DISP_480_320
     case RESOLUTION_480_320:
     {
-        const UiArea_t area_480_320 = { .x = 0, .y = 98, .w = 480, .h = 184 };
+        //const UiArea_t area_480_320 = { .x = 0, .y = 98, .w = 480, .h = 184 };
+        const UiArea_t area_480_320 = { .x = 0, .y = 110, .w = 480, .h = 176 };
         UiSpectrum_CalculateLayout(ts.spectrum_size == SPECTRUM_BIG, is_scopemode(), is_waterfallmode(), &area_480_320, 0);
         break;
     }

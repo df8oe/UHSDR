@@ -157,10 +157,17 @@ typedef struct
 
     uint16_t xraw;
     uint16_t yraw;
+#ifdef USE_HIRES_TOUCH
+    int32_t xraw_avgBuff;
+    int32_t yraw_avgBuff;
+    int16_t hr_x;
+    int16_t hr_y;
+    uint16_t xraw_prev;
+    uint16_t yraw_prev;
+#endif
 
     uint8_t x;
     uint8_t y;
-
     bool present;
     uint8_t mirrored;
 } mchf_touchscreen_t;
