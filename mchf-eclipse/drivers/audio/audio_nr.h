@@ -39,11 +39,11 @@ typedef struct NoiseReduction // declaration
 	float32_t					VAD_Esch; // holds the VAD sum for the Esh & Vary 2009 type of VAD
 	int16_t						gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
 	//											 3 = display bin gain multiplied with long_tone_gain
-	float32_t					notch1_f;
-	bool						notch1_enable;
-	float32_t					notch2_f;
-	bool						notch2_enable;
-	ulong						long_tone_counter;
+//	float32_t					notch1_f;
+//	bool						notch1_enable;
+//	float32_t					notch2_f;
+//	bool						notch2_enable;
+	//ulong						long_tone_counter;
 } NoiseReduction;
 
 // we need another struct, because of the need for strict allocation of memory for users of the
@@ -60,6 +60,16 @@ typedef struct NoiseReduction2 // declaration
 	// if it exceeds a certain limit, noise estimate is done irrespective of the VAD value
 	// this helps to get the noise estimate out of a very low position --> "VAD crash"
 	uint8_t						VAD_type; // 0 = Sohn et al. VAD, 1 = Esch & Vary 2009 VAD
+	bool 						notch_change; // indicates that notch filter has to be changed
+	uint32_t					long_tone_counter[NR_FFT_L / 2]; // holds the notch index for every bin, the higher, the more notchworthy is a bin
+	uint8_t						notch1_bin; // frequency bin where notch filter 1 has to work
+	uint8_t						max_bin; // holds the bin number of the strongest persistent tone during tone detection
+	float32_t					long_tone_max; // power value of the strongest persistent tone, used for max search
+	bool						notch1_active; // is notch1 active?
+	bool						notch2_active; // is notch21 active?
+	bool						notch3_active; // is notch3 active?
+	bool						notch4_active; // is notch4 active?
+
 } NoiseReduction2;
 
 extern NoiseReduction __MCHF_SPECIALMEM 	NR; // declaration, definition is in audio_nr.c
@@ -71,6 +81,8 @@ void alternateNR_handle();
 void do_alternate_NR();
 void alt_noise_blanking();
 void spectral_noise_reduction();
+
+void AudioNr_ActivateAutoNotch(uint8_t notch1_bin, bool notch1_active);
 
 
 int NR_in_buffer_peek(NR_Buffer** c_ptr);

@@ -953,16 +953,10 @@ void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
 
     // this is an auto-notch-filter detected by the NR algorithm
     // biquad 1, 4th stage
-    if(0) // temporarily deactivated
+//    if(0) // temporarily deactivated
 //    if((ts.dsp_active & DSP_NOTCH_ENABLE) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ))
-    {
-    	AudioDriver_CalcNotch(coeffs, NR.notch1_f, 100, FSdec);
-        AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[15],coeffs,coeffs[A0]);
-    }
-    else
-    {
+
         AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[15],biquad_passthrough,1);
-    }
 
     // the peak filter is in biquad 1 and works at the decimated sample rate FSdec
     if(ts.dsp_active & DSP_MPEAK_ENABLE)
@@ -1293,10 +1287,15 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // AUTO NOTCH INIT END
 #endif
 
+// NEW SPECTRAL NOISE REDUCTION
     // convert user setting of noise reduction to alpha NR parameter
     // alpha ranges from 0.9 to 0.999 [float32_t]
     // dsp_nr_strength is from 0 to 100 [uint8_t]
     ts.nr_alpha = 0.9 + ((float32_t)ts.dsp_nr_strength / 1000.0);
+
+// NEW AUTONOTCH
+    // set to passthrough
+    AudioNr_ActivateAutoNotch(0, 0);
 
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;

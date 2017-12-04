@@ -26,6 +26,73 @@ __IO int32_t NR_out_tail = 0;
 NR_Buffer* NR_in_buffers[NR_BUFFER_FIFO_SIZE];
 NR_Buffer* NR_out_buffers[NR_BUFFER_FIFO_SIZE];
 
+// biquad IIR filter with a maximum of four notch filters
+// pre-filled with passthrough coefficients
+static arm_biquad_casd_df1_inst_f32 NR_notch_biquad =
+{
+        .numStages = 4,
+        .pCoeffs = (float32_t *)(float32_t [])
+        {
+            1,0,0,0,0,  1,0,0,0,0,  1,0,0,0,0,  1,0,0,0,0
+        }, // 4 x 5 = 20 coefficients
+
+        .pState = (float32_t *)(float32_t [])
+        {
+            0,0,0,0,   0,0,0,0,   0,0,0,0,   0,0,0,0
+        } // 4 x 4 = 16 state variables
+};
+
+static const float32_t biquad_passthrough[] = { 1, 0, 0, 0, 0 };
+
+static float32_t NR_notch_coeffs[5];
+
+
+void AudioNR_SetBiquadCoeffs(float32_t* coeffsTo,const float32_t* coeffsFrom, float scaling)
+{
+    coeffsTo[0] = coeffsFrom[0]/scaling;
+    coeffsTo[1] = coeffsFrom[1]/scaling;
+    coeffsTo[2] = coeffsFrom[2]/scaling;
+    coeffsTo[3] = coeffsFrom[3]/scaling;
+    coeffsTo[4] = coeffsFrom[4]/scaling;
+}
+
+void AudioNr_CalculateAutoNotch(float32_t coeffs[6], uint8_t notch1_bin, bool notch1_active, float32_t BW, float32_t FS)
+{
+    // formula taken from:
+	// DSP Audio-EQ-cookbook for generating the coeffs of the filters on the fly
+    // www.musicdsp.org/files/Audio-EQ-Cookbook.txt  [by Robert Bristow-Johnson]
+	float32_t bin_BW = FS / NR_FFT_L;
+	float32_t f0 = ((float32_t)notch1_bin + 0.5) * bin_BW; // where its happening, man ;-) centre f of the bin
+    float32_t Q = 10; // larger Q gives narrower notch
+    float32_t w0 = 6.28318530717958 * f0 / FS;
+    float32_t alpha = sinf(w0) / (2 * Q);
+
+//    float32_t alpha = sinf(w0)*sinh( 0.3465735902799726 * BW * w0/sinf(w0) );
+
+    coeffs[0] = 1;
+    coeffs[1] = - 2 * cosf(w0);
+    coeffs[2] = 1;
+    coeffs[3] = 1 + alpha;
+    coeffs[4] = 2 * cosf(w0); // already negated!
+    coeffs[5] = alpha - 1; // already negated!
+}
+
+void AudioNr_ActivateAutoNotch(uint8_t notch1_bin, bool notch1_active)
+{
+	if(notch1_active)
+	{	// set coeffs to new notch frequency
+		AudioNr_CalculateAutoNotch(NR_notch_coeffs, notch1_bin, notch1_active, 100, 12000);
+		AudioNR_SetBiquadCoeffs(&NR_notch_biquad.pCoeffs[0], NR_notch_coeffs, NR_notch_coeffs[3]); // first biquad
+	}
+	else
+
+	{	// set coeffs to passthrough = NO notch
+		AudioNR_SetBiquadCoeffs(&NR_notch_biquad.pCoeffs[0], biquad_passthrough, 1.0); // first biquad --> passthrough coeffs
+	}
+	// second biquad
+//	AudioNR_SetBiquadCoeffs(&NR_notch_biquad.pCoeffs[5], NR_notch_coeffs, NR_notch_coeffs[0],1.0); // second biquad
+}
+
 
 int NR_in_buffer_peek(NR_Buffer** c_ptr)
 {
@@ -354,8 +421,17 @@ void spectral_noise_reduction (float* in_buffer)
         for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
         {
         	NR2.long_tone_gain[bindx] = 1.0;
-        	ts.nr_long_tone_reset = false;
+        	NR2.long_tone_counter[bindx] = 10;
         }
+    	ts.nr_long_tone_reset = false;
+    	NR2.notch_change = false;
+    	NR2.notch1_bin = 10; // frequency bin where notch filter 1 has to work
+    	NR2.max_bin = 10; // holds the bin number of the strongest persistent tone during tone detection
+    	NR2.long_tone_max = 100.0; // power value of the strongest persistent tone, used for max search
+    	NR2.notch1_active = false; // is notch1 active?
+    	NR2.notch2_active = false; // is notch21 active?
+    	NR2.notch3_active = false; // is notch3 active?
+    	NR2.notch4_active = false; // is notch4 active?
     }
 
     for(int k = 0; k < NR_FFT_LOOP_NO; k++)
@@ -663,40 +739,93 @@ void spectral_noise_reduction (float* in_buffer)
 #else
               if((ts.dsp_active & DSP_NOTCH_ENABLE))
               {
+            	  NR2.notch_change = false;
 // long tone attenuation = automatic notch filter
+// first version, only one notch implemented - finds the largest persisting signal and notches it with an IIR
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
                     {
+            	  	  	  // if the (strongly time smoothed) signal in a bin exceeds the threshold,
+            	  	  	  // increase the counter for that bin
 						  if(NR2.long_tone[bindx][0] > (float32_t)ts.nr_long_tone_thresh)
 						  {
-							  NR.long_tone_counter[bindx]++;
+							  NR2.long_tone_counter[bindx]++;
 						  }
+						  // if it does not exceed the threshold, decrement its counter
 						  else
 						  {
-							  NR.long_tone_counter[bindx]--;
+							  NR2.long_tone_counter[bindx]--;
 						  }
-						  if(NR.long_tone_counter[bindx] > 20)
+						  // care for low counter values
+						  if(NR2.long_tone_counter[bindx] < 1)
 						  {
-							  NR.notch1_enable[bindx] = true;
-						    	AudioDriver_CalcNotch(coeffs, NR.notch1_f, 100, FSdec);
-						        AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[15],coeffs,coeffs[A0]);
+							  NR2.long_tone_counter[bindx] = 0;
 						  }
-						  else
+						  // care for high counter values
+						  else if (NR2.long_tone_counter[bindx] > 200)
 						  {
-							  NR.notch1_enable[bindx] = false;
-    					        AudioDriver_SetBiquadCoeffs(&IIR_biquad_1.pCoeffs[15],biquad_passthrough,1);
-						  }
-						  if(NR.long_tone_counter[bindx] < 0)
-						  {
-							  NR.long_tone_counter[bindx] = 0;
-						  }
-						  else if (NR.long_tone_counter[bindx] > 200)
-						  {
-							  NR.long_tone_counter[bindx] = 200;
+							  NR2.long_tone_counter[bindx] = 200;
 						  }
                     }
-              }
-#endif
 
+				  // before we look for new notches, we have to care for existing notches
+				  if(NR2.notch1_active == true)
+				  {		// Is notch1 till notchworthy ?
+					  if(NR2.long_tone_counter[NR2.notch1_bin] > 100)
+					  {
+
+					  }
+					  else
+					  {
+						  // if a notch is no longer notchworthy, switch it off
+						  // and do not switch it on again for at least one second --> set counter to 0
+						  NR2.long_tone_counter[NR2.notch1_bin] = 0;
+						  NR2.notch1_active = false;
+						  NR2.notch_change = true;
+					  }
+				  }
+
+				  // set max long tone to zero for maximum search
+				  NR2.long_tone_max = 0.0;
+				  NR2.max_bin = -99; // -99 is the indication for reset value
+
+	              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+                  {
+						  // look for new notches
+						  // if a tone persists strong for at least one second = 100 frames
+						  // its a notchworthy tone
+						  if(NR2.long_tone_counter[bindx] > 100)
+						  {
+							  if(NR2.long_tone[bindx][0] > NR2.long_tone_max)
+								  // find out, if this is the loudest long tone
+							  {
+								  NR2.long_tone_max = NR2.long_tone[bindx][0];
+								  NR2.max_bin = bindx;
+							  }
+						  }
+                    }
+
+	              if(NR2.max_bin != -99)
+	              { // yes, we found a notchworthy bin
+					  NR2.notch1_active = true;
+					  NR2.long_tone_counter[NR2.max_bin] = 200; // hysteresis ! This notch will stay at least one second
+					  // was this bin already notched last round?
+					  if(NR2.notch1_bin != NR2.max_bin)
+					  {
+						  NR2.notch1_bin = NR2.max_bin;
+						  NR2.notch_change = true; // indicate a change
+					  }
+					  else
+					  {
+
+					  }
+	              }
+              // this activates (and deactivates) the autonotch(es)
+				  if(NR2.notch_change)
+				  {
+					  AudioNr_ActivateAutoNotch(NR2.notch1_bin, NR2.notch1_active);
+				  }
+              } // END NOTCH_ENABLE
+#endif
 
 
               if(ts.nr_gain_smooth_enable)
@@ -837,7 +966,12 @@ void spectral_noise_reduction (float* in_buffer)
           }
        // end of "for" loop which repeats the FFT_iFFT_chain two times !!!
     }
+
+    // IIR biquad notch filter with four independent notches
+    arm_biquad_cascade_df1_f32 (&NR_notch_biquad, in_buffer, in_buffer, NR_FFT_L);
 }
+
+
 
 
 //alt noise blanking is trying to localize some impulse noise within the samples and after that
