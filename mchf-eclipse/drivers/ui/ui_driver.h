@@ -184,7 +184,7 @@ void    UiDriver_DrawFButtonLabel(uint8_t button_num, const char* label, uint32_
 void 	UiDriver_DisplayFreqStepSize();
 void 	UiDriver_DisplayDemodMode(void);
 void	UiDriver_LcdBlankingStartTimer(void);
-void    UiDriver_SpectrumZoomChangeLevel();
+void    UiDriver_SpectrumChangeLayoutParameters();
 
 void UiDriver_DebugInfo_DisplayEnable(bool enable);
 

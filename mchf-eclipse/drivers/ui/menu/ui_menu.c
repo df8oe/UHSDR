@@ -2121,7 +2121,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             txt_ptr = " x1";
             break;
         }
-        UiDriver_SpectrumZoomChangeLevel();
+        UiDriver_SpectrumChangeLayoutParameters();
         break;
     case MENU_SCOPE_AGC_ADJUST: // Spectrum scope AGC adjust
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_agc_rate,
@@ -2441,7 +2441,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %u", ts.waterfall.nosig_adjust);
         break;
 #endif
-    case MENU_SPECTRUM_SIZE:    // set step size of of waterfall display?
+    case MENU_SPECTRUM_SIZE:    // set view size of of spectrum display (big disables title bar)?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.spectrum_size,
                                     0,
                                     SPECTRUM_BIG,

@@ -1270,11 +1270,21 @@ static void UiSpectrum_ScaleFFT2SpectrumWidth(float32_t samples[], uint16_t from
  * should not be called directly, go through UiSpectrum_Redraw which implements a rate limiter
  * it relies on the audio driver implementing the first stage of data collection.
  */
-static void UiSpectrum_RedrawSpectrum(void)
+static void UiSpectrum_RedrawSpectrum()
 {
     // Process implemented as state machine
     switch(sd.state)
     {
+    case 0:
+        sd.reading_ringbuffer = true;
+        __DSB();
+        // we make sure the interrupt sees this variable value by ensure all memory operations have been done
+        // after this point
+        arm_copy_f32(&sd.FFT_RingBuffer[sd.samp_ptr],&sd.FFT_Samples[0],sd.fft_iq_len-sd.samp_ptr);
+        arm_copy_f32(&sd.FFT_RingBuffer[0],&sd.FFT_Samples[sd.fft_iq_len-sd.samp_ptr],sd.samp_ptr);
+        sd.reading_ringbuffer = false;
+        sd.state++;
+        break;
 
     // Apply gain to collected IQ samples and then do FFT
     case 1:		// Scale input according to A/D gain and apply Window function
@@ -1651,7 +1661,7 @@ void UiSpectrum_Redraw()
         {
             if(ts.waterfall.speed > 0)  // is it time to update the scan, or is this scope to be disabled?
             {
-                ts.waterfall.scheduler = (ts.waterfall.speed-1)*(sd.doubleWaterfallLine?100:50); // we need to use half the speed if in double line drawing mode
+                ts.waterfall.scheduler = (ts.waterfall.speed)*(sd.doubleWaterfallLine?50:25); // we need to use half the speed if in double line drawing mode
                 sd.RedrawType|=Redraw_WATERFALL;
             }
         }
@@ -1660,7 +1670,7 @@ void UiSpectrum_Redraw()
         {
             if(ts.scope_speed > 0)  // is it time to update the scan, or is this scope to be disabled?
             {
-                ts.scope_scheduler = (ts.scope_speed-1)*50;
+                ts.scope_scheduler = (ts.scope_speed)*50;
                 sd.RedrawType|=Redraw_SCOPE;
             }
         }
