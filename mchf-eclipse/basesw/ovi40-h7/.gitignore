@@ -7,4 +7,3 @@ Drivers/CMSIS/Device/ST/STM32H7xx/Source/Templates/arm
 Drivers/CMSIS/Lib/
 Inc/usbd_audio_if.h
 Inc/usbd_desc.h
-
