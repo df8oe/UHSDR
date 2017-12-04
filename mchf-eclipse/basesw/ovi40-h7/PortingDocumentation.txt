@@ -3,3 +3,5 @@
 * created dir basesw/ovi40-h7
 * Generated from ovi40-h7.ioc CubeMX sources
 * Added most to commit, some to .gitignore (license or not used)
+
+CHECK USB DEVICE FIFO BUFFERS SIZE CONFIGURATION!
