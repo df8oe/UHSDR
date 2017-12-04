@@ -1,0 +1,5 @@
+* Created new repo cloned from my local repo
+* created new branch h7 from active-devel
+* created dir basesw/ovi40-h7
+* Generated from ovi40-h7.ioc CubeMX sources
+* Added most to commit, some to .gitignore (license or not used)
