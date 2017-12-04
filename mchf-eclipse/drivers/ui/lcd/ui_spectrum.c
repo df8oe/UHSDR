@@ -1397,9 +1397,11 @@ static void UiSpectrum_RedrawSpectrum(void)
     		UiSpectrum_DrawWaterfall();
     	}
 
-    	sd.RedrawType=0;
-
-        sd.state = 0;
+    	if (sd.RedrawType != 0)
+    	{
+    	    sd.RedrawType=0;
+    	    sd.state = 0;
+    	}
         break;
 
     }
@@ -1637,8 +1639,7 @@ void UiSpectrum_Redraw()
 {
     // Only in RX mode and NOT while powering down or in menu mode or if displaying memory information
     if (
-            (ts.scope_scheduler == 0 || ts.waterfall.scheduler == 0  )
-            && (ts.txrx_mode == TRX_MODE_RX)
+            (ts.txrx_mode == TRX_MODE_RX)
             && (ts.menu_mode == false)
             && (ts.powering_down == false)
             && (ts.mem_disp == false)
