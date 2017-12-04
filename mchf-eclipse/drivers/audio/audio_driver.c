@@ -2910,32 +2910,31 @@ static void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, f
 static void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
 {
 
-    if(sd.state == 0 && sd.fft_iq_len > 0)
+    if(sd.reading_ringbuffer == false && sd.fft_iq_len > 0)
     {
         if(sd.magnify == 0)        //
         {
             for(int i = 0; i < blockSize; i++)
             {
                 // Collect I/Q samples // why are the I & Q buffers filled with I & Q, the FFT buffers are filled with Q & I?
-                sd.FFT_Samples[sd.samp_ptr] = adb.q_buffer[i];    // get floating point data for FFT for spectrum scope/waterfall display
+                sd.FFT_RingBuffer[sd.samp_ptr] = adb.q_buffer[i];    // get floating point data for FFT for spectrum scope/waterfall display
                 sd.samp_ptr++;
-                sd.FFT_Samples[sd.samp_ptr] = adb.i_buffer[i];
+                sd.FFT_RingBuffer[sd.samp_ptr] = adb.i_buffer[i];
                 sd.samp_ptr++;
 
                 // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
                 if(sd.samp_ptr >= sd.fft_iq_len-1) //*2)
                 {
                     sd.samp_ptr = 0;
-                    sd.state    = 1;
-                    sd.FFT_frequency = (ts.tune_freq / TUNE_MULT); // spectrum shows all, LO is center frequency;
                 }
             }
+            sd.FFT_frequency = (ts.tune_freq / TUNE_MULT); // spectrum shows all, LO is center frequency;
         }
     }
 }
 static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
 {
-    if(sd.state == 0 && sd.fft_iq_len > 0)
+    if(sd.reading_ringbuffer == false && sd.fft_iq_len > 0)
     {
         if(sd.magnify != 0)        //
             // magnify 2, 4, 8, 16, or 32
@@ -2981,21 +2980,19 @@ static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
             int16_t blockSizeDecim = blockSize/ (1<<sd.magnify);
             for(int16_t i = 0; i < blockSizeDecim; i++)
             {
-                sd.FFT_Samples[sd.samp_ptr] = y_buffer[i];   // get floating point data for FFT for spectrum scope/waterfall display
+                sd.FFT_RingBuffer[sd.samp_ptr] = y_buffer[i];   // get floating point data for FFT for spectrum scope/waterfall display
                 sd.samp_ptr++;
-                sd.FFT_Samples[sd.samp_ptr] = x_buffer[i]; //
+                sd.FFT_RingBuffer[sd.samp_ptr] = x_buffer[i]; //
                 sd.samp_ptr++;
-
                 // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
                 if(sd.samp_ptr >= sd.fft_iq_len-1) //*2)
                 {
                     sd.samp_ptr = 0;
-                    sd.state    = 1;
-                    sd.FFT_frequency = (ts.tune_freq / TUNE_MULT) + AudioDriver_GetTranslateFreq(); // spectrum shows center at translate frequency, LO + Translate Freq  is center frequency;
                 }
             } // end for
+            sd.FFT_frequency = (ts.tune_freq / TUNE_MULT) + AudioDriver_GetTranslateFreq(); // spectrum shows center at translate frequency, LO + Translate Freq  is center frequency;
 
-            // loop to put samples from x and y buffer into sd.FFT_Samples
+            // loop to put samples from x and y buffer into sd.FFT_RingBuffer
 
             // TODO: also insert sample collection for snap carrier here
             // and subsequently rebuild snap carrier to use a much smaller FFT (say 256 or 512)
@@ -3007,9 +3004,9 @@ static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
         if(sd.state == 0)
         { //
             // take every 2nd, 4th, 8th, 16th, or 32nd sample depending on desired magnification --> decimation
-            sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.y_buffer[i << sd.magnify]; // get floating point data for FFT for spectrum scope/waterfall display
+            sd.FFT_RingBuffer[sd.samp_ptr] = (float32_t)adb.y_buffer[i << sd.magnify]; // get floating point data for FFT for spectrum scope/waterfall display
             sd.samp_ptr++;
-            sd.FFT_Samples[sd.samp_ptr] = (float32_t)adb.x_buffer[i << sd.magnify]; // (i << sd.magnify) is the same as (i * 2^sd.magnify)
+            sd.FFT_RingBuffer[sd.samp_ptr] = (float32_t)adb.x_buffer[i << sd.magnify]; // (i << sd.magnify) is the same as (i * 2^sd.magnify)
             sd.samp_ptr++;
 
     // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have

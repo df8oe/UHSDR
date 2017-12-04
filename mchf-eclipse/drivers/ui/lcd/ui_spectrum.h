@@ -173,6 +173,7 @@ enum
 typedef struct SpectrumDisplay
 {
     // Samples buffer
+    float32_t   FFT_RingBuffer[FFT_IQ_BUFF_LEN];
     float32_t   FFT_Samples[FFT_IQ_BUFF_LEN];
     float32_t   FFT_MagData[SPEC_BUFF_LEN];
     float32_t   FFT_AVGData[SPEC_BUFF_LEN];     // IIR low-pass filtered FFT buffer data
@@ -182,6 +183,14 @@ typedef struct SpectrumDisplay
 
     // Current data ptr
     ulong   samp_ptr;
+    volatile bool    reading_ringbuffer;
+    // if the user level code wants to read the ring buffer
+    // simply set this, and the audio driver will stop writing
+    // to the buffer.  This means we loose some samples here but this is not a problem I would think.
+    // if we don't want or should do this,
+    // we have to add a little extra space to the ringbuffer (one audio driver sample block), which gives sufficient
+    // space to add data to while we are reading.
+
 
     // Addresses of vertical grid lines on x axis
     ushort  vert_grid_id[SPECTRUM_SCOPE_GRID_VERT_COUNT-1];

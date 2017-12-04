@@ -379,7 +379,8 @@ inline bool is_dsp_mpeak()
 typedef struct
 {
 	touchscreen_region_t region;
-	void (*function)();
+	void (*function_short_press)();
+	void (*function_long_press)();
 } touchaction_descr_t;
 
 
@@ -412,7 +413,7 @@ typedef struct
  * @brief find the matching region in a list of region and associated function
  * @returns: true, if a match for the touch coordinates region was found.
  */
-bool UiDriver_ProcessTouchActions(const touchaction_list_descr_t* tld)
+bool UiDriver_ProcessTouchActions(const touchaction_list_descr_t* tld, bool is_long_press)
 {
 	bool retval = false;
 	if (tld != NULL)
@@ -421,12 +422,22 @@ bool UiDriver_ProcessTouchActions(const touchaction_list_descr_t* tld)
 		{
 			if (UiDriver_CheckTouchRegion(&tld->actions[idx].region))
 			{
-				if (tld->actions[idx].function != NULL)
-				{
-					(*tld->actions[idx].function)();
-				}
-				retval = true;
-				break;
+			    if (is_long_press)
+			    {
+			        if (tld->actions[idx].function_long_press != NULL)
+			        {
+			            (*tld->actions[idx].function_long_press)();
+			        }
+			    }
+			    else
+			    {
+			        if (tld->actions[idx].function_short_press != NULL)
+			        {
+			            (*tld->actions[idx].function_short_press)();
+			        }
+			    }
+			    retval = true;
+			    break;
 			}
 		}
 	}
@@ -733,7 +744,7 @@ void UiDriver_DebugInfo_DisplayEnable(bool enable)
 
 }
 
-void UiDriver_SpectrumZoomChangeLevel()
+void UiDriver_SpectrumChangeLayoutParameters()
 {
 	UiSpectrum_WaterfallClearData();
 	AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
@@ -1707,11 +1718,11 @@ static void UiDriver_CreateFunctionButtons(bool full_repaint)
 
 void UiDriver_SetSpectrumMode(SpectrumMode_t mode)
 {
-    ts.flags1 = (ts.flags1 & ~(3 << 7)) |(mode << 7);
+    ts.flags1 = (ts.flags1 & ~(FLAGS1_SCOPE_ENABLED | FLAGS1_WFALL_ENABLED)) |(mode << 7);
 }
 SpectrumMode_t UiDriver_GetSpectrumMode()
 {
-    return (ts.flags1 >> 7) & 0x3;
+    return (ts.flags1 & (FLAGS1_SCOPE_ENABLED | FLAGS1_WFALL_ENABLED))  >> 7;
 }
 
 //
@@ -5778,19 +5789,35 @@ static void UiAction_ChangeToNextDspMode()
 }
 
 
+static void UiAction_ChangeSpectrumSize()
+{
+    ts.menu_var_changed = 1;
+    if (ts.spectrum_size == SPECTRUM_BIG)
+    {
+        ts.spectrum_size = SPECTRUM_NORMAL;
+    }
+    else
+    {
+        ts.spectrum_size = SPECTRUM_BIG;
+    }
+
+    UiDriver_SpectrumChangeLayoutParameters();
+}
+
+
 static void UiAction_ChangeSpectrumZoomLevelDown()
 {
 	ts.menu_var_changed = 1;
 	decr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
 
-	UiDriver_SpectrumZoomChangeLevel();
+	UiDriver_SpectrumChangeLayoutParameters();
 }
 
 static void UiAction_ChangeSpectrumZoomLevelUp()
 {
 	ts.menu_var_changed = 1;
 	incr_wrap_uint8(&sd.magnify,MAGNIFY_MIN,MAGNIFY_MAX);
-	UiDriver_SpectrumZoomChangeLevel();
+	UiDriver_SpectrumChangeLayoutParameters();
 }
 
 static void UiAction_ChangeFrequencyToNextKhz()
@@ -5801,9 +5828,9 @@ static void UiAction_ChangeFrequencyToNextKhz()
 
 static void UiAction_ToggleWaterfallScopeDisplay()
 {
-    uint16_t temp = (ts.flags1 & (FLAGS1_WFALL_ENABLED|FLAGS1_SCOPE_ENABLED)) >> 7;
+    SpectrumMode_t temp = UiDriver_GetSpectrumMode();
 
-    if (temp != 0)
+    if (temp != SPECTRUM_BLANK)
     {
         // we want range 0 - 2 instead of the normal 1 - 3
         temp--;
@@ -5811,8 +5838,7 @@ static void UiAction_ToggleWaterfallScopeDisplay()
     temp++;
     temp%=3;
     temp++;
-    temp <<= 7;
-    ts.flags1 = (ts.flags1 & ~(FLAGS1_WFALL_ENABLED|FLAGS1_SCOPE_ENABLED)) | temp;
+    UiDriver_SetSpectrumMode(temp);
     UiSpectrum_Init();   // init spectrum display
 }
 
@@ -6370,22 +6396,24 @@ static void UiAction_StepPlusHold()
 }
 // these maps control the touch regions to function mapping in a specific mode
 // this is the normal mode, available when not in menu mode
+// first function is the normal touch, second function is long touch
+// if not used, function entry should be set to NULL
 static const touchaction_descr_t touchactions_normal[] =
 {
-		{ { 19,60,48,60 }, UiAction_ChangeLowerMeterUp },  // Lower Meter: Meter Toggle
-		{ { 10,28,27,31 }, UiAction_ToggleWaterfallScopeDisplay }, // Spectrum Bar Left Part: WaterfallScope Toggle
-		{ { 29,33,26,32 }, UiAction_ChangeSpectrumZoomLevelDown }, // Spectrum Bar Middle Part: Decrease Zoom Level
-		{ { 52,60,26,32 }, UiAction_ChangeSpectrumZoomLevelUp }, // Spectrum Bar Right Part: Increase Zoom Level
-		{ { 43,60,00,04 }, UiAction_ChangeFrequencyToNextKhz }, // Tune button:Set last 3 digits to zero
-		{ { 16,24,40,44 }, UiAction_ChangeDemodMode }, // Demod Mode Box: mode switch
-		{ { 16,24,45,48 }, UiAction_ChangePowerLevel }, // Power Box: TX Power Increase
-		{ { 10,16,44,50 }, UiAction_ChangeAudioSource }, // Audio In Box: Switch Source
-		{ { 48,52,35,37 }, UiAction_ChangeBandDownOrUp }, // Left Part Band Display: Band down
-		{ { 53,60,35,37 }, UiAction_ChangeBandUpOrDown }, // Right Part Band Display: Band up
-		{ { 00,07,21,30 }, Codec_RestartI2S }, // DSP Box: Restart I2S
-		{ { 8,60,11,19  }, UiAction_ChangeFrequencyByTouch }, // Scope Draw Area: Tune to Touch
-		{ { 0,7,10,13   }, UiAction_ChangeDigitalMode }, // Digital Mode Box: Switch Digi Mode
-		{ { 26,35,39,46 }, UiAction_ChangeDynamicTuning }, // Step Box: Dynamic Tuning Toggle
+		{ { 19,60,48,60 }, UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
+		{ { 10,28,27,31 }, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
+		{ { 29,33,26,32 }, UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
+		{ { 52,60,26,32 }, UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
+		{ { 43,60,00,04 }, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
+		{ { 16,24,40,44 }, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
+		{ { 16,24,45,48 }, UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
+		{ { 10,16,44,50 }, UiAction_ChangeAudioSource,              NULL }, // Audio In Box: Switch Source
+		{ { 48,52,35,37 }, UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
+		{ { 53,60,35,37 }, UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
+		{ { 00,07,21,30 }, Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
+		{ { 8,60,11,19  }, UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
+		{ { 0,7,10,13   }, UiAction_ChangeDigitalMode,              NULL }, // Digital Mode Box: Switch Digi Mode
+		{ { 26,35,39,46 }, UiAction_ChangeDynamicTuning,            NULL }, // Step Box: Dynamic Tuning Toggle
 };
 
 // this is the map for menu mode, right now only used for debugging/experimental purposes
@@ -6403,7 +6431,7 @@ static const touchaction_list_descr_t touch_regions[] =
 		{ touchactions_menu, sizeof(touchactions_menu)/sizeof(*touchactions_menu) },
 };
 
-static void UiDriver_HandleTouchScreen()
+static void UiDriver_HandleTouchScreen(bool is_long_press)
 {
 	if(is_touchscreen_pressed())
 	{
@@ -6425,15 +6453,24 @@ static void UiDriver_HandleTouchScreen()
 
 		uint32_t touchaction_idx = ts.menu_mode == true?1:0;
 
-		UiDriver_ProcessTouchActions(&touch_regions[touchaction_idx]);
+		UiDriver_ProcessTouchActions(&touch_regions[touchaction_idx], is_long_press);
 
 		ts.tp->state = TP_DATASETS_PROCESSED;							// set statemachine to data fetched
 	}
 }
 
+static void UiDriver_HandleTouchScreenShortPress(bool is_long_press)
+{
+    UiDriver_HandleTouchScreen(false);
+}
+static void UiDriver_HandleTouchScreenLongPress(bool is_long_press)
+{
+    UiDriver_HandleTouchScreen(true);
+}
+
 static const keyaction_descr_t keyactions_normal[] =
 {
-		{ TOUCHSCREEN_ACTIVE, 	UiDriver_HandleTouchScreen },
+		{ TOUCHSCREEN_ACTIVE, 	UiDriver_HandleTouchScreenShortPress,       UiDriver_HandleTouchScreenLongPress },
 		{ BUTTON_F1_PRESSED, 	UiAction_ToggleMenuMode, 					UiAction_SaveConfigurationToMemory },
 		{ BUTTON_F2_PRESSED, 	UiAction_ChangeLowerMeterDownOrSnap, 		UiAction_ChangeLowerMeterUp },
 		{ BUTTON_F3_PRESSED, 	UiAction_ToggleSplitModeOrToggleMemMode, 	UiAction_ToggleVfoMem },
