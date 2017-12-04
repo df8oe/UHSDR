@@ -51,11 +51,9 @@
 
 #include "usb_host.h"
 #include "usbh_core.h"
-#include "usbh_audio.h"
-#include "usbh_cdc.h"
 #include "usbh_msc.h"
 #include "usbh_hid.h"
-#include "usbh_mtp.h"
+#include "uhsdr_board.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -104,21 +102,17 @@ void MX_USB_HOST_Init(void)
   
   /* USER CODE END USB_HOST_Init_PreTreatment */
   
-  /* Init host Library, add supported class and start the library. */
-  USBH_Init(&hUsbHostHS, USBH_UserProcess, HOST_HS);
+  /* Init Host Library,Add Supported Class and Start the library*/
+    /* Init Host Library,Add Supported Class and Start the library*/
+    USBH_Init(&hUsbHostHS, USBH_UserProcess, HOST_HS);
 
-  USBH_RegisterClass(&hUsbHostHS, USBH_AUDIO_CLASS);
-
-  USBH_RegisterClass(&hUsbHostHS, USBH_CDC_CLASS);
-
-  USBH_RegisterClass(&hUsbHostHS, USBH_MSC_CLASS);
-
-  USBH_RegisterClass(&hUsbHostHS, USBH_HID_CLASS);
-
-  USBH_RegisterClass(&hUsbHostHS, USBH_MTP_CLASS);
-
-  USBH_Start(&hUsbHostHS);
-
+  #if defined(USE_USBDRIVE) || defined(BOOTLOADER_BUILD)
+    USBH_RegisterClass(&hUsbHostHS, USBH_MSC_CLASS);
+  #endif
+  #if defined(USE_USBKEYBOARD) && !defined(BOOTLOADER_BUILD)
+    USBH_RegisterClass(&hUsbHostHS, USBH_HID_CLASS);
+  #endif
+    USBH_Start(&hUsbHostHS);
   /* USER CODE BEGIN USB_HOST_Init_PostTreatment */
   
   /* USER CODE END USB_HOST_Init_PostTreatment */
