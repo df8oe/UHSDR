@@ -30,7 +30,9 @@
     #define USE_SPI_HAL
 #endif
 
+#ifndef STM32H7
 #define USE_DISPLAY_SPI
+#endif
 #define USE_DISPLAY_PAR
 
 #include "spi.h"
@@ -1998,6 +2000,7 @@ const uhsdr_display_info_t display_infos[] = {
                 LCD_D11_PIO, LCD_D11, true, false
         },
 #endif
+#ifdef USE_DISPLAY_SPI
         {
                 DISPLAY_HY28B_SPI, "HY28B SPI",
                 .SetActiveWindow = UiLcdHy28_SetActiveWindow_ILI932x,
@@ -2010,7 +2013,8 @@ const uhsdr_display_info_t display_infos[] = {
                 true, false
         },
 #endif
-#ifdef USE_GFX_ILI9486
+#endif
+#if defined(USE_GFX_ILI9486) && defined(USE_DISPLAY_SPI)
         {       DISPLAY_RPI_SPI, "RPi 3.5 SPI",
                 .SetActiveWindow = UiLcdHy28_SetActiveWindow_ILI9486,
                 .SetCursorA = UiLcdHy28_SetCursorA_ILI9486,
@@ -2097,11 +2101,15 @@ static uint16_t UiLcdHy28_DetectController(const uhsdr_display_info_t* disp_info
 
         if (mchf_display.use_spi == true)
         {
+#ifdef USE_DISPLAY_SPI
             UiLcdHy28_SpiInit(disp_info_ptr->spi_speed, disp_info_ptr->display_type);
+#endif
         }
         else
         {
+#ifdef USE_DISPLAY_PAR
             UiLcdHy28_ParallelInit();
+#endif
         }
 
         UiLcdHy28_Reset();
@@ -2182,11 +2190,16 @@ static uint16_t UiLcdHy28_DetectController(const uhsdr_display_info_t* disp_info
 
             if (mchf_display.use_spi == true)
             {
+#ifdef USE_DISPLAY_SPI
+
                 UiLcdHy28_SpiDeInit();
+#endif
             }
             else
             {
+#ifdef USE_DISPLAY_PAR
                 UiLcdHy28_ParallelDeInit();
+#endif
             }
 
         }
