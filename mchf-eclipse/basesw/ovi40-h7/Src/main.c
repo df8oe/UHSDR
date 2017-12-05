@@ -77,7 +77,6 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MPU_Config(void);
-void MX_USB_HOST_Process(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -85,7 +84,14 @@ void MX_USB_HOST_Process(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+#ifdef BOOTLOADER_BUILD
+void MX_USB_HOST_Process(void);
+#include "bootloader/bootloader_main.h"
+#else
 
+#include "uhsdr_main.h"
+
+#endif
 /* USER CODE END 0 */
 
 /**
@@ -96,7 +102,10 @@ void MX_USB_HOST_Process(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+#ifdef BOOTLOADER_BUILD
+  mchfBl_CheckAndGoForDfuBoot();
+  //  we need to do this as early as possible
+#endif
   /* USER CODE END 1 */
 
   /* MPU Configuration----------------------------------------------------------*/
@@ -113,20 +122,19 @@ int main(void)
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
   /* Configure the system clock */
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
+#ifdef BOOTLOADER_BUILD
+  bootloader_main();
+#else
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
+  MX_ADC1_Init();
+  MX_ADC2_Init();
+  MX_ADC3_Init();
+  MX_DAC1_Init();
   MX_FMC_Init();
   MX_I2C1_Init();
   MX_I2C2_Init();
@@ -140,15 +148,28 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM5_Init();
   MX_TIM8_Init();
-  MX_USB_HOST_Init();
-  MX_FATFS_Init();
-  MX_USB_DEVICE_Init();
   MX_TIM3_Init();
-  MX_DAC1_Init();
-  MX_ADC1_Init();
-  MX_ADC2_Init();
-  MX_ADC3_Init();
+  // MX_USB_HOST_Init();
+  // MX_FATFS_Init();
+  MX_USB_DEVICE_Init();
+#endif
+
   /* USER CODE BEGIN 2 */
+#if defined(USE_USBHOST) || defined(BOOTLOADER_BUILD)
+  MX_USB_HOST_Init();
+
+    #if defined(USE_USBDRIVE) || defined(BOOTLOADER_BUILD)
+      MX_FATFS_Init();
+    #endif
+#endif
+
+#ifndef BOOTLOADER_BUILD
+   mchfMain();
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+#else
 
   /* USER CODE END 2 */
 
@@ -160,8 +181,10 @@ int main(void)
     MX_USB_HOST_Process();
 
   /* USER CODE BEGIN 3 */
+    BL_Application();
 
   }
+#endif
   /* USER CODE END 3 */
 
 }
