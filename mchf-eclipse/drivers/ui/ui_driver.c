@@ -5241,11 +5241,11 @@ static bool UiDriver_TouchscreenCalibration()
 		clr_bg = Black;
 		clr_fg = White;
 
-		int16_t cross1[4] = {20,20,0,0};
-		int16_t cross2[4] = {MAX_X-20,20,0,0};
-		int16_t cross3[4] = {20,MAX_Y-20,0,0};
+		int16_t cross1[4] = {      20,      20,0,0};
+		int16_t cross2[4] = {MAX_X-20,      20,0,0};
+		int16_t cross3[4] = {      20,MAX_Y-20,0,0};
 		int16_t cross4[4] = {MAX_X-20,MAX_Y-20,0,0};
-		int16_t cross5[4] = {MAX_X/2,MAX_Y/2,0,0};
+		int16_t cross5[4] = { MAX_X/2, MAX_Y/2,0,0};
 
 		uint16_t x_corr[1], y_corr[1];
 		float diffx,diffy;
@@ -5328,7 +5328,7 @@ static bool UiDriver_TouchscreenCalibration()
 			UiDriver_DoCrossCheck(cross4);
 
 			UiLcdHy28_LcdClear(clr_bg);
-			DrawCross(cross1,clr_fg);
+			DrawCross(cross5,clr_fg);
 			UiDriver_DoCrossCheck(cross5);
 
 			diffx = roundf(*x_corr / 15);
@@ -5480,7 +5480,7 @@ static bool UiDriver_TouchscreenCalibration()
 
 
 #ifdef  USE_HIRES_TOUCH
-#define MaxTouchError 20
+#define MaxTouchError 50
 void UiDriver_DoCrossCheck(int16_t cross[])
 {
 	uint32_t clr_fg, clr_bg;
@@ -5522,7 +5522,9 @@ void UiDriver_DoCrossCheck(int16_t cross[])
 	}
 	while(datavalid < 3);
 
-	HAL_Delay(4000);
+	HAL_Delay(1000);
+	UiLcdHy28_PrintText(10,70,"Wait one moment please...       ",Yellow,clr_bg,0);
+	HAL_Delay(2000);
 }
 
 

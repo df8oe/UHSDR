@@ -2096,20 +2096,29 @@ void UiLcdHy28_TouchscreenDetectPress()
  * @brief tells you that touchscreen coordinates are ready for processing and marks them as processed
  * @returns true if coordinates for processing are available and have been marked as processed, false otherwise
  */
-bool UiLcdHy28_TouchscreenHasProcessableCoordinates() {
-    bool retval = false;
+bool UiLcdHy28_TouchscreenHasProcessableCoordinates()
+{
+	bool retval = false;
     UiLcdHy28_TouchscreenReadCoordinates();
+
+#ifdef USE_HIRES_TOUCH
+    if(mchf_touchscreen.state >= TP_DATASETS_VALID && mchf_touchscreen.state != TP_DATASETS_PROCESSED)
+    {
+        mchf_touchscreen.state = TP_DATASETS_NONE;     // tp data processed
+        mchf_touchscreen.xraw_avgBuff=0;
+        mchf_touchscreen.yraw_avgBuff=0;
+        retval = true;
+    }
+#else
     if(mchf_touchscreen.state > TP_DATASETS_WAIT && mchf_touchscreen.state != TP_DATASETS_PROCESSED)
     {
         mchf_touchscreen.state = TP_DATASETS_NONE;     // tp data processed
-#ifdef USE_HIRES_TOUCH
-        mchf_touchscreen.xraw_avgBuff=0;
-        mchf_touchscreen.yraw_avgBuff=0;
-#endif
         retval = true;
     }
+#endif
     return retval;
 }
+
 
 static inline void UiLcdHy28_TouchscreenStartSpiTransfer()
 {
@@ -2189,8 +2198,8 @@ const uint8_t touchscreentable [] = { 0x07, 0x09,
         0x67, 0x6c, 0x6d, 0x6e, 0x74, 0x75, 0x76, 0x77, 0x7c, 0x7d
 };
 
-#define HIRES_TOUCH_MaxDeltaX 32
-#define HIRES_TOUCH_MaxDeltaY 32
+#define HIRES_TOUCH_MaxDeltaX 50
+#define HIRES_TOUCH_MaxDeltaY 50
 
 void UiLcdHy28_TouchscreenReadCoordinates()
 {
@@ -2211,6 +2220,14 @@ void UiLcdHy28_TouchscreenReadCoordinates()
         {
 
             UiLcdHy28_TouchscreenReadData(&mchf_touchscreen.xraw,&mchf_touchscreen.yraw);
+            if(mchf_touchscreen.state==TP_DATASETS_WAIT)
+            {
+            	mchf_touchscreen.xraw_prev=mchf_touchscreen.xraw;
+            	mchf_touchscreen.yraw_prev=mchf_touchscreen.yraw;
+            	mchf_touchscreen.xraw_avgBuff=0;
+            	mchf_touchscreen.yraw_avgBuff=0;
+            }
+
             int16_t TS_dx,TS_dy;
             TS_dx=mchf_touchscreen.xraw_prev-mchf_touchscreen.xraw;
             TS_dy=mchf_touchscreen.yraw_prev-mchf_touchscreen.yraw;
@@ -2223,7 +2240,7 @@ void UiLcdHy28_TouchscreenReadCoordinates()
             {
             	TS_dy=-TS_dy;
             }
-            if((TS_dx<=HIRES_TOUCH_MaxDeltaX) && (TS_dx<=HIRES_TOUCH_MaxDeltaY))
+            if((TS_dx<HIRES_TOUCH_MaxDeltaX) && (TS_dy<HIRES_TOUCH_MaxDeltaY))
             {
             	//if the calculated new delta is within the tolerance, average it
             	mchf_touchscreen.xraw_avgBuff+=mchf_touchscreen.xraw;	//add new data to sum
