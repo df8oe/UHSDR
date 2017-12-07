@@ -2424,6 +2424,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             break;
         }
         break;
+#ifdef USE_CONFIGSTORAGE_FLASH
     case MENU_BACKUP_CONFIG:
       	txt_ptr = "n/a";
         if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
@@ -2475,6 +2476,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
       	  }
 		}
         break;
+#endif
     case MENU_RESTART_CODEC:
         txt_ptr = " Do it!";
         clr = White;

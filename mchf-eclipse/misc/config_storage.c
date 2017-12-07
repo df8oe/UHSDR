@@ -19,7 +19,65 @@
 static uint8_t config_ramcache[MAX_VAR_ADDR*2+2];
 
 
-static bool ConfigStorage_CheckSameContentSerialAndFlash(void);
+#ifdef USE_CONFIGSTORAGE_FLASH
+void ConfigStorage_CopyFlash2RAMCache()
+{
+    uint16_t i, data;
+
+    config_ramcache[0] = ts.ser_eeprom_type;
+    config_ramcache[1] = ts.configstore_in_use;
+    for(i=1; i <= MAX_VAR_ADDR; i++)
+    {
+        Flash_ReadVariable(i, &data);
+        config_ramcache[i*2+1] = (uint8_t)((0x00FF)&data);
+        data = data>>8;
+        config_ramcache[i*2] = (uint8_t)((0x00FF)&data);
+    }
+    ts.configstore_in_use = CONFIGSTORE_IN_USE_RAMCACHE;
+}
+// copy data from flash storage to serial EEPROM
+void ConfigStorage_CopyFlash2Serial(void)
+{
+    ConfigStorage_CopyFlash2RAMCache();
+    ConfigStorage_CopyRAMCache2Serial();
+}
+
+// copy data from serial to virtual EEPROM
+void ConfigStorage_CopySerial2Flash(void)
+{
+    uint16_t count;
+    uint16_t data;
+
+    for(count=1; count <= MAX_VAR_ADDR; count++)
+    {
+        SerialEEPROM_ReadVariable(count, &data);
+        Flash_UpdateVariable(count, data);
+    }
+}
+
+/**
+ * verify data serial / virtual EEPROM
+ * sets ts.configstore_in_use to CONFIGSTORE_IN_USE_ERROR if
+ * it encounters a difference between flash and I2C
+ * Used only for debugging
+ */
+static bool ConfigStorage_CheckSameContentSerialAndFlash(void)
+{
+    bool retval = true;
+    for(uint16_t count=1; retval == true && count <= MAX_VAR_ADDR; count++)
+    {
+        uint16_t data1, data2;
+        SerialEEPROM_ReadVariable(count, &data1);
+        Flash_ReadVariable(count, &data2);
+        if(data1 != data2)
+        {
+            retval = false;
+            ts.configstore_in_use = CONFIGSTORE_IN_USE_ERROR; // mark data copy as faulty
+        }
+    }
+    return retval;
+}
+#endif
 
 //
 // Interface for all EEPROM (ser/virt) functions and our code
@@ -95,15 +153,19 @@ uint16_t ConfigStorage_WriteVariable(uint16_t addr, uint16_t value)
 void ConfigStorage_Init()
 {
     // virtual Eeprom init
+#ifdef USE_CONFIGSTORAGE_FLASH
     ts.ee_init_stat = Flash_Init(); // get status of EEPROM initialization
+#else
+    ts.ee_init_stat = HAL_ERROR; // get status of EEPROM initialization
+#endif
+
+    ts.configstore_in_use = ts.ee_init_stat == HAL_OK? CONFIGSTORE_IN_USE_FLASH: CONFIGSTORE_IN_USE_ERROR;
+    // at this point, we have a working flash config storage (or not)
 
     ts.ser_eeprom_type = SerialEEPROM_Detect();
 
-    if(SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].supported == false)             // incompatible EEPROMs
-    {
-        ts.configstore_in_use = CONFIGSTORE_IN_USE_FLASH;         // serial EEPROM too small
-    }
-    else
+    // incompatible EEPROMs, no EEPROM at all, EEPROM to small
+    if(SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].supported == true)
     {
         // we read the "in use" signature here, first we use a 16 bit value to keep the error code if any
         // this was report in #857
@@ -111,10 +173,17 @@ void ConfigStorage_Init()
 
         if(ser_eeprom_in_use == SER_EEPROM_NOT_IN_USE) // empty EEPROM
         {
-            ts.configstore_in_use = CONFIGSTORE_IN_USE_FLASH;
 
-            ConfigStorage_CopyFlash2Serial();               // copy data from virtual to serial EEPROM
-            ConfigStorage_CheckSameContentSerialAndFlash();             // just 4 debug purposes
+#ifdef USE_CONFIGSTORAGE_FLASH
+            // if we have a flash storage available, copy its contents into EEPROM
+            if (ts.ee_init_stat == HAL_OK)
+            {
+                ts.configstore_in_use = CONFIGSTORE_IN_USE_FLASH;
+
+                ConfigStorage_CopyFlash2Serial();               // copy data from virtual to serial EEPROM
+                ConfigStorage_CheckSameContentSerialAndFlash();             // just 4 debug purposes
+            }
+#endif
             SerialEEPROM_Set_UseStateInSignature(SER_EEPROM_IN_USE);      // serial EEPROM in use now
         }
         else
@@ -132,21 +201,6 @@ void ConfigStorage_Init()
     }
 }
 
-void ConfigStorage_CopyFlash2RAMCache()
-{
-    uint16_t i, data;
-
-    config_ramcache[0] = ts.ser_eeprom_type;
-    config_ramcache[1] = ts.configstore_in_use;
-    for(i=1; i <= MAX_VAR_ADDR; i++)
-    {
-        Flash_ReadVariable(i, &data);
-        config_ramcache[i*2+1] = (uint8_t)((0x00FF)&data);
-        data = data>>8;
-        config_ramcache[i*2] = (uint8_t)((0x00FF)&data);
-    }
-    ts.configstore_in_use = CONFIGSTORE_IN_USE_RAMCACHE;
-}
 
 void ConfigStorage_CopySerial2RAMCache()
 {
@@ -168,67 +222,3 @@ uint16_t ConfigStorage_CopyRAMCache2Serial()
     return retval;
 }
 
-// copy data from flash storage to serial EEPROM
-void ConfigStorage_CopyFlash2Serial(void)
-{
-    ConfigStorage_CopyFlash2RAMCache();
-    ConfigStorage_CopyRAMCache2Serial();
-}
-
-// copy data from serial to virtual EEPROM
-void ConfigStorage_CopySerial2Flash(void)
-{
-    uint16_t count;
-    uint16_t data;
-
-    for(count=1; count <= MAX_VAR_ADDR; count++)
-    {
-        SerialEEPROM_ReadVariable(count, &data);
-        Flash_UpdateVariable(count, data);
-    }
-}
-
-//copy array directly to serial EEPROM
-uint16_t ConfigStorage_CopyArray2Serial(uint32_t Addr, const uint8_t *buffer, uint16_t length)
-{
-	uint16_t retval = HAL_OK;
-    if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
-    {
-        retval = SerialEEPROM_24Cxx_WriteBulk(Addr, buffer, length, ts.ser_eeprom_type);
-    }
-
-	return retval;
-}
-
-//read array directly from serial EEPROM
-void ConfigStorage_CopySerial2Array(uint32_t Addr, uint8_t *buffer, uint16_t length)
-{
-    if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
-    {
-    	SerialEEPROM_24Cxx_ReadBulk(Addr, buffer, length, ts.ser_eeprom_type);
-    }
-
-}
-
-/**
- * verify data serial / virtual EEPROM
- * sets ts.configstore_in_use to CONFIGSTORE_IN_USE_ERROR if
- * it encounters a difference between flash and I2C
- * Used only for debugging
- */
-static bool ConfigStorage_CheckSameContentSerialAndFlash(void)
-{
-    bool retval = true;
-    for(uint16_t count=1; retval == true && count <= MAX_VAR_ADDR; count++)
-    {
-        uint16_t data1, data2;
-        SerialEEPROM_ReadVariable(count, &data1);
-        Flash_ReadVariable(count, &data2);
-        if(data1 != data2)
-        {
-            retval = false;
-            ts.configstore_in_use = CONFIGSTORE_IN_USE_ERROR; // mark data copy as faulty
-        }
-    }
-    return retval;
-}

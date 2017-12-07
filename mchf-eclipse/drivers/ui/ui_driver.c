@@ -28,8 +28,7 @@
 #include "drivers/ui/oscillator/osc_si5351a.h"
 #include "audio_nr.h"
 #include "uhsdr_keypad.h"
-//
-//
+#include "serial_eeprom.h"
 #include "ui.h"
 // LCD
 #include "ui_lcd_hy28.h"
@@ -5712,10 +5711,17 @@ void UiDriver_StartUpScreenFinish()
 	if(!Si5351a_IsPresent()) {
 		UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
 	}
-	if(ts.ee_init_stat != HAL_OK)                                   // problem with EEPROM init
+
+	if(ts.configstore_in_use == CONFIGSTORE_IN_USE_ERROR)                                   // problem with EEPROM init
 	{
-		snprintf(tx,100, "EEPROM Init Error Code: %d", ts.ee_init_stat);
-		UiDriver_StartupScreen_LogIfProblem(true, tx);
+#ifndef USE_CONFIGSTORAGE_FLASH
+	    UiDriver_StartupScreen_LogIfProblem(ts.ee_init_stat != HAL_OK, "Config Flash Error");
+#endif
+	    if (SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size == 0)
+	    {
+	        snprintf(tx,100,"Config EEPROM: %s", SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].name);
+	        UiDriver_StartupScreen_LogIfProblem(true, tx);
+	    }
 	}
 
 	if(!Si5351a_IsPresent()) {

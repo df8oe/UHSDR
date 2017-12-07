@@ -773,4 +773,9 @@
 #error UI_BRD_MCHF does not permit USE_TWO_CHANNEL_AUDIO
 #endif
 
+// remove this rule once flash config storage code is ported to H7 flash sector structure
+#if defined(STM32H7) && defined(USE_CONFIGSTORAGE_FLASH)
+#error STM32H7 processor does not support USE_CONFIGSTORAGE_FLASH
+#endif
+
 #endif
