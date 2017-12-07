@@ -3,8 +3,5 @@
 * created dir basesw/ovi40-h7
 * Generated from ovi40-h7.ioc CubeMX sources
 * Added most to commit, some to .gitignore (license or not used)
-* As usual CubeMX forgets the DSP assembly ./Drivers/CMSIS/DSP/Source/TransformFunctions/arm_bitreversal2.S
-Need to copy from original source in CubeMX install dir. 
 
 CHECK USB DEVICE FIFO BUFFERS SIZE CONFIGURATION!
-
