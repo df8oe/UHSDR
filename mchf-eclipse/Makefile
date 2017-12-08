@@ -17,7 +17,7 @@
 # for example to build the bootloader in the build-bl folder inside this directory
 # make -f ../Makefile ROOTLOC=".." bootloader 
 
-# you can set the MCU you want to build for here or via environment variable (F4 or F7)
+# you can set the MCU you want to build for here or via environment variable (F4 or F7 or H7)
 
 ifndef BUILDFOR
   BUILDFOR=F4
@@ -75,15 +75,12 @@ endif
 
 # compilation options
 MACHFLAGS_F4 := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -DARM_MATH_CM4 -DCORTEX_M4 -DSTM32F407xx -D__FPU_PRESENT=1U
-MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32F767xx -D__FPU_PRESENT=1
-
-#COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
-#	-DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" -DOFFICIAL_BUILD=\"$(OFFICIAL_BUILD)\" \
-#          -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function  
+MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32F767xx -D__FPU_PRESENT=1 
+MACHFLAGS_H7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32H743xx -D__FPU_PRESENT=1 
 
 BASECFLAGS_F4  = $(MACHFLAGS_F4)  $(COMPILEFLAGS)  $(EXTRACFLAGS)
-
 BASECFLAGS_F7  = $(MACHFLAGS_F7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
+BASECFLAGS_H7  = $(MACHFLAGS_H7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
 
 LINKERLOC=$(ROOTLOC)/linker
 
@@ -154,6 +151,23 @@ $(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F7} -T$(LINKERLOC)/arm-gcc-link_f7.ld
 	include $(ROOTLOC)/f7-files.mak
 
 	include $(ROOTLOC)/f7-bootloader.mak
+
+endif
+ifeq ($(BUILDFOR),H7)
+
+$(BOOTLOADER).elf: CFLAGS = ${BASECFLAGS_H7} -Os -DBOOTLOADER_BUILD
+$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_H7} -O3
+$(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_H7} -T$(ROOTLOC)/arm-gcc-link-bootloader_h7.ld
+$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_H7} -T$(ROOTLOC)/arm-gcc-link_h7.ld
+
+
+	# Every subdirectory with header files must be mentioned here
+	include $(ROOTLOC)/h7-include.mak
+
+	# every source-file has to be mentioned here 
+	include $(ROOTLOC)/h7-files.mak
+
+	include $(ROOTLOC)/h7-bootloader.mak
 
 endif
 

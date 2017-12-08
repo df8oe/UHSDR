@@ -28,7 +28,10 @@ script:
     - mkdir -p mchf-eclipse/build-fw-f7
     - mkdir -p mchf-eclipse/build-fw-f4-ili9486-480
     - mkdir -p mchf-eclipse/build-fw-f4-small
-    - cd mchf-eclipse/build-bl
+    - mkdir -p mchf-eclipse/build-fw-h7
+    - cd mchf-eclipse/build-fw-h7
+    - cd ../build-fw-h7
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="H7" TRX_ID="ovi40" TRX_NAME="OVI40" all 
     - cd ../build-fw 
     - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." all
     - cd ../build-fw-f7
