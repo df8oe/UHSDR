@@ -30,7 +30,7 @@
 
 
 
-__IO dma_audio_buffer_t audio_buf[DMA_AUDIO_NUM];
+__UHSDR_DMAMEM __IO dma_audio_buffer_t audio_buf[DMA_AUDIO_NUM];
 
 
 static uint32_t szbuf;
@@ -153,6 +153,9 @@ void UhsdrHwI2s_Codec_StartDMA()
     HAL_I2SEx_TransmitReceive_DMA(&hi2s3,(uint16_t*)audio_buf[0].out,(uint16_t*)audio_buf[0].in,szbuf);
 #endif
 #ifdef UI_BRD_OVI40
+    // we clean the buffers since we don't know if we are in a "cleaned" memory segement
+    memset((void*)audio_buf,0,sizeof(audio_buf));
+
     HAL_SAI_Receive_DMA(&hsai_BlockA1,(uint8_t*)audio_buf[0].in,szbuf);
     HAL_SAI_Transmit_DMA(&hsai_BlockB1,(uint8_t*)audio_buf[0].out,szbuf);
 

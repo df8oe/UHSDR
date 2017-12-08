@@ -40,6 +40,12 @@
 // place tagged elements in CCM 64k extra RAM (no DMA)
 #define __MCHF_SPECIALMEM __attribute__ ((section (".ccm")))
 
+// NOT USED ON F4 based mcHF boards (defined as "no-op")
+// if used place tagged elements in an memory to peripheral DMA-able memory region
+// with the correct cache strategy set
+#define __UHSDR_DMAMEM
+
+
 #define SI570_I2C               (&hi2c1)
 #define SI5351A_I2C				(&hi2c1)
 
@@ -354,8 +360,14 @@
 #define UI_BRD_OVI40
 #define RF_BRD_MCHF
 
+// NOT USED on OVI40 F7/H7 boards (defined as no-op)
 // compiler places tagged elements by its default rules
 #define __MCHF_SPECIALMEM
+
+// place tagged elements in a memory to peripheral DMA-able memory region
+// with the correct cache strategy set
+#define __UHSDR_DMAMEM __attribute__ ((section (".dmamem")))
+
 
 
 #define SI570_I2C               (&hi2c1)

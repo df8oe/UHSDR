@@ -2,9 +2,10 @@ OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
 /* Internal Memory Map*/
 MEMORY
 {
-	/* rom  (rx)  : ORIGIN = 0x08010000, LENGTH = 2048k - 64k */
-	rom  (rx)  : ORIGIN = 0x08000000, LENGTH = 2048k - 64k
+	/* rom  (rx)  : ORIGIN = 0x08020000, LENGTH = 2048k - 128k */
+	rom  (rx)  : ORIGIN = 0x08000000, LENGTH = 2048k - 128k
 	ram  (rwx) : ORIGIN = 0x24000000, LENGTH = 512k
+	sram1 (rw)  : ORIGIN = 0x30000000, LENGTH = 128k
 }
 
 _estack = ORIGIN(ram) + LENGTH(ram) -8;  /* -8 keeps older DF8OE bootloaders (before 2.0.2-HAL) happy */
@@ -53,6 +54,9 @@ SECTIONS
 	
 	/* _sidata is used in coide startup code */
 	_sidata = __etext;
+
+
+
 	
 	.data : AT (__etext)
 	{
@@ -125,6 +129,15 @@ SECTIONS
 		*(.co_stack .co_stack.*)
 	} > ram 
 	
+	.dmamem (NOLOAD) : {
+  		. = ALIGN(4);
+  		_sdmamem = .;
+  		*(.dmamem)
+  		. = ALIGN(4);      
+  		_edmamem = .;
+	}>sram1
+	
+
 	
 	/* Set stack top to end of ram , and stack limit move down by
 	* size of stack_dummy section */
