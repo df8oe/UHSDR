@@ -37,7 +37,11 @@ All this is bundled in [startup page](https://df8oe.github.io/UHSDR/).
 
 Have fun - Open-Source opens possibilities!
 
+M0NKA, Chris<br/>
+KA7OEI, Clint<br/>
 DF8OE, Andreas<br/>
 DB4PLE, Danilo<br/>
 DD4WH, Frank<br/>
+DL2FW, Michael<br/>
+SP9BSL, Slawek<br/>
 and the complete UHSDR community
