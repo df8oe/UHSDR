@@ -25,14 +25,6 @@
 #include "spi.h"
 #include "gpio.h"
 
-#ifdef STM32F7
-#include "stm32f7xx_hal_flash_ex.h"
-#else
-#include "stm32f4xx_hal_flash_ex.h"
-#endif
-
-
-
 #include <unistd.h>
 
 
@@ -355,7 +347,7 @@ void mchfBl_CheckAndGoForDfuBoot()
     if(*(uint32_t*)(SRAM2_BASE) == 0x99)
     {
         *(uint32_t*)(SRAM2_BASE) = 0;
-#ifndef STM32F7
+#if defined(STM32F4)
         __HAL_REMAPMEMORY_SYSTEMFLASH();
 
         const uint32_t dfu_boot_start = 0x00000000;

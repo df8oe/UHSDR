@@ -52,7 +52,12 @@ inline mchf_cpu_t MchfHW_Cpu()
 
 #define STM32_GetRevision()     (*(uint16_t *) (UID_BASE + 2))
 #define STM32_GetSignature()    ((*(uint16_t *) (DBGMCU_BASE)) & 0x0FFF)
-#define STM32_GetFlashSize()    (*(uint16_t *) (FLASHSIZE_BASE))
 #define STM32_UUID ((uint32_t *)UID_BASE)
+
+#ifndef STM32H7
+    #define STM32_GetFlashSize()    (*(uint16_t *) (FLASHSIZE_BASE))
+#else
+    #define STM32_GetFlashSize()    (FLASH_SIZE/1024)
+#endif
 
 #endif

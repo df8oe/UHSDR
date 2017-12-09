@@ -13,10 +13,14 @@
  ************************************************************************************/
 
 #include "flash_if.h"
-#ifdef STM32F7
-#include "stm32f7xx_hal_flash_ex.h"
-#else
+#if defined(STM32F7)
+    #include "stm32f7xx_hal_flash_ex.h"
+#elif defined(STM32H7)
+    #include "stm32h7xx_hal_flash_ex.h"
+#elif defined(STM32F4)
 #include "stm32f4xx_hal_flash_ex.h"
+#else
+    #error Unknown processor
 #endif
 
 /* Base address of the Flash sectors */
@@ -124,9 +128,18 @@ uint32_t flashIf_EraseSectors(uint32_t Address, uint32_t Length)
   * retval FLASH Status: The returned value can be: FLASH_ERROR_PG,
   * FLASH_ERROR_WRP, HAL_OK or FLASH_TIMEOUT.
   */
-HAL_StatusTypeDef flashIf_ProgramWord(uint32_t Address, uint32_t Data)
+HAL_StatusTypeDef flashIf_Program256Bit(uint32_t Address, uint32_t Data[8])
 {
-    return HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,Address, Data);
+    HAL_StatusTypeDef retval = HAL_OK;
+#ifndef STM32H7
+    for (int i=0; retval == HAL_OK && i < 8; i++)
+    {
+        retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,Address, Data[i]);
+    }
+#else
+    retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD,Address, (uint32_t)&Data[0]);
+#endif
+    return retval;
 }
 
 /**

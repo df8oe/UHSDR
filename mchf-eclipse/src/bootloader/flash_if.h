@@ -36,19 +36,29 @@ typedef  void (*pFunction)(void);
 /* extern const char* version;
 extern const char* author; */
 
-/* Define the flash memory start address */
-#define USER_FLASH_STARTADDRESS    ((uint32_t)0x08000000) /* Flash Start Address */
+#ifndef STM32H7
+    /* Define the flash memory start address */
+    #define USER_FLASH_STARTADDRESS    ((uint32_t)0x08000000) /* Flash Start Address */
 
-/* Define the address from where user application will be loaded.
-   Note: the 1st sector 0x08000000-0x08007FFF is reserved for the Firmware upgrade code */
-#define APPLICATION_ADDRESS        ((uint32_t)0x08010000)
+    /* Define the address from where user application will be loaded.
+       Note: the 1st sector 0x08000000-0x08007FFF is reserved for the Firmware upgrade code */
+    #define APPLICATION_ADDRESS        ((uint32_t)0x08010000)
 
-/* End of the Flash address for the largest device, dynamically sized down based on real processor flash */
-#define USER_FLASH_END_ADDRESS     ((uint32_t)0x081FFFFF)
+    /* End of the Flash address for the largest device, dynamically sized down based on real processor flash */
+    #define USER_FLASH_END_ADDRESS     ((uint32_t)0x081FFFFF)
+    #define MCHF_FLASHRESERVED      64
+#else
+    /* Define the flash memory start address */
+    #define USER_FLASH_STARTADDRESS    ((uint32_t)0x08000000) /* Flash Start Address */
 
-#define STM32_GetFlashSize()    (*(uint16_t *) (FLASHSIZE_BASE))
-#define MCHF_FLASHRESERVED      64
+    /* Define the address from where user application will be loaded.
+       Note: the 1st sector 0x08000000-0x08007FFF is reserved for the Firmware upgrade code */
+    #define APPLICATION_ADDRESS        ((uint32_t)0x08020000)
 
+    /* End of the Flash address for the largest device, dynamically sized down based on real processor flash */
+    #define USER_FLASH_END_ADDRESS     ((uint32_t)0x081FFFFF)
+    #define MCHF_FLASHRESERVED      128
+#endif
 /**
  * @brief real user flash size of microprocessor (flash size - bootloader/config flash size)
  * @returns size of user flash in bytes
@@ -62,7 +72,7 @@ void flashIf_FlashUnlock();
 void flashIf_FlashLock();
 FlagStatus flashIf_ReadOutProtectionStatus();
 uint32_t flashIf_EraseSectors(uint32_t Address, uint32_t Length);
-HAL_StatusTypeDef flashIf_ProgramWord(uint32_t Address, uint32_t Data);
+HAL_StatusTypeDef flashIf_Program256Bit(uint32_t Address, uint32_t Data[8]);
 
 
 #ifdef __cplusplus

@@ -73,19 +73,19 @@ void mchfBl_LEDInit(Led_TypeDef Led)
     GPIO_InitStructure.Pin = GPIO_PIN[Led];
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
 
     HAL_GPIO_Init(GPIO_PORT[Led], &GPIO_InitStructure);
 }
 
 void mchfBl_PinOn(Led_TypeDef Led)
 {
-    GPIO_PORT[Led]->BSRR = GPIO_PIN[Led];
+    GPIO_SetBits(GPIO_PORT[Led],GPIO_PIN[Led])
 }
 
 void mchfBl_PinOff(Led_TypeDef Led)
 {
-    GPIO_PORT[Led]->BSRR = GPIO_PIN[Led] << 16U;
+    GPIO_ResetBits(GPIO_PORT[Led],GPIO_PIN[Led])
 }
 
 void mchfBl_PinToggle(Led_TypeDef Led)
@@ -103,7 +103,7 @@ void mchfBl_ButtonInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode)
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
     GPIO_InitStructure.Pin = BUTTON_PIN[Button];
-    GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
 
     if (Button_Mode == BUTTON_MODE_EXTI)
     {
@@ -130,7 +130,7 @@ void mcHF_PowerOff()
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
     GPIO_InitStructure.Pin = GPIO_PIN[PWR_HOLD];
-    GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
 
     HAL_GPIO_Init(GPIO_PORT[PWR_HOLD], &GPIO_InitStructure);
 
