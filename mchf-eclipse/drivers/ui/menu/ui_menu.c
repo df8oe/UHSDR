@@ -2750,7 +2750,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             osc->setPPM(((float32_t)ts.freq_cal)/10.0);
             // Update LO PPM (will automatically adjust frequency)
-            osc->changeToNextFrequency();
+            // this is a little trick
+            // FIXME: Use a better approach to trigger retuning
+            df.temp_factor_changed = true;
         }
         {
             char numstr[16];
