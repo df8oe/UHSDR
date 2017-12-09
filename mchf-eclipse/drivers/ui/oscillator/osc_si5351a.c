@@ -339,7 +339,7 @@ bool Si5351a_IsPresent()
 }
 static void Si5351a_SetPPM(float32_t ppm)
 {
-	si5351a_state.xtal_freq = ((float64_t)SI5351_XTAL_FREQ) + (((float64_t)SI5351_XTAL_FREQ)*(float64_t)ppm/10000000.0);
+	si5351a_state.xtal_freq = ((float64_t)SI5351_XTAL_FREQ) + (((float64_t)SI5351_XTAL_FREQ)*(float64_t)ppm/1000000.0);
 }
 
 static Oscillator_ResultCodes_t Si5351a_PrepareNextFrequency(uint32_t freq, int temp_factor)
