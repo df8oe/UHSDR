@@ -253,8 +253,8 @@ struct mchf_waterfall
 #define		TRANSVT_FREQ_A	 	42000000
 
 //
-#define		MIN_FREQ_CAL		-999		// Minimum and maximum range of frequency calibration in 10xppm
-#define		MAX_FREQ_CAL		999
+#define		MIN_FREQ_CAL		-1499		// Minimum and maximum range of frequency calibration in 10xppm
+#define		MAX_FREQ_CAL		1499
 //
 // Total bands supported
 //
