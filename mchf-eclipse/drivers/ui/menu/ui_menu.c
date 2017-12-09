@@ -2750,6 +2750,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             osc->setPPM(((float32_t)ts.freq_cal)/10.0);
             // Update LO PPM (will automatically adjust frequency)
+            osc->changeToNextFrequency();
         }
         {
             char numstr[16];
