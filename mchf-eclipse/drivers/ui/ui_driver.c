@@ -138,6 +138,15 @@ static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
 static void UiDriver_DisplayPskSpeed(bool encoder_active);
 
+#ifdef USE_HIRES_TOUCH
+typedef struct
+{
+	int16_t x_center;
+	int16_t y_center;
+	int16_t size_x;
+	int16_t size_y;
+} touchscreen_region_t;
+#else
 typedef struct
 {
 	uint8_t x_left;
@@ -145,7 +154,7 @@ typedef struct
 	uint8_t y_down;
 	uint8_t y_up;
 } touchscreen_region_t;
-
+#endif
 
 // Tuning steps
 const ulong tune_steps[T_STEP_MAX_STEPS] =
@@ -264,7 +273,14 @@ bool filter_path_change = false;
 // check if touched point is within rectangle of valid action
 static bool UiDriver_CheckTouchRegion(const touchscreen_region_t* tr_p)
 {
+#ifdef USE_HIRES_TOUCH
+	return ((ts.tp->hr_x <= (tr_p->x_center+(tr_p->size_x/2))) &&
+			(ts.tp->hr_x >= (tr_p->x_center-(tr_p->size_x/2))) &&
+			(ts.tp->hr_y <= (tr_p->y_center+(tr_p->size_y/2))) &&
+			(ts.tp->hr_y >= (tr_p->y_center-(tr_p->size_y/2))));
+#else
 	return (ts.tp->x <= tr_p->x_right && ts.tp->x >= tr_p->x_left && ts.tp->y >= tr_p->y_down && ts.tp->y <= tr_p->y_up);
+#endif
 }
 
 
@@ -6524,6 +6540,33 @@ static void UiAction_StepPlusHold()
 		}
 	}
 }
+#ifdef USE_HIRES_TOUCH
+static const touchaction_descr_t touchactions_normal[] =
+{
+		{ { POS_SM_IND_X+SM_IND_W/2,POS_SM_IND_Y+SM_IND_H/2,SM_IND_W,SM_IND_H }, UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
+//		{ { 10,28,27,31 }, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
+//		{ { 29,33,26,32 }, UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
+//		{ { 52,60,26,32 }, UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
+//		{ { 43,60,00,04 }, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
+//		{ { 16,24,40,44 }, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
+		{ { POS_PW_IND_X+32,POS_PW_IND_Y+8,64,16 },								 UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
+//		{ { 10,16,44,50 }, UiAction_ChangeAudioSource,              NULL }, // Audio In Box: Switch Source
+//		{ { 48,52,35,37 }, UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
+//		{ { 53,60,35,37 }, UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
+//		{ { 00,07,21,30 }, Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
+//		{ { 8,60,11,19  }, UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
+//		{ { 0,7,10,13   }, UiAction_ChangeDigitalMode,              NULL }, // Digital Mode Box: Switch Digi Mode
+//		{ { 26,35,39,46 }, UiAction_ChangeDynamicTuning,            NULL }, // Step Box: Dynamic Tuning Toggle
+};
+
+// this is the map for menu mode, right now only used for debugging/experimental purposes
+static const touchaction_descr_t touchactions_menu[] =
+{
+		{ { 54,57,55,57 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
+//		{ { 46,49,55,57 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
+//		{ { 50,53,55,57 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
+};
+#else
 // these maps control the touch regions to function mapping in a specific mode
 // this is the normal mode, available when not in menu mode
 // first function is the normal touch, second function is long touch
@@ -6553,7 +6596,7 @@ static const touchaction_descr_t touchactions_menu[] =
 		{ { 46,49,55,57 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
 		{ { 50,53,55,57 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
 };
-
+#endif
 static const touchaction_list_descr_t touch_regions[] =
 {
 		// ATTENTION: the size calculation only works for true arrays, not for pointers!
