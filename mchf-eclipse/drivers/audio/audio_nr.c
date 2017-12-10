@@ -395,8 +395,9 @@ void spectral_noise_reduction (float* in_buffer)
 	  0.1152168405, 0.0998979008, 0.0855580779, 0.0722324638, 0.0599536686, 0.0487517405, 0.0386540925, 0.0296854352,
 	  0.0218677165, 0.0152200676, 0.0097587564, 0.0054971478, 0.0024456704, 0.0006117919, 0};
 
-
-
+uint8_t zero_cross_count=0;
+bool  VAD_ZCR, VAD_EN, VAD_E_Z;
+float32_t VAD_E,VAD_energy_ratio;
 
 
     if(ts.nr_first_time == 1)
@@ -564,6 +565,69 @@ void spectral_noise_reduction (float* in_buffer)
                 		  VAD_high = NR_FFT_L / 2;
                 	  }
 
+// ******* alternative VAD trials
+
+	      zero_cross_count=0;
+	      for (int i=1;i<NR_FFT_L/2;i++)
+		{
+		  if ((in_buffer[i+ k * (NR_FFT_L / 2)] * in_buffer[i-1 + k * (NR_FFT_L / 2)]) < 0)
+		    {
+		      zero_cross_count++;  //if product of current sample with last sample is negative, we had a zero crossing
+		    }
+		}	     // # of zero crossing tend to be higher at only noise containing frames
+
+	      if (zero_cross_count > 10)
+		{
+		  VAD_ZCR=false;
+		//Board_RedLed(LED_STATE_OFF);
+
+		}
+	      else
+		{
+		  VAD_ZCR=true;
+		  //Board_RedLed(LED_STATE_ON);
+		}
+
+	      VAD_E = 0.0;
+
+	      for(int bindx = VAD_low; bindx < VAD_high; bindx++)
+			VAD_E = VAD_E + NR2.X[bindx][0];
+
+
+	      VAD_energy_ratio = VAD_E / (VAD_high-VAD_low);
+
+	      if (VAD_energy_ratio > (3500*ts.nr_vad_thresh)) //ts.nr_vad_thresh is per default 1000/1000!!!
+	      		{
+	      		  VAD_EN=true;
+	      		//Board_RedLed(LED_STATE_OFF);
+
+	      		}
+	      	      else
+	      		{
+	      		  VAD_EN=false;
+	      		  //Board_RedLed(LED_STATE_ON);
+	      		}
+
+	      if (VAD_EN && VAD_ZCR)
+	      	      		{
+	      	      		  VAD_E_Z=true;
+	      	      		//Board_RedLed(LED_STATE_ON);
+
+	      	      		}
+	      	      	      else
+	      	      		{
+	      	      		  VAD_E_Z=false;
+	      	      		  //Board_RedLed(LED_STATE_OFF);
+	      	      		}
+
+
+
+// ******* end of alternative VAD trials
+
+
+
+
+
 
                   for(int bindx = VAD_low; bindx < VAD_high; bindx++) // try 128:
                   {
@@ -583,6 +647,13 @@ void spectral_noise_reduction (float* in_buffer)
                   {
                 	  NR_VAD_temp = 10.0 * NR.VAD_Esch;
                   }
+                  else
+                  if(NR2.VAD_type == 2)
+                  {
+                    if (VAD_E_Z == true) NR_VAD_temp = 1000000;// just very high, because we already have a boolean decision
+                    else NR_VAD_temp = 0;
+                  }
+
                       if((NR_VAD_temp < ts.nr_vad_thresh) || ts.nr_first_time == 2)
                       { // VAD has detected NOISE
 							  // noise estimation with exponential averager
