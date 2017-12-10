@@ -165,7 +165,7 @@ typedef struct
     uint16_t xraw_prev;
     uint16_t yraw_prev;
 #endif
-
+    int32_t cal[6];
     uint8_t x;
     uint8_t y;
     bool present;

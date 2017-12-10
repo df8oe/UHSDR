@@ -223,6 +223,12 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     UI_C_EEPROM_BAND_FULL_PF(16,160,m)
 	{ ConfigEntry_UInt8, EEPROM_Scope_TRACE_HL_BW,&ts.scope_trace_BW_colour,SPEC_COLOUR_TRACEBW_DEFAULT,0,SPEC_MAX_COLOUR},
 	{ ConfigEntry_UInt8, EEPROM_Scope_TRACE_HL_BW_BGR,&ts.scope_backgr_BW_colour,SPEC_COLOUR_BACKGRBW_DEFAULT,0,100},
+	{ ConfigEntry_Int32_16, EEPROM_TScal0,&mchf_touchscreen.cal[0], 72816,-2147483648,2147483647},
+	{ ConfigEntry_Int32_16, EEPROM_TScal1,&mchf_touchscreen.cal[1], -5,-2147483648,2147483647},
+	{ ConfigEntry_Int32_16, EEPROM_TScal2,&mchf_touchscreen.cal[2], -1615424,-2147483648,2147483647},
+	{ ConfigEntry_Int32_16, EEPROM_TScal3,&mchf_touchscreen.cal[3], -1,-2147483648,2147483647},
+	{ ConfigEntry_Int32_16, EEPROM_TScal4,&mchf_touchscreen.cal[4], 74886,-2147483648,2147483647},
+	{ ConfigEntry_Int32_16, EEPROM_TScal5,&mchf_touchscreen.cal[5], -1630326,-2147483648,2147483647},
     // the entry below MUST be the last entry, and only at the last position Stop is allowed
     {
         ConfigEntry_Stop

@@ -571,13 +571,21 @@ void UiLcdHy28_BacklightEnable(bool on)
 #ifdef STM32F4
 #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_4)
 #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_2)
-#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_4)
+	#ifdef USE_HIRES_TOUCH
+		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_64)
+	#else
+		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_4)
+	#endif
 #endif
 
 #ifdef STM32F7
 #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
 #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
-#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_8)
+	#ifdef USE_HIRES_TOUCH
+		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_128)
+	#else
+		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_8)
+	#endif
 #endif
 
 static uint16_t lcd_spi_prescaler = SPI_PRESCALE_LCD_DEFAULT;
@@ -2249,20 +2257,20 @@ void UiLcdHy28_TouchscreenReadCoordinates()
             	if(mchf_touchscreen.state==TP_DATASETS_VALID)
             	{
             		//that was the last data aquire
-            		uint16_t x,y;
+            		int32_t x,y;
             		x=mchf_touchscreen.xraw_avgBuff/(TP_DATASETS_VALID-1);		//calculate the average from collected summed coordinates
             		y=mchf_touchscreen.yraw_avgBuff/(TP_DATASETS_VALID-1);
 
             		if(ts.flags2 & FLAGS2_TOUCHSCREEN_FLIP_XY)
             		{
-            			uint16_t temp = x;
+            			int32_t temp = x;
             			x = y;
             			y = temp;
             		}
 
 
 
-            		//TODO: make here the scalling according to calibration
+
 
             		x=(x*MAX_X)/4095;
             		y=(y*MAX_Y)/4095;
@@ -2278,8 +2286,22 @@ void UiLcdHy28_TouchscreenReadCoordinates()
             			y=MAX_Y-y;
             		}
 
-            		mchf_touchscreen.hr_x=x;
-            		mchf_touchscreen.hr_y=y;
+            		int32_t xn,yn;
+            		//transforming the coordinates by callibration coefficients calculated in touchscreen calibration
+            		//see the UiDriver_TouchscreenCalibration
+            		//xn=Ax+By+C
+            		//yn=Dx+Ey+F
+            		//all coefficients are in format 16.16
+            		xn=mchf_touchscreen.cal[0]*x+mchf_touchscreen.cal[1]*y+mchf_touchscreen.cal[2];
+            		yn=mchf_touchscreen.cal[3]*x+mchf_touchscreen.cal[4]*y+mchf_touchscreen.cal[5];
+
+            		xn>>=16;
+            		yn>>=16;
+            		//xn=x;
+            		//yn=y;
+
+            		mchf_touchscreen.hr_x=(int16_t)xn;
+            		mchf_touchscreen.hr_y=(int16_t)yn;
             		mchf_touchscreen.xraw_avgBuff=0;
             		mchf_touchscreen.yraw_avgBuff=0;
             	}

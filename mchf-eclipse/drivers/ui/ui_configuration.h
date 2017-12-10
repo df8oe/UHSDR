@@ -562,7 +562,14 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_DIGI_MODE_CONF			 389
 #define EEPROM_Scope_TRACE_HL_BW			 390
 #define EEPROM_Scope_TRACE_HL_BW_BGR			 391
-#define EEPROM_FIRST_UNUSED 				392		// change this if new value ids are introduced
+#define EEPROM_TScal0						392
+#define EEPROM_TScal1						393
+#define EEPROM_TScal2						394
+#define EEPROM_TScal3						395
+#define EEPROM_TScal4						396
+#define EEPROM_TScal5						397
+
+#define EEPROM_FIRST_UNUSED 				398		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
