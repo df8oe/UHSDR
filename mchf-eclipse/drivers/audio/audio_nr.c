@@ -596,7 +596,7 @@ float32_t VAD_E,VAD_energy_ratio;
 
 	      VAD_energy_ratio = VAD_E / (VAD_high-VAD_low);
 
-	      if (VAD_energy_ratio > 3500)
+	      if (VAD_energy_ratio > (3500*ts.nr_vad_thresh)) //ts.nr_vad_thresh is per default 1000/1000!!!
 	      		{
 	      		  VAD_EN=true;
 	      		//Board_RedLed(LED_STATE_OFF);
@@ -611,13 +611,13 @@ float32_t VAD_E,VAD_energy_ratio;
 	      if (VAD_EN && VAD_ZCR)
 	      	      		{
 	      	      		  VAD_E_Z=true;
-	      	      		Board_RedLed(LED_STATE_ON);
+	      	      		//Board_RedLed(LED_STATE_ON);
 
 	      	      		}
 	      	      	      else
 	      	      		{
 	      	      		  VAD_E_Z=false;
-	      	      		  Board_RedLed(LED_STATE_OFF);
+	      	      		  //Board_RedLed(LED_STATE_OFF);
 	      	      		}
 
 
@@ -647,6 +647,13 @@ float32_t VAD_E,VAD_energy_ratio;
                   {
                 	  NR_VAD_temp = 10.0 * NR.VAD_Esch;
                   }
+                  else
+                  if(NR2.VAD_type == 2)
+                  {
+                    if (VAD_E_Z == true) NR_VAD_temp = 1000000;// just very high, because we already have a boolean decision
+                    else NR_VAD_temp = 0;
+                  }
+
                       if((NR_VAD_temp < ts.nr_vad_thresh) || ts.nr_first_time == 2)
                       { // VAD has detected NOISE
 							  // noise estimation with exponential averager
@@ -661,7 +668,7 @@ float32_t VAD_E,VAD_energy_ratio;
 										  NR.Nest[bindx][1] = NR.Nest[bindx][0];
 									}
 							 ts.nr_first_time = 0;
-							 //Board_RedLed(LED_STATE_OFF);
+							 Board_RedLed(LED_STATE_OFF);
 						   }
 						 else // we wait a little until the last vowel has vanished
 						   {
@@ -677,7 +684,7 @@ float32_t VAD_E,VAD_energy_ratio;
                     		if (NR2.VAD_duration > 1) //a vowel should be longer than app. 20ms
                     		  {
                     		     NR2.VAD_delay = ts.nr_vad_delay; // we wait 1 times app.  10ms before we start updating the noisefloor
-                    		     //Board_RedLed(LED_STATE_ON);
+                    		     Board_RedLed(LED_STATE_ON);
                     		  }
                 	  }
                       // this helps to get the noise estimate out of a deep depression
