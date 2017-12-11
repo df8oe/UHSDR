@@ -52,7 +52,7 @@
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="DebugOVI40H7\fw-ovi40-h7.elf"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="mchf-eclipse"/>
 <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.433341838.1123244320.487780019"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/mchf-eclipse"/>
 </listAttribute>

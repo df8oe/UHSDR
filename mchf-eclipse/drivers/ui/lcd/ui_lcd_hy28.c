@@ -815,11 +815,14 @@ uint8_t spi_dr_dummy; // used to make sure that DR is being read
 static inline void UiLcdHy28_SpiFinishTransfer()
 {
 #ifdef STM32H7
-    while (__HAL_SPI_GET_FLAG(&hspi2, SPI_SR_TXC) == 0 || __HAL_SPI_GET_FLAG(&hspi2, SPI_SR_EOT) == 0 ) { asm("nop"); }
+#ifndef USE_SPI_HAL
+    // we cannot use this with HAL, the "normal" HAL Transmit does check the flags AND resets them (ARGH)
+    while (__HAL_SPI_GET_FLAG(&hspi2, SPI_SR_EOT) == 0 || __HAL_SPI_GET_FLAG(&hspi2, SPI_SR_EOT) == 0 ) { asm("nop"); }
     while (__HAL_SPI_GET_FLAG(&hspi2, SPI_FLAG_RXWNE) != 0 || __HAL_SPI_GET_FLAG(&hspi2, SPI_SR_RXPLVL) != 0 )
     {
         spi_dr_dummy = SPI2->RXDR;
     }
+#endif
 #else
     while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
     while (SPI2->SR & SPI_FLAG_BSY) {}
