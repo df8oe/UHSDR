@@ -5599,7 +5599,7 @@ static bool UiDriver_TouchscreenCalibration()
 
 
 #ifdef  USE_HIRES_TOUCH
-#define MaxTouchError 50
+#define MaxTouchError 500		//TODO: should be around 50, but for test we do maximum screen
 #define CrossCheckCount 3
 void UiDriver_DoCrossCheck(int16_t cross[])
 {
