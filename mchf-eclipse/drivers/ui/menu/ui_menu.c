@@ -3890,7 +3890,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
      case MENU_DEBUG_NR_VAD_TYPE:
          var_change = UiDriverMenuItemChangeUInt8(var, mode, &NR2.VAD_type,
                  0,
-                 1,
+                 2,
                  0,
                  1);
          switch(NR2.VAD_type)
@@ -3901,6 +3901,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
          case 1:
              txt_ptr = "Esch & Vary";
              break;
+		 case 2:
+			 txt_ptr = "        ZCR";
+			 break;
          }
          break;
 
