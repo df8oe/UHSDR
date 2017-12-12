@@ -22,9 +22,11 @@
 #include "ui_lcd_hy28_fonts.h"
 #include "ui_lcd_hy28.h"
 
+#define hspiDisplay hspi2
+#define SPI_DISPLAY SPI2
 
 #ifndef STM32H7
-  // FIXME: H7 Port, reeanble DMA once SPI display is working
+  // FIXME: H7 Port, re-enable DMA once SPI display is working
   #define USE_SPI_DMA
 #endif
 
@@ -32,7 +34,7 @@
     #define USE_SPI_HAL
 #endif
 
-#define USE_DISPLAY_SPI
+#define USE_SPI_DISPLAY
 #define USE_DISPLAY_PAR
 
 #include "spi.h"
@@ -581,7 +583,7 @@ static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len);
 static inline bool UiLcdHy28_SpiDisplayUsed()
 {
     bool retval = false;
-#ifdef USE_DISPLAY_SPI
+#ifdef USE_SPI_DISPLAY
     retval = mchf_display.use_spi;
 #endif
     return retval;
@@ -647,13 +649,13 @@ void UiLcdHy28_SpiInit(bool hispeed, mchf_display_types_t display_type)
 #ifdef USE_GFX_ILI9486
     if (display_type == DISPLAY_RPI_SPI)
     {
-        hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-        hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-        hspi2.Init.NSS = SPI_NSS_SOFT;
+        hspiDisplay.Init.CLKPolarity = SPI_POLARITY_LOW;
+        hspiDisplay.Init.CLKPhase = SPI_PHASE_1EDGE;
+        hspiDisplay.Init.NSS = SPI_NSS_SOFT;
 
-        hspi2.Init.BaudRatePrescaler = lcd_spi_prescaler;
+        hspiDisplay.Init.BaudRatePrescaler = lcd_spi_prescaler;
 
-        if (HAL_SPI_Init(&hspi2) != HAL_OK)
+        if (HAL_SPI_Init(&hspiDisplay) != HAL_OK)
         {
             Error_Handler();
         }
@@ -662,7 +664,7 @@ void UiLcdHy28_SpiInit(bool hispeed, mchf_display_types_t display_type)
 
     // Enable the SPI periph
     // the main init is already done earlier, we need this if we want to use our own code to access SPI
-    __HAL_SPI_ENABLE(&hspi2);
+    __HAL_SPI_ENABLE(&hspiDisplay);
 }
 
 void UiLcdHy28_GpioInit(mchf_display_types_t display_type)
@@ -727,15 +729,15 @@ void UiLcdHy28_SpiDmaStart(uint8_t* buffer, uint32_t size)
     // and finally we can move that into an interrupt, of course.
     if (size > 0)  {
         UiLcdHy28_SpiDmaStop();
-        HAL_SPI_Transmit_DMA(&hspi2,buffer,size);
+        HAL_SPI_Transmit_DMA(&hspiDisplay,buffer,size);
     }
 }
 
 void UiLcdHy28_SpiDeInit()
 {
 
-    // __HAL_SPI_DISABLE(&hspi2);
-    // HAL_SPI_DeInit(&hspi2);
+    // __HAL_SPI_DISABLE(&hspiDisplay);
+    // HAL_SPI_DeInit(&hspiDisplay);
 
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -794,20 +796,20 @@ static inline void UiLcdHy28_SpiSendByte(uint8_t byte)
     uint8_t dummy;
     HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,SPI_TIMEOUT);
 #else
-    while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
-    SPI2->DR = byte;
-    while ((SPI2->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
-    byte = SPI2->DR;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
+    SPI_DISPLAY->DR = byte;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
+    byte = SPI_DISPLAY->DR;
 #endif
 }
 /*
 static inline void UiLcdHy28_SpiSendByteFast(uint8_t byte)
 {
 
-    while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
-    SPI2->DR = byte;
-    while ((SPI2->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
-    byte = SPI2->DR;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
+    SPI_DISPLAY->DR = byte;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
+    byte = SPI_DISPLAY->DR;
 }*/
 
 
@@ -817,18 +819,18 @@ static inline void UiLcdHy28_SpiFinishTransfer()
 #ifdef STM32H7
 #ifndef USE_SPI_HAL
     // we cannot use this with HAL, the "normal" HAL Transmit does check the flags AND resets them (ARGH)
-    while (__HAL_SPI_GET_FLAG(&hspi2, SPI_SR_EOT) == 0 || __HAL_SPI_GET_FLAG(&hspi2, SPI_SR_EOT) == 0 ) { asm("nop"); }
-    while (__HAL_SPI_GET_FLAG(&hspi2, SPI_FLAG_RXWNE) != 0 || __HAL_SPI_GET_FLAG(&hspi2, SPI_SR_RXPLVL) != 0 )
+    while (__HAL_SPI_GET_FLAG(&hspiDisplay, SPI_SR_EOT) == 0 || __HAL_SPI_GET_FLAG(&hspiDisplay, SPI_SR_EOT) == 0 ) { asm("nop"); }
+    while (__HAL_SPI_GET_FLAG(&hspiDisplay, SPI_FLAG_RXWNE) != 0 || __HAL_SPI_GET_FLAG(&hspiDisplay, SPI_SR_RXPLVL) != 0 )
     {
-        spi_dr_dummy = SPI2->RXDR;
+        spi_dr_dummy = SPI_DISPLAY->RXDR;
     }
 #endif
 #else
-    while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
-    while (SPI2->SR & SPI_FLAG_BSY) {}
-    if (SPI2->SR & SPI_FLAG_RXNE)
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
+    while (SPI_DISPLAY->SR & SPI_FLAG_BSY) {}
+    if (SPI_DISPLAY->SR & SPI_FLAG_RXNE)
     {
-        spi_dr_dummy = SPI2->DR;
+        spi_dr_dummy = SPI_DISPLAY->DR;
     }
 #endif
 }
@@ -860,10 +862,10 @@ uint8_t UiLcdHy28_SpiReadByteFast()
 #else
 
     /* Send a Transmit a dummy byte and Receive Byte through the SPI peripheral */
-    while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
-    SPI2->DR = 0;
-    while ((SPI2->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
-    retval = SPI2->DR;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
+    SPI_DISPLAY->DR = 0;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
+    retval = SPI_DISPLAY->DR;
 #endif
     return retval;
 }
@@ -2175,7 +2177,7 @@ const uhsdr_display_info_t display_infos[] = {
                 LCD_D11_PIO, LCD_D11, true, false
         },
 #endif
-#ifdef USE_DISPLAY_SPI
+#ifdef USE_SPI_DISPLAY
         {
                 DISPLAY_HY28B_SPI, "HY28B SPI",
                 .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI932x,
@@ -2190,7 +2192,7 @@ const uhsdr_display_info_t display_infos[] = {
         },
 #endif
 #endif
-#if defined(USE_GFX_ILI9486) && defined(USE_DISPLAY_SPI)
+#if defined(USE_GFX_ILI9486) && defined(USE_SPI_DISPLAY)
         {       DISPLAY_RPI_SPI, "RPi 3.5 SPI",
                 .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI9486,
                 .SetActiveWindow = UiLcdHy28_SetActiveWindow_ILI9486,
@@ -2257,7 +2259,7 @@ static uint16_t UiLcdHy28_DetectController(const uhsdr_display_info_t* disp_info
 
         if (mchf_display.use_spi == true)
         {
-#ifdef USE_DISPLAY_SPI
+#ifdef USE_SPI_DISPLAY
             UiLcdHy28_SpiInit(disp_info_ptr->spi_speed, disp_info_ptr->display_type);
 #endif
         }
@@ -2299,7 +2301,7 @@ static uint16_t UiLcdHy28_DetectController(const uhsdr_display_info_t* disp_info
 
             if (mchf_display.use_spi == true)
             {
-                #ifdef USE_DISPLAY_SPI
+                #ifdef USE_SPI_DISPLAY
                 UiLcdHy28_SpiDeInit();
                 #endif
             }
@@ -2382,12 +2384,12 @@ static inline void UiLcdHy28_SetSpiPrescaler(uint32_t baudrate_prescaler)
     /*---------------------------- SPIx CR1 Configuration ------------------------*/
     /* Get the SPIx CR1 value */
 
-    uint32_t tmpreg = SPI2->CR1;
+    uint32_t tmpreg = SPI_DISPLAY->CR1;
     tmpreg &= ~SPI_BAUDRATEPRESCALER_256;
     tmpreg |= baudrate_prescaler;
 
     /* Write to SPIx CR1 */
-    SPI2->CR1 = tmpreg;
+    SPI_DISPLAY->CR1 = tmpreg;
 }
 
 mchf_touchscreen_t mchf_touchscreen;
