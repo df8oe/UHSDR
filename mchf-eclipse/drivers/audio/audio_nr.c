@@ -568,66 +568,60 @@ float32_t VAD_E,VAD_energy_ratio;
 // ******* alternative VAD trials
 
 	      zero_cross_count=0;
-	      for (int i=1;i<NR_FFT_L/2;i++)
-		{
-		  if ((in_buffer[i+ k * (NR_FFT_L / 2)] * in_buffer[i-1 + k * (NR_FFT_L / 2)]) < 0)
-		    {
-		      zero_cross_count++;  //if product of current sample with last sample is negative, we had a zero crossing
-		    }
-		}	     // # of zero crossing tend to be higher at only noise containing frames
+	      for (int i = 1; i < NR_FFT_L/2; i++)
+	      {
+			  if ((in_buffer[i + k * (NR_FFT_L / 2)] * in_buffer[ i-1 + k * (NR_FFT_L / 2)]) < 0)
+				{
+				  zero_cross_count++;  //if product of current sample with last sample is negative, we had a zero crossing
+				}
+	      }	     // # of zero crossing tend to be higher at only noise containing frames
 
 	      if (zero_cross_count > 10)
-		{
-		  VAD_ZCR=false;
-		//Board_RedLed(LED_STATE_OFF);
-
-		}
+	      {
+			  VAD_ZCR = false;
+			//Board_RedLed(LED_STATE_OFF);
+	      }
 	      else
-		{
-		  VAD_ZCR=true;
-		  //Board_RedLed(LED_STATE_ON);
-		}
+	      {
+	    	  VAD_ZCR = true;
+	    	  //Board_RedLed(LED_STATE_ON);
+	      }
 
 	      VAD_E = 0.0;
 
 	      for(int bindx = VAD_low; bindx < VAD_high; bindx++)
-			VAD_E = VAD_E + NR2.X[bindx][0];
-
+		  {
+	    	  VAD_E = VAD_E + NR2.X[bindx][0];
+		  }
 
 	      VAD_energy_ratio = VAD_E / (VAD_high-VAD_low);
 
-	      if (VAD_energy_ratio > (3500*ts.nr_vad_thresh)) //ts.nr_vad_thresh is per default 1000/1000!!!
-	      		{
+	      if (VAD_energy_ratio > (350 * ts.nr_vad_thresh)) //ts.nr_vad_thresh is per default 1000/1000!!!
+    	  {
 	      		  VAD_EN=true;
 	      		//Board_RedLed(LED_STATE_OFF);
 
-	      		}
-	      	      else
-	      		{
-	      		  VAD_EN=false;
-	      		  //Board_RedLed(LED_STATE_ON);
-	      		}
+	      }
+	      else
+	      {
+			  VAD_EN=false;
+			  //Board_RedLed(LED_STATE_ON);
+	      }
 
 	      if (VAD_EN && VAD_ZCR)
-	      	      		{
-	      	      		  VAD_E_Z=true;
-	      	      		//Board_RedLed(LED_STATE_ON);
+	      {
+			  VAD_E_Z=true;
+			 //Board_RedLed(LED_STATE_ON);
 
-	      	      		}
-	      	      	      else
-	      	      		{
-	      	      		  VAD_E_Z=false;
-	      	      		  //Board_RedLed(LED_STATE_OFF);
-	      	      		}
-
+	      }
+	      else
+	      {
+			  VAD_E_Z=false;
+			  //Board_RedLed(LED_STATE_OFF);
+	      }
 
 
 // ******* end of alternative VAD trials
-
-
-
-
-
 
                   for(int bindx = VAD_low; bindx < VAD_high; bindx++) // try 128:
                   {
@@ -650,8 +644,14 @@ float32_t VAD_E,VAD_energy_ratio;
                   else
                   if(NR2.VAD_type == 2)
                   {
-                    if (VAD_E_Z == true) NR_VAD_temp = 1000000;// just very high, because we already have a boolean decision
-                    else NR_VAD_temp = 0;
+                    if (VAD_E_Z == true)
+                    {
+                    	NR_VAD_temp = 1000000;// just very high, because we already have a boolean decision
+                    }
+                    else
+                    {
+                    	NR_VAD_temp = 0;
+                    }
                   }
 
                       if((NR_VAD_temp < ts.nr_vad_thresh) || ts.nr_first_time == 2)
