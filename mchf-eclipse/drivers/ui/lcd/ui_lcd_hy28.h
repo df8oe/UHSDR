@@ -158,6 +158,12 @@ typedef struct
     uint16_t xraw;
     uint16_t yraw;
 #ifdef USE_HIRES_TOUCH
+    int16_t xraw_m1;
+    int16_t xraw_m2;
+    int16_t yraw_m1;
+    int16_t yraw_m2;
+    int16_t focus_xprev;
+    int16_t focus_yprev;
     int32_t xraw_avgBuff;
     int32_t yraw_avgBuff;
     int16_t hr_x;

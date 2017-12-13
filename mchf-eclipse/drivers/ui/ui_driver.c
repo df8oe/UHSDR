@@ -5295,7 +5295,7 @@ static bool UiDriver_TouchscreenCalibration()
 
 		//
 		// On screen delay									// delay a bit...
-		HAL_Delay(5000);
+		HAL_Delay(3000);
 
 		// add this for emphasis
 		UiLcdHy28_PrintTextCentered(2, 195, MAX_X-4, "Press BAND+ and BAND-\n"
@@ -5331,6 +5331,10 @@ static bool UiDriver_TouchscreenCalibration()
 			{
 				HAL_Delay(40);
 			}
+			UiLcdHy28_LcdClear(clr_bg);							// clear the screen
+			UiLcdHy28_PrintTextCentered(2,100,MAX_X-4,"Wait one moment please...",Yellow,clr_bg,0);
+			HAL_Delay(1000);
+
 			UiLcdHy28_TouchscreenReadCoordinates();
 			ts.tp->state = TP_DATASETS_NONE;
 
@@ -5599,7 +5603,7 @@ static bool UiDriver_TouchscreenCalibration()
 
 
 #ifdef  USE_HIRES_TOUCH
-#define MaxTouchError 500		//TODO: should be around 50, but for test we do maximum screen
+#define MaxTouchError 100
 #define CrossCheckCount 3
 void UiDriver_DoCrossCheck(int16_t cross[])
 {
