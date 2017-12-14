@@ -4295,6 +4295,18 @@ static void UiDriver_HandleSMeter()
 		{
 			static bool         clip_indicate = 0;
 
+// we fixed the S-Meter to display ONLY dBm, NOT dBm/Hz
+			/*
+			if (ts.s_meter == DISPLAY_S_METER_DBM) // based on dBm calculation
+			{
+				sm.gain_calc = sm.dbm;
+			}
+			else // based on dBm/Hz calculation
+			{
+				sm.gain_calc = sm.dbmhz;
+			}
+*/
+
 			sm.gain_calc = sm.dbm;
 
 			const float *S_Meter_Cal_Ptr = S_Meter_Cal_dbm;
