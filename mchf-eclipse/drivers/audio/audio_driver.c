@@ -1973,7 +1973,7 @@ static void AudioDriver_RxProcessor_Bpsk(float32_t * const src, int16_t blockSiz
 
 void AudioDriver_SetupAgcWdsp()
 {
-    static bool initialised = 0;
+    static bool initialised = false;
 	float32_t tmp;
     float32_t sample_rate = IQ_SAMPLE_RATE_F / ads.decimation_rate;
     // Start variables taken from wdsp
@@ -2027,6 +2027,8 @@ void AudioDriver_SetupAgcWdsp()
 	    agc_wdsp.pop_ratio = 5.0;                 // pop_ratio
 	    //    hang_enable = 0;                 // hang_enable
 	    agc_wdsp.tau_hang_backmult = 0.500;       // tau_hang_backmult
+
+	    initialised = true;
     }
     //    var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
     agc_wdsp.var_gain = powf (10.0, (float32_t)ts.agc_wdsp_slope / 200.0); // 10 * 10^(slope / 20)
