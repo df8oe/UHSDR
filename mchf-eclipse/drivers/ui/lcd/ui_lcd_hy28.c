@@ -2204,8 +2204,8 @@ const uint8_t touchscreentable [] = { 0x07, 0x09,
         0x67, 0x6c, 0x6d, 0x6e, 0x74, 0x75, 0x76, 0x77, 0x7c, 0x7d
 };
 
-#define HIRES_TOUCH_MaxDelta 2
-#define HIRES_TOUCH_MaxFocus 2
+#define HIRES_TOUCH_MaxDelta 4
+#define HIRES_TOUCH_MaxFocus 4
 
 void UiLcdHy28_TouchscreenReadCoordinates()
 {

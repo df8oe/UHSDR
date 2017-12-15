@@ -4262,8 +4262,8 @@ static void UiDriver_DisplayDigitalMode()
 	const char* txt = digimodes[ts.digital_mode].label;
 
 	// Draw line for box
-	UiLcdHy28_DrawStraightLine(POS_DIGMODE_IND_X,(POS_DIGMODE_IND_Y - 1),LEFTBOX_WIDTH,LCD_DIR_HORIZONTAL,bgclr);
-	UiLcdHy28_PrintTextCentered((POS_DIGMODE_IND_X),(POS_DIGMODE_IND_Y),LEFTBOX_WIDTH,txt,color,bgclr,0);
+	UiLcdHy28_DrawStraightLine(POS_DIGMODE_IND_X,(POS_DIGMODE_IND_Y - 1),POS_DIGMODE_IND_H,LCD_DIR_HORIZONTAL,bgclr);
+	UiLcdHy28_PrintTextCentered((POS_DIGMODE_IND_X),(POS_DIGMODE_IND_Y),POS_DIGMODE_IND_H,txt,color,bgclr,0);
 
 	//fdv_clear_display();
 }
@@ -6055,7 +6055,75 @@ static void UiAction_SaveConfigurationToMemory()
 		}
 	}
 }
+#ifdef USE_HIRES_TOUCH
+static void UiAction_ChangeFrequencyByTouch()
+{
+	if (ts.frequency_lock == false)
+	{
+		int step = 2000;				// adjust to 500Hz
 
+		if(sd.magnify == 3)
+		{
+			step = 400;					// adjust to 100Hz
+		}
+		if(sd.magnify == 4)
+		{
+			step = 40;					// adjust to 10Hz
+		}
+		if(sd.magnify == 5)
+		{
+			step = 4;					// adjust to 1Hz
+		}
+		if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
+		{
+			step = 20000;				// adjust to 5KHz
+		}
+
+
+		//uint16_t line = 29;				// x-position of rx frequency in middle position
+		uint16_t line=slayout.scope.x+slayout.scope.w/2;
+		if(sd.magnify == 0)				// x-position differs in translated modes if not magnified
+		{
+			switch(ts.iq_freq_mode)
+			{
+			case FREQ_IQ_CONV_P6KHZ:
+				line=slayout.scope.x+(slayout.scope.w*3/8);
+				//line = 25;
+				break;
+			case FREQ_IQ_CONV_M6KHZ:
+				line=slayout.scope.x+(slayout.scope.w*5/8);
+				//line = 35;
+				break;
+			case FREQ_IQ_CONV_P12KHZ:
+				line=slayout.scope.x+(slayout.scope.w*1/8);
+				//line = 19;
+				break;
+			case FREQ_IQ_CONV_M12KHZ:
+				line=slayout.scope.x+(slayout.scope.w*7/8);
+				//line = 43;
+				break;
+			default:
+				//line = 29;
+				line=slayout.scope.x+slayout.scope.w/2;
+			}
+		}
+		else
+		{
+		  if(ts.dmod_mode == DEMOD_CW)	// x position differs if dmod_mode is CW, only relevant
+		  {								// if magnify > 1
+			uint32_t offset;
+			offset = (ts.cw_sidetone_freq * (1 << (sd.magnify))) / IQ_SAMPLE_RATE;
+			offset = ts.cw_lsb?(-offset):offset;		// CW-L or CW-U?
+			line = slayout.scope.x+slayout.scope.w/2 + offset;
+		  }
+		}
+
+		uint32_t tunediff = ((IQ_SAMPLE_RATE/slayout.scope.w)/(1 << sd.magnify))*(ts.tp->hr_x-line)*TUNE_MULT;
+		df.tune_new = lround((df.tune_new + tunediff)/step) * step;
+		UiDriver_FrequencyUpdateLOandDisplay(true);
+	}
+}
+#else
 static void UiAction_ChangeFrequencyByTouch()
 {
 	if (ts.frequency_lock == false)
@@ -6116,7 +6184,7 @@ static void UiAction_ChangeFrequencyByTouch()
 		UiDriver_FrequencyUpdateLOandDisplay(true);
 	}
 }
-
+#endif
 static void UiAction_ChangeDigitalMode()
 {
 	incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_BPSK);
@@ -6545,22 +6613,24 @@ static void UiAction_StepPlusHold()
 	}
 }
 #ifdef USE_HIRES_TOUCH
+#define TRgn(x,y,w,h) {x+w/2,y+h/2,w,h}
+
 static const touchaction_descr_t touchactions_normal[] =
 {
-		{ { POS_SM_IND_X+SM_IND_W/2,POS_SM_IND_Y+SM_IND_H/2,SM_IND_W,SM_IND_H }, UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
-//		{ { 10,28,27,31 }, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
-//		{ { 29,33,26,32 }, UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
-//		{ { 52,60,26,32 }, UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
-//		{ { 43,60,00,04 }, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
-//		{ { 16,24,40,44 }, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
-		{ { POS_PW_IND_X+32,POS_PW_IND_Y+8,64,16 },								 UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
+		{ TRgn(POS_SM_IND_X,POS_SM_IND_Y,SM_IND_W,SM_IND_H), UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
+		{ TRgn(32,110,32,16), UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
+		{ TRgn((480/2),110,64,16), UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
+		{ TRgn((480-32),110,64,16), UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
+		{ TRgn(POS_BOTTOM_BAR_F1_X+POS_BOTTOM_BAR_BUTTON_W*4,POS_BOTTOM_BAR_F1_Y,POS_BOTTOM_BAR_BUTTON_W,POS_BOTTOM_BAR_BUTTON_H), UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
+		{ TRgn(POS_DEMOD_MODE_X,POS_DEMOD_MODE_Y,POS_DEMOD_MODE_MASK_W,POS_DEMOD_MODE_MASK_H), UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
+		{ TRgn(POS_PW_IND_X,POS_PW_IND_Y,64,16),								 UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
 //		{ { 10,16,44,50 }, UiAction_ChangeAudioSource,              NULL }, // Audio In Box: Switch Source
-//		{ { 48,52,35,37 }, UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
-//		{ { 53,60,35,37 }, UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
-//		{ { 00,07,21,30 }, Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
-//		{ { 8,60,11,19  }, UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
-//		{ { 0,7,10,13   }, UiAction_ChangeDigitalMode,              NULL }, // Digital Mode Box: Switch Digi Mode
-//		{ { 26,35,39,46 }, UiAction_ChangeDynamicTuning,            NULL }, // Step Box: Dynamic Tuning Toggle
+		{ TRgn(POS_BAND_MODE_X,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H), UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
+		{ TRgn(POS_BAND_MODE_X+POS_BAND_MODE_MASK_W*3/4,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H), UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
+		{ TRgn(POS_LEFTBOXES_IND_X,POS_LEFTBOXES_IND_Y,LEFTBOX_WIDTH,LEFTBOX_ROW_H), Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
+		{ TRgn(0,110,480,80), UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
+		{ TRgn(POS_DIGMODE_IND_X,POS_DIGMODE_IND_Y,POS_DIGMODE_IND_H,16), UiAction_ChangeDigitalMode,              NULL }, // Digital Mode Box: Switch Digi Mode
+		{ TRgn(POS_TUNE_STEP_X,POS_TUNE_STEP_Y,POS_TUNE_STEP_MASK_W,POS_TUNE_STEP_MASK_H), UiAction_ChangeDynamicTuning,            NULL }, // Step Box: Dynamic Tuning Toggle
 };
 
 // this is the map for menu mode, right now only used for debugging/experimental purposes
