@@ -22,14 +22,14 @@
 //undef:regular font
 //NUM:numeric
 //ALF:alfabet Upper case
-#define MFONT24NUM
-#define MFONT24ALF
+//#define MFONT24NUM
+//#define MFONT24ALF
 
 //MFONT12 Midium font
 //define:maaberu font
 //undef:regular font
 //define:Numeric Upper/Lower case all
-#define MFONT12
+//#define MFONT12
 
 const unsigned short GL_ASCII16x24_Table [] =
 {
