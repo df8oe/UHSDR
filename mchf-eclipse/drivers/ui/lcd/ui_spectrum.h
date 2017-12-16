@@ -256,32 +256,4 @@ typedef struct SpectrumDisplay
 // Spectrum display
 extern SpectrumDisplay      sd;
 
-
-
-typedef struct {
-    uint16_t x;
-    uint16_t y;
-    uint16_t w;
-    uint16_t h;
-} UiArea_t;
-
-typedef struct
-{
-    const int16_t SCOPE_GRID_VERT_COUNT;
-    const int16_t SCOPE_GRID_HORIZ;
-} pos_spectrum_display_t;
-
-
-typedef struct
-{
-    UiArea_t full;
-    UiArea_t draw;
-    UiArea_t title;
-    UiArea_t scope;
-    UiArea_t graticule;
-    UiArea_t wfall;
-} SpectrumAreas_t;
-
-
-extern SpectrumAreas_t slayout;
 #endif
