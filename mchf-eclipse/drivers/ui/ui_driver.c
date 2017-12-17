@@ -6586,18 +6586,19 @@ static void UiAction_StepPlusHold()
 	}
 }
 #ifdef USE_HIRES_TOUCH
+#define TOUCH_SHOW_REGIONS_AND_POINTS	//this definition enables the drawing of boxes of regions and put the pixel in touch point
 //#define TRgn(x,y,w,h) {x+w/2,y+h/2,w,h}
 
 static const touchaction_descr_t touchactions_normal[] =
 {
 		{ {POS_SM_IND_X,POS_SM_IND_Y,SM_IND_W,SM_IND_H}, UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
-		{ {32,110,32,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
-		{ {(480/2),110,64,16}, UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
-		{ {(480-32),110,64,16}, UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
+		{ {100,110,60,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
+		{ {(480/2)-16,110,48,16}, UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
+		{ {(480/2)+100,110,48,16}, UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
 		{ {POS_BOTTOM_BAR_F1_X+POS_BOTTOM_BAR_BUTTON_W*4,POS_BOTTOM_BAR_F1_Y,POS_BOTTOM_BAR_BUTTON_W,POS_BOTTOM_BAR_BUTTON_H}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
 		{ {POS_DEMOD_MODE_X,POS_DEMOD_MODE_Y,POS_DEMOD_MODE_MASK_W,POS_DEMOD_MODE_MASK_H}, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
 		{ {POS_PW_IND_X,POS_PW_IND_Y,64,16},								 UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
-//		{ { 10,16,44,50 }, UiAction_ChangeAudioSource,              NULL }, // Audio In Box: Switch Source
+		{ {POS_ENCODER_IND_X+ENC_COL_W*5+Xspacing*2,POS_ENCODER_IND_Y,ENC_COL_W,ENC_ROW_H}, UiAction_ChangeAudioSource,              NULL }, // Audio In Box: Switch Source
 		{ {POS_BAND_MODE_X,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
 		{ {POS_BAND_MODE_X+POS_BAND_MODE_MASK_W*3/4,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
 		{ {POS_LEFTBOXES_IND_X,POS_LEFTBOXES_IND_Y,LEFTBOX_WIDTH,LEFTBOX_ROW_H}, Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
@@ -6609,9 +6610,9 @@ static const touchaction_descr_t touchactions_normal[] =
 // this is the map for menu mode, right now only used for debugging/experimental purposes
 static const touchaction_descr_t touchactions_menu[] =
 {
-		{ { 54,57,55,57 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
-//		{ { 46,49,55,57 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
-//		{ { 50,53,55,57 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
+		{ { POS_SM_IND_X+SM_IND_W-16,POS_SM_IND_Y,16,16 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
+		{ { POS_SM_IND_X+SM_IND_W-60,POS_SM_IND_Y,16,16 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
+		{ { POS_SM_IND_X+SM_IND_W-40,POS_SM_IND_Y,16,16 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
 };
 #else
 // these maps control the touch regions to function mapping in a specific mode
@@ -6655,15 +6656,30 @@ static void UiDriver_HandleTouchScreen(bool is_long_press)
 {
 	if(is_touchscreen_pressed())
 	{
+		uint32_t touchaction_idx = ts.menu_mode == true?1:0;
+
 		if (ts.show_debug_info)					// show coordinates for coding purposes
 		{
 
 #ifdef USE_HIRES_TOUCH
 
-			UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
-
 			char text[14];
 			snprintf(text,14,"%04d%s%04d%s",ts.tp->hr_x," : ",ts.tp->hr_y,"  ");
+
+    #ifdef TOUCH_SHOW_REGIONS_AND_POINTS
+			UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
+
+			uint16_t x,y,w,h;
+			for(int n=0;n<touch_regions[touchaction_idx].size;n++)
+			{
+				x=touch_regions[touchaction_idx].actions[n].region.x;
+				y=touch_regions[touchaction_idx].actions[n].region.y;
+				w=touch_regions[touchaction_idx].actions[n].region.w;
+				h=touch_regions[touchaction_idx].actions[n].region.h;
+				UiLcdHy28_DrawEmptyRect(x,y,h,w,Red);
+			}
+    #endif
+
 #else
 			char text[10];
 			snprintf(text,10,"%02d%s%02d%s",ts.tp->x," : ",ts.tp->y,"  ");
@@ -6671,7 +6687,7 @@ static void UiDriver_HandleTouchScreen(bool is_long_press)
 			UiLcdHy28_PrintText(0,POS_LOADANDDEBUG_Y,text,White,Black,0);
 		}
 
-		uint32_t touchaction_idx = ts.menu_mode == true?1:0;
+
 
 		UiDriver_ProcessTouchActions(&touch_regions[touchaction_idx], is_long_press);
 
