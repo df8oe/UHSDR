@@ -6602,7 +6602,7 @@ static const touchaction_descr_t touchactions_normal[] =
 		{ {POS_BAND_MODE_X,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
 		{ {POS_BAND_MODE_X+POS_BAND_MODE_MASK_W*3/4,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
 		{ {POS_LEFTBOXES_IND_X,POS_LEFTBOXES_IND_Y,LEFTBOX_WIDTH,LEFTBOX_ROW_H}, Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
-		{ {0,110,480,80}, UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
+		{ {0,110,480,176}, UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
 		{ {POS_DIGMODE_IND_X,POS_DIGMODE_IND_Y,POS_DIGMODE_IND_H,16}, UiAction_ChangeDigitalMode,              NULL }, // Digital Mode Box: Switch Digi Mode
 		{ {POS_TUNE_STEP_X,POS_TUNE_STEP_Y,POS_TUNE_STEP_MASK_W,POS_TUNE_STEP_MASK_H}, UiAction_ChangeDynamicTuning,            NULL }, // Step Box: Dynamic Tuning Toggle
 };

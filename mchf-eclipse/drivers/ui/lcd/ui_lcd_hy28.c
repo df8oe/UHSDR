@@ -2133,9 +2133,8 @@ static inline void UiLcdHy28_TouchscreenStartSpiTransfer()
     if (UiLcdHy28_SpiDisplayUsed())
     {
         UiLcdHy28_FinishWaitBulkWrite();
-        UiLcdHy28_SetSpiPrescaler(SPI_PRESCALE_TS_DEFAULT);
     }
-
+    UiLcdHy28_SetSpiPrescaler(SPI_PRESCALE_TS_DEFAULT);
     GPIO_ResetBits(TP_CS_PIO, TP_CS);
 }
 
