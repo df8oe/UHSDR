@@ -571,13 +571,21 @@ void UiLcdHy28_BacklightEnable(bool on)
 #ifdef STM32F4
 #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_4)
 #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_2)
-#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_4)
+	#ifdef USE_HIRES_TOUCH
+		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_64)
+	#else
+		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_4)
+	#endif
 #endif
 
 #ifdef STM32F7
 #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
 #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
-#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_8)
+	#ifdef USE_HIRES_TOUCH
+		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_128)
+	#else
+		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_8)
+	#endif
 #endif
 
 static uint16_t lcd_spi_prescaler = SPI_PRESCALE_LCD_DEFAULT;
@@ -2096,20 +2104,27 @@ void UiLcdHy28_TouchscreenDetectPress()
  * @brief tells you that touchscreen coordinates are ready for processing and marks them as processed
  * @returns true if coordinates for processing are available and have been marked as processed, false otherwise
  */
-bool UiLcdHy28_TouchscreenHasProcessableCoordinates() {
-    bool retval = false;
+bool UiLcdHy28_TouchscreenHasProcessableCoordinates()
+{
+	bool retval = false;
     UiLcdHy28_TouchscreenReadCoordinates();
+
+#ifdef USE_HIRES_TOUCH
+    if(mchf_touchscreen.state >= TP_DATASETS_VALID && mchf_touchscreen.state != TP_DATASETS_PROCESSED)
+    {
+        mchf_touchscreen.state = TP_DATASETS_NONE;     // tp data processed
+         retval = true;
+    }
+#else
     if(mchf_touchscreen.state > TP_DATASETS_WAIT && mchf_touchscreen.state != TP_DATASETS_PROCESSED)
     {
         mchf_touchscreen.state = TP_DATASETS_NONE;     // tp data processed
-#ifdef USE_HIRES_TOUCH
-        mchf_touchscreen.xraw_avgBuff=0;
-        mchf_touchscreen.yraw_avgBuff=0;
-#endif
         retval = true;
     }
+#endif
     return retval;
 }
+
 
 static inline void UiLcdHy28_TouchscreenStartSpiTransfer()
 {
@@ -2189,8 +2204,8 @@ const uint8_t touchscreentable [] = { 0x07, 0x09,
         0x67, 0x6c, 0x6d, 0x6e, 0x74, 0x75, 0x76, 0x77, 0x7c, 0x7d
 };
 
-#define HIRES_TOUCH_MaxDeltaX 32
-#define HIRES_TOUCH_MaxDeltaY 32
+#define HIRES_TOUCH_MaxDelta 4
+#define HIRES_TOUCH_MaxFocus 4
 
 void UiLcdHy28_TouchscreenReadCoordinates()
 {
@@ -2205,82 +2220,126 @@ void UiLcdHy28_TouchscreenReadCoordinates()
 
 
 #ifdef USE_HIRES_TOUCH
-    if(mchf_touchscreen.state < TP_DATASETS_VALID)	// no valid data ready or data ready to process
-    {
-        if(mchf_touchscreen.state > TP_DATASETS_NONE && mchf_touchscreen.state < TP_DATASETS_VALID)	// first pass finished, get data
-        {
+	if(mchf_touchscreen.state < TP_DATASETS_VALID)	// no valid data ready or data ready to process
+	{
+		if(mchf_touchscreen.state > TP_DATASETS_NONE && mchf_touchscreen.state < TP_DATASETS_VALID)	// first pass finished, get data
+		{
 
-            UiLcdHy28_TouchscreenReadData(&mchf_touchscreen.xraw,&mchf_touchscreen.yraw);
-            int16_t TS_dx,TS_dy;
-            TS_dx=mchf_touchscreen.xraw_prev-mchf_touchscreen.xraw;
-            TS_dy=mchf_touchscreen.yraw_prev-mchf_touchscreen.yraw;
-            if(TS_dx<0)
-            {
-            	TS_dx=-TS_dx;
-            }
+			UiLcdHy28_TouchscreenReadData(&mchf_touchscreen.xraw,&mchf_touchscreen.yraw);
 
-            if(TS_dy<0)
-            {
-            	TS_dy=-TS_dy;
-            }
-            if((TS_dx<=HIRES_TOUCH_MaxDeltaX) && (TS_dx<=HIRES_TOUCH_MaxDeltaY))
-            {
-            	//if the calculated new delta is within the tolerance, average it
-            	mchf_touchscreen.xraw_avgBuff+=mchf_touchscreen.xraw;	//add new data to sum
-            	mchf_touchscreen.yraw_avgBuff+=mchf_touchscreen.yraw;
-            	mchf_touchscreen.state++;						// touch data valid
-            	if(mchf_touchscreen.state==TP_DATASETS_VALID)
-            	{
-            		//that was the last data aquire
-            		uint16_t x,y;
-            		x=mchf_touchscreen.xraw_avgBuff/(TP_DATASETS_VALID-1);		//calculate the average from collected summed coordinates
-            		y=mchf_touchscreen.yraw_avgBuff/(TP_DATASETS_VALID-1);
+			//delta/focus algorithm for filtering the noise from touch panel data
+			//based on LM8300/LM8500 datasheet
 
-            		if(ts.flags2 & FLAGS2_TOUCHSCREEN_FLIP_XY)
-            		{
-            			uint16_t temp = x;
-            			x = y;
-            			y = temp;
-            		}
+			//first calculating the delta algorithm
+
+			int16_t TS_dx,TS_dy, TS_predicted_x, TS_predicted_y, NewDeltaX, NewDeltaY;
+			TS_dx=mchf_touchscreen.xraw_m1-mchf_touchscreen.xraw_m2;
+			TS_dy=mchf_touchscreen.yraw_m1-mchf_touchscreen.yraw_m2;
+			TS_predicted_x=mchf_touchscreen.yraw_m1+TS_dx;
+			TS_predicted_y=mchf_touchscreen.yraw_m1+TS_dy;
+
+			NewDeltaX=TS_predicted_x-mchf_touchscreen.xraw;
+			NewDeltaY=TS_predicted_y-mchf_touchscreen.yraw;
+
+			if(NewDeltaX<0)
+				NewDeltaX=-NewDeltaX;
+
+			if(NewDeltaY<0)
+				NewDeltaX=-NewDeltaY;
+
+			if((NewDeltaX<=HIRES_TOUCH_MaxDelta) && (NewDeltaY<=HIRES_TOUCH_MaxDelta))
+			{
+
+				//ok, the delta algorithm filtered out spikes and the bigger noise
+				//focus algorithm
+
+				NewDeltaX=mchf_touchscreen.focus_xprev-mchf_touchscreen.xraw;
+				NewDeltaY=mchf_touchscreen.focus_yprev-mchf_touchscreen.yraw;
+
+				if(NewDeltaX<0)
+					NewDeltaX=-NewDeltaX;
+
+				if(NewDeltaY<0)
+					NewDeltaX=-NewDeltaY;
+
+				if((NewDeltaX<=HIRES_TOUCH_MaxFocus) && (NewDeltaY<=HIRES_TOUCH_MaxFocus))
+				{
+					mchf_touchscreen.xraw=mchf_touchscreen.focus_xprev;
+					mchf_touchscreen.yraw=mchf_touchscreen.focus_yprev;
+				}
+				else
+				{
+					mchf_touchscreen.focus_xprev=mchf_touchscreen.xraw;
+					mchf_touchscreen.focus_yprev=mchf_touchscreen.yraw;
+				}
+
+				mchf_touchscreen.xraw_avgBuff+=mchf_touchscreen.xraw;	//averaging data
+				mchf_touchscreen.yraw_avgBuff+=mchf_touchscreen.yraw;
+
+				mchf_touchscreen.state++;
+
+				if(mchf_touchscreen.state==TP_DATASETS_VALID)
+				{
+
+					mchf_touchscreen.xraw=mchf_touchscreen.xraw_avgBuff/(TP_DATASETS_VALID-1);
+					mchf_touchscreen.yraw=mchf_touchscreen.yraw_avgBuff/(TP_DATASETS_VALID-1);
+
+					int32_t x,y;
+
+					x=mchf_touchscreen.xraw;
+					y=mchf_touchscreen.yraw;
+
+					x=(x*MAX_X)/4095;
+					y=(y*MAX_Y)/4095;
 
 
+					if(ts.flags1 & FLAGS1_REVERSE_X_TOUCHSCREEN)
+					{
+						x=MAX_X-x;
+					}
 
-            		//TODO: make here the scalling according to calibration
+					if(ts.flags1 & FLAGS1_REVERSE_Y_TOUCHSCREEN)
+					{
+						y=MAX_Y-y;
+					}
 
-            		x=(x*MAX_X)/4095;
-            		y=(y*MAX_Y)/4095;
+					int32_t xn,yn;
+					//transforming the coordinates by callibration coefficients calculated in touchscreen calibration
+					//see the UiDriver_TouchscreenCalibration
+					//xn=Ax+By+C
+					//yn=Dx+Ey+F
+					//all coefficients are in format 16.16
+					xn=mchf_touchscreen.cal[0]*x+mchf_touchscreen.cal[1]*y+mchf_touchscreen.cal[2];
+					yn=mchf_touchscreen.cal[3]*x+mchf_touchscreen.cal[4]*y+mchf_touchscreen.cal[5];
 
+					xn>>=16;
+					yn>>=16;
 
-            		if(ts.flags1 & FLAGS1_REVERSE_X_TOUCHSCREEN)
-            		{
-            			x=MAX_X-x;
-            		}
+					mchf_touchscreen.hr_x=(int16_t)xn;
+					mchf_touchscreen.hr_y=(int16_t)yn;
+				}
 
-            		if(ts.flags1 & FLAGS1_REVERSE_Y_TOUCHSCREEN)
-            		{
-            			y=MAX_Y-y;
-            		}
+			}
+			else
+			{
+				mchf_touchscreen.xraw_m2=mchf_touchscreen.xraw_m1;
+				mchf_touchscreen.yraw_m2=mchf_touchscreen.yraw_m1;
+				mchf_touchscreen.xraw_m1=mchf_touchscreen.xraw;
+				mchf_touchscreen.yraw_m1=mchf_touchscreen.yraw;
+				mchf_touchscreen.state = TP_DATASETS_WAIT;
+	        	mchf_touchscreen.xraw_avgBuff=0;	//clear averaging buffer
+	        	mchf_touchscreen.yraw_avgBuff=0;
 
-            		mchf_touchscreen.hr_x=x;
-            		mchf_touchscreen.hr_y=y;
-            		mchf_touchscreen.xraw_avgBuff=0;
-            		mchf_touchscreen.yraw_avgBuff=0;
-            	}
-            }
-            else
-            {
-                mchf_touchscreen.state = TP_DATASETS_WAIT;		// restart machine
-            	mchf_touchscreen.xraw_avgBuff=0;
-            	mchf_touchscreen.yraw_avgBuff=0;
-            }
-        	mchf_touchscreen.xraw_prev=mchf_touchscreen.xraw;	//save current coordinates for next delta calculation
-        	mchf_touchscreen.yraw_prev=mchf_touchscreen.yraw;
+			}
         }
         else
         {
         	mchf_touchscreen.state = TP_DATASETS_WAIT;		// restart machine
+        	mchf_touchscreen.xraw_avgBuff=0;	//clear averaging buffer
+        	mchf_touchscreen.yraw_avgBuff=0;
         }
     }
+
 #else
     if(mchf_touchscreen.state < TP_DATASETS_VALID)	// no valid data ready or data ready to process
     {

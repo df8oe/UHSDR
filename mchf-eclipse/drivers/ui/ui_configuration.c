@@ -223,6 +223,12 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     UI_C_EEPROM_BAND_FULL_PF(16,160,m)
 	{ ConfigEntry_UInt8, EEPROM_Scope_TRACE_HL_BW,&ts.scope_trace_BW_colour,SPEC_COLOUR_TRACEBW_DEFAULT,0,SPEC_MAX_COLOUR},
 	{ ConfigEntry_UInt8, EEPROM_Scope_TRACE_HL_BW_BGR,&ts.scope_backgr_BW_colour,SPEC_COLOUR_BACKGRBW_DEFAULT,0,100},
+	{ ConfigEntry_Int32, EEPROM_TScal0_High,&mchf_touchscreen.cal[0], 72816,-2147483648,2147483647},
+	{ ConfigEntry_Int32, EEPROM_TScal1_High,&mchf_touchscreen.cal[1], -5,-2147483648,2147483647},
+	{ ConfigEntry_Int32, EEPROM_TScal2_High,&mchf_touchscreen.cal[2], -1615424,-2147483648,2147483647},
+	{ ConfigEntry_Int32, EEPROM_TScal3_High,&mchf_touchscreen.cal[3], -1,-2147483648,2147483647},
+	{ ConfigEntry_Int32, EEPROM_TScal4_High,&mchf_touchscreen.cal[4], 74886,-2147483648,2147483647},
+	{ ConfigEntry_Int32, EEPROM_TScal5_High,&mchf_touchscreen.cal[5], -1630326,-2147483648,2147483647},
     // the entry below MUST be the last entry, and only at the last position Stop is allowed
     {
         ConfigEntry_Stop
@@ -485,7 +491,16 @@ void UiConfiguration_ReadConfigEntryData(const ConfigEntryDescriptor* ced_ptr)
     case ConfigEntry_Int16:
         UiReadSettingEEPROM_Int16(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
         break;
-
+    case ConfigEntry_Int32:
+    {
+    	uint32_t Data;
+    	uint16_t DataLo,DataHi;
+    	UiReadSettingEEPROM_UInt16(ced_ptr->id,&DataHi,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
+    	UiReadSettingEEPROM_UInt16(ced_ptr->id+1,&DataLo,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
+    	Data=DataHi<<16|DataLo;
+    	*(int32_t*)ced_ptr->val_ptr=(int32_t)Data;
+    }
+    	break;
 //  case ConfigEntry_Bool:
 //    UiReadSettingEEPROM_Bool(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max);
 //    break;
@@ -513,6 +528,17 @@ uint16_t UiConfiguration_WriteConfigEntryData(const ConfigEntryDescriptor* ced_p
     case ConfigEntry_Int16:
         retval = UiWriteSettingEEPROM_Int16(ced_ptr->id,*(int16_t*)ced_ptr->val_ptr,ced_ptr->val_default);
         break;
+    case ConfigEntry_Int32:
+    {
+    	int32_t Data=*(int32_t*)ced_ptr->val_ptr;
+    	uint16_t DataHi,DataLo;
+    	DataHi=(uint16_t)((Data>>16)&0xffff);
+    	DataLo=(uint16_t)(Data&0xffff);
+
+        retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id,DataHi,ced_ptr->val_default);
+        retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id+1,DataLo,ced_ptr->val_default);
+    }
+    	break;
 //  case ConfigEntry_Bool:
 //    UiWriteSettingEEPROM_Bool(ced_ptr->id,*(bool*)ced_ptr->val_ptr,ced_ptr->val_default);
 //    break;

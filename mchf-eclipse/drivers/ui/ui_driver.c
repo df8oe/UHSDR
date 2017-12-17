@@ -138,6 +138,15 @@ static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
 static void UiDriver_DisplayPskSpeed(bool encoder_active);
 
+#ifdef USE_HIRES_TOUCH
+typedef struct
+{
+	int16_t x;
+	int16_t y;
+	int16_t w;
+	int16_t h;
+} touchscreen_region_t;
+#else
 typedef struct
 {
 	uint8_t x_left;
@@ -145,7 +154,7 @@ typedef struct
 	uint8_t y_down;
 	uint8_t y_up;
 } touchscreen_region_t;
-
+#endif
 
 // Tuning steps
 const ulong tune_steps[T_STEP_MAX_STEPS] =
@@ -264,7 +273,18 @@ bool filter_path_change = false;
 // check if touched point is within rectangle of valid action
 static bool UiDriver_CheckTouchRegion(const touchscreen_region_t* tr_p)
 {
+#ifdef USE_HIRES_TOUCH
+	return ((ts.tp->hr_x <= (tr_p->x+tr_p->w)) &&
+				(ts.tp->hr_x >= (tr_p->x)) &&
+				(ts.tp->hr_y <= (tr_p->y+tr_p->h))) &&
+				(ts.tp->hr_y >= (tr_p->y));
+/*	return ((ts.tp->hr_x <= (tr_p->x_center+(tr_p->size_x/2))) &&
+			(ts.tp->hr_x >= (tr_p->x_center-(tr_p->size_x/2))) &&
+			(ts.tp->hr_y <= (tr_p->y_center+(tr_p->size_y/2))) &&
+			(ts.tp->hr_y >= (tr_p->y_center-(tr_p->size_y/2))));*/
+#else
 	return (ts.tp->x <= tr_p->x_right && ts.tp->x >= tr_p->x_left && ts.tp->y >= tr_p->y_down && ts.tp->y <= tr_p->y_up);
+#endif
 }
 
 
@@ -4246,8 +4266,8 @@ static void UiDriver_DisplayDigitalMode()
 	const char* txt = digimodes[ts.digital_mode].label;
 
 	// Draw line for box
-	UiLcdHy28_DrawStraightLine(POS_DIGMODE_IND_X,(POS_DIGMODE_IND_Y - 1),LEFTBOX_WIDTH,LCD_DIR_HORIZONTAL,bgclr);
-	UiLcdHy28_PrintTextCentered((POS_DIGMODE_IND_X),(POS_DIGMODE_IND_Y),LEFTBOX_WIDTH,txt,color,bgclr,0);
+	UiLcdHy28_DrawStraightLine(POS_DIGMODE_IND_X,(POS_DIGMODE_IND_Y - 1),POS_DIGMODE_IND_H,LCD_DIR_HORIZONTAL,bgclr);
+	UiLcdHy28_PrintTextCentered((POS_DIGMODE_IND_X),(POS_DIGMODE_IND_Y),POS_DIGMODE_IND_H,txt,color,bgclr,0);
 
 	//fdv_clear_display();
 }
@@ -5229,10 +5249,14 @@ static void DrawCross(int16_t* coord,uint16_t color)
  * @returns false if it is a normal startup, true if touchscreen has been calibrated
  */
 
+#define ARM_MATH_MATRIX_CHECK
+#define Touch_ShowTestscreen
 static bool UiDriver_TouchscreenCalibration()
 {
-#ifdef USE_HIRES_TOUCH
+
 	bool retval = false;
+#ifdef USE_HIRES_TOUCH
+
 
 	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
 	{
@@ -5241,22 +5265,31 @@ static bool UiDriver_TouchscreenCalibration()
 		clr_bg = Black;
 		clr_fg = White;
 
-		int16_t cross1[4] = {20,20,0,0};
-		int16_t cross2[4] = {MAX_X-20,20,0,0};
-		int16_t cross3[4] = {20,MAX_Y-20,0,0};
+		int16_t cross1[4] = {      20,      20,0,0};
+		int16_t cross2[4] = {MAX_X-20,      20,0,0};
+		int16_t cross3[4] = {      20,MAX_Y-20,0,0};
 		int16_t cross4[4] = {MAX_X-20,MAX_Y-20,0,0};
-		int16_t cross5[4] = {MAX_X/2,MAX_Y/2,0,0};
+		int16_t cross5[4] = { MAX_X/2, MAX_Y/2,0,0};
 
-		uint16_t x_corr[1], y_corr[1];
+		//reset calibration coefficients before acquiring points
+		int16_t m;
+		for(m=0;m<6;m++)
+		{
+			ts.tp->cal[m]=0;
+		}
+		ts.tp->cal[0]=65536;
+		ts.tp->cal[4]=65536;
+
+		/*uint16_t x_corr[1], y_corr[1];
 		float diffx,diffy;
 
 		*x_corr = 0;
-		*y_corr = 0;
+		*y_corr = 0;*/
 
 		UiLcdHy28_LcdClear(clr_bg);							// clear the screen
 		//											// now do all of the warnings, blah, blah...
-		UiLcdHy28_PrintText(50,05,"TOUCH CALIBRATION",clr_fg,clr_bg,1);
-		UiLcdHy28_PrintTextCentered(2, 70, 316, "If you don't want to do this\n"
+		UiLcdHy28_PrintTextCentered(2,05,MAX_X-4,"TOUCH CALIBRATION",clr_fg,clr_bg,1);
+		UiLcdHy28_PrintTextCentered(2, 70, MAX_X-4, "If you don't want to do this\n"
 				"press POWER button to start normally.\n"
 				"press and hold BAND+ AND BAND-.\n"
 				" Settings will be saved at POWEROFF"
@@ -5266,10 +5299,10 @@ static bool UiDriver_TouchscreenCalibration()
 
 		//
 		// On screen delay									// delay a bit...
-		HAL_Delay(5000);
+		HAL_Delay(3000);
 
 		// add this for emphasis
-		UiLcdHy28_PrintTextCentered(2, 195, 316, "Press BAND+ and BAND-\n"
+		UiLcdHy28_PrintTextCentered(2, 195, MAX_X-4, "Press BAND+ and BAND-\n"
 				"to start calibration",clr_fg,clr_bg,0);
 
 		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
@@ -5281,14 +5314,14 @@ static bool UiDriver_TouchscreenCalibration()
 		if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
 		{
 			UiLcdHy28_LcdClear(Black);							// clear the screen
-			UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
+			UiLcdHy28_PrintTextCentered(2,108,MAX_X-4,"      ...performing normal start...",White,Black,0);
 			HAL_Delay(3000);
 			retval = false;
 		}
 		else
 		{
 			UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-			UiLcdHy28_PrintTextCentered(2,70, 316,
+			UiLcdHy28_PrintTextCentered(2,70, MAX_X-4,
 					"On the next screen crosses will appear.\n"
 					"Touch as exact as you can on the middle\n"
 					"of each cross. After three valid\n"
@@ -5296,59 +5329,153 @@ static bool UiDriver_TouchscreenCalibration()
 					"Repeat until the five test positions\n"
 					"are finished.",clr_fg,clr_bg,0);
 
-			UiLcdHy28_PrintText(35,195,"Touch at any position to start.",clr_fg,clr_bg,0);
+			UiLcdHy28_PrintTextCentered(2,195,MAX_X-4,"Touch at any position to start.",clr_fg,clr_bg,0);
 
 			while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
 			{
 				HAL_Delay(40);
 			}
+			UiLcdHy28_LcdClear(clr_bg);							// clear the screen
+			UiLcdHy28_PrintTextCentered(2,100,MAX_X-4,"Wait one moment please...",Yellow,clr_bg,0);
+			HAL_Delay(1000);
+
 			UiLcdHy28_TouchscreenReadCoordinates();
 			ts.tp->state = TP_DATASETS_NONE;
 
-			UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-			DrawCross(cross1,clr_fg);
-
-
 			UiDriver_DoCrossCheck(cross1);
-
-			UiLcdHy28_LcdClear(clr_bg);
-			clr_fg = White;
-			DrawCross(cross2,clr_fg);
 			UiDriver_DoCrossCheck(cross2);
-
-			UiLcdHy28_LcdClear(clr_bg);
-			clr_fg = White;
-			DrawCross(cross3,clr_fg);
 			UiDriver_DoCrossCheck(cross3);
-
-			UiLcdHy28_LcdClear(clr_bg);
-			clr_fg = White;
-
-			DrawCross(cross4,clr_fg);
 			UiDriver_DoCrossCheck(cross4);
-
-			UiLcdHy28_LcdClear(clr_bg);
-			DrawCross(cross1,clr_fg);
 			UiDriver_DoCrossCheck(cross5);
 
-			diffx = roundf(*x_corr / 15);
-			diffy = roundf(*y_corr / 15);
-			*x_corr = diffx;
-			*y_corr = diffy;
+			//calibration algorithm based on publication:
+			//"Calibration in touch-screen systems" Texas Instruments
+			//Analog Applications Journal 3Q 2007
+
+			/*//test vectors
+				int16_t cross1[4] = {     128,     384,1698,2258};
+				int16_t cross2[4] = {      64,     192, 767,1149};
+				int16_t cross3[4] = {     192,     192,2807,1327};
+				int16_t cross4[4] = {     192,     576,2629,3367};
+				int16_t cross5[4] = {      64,     576, 588,3189};*/
+
+			//matrices field definitions
+			float mA[3*5];
+			float mAT[3*5];
+			float mATAinv[3*3];
+			float mbuff[3*3];
+			float mcom[3*5];
+			float mX[5];
+			float mY[5];
+			float mABC[3];
+			float mDEF[3];
+
+			//matrix data init
+			m=0;
+			mA[m++]=cross1[2]; mA[m++]=cross1[3]; mA[m++]=1.0;
+			mA[m++]=cross2[2]; mA[m++]=cross2[3]; mA[m++]=1.0;
+			mA[m++]=cross3[2]; mA[m++]=cross3[3]; mA[m++]=1.0;
+			mA[m++]=cross4[2]; mA[m++]=cross4[3]; mA[m++]=1.0;
+			mA[m++]=cross5[2]; mA[m++]=cross5[3]; mA[m++]=1.0;
+
+			m=0;
+			mX[m++]=cross1[0];
+			mX[m++]=cross2[0];
+			mX[m++]=cross3[0];
+			mX[m++]=cross4[0];
+			mX[m++]=cross5[0];
+
+			m=0;
+			mY[m++]=cross1[1];
+			mY[m++]=cross2[1];
+			mY[m++]=cross3[1];
+			mY[m++]=cross4[1];
+			mY[m++]=cross5[1];
+
+			//create matrices instances
+			arm_matrix_instance_f32 m_A,m_AT,m_ATAinv,m_X,m_Y,m_ABC,m_DEF,m_buff,m_com;
+
+			//init of matrices
+			arm_mat_init_f32(&m_A,5,3,mA);
+			arm_mat_init_f32(&m_AT,3,5,mAT);
+			arm_mat_init_f32(&m_ATAinv,3,3,mATAinv);
+			arm_mat_init_f32(&m_X,5,1,mX);
+			arm_mat_init_f32(&m_Y,5,1,mY);
+			arm_mat_init_f32(&m_ABC,3,1,mABC);
+			arm_mat_init_f32(&m_DEF,3,1,mDEF);
+			arm_mat_init_f32(&m_buff,3,3,mbuff);
+			arm_mat_init_f32(&m_com,3,5,mcom);
+
+			//real computation
+			arm_mat_trans_f32(&m_A,&m_AT);			 //A^T           size 5x3 -> 3x5
+			arm_mat_mult_f32(&m_AT,&m_A,&m_buff);		 //A^T x A   size 3x5 * 5x3 -> 3x3
+			arm_mat_inverse_f32(&m_buff,&m_ATAinv);  //(A^T x A)^-1  size 3x3
+			arm_mat_mult_f32(&m_ATAinv,&m_AT,&m_com);//(A^T x A)^-1 x A^T	m_com is common matrix for estimating coefficients for X and Y      size 3x3 * 3x5 -> 3x5
+
+			arm_mat_mult_f32(&m_com,&m_X,&m_ABC);	//calculating the coefficients for X data    size 3x5 * 5x1  -> 3x1
+			arm_mat_mult_f32(&m_com,&m_Y,&m_DEF);	//calculating the coefficients for Y data    size 3x5 * 5x1  -> 3x1
+
+			//store cal parameters
+			m=0;
+			ts.tp->cal[m++]=mABC[0]*65536;
+			ts.tp->cal[m++]=mABC[1]*65536;
+			ts.tp->cal[m++]=mABC[2]*65536;
+			ts.tp->cal[m++]=mDEF[0]*65536;
+			ts.tp->cal[m++]=mDEF[1]*65536;
+			ts.tp->cal[m++]=mDEF[2]*65536;
 
 			UiLcdHy28_LcdClear(clr_bg);
+#ifdef Touch_ShowTestscreen
+			UiLcdHy28_PrintTextCentered(2, 195, MAX_X-4, "Press BAND+ and BAND-\n"
+							"to run drawing on screen\n"
+					"or Power to save and reboot",clr_fg,clr_bg,0);
 
-			//    sprintf(txt_buf,"correction is  : %d/%d", *x_corr, *y_corr);
-			//    UiLcdHy28_PrintText(10,55,txt_buf,clr_fg,clr_bg,0);
+			while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
+			{
+				HAL_Delay(10);
+			}
 
-			HAL_Delay(4000);
+			if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
+			{
+				UiLcdHy28_LcdClear(Black);							// clear the screen
+				UiLcdHy28_PrintTextCentered(2,108,MAX_X-4,"      ...performing normal start...",White,Black,0);
+				HAL_Delay(2000);
+				retval = true;
+			}
+			else
+			{
+				UiLcdHy28_LcdClear(clr_bg);
+				UiLcdHy28_PrintTextCentered(2, MAX_Y/2-8, MAX_X-4, "Test screen.\n"
+						" You can draw here by pressing the screen.\n"
+									"Press Power to save and reboot",clr_fg,clr_bg,0);
+				while(1)
+				{
+					while((UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false) && (UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false))
+					{
+						HAL_Delay(40);
+					}
+
+					if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == true)
+						break;
+
+					if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
+					{
+						//			*xt_corr += (ts.tp->hr_x - cross[0]);
+						//			*yt_corr += (ts.tp->hr_y - cross[1]);
+						UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
+
+					}
+
+				}
+				UiLcdHy28_LcdClear(clr_bg);
+			}
+#endif
+			HAL_Delay(2000);
 			retval = true;
 			ts.menu_var_changed = true;
 		}
 	}
 #else
-	bool retval = false;
-
 	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
 	{
 
@@ -5480,18 +5607,25 @@ static bool UiDriver_TouchscreenCalibration()
 
 
 #ifdef  USE_HIRES_TOUCH
-#define MaxTouchError 20
+#define MaxTouchError 100
+#define CrossCheckCount 3
 void UiDriver_DoCrossCheck(int16_t cross[])
 {
 	uint32_t clr_fg, clr_bg;
+	clr_bg = Black;
+	clr_fg = White;
+
+	UiLcdHy28_LcdClear(clr_bg);
+	DrawCross(cross,clr_fg);
+
 	char txt_buf[40];
 	uchar datavalid = 0, samples = 0;
 
 	int16_t* xt_corr=&cross[2];
 	int16_t* yt_corr=&cross[3];
 
-	clr_bg = Black;
-	clr_fg = White;
+	*xt_corr=0;
+	*yt_corr=0;
 
 	do
 	{
@@ -5505,10 +5639,10 @@ void UiDriver_DoCrossCheck(int16_t cross[])
 			if(abs(ts.tp->hr_x - cross[0]) < MaxTouchError && abs(ts.tp->hr_y - cross[1]) < MaxTouchError)
 			{
 				datavalid++;
-				*xt_corr += (ts.tp->hr_x - cross[0]);
-				*yt_corr += (ts.tp->hr_y - cross[1]);
+				*xt_corr += ts.tp->hr_x;
+				*yt_corr += ts.tp->hr_y;
 				clr_fg = Green;
-				snprintf(txt_buf,40,"Try (%d) error: x = %+d / y = %+d       ",datavalid,ts.tp->hr_x-cross[0],ts.tp->hr_y-cross[1]);	//show misajustments
+				snprintf(txt_buf,40,"Try (%d) error: x = %+d / y = %+d",datavalid,ts.tp->hr_x-cross[0],ts.tp->hr_y-cross[1]);	//show misajustments
 			}
 			else
 			{
@@ -5516,13 +5650,21 @@ void UiDriver_DoCrossCheck(int16_t cross[])
 				snprintf(txt_buf,40,"Try (%d) BIG error: x = %+d / y = %+d",samples,ts.tp->hr_x-cross[0],ts.tp->hr_y-cross[1]);	//show misajustments
 			}
 			samples++;
-			UiLcdHy28_PrintText(10,70,txt_buf,clr_fg,clr_bg,0);
+			UiLcdHy28_PrintTextCentered(2,70,MAX_X-4,txt_buf,clr_fg,clr_bg,0);
+
+			snprintf(txt_buf,40,"RAW: x = %+d / y = %+d",ts.tp->xraw,ts.tp->yraw);	//show misajustments
+			UiLcdHy28_PrintTextCentered(2,85,MAX_X-4,txt_buf,clr_fg,clr_bg,0);
 			ts.tp->state = TP_DATASETS_PROCESSED;
 		}
 	}
-	while(datavalid < 3);
+	while(datavalid < CrossCheckCount);
 
-	HAL_Delay(4000);
+	UiLcdHy28_PrintTextCentered(2,100,MAX_X-4,"Wait one moment please...",Yellow,clr_bg,0);
+
+	*xt_corr/=CrossCheckCount; //average the data
+	*yt_corr/=CrossCheckCount;
+
+	HAL_Delay(2000);
 }
 
 
@@ -5917,7 +6059,44 @@ static void UiAction_SaveConfigurationToMemory()
 		}
 	}
 }
+#ifdef USE_HIRES_TOUCH
+static void UiAction_ChangeFrequencyByTouch()
+{
+	if (ts.frequency_lock == false)
+	{
+		int step = 2000;				// adjust to 500Hz
 
+		if(sd.magnify == 3)
+		{
+			step = 400;					// adjust to 100Hz
+		}
+		if(sd.magnify == 4)
+		{
+			step = 40;					// adjust to 10Hz
+		}
+		if(sd.magnify == 5)
+		{
+			step = 4;					// adjust to 1Hz
+		}
+		if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
+		{
+			step = 20000;				// adjust to 5KHz
+		}
+
+		int16_t line =sd.marker_pos[0];
+		/*int16_t line =sd.rx_carrier_pos;
+		if(ts.dmod_mode == DEMOD_CW)
+		{
+			line=sd.marker_pos[0];
+		}*/
+
+		//uint32_t tunediff = ((IQ_SAMPLE_RATE/slayout.scope.w)/(1 << sd.magnify))*(ts.tp->hr_x-line)*TUNE_MULT;
+		int32_t tunediff = sd.hz_per_pixel*(ts.tp->hr_x-line)*TUNE_MULT;
+		df.tune_new = lround((df.tune_new + tunediff)/step) * step;
+		UiDriver_FrequencyUpdateLOandDisplay(true);
+	}
+}
+#else
 static void UiAction_ChangeFrequencyByTouch()
 {
 	if (ts.frequency_lock == false)
@@ -5978,7 +6157,7 @@ static void UiAction_ChangeFrequencyByTouch()
 		UiDriver_FrequencyUpdateLOandDisplay(true);
 	}
 }
-
+#endif
 static void UiAction_ChangeDigitalMode()
 {
 	incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_BPSK);
@@ -6406,6 +6585,36 @@ static void UiAction_StepPlusHold()
 		}
 	}
 }
+#ifdef USE_HIRES_TOUCH
+#define TOUCH_SHOW_REGIONS_AND_POINTS	//this definition enables the drawing of boxes of regions and put the pixel in touch point
+//#define TRgn(x,y,w,h) {x+w/2,y+h/2,w,h}
+
+static const touchaction_descr_t touchactions_normal[] =
+{
+		{ {POS_SM_IND_X,POS_SM_IND_Y,SM_IND_W,SM_IND_H}, UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
+		{ {100,110,60,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
+		{ {(480/2)-16,110,48,16}, UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
+		{ {(480/2)+100,110,48,16}, UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
+		{ {POS_BOTTOM_BAR_F1_X+POS_BOTTOM_BAR_BUTTON_W*4,POS_BOTTOM_BAR_F1_Y,POS_BOTTOM_BAR_BUTTON_W,POS_BOTTOM_BAR_BUTTON_H}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
+		{ {POS_DEMOD_MODE_X,POS_DEMOD_MODE_Y,POS_DEMOD_MODE_MASK_W,POS_DEMOD_MODE_MASK_H}, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
+		{ {POS_PW_IND_X,POS_PW_IND_Y,64,16},								 UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
+		{ {POS_ENCODER_IND_X+ENC_COL_W*5+Xspacing*2,POS_ENCODER_IND_Y,ENC_COL_W,ENC_ROW_H}, UiAction_ChangeAudioSource,              NULL }, // Audio In Box: Switch Source
+		{ {POS_BAND_MODE_X,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
+		{ {POS_BAND_MODE_X+POS_BAND_MODE_MASK_W*3/4,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
+		{ {POS_LEFTBOXES_IND_X,POS_LEFTBOXES_IND_Y,LEFTBOX_WIDTH,LEFTBOX_ROW_H}, Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
+		{ {0,110,480,80}, UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
+		{ {POS_DIGMODE_IND_X,POS_DIGMODE_IND_Y,POS_DIGMODE_IND_H,16}, UiAction_ChangeDigitalMode,              NULL }, // Digital Mode Box: Switch Digi Mode
+		{ {POS_TUNE_STEP_X,POS_TUNE_STEP_Y,POS_TUNE_STEP_MASK_W,POS_TUNE_STEP_MASK_H}, UiAction_ChangeDynamicTuning,            NULL }, // Step Box: Dynamic Tuning Toggle
+};
+
+// this is the map for menu mode, right now only used for debugging/experimental purposes
+static const touchaction_descr_t touchactions_menu[] =
+{
+		{ { POS_SM_IND_X+SM_IND_W-16,POS_SM_IND_Y,16,16 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
+		{ { POS_SM_IND_X+SM_IND_W-60,POS_SM_IND_Y,16,16 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
+		{ { POS_SM_IND_X+SM_IND_W-40,POS_SM_IND_Y,16,16 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
+};
+#else
 // these maps control the touch regions to function mapping in a specific mode
 // this is the normal mode, available when not in menu mode
 // first function is the normal touch, second function is long touch
@@ -6435,7 +6644,7 @@ static const touchaction_descr_t touchactions_menu[] =
 		{ { 46,49,55,57 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
 		{ { 50,53,55,57 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
 };
-
+#endif
 static const touchaction_list_descr_t touch_regions[] =
 {
 		// ATTENTION: the size calculation only works for true arrays, not for pointers!
@@ -6447,15 +6656,30 @@ static void UiDriver_HandleTouchScreen(bool is_long_press)
 {
 	if(is_touchscreen_pressed())
 	{
+		uint32_t touchaction_idx = ts.menu_mode == true?1:0;
+
 		if (ts.show_debug_info)					// show coordinates for coding purposes
 		{
 
 #ifdef USE_HIRES_TOUCH
 
-			UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
-
 			char text[14];
 			snprintf(text,14,"%04d%s%04d%s",ts.tp->hr_x," : ",ts.tp->hr_y,"  ");
+
+    #ifdef TOUCH_SHOW_REGIONS_AND_POINTS
+			UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
+
+			uint16_t x,y,w,h;
+			for(int n=0;n<touch_regions[touchaction_idx].size;n++)
+			{
+				x=touch_regions[touchaction_idx].actions[n].region.x;
+				y=touch_regions[touchaction_idx].actions[n].region.y;
+				w=touch_regions[touchaction_idx].actions[n].region.w;
+				h=touch_regions[touchaction_idx].actions[n].region.h;
+				UiLcdHy28_DrawEmptyRect(x,y,h,w,Red);
+			}
+    #endif
+
 #else
 			char text[10];
 			snprintf(text,10,"%02d%s%02d%s",ts.tp->x," : ",ts.tp->y,"  ");
@@ -6463,7 +6687,7 @@ static void UiDriver_HandleTouchScreen(bool is_long_press)
 			UiLcdHy28_PrintText(0,POS_LOADANDDEBUG_Y,text,White,Black,0);
 		}
 
-		uint32_t touchaction_idx = ts.menu_mode == true?1:0;
+
 
 		UiDriver_ProcessTouchActions(&touch_regions[touchaction_idx], is_long_press);
 

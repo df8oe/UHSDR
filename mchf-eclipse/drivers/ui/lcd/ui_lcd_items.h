@@ -113,7 +113,7 @@
 // Tunning step control
 #define POS_TUNE_STEP_X             		(POS_TUNE_FREQ_X + 45)
 #define POS_TUNE_STEP_Y             		(POS_TUNE_FREQ_Y - 21)
-//#define POS_TUNE_STEP_MASK_H            	15
+#define POS_TUNE_STEP_MASK_H            	15
 #define POS_TUNE_STEP_MASK_W            	(SMALL_FONT_WIDTH*7)
 
 //#define POS_RADIO_MODE_X            		4
@@ -158,6 +158,7 @@
 //#define POS_DIGMODE_IND_Y              		80
 #define POS_DIGMODE_IND_X              		215
 #define POS_DIGMODE_IND_Y              		0
+#define POS_DIGMODE_IND_H					58
 
 // S meter position
 #define POS_SM_IND_X                		0
@@ -345,6 +346,7 @@
 
 #define POS_DIGMODE_IND_X              		0
 #define POS_DIGMODE_IND_Y              		(191)
+#define POS_DIGMODE_IND_H					58
 
 // S meter position
 #define POS_SM_IND_X                		116

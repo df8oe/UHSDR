@@ -54,6 +54,7 @@ typedef struct
     UiArea_t wfall;
 } SpectrumAreas_t;
 
+
 SpectrumAreas_t slayout;
 
 // full area =      x[const]=58,                y[const]= 128,                          w[const]= 262,                  h[const]=94
@@ -1448,7 +1449,6 @@ void UiSpectrum_Init()
 #ifdef USE_DISP_480_320
     case RESOLUTION_480_320:
     {
-        //const UiArea_t area_480_320 = { .x = 0, .y = 98, .w = 480, .h = 184 };
         const UiArea_t area_480_320 = { .x = 0, .y = 110, .w = 480, .h = 176 };
         UiSpectrum_CalculateLayout(ts.spectrum_size == SPECTRUM_BIG, is_scopemode(), is_waterfallmode(), &area_480_320, 0);
         break;

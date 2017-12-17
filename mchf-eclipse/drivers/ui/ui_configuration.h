@@ -25,6 +25,7 @@ enum
     ConfigEntry_UInt32_16,
     ConfigEntry_Int32_16,
     ConfigEntry_Int16,
+	ConfigEntry_Int32,			//this type saves and reads two subsequent 16bit words
 //  ConfigEntry_Bool,
 };
 
@@ -562,7 +563,20 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_DIGI_MODE_CONF			 389
 #define EEPROM_Scope_TRACE_HL_BW			 390
 #define EEPROM_Scope_TRACE_HL_BW_BGR			 391
-#define EEPROM_FIRST_UNUSED 				392		// change this if new value ids are introduced
+#define EEPROM_TScal0_High						392	//callibration data for touchscreen (all data are int32_t divided in two 16bit chunks)
+#define EEPROM_TScal0_Low						393
+#define EEPROM_TScal1_High						394
+#define EEPROM_TScal1_Low						395
+#define EEPROM_TScal2_High						396
+#define EEPROM_TScal2_Low						397
+#define EEPROM_TScal3_High						398
+#define EEPROM_TScal3_Low						399
+#define EEPROM_TScal4_High						400
+#define EEPROM_TScal4_Low						401
+#define EEPROM_TScal5_High						402
+#define EEPROM_TScal5_Low						403
+
+#define EEPROM_FIRST_UNUSED 				404		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
