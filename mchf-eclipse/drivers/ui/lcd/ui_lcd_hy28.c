@@ -2287,7 +2287,7 @@ void UiLcdHy28_TouchscreenReadCoordinates()
 
 					x=mchf_touchscreen.xraw;
 					y=mchf_touchscreen.yraw;
-
+/*
 					x=(x*MAX_X)/4095;
 					y=(y*MAX_Y)/4095;
 
@@ -2301,9 +2301,9 @@ void UiLcdHy28_TouchscreenReadCoordinates()
 					{
 						y=MAX_Y-y;
 					}
-
+*/
 					int32_t xn,yn;
-					//transforming the coordinates by callibration coefficients calculated in touchscreen calibration
+					//transforming the coordinates by calibration coefficients calculated in touchscreen calibration
 					//see the UiDriver_TouchscreenCalibration
 					//xn=Ax+By+C
 					//yn=Dx+Ey+F

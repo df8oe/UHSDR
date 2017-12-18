@@ -5160,8 +5160,15 @@ static void UiDriver_KeyTestScreen()
 
 				if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
 				{
+#ifdef USE_HIRES_TOUCH
+					snprintf(txt_buf,40,"x/y: %04d/%04d x/y raw: %04x/%04x",ts.tp->hr_x,ts.tp->hr_y,ts.tp->xraw,ts.tp->yraw);	//show touched coordinates
+					UiLcdHy28_PrintTextCentered(2,216,MAX_X-4,txt_buf,White,Blue,0);           // identify button on screen
+					UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
+
+#else
 					snprintf(txt_buf,40,"x/y: %02d/%02d x/y raw: %04x/%04x",ts.tp->x,ts.tp->y,ts.tp->xraw,ts.tp->yraw);	//show touched coordinates
 					UiLcdHy28_PrintTextCentered(10,216,300,txt_buf,White,Blue,0);           // identify button on screen
+#endif
 					txt = "Touch";
 				}
 				else
@@ -5279,12 +5286,6 @@ static bool UiDriver_TouchscreenCalibration()
 		}
 		ts.tp->cal[0]=65536;
 		ts.tp->cal[4]=65536;
-
-		/*uint16_t x_corr[1], y_corr[1];
-		float diffx,diffy;
-
-		*x_corr = 0;
-		*y_corr = 0;*/
 
 		UiLcdHy28_LcdClear(clr_bg);							// clear the screen
 		//											// now do all of the warnings, blah, blah...
@@ -5607,7 +5608,7 @@ static bool UiDriver_TouchscreenCalibration()
 
 
 #ifdef  USE_HIRES_TOUCH
-#define MaxTouchError 100
+//#define MaxTouchError 100
 #define CrossCheckCount 3
 void UiDriver_DoCrossCheck(int16_t cross[])
 {
@@ -5636,19 +5637,19 @@ void UiDriver_DoCrossCheck(int16_t cross[])
 
 		if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
 		{
-			if(abs(ts.tp->hr_x - cross[0]) < MaxTouchError && abs(ts.tp->hr_y - cross[1]) < MaxTouchError)
-			{
+			//if(abs(ts.tp->hr_x - cross[0]) < MaxTouchError && abs(ts.tp->hr_y - cross[1]) < MaxTouchError)
+			//{
 				datavalid++;
 				*xt_corr += ts.tp->hr_x;
 				*yt_corr += ts.tp->hr_y;
 				clr_fg = Green;
 				snprintf(txt_buf,40,"Try (%d) error: x = %+d / y = %+d",datavalid,ts.tp->hr_x-cross[0],ts.tp->hr_y-cross[1]);	//show misajustments
-			}
+			/*}
 			else
 			{
 				clr_fg = Red;
 				snprintf(txt_buf,40,"Try (%d) BIG error: x = %+d / y = %+d",samples,ts.tp->hr_x-cross[0],ts.tp->hr_y-cross[1]);	//show misajustments
-			}
+			}*/
 			samples++;
 			UiLcdHy28_PrintTextCentered(2,70,MAX_X-4,txt_buf,clr_fg,clr_bg,0);
 
