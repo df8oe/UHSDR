@@ -53,11 +53,13 @@
   #define USE_DISP_480_320
   #define USE_FFT_1024
   #define USE_HIRES_TOUCH
+#define USE_8bit_FONT
 #elif LCD_TYPE == 2
   #define USE_GFX_ILI932x
   #define USE_GFX_ILI9486
   #define USE_DISP_320_240
   #define USE_FFT_1024
+  #define USE_8bit_FONT
 #elif LCD_TYPE == 3
   #define USE_GFX_RA8875
   #define USE_DISP_800_480
