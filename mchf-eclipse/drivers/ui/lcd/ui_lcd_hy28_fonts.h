@@ -15,15 +15,18 @@
 #ifndef __UI_LCD_HY28_FONTS_H
 #define __UI_LCD_HY28_FONTS_H
 
-typedef const uint16_t fontPixel_t;
 
 typedef struct tFont
 {
-    fontPixel_t *table;
+	const void *table;
     uint8_t  Width;
     uint8_t  Height;
     uint16_t maxCode;
+    uint8_t BitCount;
+    uint8_t firstCode;
+    const uint16_t *offsetTable;
+    const uint8_t *heightTable;
+    const uint8_t *widthTable;
 } sFONT;
 
-
-#endif
+#endif //__UI_LCD_HY28_FONTS_H

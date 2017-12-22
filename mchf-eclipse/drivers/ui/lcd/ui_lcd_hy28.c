@@ -106,6 +106,9 @@ extern sFONT GL_Font8x12;
 extern sFONT GL_Font8x12_bold;
 extern sFONT GL_Font12x12;
 extern sFONT GL_Font16x24;
+#ifdef USE_8bit_FONT
+extern sFONT GL_Font16x24_8b_Square;
+#endif
 
 static sFONT *fontList[] =
 {
@@ -114,6 +117,9 @@ static sFONT *fontList[] =
         &GL_Font12x12,
         &GL_Font8x12,
         &GL_Font8x8,
+#ifdef USE_8bit_FONT
+		&GL_Font16x24_8b_Square,
+#endif
 };
 
 #else
@@ -1424,27 +1430,160 @@ static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
 
 void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkColor,const sFONT *cf)
 {
-    ulong       i,j;
-    ushort      a,b;
-    const uchar      fw = cf->Width;
-    const short   *ch = (const short *)(&cf->table[(symb - 32) * cf->Height]);
+	switch(cf->BitCount)
+	{
+	case 1:		//1 bit font (basic type)
+	{
+		ulong       i,j;
+		ushort      a,b,d;
+		const uchar      fw = cf->Width;
 
-    UiLcdHy28_OpenBulkWrite(x,cf->Width,y,cf->Height);
-    UiLcdHy28_BulkPixel_BufferInit();
-    for(i = 0; i < cf->Height; i++)
-    {
-        // Draw line
-        for(j = 0; j < cf->Width; j++)
-        {
-            a = ((ch[i] & ((0x80 << ((fw / 12 ) * 8)) >> j)));
-            b = ((ch[i] &  (0x01 << j)));
-            //
-            UiLcdHy28_BulkPixel_Put(((!a && (fw <= 12)) || (!b && (fw > 12)))?bkColor:Color);
-        }
-    }
-    UiLcdHy28_BulkPixel_BufferFlush();
-    // flush all not yet  transferred pixel to display.
-    UiLcdHy28_CloseBulkWrite();
+		uint8_t   *ch = (uint8_t *)cf->table;
+		if(cf->Width>8)
+			ch+=(symb - 32) * cf->Height*2;
+		else
+			ch+=(symb - 32) * cf->Height;
+
+
+		UiLcdHy28_OpenBulkWrite(x,cf->Width,y,cf->Height);
+		UiLcdHy28_BulkPixel_BufferInit();
+		for(i = 0; i < cf->Height; i++)
+		{
+			if(cf->Width>8)
+			{
+				d=ch[i*2+1]<<8;
+				d|=ch[i*2];
+			}
+			else
+			{
+				d=ch[i];
+			}
+
+			// Draw line
+			for(j = 0; j < cf->Width; j++)
+			{
+				a = (d & ((0x80 << ((fw / 12 ) * 8)) >> j));
+				b = (d &  (0x01 << j));
+				//
+				UiLcdHy28_BulkPixel_Put(((!a && (fw <= 12)) || (!b && (fw > 12)))?bkColor:Color);
+			}
+		}
+		UiLcdHy28_BulkPixel_BufferFlush();
+		// flush all not yet  transferred pixel to display.
+		UiLcdHy28_CloseBulkWrite();
+	}
+		break;
+	case 8:	//8 bit grayscaled font
+	{
+		uint8_t cntrX, cntrY;
+		uint8_t FontDefaultSize,Font_W,Font_H;
+		uint8_t *FontData;
+
+		FontDefaultSize=cf->Width;
+		if(symb==0x20)
+		{
+			Font_W=cf->Width;
+			Font_H=cf->Height;
+		}
+		else
+		{
+			Font_W=cf->widthTable[symb-cf->firstCode];
+			Font_H=cf->heightTable[symb-cf->firstCode];
+			FontData=(uint8_t*)cf->table;
+			FontData+=cf->offsetTable[symb-cf->firstCode];
+		}
+#define CHarSpacing 1
+
+		//gray shaded font type
+		uint32_t pixel;
+		uint8_t FontD;
+		uint16_t ColBG_R=(bkColor>>11)&0x1f;
+		int32_t ColBG_G=(bkColor>>5)&0x3f;
+		int32_t ColBG_B=bkColor&0x1f;
+
+		int32_t ColFG_R=((Color>>11)&0x1f) - ColBG_R; //decomposition of 16 bit color data into channels
+		int32_t ColFG_G=((Color>>5)&0x3f)  - ColBG_G;
+		int32_t ColFG_B=(Color&0x1f) - ColBG_B;
+
+		int32_t ColFG_Ro,ColFG_Go,ColFG_Bo;
+
+		UiLcdHy28_BulkPixel_OpenWrite(x, FontDefaultSize+CHarSpacing, y, Font_H);
+
+		if(symb==0x20)
+		{
+			Font_W=4;
+			for(cntrY=0;cntrY<Font_H;cntrY++)
+			{
+				//Cidx=0;
+				for(cntrX=0;cntrX<(FontDefaultSize+CHarSpacing);cntrX++)
+				{
+					UiLcdHy28_BulkPixel_Put(bkColor);
+				}
+
+			}
+			UiLcdHy28_BulkPixel_BufferFlush();
+			// flush all not yet  transferred pixel to display.
+			UiLcdHy28_CloseBulkWrite();
+		}
+		else
+		{
+			for(cntrY=0;cntrY<Font_H;cntrY++)
+			{
+				for(cntrX=0;cntrX<Font_W;cntrX++)
+				{
+					if(cntrY<Font_H)
+					{
+						FontD=*FontData++;		//get one point from bitmap
+					}
+					else
+					{
+						FontD=0;
+					}
+
+					if(FontD==0)
+					{
+						pixel=bkColor;
+					}
+					else
+					{
+						//shading the foreground colour
+						ColFG_Ro=(ColFG_R*FontD)>>8;
+						ColFG_Go=(ColFG_G*FontD)>>8;
+						ColFG_Bo=(ColFG_B*FontD)>>8;
+						ColFG_Ro+=ColBG_R;
+						ColFG_Go+=ColBG_G;
+						ColFG_Bo+=ColBG_B;
+
+						pixel=(ColFG_Ro<<11)|(ColFG_Go<<5)|ColFG_Bo;	//assembly of destination colour
+					}
+					UiLcdHy28_BulkPixel_Put(pixel);
+
+				}
+				if(Font_W<FontDefaultSize)
+				{
+					for(int n=0;n<(FontDefaultSize-Font_W);n++)
+					{
+						UiLcdHy28_BulkPixel_Put(bkColor);
+					}
+
+				}
+
+				//adding the spacing after the printed font
+				for(cntrX=0;cntrX<CHarSpacing;cntrX++)
+				{
+					UiLcdHy28_BulkPixel_Put(bkColor);
+				}
+
+
+
+			}
+			UiLcdHy28_BulkPixel_BufferFlush();
+			// flush all not yet  transferred pixel to display.
+			UiLcdHy28_CloseBulkWrite();
+		}
+		break;
+	}
+	}
 }
 
 const sFONT   *UiLcdHy28_Font(uint8_t font)

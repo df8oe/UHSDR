@@ -2521,7 +2521,11 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 	case UFM_LARGE:
 	default:			// default:  normal sized (large) digits
 		digits_ptr  = df.dial_digits;
+#ifdef USE_8bit_FONT
+		digit_size = 5;
+#else
 		digit_size = 1;
+#endif
 		pos_y_loc = POS_TUNE_FREQ_Y;
 		pos_x_loc = POS_TUNE_FREQ_X;
 		font_width = LARGE_FONT_WIDTH;
