@@ -28,7 +28,7 @@
 					<Add option="--gdwarf-2" />
 				</Assembler>
 				<Linker>
-					<Add option="-T..\mchf-eclipse\arm-gcc-link.ld" />
+					<Add option="-T..\mchf-eclipse\linker\arm-gcc-link_f4_flash1024k.ld" />
 					<Add library="bin\Debug\libstm32f4xxhal.a" />
 					<Add library="bin\Debug\libcmsisdsp.a" />
 				</Linker>
@@ -49,7 +49,7 @@
 				</Cpp>
 				<Linker>
 					<Add option="-eb_lib=n" />
-					<Add option="-T..\mchf-eclipse\arm-gcc-link.ld" />
+					<Add option="-T..\mchf-eclipse\linker\arm-gcc-link_f4_flash1024k.ld" />
 					<Add library="bin\Release\libstm32f4xxhal.a" />
 					<Add library="bin\Release\libcmsisdsp.a" />
 				</Linker>
@@ -76,7 +76,7 @@
 				</Cpp>
 				<Linker>
 					<Add option="-eb_lib=n" />
-					<Add option="-T..\mchf-eclipse\arm-gcc-link.ld" />
+					<Add option="-T..\mchf-eclipse\linker\arm-gcc-link_f4_flash512k.ld" />
 					<Add library="bin\ReleaseSmall\libstm32f4xxhal.a" />
 					<Add library="bin\ReleaseSmall\libcmsisdsp.a" />
 				</Linker>
@@ -170,8 +170,8 @@
 			<Add option="--gc-sections" />
 			<Add option="-Llibs" />
 		</Linker>
-		<Unit filename="..\mchf-eclipse\arm-gcc-link-1024k.ld" />
-		<Unit filename="..\mchf-eclipse\arm-gcc-link.ld" />
+		<Unit filename="..\mchf-eclipse\linker\arm-gcc-link_f4_flash1024k.ld" />
+		<Unit filename="..\mchf-eclipse\linker\arm-gcc-link_f4_flash512k.ld" />
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Device\ST\STM32F4xx\Source\Templates\gcc\startup_stm32f407xx.S">
 			<Option compilerVar="CC" />
 		</Unit>
