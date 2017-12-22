@@ -84,8 +84,11 @@ BASECFLAGS_F4  = $(MACHFLAGS_F4)  $(COMPILEFLAGS)  $(EXTRACFLAGS)
 
 BASECFLAGS_F7  = $(MACHFLAGS_F7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
 
-LDFLAGS_F4 := $(MACHFLAGS_F4) -flto --specs=nano.specs
-LDFLAGS_F7 := $(MACHFLAGS_F7) -flto --specs=nano.specs
+LINKERLOC=$(ROOTLOC)/linker
+
+LDFLAGS_BASE := -L$(LINKERLOC) -flto --specs=nano.specs
+LDFLAGS_F4 := $(LDFLAGS_BASE) $(MACHFLAGS_F4)
+LDFLAGS_F7 := $(LDFLAGS_BASE) $(MACHFLAGS_F7) 
 
 LIBS := -lm -lc -lnosys
 
@@ -121,8 +124,8 @@ ifeq ($(BUILDFOR),F4)
 
 $(BOOTLOADER).elf : CFLAGS = ${BASECFLAGS_F4} -Os -DBOOTLOADER_BUILD
 $(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F4} -O2
-$(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link-bootloader.ld
-$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(ROOTLOC)/arm-gcc-link.ld
+$(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F4} -T$(LINKERLOC)/arm-gcc-link-bootloader_f4.ld
+$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(LINKERLOC)/arm-gcc-link_f4_flash512k.ld
 	
 
 
@@ -139,8 +142,8 @@ ifeq ($(BUILDFOR),F7)
 
 $(BOOTLOADER).elf: CFLAGS = ${BASECFLAGS_F7} -Os -DBOOTLOADER_BUILD
 $(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F7} -O3
-$(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F7} -T$(ROOTLOC)/arm-gcc-link-bootloader_f7.ld
-$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F7} -T$(ROOTLOC)/arm-gcc-link_f7.ld
+$(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F7} -T$(LINKERLOC)/arm-gcc-link-bootloader_f7.ld
+$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F7} -T$(LINKERLOC)/arm-gcc-link_f7.ld
 
 
 	# Every subdirectory with header files must be mentioned here

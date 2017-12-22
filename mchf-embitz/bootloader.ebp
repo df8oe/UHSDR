@@ -151,12 +151,12 @@
 			<Add option="-lm" />
 			<Add option="-lc" />
 			<Add option="-lnosys" />
-			<Add option="-T..\mchf-eclipse\arm-gcc-link-bootloader.ld" />
+			<Add option="-T..\mchf-eclipse\linker\arm-gcc-link-bootloader_f4.ld" />
 			<Add option="-Xlinker" />
 			<Add option="--gc-sections" />
 			<Add option="-Llibs" />
 		</Linker>
-		<Unit filename="..\mchf-eclipse\arm-gcc-link-bootloader.ld" />
+		<Unit filename="..\mchf-eclipse\linker\arm-gcc-link-bootloader_f4.ld" />
 		<Unit filename="..\mchf-eclipse\src\bootloader\bootloader_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
