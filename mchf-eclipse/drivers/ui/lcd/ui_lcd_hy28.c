@@ -1142,7 +1142,7 @@ void UiLcdHy28_DrawColorPoint( unsigned short Xpos, unsigned short Ypos, unsigne
 #else
     if( Xpos < MAX_X && Ypos < MAX_Y )
     {
-        UiLcdHy28_OpenBulkWrite(Xpos,Xpos,Ypos,Ypos);
+        UiLcdHy28_OpenBulkWrite(Xpos,1,Ypos,1);
         UiLcdHy28_WriteDataOnly(point);
         UiLcdHy28_CloseBulkWrite();
     }
@@ -2343,7 +2343,7 @@ const uint8_t touchscreentable [] = { 0x07, 0x09,
         0x67, 0x6c, 0x6d, 0x6e, 0x74, 0x75, 0x76, 0x77, 0x7c, 0x7d
 };
 #endif
-#define HIRES_TOUCH_MaxDelta 4
+#define HIRES_TOUCH_MaxDelta 2
 #define HIRES_TOUCH_MaxFocus 4
 
 void UiLcdHy28_TouchscreenReadCoordinates()
