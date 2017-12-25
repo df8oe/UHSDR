@@ -27,6 +27,7 @@ void UiSpectrum_CalculateDisplayFilterBW(float32_t* width_pixel_, float32_t* lef
 void UiSpectrum_DisplayFilterBW();
 
 void UiSpectrum_InitCwSnapDisplay (bool visible);
+uint16_t UiSpectrum_GetSpectrumStartX();
 
 // Settings for dB/division for spectrum display
 enum

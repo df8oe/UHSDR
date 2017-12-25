@@ -2281,6 +2281,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                              );
         UiMenu_MapColors(ts.meter_colour_down,options,&clr);
         break;
+#ifndef USE_HIRES_TOUCH
     case CONFIG_TOUCHSCREEN_MIRROR:  // Touchscreen mirror
         if(ts.flags1 & FLAGS1_REVERSE_X_TOUCHSCREEN)
       	{
@@ -2366,6 +2367,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 break;
 		}
     	break;
+#endif
     case MENU_WFALL_STEP_SIZE:  // set step size of of waterfall display?
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall.vert_step_size,
                                     WATERFALL_STEP_SIZE_MIN,

@@ -5269,8 +5269,16 @@ static bool UiDriver_TouchscreenCalibration()
 #ifdef USE_HIRES_TOUCH
 
 
-	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
+	//if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
+	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
 	{
+
+		//wait for a moment to filter out some unwanted spikes
+		HAL_Delay(500);
+		if(!UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
+		{
+			return false;
+		}
 
 		uint32_t clr_fg, clr_bg;
 		clr_bg = Black;
@@ -5296,7 +5304,6 @@ static bool UiDriver_TouchscreenCalibration()
 		UiLcdHy28_PrintTextCentered(2,05,MAX_X-4,"TOUCH CALIBRATION",clr_fg,clr_bg,1);
 		UiLcdHy28_PrintTextCentered(2, 70, MAX_X-4, "If you don't want to do this\n"
 				"press POWER button to start normally.\n"
-				"press and hold BAND+ AND BAND-.\n"
 				" Settings will be saved at POWEROFF"
 				,clr_fg,clr_bg,0);
 
@@ -5451,7 +5458,7 @@ static bool UiDriver_TouchscreenCalibration()
 			{
 				UiLcdHy28_LcdClear(clr_bg);
 				UiLcdHy28_PrintTextCentered(2, MAX_Y/2-8, MAX_X-4, "Test screen.\n"
-						" You can draw here by pressing the screen.\n"
+						"You can draw by pressing the screen.\n"
 									"Press Power to save and reboot",clr_fg,clr_bg,0);
 				while(1)
 				{
@@ -6088,7 +6095,7 @@ static void UiAction_ChangeFrequencyByTouch()
 			step = 20000;				// adjust to 5KHz
 		}
 
-		int16_t line =sd.marker_pos[0];
+		int16_t line =sd.marker_pos[0] + UiSpectrum_GetSpectrumStartX();
 		/*int16_t line =sd.rx_carrier_pos;
 		if(ts.dmod_mode == DEMOD_CW)
 		{
@@ -6593,32 +6600,66 @@ static void UiAction_StepPlusHold()
 #ifdef USE_HIRES_TOUCH
 #define TOUCH_SHOW_REGIONS_AND_POINTS	//this definition enables the drawing of boxes of regions and put the pixel in touch point
 //#define TRgn(x,y,w,h) {x+w/2,y+h/2,w,h}
+	#ifdef USE_DISP_480_320
+	static const touchaction_descr_t touchactions_normal[] =
+	{
+			{ {POS_SM_IND_X,POS_SM_IND_Y,SM_IND_W,SM_IND_H}, UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
+			{ {100,110,60,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
+			{ {(480/2)-16,110,48,16}, UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
+			{ {(480/2)+100,110,48,16}, UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
+//			{ {POS_BOTTOM_BAR_F1_X+POS_BOTTOM_BAR_BUTTON_W*4,POS_BOTTOM_BAR_F1_Y,POS_BOTTOM_BAR_BUTTON_W,POS_BOTTOM_BAR_BUTTON_H}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
+			{ {POS_TUNE_FREQ_X+16*7,POS_TUNE_FREQ_Y,16*3,24}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
+			{ {POS_DEMOD_MODE_X,POS_DEMOD_MODE_Y,POS_DEMOD_MODE_MASK_W,POS_DEMOD_MODE_MASK_H}, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
+			{ {POS_PW_IND_X,POS_PW_IND_Y,64,16},								 UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
+			{ {POS_ENCODER_IND_X+ENC_COL_W*5+Xspacing*2,POS_ENCODER_IND_Y,ENC_COL_W,ENC_ROW_H}, UiAction_ChangeAudioSource,              NULL }, // Audio In Box: Switch Source
+			{ {POS_BAND_MODE_X,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
+			{ {POS_BAND_MODE_X+POS_BAND_MODE_MASK_W*3/4,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
+			{ {POS_LEFTBOXES_IND_X,POS_LEFTBOXES_IND_Y,LEFTBOX_WIDTH,LEFTBOX_ROW_H}, Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
+			{ {0,110,480,176}, UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
+			{ {POS_DIGMODE_IND_X,POS_DIGMODE_IND_Y,POS_DIGMODE_IND_H,16}, UiAction_ChangeDigitalMode,              NULL }, // Digital Mode Box: Switch Digi Mode
+			{ {POS_TUNE_STEP_X,POS_TUNE_STEP_Y,POS_TUNE_STEP_MASK_W,POS_TUNE_STEP_MASK_H}, UiAction_ChangeDynamicTuning,            NULL }, // Step Box: Dynamic Tuning Toggle
+	};
 
-static const touchaction_descr_t touchactions_normal[] =
-{
-		{ {POS_SM_IND_X,POS_SM_IND_Y,SM_IND_W,SM_IND_H}, UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
-		{ {100,110,60,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
-		{ {(480/2)-16,110,48,16}, UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
-		{ {(480/2)+100,110,48,16}, UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
-		{ {POS_BOTTOM_BAR_F1_X+POS_BOTTOM_BAR_BUTTON_W*4,POS_BOTTOM_BAR_F1_Y,POS_BOTTOM_BAR_BUTTON_W,POS_BOTTOM_BAR_BUTTON_H}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
-		{ {POS_DEMOD_MODE_X,POS_DEMOD_MODE_Y,POS_DEMOD_MODE_MASK_W,POS_DEMOD_MODE_MASK_H}, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
-		{ {POS_PW_IND_X,POS_PW_IND_Y,64,16},								 UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
-		{ {POS_ENCODER_IND_X+ENC_COL_W*5+Xspacing*2,POS_ENCODER_IND_Y,ENC_COL_W,ENC_ROW_H}, UiAction_ChangeAudioSource,              NULL }, // Audio In Box: Switch Source
-		{ {POS_BAND_MODE_X,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
-		{ {POS_BAND_MODE_X+POS_BAND_MODE_MASK_W*3/4,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
-		{ {POS_LEFTBOXES_IND_X,POS_LEFTBOXES_IND_Y,LEFTBOX_WIDTH,LEFTBOX_ROW_H}, Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
-		{ {0,110,480,176}, UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
-		{ {POS_DIGMODE_IND_X,POS_DIGMODE_IND_Y,POS_DIGMODE_IND_H,16}, UiAction_ChangeDigitalMode,              NULL }, // Digital Mode Box: Switch Digi Mode
-		{ {POS_TUNE_STEP_X,POS_TUNE_STEP_Y,POS_TUNE_STEP_MASK_W,POS_TUNE_STEP_MASK_H}, UiAction_ChangeDynamicTuning,            NULL }, // Step Box: Dynamic Tuning Toggle
-};
+	// this is the map for menu mode, right now only used for debugging/experimental purposes
+	static const touchaction_descr_t touchactions_menu[] =
+	{
+			{ { POS_SM_IND_X+SM_IND_W-16,POS_SM_IND_Y,16,16 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
+			{ { POS_SM_IND_X+SM_IND_W-60,POS_SM_IND_Y,16,16 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
+			{ { POS_SM_IND_X+SM_IND_W-40,POS_SM_IND_Y,16,16 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
+	};
 
-// this is the map for menu mode, right now only used for debugging/experimental purposes
-static const touchaction_descr_t touchactions_menu[] =
-{
-		{ { POS_SM_IND_X+SM_IND_W-16,POS_SM_IND_Y,16,16 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
-		{ { POS_SM_IND_X+SM_IND_W-60,POS_SM_IND_Y,16,16 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
-		{ { POS_SM_IND_X+SM_IND_W-40,POS_SM_IND_Y,16,16 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
-};
+	#elif defined(USE_DISP_320_240)
+
+	static const touchaction_descr_t touchactions_normal[] =
+	{
+			{ {POS_SM_IND_X,POS_SM_IND_Y,SM_IND_W,SM_IND_H}, UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
+			{ {64,128,60,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
+			{ {180,128,40,16}, UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
+			{ {280,128,40,16}, UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
+//			{ {POS_BOTTOM_BAR_F1_X+POS_BOTTOM_BAR_BUTTON_W*4,POS_BOTTOM_BAR_F1_Y,POS_BOTTOM_BAR_BUTTON_W,POS_BOTTOM_BAR_BUTTON_H}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
+			{ {POS_TUNE_FREQ_X+16*7,POS_TUNE_FREQ_Y,16*3,24}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
+			{ {POS_DEMOD_MODE_X,POS_DEMOD_MODE_Y,POS_DEMOD_MODE_MASK_W,POS_DEMOD_MODE_MASK_H}, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
+			{ {POS_PW_IND_X,POS_PW_IND_Y,64,16},								 UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
+			{ {POS_ENCODER_IND_X+ENC_COL_W*2,POS_ENCODER_IND_Y+ENC_ROW_H,ENC_COL_W,ENC_ROW_H}, UiAction_ChangeAudioSource,              NULL }, // Audio In Box: Switch Source
+			{ {POS_BAND_MODE_X,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
+			{ {POS_BAND_MODE_X+POS_BAND_MODE_MASK_W*3/4,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
+			{ {POS_LEFTBOXES_IND_X,POS_LEFTBOXES_IND_Y,LEFTBOX_WIDTH,LEFTBOX_ROW_H}, Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
+			{ {60,128,256,80}, UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
+			{ {POS_DIGMODE_IND_X,POS_DIGMODE_IND_Y,POS_DIGMODE_IND_H,16}, UiAction_ChangeDigitalMode,              NULL }, // Digital Mode Box: Switch Digi Mode
+			{ {POS_TUNE_STEP_X,POS_TUNE_STEP_Y,POS_TUNE_STEP_MASK_W,POS_TUNE_STEP_MASK_H}, UiAction_ChangeDynamicTuning,            NULL }, // Step Box: Dynamic Tuning Toggle
+	};
+
+	// this is the map for menu mode, right now only used for debugging/experimental purposes
+	static const touchaction_descr_t touchactions_menu[] =
+	{
+			{ { POS_SM_IND_X+SM_IND_W-16,POS_SM_IND_Y,16,16 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
+			{ { POS_SM_IND_X+SM_IND_W-60,POS_SM_IND_Y,16,16 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
+			{ { POS_SM_IND_X+SM_IND_W-40,POS_SM_IND_Y,16,16 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
+	};
+
+
+	#endif
+
 #else
 // these maps control the touch regions to function mapping in a specific mode
 // this is the normal mode, available when not in menu mode
