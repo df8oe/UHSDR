@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2017-12-09T18:52:18  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2017-12-25T11:06:17  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2017-12-09T18:52:18  by "./ui_menu_structure_mdtable.py"
+generated at  2017-12-25T11:06:17  by "./ui_menu_structure_mdtable.py"
 
 
 
