@@ -2250,6 +2250,7 @@ bool UiLcdHy28_TouchscreenHasProcessableCoordinates()
 
 #ifdef USE_HIRES_TOUCH
     if(mchf_touchscreen.state >= TP_DATASETS_VALID && mchf_touchscreen.state != TP_DATASETS_PROCESSED)
+    //if(mchf_touchscreen.state >= TP_DATASETS_WAIT && mchf_touchscreen.state != TP_DATASETS_PROCESSED)
     {
         mchf_touchscreen.state = TP_DATASETS_NONE;     // tp data processed
          retval = true;
@@ -2332,7 +2333,7 @@ static void UiLcdHy28_TouchscreenReadData(uint16_t* x_p,uint16_t* y_p)
     *y_p = (xpt_response[3] << 8 | xpt_response[4]) >> 3;
 
 }
-
+#ifndef USE_HIRES_TOUCH
 const uint8_t touchscreentable [] = { 0x07, 0x09,
         0x0c, 0x0d, 0x0e, 0x0f, 0x12, 0x13, 0x14, 0x15, 0x16, 0x18,
         0x1c, 0x1d, 0x1e, 0x1f, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
@@ -2341,7 +2342,7 @@ const uint8_t touchscreentable [] = { 0x07, 0x09,
         0x54, 0x55, 0x56, 0x5c, 0x5d, 0x60, 0x62, 0x64, 0x65, 0x66,
         0x67, 0x6c, 0x6d, 0x6e, 0x74, 0x75, 0x76, 0x77, 0x7c, 0x7d
 };
-
+#endif
 #define HIRES_TOUCH_MaxDelta 4
 #define HIRES_TOUCH_MaxFocus 4
 
@@ -2389,7 +2390,7 @@ void UiLcdHy28_TouchscreenReadCoordinates()
 			{
 
 				//ok, the delta algorithm filtered out spikes and the bigger noise
-				//focus algorithm
+				//now we perform focus algorithm
 
 				NewDeltaX=mchf_touchscreen.focus_xprev-mchf_touchscreen.xraw;
 				NewDeltaY=mchf_touchscreen.focus_yprev-mchf_touchscreen.yraw;
@@ -2411,51 +2412,29 @@ void UiLcdHy28_TouchscreenReadCoordinates()
 					mchf_touchscreen.focus_yprev=mchf_touchscreen.yraw;
 				}
 
-				mchf_touchscreen.xraw_avgBuff+=mchf_touchscreen.xraw;	//averaging data
-				mchf_touchscreen.yraw_avgBuff+=mchf_touchscreen.yraw;
-
-				mchf_touchscreen.state++;
-
-				if(mchf_touchscreen.state==TP_DATASETS_VALID)
-				{
-
-					mchf_touchscreen.xraw=mchf_touchscreen.xraw_avgBuff/(TP_DATASETS_VALID-1);
-					mchf_touchscreen.yraw=mchf_touchscreen.yraw_avgBuff/(TP_DATASETS_VALID-1);
-
-					int32_t x,y;
-
-					x=mchf_touchscreen.xraw;
-					y=mchf_touchscreen.yraw;
-/*
-					x=(x*MAX_X)/4095;
-					y=(y*MAX_Y)/4095;
+				mchf_touchscreen.state=TP_DATASETS_VALID;
 
 
-					if(ts.flags1 & FLAGS1_REVERSE_X_TOUCHSCREEN)
-					{
-						x=MAX_X-x;
-					}
+				int32_t x,y;
 
-					if(ts.flags1 & FLAGS1_REVERSE_Y_TOUCHSCREEN)
-					{
-						y=MAX_Y-y;
-					}
-*/
-					int32_t xn,yn;
-					//transforming the coordinates by calibration coefficients calculated in touchscreen calibration
-					//see the UiDriver_TouchscreenCalibration
-					//xn=Ax+By+C
-					//yn=Dx+Ey+F
-					//all coefficients are in format 16.16
-					xn=mchf_touchscreen.cal[0]*x+mchf_touchscreen.cal[1]*y+mchf_touchscreen.cal[2];
-					yn=mchf_touchscreen.cal[3]*x+mchf_touchscreen.cal[4]*y+mchf_touchscreen.cal[5];
+				x=mchf_touchscreen.xraw;
+				y=mchf_touchscreen.yraw;
 
-					xn>>=16;
-					yn>>=16;
+				int32_t xn,yn;
+				//transforming the coordinates by calibration coefficients calculated in touchscreen calibration
+				//see the UiDriver_TouchscreenCalibration
+				//xn=Ax+By+C
+				//yn=Dx+Ey+F
+				//all coefficients are in format 16.16
+				xn=mchf_touchscreen.cal[0]*x+mchf_touchscreen.cal[1]*y+mchf_touchscreen.cal[2];
+				yn=mchf_touchscreen.cal[3]*x+mchf_touchscreen.cal[4]*y+mchf_touchscreen.cal[5];
 
-					mchf_touchscreen.hr_x=(int16_t)xn;
-					mchf_touchscreen.hr_y=(int16_t)yn;
-				}
+				xn>>=16;
+				yn>>=16;
+
+				mchf_touchscreen.hr_x=(int16_t)xn;
+				mchf_touchscreen.hr_y=(int16_t)yn;
+
 
 			}
 			else
@@ -2465,16 +2444,11 @@ void UiLcdHy28_TouchscreenReadCoordinates()
 				mchf_touchscreen.xraw_m1=mchf_touchscreen.xraw;
 				mchf_touchscreen.yraw_m1=mchf_touchscreen.yraw;
 				mchf_touchscreen.state = TP_DATASETS_WAIT;
-	        	mchf_touchscreen.xraw_avgBuff=0;	//clear averaging buffer
-	        	mchf_touchscreen.yraw_avgBuff=0;
-
 			}
         }
         else
         {
         	mchf_touchscreen.state = TP_DATASETS_WAIT;		// restart machine
-        	mchf_touchscreen.xraw_avgBuff=0;	//clear averaging buffer
-        	mchf_touchscreen.yraw_avgBuff=0;
         }
     }
 
@@ -2592,8 +2566,13 @@ void UiLcdHy28_TouchscreenInit(uint8_t mirror)
 {
     mchf_touchscreen.xraw = 0;
     mchf_touchscreen.yraw = 0;
+#ifdef USE_HIRES_TOUCH
+    mchf_touchscreen.hr_x = 0x7FFF;                        // invalid position
+    mchf_touchscreen.hr_y = 0x7FFF;                        // invalid position
+#else
     mchf_touchscreen.x = 0xFF;                        // invalid position
     mchf_touchscreen.y = 0xFF;                        // invalid position
     mchf_touchscreen.mirrored = mirror;
+#endif
     mchf_touchscreen.present = UiLcdHy28_TouchscreenPresenceDetection();
 }

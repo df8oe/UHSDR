@@ -602,7 +602,10 @@ void UiSpectrum_Clear()
     UiLcdHy28_DrawFullRect(slayout.full.x, slayout.full.y, slayout.full.h, slayout.full.w, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 }
 
-
+uint16_t UiSpectrum_GetSpectrumStartX()
+{
+	return slayout.scope.x;
+}
 
 
 // This version of "Draw Scope" is revised from the original in that it interleaves the erasure with the drawing

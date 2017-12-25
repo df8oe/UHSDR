@@ -164,18 +164,20 @@ typedef struct
     int16_t yraw_m2;
     int16_t focus_xprev;
     int16_t focus_yprev;
-    int32_t xraw_avgBuff;
-    int32_t yraw_avgBuff;
+    //int32_t xraw_avgBuff;
+    //int32_t yraw_avgBuff;
     int16_t hr_x;
     int16_t hr_y;
     uint16_t xraw_prev;
     uint16_t yraw_prev;
-#endif
-    int32_t cal[6];
+#else
     uint8_t x;
     uint8_t y;
-    bool present;
     uint8_t mirrored;
+#endif
+    int32_t cal[6];
+    bool present;
+
 } mchf_touchscreen_t;
 
 
