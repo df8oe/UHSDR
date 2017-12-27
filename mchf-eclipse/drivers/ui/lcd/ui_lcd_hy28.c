@@ -669,7 +669,7 @@ void UiLcdHy28_GpioInit(mchf_display_types_t display_type)
 DMA_HandleTypeDef DMA_Handle;
 
 
-inline void UiLcdHy28_SpiDmaStop()
+static inline void UiLcdHy28_SpiDmaStop()
 {
     while (DMA1_Stream4->CR & DMA_SxCR_EN) { asm(""); }
 }
@@ -714,7 +714,7 @@ inline void UiLcdHy28_SpiLcdCsDisable()
 {
     GPIO_SetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
-inline void UiLcdHy28_SpiLcdCsEnable()
+static inline void UiLcdHy28_SpiLcdCsEnable()
 {
     GPIO_ResetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
