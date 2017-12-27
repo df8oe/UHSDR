@@ -53,7 +53,7 @@ extern const char* author; */
  * @brief real user flash size of microprocessor (flash size - bootloader/config flash size)
  * @returns size of user flash in bytes
  */
-inline uint32_t flashIf_userFlashSize()  {  return ((STM32_GetFlashSize() - MCHF_FLASHRESERVED)*1024); }
+static inline uint32_t flashIf_userFlashSize()  {  return ((STM32_GetFlashSize() - MCHF_FLASHRESERVED)*1024); }
 
 
 /* Exported macros -----------------------------------------------------------*/

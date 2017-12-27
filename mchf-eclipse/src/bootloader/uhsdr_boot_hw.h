@@ -90,12 +90,12 @@ void mcHF_PowerOff();
 /*
  * Just toggles the PowerHold Pin, but does not stop execution
  */
-inline void mcHF_PowerHoldOff()
+static inline void mcHF_PowerHoldOff()
 {
     mchfBl_PinOn(PWR_HOLD);
 }
 
-inline void mcHF_PowerHoldOn()
+static inline void mcHF_PowerHoldOn()
 {
     mchfBl_PinOff(PWR_HOLD);
 }
