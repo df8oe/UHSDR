@@ -265,9 +265,8 @@ firmware:  $(FIRMWARE)
 	@echo "using \c"
 	$(CC) --version | grep gcc
 
-bootloader:  
+bootloader:  $(BOOTLOADER)
 	# compile the bootloader ARM-executables .bin / .elf and .dfu, generate .map 
-	$(BOOTLOADER)
 	@echo "using \c"
 	$(CC) --version | grep gcc
 
