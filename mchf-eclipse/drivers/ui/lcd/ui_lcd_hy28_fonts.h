@@ -24,9 +24,11 @@ typedef struct tFont
     uint16_t maxCode;
     uint8_t BitCount;
     uint8_t firstCode;
+#ifdef USE_8bit_FONT
     const uint16_t *offsetTable;
     const uint8_t *heightTable;
     const uint8_t *widthTable;
+#endif
 } sFONT;
 
 #endif //__UI_LCD_HY28_FONTS_H
