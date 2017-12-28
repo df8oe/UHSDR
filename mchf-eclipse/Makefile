@@ -257,15 +257,17 @@ help:
 .PHONY: all clean docs docs-clean help
 
 
-all: firmware $(TRX_ID).handbook
+all:  firmware $(TRX_ID).handbook
+	# compile the firmware ARM-executables .bin / .elf and .dfu, generate .map 
 
 firmware:  $(FIRMWARE) 
-	# compile the ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map 
+	# compile the firmware ARM-executables .bin / .elf and .dfu, generate .map 
 	@echo "using \c"
 	$(CC) --version | grep gcc
 
-bootloader: $(BOOTLOADER)
-	# compile the ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map 
+bootloader:  
+	# compile the bootloader ARM-executables .bin / .elf and .dfu, generate .map 
+	$(BOOTLOADER)
 	@echo "using \c"
 	$(CC) --version | grep gcc
 
@@ -293,14 +295,16 @@ $(TRX_ID).version:
 	@printf "Version %s.%s.%s%s\n" $(UHSDR_VER_MAJOR) $(UHSDR_VER_MINOR) $(UHSDR_VER_RELEASE) $(UHSDR_VER_TAINT)
 
 # cleaning rule
-clean-firmware:
+clean-firmware:  
+	# remove the firmware executables, map, dmp and all object files (.o) (except libs object files)
 	$(RM) $(call FixPath,$(OBJS))	
 	$(RM) $(call FixPath,$(FIRMWARE).elf)
 	$(RM) $(call FixPath,$(FIRMWARE).dfu)
 	$(RM) $(call FixPath,$(FIRMWARE).bin)
 	$(RM) $(call FixPath,$(FIRMWARE).map)
 
-clean-bootloader:
+clean-bootloader:  
+	# remove the bootloader executables, map, dmp and all object files (.o) (except libs object files)
 	$(RM) $(call FixPath,$(BL_OBJS))
 	$(RM) $(call FixPath,$(BL_HAL_OBJS))
 	$(RM) $(call FixPath,$(BOOTLOADER).elf)
@@ -308,10 +312,11 @@ clean-bootloader:
 	$(RM) $(call FixPath,$(BOOTLOADER).bin)
 	$(RM) $(call FixPath,$(BOOTLOADER).map)
 
-clean-libs:
+clean-libs:  
+	# remove libs object files (.o)
 	$(RM) $(call FixPath,$(DSPLIB_OBJS))
 	$(RM) $(call FixPath,$(HAL_OBJS))
-	
+
 
 clean:  clean-firmware clean-bootloader clean-libs
 	# remove the executables, map, dmp and all object files (.o)
