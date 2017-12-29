@@ -5262,356 +5262,240 @@ static void DrawCross(int16_t* coord,uint16_t color)
 
 #define ARM_MATH_MATRIX_CHECK
 #define Touch_ShowTestscreen
+
+static void UiDriver_TouchscreenCalibrationRun()
+{
+    UiLcdHy28_TouchscreenReadCoordinates();
+    ts.tp->state = TP_DATASETS_NONE;
+
+    int16_t cross[5][4] =
+    {
+            {      20,      20,0,0},
+            {MAX_X-20,      20,0,0},
+            {      20,MAX_Y-20,0,0},
+            {MAX_X-20,MAX_Y-20,0,0},
+            {MAX_X-20,MAX_Y-20,0,0},
+    };
+
+    //reset calibration coefficients before acquiring points
+    for(int16_t m=0; m<6; m++)
+    {
+        ts.tp->cal[m]=0;
+    }
+
+    ts.tp->cal[0]=65536;
+    ts.tp->cal[4]=65536;
+
+    for (int16_t idx = 0; idx < 5; idx++)
+    {
+        UiDriver_DoCrossCheck(cross[idx]);
+    }
+
+    //calibration algorithm based on publication:
+    //"Calibration in touch-screen systems" Texas Instruments
+    //Analog Applications Journal 3Q 2007
+
+    /*//test vectors
+    int16_t cross[0][4] = {     128,     384,1698,2258};
+    int16_t cross[1][4] = {      64,     192, 767,1149};
+    int16_t cross[2][4] = {     192,     192,2807,1327};
+    int16_t cross[3][4] = {     192,     576,2629,3367};
+    int16_t cross[4][4] = {      64,     576, 588,3189};*/
+
+    //matrices field definitions
+    float mA[3*5];
+    float mAT[3*5];
+    float mATAinv[3*3];
+    float mbuff[3*3];
+    float mcom[3*5];
+    float mX[5];
+    float mY[5];
+    float mABC[3];
+    float mDEF[3];
+
+    //matrix data init
+    for (int m=0; m < 5; m++)
+    {
+        mA[3*m+0]=cross[m][2];
+        mA[3*m+1]=cross[m][3];
+        mA[3*m+2]=1.0;
+        mX[m]= cross[m][0];
+        mY[m]= cross[m][1];
+    }
+
+    //create matrices instances
+    arm_matrix_instance_f32 m_A,m_AT,m_ATAinv,m_X,m_Y,m_ABC,m_DEF,m_buff,m_com;
+
+    //init of matrices
+    arm_mat_init_f32(&m_A,5,3,mA);
+    arm_mat_init_f32(&m_AT,3,5,mAT);
+    arm_mat_init_f32(&m_ATAinv,3,3,mATAinv);
+    arm_mat_init_f32(&m_X,5,1,mX);
+    arm_mat_init_f32(&m_Y,5,1,mY);
+    arm_mat_init_f32(&m_ABC,3,1,mABC);
+    arm_mat_init_f32(&m_DEF,3,1,mDEF);
+    arm_mat_init_f32(&m_buff,3,3,mbuff);
+    arm_mat_init_f32(&m_com,3,5,mcom);
+
+    //real computation
+    arm_mat_trans_f32(&m_A,&m_AT);           //A^T           size 5x3 -> 3x5
+    arm_mat_mult_f32(&m_AT,&m_A,&m_buff);        //A^T x A   size 3x5 * 5x3 -> 3x3
+    arm_mat_inverse_f32(&m_buff,&m_ATAinv);  //(A^T x A)^-1  size 3x3
+    arm_mat_mult_f32(&m_ATAinv,&m_AT,&m_com);//(A^T x A)^-1 x A^T   m_com is common matrix for estimating coefficients for X and Y      size 3x3 * 3x5 -> 3x5
+
+    arm_mat_mult_f32(&m_com,&m_X,&m_ABC);   //calculating the coefficients for X data    size 3x5 * 5x1  -> 3x1
+    arm_mat_mult_f32(&m_com,&m_Y,&m_DEF);   //calculating the coefficients for Y data    size 3x5 * 5x1  -> 3x1
+
+    //store cal parameters
+    for (int m=0; m < 3; m++)
+    {
+        ts.tp->cal[m]=mABC[m]*65536;
+        ts.tp->cal[m+3]=mDEF[m]*65536;
+    }
+}
+
 static bool UiDriver_TouchscreenCalibration()
 {
-
 	bool retval = false;
+
 #ifdef USE_HIRES_TOUCH
 
+    bool run_calibration = false;
 
-	//if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
-	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
-	{
+    const uint32_t clr_bg = Black;
+    const uint32_t clr_fg = White;
 
-		//wait for a moment to filter out some unwanted spikes
-		HAL_Delay(500);
-		if(!UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
-		{
-			return false;
-		}
+    //if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
+    if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
+    {
+        //wait for a moment to filter out some unwanted spikes
+        HAL_Delay(500);
+        if(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
+        {
 
-		uint32_t clr_fg, clr_bg;
-		clr_bg = Black;
-		clr_fg = White;
+            UiLcdHy28_LcdClear(clr_bg);
 
-		int16_t cross1[4] = {      20,      20,0,0};
-		int16_t cross2[4] = {MAX_X-20,      20,0,0};
-		int16_t cross3[4] = {      20,MAX_Y-20,0,0};
-		int16_t cross4[4] = {MAX_X-20,MAX_Y-20,0,0};
-		int16_t cross5[4] = { MAX_X/2, MAX_Y/2,0,0};
+            if (ts.tp->present)
+            {
+                // now do all of the warnings, blah, blah...
+                UiLcdHy28_PrintTextCentered(2,05,MAX_X-4,"TOUCH CALIBRATION",clr_fg,clr_bg,1);
+                UiLcdHy28_PrintTextCentered(2, 70, MAX_X-4, "If you don't want to do this\n"
+                        "press POWER button to start normally.\n"
+                        " Settings will be saved at POWEROFF"
+                        ,clr_fg,clr_bg,0);
 
-		//reset calibration coefficients before acquiring points
-		int16_t m;
-		for(m=0;m<6;m++)
-		{
-			ts.tp->cal[m]=0;
-		}
-		ts.tp->cal[0]=65536;
-		ts.tp->cal[4]=65536;
+                // delay a bit...
+                HAL_Delay(3000);
 
-		UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-		//											// now do all of the warnings, blah, blah...
-		UiLcdHy28_PrintTextCentered(2,05,MAX_X-4,"TOUCH CALIBRATION",clr_fg,clr_bg,1);
-		UiLcdHy28_PrintTextCentered(2, 70, MAX_X-4, "If you don't want to do this\n"
-				"press POWER button to start normally.\n"
-				" Settings will be saved at POWEROFF"
-				,clr_fg,clr_bg,0);
+                // add this for emphasis
+                UiLcdHy28_PrintTextCentered(2, 195, MAX_X-4, "Press BAND+ and BAND-\n"
+                        "to start calibration",clr_fg,clr_bg,0);
+
+                while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
+                {
+                    HAL_Delay(10);
+                }
 
 
+                if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
+                {
+                    UiLcdHy28_LcdClear(Black);							// clear the screen
+                    UiLcdHy28_PrintTextCentered(2,108,MAX_X-4,"      ...performing normal start...",White,Black,0);
+                    HAL_Delay(3000);
+                }
+                else
+                {
+                    run_calibration = true;
+                }
+            }
+            else
+            {
+                UiLcdHy28_PrintTextCentered(2,05,MAX_X-4,"TOUCHSCREEN ERROR",clr_fg,clr_bg,1);
+                UiLcdHy28_PrintTextCentered(2, 70, MAX_X-4, "A touchscreen press was detected\n"
+                        "but no touchscreen controller found\n"
+                        "Calibration cannot be executed!"
+                        ,clr_fg,clr_bg,0);
+                // delay a bit...
+                HAL_Delay(3000);
 
-		//
-		// On screen delay									// delay a bit...
-		HAL_Delay(3000);
-
-		// add this for emphasis
-		UiLcdHy28_PrintTextCentered(2, 195, MAX_X-4, "Press BAND+ and BAND-\n"
-				"to start calibration",clr_fg,clr_bg,0);
-
-		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
-		{
-			HAL_Delay(10);
-		}
-
-
-		if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
-		{
-			UiLcdHy28_LcdClear(Black);							// clear the screen
-			UiLcdHy28_PrintTextCentered(2,108,MAX_X-4,"      ...performing normal start...",White,Black,0);
-			HAL_Delay(3000);
-			retval = false;
-		}
-		else
-		{
-			UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-			UiLcdHy28_PrintTextCentered(2,70, MAX_X-4,
-					"On the next screen crosses will appear.\n"
-					"Touch as exact as you can on the middle\n"
-					"of each cross. After three valid\n"
-					"samples position of cross changes.\n"
-					"Repeat until the five test positions\n"
-					"are finished.",clr_fg,clr_bg,0);
-
-			UiLcdHy28_PrintTextCentered(2,195,MAX_X-4,"Touch at any position to start.",clr_fg,clr_bg,0);
-
-			while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
-			{
-				HAL_Delay(40);
-			}
-			UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-			UiLcdHy28_PrintTextCentered(2,100,MAX_X-4,"Wait one moment please...",Yellow,clr_bg,0);
-			HAL_Delay(1000);
-
-			UiLcdHy28_TouchscreenReadCoordinates();
-			ts.tp->state = TP_DATASETS_NONE;
-
-			UiDriver_DoCrossCheck(cross1);
-			UiDriver_DoCrossCheck(cross2);
-			UiDriver_DoCrossCheck(cross3);
-			UiDriver_DoCrossCheck(cross4);
-			UiDriver_DoCrossCheck(cross5);
-
-			//calibration algorithm based on publication:
-			//"Calibration in touch-screen systems" Texas Instruments
-			//Analog Applications Journal 3Q 2007
-
-			/*//test vectors
-				int16_t cross1[4] = {     128,     384,1698,2258};
-				int16_t cross2[4] = {      64,     192, 767,1149};
-				int16_t cross3[4] = {     192,     192,2807,1327};
-				int16_t cross4[4] = {     192,     576,2629,3367};
-				int16_t cross5[4] = {      64,     576, 588,3189};*/
-
-			//matrices field definitions
-			float mA[3*5];
-			float mAT[3*5];
-			float mATAinv[3*3];
-			float mbuff[3*3];
-			float mcom[3*5];
-			float mX[5];
-			float mY[5];
-			float mABC[3];
-			float mDEF[3];
-
-			//matrix data init
-			m=0;
-			mA[m++]=cross1[2]; mA[m++]=cross1[3]; mA[m++]=1.0;
-			mA[m++]=cross2[2]; mA[m++]=cross2[3]; mA[m++]=1.0;
-			mA[m++]=cross3[2]; mA[m++]=cross3[3]; mA[m++]=1.0;
-			mA[m++]=cross4[2]; mA[m++]=cross4[3]; mA[m++]=1.0;
-			mA[m++]=cross5[2]; mA[m++]=cross5[3]; mA[m++]=1.0;
-
-			m=0;
-			mX[m++]=cross1[0];
-			mX[m++]=cross2[0];
-			mX[m++]=cross3[0];
-			mX[m++]=cross4[0];
-			mX[m++]=cross5[0];
-
-			m=0;
-			mY[m++]=cross1[1];
-			mY[m++]=cross2[1];
-			mY[m++]=cross3[1];
-			mY[m++]=cross4[1];
-			mY[m++]=cross5[1];
-
-			//create matrices instances
-			arm_matrix_instance_f32 m_A,m_AT,m_ATAinv,m_X,m_Y,m_ABC,m_DEF,m_buff,m_com;
-
-			//init of matrices
-			arm_mat_init_f32(&m_A,5,3,mA);
-			arm_mat_init_f32(&m_AT,3,5,mAT);
-			arm_mat_init_f32(&m_ATAinv,3,3,mATAinv);
-			arm_mat_init_f32(&m_X,5,1,mX);
-			arm_mat_init_f32(&m_Y,5,1,mY);
-			arm_mat_init_f32(&m_ABC,3,1,mABC);
-			arm_mat_init_f32(&m_DEF,3,1,mDEF);
-			arm_mat_init_f32(&m_buff,3,3,mbuff);
-			arm_mat_init_f32(&m_com,3,5,mcom);
-
-			//real computation
-			arm_mat_trans_f32(&m_A,&m_AT);			 //A^T           size 5x3 -> 3x5
-			arm_mat_mult_f32(&m_AT,&m_A,&m_buff);		 //A^T x A   size 3x5 * 5x3 -> 3x3
-			arm_mat_inverse_f32(&m_buff,&m_ATAinv);  //(A^T x A)^-1  size 3x3
-			arm_mat_mult_f32(&m_ATAinv,&m_AT,&m_com);//(A^T x A)^-1 x A^T	m_com is common matrix for estimating coefficients for X and Y      size 3x3 * 3x5 -> 3x5
-
-			arm_mat_mult_f32(&m_com,&m_X,&m_ABC);	//calculating the coefficients for X data    size 3x5 * 5x1  -> 3x1
-			arm_mat_mult_f32(&m_com,&m_Y,&m_DEF);	//calculating the coefficients for Y data    size 3x5 * 5x1  -> 3x1
-
-			//store cal parameters
-			m=0;
-			ts.tp->cal[m++]=mABC[0]*65536;
-			ts.tp->cal[m++]=mABC[1]*65536;
-			ts.tp->cal[m++]=mABC[2]*65536;
-			ts.tp->cal[m++]=mDEF[0]*65536;
-			ts.tp->cal[m++]=mDEF[1]*65536;
-			ts.tp->cal[m++]=mDEF[2]*65536;
-
-			UiLcdHy28_LcdClear(clr_bg);
-#ifdef Touch_ShowTestscreen
-			UiLcdHy28_PrintTextCentered(2, 195, MAX_X-4, "Press BAND+ and BAND-\n"
-							"to run drawing on screen\n"
-					"or Power to save and reboot",clr_fg,clr_bg,0);
-
-			while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
-			{
-				HAL_Delay(10);
-			}
-
-			if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
-			{
-				UiLcdHy28_LcdClear(Black);							// clear the screen
-				UiLcdHy28_PrintTextCentered(2,108,MAX_X-4,"      ...performing normal start...",White,Black,0);
-				HAL_Delay(2000);
-				retval = true;
-			}
-			else
-			{
-				UiLcdHy28_LcdClear(clr_bg);
-				UiLcdHy28_PrintTextCentered(2, MAX_Y/2-8, MAX_X-4, "Test screen.\n"
-						"You can draw by pressing the screen.\n"
-									"Press Power to save and reboot",clr_fg,clr_bg,0);
-				while(1)
-				{
-					while((UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false) && (UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false))
-					{
-						HAL_Delay(40);
-					}
-
-					if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == true)
-						break;
-
-					if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
-					{
-						//			*xt_corr += (ts.tp->hr_x - cross[0]);
-						//			*yt_corr += (ts.tp->hr_y - cross[1]);
-						UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
-
-					}
-
-				}
-				UiLcdHy28_LcdClear(clr_bg);
-			}
-#endif
-			HAL_Delay(2000);
-			retval = true;
-			ts.menu_var_changed = true;
+            }
 		}
 	}
-#else
-	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
+
+	if (run_calibration)
 	{
+	    UiLcdHy28_LcdClear(clr_bg);
+	    UiLcdHy28_PrintTextCentered(2,70, MAX_X-4,
+	            "On the next screen crosses will appear.\n"
+	            "Touch as exact as you can on the middle\n"
+	            "of each cross. After three valid\n"
+	            "samples position of cross changes.\n"
+	            "Repeat until the five test positions\n"
+	            "are finished.",clr_fg,clr_bg,0);
 
-		uint32_t clr_fg, clr_bg;
-		clr_bg = Magenta;
-		clr_fg = White;
+	    UiLcdHy28_PrintTextCentered(2,195,MAX_X-4,"Touch at any position to start.",clr_fg,clr_bg,0);
 
-		char cross1[2] = {3,55};
-		char cross2[2] = {56,55};
-		char cross3[2] = {3,4};
-		char cross4[2] = {56,4};
-		char cross5[2] = {25,32};
+	    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
+	    {
+	        HAL_Delay(40);
+	    }
 
-		char x_corr[1], y_corr[1];
-		float diffx,diffy;
+	    UiLcdHy28_LcdClear(clr_bg);
+	    UiLcdHy28_PrintTextCentered(2,100,MAX_X-4,"Wait one moment please...",Yellow,clr_bg,0);
+	    HAL_Delay(1000);
 
-		*x_corr = 0;
-		*y_corr = 0;
+	    UiDriver_TouchscreenCalibrationRun();
 
-		UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-		//											// now do all of the warnings, blah, blah...
-		UiLcdHy28_PrintText(0,05,"  TOUCH CALIBRATION",clr_fg,clr_bg,1);
-		UiLcdHy28_PrintTextCentered(2, 70, 316, "If you don't want to do this\n"
-				"press POWER button to start normally.\n"
-				"press and hold BAND+ AND BAND-.\n"
-				" Settings will be saved at POWEROFF"
-				,clr_fg,clr_bg,0);
-		//
-		// On screen delay									// delay a bit...
-		HAL_Delay(5000);
+	    UiLcdHy28_LcdClear(clr_bg);
 
-		// add this for emphasis
-		UiLcdHy28_PrintTextCentered(2, 195, 316, "Press BAND+ and BAND-\n"
-				"to start calibration",clr_fg,clr_bg,0);
+#ifdef Touch_ShowTestscreen
+	    UiLcdHy28_PrintTextCentered(2, 195, MAX_X-4, "Press BAND+ and BAND-\n"
+	            "to run drawing on screen\n"
+	            "or Power to save and reboot",clr_fg,clr_bg,0);
 
-		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
-		{
-			HAL_Delay(10);
-		}
+	    while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
+	    {
+	        HAL_Delay(10);
+	    }
 
+	    if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
+	    {
+	        UiLcdHy28_LcdClear(Black);							// clear the screen
+	        UiLcdHy28_PrintTextCentered(2,108,MAX_X-4,"      ...performing normal start...",White,Black,0);
+	        HAL_Delay(2000);
+	        retval = true;
+	    }
+	    else
+	    {
+	        UiLcdHy28_LcdClear(clr_bg);
+	        UiLcdHy28_PrintTextCentered(2, MAX_Y/2-8, MAX_X-4, "Test screen.\n"
+	                "You can draw by pressing the screen.\n"
+	                "Press Power to save and reboot",clr_fg,clr_bg,0);
+	        while(1)
+	        {
+	            while((UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false) && (UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false))
+	            {
+	                HAL_Delay(40);
+	            }
 
-		if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
-		{
-			UiLcdHy28_LcdClear(Black);							// clear the screen
-			UiLcdHy28_PrintText(2,108,"      ...performing normal start...",White,Black,0);
-			HAL_Delay(3000);
-			retval = false;
-		}
-		else
-		{
-			UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-			UiLcdHy28_PrintTextCentered(2,70, 316,
-					"On the next screen crosses will appear.\n"
-					"Touch as exact as you can on the middle\n"
-					"of each cross. After three valid\n"
-					"samples position of cross changes.\n"
-					"Repeat until the five test positions\n"
-					"are finished.",clr_fg,clr_bg,0);
+	            if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == true)
+	                break;
 
-			UiLcdHy28_PrintText(35,195,"Touch at any position to start.",clr_fg,clr_bg,0);
+	            if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
+	            {
+	                //			*xt_corr += (ts.tp->hr_x - cross[0]);
+	                //			*yt_corr += (ts.tp->hr_y - cross[1]);
+	                UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
 
-			while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
-			{
-				HAL_Delay(40);
-			}
-			UiLcdHy28_TouchscreenReadCoordinates();
-			ts.tp->state = TP_DATASETS_NONE;
+	            }
 
-			UiLcdHy28_LcdClear(clr_bg);							// clear the screen
-			UiLcdHy28_PrintText(10,10,"+",clr_fg,clr_bg,1);
-
-
-			UiDriver_DoCrossCheck(cross1, x_corr, y_corr);
-
-			UiLcdHy28_LcdClear(clr_bg);
-			clr_fg = White;
-			UiLcdHy28_PrintText(10,10,"                  +",clr_fg,clr_bg,1);
-
-			//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/3, *y_corr/3);
-			//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
-
-			UiDriver_DoCrossCheck(cross2, x_corr, y_corr);
-
-			UiLcdHy28_LcdClear(clr_bg);
-			clr_fg = White;
-			UiLcdHy28_PrintText(10,210,"+",clr_fg,clr_bg,1);
-
-			//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/6, *y_corr/6);
-			//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
-
-			UiDriver_DoCrossCheck(cross3, x_corr, y_corr);
-
-			UiLcdHy28_LcdClear(clr_bg);
-			clr_fg = White;
-			UiLcdHy28_PrintText(10,210,"                  +",clr_fg,clr_bg,1);
-
-			//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/9, *y_corr/9);
-			//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
-
-			UiDriver_DoCrossCheck(cross4, x_corr, y_corr);
-
-			UiLcdHy28_LcdClear(clr_bg);
-			clr_fg = White;
-			UiLcdHy28_PrintText(10,110,"         +",clr_fg,clr_bg,1);
-
-			//    sprintf(txt_buf,"temp_corr is  : %d/%d", *x_corr/12, *y_corr/12);
-			//    UiLcdHy28_PrintText(10,140,txt_buf,clr_fg,clr_bg,0);
-
-			UiDriver_DoCrossCheck(cross5, x_corr, y_corr);
-
-			diffx = roundf(*x_corr / 15);
-			diffy = roundf(*y_corr / 15);
-			*x_corr = diffx;
-			*y_corr = diffy;
-
-			UiLcdHy28_LcdClear(clr_bg);
-
-			//    sprintf(txt_buf,"correction is  : %d/%d", *x_corr, *y_corr);
-			//    UiLcdHy28_PrintText(10,55,txt_buf,clr_fg,clr_bg,0);
-
-			HAL_Delay(4000);
-			retval = true;
-			ts.menu_var_changed = true;
-		}
+	        }
+	        UiLcdHy28_LcdClear(clr_bg);
+	    }
+#endif
+	    HAL_Delay(2000);
+	    retval = true;
+	    ts.menu_var_changed = true;
 	}
 #endif
 	return retval;
@@ -5678,52 +5562,8 @@ void UiDriver_DoCrossCheck(int16_t cross[])
 
 	HAL_Delay(2000);
 }
-
-
-
-
-#else
-void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr)
-{
-	uint32_t clr_fg, clr_bg;
-	char txt_buf[40];
-	uchar datavalid = 0, samples = 0;
-
-	clr_bg = Magenta;
-	clr_fg = White;
-
-	do
-	{
-		while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
-		{
-			HAL_Delay(40);
-		}
-
-		if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
-		{
-			if(abs(ts.tp->x - cross[0]) < 4 && abs(ts.tp->y - cross[1]) < 4)
-			{
-				datavalid++;
-				*xt_corr += (ts.tp->x - cross[0]);
-				*yt_corr += (ts.tp->y - cross[1]);
-				clr_fg = Green;
-				snprintf(txt_buf,40,"Try (%d) error: x = %+d / y = %+d       ",datavalid,ts.tp->x-cross[0],ts.tp->y-cross[1]);	//show misajustments
-			}
-			else
-			{
-				clr_fg = Red;
-				snprintf(txt_buf,40,"Try (%d) BIG error: x = %+d / y = %+d",samples,ts.tp->x-cross[0],ts.tp->y-cross[1]);	//show misajustments
-			}
-			samples++;
-			UiLcdHy28_PrintText(10,70,txt_buf,clr_fg,clr_bg,0);
-			ts.tp->state = TP_DATASETS_PROCESSED;
-		}
-	}
-	while(datavalid < 3);
-
-	HAL_Delay(4000);
-}
 #endif
+
 static uint16_t startUpScreen_nextLineY;
 static bool startUpError = false;
 
