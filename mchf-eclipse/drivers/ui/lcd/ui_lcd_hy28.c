@@ -21,7 +21,7 @@
 
 #include "ui_lcd_hy28_fonts.h"
 #include "ui_lcd_hy28.h"
-
+#include "profiling.h"
 
 
 #define USE_SPI_DMA
@@ -578,7 +578,7 @@ void UiLcdHy28_BacklightEnable(bool on)
 #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_4)
 #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_2)
 	#ifdef USE_HIRES_TOUCH
-		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_64)
+		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_32)
 	#else
 		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_32)
 	#endif
@@ -588,7 +588,7 @@ void UiLcdHy28_BacklightEnable(bool on)
 #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
 #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
 	#ifdef USE_HIRES_TOUCH
-		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_128)
+		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_64)
 	#else
 		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_64)
 	#endif
@@ -2319,7 +2319,62 @@ static inline void UiLcdHy28_TouchscreenFinishSpiTransfer()
 #define XPT2046_CH_DFR_X    0x10
 #define XPT2046_CONV_START  0x80
 
-#define  XPT2046_COMMAND_LEN 7
+//#define  XPT2046_COMMAND_LEN 7
+#define  XPT2046_COMMAND_LEN 9
+static void UiLcdHy28_delay_us(uint32_t us)
+{
+	uint32_t tp=us*SystemCoreClock/2000000;
+	profileTimedEventInit();
+
+	while(profileCycleCount_get()<tp);
+}
+
+static void UiLcdHy28_TouchscreenReadData(uint16_t* x_p,uint16_t* y_p)
+{
+
+	UiLcdHy28_TouchscreenFinishSpiTransfer();
+	UiLcdHy28_delay_us(3);
+
+    static const uint8_t xpt2046_command[XPT2046_COMMAND_LEN] =
+    {
+            XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT|XPT2046_PD_REF, 0,0, // the measurement for first command is here, we discard this
+			XPT2046_CONV_START|XPT2046_CH_DFR_Y|XPT2046_MODE_12BIT|XPT2046_PD_REF, 0,0, // y measurement from previous command, next command turns off power
+            XPT2046_CONV_START|XPT2046_CH_DFR_X|XPT2046_MODE_12BIT|XPT2046_PD_FULL,0,0}; // x measurement from previous command
+
+
+    uint8_t xpt_response[XPT2046_COMMAND_LEN];
+
+    UiLcdHy28_TouchscreenStartSpiTransfer();
+    UiLcdHy28_delay_us(2);
+
+    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)&xpt2046_command[0], &xpt_response[0],1,10);
+    UiLcdHy28_SpiFinishTransfer();
+    UiLcdHy28_delay_us(2);
+
+    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)&xpt2046_command[1], &xpt_response[1],2,10);
+    UiLcdHy28_SpiFinishTransfer();
+    UiLcdHy28_delay_us(1);
+
+    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)&xpt2046_command[3], &xpt_response[3],1,10);
+    UiLcdHy28_SpiFinishTransfer();
+    UiLcdHy28_delay_us(2);
+
+    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)&xpt2046_command[4], &xpt_response[4],2,10);
+    UiLcdHy28_SpiFinishTransfer();
+    UiLcdHy28_delay_us(1);
+
+    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)&xpt2046_command[6], &xpt_response[6],1,10);
+    UiLcdHy28_SpiFinishTransfer();
+    UiLcdHy28_delay_us(2);
+
+    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)&xpt2046_command[7], &xpt_response[7],2,10);
+    UiLcdHy28_TouchscreenFinishSpiTransfer();
+
+    *x_p = (xpt_response[7] << 8 | xpt_response[8]) >> 3;
+    *y_p = (xpt_response[4] << 8 | xpt_response[5]) >> 3;
+
+}
+/*		//old but nice Danilos function
 
 static void UiLcdHy28_TouchscreenReadData(uint16_t* x_p,uint16_t* y_p)
 {
@@ -2345,6 +2400,8 @@ static void UiLcdHy28_TouchscreenReadData(uint16_t* x_p,uint16_t* y_p)
     *y_p = (xpt_response[3] << 8 | xpt_response[4]) >> 3;
 
 }
+
+ */
 #ifndef USE_HIRES_TOUCH
 const uint8_t touchscreentable [] = { 0x07, 0x09,
         0x0c, 0x0d, 0x0e, 0x0f, 0x12, 0x13, 0x14, 0x15, 0x16, 0x18,
