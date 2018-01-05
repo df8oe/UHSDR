@@ -278,7 +278,8 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
     {
 	profileTimedEventStart(ProfileTP8);
 
-	  spectral_noise_reduction(inputsamples);
+	// spectral_noise_reduction_2(inputsamples);
+	spectral_noise_reduction(inputsamples);
 
         profileTimedEventStop(ProfileTP8);
     }
@@ -308,6 +309,9 @@ int NR_FFT_LOOP_NO = 2;
 //#define NR_WINDOW_SIN2
 //#define NR_WINDOW_SIN4
 #define NR_WINDOW_HANN_CONST
+
+
+#if 1
 
 void spectral_noise_reduction (float* in_buffer)
 {
@@ -395,26 +399,66 @@ void spectral_noise_reduction (float* in_buffer)
 	  0.1152168405, 0.0998979008, 0.0855580779, 0.0722324638, 0.0599536686, 0.0487517405, 0.0386540925, 0.0296854352,
 	  0.0218677165, 0.0152200676, 0.0097587564, 0.0054971478, 0.0024456704, 0.0006117919, 0};
 
+const float32_t SQRT_van_hann[128]= {0.000000000, 0.024734427, 0.04945372, 0.074142753, 0.098786418, 0.123369638, 0.14787737, 0.172294617,
+	      0.196606441, 0.220797963, 0.244854382, 0.268760979, 0.292503125, 0.316066292, 0.339436063, 0.362598137,
+	      0.385538344, 0.408242645, 0.430697148, 0.452888114, 0.474801964, 0.49642529, 0.51774486, 0.53874763,
+	      0.559420747, 0.579751564, 0.599727639, 0.619336749, 0.638566896, 0.657406313, 0.675843473, 0.693867094,
+	      0.711466148, 0.728629866, 0.745347746, 0.761609559, 0.777405353, 0.792725465, 0.807560519, 0.821901439,
+	      0.835739449, 0.849066083, 0.861873185, 0.874152919, 0.885897772, 0.897100557, 0.907754419, 0.91785284,
+	      0.927389639, 0.936358983, 0.944755382, 0.952573698, 0.959809149, 0.966457306, 0.972514103, 0.977975832,
+	      0.982839151, 0.987101086, 0.990759028, 0.993810738, 0.996254351, 0.99808837, 0.999311673, 0.999923511,
+	      0.999923511, 0.999311673, 0.99808837, 0.996254351, 0.993810738, 0.990759028, 0.987101086, 0.982839151,
+	      0.977975832, 0.972514103, 0.966457306, 0.959809149, 0.952573698, 0.944755382, 0.936358983, 0.927389639,
+	      0.91785284, 0.907754419, 0.897100557, 0.885897772, 0.874152919, 0.861873185, 0.849066083, 0.835739449,
+	      0.821901439, 0.807560519, 0.792725465, 0.777405353, 0.761609559, 0.745347746, 0.728629866, 0.711466148,
+	      0.693867094, 0.675843473, 0.657406313, 0.638566896, 0.619336749, 0.599727639, 0.579751564, 0.559420747,
+	      0.53874763, 0.51774486, 0.49642529, 0.474801964, 0.452888114, 0.430697148, 0.408242645, 0.385538344,
+	      0.362598137, 0.339436063, 0.316066292, 0.292503125, 0.268760979, 0.244854382, 0.220797963, 0.196606441,
+	      0.172294617, 0.14787737, 0.123369638, 0.098786418, 0.074142753, 0.04945372, 0.024734427, 0.00000000};
+
+
 uint8_t zero_cross_count=0;
 bool  VAD_ZCR, VAD_EN, VAD_E_Z;
 float32_t VAD_E,VAD_energy_ratio;
-
+static uint8_t NR_init_counter = 0;
+uint8_t VAD_low=0;
+uint8_t VAD_high=63;
+float32_t NR_temp_sum = 0.0;
+float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+float32_t offset = FilterPathInfo[ts.filter_path].offset;
+float32_t lf_freq = (offset - width/2) / (12000 / NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
+float32_t uf_freq = (offset + width/2) / (12000 / NR_FFT_L);
 
     if(ts.nr_first_time == 1)
     { // TODO: properly initialize all the variables
         for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
         {
+          if (ts.nr_mode==0)
+           {
             NR.last_sample_buffer_L[bindx] = 20.0;
-            NR.Hk_old[bindx] = 0.1; // old gain
+            NR.Hk_old[bindx] = 0.1; // old gain or xu in development mode
             NR.Nest[bindx][0] = 50000.0;
             NR.Nest[bindx][1] = 40000.0;
             NR2.X[bindx][1] = 15000.0;
             NR.SNR_post[bindx] = 2.0;
             NR.SNR_prio[bindx] = 1.0;
-            ts.nr_first_time = 2;
-            //NR_long_tone_counter[bindx] = 0;
-  //          arm_rfft_fast_init_f32(&fftInstance, 128);
+
+           }
+          else  //development mode
+            {
+              NR.last_sample_buffer_L[bindx] = 0.0;
+              NR.Hk[bindx] = 1.0;
+			//xu[bindx] = 1.0;  //has to be replaced by other variable
+              NR.Hk_old[bindx] = 1.0; // old gain or xu in development mode
+	      NR.Nest[bindx][0] = 0.0;
+	      NR.Nest[bindx][1] = 1.0;
+	      //NR2.X[bindx][1] = 0.0;
+	      //NR.SNR_post[bindx] = 1.0;
+	      //NR.SNR_prio[bindx] = 1.0;
+
+            }
         }
+	ts.nr_first_time = 2; // we need to do some more a bit later down
     }
 
     if(ts.nr_long_tone_reset)
@@ -462,7 +506,10 @@ float32_t VAD_E,VAD_energy_ratio;
 
           for (int idx = 0; idx < NR_FFT_L; idx++)
               {
-                NR.FFT_buffer[idx * 2] *= v_hann_window[idx];
+              if (ts.nr_mode==0)
+        	NR.FFT_buffer[idx * 2] *= v_hann_window[idx];
+              else
+        	NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
               }
 
     #endif
@@ -510,13 +557,35 @@ float32_t VAD_E,VAD_energy_ratio;
 #endif
 
 #ifndef NR_NOTCHTEST
-//              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
-//                    {
-//                        // this is magnitude for the current frame
-//                        NR2.X[bindx][0] = sqrtf(NR.FFT_buffer[bindx * 2] * NR.FFT_buffer[bindx * 2] + NR.FFT_buffer[bindx * 2 + 1] * NR.FFT_buffer[bindx * 2 + 1]);
-//                    }
+              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+                    {
+                        // this is magnitude for the current frame
+                  if (ts.nr_mode==0)
+                    NR2.X[bindx][0] = sqrtf(NR.FFT_buffer[bindx * 2] * NR.FFT_buffer[bindx * 2] + NR.FFT_buffer[bindx * 2 + 1] * NR.FFT_buffer[bindx * 2 + 1]);
+                  else   //here we need only the squared magnitude
+                    NR2.X[bindx][0] = (NR.FFT_buffer[bindx * 2] * NR.FFT_buffer[bindx * 2] + NR.FFT_buffer[bindx * 2 + 1] * NR.FFT_buffer[bindx * 2 + 1]);
+                    }
 
-  	  arm_cmplx_mag_f32(&NR.FFT_buffer[0],&NR2.X[0][0],NR_FFT_L/2);
+   if(ts.nr_first_time == 2)
+      { // TODO: properly initialize all the variables
+		if (ts.nr_mode==1)
+		{
+		 for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+                  {
+                	  NR.Nest[bindx][0] = NR.Nest[bindx][0] + 0.05* NR2.X[bindx][0];// we do it 20 times to average over 20 frames for app. 100ms only on NR_on/bandswitch/modeswitch,...
+                  }
+		 NR_init_counter++;
+		 if (NR_init_counter > 19)//average over 20 frames for app. 100ms
+		     {
+			  NR_init_counter = 0;
+			  ts.nr_first_time = 3;  // now we did all the necessary initialization to actually start the noise reduction
+		     }
+		}
+		else ts.nr_first_time = 3;
+
+      }
+   if (ts.nr_first_time == 3)
+     {
 
               if((ts.dsp_active & DSP_NOTCH_ENABLE))
               {
@@ -527,21 +596,36 @@ float32_t VAD_E,VAD_energy_ratio;
             	  	  	NR2.long_tone[bindx][1] = NR2.long_tone[bindx][0];
                     }
               }
+
+      if (ts.nr_mode == 1) // in development mode we start here with the calculation of the SNRs
+	{
+	        // 3    calculate gamma (SNRpost)
+	  	//      and also xi (SNRprio)
+	  	  for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+	             {
+	               NR.SNR_post[bindx] = fmax(fmin(NR2.X[bindx][0] / NR.Nest[bindx][0],1000.0),0.001); // limited to +30 /-30 dB, might be still too much of reduction, let's try it?
+
+	               NR.SNR_prio[bindx] = fmax(ts.nr_alpha * NR.Hk_old[bindx] + (1.0 - ts.nr_alpha)*fmax(NR.SNR_post[bindx]-1.0,0.0),0.0);
+	             }
+
+	}
+
+
               // 2b.) voice activity detector
               // we restrict the calculation of the VAD to the bins in the filter bandwidth
-                  float32_t NR_temp_sum = 0.0;
-                  float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-                  float32_t offset = FilterPathInfo[ts.filter_path].offset;
+              //    float32_t NR_temp_sum = 0.0;
+              //    float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+              //    float32_t offset = FilterPathInfo[ts.filter_path].offset;
 
                   if (offset == 0)
                   {
                       offset = width/2;
                   }
 
-                  float32_t lf_freq = (offset - width/2) / (12000 / NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
-                  float32_t uf_freq = (offset + width/2) / (12000 / NR_FFT_L);
-                  int VAD_low = (int)lf_freq;
-                  int VAD_high = (int)uf_freq;
+                 // float32_t lf_freq = (offset - width/2) / (12000 / NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
+                 // float32_t uf_freq = (offset + width/2) / (12000 / NR_FFT_L);
+                  VAD_low = (int)lf_freq;
+                  VAD_high = (int)uf_freq;
                   if(VAD_low == VAD_high)
                   {
                 	  VAD_high++;
@@ -567,6 +651,9 @@ float32_t VAD_E,VAD_energy_ratio;
 
 // ******* alternative VAD trials
 
+if (ts.nr_mode == 0) //mode "0" is the older version
+  {
+
 	      zero_cross_count=0;
 	      for (int i = 1; i < NR_FFT_L/2; i++)
 	      {
@@ -591,13 +678,16 @@ float32_t VAD_E,VAD_energy_ratio;
 
 	      for(int bindx = VAD_low; bindx < VAD_high; bindx++)
 		  {
-	    	  VAD_E = VAD_E + NR2.X[bindx][0];
+	    	  if (ts.nr_mode == 0) //if mode=1, we need to take the squareroot to have the same performance - will later e fixed
+		   VAD_E = VAD_E + NR2.X[bindx][0];
+	    	  else
+	    	   VAD_E = VAD_E + sqrtf(NR2.X[bindx][0]);
 		  }
 
 	      VAD_energy_ratio = VAD_E / (VAD_high-VAD_low);
 
 	      if (VAD_energy_ratio > (350 * ts.nr_vad_thresh)) //ts.nr_vad_thresh is per default 1000/1000!!!
-    	  {
+    	      {
 	      		  VAD_EN=true;
 	      		//Board_RedLed(LED_STATE_OFF);
 
@@ -622,6 +712,7 @@ float32_t VAD_E,VAD_energy_ratio;
 
 
 // ******* end of alternative VAD trials
+	float32_t NR_VAD_temp;
 
                   for(int bindx = VAD_low; bindx < VAD_high; bindx++) // try 128:
                   {
@@ -631,7 +722,7 @@ float32_t VAD_E,VAD_energy_ratio;
                       NR_temp_sum += (NR2.X[bindx][0] * NR2.X[bindx][0]/ (D_squared) ); // try without log
                   }
                   NR.VAD = NR_temp_sum / (VAD_high - VAD_low);
-                  float32_t NR_VAD_temp;
+                  //float32_t NR_VAD_temp;
                   if(NR2.VAD_type == 0)
                 	  {
                 	  	  NR_VAD_temp = NR.VAD;
@@ -643,6 +734,7 @@ float32_t VAD_E,VAD_energy_ratio;
                   }
                   else
                   if(NR2.VAD_type == 2)
+
                   {
                     if (VAD_E_Z == true)
                     {
@@ -654,7 +746,8 @@ float32_t VAD_E,VAD_energy_ratio;
                     }
                   }
 
-                      if((NR_VAD_temp < ts.nr_vad_thresh) || ts.nr_first_time == 2)
+
+         if((NR_VAD_temp < ts.nr_vad_thresh) || ts.nr_first_time == 2)
                       { // VAD has detected NOISE
 							  // noise estimation with exponential averager
 							 NR2.VAD_duration=0;
@@ -664,10 +757,17 @@ float32_t VAD_E,VAD_energy_ratio;
 						   {
 							 for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
 									{   // exponential averager for current noise estimate
-										  NR.Nest[bindx][0] = (1.0 - ts.nr_beta) * NR2.X[bindx][0] + ts.nr_beta * NR.Nest[bindx][1]; //
-										  NR.Nest[bindx][1] = NR.Nest[bindx][0];
+										if (ts.nr_mode == 0)
+										  {
+										   NR.Nest[bindx][0] = (1.0 - ts.nr_beta) * NR2.X[bindx][0] + ts.nr_beta * NR.Nest[bindx][1]; //
+										   NR.Nest[bindx][1] = NR.Nest[bindx][0];
+										  }
+										else
+										  {
+										    NR.Nest[bindx][0] = NR.Nest[bindx][0] * ts.nr_beta + (1.0 - ts.nr_beta) * NR2.X[bindx][0]; //already squared!
+										  }
 									}
-							 ts.nr_first_time = 0;
+
 							 Board_RedLed(LED_STATE_OFF);
 						   }
 						 else // we wait a little until the last vowel has vanished
@@ -697,7 +797,17 @@ float32_t VAD_E,VAD_energy_ratio;
 										  NR.Nest[bindx][0] = NR2.X[bindx][0] * 1.2; //
 										  NR.Nest[bindx][1] = NR.Nest[bindx][0];
 									}
+
+
+
+
+
                       }
+
+
+
+
+
 
 
         // 3    calculate SNRpost (n, bin[i]) = (X(n, bin[i])^2 / Nest(n, bin[i])^2) - 1 (eq. 13 of Schmitt et al. 2002)
@@ -747,6 +857,56 @@ float32_t VAD_E,VAD_energy_ratio;
                         NR.Hk_old[bindx] = NR.Hk[bindx];
                         NR2.X[bindx][1] = NR2.X[bindx][0];
                     }
+  }
+
+else  //new mode under development,  following the same equations, sligthly different implemented
+  {
+
+	// ***** Starting with the voice activity detection **************
+	float32_t frame_speech=0.0;
+  	  for(int bindx = VAD_low; bindx < VAD_high; bindx++) // maybe we should limit this to the signal containing bins (filtering!!)
+  	     {
+  	        frame_speech = frame_speech + (NR.SNR_post[bindx] * NR.SNR_prio[bindx]/(1.0 + NR.SNR_prio[bindx]))
+												- logf(1.0 + NR.SNR_prio[bindx]);  // looks like we had a similar one  before, Frank?? ?
+
+  	     }
+
+  	  if (frame_speech < (0.15 * (VAD_high - VAD_low + 1.0)))// then we have noise!!!!
+
+  	    {
+  	    Board_RedLed(LED_STATE_OFF); //Noise!
+  	    for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)  //update the noise estimate
+  	      	     {
+  	      	         NR.Nest[bindx][0] = ts.nr_beta * NR.Nest[bindx][0] + (1.0 - ts.nr_beta) * NR2.X[bindx][0];
+  	      	     }
+  	    }
+  	  else
+  	    {
+  	    Board_RedLed(LED_STATE_ON);//Speech!
+  	    }
+
+
+  	  // 4    calculate v = SNRprio(n, bin[i]) / (SNRprio(n, bin[i]) + 1) * SNRpost(n, bin[i]) (eq. 12 of Schmitt et al. 2002, eq. 9 of Romanin et al. 2009)
+     //		   and calculate the HK's
+
+  	for(int bindx = VAD_low; bindx < VAD_high; bindx++)// maybe we should limit this to the signal containing bins (filtering!!)
+  	   {
+  	      float32_t v = NR.SNR_prio[bindx] * NR.SNR_post[bindx] / (1.0 + NR.SNR_prio[bindx]);
+
+  	      NR.Hk[bindx] = 1.0 / NR.SNR_post[bindx] * sqrtf((0.7212 * v + v * v));
+
+  	      NR.Hk_old[bindx] = NR.SNR_post[bindx] * NR.Hk[bindx] * NR.Hk[bindx]; //
+
+
+	      if(!(ts.dsp_active & DSP_NR_ENABLE)) // if NR is not enabled (but notch is enabled !)
+	      {
+		      NR.Hk[bindx] = 1.0;
+	      }
+
+  	   }
+  }
+
+
 
 #ifdef OLD_LONG_TONE_DETECTION
               if((ts.dsp_active & DSP_NOTCH_ENABLE))
@@ -904,6 +1064,10 @@ float32_t VAD_E,VAD_energy_ratio;
 // we hear considerable distortion in the end result
 // this can be healed significantly by frequency smoothing the gain values
 // this is a trial for smoothing among the gain values
+
+//remark: if we smooth the gains and really modify the HK's like here, the noise reduction algorithm might directly "fight" against this!
+// might be better to keep the HK's internaly and smooth a copy of the gains which are than working on the signal.
+
 				  for(int bindx = 1; bindx < (NR_FFT_L / 2) - 1; bindx++)
 				  {
 					  NR.Hk[bindx] = ts.nr_gain_smooth_alpha * NR.Hk[bindx - 1] + (1.0 - 2.0 * ts.nr_gain_smooth_alpha) * NR.Hk[bindx] + ts.nr_gain_smooth_alpha * NR.Hk[bindx + 1];
@@ -912,6 +1076,11 @@ float32_t VAD_E,VAD_energy_ratio;
 				  NR.Hk[0] = (1.0 - ts.nr_gain_smooth_alpha) * NR.Hk[0] + ts.nr_gain_smooth_alpha * NR.Hk[1];
 				  NR.Hk[(NR_FFT_L / 2) - 1] = (1.0 - ts.nr_gain_smooth_alpha) * NR.Hk[(NR_FFT_L / 2) - 1] + ts.nr_gain_smooth_alpha * NR.Hk[(NR_FFT_L / 2) - 2];
               }
+
+	}	//end of "if ts.nr_first_time == 3"
+
+
+
 #if 1
         // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 64 bins with the 64 bin-specific gain factors
               // only do this for the bins inside the filter passband
@@ -1023,6 +1192,16 @@ float32_t VAD_E,VAD_energy_ratio;
   	  arm_cfft_f32(&arm_cfft_sR_f32_len128, NR.FFT_buffer, 1, 1);
 #endif
 
+// Window on exit!
+  	for (int idx = 0; idx < NR_FFT_L; idx++)
+  	  {
+  	    NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
+	  }
+
+
+
+
+
     // do the overlap & add
           for(int i = 0; i < NR_FFT_L / 2; i++)
           { // take real part of first half of current iFFT result and add to 2nd half of last iFFT_result
@@ -1042,6 +1221,345 @@ float32_t VAD_E,VAD_energy_ratio;
     arm_biquad_cascade_df1_f32 (&NR_notch_biquad, in_buffer, in_buffer, NR_FFT_L);
 }
 
+#endif
+
+
+#if 0
+void spectral_noise_reduction_2 (float* in_buffer)
+{
+
+//  arm_rfft_fast_instance_f32 fftInstance;
+
+
+
+// Frank DD4WH & Michael DL2FW, November 2017
+// NOISE REDUCTION BASED ON SPECTRAL SUBTRACTION
+// following Romanin et al. 2009 on the basis of Ephraim & Malah 1984 and Hu et al. 2001
+// detailed technical description of the implemented algorithm
+// can be found in our WIKI
+// https://github.com/df8oe/UHSDR/wiki/Noise-reduction
+//
+// half-overlapping input buffers (= overlap 50%)
+// Hann window on 128 samples
+// FFT128 - inverse FFT128
+// overlap-add
+
+
+  static float32_t  	xu[NR_FFT_L/2];
+//  float32_t	  	xi[NR_FFT_L/2];
+//  float32_t	  	gami[NR_FFT_L/2];
+  //static float32_t  	dpi[NR_FFT_L/2];
+  //static float32_t	last_iFFT_result [NR_FFT_L / 2];
+  //static float32_t 	last_sample_buffer_L [NR_FFT_L / 2];
+  //float32_t	 	Hk[NR_FFT_L / 2]; // gain factors
+ // static float32_t 	FFT_buffer[NR_FFT_L * 2];
+//  float32_t 		X[NR_FFT_L / 2];
+
+  float32_t frame_speach=0.0;
+  float32_t v=0.0;
+  uint8_t zero_cross_count=0;
+  uint8_t VAD_low=0;
+  uint8_t VAD_high=63;
+  static uint8_t NR_init_counter = 0;
+  //bool  VAD_ZCR;
+  //bool  VAD_EN, VAD_E_Z;
+  //float32_t VAD_E,VAD_energy_ratio;
+
+	  const float32_t v_hann_window[128]= {0 , 0.0006117919, 0.0024456704, 0.0054971478, 0.0097587564 ,0.0152200676, 0.0218677165, 0.0296854352, 0.0386540925,
+	  0.0487517405, 0.0599536686, 0.0722324638 ,0.0855580779, 0.0998979008, 0.1152168405, 0.1314774092, 0.1486398144,
+	  0.1666620568 ,0.1855000331, 0.2051076434, 0.2254369048, 0.2464380681, 0.2680597399, 0.2902490084, 0.3129515727,
+	  0.3361118759, 0.3596732407, 0.3835780087, 0.4077676808, 0.4321830608, 0.4567644003, 0.4814515445, 0.5061840798,
+	  0.5309014817, 0.5555432625, 0.5800491196, 0.6043590832, 0.6284136625, 0.6521539921, 0.6755219754, 0.698460427,
+	  0.7209132127, 0.7428253867, 0.7641433263, 0.7848148629, 0.8047894099, 0.8240180861, 0.8424538357, 0.8600515434,
+	  0.8767681446, 0.8925627311, 0.9073966507, 0.9212336025, 0.9340397251, 0.9457836798, 0.956436727, 0.9659727972,
+	  0.9743685538, 0.981603451, 0.987659784, 0.9925227317, 0.9961803937, 0.9986238192, 0.9998470286, 0.9998470286,
+	  0.9986238192, 0.9961803937, 0.9925227317, 0.987659784, 0.981603451, 0.9743685538, 0.9659727972, 0.956436727,
+	  0.9457836798, 0.9340397251, 0.9212336025, 0.9073966507, 0.8925627311, 0.8767681446, 0.8600515434, 0.8424538357,
+	  0.8240180861, 0.8047894099, 0.7848148629, 0.7641433263, 0.7428253867, 0.7209132127, 0.698460427, 0.6755219754,
+	  0.6521539921, 0.6284136625, 0.6043590832, 0.5800491196, 0.5555432625, 0.5309014817, 0.5061840798, 0.4814515445,
+	  0.4567644003, 0.4321830608, 0.4077676808, 0.3835780087, 0.3596732407, 0.3361118759, 0.3129515727, 0.2902490084,
+	  0.2680597399, 0.2464380681, 0.2254369048, 0.2051076434, 0.1855000331, 0.1666620568, 0.1486398144, 0.1314774092,
+	  0.1152168405, 0.0998979008, 0.0855580779, 0.0722324638, 0.0599536686, 0.0487517405, 0.0386540925, 0.0296854352,
+	  0.0218677165, 0.0152200676, 0.0097587564, 0.0054971478, 0.0024456704, 0.0006117919, 0};
+
+	  const float32_t SQRT_van_hann[128]= {0.000000000, 0.024734427, 0.04945372, 0.074142753, 0.098786418, 0.123369638, 0.14787737, 0.172294617,
+	      0.196606441, 0.220797963, 0.244854382, 0.268760979, 0.292503125, 0.316066292, 0.339436063, 0.362598137,
+	      0.385538344, 0.408242645, 0.430697148, 0.452888114, 0.474801964, 0.49642529, 0.51774486, 0.53874763,
+	      0.559420747, 0.579751564, 0.599727639, 0.619336749, 0.638566896, 0.657406313, 0.675843473, 0.693867094,
+	      0.711466148, 0.728629866, 0.745347746, 0.761609559, 0.777405353, 0.792725465, 0.807560519, 0.821901439,
+	      0.835739449, 0.849066083, 0.861873185, 0.874152919, 0.885897772, 0.897100557, 0.907754419, 0.91785284,
+	      0.927389639, 0.936358983, 0.944755382, 0.952573698, 0.959809149, 0.966457306, 0.972514103, 0.977975832,
+	      0.982839151, 0.987101086, 0.990759028, 0.993810738, 0.996254351, 0.99808837, 0.999311673, 0.999923511,
+	      0.999923511, 0.999311673, 0.99808837, 0.996254351, 0.993810738, 0.990759028, 0.987101086, 0.982839151,
+	      0.977975832, 0.972514103, 0.966457306, 0.959809149, 0.952573698, 0.944755382, 0.936358983, 0.927389639,
+	      0.91785284, 0.907754419, 0.897100557, 0.885897772, 0.874152919, 0.861873185, 0.849066083, 0.835739449,
+	      0.821901439, 0.807560519, 0.792725465, 0.777405353, 0.761609559, 0.745347746, 0.728629866, 0.711466148,
+	      0.693867094, 0.675843473, 0.657406313, 0.638566896, 0.619336749, 0.599727639, 0.579751564, 0.559420747,
+	      0.53874763, 0.51774486, 0.49642529, 0.474801964, 0.452888114, 0.430697148, 0.408242645, 0.385538344,
+	      0.362598137, 0.339436063, 0.316066292, 0.292503125, 0.268760979, 0.244854382, 0.220797963, 0.196606441,
+	      0.172294617, 0.14787737, 0.123369638, 0.098786418, 0.074142753, 0.04945372, 0.024734427, 0.00000000};
+
+
+
+
+
+
+
+
+
+    if(ts.nr_first_time == 1)
+    { // TODO: properly initialize all the variables
+        for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+        {
+            NR.last_sample_buffer_L[bindx] =0.0;
+            NR.Hk[bindx] = 1.0;
+            xu[bindx] = 1.0;
+            NR.Nest[bindx][0] =  0.0;  // set Noise estimate to zero, later it will be initialized
+        }
+        ts.nr_first_time = 2;
+    }
+
+    //arm_scale_f32(&in_buffer[0],0.0001,&in_buffer[0],NR_FFT_L);
+
+    for(int k = 0; k < NR_FFT_LOOP_NO; k++)
+    {
+    // NR_FFT_buffer is 256 floats big, 128 complex numbers!!!
+    // interleaved r, i, r, i . . .
+    // fill first half of FFT_buffer with last events audio samples
+          for(int i = 0; i < NR_FFT_L / 2; i++)
+          {
+            NR.FFT_buffer[i * 2] = NR.last_sample_buffer_L[i]; // real
+            NR.FFT_buffer[i * 2 + 1] = 0.0; // imaginary
+          }
+    // copy recent samples to last_sample_buffer for next time!
+          for(int i = 0; i < NR_FFT_L  / 2; i++)
+          {
+             NR.last_sample_buffer_L [i] = in_buffer[i + k * (NR_FFT_L / 2)];
+          }
+    // now fill recent audio samples into second half of FFT_buffer
+          for(int i = 0; i < NR_FFT_L / 2; i++)
+          {
+              NR.FFT_buffer[NR_FFT_L + i * 2] = in_buffer[i+ k * (NR_FFT_L / 2)]; // real
+              NR.FFT_buffer[NR_FFT_L + i * 2 + 1] = 0.0;
+          }
+    /////////////////////////////////7
+    // WINDOWING
+
+          for (int idx = 0; idx < NR_FFT_L; idx++) // we multiply only the real parts with the window as the imag part is zero!
+              {
+                //NR.FFT_buffer[idx * 2] *= v_hann_window[idx];
+                NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
+              }
+    //////////////////////////////////
+
+// FFT
+          arm_cfft_f32(&arm_cfft_sR_f32_len128, &NR.FFT_buffer[0], 0, 1);//we do the 128' FFT in Place!
+//Powerspectrum
+  	  arm_cmplx_mag_squared_f32(&NR.FFT_buffer[0],&NR2.X[0],NR_FFT_L / 2); //only the square is needed downstairs
+  										  // Spectrum is symmetric. so we only use up to FFT_L/2!
+
+
+//here preset the first noise estimate with the actual powerspectrum over a period of app. 100ms
+
+  	  if(ts.nr_first_time == 2)
+  	    { // TODO: properly initialize all the variables
+
+  	      for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+  	        {
+  		      NR.Nest[bindx][0] =  NR.Nest[bindx][0] + 0.05 * NR2.X[bindx]; // we do it 20 times, so finally we have the averaged noise estimate
+  	        }
+			NR_init_counter++;
+			if (NR_init_counter > 19) // do it 20 times which is app. 100ms of Signal duration
+			{
+			  NR_init_counter = 0;
+			  ts.nr_first_time = 3; //now we have all initialized
+			}
+  	    }
+
+
+	if (ts.nr_first_time == 3) // we did all the necessary initalization and start with the denoising
+	{
+// calculate the filtered bins range
+	              float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
+                  float32_t offset = FilterPathInfo[ts.filter_path].offset;
+
+                  if (offset == 0)
+                  {
+                      offset = width/2;
+                  }
+
+                  float32_t lf_freq = (offset - width/2) / (12000 / NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
+                  float32_t uf_freq = (offset + width/2) / (12000 / NR_FFT_L);
+                  VAD_low = (int)lf_freq;
+                  VAD_high = (int)uf_freq;
+                  if(VAD_low == VAD_high)
+                  {
+                	  VAD_high++;
+                  }
+                  if(VAD_low < 1)
+                  {
+                	  VAD_low = 1;
+                  }
+                  else
+                	  if(VAD_low > NR_FFT_L / 2 - 2)
+                	  {
+                		  VAD_low = NR_FFT_L / 2 - 2;
+                	  }
+                  if(VAD_high < 1)
+                  {
+                	  VAD_high = 1;
+                  }
+                  else
+					if(VAD_high > NR_FFT_L / 2)
+                	  {
+                		  VAD_high = NR_FFT_L / 2;
+                	  }
+
+
+
+
+
+
+
+
+
+
+        // 3    calculate gamma (SNRpost)
+  	//      and also xi (SNRprio)
+  	  for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+             {
+                 NR.SNR_post[bindx] = fmax(fmin(NR2.X[bindx] / NR.Nest[bindx][0],1000.0),0.001); // limited to +30 /-30 dB
+
+                 NR.SNR_prio[bindx] = fmax(ts.nr_alpha * xu[bindx] + (1.0 - ts.nr_alpha)*fmax(NR.SNR_post[bindx]-1.0,0.0),0.0); //vorher beide 0!!
+             }
+
+  	  ///VAD and noise update
+
+  	  frame_speach=0.0;
+  	  for(int bindx = 3; bindx < (VAD_high); bindx++) // maybe we should limit this to the signal containing bins (filtering!!)
+  	     {
+  	        frame_speach = frame_speach + (NR.SNR_post[bindx] * NR.SNR_prio[bindx]/(1.0 + NR.SNR_prio[bindx])) - logf(1.0 + NR.SNR_prio[bindx]);  // looks like we had a similar one  before ?
+  	       //frame_speach = frame_speach + (NR.SNR_post[bindx] * NR.SNR_prio[bindx]/(1.0 + NR.SNR_prio[bindx]));  //  maybe log is too time consuming???looks like we had a similar one  before ?
+  	     }
+
+  	  if (frame_speach < (0.15 * (VAD_high-3)))//must be optimized, then we have noise!!!!
+
+  	    {
+  	    NR2.VAD_duration = 0;
+  	    if (NR2.VAD_delay > 0)
+  	      {
+  		NR2.VAD_delay--;
+  	      }
+  	    else
+  	      {
+  		Board_RedLed(LED_STATE_OFF); //Noise!
+  		for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)  //update the noise estimate in dpi
+  	      	     {
+  	      	         NR.Nest[bindx][0] = NR.Nest[bindx][0] * ts.nr_beta + (1.0 - ts.nr_beta) * NR2.X[bindx];
+  	      	     }
+  	      }
+  	    }
+  	  else
+  	    {
+  	      NR2.VAD_duration++;
+  	      if (NR2.VAD_duration > 1)
+  		{
+  		 NR2.VAD_delay=ts.nr_vad_delay;
+
+
+  		  Board_RedLed(LED_STATE_ON);//Speach!
+  		}
+  	}
+
+
+  	  // 4    calculate v = SNRprio(n, bin[i]) / (SNRprio(n, bin[i]) + 1) * SNRpost(n, bin[i]) (eq. 12 of Schmitt et al. 2002, eq. 9 of Romanin et al. 2009)
+          //		and calculate the HK's
+
+  	for(int bindx = 0; bindx < (NR_FFT_L/2); bindx++)// maybe we should limit this to the signal containing bins (filtering!!)
+  	   {											  // to do:reduce to filtered range...
+  	      v = NR.SNR_prio[bindx] * NR.SNR_post[bindx] / (1.0 + NR.SNR_prio[bindx]);
+
+  	      NR.Hk[bindx] = 1.0 / NR.SNR_post[bindx] * sqrtf((0.7212 * v + v * v));
+
+  	      xu[bindx] = NR.SNR_post[bindx] * NR.Hk[bindx] * NR.Hk[bindx];
+
+
+	      if(!(ts.dsp_active & DSP_NR_ENABLE)) // if NR is not enabled (but notch is enabled !)
+	      {
+		      NR.Hk[bindx] = 1.0;
+	      }
+
+  	   }
+
+
+
+              if(ts.nr_gain_smooth_enable)
+              {
+// we hear considerable distortion in the end result
+// this can be healed significantly by frequency smoothing the gain values
+// this is a trial for smoothing among the gain values
+				  for(int bindx = 1; bindx < (NR_FFT_L / 2) - 1; bindx++)
+				  {
+					  NR.Hk[bindx] = ts.nr_gain_smooth_alpha * NR.Hk[bindx - 1] + (1.0 - 2.0 * ts.nr_gain_smooth_alpha) * NR.Hk[bindx] + ts.nr_gain_smooth_alpha * NR.Hk[bindx + 1];
+
+				  }
+				  NR.Hk[0] = (1.0 - ts.nr_gain_smooth_alpha) * NR.Hk[0] + ts.nr_gain_smooth_alpha * NR.Hk[1];
+				  NR.Hk[(NR_FFT_L / 2) - 1] = (1.0 - ts.nr_gain_smooth_alpha) * NR.Hk[(NR_FFT_L / 2) - 1] + ts.nr_gain_smooth_alpha * NR.Hk[(NR_FFT_L / 2) - 2];
+              }
+
+	}
+
+
+        // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 64 bins with the 64 bin-specific gain factors
+              // only do this for the bins inside the filter passband
+              // if you do this for all the bins, you will get distorted audio: plopping !
+             for(int bindx = VAD_low; bindx < (VAD_high + 1); bindx++) // plopping !!!!
+              {
+                  NR.FFT_buffer[bindx * 2] = NR.FFT_buffer [bindx * 2] * NR.Hk[bindx] ; // real part
+                  NR.FFT_buffer[bindx * 2 + 1] = NR.FFT_buffer [bindx * 2 + 1] * NR.Hk[bindx]; // imag part
+                  NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] = NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] * NR.Hk[bindx]; // real part conjugate symmetric
+                  NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] = NR.FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] * NR.Hk[bindx]; // imag part conjugate symmetric
+              }
+
+    // NR_iFFT
+    // perform iFFT (in-place)
+  	  arm_cfft_f32(&arm_cfft_sR_f32_len128, &NR.FFT_buffer[0], 1, 1);
+
+
+  	  /////////////////////////////////7
+  	    // WINDOWING
+
+  	          for (int idx = 0; idx < NR_FFT_L; idx++) // we multiply only the real parts with the window as the imag part is zero!
+  	              {
+  	                //NR.FFT_buffer[idx * 2] *= v_hann_window[idx];
+  	                NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
+  	              }
+  	    //////////////////////////////////
+
+
+
+
+
+    // do the overlap & add
+          for(int i = 0; i < NR_FFT_L / 2; i++)
+          { // take real part of first half of current iFFT result and add to 2nd half of last iFFT_result
+        	  //              NR_output_audio_buffer[i + k * (NR_FFT_L / 2)] = NR_FFT_buffer[i * 2] + NR_last_iFFT_result[i];
+        	  in_buffer[i + k * (NR_FFT_L / 2)] = NR.FFT_buffer[i * 2] + NR.last_iFFT_result[i];
+          }
+          for(int i = 0; i < NR_FFT_L / 2; i++)
+          {
+              NR.last_iFFT_result[i] = NR.FFT_buffer[NR_FFT_L + i * 2];
+          }
+       // end of "for" loop which repeats the FFT_iFFT_chain two times !!!
+    }
+
+   // arm_scale_f32(&in_buffer[0],10000.0,&in_buffer[0],NR_FFT_L);
+
+}
+
+
+
+#endif
 
 
 
