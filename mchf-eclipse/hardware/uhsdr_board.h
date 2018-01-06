@@ -1073,7 +1073,7 @@ typedef struct TransceiverState
 	int16_t nr_long_tone_thresh; // threshold for long tone detection
 	bool nr_long_tone_reset; // used to reset gains of the long tone detection to 1.0
 	int16_t nr_vad_delay; // how many frames to delay the noise estimate after VAD has detected NOISE
-
+	int16_t nr_mode;
 	uint8_t debug_si5351a_pllreset;
 } TransceiverState;
 //

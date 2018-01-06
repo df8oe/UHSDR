@@ -790,7 +790,7 @@ void RadioManagement_ChangeBandFilter(uchar band)
     default:
         break;
     }
-
+  ts.nr_first_time = 1; // in case of any Bandfilter change restart the NR routine
 }
 typedef struct BandFilterDescriptor
 {
@@ -1517,6 +1517,7 @@ void RadioManagement_ToggleVfoAB()
     {
         RadioManagement_SetDemodMode(vfo[vfo_new].band[ts.band].decod_mode);
     }
+    ts.nr_first_time = 1; // restart in case of VFO-Toggle
 }
 
 /**

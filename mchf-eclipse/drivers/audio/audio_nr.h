@@ -51,7 +51,8 @@ typedef struct NoiseReduction // declaration
 //
 typedef struct NoiseReduction2 // declaration
 {
-	float32_t 					X[NR_FFT_L / 2][2]; // magnitudes of the current and the last FFT bins
+	float32_t 					X[NR_FFT_L/2][2]; // magnitudes of the current and the last FFT bins
+	//float32_t 					X[NR_FFT_L/2]; // magnitudes of the current and the last FFT bins
 	float32_t 					long_tone_gain[NR_FFT_L / 2];
 	float32_t 					long_tone[NR_FFT_L / 2][2];
 	int 						VAD_delay;
@@ -81,6 +82,7 @@ void alternateNR_handle();
 void do_alternate_NR();
 void alt_noise_blanking();
 void spectral_noise_reduction();
+//void spectral_noise_reduction_2();
 
 void AudioNr_ActivateAutoNotch(uint8_t notch1_bin, bool notch1_active);
 
