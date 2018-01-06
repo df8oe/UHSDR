@@ -5274,7 +5274,7 @@ static void UiDriver_TouchscreenCalibrationRun()
             {MAX_X-20,      20,0,0},
             {      20,MAX_Y-20,0,0},
             {MAX_X-20,MAX_Y-20,0,0},
-            {MAX_X-20,MAX_Y-20,0,0},
+            { MAX_X/2, MAX_Y/2,0,0},
     };
 
     //reset calibration coefficients before acquiring points
