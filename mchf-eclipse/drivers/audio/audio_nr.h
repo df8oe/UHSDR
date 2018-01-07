@@ -82,7 +82,8 @@ void alternateNR_handle();
 void do_alternate_NR();
 void alt_noise_blanking();
 void spectral_noise_reduction();
-//void spectral_noise_reduction_2();
+void spectral_noise_reduction_2();
+void spectral_noise_reduction_3();
 
 void AudioNr_ActivateAutoNotch(uint8_t notch1_bin, bool notch1_active);
 
