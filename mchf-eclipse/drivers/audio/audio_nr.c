@@ -1394,7 +1394,7 @@ float32_t uf_freq = (offset + width/2) / (12000 / NR_FFT_L);
 
 	  	  for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)// 1. Step of NR - calculate the SNR's
 	             {
-	               NR.SNR_post[bindx] = fmax(fmin(NR2.X[bindx][0] / NR.Nest[bindx][0],1000.0),0.001); // limited to +30 /-30 dB, might be still too much of reduction, let's try it?
+	               NR.SNR_post[bindx] = fmax(fmin(NR2.X[bindx][0] / NR.Nest[bindx][0],1000.0),0.03); // limited to +30 /-15 dB, might be still too much of reduction, let's try it?
 
 	               NR.SNR_prio[bindx] = fmax(ts.nr_alpha * NR.Hk_old[bindx] + (1.0 - ts.nr_alpha)*fmax(NR.SNR_post[bindx]-1.0,0.0),0.0);
 	             }
@@ -2006,7 +2006,7 @@ Board_RedLed(LED_STATE_OFF);
 
 	  	  for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)// 1. Step of NR - calculate the SNR's
 	             {
-	               NR.SNR_post[bindx] = fmax(fmin(NR2.X[bindx][0] / xt[bindx],1000.0),0.001); // limited to +30 /-30 dB, might be still too much of reduction, let's try it?
+	               NR.SNR_post[bindx] = fmax(fmin(NR2.X[bindx][0] / xt[bindx],1000.0),0.03); // limited to +30 /-30 dB, might be still too much of reduction, let's try it?
 
 	               NR.SNR_prio[bindx] = fmax(ts.nr_alpha * NR.Hk_old[bindx] + (1.0 - ts.nr_alpha)*fmax(NR.SNR_post[bindx]-1.0,0.0),0.0);
 	             }
