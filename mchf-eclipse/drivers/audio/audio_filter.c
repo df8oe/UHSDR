@@ -280,7 +280,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_1P4KHZ, "LPF", FILTER_MASK_SSBCW, 1, I_NUM_TAPS_HI, i_rx_new_coeffs, q_rx_new_coeffs, &FirRxDecimate_sideband_supp,
         RX_DECIMATION_RATE_12KHZ, &IIR_1k4_LPF,
-        &FirRxInterpolate, NULL
+        &FirRxInterpolate, NULL, 700
     },
 //20
     {
@@ -292,7 +292,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_1P6KHZ, "LPF", FILTER_MASK_SSBCW, 1, I_NUM_TAPS_HI, i_rx_new_coeffs, q_rx_new_coeffs, &FirRxDecimate_sideband_supp,
         RX_DECIMATION_RATE_12KHZ, &IIR_1k6_LPF,
-        &FirRxInterpolate, NULL
+        &FirRxInterpolate, NULL, 800
     },
 
     {
@@ -334,13 +334,13 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_1P8KHZ, "LPF", FILTER_MASK_SSBCW, 6, I_NUM_TAPS_HI, i_rx_new_coeffs, q_rx_new_coeffs, &FirRxDecimate_sideband_supp,
         RX_DECIMATION_RATE_12KHZ, &IIR_1k8_LPF,
-        &FirRxInterpolate, NULL
+        &FirRxInterpolate, NULL, 900
     },
 
     {
         AUDIO_2P1KHZ, "LPF", FILTER_MASK_SSBCW, 1, I_NUM_TAPS_HI, i_rx_new_coeffs, q_rx_new_coeffs, &FirRxDecimate_sideband_supp,
         RX_DECIMATION_RATE_12KHZ, &IIR_2k1_LPF,
-        &FirRxInterpolate, NULL
+        &FirRxInterpolate, NULL, 1050
     },
 //30
     {
@@ -376,7 +376,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_2P3KHZ, "LPF", FILTER_MASK_SSBCW, 5, I_NUM_TAPS_HI, i_rx_new_coeffs, q_rx_new_coeffs, &FirRxDecimate_sideband_supp,
         RX_DECIMATION_RATE_12KHZ, &IIR_2k3_LPF,
-        &FirRxInterpolate, NULL
+        &FirRxInterpolate, NULL, 1150
     },
 
 //###################################################################################################################################
@@ -386,7 +386,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_2P5KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS_HI, i_rx_new_coeffs, q_rx_new_coeffs, &FirRxDecimate_sideband_supp,
         RX_DECIMATION_RATE_12KHZ, &IIR_2k5_LPF,
-        &FirRxInterpolate, NULL
+        &FirRxInterpolate, NULL, 1250
     },
 
     {
@@ -398,7 +398,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_2P7KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS_HI, i_rx_new_coeffs, q_rx_new_coeffs, &FirRxDecimate_sideband_supp,
         RX_DECIMATION_RATE_12KHZ, &IIR_2k7_LPF,
-        &FirRxInterpolate, NULL
+        &FirRxInterpolate, NULL, 1350
     },
 
     {
@@ -410,7 +410,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_2P9KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS_HI, i_rx_new_coeffs, q_rx_new_coeffs, &FirRxDecimate_sideband_supp,
         RX_DECIMATION_RATE_12KHZ, &IIR_2k9_LPF,
-        &FirRxInterpolate, NULL
+        &FirRxInterpolate, NULL, 1450
     },
 
     {
@@ -422,7 +422,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_3P2KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS_HI, i_rx_new_coeffs, q_rx_new_coeffs, &FirRxDecimate_sideband_supp,
         RX_DECIMATION_RATE_12KHZ, &IIR_3k2_LPF,
-        &FirRxInterpolate, NULL
+        &FirRxInterpolate, NULL, 1600
     },
 
     {
@@ -436,7 +436,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_3P4KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS_HI, i_rx_new_coeffs, q_rx_new_coeffs, &FirRxDecimate_sideband_supp,
         RX_DECIMATION_RATE_12KHZ, &IIR_3k4_LPF,
-        &FirRxInterpolate_4_5k, &IIR_aa_5k
+        &FirRxInterpolate_4_5k, &IIR_aa_5k, 1700
     },
 //45
     {
@@ -448,7 +448,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_3P6KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS_HI, i_rx_new_coeffs, q_rx_new_coeffs, &FirRxDecimate_sideband_supp,
         RX_DECIMATION_RATE_12KHZ, &IIR_3k6_LPF,
-        &FirRxInterpolate_4_5k, &IIR_aa_5k
+        &FirRxInterpolate_4_5k, &IIR_aa_5k, 1800
     },
 
     {
@@ -460,7 +460,7 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_3P8KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_3k8_LPF,
-        &FirRxInterpolate_4_5k, &IIR_aa_5k
+        &FirRxInterpolate_4_5k, &IIR_aa_5k, 1900
     },
 
     {
@@ -472,31 +472,31 @@ const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM] =
     {
         AUDIO_4P0KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_4k_LPF,
-        &FirRxInterpolate_4_5k, &IIR_aa_5k
+        &FirRxInterpolate_4_5k, &IIR_aa_5k, 2000
     },
 
     {
         AUDIO_4P2KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_4k2_LPF,
-        &FirRxInterpolate_4_5k, &IIR_aa_5k
+        &FirRxInterpolate_4_5k, &IIR_aa_5k, 2100
     },
 
     {
         AUDIO_4P4KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_4k4_LPF,
-        &FirRxInterpolate_4_5k, &IIR_aa_5k
+        &FirRxInterpolate_4_5k, &IIR_aa_5k, 2200
     },
 
     {
         AUDIO_4P6KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_4k6_LPF,
-        &FirRxInterpolate_4_5k, &IIR_aa_5k
+        &FirRxInterpolate_4_5k, &IIR_aa_5k, 2300
     },
 
     {
         AUDIO_4P8KHZ, "LPF", FILTER_MASK_SSB, 1, I_NUM_TAPS, i_rx_4k5_coeffs, q_rx_4k5_coeffs, &FirRxDecimate,
         RX_DECIMATION_RATE_12KHZ, &IIR_4k8_LPF,
-        &FirRxInterpolate_4_5k, &IIR_aa_5k
+        &FirRxInterpolate_4_5k, &IIR_aa_5k, 2400
     },
 
 //55		// new decimation rate, new decimation filter, new interpolation filter, no IIR Prefilter, no IIR interpolation filter
