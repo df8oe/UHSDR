@@ -3848,42 +3848,39 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             );
             switch(ts.nr_mode)
             {
-            case 0:
-                txt_ptr = "    Release";
+				case 0:
+					txt_ptr = "    Release";
 
-                break;
-            case 1:
-                txt_ptr = "   Devel1";
+					break;
+				case 1:
+					txt_ptr = "   Devel1";
 
-                break;
-            case 2:
-		txt_ptr = "   Devel2";
-
-		break;
+					break;
+				case 2:
+					txt_ptr = "   Devel2";
             }
+
             if(var_change)
-                        {
-                            switch(ts.nr_mode)
-                            {
-                            case 0:
-                                ts.nr_beta = 0.850;
-                                ts.nr_beta_int=850;
-                                ts.nr_first_time = 1; //Restart the noisereduction
-                                break;
-                            case 1:
-                                ts.nr_beta = 0.960;
-                                ts.nr_beta_int=960;
-                                ts.nr_first_time = 1; //Restart the noisereduction
-                            case 2:
-                                ts.nr_beta = 0.960;
-                                ts.nr_beta_int=960;
-                                ts.nr_first_time = 1; //Restart the noisereduction
-                                break;
-                            }
-                        }
-
+			{
+				switch(ts.nr_mode)
+				{
+				case 0:
+					ts.nr_beta = 0.850;
+					ts.nr_beta_int=850;
+					ts.nr_first_time = 1; //Restart the noisereduction
+					break;
+				case 1:
+					ts.nr_beta = 0.960;
+					ts.nr_beta_int=960;
+					ts.nr_first_time = 1; //Restart the noisereduction
+				case 2:
+					ts.nr_beta = 0.960;
+					ts.nr_beta_int=960;
+					ts.nr_first_time = 1; //Restart the noisereduction
+					break;
+				}
+			}
         break;
-
 
         case MENU_DEBUG_NR_VAD_DELAY:      //
             var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_vad_delay,
@@ -3964,7 +3961,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 //         break;
 
      case MENU_CW_DECODER:
-         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.cw_decoder_enable,0,options,&clr);
+         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.cw_decoder_enable,
+                 0,
+                 1,
+                 0,
+                 1);
          if (var_change)
          {
              if (ts.dmod_mode == DEMOD_CW)
@@ -3973,7 +3974,17 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
              }
              Board_RedLed(LED_STATE_OFF);
          }
+         switch(ts.cw_decoder_enable)
+         {
+         case 0:
+             txt_ptr = "OFF";
+             break;
+         case 1:
+             txt_ptr = " ON";
+             break;
+         }
          break;
+
      case MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL:
          var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.cw_offset_shift_keep_signal,0,options,&clr);
          break;

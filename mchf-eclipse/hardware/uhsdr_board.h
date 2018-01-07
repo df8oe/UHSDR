@@ -1044,7 +1044,7 @@ typedef struct TransceiverState
 	bool rtty_atc_enable; // is ATC enabled for RTTY decoding? (for testing!)
 
 	uint8_t enable_rtty_decode; // new rtty encoder (experimental)
-	bool cw_decoder_enable;
+	uint8_t cw_decoder_enable;
 	bool cw_offset_shift_keep_signal; // experimental flag, shall we move shift by sidetone frequency to keep tuned signal?
 	bool enable_ptt_rts; // disable/enable ptt via virtual serial port rts
 
