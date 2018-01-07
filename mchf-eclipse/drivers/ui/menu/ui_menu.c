@@ -3842,7 +3842,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         case MENU_DEBUG_NR_Mode:      //
             var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_mode,
                     0,
-                    1,
+                    2,
                     0,
                     1
             );
@@ -3850,17 +3850,37 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             {
             case 0:
                 txt_ptr = "    Release";
-                ts.nr_beta = 0.850;
-                ts.nr_beta_int=850;
-                ts.nr_first_time = 1; //Restart the noisereduction
+
                 break;
             case 1:
-                txt_ptr = "   Develop";
-                ts.nr_beta = 0.960;
-                ts.nr_beta_int=960;
-                ts.nr_first_time = 1; //Restart the noisereduction
+                txt_ptr = "   Devel1";
+
                 break;
+            case 2:
+		txt_ptr = "   Devel2";
+
+		break;
             }
+            if(var_change)
+                        {
+                            switch(ts.nr_mode)
+                            {
+                            case 0:
+                                ts.nr_beta = 0.850;
+                                ts.nr_beta_int=850;
+                                ts.nr_first_time = 1; //Restart the noisereduction
+                                break;
+                            case 1:
+                                ts.nr_beta = 0.960;
+                                ts.nr_beta_int=960;
+                                ts.nr_first_time = 1; //Restart the noisereduction
+                            case 2:
+                                ts.nr_beta = 0.960;
+                                ts.nr_beta_int=960;
+                                ts.nr_first_time = 1; //Restart the noisereduction
+                                break;
+                            }
+                        }
 
         break;
 
