@@ -575,8 +575,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_TScal4_Low						401
 #define EEPROM_TScal5_High						402
 #define EEPROM_TScal5_Low						403
+#define EEPROM_CW_DECODER_ENABLE				404
 
-#define EEPROM_FIRST_UNUSED 				404		// change this if new value ids are introduced
+#define EEPROM_FIRST_UNUSED 				405		// change this if new value ids are introduced
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
