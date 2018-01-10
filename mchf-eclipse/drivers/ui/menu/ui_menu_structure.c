@@ -408,8 +408,13 @@ const MenuDescriptor debugGroup[] =
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_VAD_DELAY, NULL,"NR VAD delay", UiMenuDesc("delay for spectral noise reduction voice activity detector") },
 
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_BETA, NULL,"NR beta", UiMenuDesc("time constant beta for spectral noise reduction, leave at 0.85") },
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_Mode, NULL,"NR Mode", UiMenuDesc("switch between the released NR and a Development one") },
-//    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_RTTY_ATC, NULL,"RTTY ATC Enable", UiMenuDesc("Enable automatic threshold correction ATC for RTTY decoding") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_Mode, NULL,"NR Mode", UiMenuDesc("switch between the released NR and two development NRs") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_TAX, NULL,"NR tax", UiMenuDesc("Devel 2 NR: tax") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_TAP, NULL,"NR tap", UiMenuDesc("Devel 2 NR: tap") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_ASNR, NULL,"NR asnr", UiMenuDesc("Devel 2 NR: asnr") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_SNR_PRIO_MIN, NULL,"NR prio min", UiMenuDesc("Devel 2 NR: minimum value for SNRprio") },
+
+	//    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_RTTY_ATC, NULL,"RTTY ATC Enable", UiMenuDesc("Enable automatic threshold correction ATC for RTTY decoding") },
 #ifdef USE_TWO_CHANNEL_AUDIO
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ENABLE_STEREO, NULL,"STEREO Enable", UiMenuDesc("Enable stereo demodulation modes") },
 #endif
