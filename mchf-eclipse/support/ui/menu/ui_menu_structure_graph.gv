@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-01-06T08:11:29  by "./ui_menu_structure_graph.py"
+#  generated at  2018-01-11T07:16:06  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-01-06T08:11:29  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-01-11T07:16:06  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1252,6 +1252,26 @@
              shape = record
              ];
         
+        "MENU_DEBUG_NR_TAX" [
+             label = "MENU_DEBUG_NR_TAX | NR tax"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_NR_TAP" [
+             label = "MENU_DEBUG_NR_TAP | NR tap"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_NR_ASNR" [
+             label = "MENU_DEBUG_NR_ASNR | NR asnr"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_NR_SNR_PRIO_MIN" [
+             label = "MENU_DEBUG_NR_SNR_PRIO_MIN | NR prio min"
+             shape = record
+             ];
+        
         "MENU_DEBUG_ENABLE_STEREO" [
              label = "MENU_DEBUG_ENABLE_STEREO | STEREO Enable"
              shape = record
@@ -1870,6 +1890,14 @@
             MENU_DEBUG -> MENU_DEBUG_NR_BETA
             
             MENU_DEBUG -> MENU_DEBUG_NR_Mode
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_TAX
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_TAP
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_ASNR
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_SNR_PRIO_MIN
             
             MENU_DEBUG -> MENU_DEBUG_ENABLE_STEREO
             

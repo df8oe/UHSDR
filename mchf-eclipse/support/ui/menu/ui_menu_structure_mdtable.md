@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-01-06T08:11:33  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-01-11T07:16:11  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-01-06T08:11:33  by "./ui_menu_structure_mdtable.py"
+generated at  2018-01-11T07:16:11  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -289,7 +289,11 @@ generated at  2018-01-06T08:11:33  by "./ui_menu_structure_mdtable.py"
 | **NR VAD type**               (                     MENU_DEBUG_NR_VAD_TYPE) | VAD type for spectral noise reduction voice activity detector | 
 | **NR VAD delay**              (                    MENU_DEBUG_NR_VAD_DELAY) | delay for spectral noise reduction voice activity detector | 
 | **NR beta**                   (                         MENU_DEBUG_NR_BETA) | time constant beta for spectral noise reduction, leave at 0.85 | 
-| **NR Mode**                   (                         MENU_DEBUG_NR_Mode) | switch between the released NR and a Development one | 
+| **NR Mode**                   (                         MENU_DEBUG_NR_Mode) | switch between the released NR and two development NRs | 
+| **NR tax**                    (                          MENU_DEBUG_NR_TAX) | Devel 2 NR: tax                                | 
+| **NR tap**                    (                          MENU_DEBUG_NR_TAP) | Devel 2 NR: tap                                | 
+| **NR asnr**                   (                         MENU_DEBUG_NR_ASNR) | Devel 2 NR: asnr                               | 
+| **NR prio min**               (                 MENU_DEBUG_NR_SNR_PRIO_MIN) | Devel 2 NR: minimum value for SNRprio          | 
 | **STEREO Enable**             (                   MENU_DEBUG_ENABLE_STEREO) | Enable stereo demodulation modes               | 
 | **leaky LMS**                 (                       MENU_DEBUG_LEAKY_LMS) | Use leaky LMS noise reduction instead of built-in CMSIS LMS algorithm | 
 | **NR no taps**                (                        MENU_DEBUG_ANR_TAPS) | Number of taps of leaky LMS noise reduction    | 
