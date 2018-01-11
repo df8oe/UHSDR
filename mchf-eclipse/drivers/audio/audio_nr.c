@@ -1275,7 +1275,7 @@ const float32_t SQRT_van_hann[128]= {0.000000000, 0.024734427, 0.04945372, 0.074
 static uint8_t NR_init_counter = 0;
 uint8_t VAD_low=0;
 uint8_t VAD_high=63;
-float32_t NR_temp_sum = 0.0;
+//float32_t NR_temp_sum = 0.0;
 float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
 float32_t offset = FilterPathInfo[ts.filter_path].offset;
 float32_t lf_freq = (offset - width/2) / (12000 / NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
@@ -1791,12 +1791,9 @@ float32_t uf_freq = (offset + width/2) / (12000 / NR_FFT_L);
     arm_biquad_cascade_df1_f32 (&NR_notch_biquad, in_buffer, in_buffer, NR_FFT_L);
 }
 
+
 void spectral_noise_reduction_3 (float* in_buffer)
 {
-
-//  arm_rfft_fast_instance_f32 fftInstance;
-
-
 ////////////////////////////////////////////////////////////////////////////////////////
 
 // Frank DD4WH & Michael DL2FW, November 2017
@@ -1810,7 +1807,6 @@ void spectral_noise_reduction_3 (float* in_buffer)
 // Hann window on 128 samples
 // FFT128 - inverse FFT128
 // overlap-add
-
 
 const float32_t SQRT_van_hann[128]= {0.000000000, 0.024734427, 0.04945372, 0.074142753, 0.098786418, 0.123369638, 0.14787737, 0.172294617,
 	      0.196606441, 0.220797963, 0.244854382, 0.268760979, 0.292503125, 0.316066292, 0.339436063, 0.362598137,
@@ -1829,8 +1825,6 @@ const float32_t SQRT_van_hann[128]= {0.000000000, 0.024734427, 0.04945372, 0.074
 	      0.362598137, 0.339436063, 0.316066292, 0.292503125, 0.268760979, 0.244854382, 0.220797963, 0.196606441,
 	      0.172294617, 0.14787737, 0.123369638, 0.098786418, 0.074142753, 0.04945372, 0.024734427, 0.00000000};
 
-
-
 static uint8_t NR_init_counter = 0;
 uint8_t VAD_low=0;
 uint8_t VAD_high=63;
@@ -1841,28 +1835,34 @@ float32_t lf_freq = (offset - width/2) / (12000 / NR_FFT_L); // bin BW is 93.75H
 float32_t uf_freq = (offset + width/2) / (12000 / NR_FFT_L);
 
 
-
-//const float32_t tax=0.0239;	// noise output smoothing time constant = -tinc/log(0.8)
-//const float32_t tap=0.05062;	// speech prob smoothing time constant = -tinc/log(0.9) tinc = frame time (5.33ms)
+//const float32_t tinc = 0.00533333; // frame time 5.3333ms
+const float32_t tinc = 5.33333; // frame time 5.3333ms
+//const float32_t tax=0.0239;	// noise output smoothing time constant = -tinc/ln(0.8)
+//const float32_t tap=0.05062;	// speech prob smoothing time constant = -tinc/ln(0.9) tinc = frame time (5.33ms)
 const float32_t psthr=0.99;	// threshold for smoothed speech probability [0.99]
 const float32_t pnsaf=0.01;	// noise probability safety value [0.01]
 //const float32_t asnr=15; 	// active SNR in dB
 const float32_t psini=0.5;	// initial speech probability [0.5]
-//const float32_t pspri=0.5;	// prior speech probability [0.5]
+const float32_t pspri=0.5;	// prior speech probability [0.5]
 //const float32_t tavini=0.064;
-const float32_t ax=0.8;       // ax=exp(-tinc/tax); % noise output smoothing factor
-const float32_t ap=0.9;        // ap=exp(-tinc/tap); % noise output smoothing factor
-				 // xih1=10^(asnr/10); % speech-present SNR
-const float32_t xih1r=-0.969346; // xih1r=1/(1+xih1)-1;
+//static float32_t ax; //=0.8;       // ax=exp(-tinc/tax); % noise output smoothing factor
+//static float32_t ap; //=0.9;        // ap=exp(-tinc/tap); % noise output smoothing factor
+//static float32_t xih1; // = 31.6;
+// xih1=10^(asnr/10); % speech-present SNR
+//static float32_t xih1r; //=-0.969346; // xih1r=1/(1+xih1)-1;
+NR2.ax = expf(-tinc / NR2.tax);
+NR2.ap = expf(-tinc / NR2.tap);
+NR2.xih1 = powf(10, (float32_t)NR2.asnr / 10.0);
+NR2.xih1r = 1.0 / (1.0 + NR2.xih1) - 1.0;
+NR2.pfac= (1.0 / pspri - 1.0) * (1.0 + NR2.xih1);
+NR2.snr_prio_min = powf(10, - (float32_t)NR2.snr_prio_min_int / 20.0);
 
-const float32_t pfac=32.6;	 // pfac=(1/pspri-1)*(1+xih1); % p(noise)/p(speech)
+//static float32_t pfac; //=32.6;	 // pfac=(1/pspri-1)*(1+xih1); % p(noise)/p(speech)
 
 static float32_t pslp[NR_FFT_L/2];
 static float32_t xt[NR_FFT_L/2];
 static float32_t xtr;
 float32_t ph1y[NR_FFT_L/2];
-
-
 
 
 Board_RedLed(LED_STATE_OFF);
@@ -1875,30 +1875,15 @@ Board_RedLed(LED_STATE_OFF);
               NR.Hk[bindx] = 1.0;
 			//xu[bindx] = 1.0;  //has to be replaced by other variable
               NR.Hk_old[bindx] = 1.0; // old gain or xu in development mode
-	      NR.Nest[bindx][0] = 0.0;
-	      NR.Nest[bindx][1] = 1.0;
-
-	      pslp[bindx]=0.5;
+              NR.Nest[bindx][0] = 0.0;
+              NR.Nest[bindx][1] = 1.0;
+              pslp[bindx] = 0.5;
         }
-	ts.nr_first_time = 2; // we need to do some more a bit later down
-    }
+        //NR2.tax = 0.0239;
+        //NR2.tap = 0.05062;
+        //NR2.asnr = 15;
 
-    if(ts.nr_long_tone_reset)
-    {
-        for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
-        {
-        	NR2.long_tone_gain[bindx] = 1.0;
-        	NR2.long_tone_counter[bindx] = 10;
-        }
-    	ts.nr_long_tone_reset = false;
-    	NR2.notch_change = false;
-    	NR2.notch1_bin = 10; // frequency bin where notch filter 1 has to work
-    	NR2.max_bin = 10; // holds the bin number of the strongest persistent tone during tone detection
-    	NR2.long_tone_max = 100.0; // power value of the strongest persistent tone, used for max search
-    	NR2.notch1_active = false; // is notch1 active?
-    	NR2.notch2_active = false; // is notch21 active?
-    	NR2.notch3_active = false; // is notch3 active?
-    	NR2.notch4_active = false; // is notch4 active?
+        ts.nr_first_time = 2; // we need to do some more a bit later down
     }
 
     for(int k = 0; k < NR_FFT_LOOP_NO; k++)
@@ -1928,7 +1913,7 @@ Board_RedLed(LED_STATE_OFF);
 
           for (int idx = 0; idx < NR_FFT_L; idx++)
               {
-        	NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
+        	  	  NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
               }
 
     #endif
@@ -1938,8 +1923,6 @@ Board_RedLed(LED_STATE_OFF);
 
           arm_cfft_f32(&arm_cfft_sR_f32_len128, NR.FFT_buffer, 0, 1);
 
-
-#ifndef NR_NOTCHTEST
               for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
                     {
                         // this is magnitude for the current frame
@@ -1949,66 +1932,40 @@ Board_RedLed(LED_STATE_OFF);
                     NR2.X[bindx][0] = (NR.FFT_buffer[bindx * 2] * NR.FFT_buffer[bindx * 2] + NR.FFT_buffer[bindx * 2 + 1] * NR.FFT_buffer[bindx * 2 + 1]);
                     }
 
-   if(ts.nr_first_time == 2)
+      if(ts.nr_first_time == 2)
       { // TODO: properly initialize all the variables
-		if (ts.nr_mode==1)
-		{
-		 for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
-                  {
-                	  NR.Nest[bindx][0] = NR.Nest[bindx][0] + 0.05* NR2.X[bindx][0];// we do it 20 times to average over 20 frames for app. 100ms only on NR_on/bandswitch/modeswitch,...
-                	  xt[bindx] = psini * NR.Nest[bindx][0];
-                  }
-		 NR_init_counter++;
-		 if (NR_init_counter > 19)//average over 20 frames for app. 100ms
-		     {
+ 		  for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+		  {
+			  NR.Nest[bindx][0] = NR.Nest[bindx][0] + 0.05* NR2.X[bindx][0];// we do it 20 times to average over 20 frames for app. 100ms only on NR_on/bandswitch/modeswitch,...
+			  xt[bindx] = psini * NR.Nest[bindx][0];
+		  }
+		  NR_init_counter++;
+		  if (NR_init_counter > 19)//average over 20 frames for app. 100ms
+		  {
 			  NR_init_counter = 0;
 			  ts.nr_first_time = 3;  // now we did all the necessary initialization to actually start the noise reduction
-		     }
-		}
-		else ts.nr_first_time = 3;
-
+		  }
       }
-   if (ts.nr_first_time == 3)
+     if (ts.nr_first_time == 3)
      {
-
-              if((ts.dsp_active & DSP_NOTCH_ENABLE))
-              {
-        	    // detection of long tones
-              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
-                    {
-            	  	 NR2.long_tone[bindx][0] = (ts.nr_long_tone_alpha) * NR2.long_tone[bindx][1] + (1.0 - ts.nr_long_tone_alpha) * NR2.X[bindx][0]; //
-            	  	 NR2.long_tone[bindx][1] = NR2.long_tone[bindx][0];
-                    }
-              }
 
  //new noise estimate MMSE based!!!
 
 		for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)// 1. Step of NR - calculate the SNR's
-    	             {
-		      ph1y[bindx] = (1 + pfac * 1.0 / expf(xih1r * NR2.X[bindx][0]/xt[bindx]));
-		      pslp[bindx] = ap * pslp[bindx] + (1-ap) * ph1y[bindx];
-		      ph1y[bindx] = fmin(ph1y[bindx],1-pnsaf*(pslp[bindx]>psthr)); //?????
-		      xtr = (1-ph1y[bindx]) * NR2.X[bindx][0] + ph1y[bindx] * xt[bindx];
-		      xt[bindx] = ax * xt[bindx] + (1 - ax) * xtr;
-
-
-
-    	             }
-
-
-
-
-
-
-
-
+    	{
+		      ph1y[bindx] = (1.0 + NR2.pfac * 1.0 / expf(NR2.xih1r * NR2.X[bindx][0]/xt[bindx]));
+		      pslp[bindx] = NR2.ap * pslp[bindx] + (1.0 - NR2.ap) * ph1y[bindx];
+		      ph1y[bindx] = fmin(ph1y[bindx], 1.0 - pnsaf * (pslp[bindx] > psthr)); //?????
+		      xtr = (1.0 - ph1y[bindx]) * NR2.X[bindx][0] + ph1y[bindx] * xt[bindx];
+		      xt[bindx] = NR2.ax * xt[bindx] + (1.0 - NR2.ax) * xtr;
+        }
 
 
 	  	  for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)// 1. Step of NR - calculate the SNR's
 	             {
-	               NR.SNR_post[bindx] = fmax(fmin(NR2.X[bindx][0] / xt[bindx],1000.0),0.03); // limited to +30 /-30 dB, might be still too much of reduction, let's try it?
+	               NR.SNR_post[bindx] = fmax(fmin(NR2.X[bindx][0] / xt[bindx],1000.0), NR2.snr_prio_min); // limited to +30 /-15 dB, might be still too much of reduction, let's try it?
 
-	               NR.SNR_prio[bindx] = fmax(ts.nr_alpha * NR.Hk_old[bindx] + (1.0 - ts.nr_alpha)*fmax(NR.SNR_post[bindx]-1.0,0.0),0.0);
+	               NR.SNR_prio[bindx] = fmax(ts.nr_alpha * NR.Hk_old[bindx] + (1.0 - ts.nr_alpha) * fmax(NR.SNR_post[bindx] - 1.0, 0.0), 0.0);
 	             }
 
 
@@ -2047,193 +2004,20 @@ Board_RedLed(LED_STATE_OFF);
   	  // 4    calculate v = SNRprio(n, bin[i]) / (SNRprio(n, bin[i]) + 1) * SNRpost(n, bin[i]) (eq. 12 of Schmitt et al. 2002, eq. 9 of Romanin et al. 2009)
      //		   and calculate the HK's
 
-  	for(int bindx = VAD_low; bindx < VAD_high; bindx++)// maybe we should limit this to the signal containing bins (filtering!!)
-  	   {
-  	      float32_t v = NR.SNR_prio[bindx] * NR.SNR_post[bindx] / (1.0 + NR.SNR_prio[bindx]);
+		for(int bindx = VAD_low; bindx < VAD_high; bindx++)// maybe we should limit this to the signal containing bins (filtering!!)
+		{
+			  float32_t v = NR.SNR_prio[bindx] * NR.SNR_post[bindx] / (1.0 + NR.SNR_prio[bindx]);
 
-  	      NR.Hk[bindx] = 1.0 / NR.SNR_post[bindx] * sqrtf((0.7212 * v + v * v));
+			  NR.Hk[bindx] = 1.0 / NR.SNR_post[bindx] * sqrtf((0.7212 * v + v * v));
 
-  	      NR.Hk_old[bindx] = NR.SNR_post[bindx] * NR.Hk[bindx] * NR.Hk[bindx]; //
-
-
-	      if(!(ts.dsp_active & DSP_NR_ENABLE)) // if NR is not enabled (but notch is enabled !)
-	      {
-		      NR.Hk[bindx] = 1.0;
-	      }
-
-  	   }
+			  NR.Hk_old[bindx] = NR.SNR_post[bindx] * NR.Hk[bindx] * NR.Hk[bindx]; //
 
 
-
-
-#ifdef OLD_LONG_TONE_DETECTION
-              if((ts.dsp_active & DSP_NOTCH_ENABLE))
-              {
-// long tone attenuation = automatic notch filter
-              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
-                    {
-            	  	  	  if(NR2.long_tone[bindx][0] > (float32_t)ts.nr_long_tone_thresh)
-            	  	  	  {
-            	  	  			  NR2.long_tone_gain[bindx] = NR2.long_tone_gain[bindx] * 0.99;
-
-            	  	  			  if(bindx != 0)
-            	  	  			  {
-            	  	  				  NR2.long_tone_gain[bindx - 1] = NR2.long_tone_gain[bindx - 1] * 0.9995;
-                	  	  			  if(NR2.long_tone_gain[bindx - 1] < 0.2)
-                	  	  			  {
-                	  	  				NR2.long_tone_gain[bindx - 1] = 0.2;
-                	  	  			  }
-            	  	  			  }
-            	  	  			  else
-            	  	  			  if(bindx != (NR_FFT_L / 2 - 1))
-            	  	  			  {
-            	  	  				  NR2.long_tone_gain[bindx + 1] = NR2.long_tone_gain[bindx + 1] * 0.9995;
-                	  	  			  if(NR2.long_tone_gain[bindx + 1] < 0.2)
-                	  	  			  {
-                	  	  				NR2.long_tone_gain[bindx + 1] = 0.2;
-                	  	  			  }
-            	  	  			  }
-            	  	  			  if(NR2.long_tone_gain[bindx] < 0.05)
-            	  	  			  {
-            	  	  				NR2.long_tone_gain[bindx] = 0.05;
-            	  	  			  }
-            	  	  	  }
-            	  	  	  else
-            	  	  	  {
-            	  	  		  NR2.long_tone_gain[bindx] *= 1.01;
-        	  	  			  if(bindx != 0)
-        	  	  			  {
-        	  	  				  NR2.long_tone_gain[bindx - 1] = NR2.long_tone_gain[bindx - 1] * 1.0005;
-            	  	  			  if(NR2.long_tone_gain[bindx - 1] > 1.0)
-            	  	  			  {
-            	  	  				NR2.long_tone_gain[bindx - 1] = 1.0;
-            	  	  			  }
-        	  	  			  }
-        	  	  			  else
-        	  	  			  if(bindx != (NR_FFT_L / 2 - 1))
-        	  	  			  {
-        	  	  				  NR2.long_tone_gain[bindx + 1] = NR2.long_tone_gain[bindx + 1] * 1.0005;
-            	  	  			  if(NR2.long_tone_gain[bindx + 1] > 1.0)
-            	  	  			  {
-            	  	  				NR2.long_tone_gain[bindx + 1] = 1.0;
-            	  	  			  }
-        	  	  			  }
-        	  	  			  if(NR2.long_tone_gain[bindx] > 1.0)
-        	  	  			  {
-        	  	  				NR2.long_tone_gain[bindx] = 1.0;
-        	  	  			  }
-            	  	  	  }
-                    }
-              }
-#else
-              if((ts.dsp_active & DSP_NOTCH_ENABLE))
-              {
-            	  NR2.notch_change = false;
-// long tone attenuation = automatic notch filter
-// first version, only one notch implemented - finds the largest persisting signal and notches it with an IIR
-              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
-                    {
-            	  	  	  // if the (strongly time smoothed) signal in a bin exceeds the threshold,
-            	  	  	  // increase the counter for that bin
-						  if(NR2.long_tone[bindx][0] > (float32_t)ts.nr_long_tone_thresh)
-						  {
-							  NR2.long_tone_counter[bindx]++;
-						  }
-						  // if it does not exceed the threshold, decrement its counter
-						  else
-						  {
-							  NR2.long_tone_counter[bindx]--;
-						  }
-						  // care for low counter values
-						  if(NR2.long_tone_counter[bindx] < 1)
-						  {
-							  NR2.long_tone_counter[bindx] = 0;
-						  }
-						  // care for high counter values
-						  else if (NR2.long_tone_counter[bindx] > 200)
-						  {
-							  NR2.long_tone_counter[bindx] = 200;
-						  }
-                    }
-
-				  // before we look for new notches, we have to care for existing notches
-				  if(NR2.notch1_active == true)
-				  {		// Is notch1 till notchworthy ?
-					  if(NR2.long_tone_counter[NR2.notch1_bin] > 100)
-					  {
-
-					  }
-					  else
-					  {
-						  // if a notch is no longer notchworthy, switch it off
-						  // and do not switch it on again for at least one second --> set counter to 0
-						  NR2.long_tone_counter[NR2.notch1_bin] = 0;
-						  NR2.notch1_active = false;
-						  NR2.notch_change = true;
-					  }
-				  }
-
-				  // set max long tone to zero for maximum search
-				  NR2.long_tone_max = 0.0;
-				  NR2.max_bin = -99; // -99 is the indication for reset value
-
-	              for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
-                  {
-						  // look for new notches
-						  // if a tone persists strong for at least one second = 100 frames
-						  // its a notchworthy tone
-						  if(NR2.long_tone_counter[bindx] > 100)
-						  {
-							  if(NR2.long_tone[bindx][0] > NR2.long_tone_max)
-								  // find out, if this is the loudest long tone
-							  {
-								  NR2.long_tone_max = NR2.long_tone[bindx][0];
-								  NR2.max_bin = bindx;
-							  }
-						  }
-                    }
-
-	              if(NR2.max_bin != -99)
-	              { // yes, we found a notchworthy bin
-					  NR2.notch1_active = true;
-					  NR2.long_tone_counter[NR2.max_bin] = 200; // hysteresis ! This notch will stay at least one second
-					  // was this bin already notched last round?
-					  if(NR2.notch1_bin != NR2.max_bin)
-					  {
-						  NR2.notch1_bin = NR2.max_bin;
-						  NR2.notch_change = true; // indicate a change
-					  }
-					  else
-					  {
-
-					  }
-	              }
-              // this activates (and deactivates) the autonotch(es)
-				  if(NR2.notch_change)
-				  {
-					  AudioNr_ActivateAutoNotch(NR2.notch1_bin, NR2.notch1_active);
-				  }
-              } // END NOTCH_ENABLE
-#endif
-
-
-              if(ts.nr_gain_smooth_enable)
-              {
-// we hear considerable distortion in the end result
-// this can be healed significantly by frequency smoothing the gain values
-// this is a trial for smoothing among the gain values
-
-//remark: if we smooth the gains and really modify the HK's like here, the noise reduction algorithm might directly "fight" against this!
-// might be better to keep the HK's internaly and smooth a copy of the gains which are than working on the signal.
-
-				  for(int bindx = 1; bindx < (NR_FFT_L / 2) - 1; bindx++)
-				  {
-					  NR.Hk[bindx] = ts.nr_gain_smooth_alpha * NR.Hk[bindx - 1] + (1.0 - 2.0 * ts.nr_gain_smooth_alpha) * NR.Hk[bindx] + ts.nr_gain_smooth_alpha * NR.Hk[bindx + 1];
-
-				  }
-				  NR.Hk[0] = (1.0 - ts.nr_gain_smooth_alpha) * NR.Hk[0] + ts.nr_gain_smooth_alpha * NR.Hk[1];
-				  NR.Hk[(NR_FFT_L / 2) - 1] = (1.0 - ts.nr_gain_smooth_alpha) * NR.Hk[(NR_FFT_L / 2) - 1] + ts.nr_gain_smooth_alpha * NR.Hk[(NR_FFT_L / 2) - 2];
-              }
+			  if(!(ts.dsp_active & DSP_NR_ENABLE)) // if NR is not enabled (but notch is enabled !)
+			  {
+				  NR.Hk[bindx] = 1.0;
+			  }
+		}
 
 	}	//end of "if ts.nr_first_time == 3"
 
@@ -2252,79 +2036,9 @@ Board_RedLed(LED_STATE_OFF);
               }
 
 
-
-#endif
                 /*****************************************************************
          * NOISE REDUCTION CODE ENDS HERE
          *****************************************************************/
-// very interesting!
-// if I leave the FFT_buffer as is and just multiply the 19 bins below with 0.1, the audio
-// is distorted a little bit !
-// To me, this is an indicator of a problem with windowing . . .
-// OR: smooth the bin gains by frequency, because the problem could be that one bin has gain 1.0 and
-// the adjacent bin has gain 0.1 --> a 20dB difference!
-
-#if 0
-  for(int bindx = 1; bindx < 20; bindx++)
-  // bins 2 to 29 attenuated
-  // set real values to 0.1 of their original value
-  {
-      NR.FFT_buffer[bindx * 2] *= 0.1;
-//      NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 2] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
-      NR.FFT_buffer[bindx * 2 + 1] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
-//      NR_FFT_buffer[NR_FFT_L * 2 - bindx * 2 - 1] *= 0.1; //NR_iFFT_buffer[idx] * 0.1;
-  }
-#endif
-
-#ifdef NR_NOTCHTEST  // this is a test of a smoother notch filter
-	  // centre bin to be notched
-  	  NR.FFT_buffer[				bin_c * 2] 		*= bin1_att; // real
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_c * 2 - 2]	*= bin1_att; // imaginary
-      NR.FFT_buffer[				bin_c * 2 + 1] 	*= bin1_att; // real conjugate symmetric
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_c * 2 - 1] 	*= bin1_att; // imaginary conjugate symmetric
-      // centre_bin + 1 to be notched
-  	  NR.FFT_buffer[				bin_p1 * 2] 	*= bin2_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p1 * 2 - 2]	*= bin2_att;
-      NR.FFT_buffer[				bin_p1 * 2 + 1] *= bin2_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p1 * 2 - 1] *= bin2_att;
-      // centre_bin - 1 to be notched
-  	  NR.FFT_buffer[				bin_m1 * 2] 	*= bin2_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m1 * 2 - 2]	*= bin2_att;
-      NR.FFT_buffer[				bin_m1 * 2 + 1] *= bin2_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m1 * 2 - 1] *= bin2_att;
-      // centre_bin + 2 to be notched
-  	  NR.FFT_buffer[				bin_p2 * 2] 	*= bin3_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p2 * 2 - 2]	*= bin3_att;
-      NR.FFT_buffer[				bin_p2 * 2 + 1] *= bin3_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p2 * 2 - 1] *= bin3_att;
-      // centre_bin - 2 to be notched
-  	  NR.FFT_buffer[				bin_m2 * 2] 	*= bin3_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m2 * 2 - 2]	*= bin3_att;
-      NR.FFT_buffer[				bin_m2 * 2 + 1] *= bin3_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m2 * 2 - 1] *= bin3_att;
-      // centre_bin + 3 to be notched
-  	  NR.FFT_buffer[				bin_p3 * 2] 	*= bin4_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p3 * 2 - 2]	*= bin4_att;
-      NR.FFT_buffer[				bin_p3 * 2 + 1] *= bin4_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p3 * 2 - 1] *= bin4_att;
-      // centre_bin - 3 to be notched
-  	  NR.FFT_buffer[				bin_m3 * 2] 	*= bin4_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m3 * 2 - 2]	*= bin4_att;
-      NR.FFT_buffer[				bin_m3 * 2 + 1] *= bin4_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m3 * 2 - 1] *= bin4_att;
-      // centre_bin + 4 to be notched
-  	  NR.FFT_buffer[				bin_p4 * 2] 	*= bin5_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p4 * 2 - 2]	*= bin5_att;
-      NR.FFT_buffer[				bin_p4 * 2 + 1] *= bin5_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_p4 * 2 - 1] *= bin5_att;
-      // centre_bin - 4 to be notched
-  	  NR.FFT_buffer[				bin_m4 * 2] 	*= bin5_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m4 * 2 - 2]	*= bin5_att;
-      NR.FFT_buffer[				bin_m4 * 2 + 1] *= bin5_att;
-      NR.FFT_buffer[NR_FFT_L * 2 - 	bin_m4 * 2 - 1] *= bin5_att;
-#endif
-
-
     // NR_iFFT
     // perform iFFT (in-place)
 #ifdef NR_FFT_256
@@ -2338,10 +2052,6 @@ Board_RedLed(LED_STATE_OFF);
   	  {
   	    NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
 	  }
-
-
-
-
 
     // do the overlap & add
           for(int i = 0; i < NR_FFT_L / 2; i++)

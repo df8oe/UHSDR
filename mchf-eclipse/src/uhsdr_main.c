@@ -29,6 +29,7 @@
 #include "drivers/audio/audio_management.h"
 #include "drivers/audio/cw/cw_gen.h"
 #include "drivers/audio/freedv_uhsdr.h"
+#include "drivers/audio/audio_nr.h"
 
 //cat
 #include "drivers/cat/cat_driver.h"
@@ -357,6 +358,12 @@ void TransceiverStateInit(void)
 	ts.nr_long_tone_reset = true;
 	ts.nr_first_time = 1;
 	ts.nr_vad_delay = 7;
+	NR2.tax = 0.0717;
+	NR2.tax_int = 72;
+	NR2.tap = 0.152;
+	NR2.tap_int = 152;
+	NR2.asnr = 15;
+	NR2.snr_prio_min_int = 20;
 
     // development setting for DF8OE
     if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
