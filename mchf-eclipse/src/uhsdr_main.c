@@ -358,10 +358,10 @@ void TransceiverStateInit(void)
 	ts.nr_long_tone_reset = true;
 	ts.nr_first_time = 1;
 	ts.nr_vad_delay = 7;
-	NR2.tax = 0.0717;
-	NR2.tax_int = 72;
-	NR2.tap = 0.152;
-	NR2.tap_int = 152;
+	NR2.tax = 0.0239;
+	NR2.tax_int = 24;
+	NR2.tap = 0.0506;
+	NR2.tap_int = 51;
 	NR2.asnr = 15;
 	NR2.snr_prio_min_int = 20;
 

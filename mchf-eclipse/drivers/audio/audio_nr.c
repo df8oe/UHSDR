@@ -1836,7 +1836,7 @@ float32_t uf_freq = (offset + width/2) / (12000 / NR_FFT_L);
 
 
 //const float32_t tinc = 0.00533333; // frame time 5.3333ms
-const float32_t tinc = 5.33333; // frame time 5.3333ms
+const float32_t tinc = 0.00533333; // frame time 5.3333ms
 //const float32_t tax=0.0239;	// noise output smoothing time constant = -tinc/ln(0.8)
 //const float32_t tap=0.05062;	// speech prob smoothing time constant = -tinc/ln(0.9) tinc = frame time (5.33ms)
 const float32_t psthr=0.99;	// threshold for smoothed speech probability [0.99]
