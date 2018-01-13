@@ -3884,28 +3884,28 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
 		case MENU_DEBUG_NR_TAX:
 		var_change = UiDriverMenuItemChangeInt16(var, mode, &NR2.tax_int,
-											  50,
-											  200,
-											  72,
+											  5,
+											  100,
+											  24,
 											  1);
 		if(var_change)      // did something change?
 		{
 			NR2.tax = ((float32_t)NR2.tax_int) * 0.001;
-			ts.nr_first_time = 1;
+			//ts.nr_first_time = 1;
 		}
 		snprintf(options,32, "  %3u", (unsigned int)NR2.tax_int);
 		break;
 
 		case MENU_DEBUG_NR_TAP:
 		var_change = UiDriverMenuItemChangeInt16(var, mode, &NR2.tap_int,
-											  50,
-											  300,
-											  152,
+											  10,
+											  200,
+											  51,
 											  1);
 		if(var_change)      // did something change?
 		{
 			NR2.tap = ((float32_t)NR2.tap_int) * 0.001;
-			ts.nr_first_time = 1;
+			//ts.nr_first_time = 1;
 		}
 		snprintf(options,32, "  %3u", (unsigned int)NR2.tap_int);
 		break;
@@ -3918,7 +3918,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                               1);
         if(var_change)      // did something change?
         {
-        	ts.nr_first_time = 1;
+        	//ts.nr_first_time = 1;
         }
         snprintf(options,32, "  %3u", (unsigned int)NR2.asnr);
         break;
@@ -3931,7 +3931,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                               1);
         if(var_change)      // did something change?
         {
-        	ts.nr_first_time = 1;
+        	//ts.nr_first_time = 1;
         }
         snprintf(options,32, "  %3u", (unsigned int)NR2.snr_prio_min_int);
         break;
