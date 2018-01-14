@@ -1953,7 +1953,7 @@ Board_RedLed(LED_STATE_OFF);
 
 		for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)// 1. Step of NR - calculate the SNR's
     	{
-		      ph1y[bindx] = (1.0 + NR2.pfac * 1.0 / expf(NR2.xih1r * NR2.X[bindx][0]/xt[bindx]));
+		      ph1y[bindx] = 1/ (1.0 + NR2.pfac * expf(NR2.xih1r * NR2.X[bindx][0]/xt[bindx]));
 		      pslp[bindx] = NR2.ap * pslp[bindx] + (1.0 - NR2.ap) * ph1y[bindx];
 		      ph1y[bindx] = fmin(ph1y[bindx], 1.0 - pnsaf * (pslp[bindx] > psthr)); //?????
 		      xtr = (1.0 - ph1y[bindx]) * NR2.X[bindx][0] + ph1y[bindx] * xt[bindx];
