@@ -111,26 +111,39 @@ uint16_t psk_varicode[] = {
 		0b1011010111 // ~
 };
 
-#define PSK_BND_FLT_LEN 5
 
 float32_t PskBndPassB[] = {
-		0.00068698,
+		0.000069360488,
 		0,
-		-0.00137396,
+		-0.000138720977,
 		0,
-		0.00068698
+		0.000069360488
 };
 
 float32_t PskBndPassA[] = {
 		1,
-		-3.40096044,
-		4.81713149,
-		-3.27487565,
-		0.92725284
+		-3.44370261,
+		4.94118045,
+		-3.40314202,
+		0.97658316
 };
 
-float32_t bnd_ibuffer[PSK_BND_FLT_LEN];
-float32_t bnd_obuffer[PSK_BND_FLT_LEN];
+float32_t PskCosDDS[] = { 6.12323400e-17, -9.95678466e-02, -1.98146143e-01, -2.94755174e-01,
+ -3.88434796e-01,-4.78253979e-01,-5.63320058e-01,-6.42787610e-01,
+ -7.15866849e-01,-7.81831482e-01,-8.40025923e-01,-8.89871809e-01,
+ -9.30873749e-01,-9.62624247e-01,-9.84807753e-01,-9.97203797e-01,
+ -9.99689182e-01,-9.92239207e-01,-9.74927912e-01,-9.47927346e-01,
+ -9.11505852e-01,-8.66025404e-01,-8.11938006e-01,-7.49781203e-01,
+ -6.80172738e-01,-6.03804410e-01,-5.21435203e-01,-4.33883739e-01,
+ -3.42020143e-01,-2.46757398e-01,-1.49042266e-01,-4.98458857e-02,
+  4.98458857e-02, 1.49042266e-01, 2.46757398e-01, 3.42020143e-01,
+  4.33883739e-01, 5.21435203e-01, 6.03804410e-01, 6.80172738e-01,
+  7.49781203e-01, 8.11938006e-01, 8.66025404e-01, 9.11505852e-01,
+  9.47927346e-01, 9.74927912e-01, 9.92239207e-01, 9.99689182e-01,
+  9.97203797e-01, 9.84807753e-01, 9.62624247e-01, 9.30873749e-01,
+  8.89871809e-01, 8.40025923e-01, 7.81831482e-01, 7.15866849e-01,
+  6.42787610e-01, 5.63320058e-01, 4.78253979e-01,  3.88434796e-01,
+  2.94755174e-01,  1.98146143e-01,  9.95678466e-02, 3.06161700e-16 }; // TODO to replace with soft_dds
 
 soft_dds_t psk_dds;
 soft_dds_t psk_bit_dds;
@@ -142,6 +155,23 @@ void PskBufAdd(int len, float32_t buf[], float32_t v)
 		buf[i] = buf[i-1];
 	}
 	buf[0] = v;
+}
+
+float32_t Psk_IirNext(float32_t b[], float32_t a[], float32_t x[], float32_t y[], int idx, int taps)
+{
+	float32_t resp = 0;
+	int iidx; 
+
+	for (int i = 0; i < taps; i++)
+	{
+		iidx = (idx - i + taps) % taps;
+		resp += b[i] * x[iidx];
+		if (i>0)
+		{
+			resp -= a[i] * y[iidx];
+		}
+	}
+	return resp / a[0];
 }
 
 
@@ -179,6 +209,41 @@ void Bpsk_ModulatorInit(void)
 	Bpsk_ResetWin();
 }
 
+void Bpsk_DemodulatorInit(void)
+{
+	psk_state.rx_phase = 0;
+	psk_state.rx_bnd_idx = 0;
+	
+	for (int i = 0; i < PSK_BND_FLT_LEN; i++)
+	{
+		psk_state.rx_samples_in[i] = 0;
+		psk_state.rx_samples[i] = 0;
+	}
+	
+	for (int i = 0; i < PSK_BUF_LEN; i++)
+	{
+		psk_state.rx_vco[i] = 0;
+		psk_state.rx_sin_prod[i] = 0;
+		psk_state.rx_cos_prod[i] = 0;
+		psk_state.rx_scmix[i] = 0;
+	}
+
+	psk_state.rx_idx = 0;
+	psk_state.rx_last_bit = 0;
+	psk_state.rx_err = 0;
+	psk_state.rx_last_symbol = 0;
+	psk_state.rx_symbol_len = psk_state.rate / PSK_BUF_LEN;
+	psk_state.rx_symbol_idx = 0;
+	
+	// for (int i = 0; i < psk_state.rx_symbol_len; i ++)
+	// {
+	// 	psk_state.rx_symbol_buf[i];
+	// }
+
+	psk_state.rx_word = 0;
+	UiDriver_TextMsgPutChar('>');
+}
+
 
 void PskDecoder_Init(void)
 {
@@ -189,10 +254,10 @@ void PskDecoder_Init(void)
 		psk_state.rate = 384;
 		break;
 	case PSK_SPEED_63:
-		psk_state.rate = 96;
+		psk_state.rate = 192;
 		break;
 	case PSK_SPEED_125:
-		psk_state.rate = 48;
+		psk_state.rate = 96;
 		break;
 	default:
 	{
@@ -206,6 +271,7 @@ void PskDecoder_Init(void)
 	psk_state.tx_bit_len = lround(ts.samp_rate / psk_speeds[psk_ctrl_config.speed_idx].value * 2);
 	psk_state.tx_zeros = - psk_speeds[psk_ctrl_config.speed_idx].zeros;
 	Bpsk_ModulatorInit();
+	Bpsk_DemodulatorInit();
 }
 
 
@@ -245,6 +311,84 @@ uint16_t Bpsk_FindCharReversed(uint8_t c)
 
 void BpskDecoder_ProcessSample(float32_t sample)
 {
+	float32_t fsample, sum_sin = 0, sum_cos = 0, symbol_out;
+	int8_t bit;
+
+	psk_state.rx_samples_in[psk_state.rx_bnd_idx] = sample;
+	fsample = Psk_IirNext(PskBndPassB, PskBndPassA, psk_state.rx_samples_in,
+		psk_state.rx_samples, psk_state.rx_bnd_idx, PSK_BND_FLT_LEN);
+	psk_state.rx_samples[psk_state.rx_bnd_idx] = fsample;
+	psk_state.rx_bnd_idx++;
+	psk_state.rx_bnd_idx %= PSK_BND_FLT_LEN;
+
+	psk_state.rx_vco[psk_state.rx_idx] = PskCosDDS[(int)(psk_state.rx_phase * PSK_COS_DDS_LEN)]; // TODO This shall be replaced with soft_dds
+	psk_state.rx_sin_prod[psk_state.rx_idx] = psk_state.rx_vco[(psk_state.rx_idx - PSK_SHIFT_90 + PSK_BUF_LEN) % PSK_BUF_LEN] * fsample;
+	psk_state.rx_cos_prod[psk_state.rx_idx] = psk_state.rx_vco[psk_state.rx_idx] * fsample;
+
+	for (int i = 0; i < PSK_BUF_LEN; i++)
+	{
+		sum_sin += psk_state.rx_sin_prod[i]; // Could be optimized keeping the sum in memory
+		sum_cos += psk_state.rx_cos_prod[i]; //
+	}
+
+	symbol_out = sum_sin / PSK_BUF_LEN;
+	psk_state.rx_scmix[psk_state.rx_idx] = symbol_out * sum_cos / PSK_BUF_LEN;
+
+	psk_state.rx_err = 0;
+	for (int i = 0; i < PSK_BUF_LEN; i++)
+	{
+		psk_state.rx_err += psk_state.rx_scmix[i];
+	}
+	psk_state.rx_err /= PSK_BUF_LEN * 100000.0;
+	if(fabsf(psk_state.rx_err) > 0.001)
+	{
+		psk_state.rx_err = 0.001 * ((psk_state.rx_err > 0) ? 1 : -1 );
+	}
+
+	psk_state.rx_idx += 1;
+	psk_state.rx_idx %= PSK_BUF_LEN;
+
+	psk_state.rx_phase += PSK_SHIFT_DIFF + psk_state.rx_err;
+	
+	if (psk_state.rx_phase > 1)
+	{
+		psk_state.rx_phase -= 1;
+		psk_state.rx_symbol_idx += 1;
+		if (psk_state.rx_symbol_idx >= psk_state.rx_symbol_len)
+		{
+			psk_state.rx_symbol_idx = 0;
+			// TODO here should come additional part to check if timing of sampling should be moved
+			if (psk_state.rx_last_symbol * symbol_out < 0)
+			{
+				bit = 0;
+			} 
+			else
+			{
+				bit = 1;
+			}
+
+			psk_state.rx_last_symbol = symbol_out;
+
+			if (psk_state.rx_last_bit == 0 && bit == 0 && psk_state.rx_word != 0)
+			{
+				UiDriver_TextMsgPutChar(Bpsk_DecodeVaricode(psk_state.rx_word / 2));
+				psk_state.rx_word = 0;
+			}
+			else
+			{
+				psk_state.rx_word = 2 * psk_state.rx_word + bit;
+			}
+
+			psk_state.rx_last_bit = bit;
+
+		}
+	}
+
+	if (psk_state.rx_phase < 0)
+	{
+		psk_state.rx_phase += 1;
+	}
+
 }
 
 
