@@ -138,14 +138,16 @@ static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
 static void UiDriver_DisplayPskSpeed(bool encoder_active);
 
+
+
 #ifdef USE_HIRES_TOUCH
-typedef struct
+/*typedef struct
 {
 	int16_t x;
 	int16_t y;
 	int16_t w;
 	int16_t h;
-} touchscreen_region_t;
+} touchscreen_region_t;*/
 #else
 typedef struct
 {
@@ -271,7 +273,7 @@ uchar drv_state = 0;
 bool filter_path_change = false;
 
 // check if touched point is within rectangle of valid action
-static bool UiDriver_CheckTouchRegion(const touchscreen_region_t* tr_p)
+static bool UiDriver_CheckTouchRegion(const UiArea_t* tr_p)
 {
 #ifdef USE_HIRES_TOUCH
 	return ((ts.tp->hr_x <= (tr_p->x+tr_p->w)) &&
@@ -394,15 +396,21 @@ inline bool is_dsp_mpeak()
 {
 	return (ts.dsp_active & DSP_MPEAK_ENABLE) != 0;
 }
-
-
+#ifdef USE_HIRES_TOUCH
+typedef struct
+{
+	UiArea_t region;
+	void (*function_short_press)();
+	void (*function_long_press)();
+} touchaction_descr_t;
+#else
 typedef struct
 {
 	touchscreen_region_t region;
 	void (*function_short_press)();
 	void (*function_long_press)();
 } touchaction_descr_t;
-
+#endif
 
 #define KEYACTION_NOP    (NULL)				// This action for the pressed key is treated as being executed, but it is a no-operation
 #define KEYACTION_PASS ((void(*)())-1)		// This action for the pressed key is treated as not present, i.e. we do not report the key event has been processed
@@ -1778,6 +1786,7 @@ static void UiDriver_CreateDesktop()
 	    UiDriver_SetSpectrumMode(SPECTRUM_DUAL);
 	}
 
+	//UiSpectrum_GetSpectrumGraticule()->y=ts.graticulePowerupYpos;
 	// Spectrum scope
 	UiSpectrum_Init();
 
@@ -5834,6 +5843,11 @@ static void UiAction_ChangeFrequencyToNextKhz()
 
 static void UiAction_ToggleWaterfallScopeDisplay()
 {
+	if(ts.spectrum_size == SPECTRUM_BIG)
+	{
+		return;		//preventing the accidental change of view type  when user doesn't see the bar
+	}
+
     SpectrumMode_t temp = UiDriver_GetSpectrumMode();
 
     if (temp != SPECTRUM_BLANK)
@@ -5845,6 +5859,7 @@ static void UiAction_ToggleWaterfallScopeDisplay()
     temp%=3;
     temp++;
     UiDriver_SetSpectrumMode(temp);
+    UiSpectrum_ResetSpectrum();
     UiSpectrum_Init();   // init spectrum display
 }
 
@@ -5911,6 +5926,45 @@ static void UiAction_SaveConfigurationToMemory()
 		}
 	}
 }
+
+static void UiDriver_DrawGraticule_Rect(bool show)
+{
+	uint16_t pos_y=ts.graticulePowerupYpos;
+	if(show)
+	{
+
+		UiLcdHy28_PrintText(sd.Slayout->graticule.x+5,pos_y+4,"CHOOSE NEW POSITION",White,Black,4);
+		UiLcdHy28_PrintText(sd.Slayout->graticule.x+sd.Slayout->graticule.w-50,pos_y+4,"|SAVE",Yellow,Black,4);
+		UiLcdHy28_DrawEmptyRect(sd.Slayout->graticule.x+1,pos_y+1,sd.Slayout->graticule.h-3,sd.Slayout->graticule.w-3,White);
+	}
+	else
+	{
+		//clear the graticule area
+		UiLcdHy28_DrawFullRect(sd.Slayout->graticule.x+1,pos_y+1,sd.Slayout->graticule.h-2,sd.Slayout->graticule.w-2,Black);
+	}
+}
+
+/*
+ * Special actions for long pressed spectrum/waterfall area
+ */
+static void UiAction_CheckSpectrumTouchActions()
+{
+	//UiArea_t* ScGRAT_area=UiSpectrum_GetSpectrumGraticule();	//fetch the current scope graticule area pointer
+
+	if(UiDriver_CheckTouchRegion(&sd.Slayout->graticule)			//check for spectrum/waterfall size ratio change
+			&&ts.txrx_mode == TRX_MODE_RX)
+	{
+		if(ts.SpectrumResize_flag==0)
+		{
+			UiSpectrum_Clear();
+			UiDriver_DrawGraticule_Rect(true);		//draw new graticule control
+			UiLcdHy28_DrawEmptyRect(sd.Slayout->full.x,sd.Slayout->full.y,sd.Slayout->full.h-1,sd.Slayout->full.w-1,White);
+			ts.SpectrumResize_flag=1;
+			return;
+		}
+	}
+}
+
 #ifdef USE_HIRES_TOUCH
 static void UiAction_ChangeFrequencyByTouch()
 {
@@ -5935,7 +5989,9 @@ static void UiAction_ChangeFrequencyByTouch()
 			step = 20000;				// adjust to 5KHz
 		}
 
-		int16_t line =sd.marker_pos[0] + UiSpectrum_GetSpectrumStartX();
+		//int16_t line =sd.marker_pos[0] + UiSpectrum_GetSpectrumStartX();
+		int16_t line =sd.marker_pos[0] + sd.Slayout->scope.x;
+
 		/*int16_t line =sd.rx_carrier_pos;
 		if(ts.dmod_mode == DEMOD_CW)
 		{
@@ -6444,9 +6500,9 @@ static void UiAction_StepPlusHold()
 	static const touchaction_descr_t touchactions_normal[] =
 	{
 			{ {POS_SM_IND_X,POS_SM_IND_Y,SM_IND_W,SM_IND_H}, UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
-			{ {100,110,60,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
-			{ {(480/2)-16,110,48,16}, UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
-			{ {(480/2)+100,110,48,16}, UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
+			{ {0,110,60,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
+			{ {(480/2)-16,110,48,16}, UiAction_ChangeSpectrumZoomLevelDown,    UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Middle Part: Decrease Zoom Level
+			{ {(480/2)+100,110,48,16}, UiAction_ChangeSpectrumZoomLevelUp,      UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Right Part: Increase Zoom Level
 //			{ {POS_BOTTOM_BAR_F1_X+POS_BOTTOM_BAR_BUTTON_W*4,POS_BOTTOM_BAR_F1_Y,POS_BOTTOM_BAR_BUTTON_W,POS_BOTTOM_BAR_BUTTON_H}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
 			{ {POS_TUNE_FREQ_X+16*7,POS_TUNE_FREQ_Y,16*3,24}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
 			{ {POS_DEMOD_MODE_X,POS_DEMOD_MODE_Y,POS_DEMOD_MODE_MASK_W,POS_DEMOD_MODE_MASK_H}, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
@@ -6455,7 +6511,7 @@ static void UiAction_StepPlusHold()
 			{ {POS_BAND_MODE_X,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
 			{ {POS_BAND_MODE_X+POS_BAND_MODE_MASK_W*3/4,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
 			{ {POS_LEFTBOXES_IND_X,POS_LEFTBOXES_IND_Y,LEFTBOX_WIDTH,LEFTBOX_ROW_H}, Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
-			{ {0,110,480,176}, UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
+			{ {0,110,480,176}, UiAction_ChangeFrequencyByTouch, UiAction_CheckSpectrumTouchActions}, // Scope Draw Area: Tune to Touch
 			{ {POS_DIGMODE_IND_X,POS_DIGMODE_IND_Y,POS_DIGMODE_IND_H,16}, UiAction_ChangeDigitalMode,              NULL }, // Digital Mode Box: Switch Digi Mode
 			{ {POS_TUNE_STEP_X,POS_TUNE_STEP_Y,POS_TUNE_STEP_MASK_W,POS_TUNE_STEP_MASK_H}, UiAction_ChangeDynamicTuning,            NULL }, // Step Box: Dynamic Tuning Toggle
 	};
@@ -6474,8 +6530,8 @@ static void UiAction_StepPlusHold()
 	{
 			{ {POS_SM_IND_X,POS_SM_IND_Y,SM_IND_W,SM_IND_H}, UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
 			{ {64,128,60,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
-			{ {180,128,40,16}, UiAction_ChangeSpectrumZoomLevelDown,    NULL }, // Spectrum Bar Middle Part: Decrease Zoom Level
-			{ {280,128,40,16}, UiAction_ChangeSpectrumZoomLevelUp,      NULL }, // Spectrum Bar Right Part: Increase Zoom Level
+			{ {180,128,40,16}, UiAction_ChangeSpectrumZoomLevelDown,    UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Middle Part: Decrease Zoom Level
+			{ {280,128,40,16}, UiAction_ChangeSpectrumZoomLevelUp,      UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Right Part: Increase Zoom Level
 //			{ {POS_BOTTOM_BAR_F1_X+POS_BOTTOM_BAR_BUTTON_W*4,POS_BOTTOM_BAR_F1_Y,POS_BOTTOM_BAR_BUTTON_W,POS_BOTTOM_BAR_BUTTON_H}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
 			{ {POS_TUNE_FREQ_X+16*7,POS_TUNE_FREQ_Y,16*3,24}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
 			{ {POS_DEMOD_MODE_X,POS_DEMOD_MODE_Y,POS_DEMOD_MODE_MASK_W,POS_DEMOD_MODE_MASK_H}, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
@@ -6484,7 +6540,7 @@ static void UiAction_StepPlusHold()
 			{ {POS_BAND_MODE_X,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandDownOrUp,             NULL }, // Left Part Band Display: Band down
 			{ {POS_BAND_MODE_X+POS_BAND_MODE_MASK_W*3/4,POS_BAND_MODE_Y,POS_BAND_MODE_MASK_W/2,POS_BAND_MODE_MASK_H}, UiAction_ChangeBandUpOrDown,             NULL }, // Right Part Band Display: Band up
 			{ {POS_LEFTBOXES_IND_X,POS_LEFTBOXES_IND_Y,LEFTBOX_WIDTH,LEFTBOX_ROW_H}, Codec_RestartI2S,                        NULL }, // DSP Box: Restart I2S
-			{ {60,128,256,80}, UiAction_ChangeFrequencyByTouch,         NULL }, // Scope Draw Area: Tune to Touch
+			{ {60,128,256,90}, UiAction_ChangeFrequencyByTouch, UiAction_CheckSpectrumTouchActions }, // Scope Draw Area: Tune to Touch
 			{ {POS_DIGMODE_IND_X,POS_DIGMODE_IND_Y,POS_DIGMODE_IND_H,16}, UiAction_ChangeDigitalMode,              NULL }, // Digital Mode Box: Switch Digi Mode
 			{ {POS_TUNE_STEP_X,POS_TUNE_STEP_Y,POS_TUNE_STEP_MASK_W,POS_TUNE_STEP_MASK_H}, UiAction_ChangeDynamicTuning,            NULL }, // Step Box: Dynamic Tuning Toggle
 	};
@@ -6573,9 +6629,48 @@ static void UiDriver_HandleTouchScreen(bool is_long_press)
 			UiLcdHy28_PrintText(0,POS_LOADANDDEBUG_Y,text,White,Black,0);
 		}
 
+		if(ts.SpectrumResize_flag==true
+				&& ts.menu_mode==0)
+		{
+			UiArea_t SaveArea;
+			SaveArea.x=sd.Slayout->graticule.x+sd.Slayout->graticule.w-50;
+			SaveArea.y=ts.graticulePowerupYpos;
+			SaveArea.h=sd.Slayout->graticule.h;
+			SaveArea.w=50;
+			if(UiDriver_CheckTouchRegion(&SaveArea))
+			{
+				ts.SpectrumResize_flag=0;
+				UiSpectrum_Init();
+				ts.graticulePowerupYpos=sd.Slayout->graticule.y;		//store current graticule position for future eeprom save
+				UiDriver_DisplayFButton_F1MenuExit();		//redraw the menu button to indicate the changed item
+			}
+			else if(UiDriver_CheckTouchRegion(&sd.Slayout->full))
+			{
+				UiDriver_DrawGraticule_Rect(false); 	 //clear graticule current area
+				uint16_t new_y=ts.tp->hr_y;
 
+				if((new_y<sd.Slayout->draw.y+MinimumScopeSize))
+				{
+					new_y=sd.Slayout->draw.y;
+				}
+				if(new_y>(sd.Slayout->draw.y+sd.Slayout->draw.h-MinimumWaterfallSize))
+				{
+					new_y=sd.Slayout->draw.y+sd.Slayout->draw.h-sd.Slayout->graticule.h;
+				}
 
-		UiDriver_ProcessTouchActions(&touch_regions[touchaction_idx], is_long_press);
+				ts.graticulePowerupYpos=new_y;
+				UiDriver_DrawGraticule_Rect(true);		//draw new graticule control
+				ts.menu_var_changed=1;
+			}
+			else
+			{
+				UiDriver_ProcessTouchActions(&touch_regions[touchaction_idx], is_long_press);
+			}
+		}
+		else
+		{
+			UiDriver_ProcessTouchActions(&touch_regions[touchaction_idx], is_long_press);
+		}
 
 		ts.tp->state = TP_DATASETS_PROCESSED;							// set statemachine to data fetched
 	}
