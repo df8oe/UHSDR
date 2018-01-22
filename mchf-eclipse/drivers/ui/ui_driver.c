@@ -6500,10 +6500,9 @@ static void UiAction_StepPlusHold()
 	static const touchaction_descr_t touchactions_normal[] =
 	{
 			{ {POS_SM_IND_X,POS_SM_IND_Y,SM_IND_W,SM_IND_H}, UiAction_ChangeLowerMeterUp,             NULL },  // Lower Meter: Meter Toggle
-			{ {0,110,60,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
+			{ {0,110,160,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
 			{ {(480/2)-16,110,48,16}, UiAction_ChangeSpectrumZoomLevelDown,    UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Middle Part: Decrease Zoom Level
 			{ {(480/2)+100,110,48,16}, UiAction_ChangeSpectrumZoomLevelUp,      UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Right Part: Increase Zoom Level
-//			{ {POS_BOTTOM_BAR_F1_X+POS_BOTTOM_BAR_BUTTON_W*4,POS_BOTTOM_BAR_F1_Y,POS_BOTTOM_BAR_BUTTON_W,POS_BOTTOM_BAR_BUTTON_H}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
 			{ {POS_TUNE_FREQ_X+16*7,POS_TUNE_FREQ_Y,16*3,24}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
 			{ {POS_DEMOD_MODE_X,POS_DEMOD_MODE_Y,POS_DEMOD_MODE_MASK_W,POS_DEMOD_MODE_MASK_H}, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
 			{ {POS_PW_IND_X,POS_PW_IND_Y,64,16},								 UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
