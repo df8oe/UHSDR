@@ -5843,11 +5843,6 @@ static void UiAction_ChangeFrequencyToNextKhz()
 
 static void UiAction_ToggleWaterfallScopeDisplay()
 {
-	if(ts.spectrum_size == SPECTRUM_BIG)
-	{
-		return;		//preventing the accidental change of view type  when user doesn't see the bar
-	}
-
     SpectrumMode_t temp = UiDriver_GetSpectrumMode();
 
     if (temp != SPECTRUM_BLANK)
