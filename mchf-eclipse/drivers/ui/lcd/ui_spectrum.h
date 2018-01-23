@@ -19,6 +19,25 @@
 #include "arm_const_structs.h"
 #include "ui_lcd_items.h"
 
+
+typedef struct {
+    uint16_t x;
+    uint16_t y;
+    uint16_t w;
+    uint16_t h;
+} UiArea_t;
+
+typedef struct
+{
+    UiArea_t full;
+    UiArea_t draw;
+    UiArea_t title;
+    UiArea_t scope;
+    UiArea_t graticule;
+    UiArea_t wfall;
+} SpectrumAreas_t;
+
+
 void UiSpectrum_Init();
 void UiSpectrum_Clear();
 void UiSpectrum_Redraw();
@@ -27,7 +46,8 @@ void UiSpectrum_CalculateDisplayFilterBW(float32_t* width_pixel_, float32_t* lef
 void UiSpectrum_DisplayFilterBW();
 
 void UiSpectrum_InitCwSnapDisplay (bool visible);
-uint16_t UiSpectrum_GetSpectrumStartX();
+void UiSpectrum_SetNewGraticulePosition(uint16_t new_y);
+void UiSpectrum_ResetSpectrum(void);
 
 // Settings for dB/division for spectrum display
 enum
@@ -114,6 +134,8 @@ enum
 	Redraw_SCOPE=1,
 	Redraw_WATERFALL=2
 };
+
+
 //#define FFT_WINDOW_DEFAULT                  FFT_WINDOW_BLACKMAN
 
 #define SPECTRUM_SIZE_DEFAULT               SPECTRUM_NORMAL
@@ -223,14 +245,14 @@ typedef struct SpectrumDisplay
 
     uint16_t waterfall_colours[NUMBER_WATERFALL_COLOURS+1];  // palette of colors for waterfall data
     // uint8_t (*waterfall)[SPECTRUM_WIDTH];	//pointer to waterfall memory
-    uint8_t doubleWaterfallLine;				//line doubling control state
+    uint8_t repeatWaterfallLine;				//line repeating count for waterfall size grater than number of data lines in waterfall array
     // uint8_t  waterfall[WATERFALL_MAX_LINES*SPECTRUM_WIDTH];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
     uint8_t  waterfall[(WATERFALL_HEIGHT+10)*256];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
     uint32_t waterfall_frequencies[(WATERFALL_HEIGHT+10)]; // we reserve hopefully enough frequency stores here. We store for each line in waterfall the center frequency of it.
-    uint8_t wfall_DrawDirection;	//0=upward (water fountain), 1=downward (real waterfall)
+    //uint8_t wfall_DrawDirection;	//0=upward (water fountain), 1=downward (real waterfall)
     uint16_t wfall_line;        // pointer to current line of waterfall data
     uint16_t wfall_size;        // vertical size of the waterfall data (number of stored fft results)
-    uint16_t wfall_disp_lines;        // vertical size of the waterfall on display
+    //uint16_t wfall_disp_lines;        // vertical size of the waterfall on display
     uint16_t wfall_ystart;
 
     uint16_t scope_size;
@@ -251,10 +273,15 @@ typedef struct SpectrumDisplay
     uint16_t old_left_filter_border_pos;	//previous BW highlight left border
     uint16_t old_right_filter_border_pos;	//previous BW highlight right border
     uint8_t RedrawType;
+    SpectrumAreas_t* Slayout;
 
 } SpectrumDisplay;
 
 // Spectrum display
 extern SpectrumDisplay      sd;
+
+#define MinimumScopeSize 16
+#define MinimumWaterfallSize 16
+
 
 #endif

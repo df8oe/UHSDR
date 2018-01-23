@@ -30,29 +30,13 @@
 #define USE_DISP_480_320_SPEC
 #endif
 
-typedef struct {
-    uint16_t x;
-    uint16_t y;
-    uint16_t w;
-    uint16_t h;
-} UiArea_t;
+
 
 typedef struct
 {
     const int16_t SCOPE_GRID_VERT_COUNT;
     const int16_t SCOPE_GRID_HORIZ;
 } pos_spectrum_display_t;
-
-
-typedef struct
-{
-    UiArea_t full;
-    UiArea_t draw;
-    UiArea_t title;
-    UiArea_t scope;
-    UiArea_t graticule;
-    UiArea_t wfall;
-} SpectrumAreas_t;
 
 
 SpectrumAreas_t slayout;
@@ -69,6 +53,70 @@ SpectrumAreas_t slayout;
  * This algorithm can also be used to calculate the layout statically offline (we don't do this yet).
  */
 void UiSpectrum_CalculateLayout(const bool is_big, const bool scope_enabled, const bool wfall_enabled, const UiArea_t* full_ptr, const uint16_t padding)
+{
+	sd.Slayout=&slayout;
+
+    slayout.full.x = full_ptr->x;
+    slayout.full.y = full_ptr->y;
+    slayout.full.w = full_ptr->w;
+    slayout.full.h = full_ptr->h;
+
+    slayout.draw.x = slayout.full.x + padding;
+    slayout.draw.y = slayout.full.y + padding;
+    slayout.draw.w = slayout.full.w - 2*padding;
+    slayout.draw.h = slayout.full.h - 2*padding;
+
+    slayout.title.x = slayout.draw.x;
+    slayout.title.y = slayout.draw.y;
+    slayout.title.w = slayout.draw.w;
+    slayout.title.h = is_big?0:16; // hide title if big
+
+    slayout.graticule.x = slayout.draw.x;
+    slayout.graticule.w = slayout.draw.w;
+    slayout.graticule.h = 16;
+
+    slayout.scope.x = slayout.draw.x;
+    slayout.scope.y = slayout.title.y + slayout.title.h;
+    slayout.scope.w = slayout.draw.w;
+
+    UiSpectrum_SetNewGraticulePosition(ts.graticulePowerupYpos);
+ /*
+    if(slayout.graticule.y<slayout.scope.y)
+    {															//not allowed y position (not initialized yet)
+    	slayout.graticule.y=slayout.scope.y + slayout.draw.h/2;	//default setup 50% space for spectrum and 50% for waterfall
+    	ts.flags1 |= FLAGS1_SCOPE_ENABLED | FLAGS1_WFALL_ENABLED;
+    }
+
+    if(slayout.graticule.y>(slayout.draw.y+slayout.draw.h-slayout.graticule.h-MinimumWaterfallSize))
+    {
+    	slayout.graticule.y=slayout.draw.y+slayout.draw.h-slayout.graticule.h;
+    	ts.flags1 &= ~FLAGS1_WFALL_ENABLED;
+    }
+
+    if(slayout.graticule.y<(slayout.draw.y+slayout.title.h+MinimumScopeSize))
+    {
+    	slayout.graticule.y=slayout.draw.y+slayout.title.h;
+    	ts.flags1 &= ~FLAGS1_SCOPE_ENABLED;
+    }
+   */
+    slayout.scope.h = slayout.graticule.y - slayout.scope.y;
+
+    slayout.wfall.x = slayout.draw.x;
+    slayout.wfall.y = slayout.graticule.y + slayout.graticule.h;
+    slayout.wfall.w = slayout.draw.w;
+
+    if((slayout.title.h + slayout.graticule.h + slayout.scope.h)>=slayout.draw.h)
+    {
+    	slayout.wfall.h=0;
+    }
+    else
+    {
+    	slayout.wfall.h=slayout.draw.h-(slayout.title.h + slayout.graticule.h + slayout.scope.h);
+    }
+}
+
+/*
+//old Danilo's nice calculation
 {
     slayout.full.x = full_ptr->x;
     slayout.full.y = full_ptr->y;
@@ -101,7 +149,48 @@ void UiSpectrum_CalculateLayout(const bool is_big, const bool scope_enabled, con
     slayout.wfall.w = slayout.draw.w;
     slayout.wfall.h = wfall_enabled?(slayout.draw.h - slayout.title.h - slayout.graticule.h)/(scope_enabled?2:1) : 0;
 }
+ */
+void UiSpectrum_SetNewGraticulePosition(uint16_t new_y)
+{
+	if(new_y>(slayout.draw.y+slayout.draw.h-slayout.graticule.h-MinimumWaterfallSize))
+	{
+		slayout.graticule.y=slayout.draw.y+slayout.draw.h-slayout.graticule.h;
+		ts.flags1 &= ~FLAGS1_WFALL_ENABLED;
+		ts.flags1 |= FLAGS1_SCOPE_ENABLED;
+	}
+	else if(new_y<(slayout.draw.y+slayout.title.h+MinimumScopeSize))
+	{
+		slayout.graticule.y=slayout.draw.y+slayout.title.h;
+		ts.flags1 &= ~FLAGS1_SCOPE_ENABLED;
+		ts.flags1 |= FLAGS1_WFALL_ENABLED;
+		return;
+	}
+	else
+	{
+		slayout.graticule.y=new_y;
+		ts.flags1 |= FLAGS1_SCOPE_ENABLED;
+		ts.flags1 |= FLAGS1_WFALL_ENABLED;
+	}
+}
 
+//sets graticule position according to control bits (to default for particular case)
+void UiSpectrum_ResetSpectrum()
+{
+	switch(ts.flags1&(FLAGS1_SCOPE_ENABLED | FLAGS1_WFALL_ENABLED))
+	{
+	case FLAGS1_SCOPE_ENABLED:
+		ts.graticulePowerupYpos=slayout.draw.y+slayout.draw.h-slayout.graticule.h;
+		break;
+	case FLAGS1_WFALL_ENABLED:
+		ts.graticulePowerupYpos=slayout.draw.y;
+		break;
+	case (FLAGS1_SCOPE_ENABLED | FLAGS1_WFALL_ENABLED):
+		ts.graticulePowerupYpos=slayout.draw.y + slayout.draw.h/2;
+		break;
+	default:
+		break;
+	}
+}
 
 const pos_spectrum_display_t pos_spectrum_set[] =
 {
@@ -499,7 +588,7 @@ static void UiSpectrum_CreateDrawArea()
     // Clear screen where frequency information will be under graticule
     UiLcdHy28_DrawFullRect(slayout.graticule.x, slayout.graticule.y, slayout.graticule.h, slayout.graticule.w, Black);    // Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 
-    sd.wfall_DrawDirection=1;
+    //sd.wfall_DrawDirection=1;
 
 // was used on 320x240, we may reactivate that at some point for all resolutions
 #if 0
@@ -601,12 +690,6 @@ void UiSpectrum_Clear()
 {
     UiLcdHy28_DrawFullRect(slayout.full.x, slayout.full.y, slayout.full.h, slayout.full.w, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 }
-
-uint16_t UiSpectrum_GetSpectrumStartX()
-{
-	return slayout.scope.x;
-}
-
 
 // This version of "Draw Scope" is revised from the original in that it interleaves the erasure with the drawing
 // of the spectrum to minimize visible flickering  (KA7OEI, 20140916, adapted from original)
@@ -978,7 +1061,8 @@ static void UiSpectrum_InitSpectrumDisplayData()
     // otherwise we will reduce size of displayed waterfall
     if(sd.wfall_size * slayout.scope.w > sizeof(sd.waterfall))
     {
-        sd.doubleWaterfallLine = 1;
+        //sd.doubleWaterfallLine = 1;
+
 
         if (sd.wfall_size/2 * slayout.scope.w > sizeof(sd.waterfall))
         {
@@ -994,13 +1078,15 @@ static void UiSpectrum_InitSpectrumDisplayData()
             sd.wfall_size /= 2;
         }
     }
-    else
+ /*   else
     {
-        sd.doubleWaterfallLine = 0;
-    }
+        sd.repeatWaterfallLine = 0;
+    }*/
 
+    sd.repeatWaterfallLine = slayout.wfall.h/(sd.wfall_size);		//-1 for prewention of doubling lines for equal size
 
-    sd.wfall_disp_lines = sd.wfall_size * (sd.doubleWaterfallLine==true? 2:1);
+    //no need for this variable because we have slayout.wfall.h
+    //sd.wfall_disp_lines = sd.wfall_size * (sd.doubleWaterfallLine==true? 2:1);
 
 
     for (uint16_t idx = 0; idx < slayout.scope.w; idx++)
@@ -1070,12 +1156,12 @@ static void UiSpectrum_DrawWaterfall()
 
     if(!sd.wfall_line_update)                               // if it's count is zero, it's time to move the waterfall up
     {
-    	if(sd.wfall_DrawDirection==1)
-    	{
+    	//if(sd.wfall_DrawDirection==1)
+    	//{
     	    // can't use modulo here, doesn't work if we use uint16_t,
     	    // since it 0-1 == 65536 and not -1 (it is an unsigned integer after all)
     	    lptr = lptr?lptr-1 : sd.wfall_size-1;
-    	}
+    	//}
 
         lptr %= sd.wfall_size;      // do modulus limit of spectrum high
 
@@ -1086,14 +1172,16 @@ static void UiSpectrum_DrawWaterfall()
 
 
 
-        UiLcdHy28_BulkPixel_OpenWrite(slayout.wfall.x, slayout.wfall.w, (sd.wfall_ystart), sd.wfall_disp_lines);
+        //UiLcdHy28_BulkPixel_OpenWrite(slayout.wfall.x, slayout.wfall.w, (sd.wfall_ystart), sd.wfall_disp_lines);
+        UiLcdHy28_BulkPixel_OpenWrite(slayout.wfall.x, slayout.wfall.w, slayout.wfall.y, slayout.wfall.h);
 
         uint16_t spectrum_pixel_buf[slayout.wfall.w];
 
         const int32_t cur_center_hz = sd.FFT_frequency;
 
-
-        for(uint16_t lcnt = 0;lcnt < sd.wfall_size; lcnt++)                 // set up counter for number of lines defining height of waterfall
+        //uint16_t lcnt = 0;
+        //for(uint16_t lcnt = 0;lcnt < sd.wfall_size; lcnt++)                 // set up counter for number of lines defining height of waterfall
+        for(uint16_t lcnt = 0;lcnt < slayout.wfall.h;)                 // set up counter for number of lines defining height of waterfall
         {
             uint8_t  * const waterfallline_ptr = &sd.waterfall[lptr*slayout.wfall.w];
 
@@ -1159,13 +1247,19 @@ static void UiSpectrum_DrawWaterfall()
             }
 
 
-            UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, slayout.wfall.w);
+            //UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, slayout.wfall.w);
 
-            if(sd.doubleWaterfallLine)
+            for(uint8_t doubleLine=0;doubleLine<sd.repeatWaterfallLine+1;doubleLine++)
             {
                 UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, slayout.wfall.w);
+                lcnt++;
+                if(lcnt==slayout.wfall.h)	//preventing the window overlap if doubling oversize the display window
+                {
+                	break;
+                }
             }
-
+            lptr = lptr?lptr-1 : sd.wfall_size-1;
+            /*
             // point to next/prev line in circular display buffer:
             if(sd.wfall_DrawDirection==1)
             {
@@ -1174,8 +1268,9 @@ static void UiSpectrum_DrawWaterfall()
             else
             {
             	lptr++;                         //moving upward (water fountain, "normal" in 320x240)
-            }
+            }*/
             lptr %= sd.wfall_size;              // clip to display height
+
         }
         UiLcdHy28_BulkPixel_CloseWrite();                   // we are done updating the display - return to normal full-screen mode
     }
@@ -1658,13 +1753,15 @@ void UiSpectrum_Redraw()
             && (ts.mem_disp == false)
             && (sd.enabled == true)
             && (ts.lcd_blanking_flag == false)
+			&& (ts.SpectrumResize_flag == false)
     )
     {
         if(ts.waterfall.scheduler == 0 && is_waterfallmode())   // is waterfall mode enabled?
         {
             if(ts.waterfall.speed > 0)  // is it time to update the scan, or is this scope to be disabled?
             {
-                ts.waterfall.scheduler = (ts.waterfall.speed)*(sd.doubleWaterfallLine?50:25); // we need to use half the speed if in double line drawing mode
+                //ts.waterfall.scheduler = (ts.waterfall.speed)*(sd.doubleWaterfallLine?50:25); // we need to use half the speed if in double line drawing mode
+            	ts.waterfall.scheduler = (ts.waterfall.speed)*(25*(sd.repeatWaterfallLine)); // we need to use half the speed if in double line drawing mode
                 sd.RedrawType|=Redraw_WATERFALL;
             }
         }

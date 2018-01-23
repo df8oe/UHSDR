@@ -908,7 +908,8 @@ typedef struct TransceiverState
     ulong	lcd_blanking_time;			// this holds the system time after which the LCD is blanked - if blanking is enabled
     bool	lcd_blanking_flag;			// if TRUE, the LCD is blanked completely (e.g. backlight is off)
     bool	xvtr_adjust_flag;			// set TRUE if transverter offset adjustment is in process
-
+    bool	SpectrumResize_flag;		// set TRUE if waterfall/spectrum resize request from touchscreen action
+    uint32_t SpectrumResize_timer;		//
 #define VFO_MEM_MODE_SPLIT 0x80
 #define VFO_MEM_MODE_VFO_B 0x40
     ulong	vfo_mem_mode;				// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
@@ -1075,6 +1076,7 @@ typedef struct TransceiverState
 	int16_t nr_vad_delay; // how many frames to delay the noise estimate after VAD has detected NOISE
 	int16_t nr_mode;
 	uint8_t debug_si5351a_pllreset;
+	uint16_t graticulePowerupYpos;	//initial (after powerup) position of graticule (frequency bar)
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
