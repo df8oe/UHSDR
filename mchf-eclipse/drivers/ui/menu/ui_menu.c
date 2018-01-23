@@ -2212,6 +2212,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             break;
         }
         UiDriver_SetSpectrumMode(temp_var_u8);
+        UiSpectrum_ResetSpectrum();
         break;
     case MENU_WFALL_COLOR_SCHEME:   // Adjustment of dB/division of spectrum scope
         UiDriverMenuItemChangeUInt8(var, mode, &ts.waterfall.color_scheme,
