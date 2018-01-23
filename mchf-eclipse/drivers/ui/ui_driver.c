@@ -1275,6 +1275,7 @@ void UiDriver_ModeSpecificDisplayClear(uint8_t dmod_mode, uint8_t digital_mode)
 		case DigitalMode_RTTY:
 		case DigitalMode_BPSK:
 			UiDriver_TextMsgClear();
+			UiSpectrum_InitCwSnapDisplay(false);
 			break;
 		default:
 			break;
@@ -1320,6 +1321,10 @@ void UiDriver_ModeSpecificDisplayPrepare(uint8_t dmod_mode, uint8_t digital_mode
 		case DigitalMode_RTTY:
 		case DigitalMode_BPSK:
 			UiDriver_TextMsgClear();
+		    if(cw_decoder_config.snap_enable == true)
+		    {
+		    	UiSpectrum_InitCwSnapDisplay(true);
+		    }
 			break;
 		default:
 			break;
