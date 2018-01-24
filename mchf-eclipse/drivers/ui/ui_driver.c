@@ -5929,12 +5929,13 @@ static void UiAction_SaveConfigurationToMemory()
 
 static void UiDriver_DrawGraticule_Rect(bool show)
 {
-	uint16_t pos_y=ts.graticulePowerupYpos;
+	uint16_t pos_y=sd.Slayout->graticule.y;
 	if(show)
 	{
 
 		UiLcdHy28_PrintText(sd.Slayout->graticule.x+5,pos_y+4,"CHOOSE NEW POSITION",White,Black,4);
-		UiLcdHy28_PrintText(sd.Slayout->graticule.x+sd.Slayout->graticule.w-50,pos_y+4,"|SAVE",Yellow,Black,4);
+		UiLcdHy28_PrintText(sd.Slayout->graticule.x+sd.Slayout->graticule.w-65,pos_y+4,"| OK |",Green,Black,4);
+		UiLcdHy28_PrintText(sd.Slayout->graticule.x+sd.Slayout->graticule.w-20,pos_y+4,"X",Orange,Black,4);
 		UiLcdHy28_DrawEmptyRect(sd.Slayout->graticule.x+1,pos_y+1,sd.Slayout->graticule.h-3,sd.Slayout->graticule.w-3,White);
 	}
 	else
@@ -6631,35 +6632,37 @@ static void UiDriver_HandleTouchScreen(bool is_long_press)
 		if(ts.SpectrumResize_flag==true
 				&& ts.menu_mode==0)
 		{
-			UiArea_t SaveArea;
-			SaveArea.x=sd.Slayout->graticule.x+sd.Slayout->graticule.w-50;
-			SaveArea.y=ts.graticulePowerupYpos;
-			SaveArea.h=sd.Slayout->graticule.h;
-			SaveArea.w=50;
-			if(UiDriver_CheckTouchRegion(&SaveArea))
+			UiArea_t OKArea;
+			OKArea.x=sd.Slayout->graticule.x+sd.Slayout->graticule.w-65;
+			OKArea.y=sd.Slayout->graticule.y;
+			OKArea.h=sd.Slayout->graticule.h;
+			OKArea.w=25;
+			UiArea_t ExitArea;
+			ExitArea.x=sd.Slayout->graticule.x+sd.Slayout->graticule.w-30;
+			ExitArea.y=sd.Slayout->graticule.y;
+			ExitArea.h=sd.Slayout->graticule.h;
+			ExitArea.w=30;
+
+			if(UiDriver_CheckTouchRegion(&OKArea))
+			{
+				ts.SpectrumResize_flag=0;
+				ts.graticulePowerupYpos=sd.Slayout->graticule.y;		//store current graticule position for future eeprom save
+				UiDriver_DisplayFButton_F1MenuExit();		//redraw the menu button to indicate the changed item
+				ts.menu_var_changed=1;
+				ts.flags1 |= FLAGS1_SCOPE_ENABLED;
+				ts.flags1 |= FLAGS1_WFALL_ENABLED;
+				UiSpectrum_Init();
+			}
+			else if(UiDriver_CheckTouchRegion(&ExitArea))
 			{
 				ts.SpectrumResize_flag=0;
 				UiSpectrum_Init();
-				ts.graticulePowerupYpos=sd.Slayout->graticule.y;		//store current graticule position for future eeprom save
-				UiDriver_DisplayFButton_F1MenuExit();		//redraw the menu button to indicate the changed item
 			}
 			else if(UiDriver_CheckTouchRegion(&sd.Slayout->full))
 			{
 				UiDriver_DrawGraticule_Rect(false); 	 //clear graticule current area
-				uint16_t new_y=ts.tp->hr_y;
-
-				if((new_y<sd.Slayout->draw.y+MinimumScopeSize))
-				{
-					new_y=sd.Slayout->draw.y;
-				}
-				if(new_y>(sd.Slayout->draw.y+sd.Slayout->draw.h-MinimumWaterfallSize))
-				{
-					new_y=sd.Slayout->draw.y+sd.Slayout->draw.h-sd.Slayout->graticule.h;
-				}
-
-				ts.graticulePowerupYpos=new_y;
+				sd.Slayout->graticule.y=UiSprectrum_CheckNewGraticulePos(ts.tp->hr_y);
 				UiDriver_DrawGraticule_Rect(true);		//draw new graticule control
-				ts.menu_var_changed=1;
 			}
 			else
 			{

@@ -46,8 +46,8 @@ void UiSpectrum_CalculateDisplayFilterBW(float32_t* width_pixel_, float32_t* lef
 void UiSpectrum_DisplayFilterBW();
 
 void UiSpectrum_InitCwSnapDisplay (bool visible);
-void UiSpectrum_SetNewGraticulePosition(uint16_t new_y);
 void UiSpectrum_ResetSpectrum(void);
+uint16_t UiSprectrum_CheckNewGraticulePos(uint16_t new_y);
 
 // Settings for dB/division for spectrum display
 enum
@@ -280,7 +280,7 @@ typedef struct SpectrumDisplay
 // Spectrum display
 extern SpectrumDisplay      sd;
 
-#define MinimumScopeSize 16
+#define MinimumScopeSize 24
 #define MinimumWaterfallSize 16
 
 
