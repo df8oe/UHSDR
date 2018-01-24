@@ -1918,8 +1918,10 @@ void UiSpectrum_CwSnapDisplay (float32_t delta)
 
 void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float32_t bin_BW)
 {
-	if(ads.CW_signal || (ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)) // this is only done, if there has been a pulse from the CW station that exceeds the threshold
+	if(ads.CW_signal || (ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)))
+		// this is only done, if there has been a pulse from the CW station that exceeds the threshold
 		// in the CW decoder section
+		// or if we are in AM/SAM/Digi BPSK mode
 	{
 		static float32_t freq_old = 10000000.0;
 	float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
@@ -1974,6 +1976,19 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
         const float32_t cw_offset = (ts.cw_lsb?1.0:-1.0)*(float32_t)ts.cw_sidetone_freq;
         delta = delta + cw_offset;
     }
+
+    if(ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)
+    {
+    	// FIXME: has to be substituted by global variable --> centre frequency BPSK
+    	if(ts.digi_lsb)
+    	{
+    		delta = delta + 1000; //
+    	}
+    	else
+    	{
+    		delta = delta - 1000; //
+    	}
+    }
     // these frequency calculations are unused at the moment, they will be used with
     // real snap by button press
 
@@ -1989,7 +2004,7 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
 
 	static uint8_t snap_counter = 0;
 #if	defined(STM32F7) || defined(STM32H7)
-	const int SNAP_COUNT_MAX = 6;
+	const int SNAP_COUNT_MAX = 10;
 #else
 	const int SNAP_COUNT_MAX = 6;
 #endif
@@ -2075,6 +2090,12 @@ static void UiSpectrum_CalculateDBm()
                 bw_UPPER = -lf_freq;
                 bw_LOWER = -uf_freq;
             }
+            else if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)
+            { // this is for experimental SNAP of BPSK carriers
+            	// FIXME: has to be substituted by global variable --> centre frequency BPSK
+            	bw_LOWER = 900;
+            	bw_UPPER = 1100;
+            }
             else // USB
             {
                 bw_UPPER = uf_freq;
@@ -2145,7 +2166,7 @@ static void UiSpectrum_CalculateDBm()
             }
 
             // here would be the right place to start with the SNAP mode!
-            if(cw_decoder_config.snap_enable && (ts.dmod_mode == DEMOD_CW || ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM))
+            if(cw_decoder_config.snap_enable && (ts.dmod_mode == DEMOD_CW || ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)))
             {
             	 UiSpectrum_CalculateSnap(Lbin, Ubin, posbin, bin_BW);
 

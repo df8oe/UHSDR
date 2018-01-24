@@ -36,7 +36,7 @@
 // 3 RA8875 @800x600
 
 //for manual setting adjust following #define
-//#define LCD_TYPE 1
+#define LCD_TYPE 1
 
 // ALTERNATIVE GROUP START USE_GFX
 
