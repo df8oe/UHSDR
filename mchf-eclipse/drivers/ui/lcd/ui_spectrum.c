@@ -25,6 +25,7 @@
 #include "rtty.h"
 #include "cw_decoder.h"
 #include "audio_nr.h"
+#include "psk.h"
 
 #if defined(USE_DISP_480_320) || defined(USE_EXPERIMENTAL_MULTIRES)
 #define USE_DISP_480_320_SPEC
@@ -1918,10 +1919,18 @@ void UiSpectrum_CwSnapDisplay (float32_t delta)
 
 void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float32_t bin_BW)
 {
+	// SNAP is used to estimate the frequency of a carrier and subsequently tune the Rx frequency to that carrier frequency
+	// At the moment (January 2018), it is usable in the following demodulation modes:
+	// AM & SAM
+	// CW -> a morse activity detector (built-in in the CW decoding algorithm) detects whenever a CW signal is present and allows
+	//       frequency estimation update ONLY when a carrier is present
+	// DIGIMODE -> BPSK
+	// DD4WH, Jan 2018
+	//
 	if(ads.CW_signal || (ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)))
 		// this is only done, if there has been a pulse from the CW station that exceeds the threshold
 		// in the CW decoder section
-		// or if we are in AM/SAM/Digi BPSK mode
+		// OR if we are in AM/SAM/Digi BPSK mode
 	{
 		static float32_t freq_old = 10000000.0;
 	float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
@@ -1982,11 +1991,11 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     	// FIXME: has to be substituted by global variable --> centre frequency BPSK
     	if(ts.digi_lsb)
     	{
-    		delta = delta + 1000; //
+    		delta = delta + PSK_OFFSET; //
     	}
     	else
     	{
-    		delta = delta - 1000; //
+    		delta = delta - PSK_OFFSET; //
     	}
     }
     // these frequency calculations are unused at the moment, they will be used with
@@ -2092,9 +2101,8 @@ static void UiSpectrum_CalculateDBm()
             }
             else if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)
             { // this is for experimental SNAP of BPSK carriers
-            	// FIXME: has to be substituted by global variable --> centre frequency BPSK
-            	bw_LOWER = 900;
-            	bw_UPPER = 1100;
+            	bw_LOWER = PSK_OFFSET - PSK_SNAP_RANGE;
+            	bw_UPPER = PSK_OFFSET + PSK_SNAP_RANGE;
             }
             else // USB
             {

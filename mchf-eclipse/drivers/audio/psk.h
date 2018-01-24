@@ -15,6 +15,7 @@
 #include "softdds.h"
 
 #define PSK_OFFSET 1000
+#define PSK_SNAP_RANGE 100 // defines the range within the SNAP algorithm in spectrum.c searches for the PSK carrier
 #define PSK_SAMPLE_RATE 12000 // TODO This should come from elsewhere, to be fixed
 #define PSK_BND_FLT_LEN 5
 #define PSK_BUF_LEN (PSK_SAMPLE_RATE / PSK_OFFSET)
