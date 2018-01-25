@@ -1953,7 +1953,6 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
 
     if(ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)
     {
-    	// FIXME: has to be substituted by global variable --> centre frequency BPSK
     	if(ts.digi_lsb)
     	{
     		delta = delta + PSK_OFFSET; //
