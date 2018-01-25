@@ -80,40 +80,15 @@ void UiSpectrum_CalculateLayout(const bool is_big, const bool scope_enabled, con
     slayout.scope.y = slayout.title.y + slayout.title.h;
     slayout.scope.w = slayout.draw.w;
 
-    UiSpectrum_SetNewGraticulePosition(ts.graticulePowerupYpos);
- /*
-    if(slayout.graticule.y<slayout.scope.y)
-    {															//not allowed y position (not initialized yet)
-    	slayout.graticule.y=slayout.scope.y + slayout.draw.h/2;	//default setup 50% space for spectrum and 50% for waterfall
-    	ts.flags1 |= FLAGS1_SCOPE_ENABLED | FLAGS1_WFALL_ENABLED;
-    }
+   // UiSpectrum_SetNewGraticulePosition(ts.graticulePowerupYpos);
+    UiSpectrum_ResetSpectrum();
 
-    if(slayout.graticule.y>(slayout.draw.y+slayout.draw.h-slayout.graticule.h-MinimumWaterfallSize))
-    {
-    	slayout.graticule.y=slayout.draw.y+slayout.draw.h-slayout.graticule.h;
-    	ts.flags1 &= ~FLAGS1_WFALL_ENABLED;
-    }
-
-    if(slayout.graticule.y<(slayout.draw.y+slayout.title.h+MinimumScopeSize))
-    {
-    	slayout.graticule.y=slayout.draw.y+slayout.title.h;
-    	ts.flags1 &= ~FLAGS1_SCOPE_ENABLED;
-    }
-   */
     slayout.scope.h = slayout.graticule.y - slayout.scope.y;
 
     slayout.wfall.x = slayout.draw.x;
     slayout.wfall.y = slayout.graticule.y + slayout.graticule.h;
     slayout.wfall.w = slayout.draw.w;
-
-    if((slayout.title.h + slayout.graticule.h + slayout.scope.h)>=slayout.draw.h)
-    {
-    	slayout.wfall.h=0;
-    }
-    else
-    {
-    	slayout.wfall.h=slayout.draw.h-(slayout.title.h + slayout.graticule.h + slayout.scope.h);
-    }
+    slayout.wfall.h = slayout.draw.y+slayout.draw.h-slayout.wfall.y;
 }
 
 /*
@@ -151,28 +126,6 @@ void UiSpectrum_CalculateLayout(const bool is_big, const bool scope_enabled, con
     slayout.wfall.h = wfall_enabled?(slayout.draw.h - slayout.title.h - slayout.graticule.h)/(scope_enabled?2:1) : 0;
 }
  */
-void UiSpectrum_SetNewGraticulePosition(uint16_t new_y)
-{
-	if(new_y>(slayout.draw.y+slayout.draw.h-slayout.graticule.h-MinimumWaterfallSize))
-	{
-		slayout.graticule.y=slayout.draw.y+slayout.draw.h-slayout.graticule.h;
-		ts.flags1 &= ~FLAGS1_WFALL_ENABLED;
-		ts.flags1 |= FLAGS1_SCOPE_ENABLED;
-	}
-	else if(new_y<(slayout.draw.y+slayout.title.h+MinimumScopeSize))
-	{
-		slayout.graticule.y=slayout.draw.y+slayout.title.h;
-		ts.flags1 &= ~FLAGS1_SCOPE_ENABLED;
-		ts.flags1 |= FLAGS1_WFALL_ENABLED;
-		return;
-	}
-	else
-	{
-		slayout.graticule.y=new_y;
-		ts.flags1 |= FLAGS1_SCOPE_ENABLED;
-		ts.flags1 |= FLAGS1_WFALL_ENABLED;
-	}
-}
 
 //sets graticule position according to control bits (to default for particular case)
 void UiSpectrum_ResetSpectrum()
@@ -180,17 +133,29 @@ void UiSpectrum_ResetSpectrum()
 	switch(ts.flags1&(FLAGS1_SCOPE_ENABLED | FLAGS1_WFALL_ENABLED))
 	{
 	case FLAGS1_SCOPE_ENABLED:
-		ts.graticulePowerupYpos=slayout.draw.y+slayout.draw.h-slayout.graticule.h;
+		slayout.graticule.y=slayout.draw.y+slayout.draw.h-slayout.graticule.h;
 		break;
 	case FLAGS1_WFALL_ENABLED:
-		ts.graticulePowerupYpos=slayout.draw.y;
+		slayout.graticule.y=slayout.draw.y+slayout.title.h;
 		break;
 	case (FLAGS1_SCOPE_ENABLED | FLAGS1_WFALL_ENABLED):
-		ts.graticulePowerupYpos=slayout.draw.y + slayout.draw.h/2;
+		slayout.graticule.y=UiSprectrum_CheckNewGraticulePos(ts.graticulePowerupYpos);
 		break;
 	default:
 		break;
 	}
+}
+uint16_t UiSprectrum_CheckNewGraticulePos(uint16_t new_y)
+{
+	if((new_y<sd.Slayout->draw.y+MinimumScopeSize))
+	{
+		new_y=sd.Slayout->draw.y+MinimumScopeSize;
+	}
+	if(new_y>(sd.Slayout->draw.y+sd.Slayout->draw.h-MinimumWaterfallSize-slayout.graticule.h))
+	{
+		new_y=sd.Slayout->draw.y+sd.Slayout->draw.h-MinimumWaterfallSize-slayout.graticule.h;
+	}
+	return new_y;
 }
 
 const pos_spectrum_display_t pos_spectrum_set[] =
