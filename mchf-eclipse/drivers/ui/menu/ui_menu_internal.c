@@ -511,11 +511,13 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
                 bool old_state = UiMenu_GroupIsUnfolded(entry);
                 if (ts.menu_var < 0 )
                 {
-                    UiMenu_GroupFold(entry,true);
+                	// UiMenu_GroupFold(entry,true);
+                    UiMenu_GroupFold(entry,false);
                 }
                 if (ts.menu_var > 0 )
                 {
-                    UiMenu_GroupFold(entry,false);
+                	// UiMenu_GroupFold(entry,false);
+                    UiMenu_GroupFold(entry,true);
                 }
                 if (old_state != UiMenu_GroupIsUnfolded(entry))
                 {
@@ -725,11 +727,13 @@ void UiMenu_RenderChangeItem(int16_t pot_diff)
 {
     if(pot_diff < 0)
     {
-        ts.menu_item--;
+    	// ts.menu_item--;
+        ts.menu_item++;
     }
     else  if(pot_diff > 0)
     {
-        ts.menu_item++;
+    	// ts.menu_item++;
+        ts.menu_item--;
     }
     ts.menu_var = 0;            // clear variable that is used to change a menu item
     UiMenu_RenderMenu(MENU_PROCESS_VALUE_CHANGE);      // Update that menu item
