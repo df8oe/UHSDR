@@ -1843,7 +1843,7 @@ void UiSpectrum_CwSnapDisplay (float32_t delta)
 	static float32_t old_delta = 0.0;
 #endif
 
-	static int old_delta_p = 0.0;
+	static int old_delta_p = 0;
 	if(delta > max_delta)
 	{
 		delta = max_delta;
@@ -1962,11 +1962,8 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     		delta = delta - PSK_OFFSET; //
     	}
     }
-    // these frequency calculations are unused at the moment, they will be used with
-    // real snap by button press
 
     // make 10 frequency measurements and after that take the lowpass filtered frequency to tune to
-
 
     help_freq = help_freq + delta;
     // do we need a lowpass filter?

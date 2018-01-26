@@ -178,6 +178,7 @@ const rtty_speed_item_t rtty_speeds[RTTY_SPEED_NUM] =
 const rtty_shift_item_t rtty_shifts[RTTY_SHIFT_NUM] =
 {
 		{ RTTY_SHIFT_170, 170, "170" },
+		{ RTTY_SHIFT_200, 200, "200" },
 		{ RTTY_SHIFT_450, 450, "450" },
 };
 
@@ -331,6 +332,13 @@ static rtty_bpf_config_t rtty_bp_12khz_1085 =
 		.coeffs = { -0.9286270861, 3.1900687350, -4.6666321298, 3.3104336142 },
 		.freq = 1085
 };
+// order 2 Butterworth, freqs: 1065-1165 Hz, centre: 1115Hz
+static rtty_bpf_config_t rtty_bp_12khz_1115 =
+{
+		.gain = 1.513364944e+03,
+		.coeffs = { -0.9286270861, 3.1576917276, -4.6112830458, 3.2768349860 },
+		.freq = 1085
+};
 
 static rtty_lpf_config_t rtty_lp_12khz_50 =
 {
@@ -365,6 +373,9 @@ void RttyDecoder_Init()
 	{
 	case 450:
 		rttyDecoderData.bpfSpaceConfig = &rtty_bp_12khz_1365; // this is space or '0'
+		break;
+	case 200:
+		rttyDecoderData.bpfSpaceConfig = &rtty_bp_12khz_1115;
 		break;
 	case 170:
 	default:
