@@ -177,8 +177,12 @@ const rtty_speed_item_t rtty_speeds[RTTY_SPEED_NUM] =
 
 const rtty_shift_item_t rtty_shifts[RTTY_SHIFT_NUM] =
 {
+		{ RTTY_SHIFT_85, 85, " 85" },
 		{ RTTY_SHIFT_170, 170, "170" },
+		{ RTTY_SHIFT_200, 200, "200" },
+		{ RTTY_SHIFT_425, 425, "425" },
 		{ RTTY_SHIFT_450, 450, "450" },
+		{ RTTY_SHIFT_850, 850, "850" },
 };
 
 rtty_ctrl_t rtty_ctrl_config =
@@ -331,6 +335,45 @@ static rtty_bpf_config_t rtty_bp_12khz_1085 =
 		.coeffs = { -0.9286270861, 3.1900687350, -4.6666321298, 3.3104336142 },
 		.freq = 1085
 };
+// order 2 Butterworth, freqs: 1065-1165 Hz, centre: 1115Hz
+// for 200Hz shift
+static rtty_bpf_config_t rtty_bp_12khz_1115 =
+{
+		.gain = 1.513364944e+03,
+		.coeffs = { -0.9286270861, 3.1576917276, -4.6112830458, 3.2768349860 },
+		.freq = 1115
+};
+
+// for 85Hz shift --> 915 + 85Hz = space = 1000Hz
+// 3dB bandwidth 50Hz
+// order 2 Butterworth, freqs: 975-1025 Hz, centre: 1000Hz
+static rtty_bpf_config_t rtty_bp_12khz_1000 =
+{
+		.gain = 5.944465260e+03,
+		.coeffs = { -0.9636529842, 3.3693752166, -4.9084595657, 3.4323354886 },
+		.freq = 1000
+};
+
+// for 425Hz shift --> 915 + 425Hz = space = 1340Hz
+// 3dB bandwidth 100Hz
+// order 2 Butterworth, freqs: 1290 - 1390 Hz, centre: 1340Hz
+static rtty_bpf_config_t rtty_bp_12khz_1340 =
+{
+		.gain = 1.513365018e+03,
+		.coeffs = { -0.9286270862, 2.8906128091, -4.1762457780, 2.9996788796 },
+		.freq = 1340
+};
+
+// for 850Hz shift --> 915 + 850Hz = space = 1765Hz
+// 3dB bandwidth 100Hz
+// order 2 Butterworth, freqs: 1715 - 1815 Hz, centre: 1765Hz
+static rtty_bpf_config_t rtty_bp_12khz_1765 =
+{
+		.gain = 1.513365057e+03,
+		.coeffs = { -0.9286270862, 2.1190223173, -3.1352567157, 2.1989754113 },
+		.freq = 1765
+};
+
 
 static rtty_lpf_config_t rtty_lp_12khz_50 =
 {
@@ -363,8 +406,20 @@ void RttyDecoder_Init()
 	// now we handled the specifics
 	switch (rttyDecoderData.config_p->shift)
 	{
+	case 85:
+		rttyDecoderData.bpfSpaceConfig = &rtty_bp_12khz_1000;
+		break;
+	case 200:
+		rttyDecoderData.bpfSpaceConfig = &rtty_bp_12khz_1115;
+		break;
+	case 425:
+		rttyDecoderData.bpfSpaceConfig = &rtty_bp_12khz_1340;
+		break;
 	case 450:
 		rttyDecoderData.bpfSpaceConfig = &rtty_bp_12khz_1365; // this is space or '0'
+		break;
+	case 850:
+		rttyDecoderData.bpfSpaceConfig = &rtty_bp_12khz_1765; // this is space or '0'
 		break;
 	case 170:
 	default:

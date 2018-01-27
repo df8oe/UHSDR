@@ -37,8 +37,12 @@ typedef enum {
 } rtty_speed_t;
 
 typedef enum {
+    RTTY_SHIFT_85,
     RTTY_SHIFT_170,
-    RTTY_SHIFT_450,
+	RTTY_SHIFT_200,
+    RTTY_SHIFT_425,
+	RTTY_SHIFT_450,
+	RTTY_SHIFT_850,
     RTTY_SHIFT_NUM
 } rtty_shift_t;
 
