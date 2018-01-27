@@ -170,13 +170,11 @@ typedef enum {
 typedef enum
 {
     DigitalMode_None = 0,
+#ifdef USE_FREEDV
     DigitalMode_FreeDV,
+#endif
     DigitalMode_RTTY,
     DigitalMode_BPSK,
-    DigitalMode_FreeDV2,
-    DigitalMode_SSTV,
-    DigitalMode_WSPR_A,
-    DigitalMode_WSPR_P,
     DigitalMode_Num_Modes
 } digital_modes_t;
 

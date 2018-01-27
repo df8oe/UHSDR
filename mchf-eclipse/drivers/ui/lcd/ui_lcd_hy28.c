@@ -33,8 +33,6 @@
 #define USE_DISPLAY_SPI
 #define USE_DISPLAY_PAR
 
-// #define HY28BHISPEED true // does not work with touchscreen and HY28A and some HY28B
-
 #include "spi.h"
 
 #ifdef USE_DISPLAY_PAR
