@@ -254,6 +254,21 @@ void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
 
 int bootloader_main()
 {
+    double i,border;
+	/* prevention of erratical boot loop */
+	if( *(__IO uint32_t*)(SRAM2_BASE) != 0x55)
+	{
+  	  border = 300000; // long delay if firmware was not running before or at powerdown
+  	}
+	else
+	{
+  	  border = 10; // short delay if reboot is requested
+    }
+  	for (i = 0; i < border; i++)
+	{
+	  ;
+	}
+
     /* initialization */
     BSP_Init();
 
