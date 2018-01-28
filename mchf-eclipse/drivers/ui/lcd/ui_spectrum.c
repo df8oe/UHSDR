@@ -335,7 +335,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
                 sd.marker_num = 2;
                 break;
             case DigitalMode_BPSK:
-            	mode_marker[0] = 1000;
+            	mode_marker[0] = PSK_OFFSET;
             	sd.marker_num = 1;
             	break;
             default:
