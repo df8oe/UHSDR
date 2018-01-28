@@ -75,7 +75,9 @@
   #define USE_DISP_480_320
   #define USE_FFT_1024
   #define USE_HIRES_TOUCH
+#ifndef IS_SMALL_BUILD
   #define USE_8bit_FONT
+#endif
 /*
 #elif LCD_TYPE == 2
   #define USE_GFX_ILI932x
