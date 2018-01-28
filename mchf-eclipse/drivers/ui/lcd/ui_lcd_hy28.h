@@ -194,7 +194,7 @@ bool    UiLcdHy28_TouchscreenHasProcessableCoordinates();
 void    UiLcdHy28_TouchscreenInit(uint8_t mirror);
 
 
-
+/*
 // FIXME: THIS MUST BE HANDLED DIFFERENTLY, IT DOES NOT ALWAYS SEES
 // THE CONFIGURATION FROM uhsdr_board.h but due to dependency issues, we cannot include
 // uhsdr_board.h at the top
@@ -213,5 +213,5 @@ void    UiLcdHy28_TouchscreenInit(uint8_t mirror);
         #define MAX_Y  240
     #endif
 #endif
-
+*/
 #endif

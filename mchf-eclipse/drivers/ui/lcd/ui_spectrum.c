@@ -27,10 +27,11 @@
 #include "audio_nr.h"
 #include "psk.h"
 
+/*
 #if defined(USE_DISP_480_320) || defined(USE_EXPERIMENTAL_MULTIRES)
 #define USE_DISP_480_320_SPEC
 #endif
-
+*/
 
 
 typedef struct
@@ -193,30 +194,22 @@ const pos_spectrum_display_t pos_spectrum_set[] =
 #endif
         },
 #endif
-#ifdef USE_DISP_480_320_SPEC
+//#ifdef USE_DISP_480_320_SPEC
          {
-                .SCOPE_GRID_HORIZ = 16, // SPECTRUM_SCOPE_GRID_HORIZ,
-                .SCOPE_GRID_VERT_COUNT = 8, // SPECTRUM_SCOPE_GRID_VERT_COUNT,
+                .SCOPE_GRID_HORIZ = SPECTRUM_SCOPE_GRID_HORIZ,
+                .SCOPE_GRID_VERT_COUNT = SPECTRUM_SCOPE_GRID_VERT_COUNT,
         },
-#endif
+//#endif
 };
 
-typedef enum
-{
-#ifdef USE_DISP_320_240
-    RESOLUTION_320_240,
-#endif
-#ifdef USE_DISP_480_320_SPEC
-    RESOLUTION_480_320,
-#endif
-} disp_resolution_t;
+
 
 // in single resolution case we can set both of the to const, then the compiler will optimize
 // it all memory access to the data away and the code is as performant as with all constant coordinates.
 // const pos_spectrum_display_t* pos_spectrum = &pos_spectrum_set[0];
 // const disp_resolution_t disp_resolution;
 const pos_spectrum_display_t* pos_spectrum = &pos_spectrum_set[0];
-disp_resolution_t disp_resolution;
+
 
 
 
@@ -944,20 +937,17 @@ static void UiSpectrum_InitSpectrumDisplayData()
 
     switch(disp_resolution)
     {
-#ifdef USE_DISP_320_240
+
     case RESOLUTION_320_240:
-    sd.spec_len = 256;
-    sd.fft_iq_len = 512;
-    sd.cfft_instance = &arm_cfft_sR_f32_len256;
-    break;
-#endif
-#ifdef USE_DISP_480_320_SPEC
+    	sd.spec_len = 256;
+    	sd.fft_iq_len = 512;
+    	sd.cfft_instance = &arm_cfft_sR_f32_len256;
+    	break;
     case RESOLUTION_480_320:
-        sd.spec_len = 512;
-        sd.fft_iq_len = 1024;
-        sd.cfft_instance = &arm_cfft_sR_f32_len512;
-        break;
-#endif
+    	sd.spec_len = 512;
+    	sd.fft_iq_len = 1024;
+    	sd.cfft_instance = &arm_cfft_sR_f32_len512;
+    	break;
     }
 
 
@@ -1509,14 +1499,13 @@ void UiSpectrum_Init()
     UiSpectrum_WaterfallClearData();
 #endif
 
-
+/*
     switch(disp_resolution)
     {
 #ifdef USE_DISP_480_320
     case RESOLUTION_480_320:
     {
-        const UiArea_t area_480_320 = { .x = 0, .y = 110, .w = 480, .h = 176 };
-        UiSpectrum_CalculateLayout(ts.spectrum_size == SPECTRUM_BIG, is_scopemode(), is_waterfallmode(), &area_480_320, 0);
+        UiSpectrum_CalculateLayout(ts.spectrum_size == SPECTRUM_BIG, is_scopemode(), is_waterfallmode(), &ts.Layout->SpectrumWindow, 0);
         break;
     }
 #endif
@@ -1529,7 +1518,8 @@ void UiSpectrum_Init()
         }
 #endif
     }
-
+  */
+    UiSpectrum_CalculateLayout(ts.spectrum_size == SPECTRUM_BIG, is_scopemode(), is_waterfallmode(), &ts.Layout->SpectrumWindow, ts.Layout->SpectrumWindowPadding);
     UiSpectrum_InitSpectrumDisplayData();
     UiSpectrum_Clear();         // clear display under spectrum scope
     UiSpectrum_CreateDrawArea();
@@ -1775,8 +1765,8 @@ static void UiSpectrum_DisplayDbm()
         {
             char txt[12];
             snprintf(txt,12,"%4ld      ", val);
-            UiLcdHy28_PrintText(POS_DisplayDbm_X,POS_DisplayDbm_Y,txt,White,Blue,0);
-            UiLcdHy28_PrintText(POS_DisplayDbm_X+SMALL_FONT_WIDTH * 4,POS_DisplayDbm_Y,unit_label,White,Blue,4);
+            UiLcdHy28_PrintText(ts.Layout->DisplayDbm_X,ts.Layout->DisplayDbm_Y,txt,White,Blue,0);
+            UiLcdHy28_PrintText(ts.Layout->DisplayDbm_X+SMALL_FONT_WIDTH * 4,ts.Layout->DisplayDbm_Y,unit_label,White,Blue,4);
             oldVal=val;		//this will prevent from useless redrawing the same
             dBmShown=1;		//for indicate that dms are shown and erase function may it clear when needed
         }
@@ -1785,7 +1775,7 @@ static void UiSpectrum_DisplayDbm()
     // clear the display since we are not showing dBm or dBm/Hz or we are in TX mode
     if ((display_something == false) && (dBmShown==1))
     {
-        UiLcdHy28_DrawFullRect(POS_DisplayDbm_X, POS_DisplayDbm_Y, 15, SMALL_FONT_WIDTH * 10 , Black);
+        UiLcdHy28_DrawFullRect(ts.Layout->DisplayDbm_X, ts.Layout->DisplayDbm_Y, 15, SMALL_FONT_WIDTH * 10 , Black);
         dBmShown=0;		//just to indicate that dbm is erased
         oldVal=99999;	//some value that will enforce refresh when user enable display dbm
     }
@@ -1801,37 +1791,37 @@ void UiSpectrum_InitCwSnapDisplay (bool visible)
 	{
 		color = Black;
 		// also erase yellow indicator
-        UiLcdHy28_DrawFullRect(CW_SNAP_CARRIER_X-27, CW_SNAP_CARRIER_Y, 6, 57, Black);
+        UiLcdHy28_DrawFullRect(ts.Layout->SNAP_CARRIER_X-27, ts.Layout->SNAP_CARRIER_Y, 6, 57, Black);
 	}
 	//Horizontal lines of box
-	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X-27,
-			CW_SNAP_CARRIER_Y + 6,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X-27,
+			ts.Layout->SNAP_CARRIER_Y + 6,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X+5,
-			CW_SNAP_CARRIER_Y + 6,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X+5,
+			ts.Layout->SNAP_CARRIER_Y + 6,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X-27,
-			CW_SNAP_CARRIER_Y - 1,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X-27,
+			ts.Layout->SNAP_CARRIER_Y - 1,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X+5,
-			CW_SNAP_CARRIER_Y - 1,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X+5,
+			ts.Layout->SNAP_CARRIER_Y - 1,
             27,
             LCD_DIR_HORIZONTAL,
             color);
 	// vertical lines of box
-	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X-27,
-			CW_SNAP_CARRIER_Y - 1,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X-27,
+			ts.Layout->SNAP_CARRIER_Y - 1,
             8,
             LCD_DIR_VERTICAL,
             color);
-	UiLcdHy28_DrawStraightLine(CW_SNAP_CARRIER_X+31,
-			CW_SNAP_CARRIER_Y - 1,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X+31,
+			ts.Layout->SNAP_CARRIER_Y - 1,
             8,
             LCD_DIR_VERTICAL,
             color);
@@ -1865,14 +1855,14 @@ void UiSpectrum_CwSnapDisplay (float32_t delta)
 
 	if(delta_p != old_delta_p)
 	{
-	    UiLcdHy28_DrawStraightLineDouble( CW_SNAP_CARRIER_X + old_delta_p + 1,
-	    		CW_SNAP_CARRIER_Y,
+	    UiLcdHy28_DrawStraightLineDouble( ts.Layout->SNAP_CARRIER_X + old_delta_p + 1,
+	    		ts.Layout->SNAP_CARRIER_Y,
 	            6,
 	            LCD_DIR_VERTICAL,
 	            Black);
 
-	    UiLcdHy28_DrawStraightLineDouble( CW_SNAP_CARRIER_X + delta_p + 1,
-	    		CW_SNAP_CARRIER_Y,
+	    UiLcdHy28_DrawStraightLineDouble( ts.Layout->SNAP_CARRIER_X + delta_p + 1,
+	    		ts.Layout->SNAP_CARRIER_Y,
 	            6,
 	            LCD_DIR_VERTICAL,
 	            Yellow);
@@ -2206,7 +2196,7 @@ static void UiSpectrum_CalculateDBm()
         UiSpectrum_DisplayDbm();
     }
 }
-
+/*
 #ifdef X_USE_DISP_480_320_SPEC
 //Waterfall memory pointer allocation.
 //It sets memory pointer to Height/2 array located in CCM for f4 devices with low ram amount. For all rest allocates memory by calling malloc.
@@ -2222,4 +2212,4 @@ void UiSpectrum_SetWaterfallMemoryPointer(uint16_t ramsize)
 	}
 }
 #endif
-
+*/

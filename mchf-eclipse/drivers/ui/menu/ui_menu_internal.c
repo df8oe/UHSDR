@@ -13,7 +13,9 @@
 // we show MENUSIZE items at the same time to the user.
 // right now the render code uses this global variable since
 // only a single active menu is supported right now.
-MenuDisplaySlot menu[MENUSIZE];
+
+//Because of dynamic resolution change we have to declare the maximum amount of items displayed at once for the highest option
+MenuDisplaySlot menu[MAX_MENUSIZE];
 
 bool init_done = false;
 
@@ -373,15 +375,15 @@ bool UiMenu_FillSlotWithEntry(MenuDisplaySlot* here, const MenuDescriptor* entry
 // DISPLAY SPECIFIC CODE BEGIN
 void UiMenu_DisplayValue(const char* value,uint32_t clr,uint16_t pos)
 {
-    UiLcdHy28_PrintTextRight(POS_MENU_CURSOR_X - 4, POS_MENU_IND_Y + (pos * 12), value, clr, Black, 0);       // yes, normal position
+    UiLcdHy28_PrintTextRight(ts.Layout->MENU_CURSOR_X - 4, ts.Layout->MENU_IND_Y + (pos * 12), value, clr, Black, 0);       // yes, normal position
 }
 static void UiMenu_DisplayLabel(const char* label,uint32_t clr,uint16_t pos)
 {
-    UiLcdHy28_PrintText(POS_MENU_IND_X, POS_MENU_IND_Y+(12*(pos)),label,clr,Black,0);
+    UiLcdHy28_PrintText(ts.Layout->MENU_IND_X, ts.Layout->MENU_IND_Y+(12*(pos)),label,clr,Black,0);
 }
 static void UiMenu_DisplayCursor(const char* label,uint32_t clr,uint16_t pos)
 {
-    UiLcdHy28_PrintText(POS_MENU_CURSOR_X, POS_MENU_IND_Y+(12*(pos)),label,clr,Black,0);
+    UiLcdHy28_PrintText(ts.Layout->MENU_CURSOR_X, ts.Layout->MENU_IND_Y+(12*(pos)),label,clr,Black,0);
 }
 // DISPLAY SPECIFIC CODE END
 
@@ -457,11 +459,13 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
     uint32_t  m_clr;
     m_clr = Yellow;
     char out[40];
-#ifdef USE_DISP_480_320
-    const char blank[40] = "                                     ";
-#else
-    const char blank[34] = "                               ";
-#endif
+
+    char blank[40] = "                                     ";
+    blank[ts.Layout->MENU_TEXT_SIZE_MAX-1]=0;
+//#else
+//    const char blank[34] = "                               ";
+//#endif
+
     if (entry != NULL && (entry->kind == MENU_ITEM || entry->kind == MENU_GROUP || entry->kind == MENU_INFO || entry->kind == MENU_TEXT) )
     {
         if (mode == MENU_RENDER_ONLY)
@@ -480,11 +484,14 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
             // uint16_t labellen = strlen(entry->id)+strlen(entry->label) + 1;
             uint16_t labellen = level+strlen(entry->label);
             // snprintf(out,34,"%s-%s%s",entry->id,entry->label,(&blank[labellen>33?33:labellen]));
-#ifdef USE_DISP_480_320
-            snprintf(out,40,"%s%s%s",(&blank[level>5?37-5:37-level]),entry->label,(&blank[labellen>39?39:labellen]));
-#else
-            snprintf(out,34,"%s%s%s",(&blank[level>5?31-5:31-level]),entry->label,(&blank[labellen>33?33:labellen]));
-#endif
+//#ifdef USE_DISP_480_320
+            //snprintf(out,ts.40,"%s%s%s",(&blank[level>5?37-5:37-level]),entry->label,(&blank[labellen>39?39:labellen]));
+            snprintf(out,ts.Layout->MENU_TEXT_SIZE_MAX,"%s%s%s",
+            		(&blank[level>5?ts.Layout->MENU_TEXT_SIZE_MAX-8:ts.Layout->MENU_TEXT_SIZE_MAX-3-level]),
+					entry->label,(&blank[labellen>ts.Layout->MENU_TEXT_SIZE_MAX-1?ts.Layout->MENU_TEXT_SIZE_MAX-1:labellen]));
+
+  //         snprintf(out,34,"%s%s%s",(&blank[level>5?31-5:31-level]),entry->label,(&blank[labellen>33?33:labellen]));
+
             UiMenu_DisplayLabel(out,m_clr,pos);
         }
         switch(entry->kind)
@@ -513,7 +520,7 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
                 if (old_state != UiMenu_GroupIsUnfolded(entry))
                 {
                     int idx;
-                    for (idx = pos+1; idx < MENUSIZE; idx++)
+                    for (idx = pos+1; idx < ts.Layout->MENUSIZE; idx++)
                     {
                         UiMenu_FillSlotWithEntry(&menu[idx],UiMenu_NextMenuEntry(menu[idx-1].entryItem));
                         UiMenu_UpdateMenuEntry(menu[idx].entryItem, 0, idx);
@@ -541,7 +548,7 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
 void UiMenu_DisplayInitSlots(const MenuDescriptor* entry)
 {
     int idx;
-    for (idx=0; idx < MENUSIZE; idx++)
+    for (idx=0; idx < ts.Layout->MENUSIZE; idx++)
     {
         UiMenu_FillSlotWithEntry(&menu[idx],entry);
         entry = UiMenu_NextMenuEntry(entry);
@@ -550,7 +557,7 @@ void UiMenu_DisplayInitSlots(const MenuDescriptor* entry)
 void UiMenu_DisplayInitSlotsBackwards(const MenuDescriptor* entry)
 {
     int idx;
-    for (idx=MENUSIZE; idx > 0; idx--)
+    for (idx=ts.Layout->MENUSIZE; idx > 0; idx--)
     {
         UiMenu_FillSlotWithEntry(&menu[idx-1],entry);
         entry = UiMenu_PrevMenuEntry(entry);
@@ -563,8 +570,8 @@ void UiMenu_DisplayInitSlotsBackwards(const MenuDescriptor* entry)
 bool UiMenu_DisplayMoveSlotsBackwards(int16_t change)
 {
     int idx;
-    int dist = (change % MENUSIZE);
-    int screens = change / MENUSIZE;
+    int dist = (change % ts.Layout->MENUSIZE);
+    int screens = change / ts.Layout->MENUSIZE;
     bool retval = false; // n
     for (idx = 0; idx < screens; idx++)
     {
@@ -587,12 +594,12 @@ bool UiMenu_DisplayMoveSlotsBackwards(int16_t change)
     if (dist != 0)
     {
         retval = true;
-        for (idx = MENUSIZE-dist; idx > 0; idx--)
+        for (idx = ts.Layout->MENUSIZE-dist; idx > 0; idx--)
         {
-            UiMenu_FillSlotWithEntry(&menu[MENUSIZE-idx],menu[MENUSIZE-(dist+idx)].entryItem);
+            UiMenu_FillSlotWithEntry(&menu[ts.Layout->MENUSIZE-idx],menu[ts.Layout->MENUSIZE-(dist+idx)].entryItem);
         }
 
-        for (idx = MENUSIZE-dist; idx >0; idx--)
+        for (idx = ts.Layout->MENUSIZE-dist; idx >0; idx--)
         {
             UiMenu_FillSlotWithEntry(&menu[idx-1],UiMenu_PrevMenuEntry(menu[idx].entryItem));
         }
@@ -605,14 +612,14 @@ bool UiMenu_DisplayMoveSlotsBackwards(int16_t change)
 bool UiMenu_DisplayMoveSlotsForward(int16_t change)
 {
     int idx;
-    int dist = (change % MENUSIZE);
-    int screens = change / MENUSIZE;
+    int dist = (change % ts.Layout->MENUSIZE);
+    int screens = change / ts.Layout->MENUSIZE;
     bool retval = false;
     // first jump screens. we have to iterate through the menu structure one by one
     // in order to respect fold/unfold state etc.
     for (idx = 0; idx < screens; idx++)
     {
-        const MenuDescriptor *next = UiMenu_NextMenuEntry(menu[MENUSIZE-1].entryItem);
+        const MenuDescriptor *next = UiMenu_NextMenuEntry(menu[ts.Layout->MENUSIZE-1].entryItem);
         if (next != NULL)
         {
             UiMenu_DisplayInitSlots(next);
@@ -629,11 +636,11 @@ bool UiMenu_DisplayMoveSlotsForward(int16_t change)
     if (dist != 0)
     {
         retval = true;
-        for (idx = 0; idx < MENUSIZE-dist; idx++)
+        for (idx = 0; idx < ts.Layout->MENUSIZE-dist; idx++)
         {
             UiMenu_FillSlotWithEntry(&menu[idx],menu[dist+idx].entryItem);
         }
-        for (idx = MENUSIZE-dist; idx < MENUSIZE; idx++)
+        for (idx = ts.Layout->MENUSIZE-dist; idx < ts.Layout->MENUSIZE; idx++)
         {
             UiMenu_FillSlotWithEntry(&menu[idx],UiMenu_NextMenuEntry(menu[idx-1].entryItem));
         }
@@ -662,7 +669,7 @@ void UiMenu_RenderMenu(uint16_t mode)
     case MENU_RENDER_ONLY:  // (re)draw all labels and values
     {
         int idx;
-        for (idx = 0; idx < MENUSIZE; idx++)
+        for (idx = 0; idx < ts.Layout->MENUSIZE; idx++)
         {
             UiMenu_UpdateMenuEntry(menu[idx].entryItem,mode, idx);
         }
@@ -673,7 +680,7 @@ void UiMenu_RenderMenu(uint16_t mode)
     case MENU_PROCESS_VALUE_CHANGE:
     {
         // wrapping to next screen (and from end to start and vice versa)
-        if (ts.menu_item >= MENUSIZE)
+        if (ts.menu_item >= ts.Layout->MENUSIZE)
         {
             if (UiMenu_RenderNextScreen() == false)
             {
@@ -689,10 +696,10 @@ void UiMenu_RenderMenu(uint16_t mode)
 
         }
 
-        ts.menu_item%=MENUSIZE;
-        if (ts.menu_item < 0) ts.menu_item+=MENUSIZE;
+        ts.menu_item%=ts.Layout->MENUSIZE;
+        if (ts.menu_item < 0) ts.menu_item+=ts.Layout->MENUSIZE;
 
-        uint16_t current_item = ts.menu_item%MENUSIZE;
+        uint16_t current_item = ts.menu_item%ts.Layout->MENUSIZE;
         UiMenu_UpdateMenuEntry(menu[current_item].entryItem,mode, current_item);
     }
     break;
@@ -730,9 +737,9 @@ void UiMenu_RenderChangeItem(int16_t pot_diff)
 
 void UiMenu_RenderLastScreen()
 {
-    while (menu[MENUSIZE-1].entryItem != NULL && UiMenu_NextMenuEntry(menu[MENUSIZE-1].entryItem) != NULL )
+    while (menu[ts.Layout->MENUSIZE-1].entryItem != NULL && UiMenu_NextMenuEntry(menu[ts.Layout->MENUSIZE-1].entryItem) != NULL )
     {
-        UiMenu_DisplayMoveSlotsForward(MENUSIZE);
+        UiMenu_DisplayMoveSlotsForward(ts.Layout->MENUSIZE);
     }
     UiMenu_RenderMenu(MENU_RENDER_ONLY);
 }
@@ -745,7 +752,7 @@ void UiMenu_RenderFirstScreen()
 
 bool UiMenu_RenderNextScreen()
 {
-    bool retval = UiMenu_DisplayMoveSlotsForward(MENUSIZE);
+    bool retval = UiMenu_DisplayMoveSlotsForward(ts.Layout->MENUSIZE);
     if (retval)
     {
         UiMenu_RenderMenu(MENU_RENDER_ONLY);
@@ -755,7 +762,7 @@ bool UiMenu_RenderNextScreen()
 
 bool UiMenu_RenderPrevScreen()
 {
-    bool retval = UiMenu_DisplayMoveSlotsBackwards(MENUSIZE);
+    bool retval = UiMenu_DisplayMoveSlotsBackwards(ts.Layout->MENUSIZE);
     if (retval)
     {
         UiMenu_RenderMenu(MENU_RENDER_ONLY);

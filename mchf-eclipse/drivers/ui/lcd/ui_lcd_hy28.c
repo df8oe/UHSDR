@@ -1032,6 +1032,7 @@ static void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort hei
 static void UiLcdHy28_CloseBulkWrite()
 {
 #ifdef USE_GFX_RA8875
+	uint16_t MAX_X=ts.Layout->SizeX; uint16_t MAX_Y=ts.Layout->SizeY;
     UiLcdHy28_SetActiveWindow(0, MAX_X - 1, 0, MAX_Y - 1);
     UiLcdHy28_WriteReg(0x40, 0);
 #endif
@@ -1105,6 +1106,7 @@ inline void UiLcdHy28_BulkPixel_CloseWrite()
 
 void UiLcdHy28_LcdClear(ushort Color)
 {
+	uint32_t MAX_X=ts.Layout->SizeX; uint32_t MAX_Y=ts.Layout->SizeY;
     UiLcdHy28_OpenBulkWrite(0,MAX_X,0,MAX_Y);
 #ifdef USE_SPI_DMA
     if(UiLcdHy28_SpiDisplayUsed())
@@ -1131,6 +1133,7 @@ void UiLcdHy28_LcdClear(ushort Color)
 
 void UiLcdHy28_DrawColorPoint( unsigned short Xpos, unsigned short Ypos, unsigned short point)
 {
+	uint16_t MAX_X=ts.Layout->SizeX; uint16_t MAX_Y=ts.Layout->SizeY;
 #ifdef USE_GFX_RA8875
     if( Xpos < MAX_X && Ypos < MAX_Y )
     {
@@ -1604,6 +1607,7 @@ const sFONT   *UiLcdHy28_Font(uint8_t font)
 
 static void UiLcdHy28_PrintTextLen(uint16_t XposStart, uint16_t YposStart, const char *str, const uint16_t len, const uint32_t clr_fg, const uint32_t clr_bg,uchar font)
 {
+	uint32_t MAX_X=ts.Layout->SizeX; uint32_t MAX_Y=ts.Layout->SizeY;
     const sFONT   *cf = UiLcdHy28_Font(font);
     int8_t Xshift =  cf->Width - ((cf->Width == 8 && cf->Height == 8)?1:0);
     // Mod the 8x8 font - the shift is too big
@@ -2207,6 +2211,19 @@ uint8_t UiLcdHy28_Init()
     }
 
     mchf_display.display_type = retval;
+
+    switch(mchf_display.DeviceCode)
+    {
+    case 0x9486:
+    case 0x9488:
+    	ts.Layout=&LcdLayouts[LcdLayout_480x320];
+    	disp_resolution=RESOLUTION_480_320;
+    	break;
+    default:
+    	ts.Layout=&LcdLayouts[LcdLayout_320x240];
+    	disp_resolution=RESOLUTION_320_240;
+    	break;
+    }
     return retval;
 
 }

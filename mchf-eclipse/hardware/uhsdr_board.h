@@ -60,6 +60,7 @@
 // ALTERNATIVE GROUP START USE_GFX
 
 // default graphics driver ILI932x
+/*
 #ifndef LCD_TYPE
   #define LCD_TYPE 2
 #endif
@@ -68,11 +69,14 @@
   #define USE_GFX_ILI932x
   #define USE_DISP_320_240
 #elif LCD_TYPE == 1
+*/
+  #define USE_GFX_ILI932x
   #define USE_GFX_ILI9486
   #define USE_DISP_480_320
   #define USE_FFT_1024
   #define USE_HIRES_TOUCH
-#define USE_8bit_FONT
+  #define USE_8bit_FONT
+/*
 #elif LCD_TYPE == 2
   #define USE_GFX_ILI932x
   #define USE_GFX_ILI9486
@@ -87,7 +91,7 @@
 #else
   #error "Unsupported LCD_TYPE"
 #endif
-
+*/
 // OPTION
 #define USE_RTTY_PROCESSOR
 
@@ -124,7 +128,6 @@
 // Support for LO based on SI5351
 #define USE_OSC_SI5351A
 // AT LEAST ONE GROUP END USE_OSC
-
 
 #include "uhsdr_mcu.h"
 // HW libs
@@ -176,6 +179,7 @@
 #include "uhsdr_types.h"
 #include "audio_filter.h"
 #include "osc_interface.h"
+#include "ui_lcd_items.h"
 #include "ui_lcd_hy28.h"
 
 #include "comp.h"
@@ -1099,6 +1103,7 @@ typedef struct TransceiverState
 	int16_t nr_mode;
 	uint8_t debug_si5351a_pllreset;
 	uint16_t graticulePowerupYpos;	//initial (after powerup) position of graticule (frequency bar)
+	const LcdLayout* Layout;				//current lcd layout (set by lcd detection routine)
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
