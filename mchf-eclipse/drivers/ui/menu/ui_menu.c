@@ -4068,7 +4068,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     	 break;
 
     case MENU_DIGITAL_MODE_SELECT:
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.digital_mode,0,DigitalMode_BPSK,0,1);
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.digital_mode,0,DigitalMode_Num_Modes-1,0,1);
         if (var_change)
         {
             // TODO: Factor this out into a Ui function for (de-)activating Rtty mode

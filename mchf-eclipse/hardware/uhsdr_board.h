@@ -14,15 +14,34 @@
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
 #include "uhsdr_mcu.h"
+/***
+ * Please document all switches/parameters with what they are supposed to do and what values they can have.
+ * Please use proper naming:
+ * For capabilities of the software which can be enabled and disabled
+ * use USE_<CAPABILITY/FEATURENAME>
+ *
+ * These should be defined using #define USE_CAPABILITY
+ * or left undefined if not enabled so that these can be checked using #ifdef
+ *
+ * For related parameters DON'T USE USE_...
+ *
+ * In an ideal world please use PAR_<CAPABILITY/FEATURE>_<PARAMETERNAME> (we haven't done that yet)
+ * Please don't define constant or local parameters here, only those a user (!) is supposed to change as part of
+ * configuring a specific build variant.
+ *
+ */
+
+/**
+ * This parameter disables certain features / capabilites in order to achieve a minimum build size for
+ * the 192k ram / 512k flash STM32F4 machines. Unless you have such a machine, leave this disabled.
+ */
+// #define IS_SMALL_BUILD
+
 // some special switches
 //#define 	DEBUG_BUILD
 
+// if enabled the alternate (read new and better) noise reduction is active
 #define USE_ALTERNATE_NR
-//#define debug_alternate_NR
-
-#ifdef USE_ALTERNATE_NR
-#define NR_FFT_SIZE 128
-#endif
 
 //time optimisation debug pin enable
 //#define TimeDebug
@@ -81,10 +100,13 @@
 #endif
 
 // OPTION
-#define USE_FREEDV
+// with IS_SMALL_BUILD we are not automatically including USE_FREEDV as it uses lot of memory both RAM and flash
+#ifndef IS_SMALL_BUILD
+    #define USE_FREEDV
+#endif
 // #define DEBUG_FREEDV
 // hardware specific switches
-//#define HY28BHISPEED			true		// uncomment for using new HY28B in SPI with bus speed 50MHz instead of 25MHz
+
 
 // Unified the 3 graphics drivers.
 

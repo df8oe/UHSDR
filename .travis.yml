@@ -25,6 +25,7 @@ script:
     - mkdir -p mchf-eclipse/build-bl-f7
     - mkdir -p mchf-eclipse/build-fw-f7
     - mkdir -p mchf-eclipse/build-fw-f4-ili9486-480
+    - mkdir -p mchf-eclipse/build-fw-f4-small
     - cd mchf-eclipse/build-bl
     - cd ../build-fw 
     - make -f ../Makefile ROOTLOC=".." all
@@ -36,6 +37,8 @@ script:
     - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" bootloader
     - cd ../build-fw-f4-ili9486-480
     - make -f ../Makefile ROOTLOC=".." LCD_TYPE=1 all
+    - cd ../build-fw-f4-small
+    - make -f ../Makefile CONFIGFLAGS="-DIS_SMALL_BUILD" ROOTLOC=".." all
     - cd ..
 before_deploy:
     - sudo apt-get install -y doxygen graphviz

@@ -321,12 +321,14 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
             float32_t mode_marker[SPECTRUM_MAX_MARKER];
             switch(ts.digital_mode)
             {
+#ifdef USE_FREEDV
             case DigitalMode_FreeDV:
             	// 1500 +/- 625Hz
                 mode_marker[0] = 875;
                 mode_marker[1] = 2125;
                 sd.marker_num = 2;
                 break;
+#endif
             case DigitalMode_RTTY:
                 mode_marker[0] = 915; // Mark Frequency
                 mode_marker[1] = mode_marker[0] + rtty_shifts[rtty_ctrl_config.shift_idx].value;

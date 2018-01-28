@@ -1267,11 +1267,11 @@ void UiDriver_ModeSpecificDisplayClear(uint8_t dmod_mode, uint8_t digital_mode)
 	{
 		switch(digital_mode)
 		{
-		case DigitalMode_FreeDV:
 #ifdef USE_FREEDV
+		case DigitalMode_FreeDV:
 			FreeDv_DisplayClear();
-#endif
 			break;
+#endif
 		case DigitalMode_RTTY:
 		case DigitalMode_BPSK:
 			UiDriver_TextMsgClear();
@@ -1313,11 +1313,11 @@ void UiDriver_ModeSpecificDisplayPrepare(uint8_t dmod_mode, uint8_t digital_mode
 	{
 		switch(digital_mode)
 		{
-		case DigitalMode_FreeDV:
 #ifdef USE_FREEDV
+		case DigitalMode_FreeDV:
 			FreeDv_DisplayPrepare();
-#endif
 			break;
+#endif
 		case DigitalMode_RTTY:
 		case DigitalMode_BPSK:
 			UiDriver_TextMsgClear();
@@ -6069,7 +6069,7 @@ static void UiAction_ChangeFrequencyByTouch()
 #endif
 static void UiAction_ChangeDigitalMode()
 {
-	incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_BPSK);
+	incr_wrap_uint8(&ts.digital_mode,0,DigitalMode_Num_Modes-1);
 	// We limit the reachable modes to the ones truly available
 	// which is FreeDV1, RTTY, BPSK for now
 	UiDriver_ToggleDigitalMode();

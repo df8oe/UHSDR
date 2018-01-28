@@ -20,6 +20,8 @@
 #ifdef USE_ALTERNATE_NR
 #include "freedv_uhsdr.h"
 
+#define NR_FFT_SIZE 128
+
 #define NR_FFT_L (NR_FFT_SIZE) // for NR FFT size 128
 //#define NR_FFT_L (NR_FFT_SIZE * 2) // for NR FFT size 256
 

@@ -109,13 +109,11 @@ const BandInfo bandInfo[] =
 const digital_mode_desc_t digimodes[DigitalMode_Num_Modes] =
 {
     { "DIGITAL" , true },
+#ifdef USE_FREEDV
     { "FreeDV"  , true },
+#endif
     { "RTTY"    , true },
     { "BPSK"    , true },
-    { "FREEDV2" , false },
-    { "SSTV"    , false },
-    { "WSPR A"  , false },
-    { "WSPR P"  , false },
 };
 
 
@@ -253,6 +251,26 @@ int32_t RadioManagement_GetCWDialOffset()
     return retval * TUNE_MULT;
 }
 
+/**
+ * @brief returns true if the mode parameters tell us we will TX at zero if as opposed to offset frequency
+ */
+static bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode)
+{
+    return  (
+                dmod_mode == DEMOD_CW ||
+                (dmod_mode == DEMOD_DIGI &&
+                    (
+#ifdef USE_FREEDV
+                            digital_mode == DigitalMode_FreeDV
+#else
+                            false
+#endif
+                            ||
+                            digital_mode == DigitalMode_BPSK
+                    )
+                )
+             );
+}
 uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t txrx_mode)
 {
     uint32_t tune_freq = dial_freq;
@@ -265,12 +283,12 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
     }
 
 
-    // Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in CW mode
-    // In CW TX mode we do not use frequency translation, this permits to use the generated I or Q channel as audio sidetone
-
-    if(!((ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && (ts.digital_mode == DigitalMode_FreeDV || ts.digital_mode == DigitalMode_BPSK))) && (txrx_mode == TRX_MODE_TX)))
+    // Offset dial frequency if the RX/TX frequency translation is active and we are not transmitting in mode which
+    // does not use frequency translation, this permits to use the generated I or Q channel as audio sidetone
+    // that is right now RTTY, FreeDV, CW, BPSK
+    if(txrx_mode != TRX_MODE_TX || RadioManagement_IsTxAtZeroIF(ts.dmod_mode, ts.digital_mode) == false)
     {
-        tune_freq += AudioDriver_GetTranslateFreq();        // magnitude of shift is quadrupled at actual Si570 operating frequency
+        tune_freq += AudioDriver_GetTranslateFreq();
     }
 
     // Extra tuning actions
@@ -925,8 +943,8 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
     {
         if (ts.digital_mode == DigitalMode_None)
         {
-            ts.digital_mode = DigitalMode_FreeDV;
-            // TODOD: more clever selection of initial DV Mode, if none was previously selected
+            ts.digital_mode = 1;
+            // this maps to the first available digital mode (if any)
         }
         RadioManagement_ChangeCodec(ts.digital_mode,1);
     }
