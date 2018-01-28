@@ -310,7 +310,7 @@ uint16_t Bpsk_FindCharReversed(uint8_t c)
 
 void BpskDecoder_ProcessSample(float32_t sample)
 {
-	float32_t fsample, sum_sin = 0, sum_cos = 0, symbol_out, sample_sum = 0;
+	float32_t fsample, sum_sin = 0, sum_cos = 0, symbol_out, smax = 0;
 	int8_t bit;
 
 	psk_state.rx_samples_in[psk_state.rx_bnd_idx] = sample;
@@ -334,18 +334,29 @@ void BpskDecoder_ProcessSample(float32_t sample)
 	psk_state.rx_scmix[psk_state.rx_idx] = symbol_out * sum_cos / PSK_BUF_LEN;
 
 	psk_state.rx_err = 0;
+	smax = 0;
 	for (int i = 0; i < PSK_BUF_LEN; i++)
 	{
 		psk_state.rx_err += psk_state.rx_scmix[i]; // Could be optimized keeping the sum in memory
+		if (fabsf(psk_state.rx_sin_prod[i]) > smax)
+		{
+			smax = fabsf(psk_state.rx_sin_prod[i]);
+		}
+		if (fabsf(psk_state.rx_cos_prod[i]) > smax)
+		{
+			smax = fabsf(psk_state.rx_cos_prod[i]);
+		}
 	}
 
-	sample_sum = 0;
-	for (int i = 0; i < PSK_BND_FLT_LEN; i++)
+	if (smax != 0)
 	{
-		sample_sum += psk_state.rx_samples[i];
+		psk_state.rx_err /= PSK_BUF_LEN * smax * 4;
+	}
+	else
+	{
+		psk_state.rx_err /= PSK_BUF_LEN;
 	}
 
-	psk_state.rx_err /= PSK_BUF_LEN * sample_sum / PSK_BND_FLT_LEN * 4;
 	if(fabsf(psk_state.rx_err) > 0.1)
 	{
 		psk_state.rx_err = 0.1 * ((psk_state.rx_err > 0) ? 1 : -1 );
