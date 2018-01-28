@@ -637,7 +637,11 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     case INFO_FW_VERSION:
     {
   		#ifdef OFFICIAL_BUILD
-      	  snprintf(out,32, "D%s", UHSDR_VERSION+4);
+  		  #ifdef IS_SMALL_BUILD
+      		snprintf(out,32, "S%s", UHSDR_VERSION+4);
+		  #else
+      		snprintf(out,32, "D%s", UHSDR_VERSION+4);
+		  #endif
 		#else
     	  snprintf(out,32, "%s", UHSDR_VERSION+4);
     	#endif
