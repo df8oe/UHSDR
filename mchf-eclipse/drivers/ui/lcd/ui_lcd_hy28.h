@@ -159,7 +159,6 @@ typedef struct
 
     uint16_t xraw;
     uint16_t yraw;
-#ifdef USE_HIRES_TOUCH
     int16_t xraw_m1;
     int16_t xraw_m2;
     int16_t yraw_m1;
@@ -172,11 +171,6 @@ typedef struct
     int16_t hr_y;
     uint16_t xraw_prev;
     uint16_t yraw_prev;
-#else
-    uint8_t x;
-    uint8_t y;
-    uint8_t mirrored;
-#endif
     int32_t cal[6];
     bool present;
 

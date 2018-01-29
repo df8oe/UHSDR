@@ -43,57 +43,15 @@
 // if enabled the alternate (read new and better) noise reduction is active
 #define USE_ALTERNATE_NR
 
-//time optimisation debug pin enable
-//#define TimeDebug
 
-
-// New LCD defines, ONLY ONE MAY BE SET AT COMPILE TIME
-// all supported controller/resolution combinations:
-// 0 ILI932x @320x240
-// 1 ILI9486 @480x320
-// 2 ILI9486 @320x240 this is for debug purposes to simulate 320x240 @ ILI9486
-// 3 RA8875 @800x600
-
-//for manual setting adjust following #define
-//#define LCD_TYPE 1
-
-// ALTERNATIVE GROUP START USE_GFX
-
-// default graphics driver ILI932x
-/*
-#ifndef LCD_TYPE
-  #define LCD_TYPE 2
-#endif
-
-#if LCD_TYPE == 0
-  #define USE_GFX_ILI932x
-  #define USE_DISP_320_240
-#elif LCD_TYPE == 1
-*/
   #define USE_GFX_ILI932x
   #define USE_GFX_ILI9486
   #define USE_DISP_480_320
   #define USE_FFT_1024
-  #define USE_HIRES_TOUCH
 #ifndef IS_SMALL_BUILD
   #define USE_8bit_FONT
 #endif
-/*
-#elif LCD_TYPE == 2
-  #define USE_GFX_ILI932x
-  #define USE_GFX_ILI9486
-  #define USE_DISP_320_240
-  #define USE_FFT_1024
-  #define USE_HIRES_TOUCH
-//  #define USE_8bit_FONT
-#elif LCD_TYPE == 3
-  #define USE_GFX_RA8875
-  #define USE_DISP_800_480
-  #define USE_FFT_1024
-#else
-  #error "Unsupported LCD_TYPE"
-#endif
-*/
+
 // OPTION
 #define USE_RTTY_PROCESSOR
 

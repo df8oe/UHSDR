@@ -140,24 +140,6 @@ static void UiDriver_DisplayPskSpeed(bool encoder_active);
 
 
 
-#ifdef USE_HIRES_TOUCH
-/*typedef struct
-{
-	int16_t x;
-	int16_t y;
-	int16_t w;
-	int16_t h;
-} touchscreen_region_t;*/
-#else
-typedef struct
-{
-	uint8_t x_left;
-	uint8_t x_right;
-	uint8_t y_down;
-	uint8_t y_up;
-} touchscreen_region_t;
-#endif
-
 // Tuning steps
 const ulong tune_steps[T_STEP_MAX_STEPS] =
 {
@@ -275,18 +257,11 @@ bool filter_path_change = false;
 // check if touched point is within rectangle of valid action
 static bool UiDriver_CheckTouchRegion(const UiArea_t* tr_p)
 {
-#ifdef USE_HIRES_TOUCH
 	return ((ts.tp->hr_x <= (tr_p->x+tr_p->w)) &&
 				(ts.tp->hr_x >= (tr_p->x)) &&
 				(ts.tp->hr_y <= (tr_p->y+tr_p->h))) &&
 				(ts.tp->hr_y >= (tr_p->y));
-/*	return ((ts.tp->hr_x <= (tr_p->x_center+(tr_p->size_x/2))) &&
-			(ts.tp->hr_x >= (tr_p->x_center-(tr_p->size_x/2))) &&
-			(ts.tp->hr_y <= (tr_p->y_center+(tr_p->size_y/2))) &&
-			(ts.tp->hr_y >= (tr_p->y_center-(tr_p->size_y/2))));*/
-#else
-	return (ts.tp->x <= tr_p->x_right && ts.tp->x >= tr_p->x_left && ts.tp->y >= tr_p->y_down && ts.tp->y <= tr_p->y_up);
-#endif
+
 }
 
 
@@ -5138,15 +5113,11 @@ static void UiDriver_KeyTestScreen()
 
 				if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
 				{
-#ifdef USE_HIRES_TOUCH
+
 					snprintf(txt_buf,40,"x/y: %04d/%04d x/y raw: %04x/%04x",ts.tp->hr_x,ts.tp->hr_y,ts.tp->xraw,ts.tp->yraw);	//show touched coordinates
 					UiLcdHy28_PrintTextCentered(2,216,ts.Layout->SizeX-4,txt_buf,White,Blue,0);           // identify button on screen
 					UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
 
-#else
-					snprintf(txt_buf,40,"x/y: %02d/%02d x/y raw: %04x/%04x",ts.tp->x,ts.tp->y,ts.tp->xraw,ts.tp->yraw);	//show touched coordinates
-					UiLcdHy28_PrintTextCentered(10,216,300,txt_buf,White,Blue,0);           // identify button on screen
-#endif
 					txt = "Touch";
 				}
 				else
@@ -5218,7 +5189,6 @@ static void UiDriver_KeyTestScreen()
 		}
 	}
 }
-#ifdef USE_HIRES_TOUCH
 //cross size definitions, must be odd
 #define CrossSizeH 11
 #define CrossSizeV 11
@@ -5227,7 +5197,7 @@ static void DrawCross(int16_t* coord,uint16_t color)
 	UiLcdHy28_DrawStraightLine(coord[0]-(CrossSizeH/2), coord[1],CrossSizeH,        LCD_DIR_HORIZONTAL,color);
 	UiLcdHy28_DrawStraightLine(coord[0], coord[1]-(CrossSizeV/2),CrossSizeV,        LCD_DIR_VERTICAL,color);
 }
-#endif
+
 
 /*
  * @brief Touchscreen Calibration function
@@ -5334,7 +5304,7 @@ static bool UiDriver_TouchscreenCalibration()
 	bool retval = false;
 	uint16_t MAX_X=ts.Layout->SizeX; uint16_t MAX_Y=ts.Layout->SizeY;
 
-#ifdef USE_HIRES_TOUCH
+
 
     bool run_calibration = false;
 
@@ -5473,13 +5443,9 @@ static bool UiDriver_TouchscreenCalibration()
 	    retval = true;
 	    ts.menu_var_changed = true;
 	}
-#endif
 	return retval;
 }
 
-
-#ifdef  USE_HIRES_TOUCH
-//#define MaxTouchError 100
 #define CrossCheckCount 3
 void UiDriver_DoCrossCheck(int16_t cross[])
 {
@@ -5539,7 +5505,7 @@ void UiDriver_DoCrossCheck(int16_t cross[])
 
 	HAL_Delay(2000);
 }
-#endif
+
 
 static uint16_t startUpScreen_nextLineY;
 static bool startUpError = false;
@@ -6407,7 +6373,7 @@ static void UiDriver_HandleTouchScreen(bool is_long_press)
 		if (ts.show_debug_info)					// show coordinates for coding purposes
 		{
 
-#ifdef USE_HIRES_TOUCH
+
 
 			char text[14];
 			snprintf(text,14,"%04d%s%04d%s",ts.tp->hr_x," : ",ts.tp->hr_y,"  ");
@@ -6426,10 +6392,7 @@ static void UiDriver_HandleTouchScreen(bool is_long_press)
 			}
     #endif
 
-#else
-			char text[10];
-			snprintf(text,10,"%02d%s%02d%s",ts.tp->x," : ",ts.tp->y,"  ");
-#endif
+
 			UiLcdHy28_PrintText(0,ts.Layout->LOADANDDEBUG_Y,text,White,Black,0);
 		}
 
