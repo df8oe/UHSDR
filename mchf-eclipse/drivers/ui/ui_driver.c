@@ -813,6 +813,20 @@ void UiDriver_Init()
 	// Load stored data from eeprom or calibrate touchscreen
 	bool run_keytest = (UiDriver_LoadSavedConfigurationAtStartup() == false && UiDriver_TouchscreenCalibration() == false);
 
+
+	if(mchf_touchscreen.present)
+	{
+		//touchscreen calibration test
+		bool IS_TSCalibrated=0;
+		for(int16_t m=0; m<6; m++)
+		{
+			IS_TSCalibrated|=ts.tp->cal[m]!=0;
+		}
+
+		UiDriver_StartupScreen_LogIfProblem(IS_TSCalibrated == 0,
+				"WARNING:  TOUCHSCREEN NOT CALIBRATED!!!\nRun calibration first!");
+	}
+
 	UiDriver_StartupScreen_LogIfProblem(AudioDriver_GetTranslateFreq() == 0,
 			"WARNING:  Freq. Translation is OFF!!!\nTranslation is STRONGLY recommended!!");
 
