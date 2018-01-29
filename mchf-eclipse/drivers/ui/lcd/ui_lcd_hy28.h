@@ -109,6 +109,8 @@ typedef struct
     uint16_t DeviceCode;      // LCD ident code
     bool use_spi;
     int16_t lcd_cs;
+    uint16_t MAX_X;
+    uint16_t MAX_Y;
     GPIO_TypeDef* lcd_cs_pio;
     void (*SetActiveWindow) (uint16_t XLeft, uint16_t XRight, uint16_t YTop, uint16_t YBottom);
     void (*SetCursorA)( unsigned short Xpos, unsigned short Ypos );

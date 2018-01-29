@@ -4,9 +4,11 @@
  *  Created on: 27.01.2018
  *      Author: Slawomir Balon (SP9BSL)
  */
+#ifndef BOOTLOADER_BUILD
 #include "uhsdr_board.h"
 #include "ui_lcd_items.h"
 #include "ui_driver.h"
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //some local 480x320 calculations to make life easier in case of change something
@@ -381,3 +383,4 @@ const LcdLayout LcdLayouts[LcdLayoutsCount]=
 
 
 disp_resolution_t disp_resolution;
+#endif
