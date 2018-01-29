@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-01-11T07:16:11  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-01-29T13:33:01  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-01-11T07:16:11  by "./ui_menu_structure_mdtable.py"
+generated at  2018-01-29T13:33:01  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -85,7 +85,6 @@ generated at  2018-01-11T07:16:11  by "./ui_menu_structure_mdtable.py"
 | **RTC Seconds**               (                             CONFIG_RTC_SEC) | Sets the Real Time Clock Seconds. Needs HW Modifications. | 
 | **RTC Reset**                 (                           CONFIG_RTC_RESET) | Full Reset of STM32 RTC. Can be used to simulate first start with RTC mod completed | 
 | **RTC Calibration**           (                           CONFIG_RTC_CALIB) | Sets the Real Time Clock Frequency calibration value in ppm. 1s/day deviation equals 11.57 ppm deviation | 
-| **Touchscreen**               (                  CONFIG_TOUCHSCREEN_MIRROR) | Some touchscreens have the touch coordinates reversed or x and y flipped. Select regarding your touchscreen. | 
 | **Voltmeter Cal.**            (               CONFIG_VOLTMETER_CALIBRATION) | Adjusts the displayed value of the voltmeter.  | 
 | **Low Voltage Threshold**     (                 CONFIG_LOW_POWER_THRESHOLD) | Voltage threshold for voltage warning colors and auto shutdown. | 
 | **Freq. Calibrate**           (                 CONFIG_FREQUENCY_CALIBRATE) | Adjust the frequency correction of the local oscillator. Measure TX frequency and adjust until both match. Or use receive a know reference signal and zero-beat it and then adjust. More information in the Wiki. | 
