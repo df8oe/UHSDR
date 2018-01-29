@@ -128,4 +128,4 @@ drivers/audio/freedv_uhsdr.c \
 drivers/audio/freedv_test_data.c \
 drivers/audio/rtty.c \
 drivers/audio/psk.c \
-
+drivers/ui/lcd/ui_lcd_layouts.c \

@@ -68,6 +68,8 @@ enum MENU_INFO_ITEM
 };
 
 const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item);
+#define MAX_MENUSIZE 14		//memory allocation of displayed menuitems at once, must be higher or equal to highest ts.Layout->MENUSIZE
+/*
 #ifdef USE_DISP_480_320
 //
 #define	MENUSIZE							14		// number of menu items per page/screen
@@ -92,6 +94,6 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item);
 #define POS_MENU_CHANGE_X                   244     // Position of variable being changed
 #define POS_MENU_CURSOR_X                   311     // Position of cursor used to indicate selected item
 #endif
-
+*/
 
 #endif //__UI_MENU_H

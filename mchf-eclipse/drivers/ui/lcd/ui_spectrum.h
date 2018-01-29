@@ -20,13 +20,6 @@
 #include "ui_lcd_items.h"
 
 
-typedef struct {
-    uint16_t x;
-    uint16_t y;
-    uint16_t w;
-    uint16_t h;
-} UiArea_t;
-
 typedef struct
 {
     UiArea_t full;

@@ -196,11 +196,7 @@ void UiDriver_SetDemodMode(uint8_t new_mode);
 void UiDriver_StartUpScreenInit();
 void UiDriver_StartUpScreenFinish();
 
-#ifdef  USE_HIRES_TOUCH
 void UiDriver_DoCrossCheck(int16_t cross[]);
-#else
-void UiDriver_DoCrossCheck(char cross[],char* xt_corr, char* yt_corr);
-#endif
 void UiAction_ToggleVfoAB();
 void UiDriver_SetSplitMode(bool mode_active);
 
@@ -218,6 +214,26 @@ void UiDriver_TextMsgClear();
 void UiDriver_SetSpectrumMode(SpectrumMode_t mode);
 SpectrumMode_t UiDriver_GetSpectrumMode();
 
+//some exports for layout definitions
+void UiAction_ChangeLowerMeterUp();
+void UiAction_ToggleWaterfallScopeDisplay();
+void UiAction_ChangeSpectrumSize();
+void UiAction_ChangeSpectrumZoomLevelDown();
+void UiAction_ChangeSpectrumZoomLevelUp();
+void UiAction_CheckSpectrumTouchActions();
+void UiAction_ChangeFrequencyToNextKhz();
+void UiAction_ChangeDemodMode();
+void UiAction_ChangePowerLevel();
+void UiAction_ChangeAudioSource();
+void UiAction_ChangeBandDownOrUp();
+void UiAction_ChangeBandUpOrDown();
+void UiAction_ChangeDigitalMode();
+void UiAction_ChangeDynamicTuning();
+void UiAction_ChangeDebugInfoDisplay();
+void UiAction_ChangeRfModPresence();
+void UiAction_ChangeVhfUhfModPresence();
+void UiAction_ChangeFrequencyByTouch();
+void Codec_RestartI2S();
 
 //
 // Items that are timed using ts.sysclock (operates at 100 Hz)

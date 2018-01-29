@@ -109,6 +109,8 @@ typedef struct
     uint16_t DeviceCode;      // LCD ident code
     bool use_spi;
     int16_t lcd_cs;
+    uint16_t MAX_X;
+    uint16_t MAX_Y;
     GPIO_TypeDef* lcd_cs_pio;
     void (*SetActiveWindow) (uint16_t XLeft, uint16_t XRight, uint16_t YTop, uint16_t YBottom);
     void (*SetCursorA)( unsigned short Xpos, unsigned short Ypos );
@@ -157,7 +159,6 @@ typedef struct
 
     uint16_t xraw;
     uint16_t yraw;
-#ifdef USE_HIRES_TOUCH
     int16_t xraw_m1;
     int16_t xraw_m2;
     int16_t yraw_m1;
@@ -170,11 +171,6 @@ typedef struct
     int16_t hr_y;
     uint16_t xraw_prev;
     uint16_t yraw_prev;
-#else
-    uint8_t x;
-    uint8_t y;
-    uint8_t mirrored;
-#endif
     int32_t cal[6];
     bool present;
 
@@ -194,7 +190,7 @@ bool    UiLcdHy28_TouchscreenHasProcessableCoordinates();
 void    UiLcdHy28_TouchscreenInit(uint8_t mirror);
 
 
-
+/*
 // FIXME: THIS MUST BE HANDLED DIFFERENTLY, IT DOES NOT ALWAYS SEES
 // THE CONFIGURATION FROM uhsdr_board.h but due to dependency issues, we cannot include
 // uhsdr_board.h at the top
@@ -213,5 +209,5 @@ void    UiLcdHy28_TouchscreenInit(uint8_t mirror);
         #define MAX_Y  240
     #endif
 #endif
-
+*/
 #endif

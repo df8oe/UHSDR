@@ -575,21 +575,15 @@ void UiLcdHy28_BacklightEnable(bool on)
 #ifdef STM32F4
 #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_4)
 #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_2)
-	#ifdef USE_HIRES_TOUCH
+
 		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_64)
-	#else
-		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_32)
-	#endif
 #endif
 
 #ifdef STM32F7
 #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
 #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
-	#ifdef USE_HIRES_TOUCH
+
 		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_128)
-	#else
-		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_64)
-	#endif
 #endif
 
 static uint16_t lcd_spi_prescaler = SPI_PRESCALE_LCD_DEFAULT;
@@ -1032,6 +1026,7 @@ static void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort hei
 static void UiLcdHy28_CloseBulkWrite()
 {
 #ifdef USE_GFX_RA8875
+	uint16_t MAX_X=mchf_display.MAX_X; uint16_t MAX_Y=mchf_display.MAX_Y;
     UiLcdHy28_SetActiveWindow(0, MAX_X - 1, 0, MAX_Y - 1);
     UiLcdHy28_WriteReg(0x40, 0);
 #endif
@@ -1105,6 +1100,7 @@ inline void UiLcdHy28_BulkPixel_CloseWrite()
 
 void UiLcdHy28_LcdClear(ushort Color)
 {
+	uint32_t MAX_X=mchf_display.MAX_X; uint32_t MAX_Y=mchf_display.MAX_Y;
     UiLcdHy28_OpenBulkWrite(0,MAX_X,0,MAX_Y);
 #ifdef USE_SPI_DMA
     if(UiLcdHy28_SpiDisplayUsed())
@@ -1131,6 +1127,7 @@ void UiLcdHy28_LcdClear(ushort Color)
 
 void UiLcdHy28_DrawColorPoint( unsigned short Xpos, unsigned short Ypos, unsigned short point)
 {
+	uint16_t MAX_X=mchf_display.MAX_X; uint16_t MAX_Y=mchf_display.MAX_Y;
 #ifdef USE_GFX_RA8875
     if( Xpos < MAX_X && Ypos < MAX_Y )
     {
@@ -1604,6 +1601,7 @@ const sFONT   *UiLcdHy28_Font(uint8_t font)
 
 static void UiLcdHy28_PrintTextLen(uint16_t XposStart, uint16_t YposStart, const char *str, const uint16_t len, const uint32_t clr_fg, const uint32_t clr_bg,uchar font)
 {
+	uint32_t MAX_X=mchf_display.MAX_X; uint32_t MAX_Y=mchf_display.MAX_Y;
     const sFONT   *cf = UiLcdHy28_Font(font);
     int8_t Xshift =  cf->Width - ((cf->Width == 8 && cf->Height == 8)?1:0);
     // Mod the 8x8 font - the shift is too big
@@ -2207,8 +2205,38 @@ uint8_t UiLcdHy28_Init()
     }
 
     mchf_display.display_type = retval;
-    return retval;
 
+#ifndef BOOTLOADER_BUILD
+    switch(mchf_display.DeviceCode)
+    {
+    case 0x9486:
+    case 0x9488:
+    	ts.Layout=&LcdLayouts[LcdLayout_480x320];
+    	disp_resolution=RESOLUTION_480_320;
+    	break;
+    default:
+    	ts.Layout=&LcdLayouts[LcdLayout_320x240];
+    	disp_resolution=RESOLUTION_320_240;
+    	break;
+    }
+    mchf_display.MAX_X=ts.Layout->SizeX;
+    mchf_display.MAX_Y=ts.Layout->SizeY;
+#else
+    switch(mchf_display.DeviceCode)
+    {
+    case 0x9486:
+    case 0x9488:
+    	mchf_display.MAX_X=480;
+    	mchf_display.MAX_Y=320;
+    	break;
+    default:
+    	mchf_display.MAX_X=320;
+    	mchf_display.MAX_Y=240;
+    	break;
+    }
+#endif
+
+    return retval;
 }
 
 
@@ -2241,11 +2269,8 @@ void UiLcdHy28_TouchscreenDetectPress()
         if(HAL_GPIO_ReadPin(TP_IRQ_PIO,TP_IRQ) && mchf_touchscreen.state == TP_DATASETS_PROCESSED)     // clear statemachine when data is processed
         {
             mchf_touchscreen.state = TP_DATASETS_NONE;
-#ifdef USE_HIRES_TOUCH
+
             mchf_touchscreen.hr_x = mchf_touchscreen.hr_y = 0x7fff;
-#else
-            mchf_touchscreen.x = mchf_touchscreen.y = 0xff;
-#endif
         }
     }
 }
@@ -2258,20 +2283,12 @@ bool UiLcdHy28_TouchscreenHasProcessableCoordinates()
 	bool retval = false;
     UiLcdHy28_TouchscreenReadCoordinates();
 
-#ifdef USE_HIRES_TOUCH
     if(mchf_touchscreen.state >= TP_DATASETS_VALID && mchf_touchscreen.state != TP_DATASETS_PROCESSED)
     //if(mchf_touchscreen.state >= TP_DATASETS_WAIT && mchf_touchscreen.state != TP_DATASETS_PROCESSED)
     {
         mchf_touchscreen.state = TP_DATASETS_NONE;     // tp data processed
          retval = true;
     }
-#else
-    if(mchf_touchscreen.state > TP_DATASETS_WAIT && mchf_touchscreen.state != TP_DATASETS_PROCESSED)
-    {
-        mchf_touchscreen.state = TP_DATASETS_NONE;     // tp data processed
-        retval = true;
-    }
-#endif
     return retval;
 }
 
@@ -2343,16 +2360,6 @@ static void UiLcdHy28_TouchscreenReadData(uint16_t* x_p,uint16_t* y_p)
     *y_p = (xpt_response[3] << 8 | xpt_response[4]) >> 3;
 
 }
-#ifndef USE_HIRES_TOUCH
-const uint8_t touchscreentable [] = { 0x07, 0x09,
-        0x0c, 0x0d, 0x0e, 0x0f, 0x12, 0x13, 0x14, 0x15, 0x16, 0x18,
-        0x1c, 0x1d, 0x1e, 0x1f, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27,
-        0x2c, 0x2d, 0x2e, 0x30, 0x32, 0x34, 0x35, 0x36, 0x3a, 0x3c,
-        0x40, 0x42, 0x44, 0x45, 0x46, 0x47, 0x4c, 0x4d, 0x4e, 0x52,
-        0x54, 0x55, 0x56, 0x5c, 0x5d, 0x60, 0x62, 0x64, 0x65, 0x66,
-        0x67, 0x6c, 0x6d, 0x6e, 0x74, 0x75, 0x76, 0x77, 0x7c, 0x7d
-};
-#endif
 #define HIRES_TOUCH_MaxDelta 2
 #define HIRES_TOUCH_MaxFocus 4
 
@@ -2368,7 +2375,6 @@ void UiLcdHy28_TouchscreenReadCoordinates()
      */
 
 
-#ifdef USE_HIRES_TOUCH
 	if(mchf_touchscreen.state < TP_DATASETS_VALID)	// no valid data ready or data ready to process
 	{
 		if(mchf_touchscreen.state > TP_DATASETS_NONE && mchf_touchscreen.state < TP_DATASETS_VALID)	// first pass finished, get data
@@ -2462,97 +2468,6 @@ void UiLcdHy28_TouchscreenReadCoordinates()
         }
     }
 
-#else
-    if(mchf_touchscreen.state < TP_DATASETS_VALID)	// no valid data ready or data ready to process
-    {
-        if(mchf_touchscreen.state > TP_DATASETS_NONE && mchf_touchscreen.state < TP_DATASETS_VALID)	// first pass finished, get data
-        {
-
-            UiLcdHy28_TouchscreenReadData(&mchf_touchscreen.xraw,&mchf_touchscreen.yraw);
-            uint8_t x,y;
-
-            uint8_t xraw = mchf_touchscreen.xraw >> 5;
-            uint8_t yraw = mchf_touchscreen.yraw >> 5;
-
-			// actually known LCDs:
-			// mode 0: old HY28A and old HY28B
-			// mode 1: HY32D and 3.2" SPI LCD
-			// mode 6: new HY28B (?) reported by some OMs with soldered newer LCDs, cannot look on backside of LCD to verify type of LCD
-			// all other modes not used at the moment
-
-            if(mchf_touchscreen.mirrored == 0 || mchf_touchscreen.mirrored == 4)
-            {
-                uint8_t i;
-                for(i=0; touchscreentable[i] < xraw && i < 60; i++);
-                x = 60-i;
-          		for(i=0; touchscreentable[i] < yraw && i < 60; i++);
-          		y = i--;
-            }
-            if(mchf_touchscreen.mirrored == 1 || mchf_touchscreen.mirrored == 5)
-            {
-                uint8_t i;
-                for(i=60; touchscreentable[i] > xraw && i > 0; i--);
-                x = i--;
-          		for(i=0; touchscreentable[i] < yraw && i < 60; i++);
-          		y = i--;
-			}
-            if(mchf_touchscreen.mirrored == 1)
-            {
-				// correction of reversed x unlinearity only for HY32D
-                uint8_t k = 0;
-                if(x == 57 || (x < 7 && x > 1))	k=2;
-                if(x == 56 || (x == 8 || x == 7))	k=3;
-                if((x < 56 && x > 50) || (x < 16 && x > 8))	k=5;;
-                if(x == 50 || (x == 17 || x == 16) || (x == 47 || x == 46))	k=6;
-                if(x == 45)	k=7;
-                if((x == 49 || x == 48) || x == 44 || (x < 34 && x > 30) || (x < 21 && x > 17))	k=8;
-                if((x < 44 && x > 33) || (x < 27 && x > 20))	k=9;
-                if(x < 31 && x > 26)	k=10;
-                x = x - k;
-            }
-            if(mchf_touchscreen.mirrored == 2 || mchf_touchscreen.mirrored == 6)
-            {
-                uint8_t i;
-                for(i=0; touchscreentable[i] < xraw && i < 60; i++);
-                x = 60-i;
-          		for(i=0; touchscreentable[i] < yraw && i < 60; i++);
-                y = 60-i;
-			}
-            if(mchf_touchscreen.mirrored == 3 || mchf_touchscreen.mirrored == 7)
-            {
-                uint8_t i;
-                for(i=60; touchscreentable[i] > xraw && i > 0; i--);
-                x = i--;
-          		for(i=0; touchscreentable[i] < yraw && i < 60; i++);
-                y = 60-i;
-			}
-
-			if(ts.flags2 & FLAGS2_TOUCHSCREEN_FLIP_XY)
-			{
-			  uint8_t temp = x;
-			  x = y;
-			  y = temp;
-			}
-
-            if(x == mchf_touchscreen.x && y == mchf_touchscreen.y)		// got identical data
-            {
-                mchf_touchscreen.state++;						// touch data valid
-            }
-            else
-            {
-                // set new data
-                mchf_touchscreen.x = x;
-                mchf_touchscreen.y = y;
-                mchf_touchscreen.state = TP_DATASETS_WAIT;		// restart machine
-            }
-        }
-        else
-        {
-            mchf_touchscreen.state = TP_DATASETS_WAIT;			// do next first data read
-        }
-
-    }
-#endif
 }
 
 bool UiLcdHy28_TouchscreenPresenceDetection()
@@ -2576,13 +2491,8 @@ void UiLcdHy28_TouchscreenInit(uint8_t mirror)
 {
     mchf_touchscreen.xraw = 0;
     mchf_touchscreen.yraw = 0;
-#ifdef USE_HIRES_TOUCH
+
     mchf_touchscreen.hr_x = 0x7FFF;                        // invalid position
     mchf_touchscreen.hr_y = 0x7FFF;                        // invalid position
-#else
-    mchf_touchscreen.x = 0xFF;                        // invalid position
-    mchf_touchscreen.y = 0xFF;                        // invalid position
-    mchf_touchscreen.mirrored = mirror;
-#endif
     mchf_touchscreen.present = UiLcdHy28_TouchscreenPresenceDetection();
 }
