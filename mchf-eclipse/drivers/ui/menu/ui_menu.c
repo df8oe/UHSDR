@@ -1418,7 +1418,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.nb_setting,
                                               0,
                                               MAX_NB_SETTING,
-                                              0,
+                                              10,
                                               1
                                              );
 
