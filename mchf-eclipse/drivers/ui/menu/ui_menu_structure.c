@@ -407,10 +407,8 @@ const MenuDescriptor debugGroup[] =
 
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_BETA, NULL,"NR beta", UiMenuDesc("time constant beta for spectral noise reduction, leave at 0.85") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_Mode, NULL,"NR Mode", UiMenuDesc("switch between the released NR and two development NRs") },
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_TAX, NULL,"NR tax", UiMenuDesc("Devel 2 NR: tax") },
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_TAP, NULL,"NR tap", UiMenuDesc("Devel 2 NR: tap") },
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_ASNR, NULL,"NR asnr", UiMenuDesc("Devel 2 NR: asnr") },
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_SNR_PRIO_MIN, NULL,"NR prio min", UiMenuDesc("Devel 2 NR: minimum value for SNRprio") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_WIDTH, NULL,"NR smooth wd.", UiMenuDesc("Devel 2 NR: width of gain smoothing window") },
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_THRESHOLD, NULL,"NR smooth thr.", UiMenuDesc("Devel 2 NR: threhold for gain smoothing") },
 
 	//    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_RTTY_ATC, NULL,"RTTY ATC Enable", UiMenuDesc("Enable automatic threshold correction ATC for RTTY decoding") },
 #ifdef USE_TWO_CHANNEL_AUDIO

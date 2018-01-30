@@ -72,11 +72,11 @@ typedef struct NoiseReduction2 // declaration
 	bool						notch2_active; // is notch21 active?
 	bool						notch3_active; // is notch3 active?
 	bool						notch4_active; // is notch4 active?
-	float32_t					tax; // for NR devel2: noise output smoothing time constant = -tinc/ln(0.8)
-	int16_t						tax_int;
-	float32_t					tap; // for NR devel2: speech prob smoothing time constant = -tinc/ln(0.9) tinc = frame time (5.33ms)
-	int16_t						tap_int;
-	int16_t						asnr; // for NR devel2: active SNR in dB
+	//float32_t					tax; // for NR devel2: noise output smoothing time constant = -tinc/ln(0.8)
+	//int16_t						tax_int;
+	//float32_t					tap; // for NR devel2: speech prob smoothing time constant = -tinc/ln(0.9) tinc = frame time (5.33ms)
+	//int16_t						tap_int;
+	//int16_t						asnr; // for NR devel2: active SNR in dB
 	float32_t					ax;
 	float32_t					ap;
 	float32_t					xih1;
@@ -84,7 +84,13 @@ typedef struct NoiseReduction2 // declaration
 	float32_t					pfac;
 	int16_t						snr_prio_min_int;
 	float32_t					snr_prio_min;
-
+	int16_t						NN;// for musical noise reduction
+	int16_t						width;// for musical noise reduction
+	float32_t 					pre_power;// for musical noise reduction
+	float32_t					post_power;// for musical noise reduction
+	float32_t					power_ratio; // for musical noise reduction
+	float32_t					power_threshold;
+	int16_t						power_threshold_int;
 } NoiseReduction2;
 
 extern NoiseReduction __MCHF_SPECIALMEM 	NR; // declaration, definition is in audio_nr.c

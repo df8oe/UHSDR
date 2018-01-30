@@ -1836,40 +1836,33 @@ float32_t uf_freq = (offset + width/2) / (12000 / NR_FFT_L);
 
 
 //const float32_t tinc = 0.00533333; // frame time 5.3333ms
-const float32_t tinc = 0.00533333; // frame time 5.3333ms
-//const float32_t tax=0.0239;	// noise output smoothing time constant = -tinc/ln(0.8)
-//const float32_t tap=0.05062;	// speech prob smoothing time constant = -tinc/ln(0.9) tinc = frame time (5.33ms)
+//const float32_t tinc = 0.00533333; // frame time 5.3333ms
+//const float32_t tax=0.071;	// noise output smoothing time constant = -tinc/ln(0.8)
+//const float32_t tap=0.152;	// speech prob smoothing time constant = -tinc/ln(0.9) tinc = frame time (5.33ms)
 const float32_t psthr=0.99;	// threshold for smoothed speech probability [0.99]
 const float32_t pnsaf=0.01;	// noise probability safety value [0.01]
 //const float32_t asnr=15; 	// active SNR in dB
 const float32_t psini=0.5;	// initial speech probability [0.5]
 const float32_t pspri=0.5;	// prior speech probability [0.5]
-//const float32_t tavini=0.064;
-//static float32_t ax; //=0.8;       // ax=exp(-tinc/tax); % noise output smoothing factor
-//static float32_t ap; //=0.9;        // ap=exp(-tinc/tap); % noise output smoothing factor
-//static float32_t xih1; // = 31.6;
-// xih1=10^(asnr/10); % speech-present SNR
-//static float32_t xih1r; //=-0.969346; // xih1r=1/(1+xih1)-1;
-NR2.ax = expf(-tinc / NR2.tax);
-NR2.ap = expf(-tinc / NR2.tap);
-NR2.xih1 = powf(10, (float32_t)NR2.asnr / 10.0);
+NR2.ax = 0.9276; 		//expf(-tinc / tax);
+NR2.ap = 0.9655; 		//expf(-tinc / tap);
+NR2.xih1 = 31.62; 		//powf(10, (float32_t)NR2.asnr / 10.0);
 NR2.xih1r = 1.0 / (1.0 + NR2.xih1) - 1.0;
 NR2.pfac= (1.0 / pspri - 1.0) * (1.0 + NR2.xih1);
-NR2.snr_prio_min = powf(10, - (float32_t)NR2.snr_prio_min_int / 20.0);
-
-//static float32_t pfac; //=32.6;	 // pfac=(1/pspri-1)*(1+xih1); % p(noise)/p(speech)
-
+NR2.snr_prio_min = 0.001; 			//powf(10, - (float32_t)NR2.snr_prio_min_int / 10.0);  //range should be down to -30dB min
+NR2.power_threshold = (float32_t)(NR2.power_threshold_int)/100.0;
 static float32_t pslp[NR_FFT_L/2];
 static float32_t xt[NR_FFT_L/2];
-static float32_t xtr;
+float32_t xtr;
 float32_t ph1y[NR_FFT_L/2];
-
+static float32_t gain_correction;
 
 Board_RedLed(LED_STATE_OFF);
 
     if(ts.nr_first_time == 1)
     { // TODO: properly initialize all the variables
-        for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+	gain_correction = 0.0;
+	for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
         {
               NR.last_sample_buffer_L[bindx] = 0.0;
               NR.Hk[bindx] = 1.0;
@@ -1878,11 +1871,9 @@ Board_RedLed(LED_STATE_OFF);
               NR.Nest[bindx][0] = 0.0;
               NR.Nest[bindx][1] = 1.0;
               pslp[bindx] = 0.5;
+              gain_correction += SQRT_van_hann[bindx];
         }
-        //NR2.tax = 0.0239;
-        //NR2.tap = 0.05062;
-        //NR2.asnr = 15;
-
+        gain_correction = (NR_FFT_L / 2) / gain_correction;
         ts.nr_first_time = 2; // we need to do some more a bit later down
     }
 
@@ -1913,7 +1904,7 @@ Board_RedLed(LED_STATE_OFF);
 
           for (int idx = 0; idx < NR_FFT_L; idx++)
               {
-        	  	  NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
+        	  	  NR.FFT_buffer[idx * 2] *= gain_correction * SQRT_van_hann[idx];
               }
 
     #endif
@@ -1955,7 +1946,13 @@ Board_RedLed(LED_STATE_OFF);
     	{
 		      ph1y[bindx] = 1.0 / (1.0 + NR2.pfac * expf(NR2.xih1r * NR2.X[bindx][0]/xt[bindx]));
 		      pslp[bindx] = NR2.ap * pslp[bindx] + (1.0 - NR2.ap) * ph1y[bindx];
-		      ph1y[bindx] = fmin(ph1y[bindx], 1.0 - pnsaf * (pslp[bindx] > psthr)); //?????
+		      //ph1y[bindx] = fmin(ph1y[bindx], 1.0 - pnsaf * (pslp[bindx] > psthr)); //?????
+
+		      if (pslp[bindx] > psthr)
+			ph1y[bindx] = 1.0 - pnsaf;
+		      else
+			ph1y[bindx] = fmin(ph1y[bindx] , 1.0);
+
 		      xtr = (1.0 - ph1y[bindx]) * NR2.X[bindx][0] + ph1y[bindx] * xt[bindx];
 		      xt[bindx] = NR2.ax * xt[bindx] + (1.0 - NR2.ax) * xtr;
         }
@@ -1969,13 +1966,11 @@ Board_RedLed(LED_STATE_OFF);
 	             }
 
 
-                  if (offset == 0)
-                  {
-                      offset = width/2;
-                  }
 
                   VAD_low = (int)lf_freq;
+
                   VAD_high = (int)uf_freq;
+
                   if(VAD_low == VAD_high)
                   {
                 	  VAD_high++;
@@ -2008,7 +2003,7 @@ Board_RedLed(LED_STATE_OFF);
 		{
 			  float32_t v = NR.SNR_prio[bindx] * NR.SNR_post[bindx] / (1.0 + NR.SNR_prio[bindx]);
 
-			  NR.Hk[bindx] = 1.0 / NR.SNR_post[bindx] * sqrtf((0.7212 * v + v * v));
+			  NR.Hk[bindx] = fmax(1.0 / NR.SNR_post[bindx] * sqrtf((0.7212 * v + v * v)),0.001); //limit HK's to 0.001'
 
 			  NR.Hk_old[bindx] = NR.SNR_post[bindx] * NR.Hk[bindx] * NR.Hk[bindx]; //
 
@@ -2018,6 +2013,43 @@ Board_RedLed(LED_STATE_OFF);
 				  NR.Hk[bindx] = 1.0;
 			  }
 		}
+// musical noise "artefact" reduction by dynamic averaging - depending on SNR ratio
+		NR2.pre_power = 0.0;
+		NR2.post_power = 0.0;
+		for(int bindx = VAD_low; bindx < VAD_high; bindx++)
+		  {
+		    NR2.pre_power += NR2.X[bindx][0];
+		    NR2.post_power += NR.Hk[bindx] * NR.Hk[bindx]  * NR2.X[bindx][0];
+		  }
+
+
+		NR2.power_ratio = NR2.post_power / NR2.pre_power;
+		if (NR2.power_ratio > NR2.power_threshold)
+		  {
+		    NR2.power_ratio = 1.0;
+		    NR2.NN = 1;
+		  }
+		else
+		  {
+		    NR2.NN = 1 + 2 * (int)(0.5 + NR2.width * (1.0 - NR2.power_ratio / NR2.power_threshold));
+		  }
+
+		for(int bindx = VAD_low + NR2.NN/2; bindx < VAD_high - NR2.NN/2; bindx++)
+		  {
+		    NR.Nest[bindx][0] = 0.0;
+		    for(int m = bindx - NR2.NN/2; m <= bindx + NR2.NN/2;m++)
+		      {
+			NR.Nest[bindx][0] += NR.Hk[m];
+		      }
+		    NR.Nest[bindx][0] /= (float32_t)NR2.NN;
+		  }
+		for(int bindx = VAD_low + NR2.NN/2; bindx < VAD_high - NR2.NN/2; bindx++)
+		  {
+		    NR.Hk[bindx] = NR.Nest[bindx][0];
+		  }
+
+// end of musical noise reduction
+
 
 	}	//end of "if ts.nr_first_time == 3"
 
@@ -2050,7 +2082,7 @@ Board_RedLed(LED_STATE_OFF);
 // Window on exit!
   	for (int idx = 0; idx < NR_FFT_L; idx++)
   	  {
-  	    NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
+  	    NR.FFT_buffer[idx * 2] *= gain_correction * SQRT_van_hann[idx];
 	  }
 
     // do the overlap & add

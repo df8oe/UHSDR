@@ -358,12 +358,9 @@ void TransceiverStateInit(void)
 	ts.nr_long_tone_reset = true;
 	ts.nr_first_time = 1;
 	ts.nr_vad_delay = 7;
-	NR2.tax = 0.0239;
-	NR2.tax_int = 24;
-	NR2.tap = 0.0506;
-	NR2.tap_int = 51;
-	NR2.asnr = 15;
-	NR2.snr_prio_min_int = 20;
+	NR2.width = 2;
+	NR2.power_threshold = 0.60;
+	NR2.power_threshold_int = 60;
 
     // development setting for DF8OE
     if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
