@@ -13,6 +13,8 @@
 #include "arm_const_structs.h"
 #include "profiling.h"
 
+//#define debug_alternate_NR
+
 #ifdef USE_ALTERNATE_NR
 
 NoiseReduction __MCHF_SPECIALMEM 	NR; // definition
@@ -2121,8 +2123,63 @@ Board_RedLed(LED_STATE_OFF);
 //backward prediction)
 //hopefully we have enough processor power left....
 
-void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
+void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )  //Nsam = 128
 {
+
+#ifdef debug_alternate_NR
+
+const float32_t NR_test_samp[128] = { 853.472351,629.066223,864.270813,1012.3078,738.378113,
+        446.268219,635.763123,1062.71118,955.245667,22.6679211,-1130.45386,-1737.12817,
+        -1728.79114,-1594.82227,-1545.75671,-1208.91003,-252.898315,993.880493,1820.26538,
+        1915.65186,1597.90259,1248.58838,809.456909,28.6509247,-961.62677,-1604.66443,-1499.18225,
+        -824.882935,-85.1342163,432.899261,782.52063,1029.38452,1040.57166,692.128662,138.820541,
+        -286.785767,-420.356415,-384.165161,-348.958527,-308.304718,-171.111633,4.52698851,  //last value:4.52698851,
+        -5.53196001,-368.999939,-1031.19165,-1766.01074,-2290.01587,-2293.98853,-1514.0238,
+        23.0157223,1797.16394,3018.3894,3231.77148,2702.38745,2085.92676,1685.99255,1145.43176,
+        -31.9259377,-1722.42847,-3112.2937,-3453.61426,-2790.31763,-1812.12769,-1028.70874,
+        -1812 ,897.985779,2375.50903,3409.33472,3332.44238,2293.16602,1067.26196,183.806381,
+        -548.479553,-1549.47034,-2692.18213,-3288.44702,-2873.70239,-1761.34033,-636.71936,
+        250.664383,1198.7804,2336.43726,3121.80615,2848.64355,1556.67969,110.084801,-724.328186,
+        -1013.82141,-1265.38879,-1506.06091,-1177.04529,-35.6577721,1209.823,1520.28088,679.406555,
+        -514.541626,-1245.55945,-1508.29407,-1707.93408,-1736.12427,-965.137085,752.618347,2518.7168,
+        3185.57031,2563.83838,1472.3927,613.243835,-172.269989,-1311.97058,-2534.06421,-2982.73169,
+        -2282.05859,-1025.64673,12.714426,809.696228,1828.12854,2977.01709,3388.77612,2460.82178,
+        751.800781,-567.183105,-1026.46143,-1190.80762,-1635.05701,-2060.84619,-1785.74683,-841.740173,
+        -62.468441
+
+};
+
+
+
+const float32_t NR_test_sinus_samp[128] = {
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
+
+        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
+        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302
+};
+
+
+#endif
+
 #define boundary_blank 14 // for first trials very large!!!!
 #define impulse_length 7 // has to be odd!!!! 7 / 3 should be enough
 #define PL             3 // has to be (impulse_length-1)/2 !!!!
@@ -2138,7 +2195,7 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
     int impulse_positions[5];  //we allow a maximum of 5 impulses per frame
     int search_pos=0;
     int impulse_count=0;
-    static float32_t last_frame_end[order+PL]; //this takes the last samples from the previous frame to do the prediction within the boundaries
+    //static float32_t last_frame_end[order+PL]; //this takes the last samples from the previous frame to do the prediction within the boundaries
 #ifdef debug_alternate_NR
     static int frame_count=0;  //only used for the distortion insertion - can alter be deleted
     int dist_level=0;//only used for the distortion insertion - can alter be deleted
@@ -2155,6 +2212,9 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
     float32_t Wfw[impulse_length],Wbw[impulse_length]; // taking linear windows for the combination of fwd and bwd
 
     float32_t s;
+
+    static float32_t working_buffer[NR_FFT_SIZE + 2 * order + 2 * PL]; //we need 128 + 26 floats to work on -
+								      //necessary to watch for impulses as close to the frame boundaries as possible
 
 #ifdef debug_alternate_NR  // generate test frames to test the noise blanker function
     // using the NR-setting (0..55) to select the test frame
@@ -2221,6 +2281,9 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
     //*****************************end of debug impulse generation
 
+    memcpy(&working_buffer[2*PL + 2*order],insamp,NR_FFT_SIZE * sizeof(float32_t));// copy incomming samples to the end of our working bufer
+
+
     //  start of test timing zone
 
     for (int i=0; i<impulse_length; i++)  // generating 2 Windows for the combination of the 2 predictors
@@ -2232,7 +2295,8 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
     // calculate the autocorrelation of insamp (moving by max. of #order# samples)
     for(int i=0; i < (order+1); i++)
     {
-        arm_dot_prod_f32(&insamp[0],&insamp[i],Nsam-i,&R[i]); // R is carrying the crosscorrelations
+    //    arm_dot_prod_f32(&insamp[0],&insamp[i],Nsam-i,&R[i]); // R is carrying the crosscorrelations
+	arm_dot_prod_f32(&working_buffer[order+PL+0],&working_buffer[order+PL+i],Nsam-i,&R[i]); // R is carrying the crosscorrelations
     }
     // end of autocorrelation
 
@@ -2274,7 +2338,8 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
     arm_fir_init_f32(&LPC,order+1,&reverse_lpcs[0],&firStateF32[0],NR_FFT_SIZE);                                         // we are using the same function as used in freedv
 
-    arm_fir_f32(&LPC,insamp,tempsamp,Nsam); //do the inverse filtering to eliminate voice and enhance the impulses
+    //arm_fir_f32(&LPC,insamp,tempsamp,Nsam); //do the inverse filtering to eliminate voice and enhance the impulses
+    arm_fir_f32(&LPC,&working_buffer[order+PL],tempsamp,Nsam); //do the inverse filtering to eliminate voice and enhance the impulses
 
     arm_fir_init_f32(&LPC,order+1,&lpcs[0],&firStateF32[0],NR_FFT_SIZE);                                         // we are using the same function as used in freedv
 
@@ -2290,7 +2355,8 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
     //if ((nr_setting > 20) && (nr_setting <51))
     //    impulse_threshold = impulse_threshold / (0.9 + (nr_setting-20.0)/10);  //scaling the threshold by 1 ... 0.26
 
-    search_pos = order+PL;  // lower boundary problem has been solved! - so here we start from 1 or 0?
+    //search_pos = order+PL;  // lower boundary problem has been solved! - so here we start from 1 or 0?
+    search_pos = 1;
     impulse_count=0;
 
     do {        //going through the filtered samples to find an impulse larger than the threshold
@@ -2305,10 +2371,9 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
 
         search_pos++;
 
-    } while ((search_pos < NR_FFT_SIZE-boundary_blank) && (impulse_count < 5));// avoid upper boundary
+    //} while ((search_pos < NR_FFT_SIZE-boundary_blank) && (impulse_count < 5));// avoid upper boundary
+    } while ((search_pos < NR_FFT_SIZE) && (impulse_count < 5));
 
-    //boundary handling has to be fixed later
-    //as a result we now will not find any impulse in these areas
 
     // from here: reconstruction of the impulse-distorted audio part:
 
@@ -2325,16 +2390,18 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
         for (int k = 0; k<order; k++)   // we have to copy some samples from the original signal as
         {                           // basis for the reconstructions - could be done by memcopy
 
-            if ((impulse_positions[j]-PL-order+k) < 0)// this solves the prediction problem at the left boundary
-            {
-                Rfw[k]=last_frame_end[impulse_positions[j]+k];//take the sample from the last frame
-            }
-            else
-            {
-                Rfw[k]=insamp[impulse_positions[j]-PL-order+k];//take the sample from this frame as we are away from the boundary
-            }
+            //if ((impulse_positions[j]-PL-order+k) < 0)// this solves the prediction problem at the left boundary
+            //{
+            //   Rfw[k]=last_frame_end[impulse_positions[j]+k];//take the sample from the last frame
+            //}
+            //else
+            //{
+                //Rfw[k]=insamp[impulse_positions[j]-PL-order+k];//take the sample from this frame as we are away from the boundary
+                Rfw[k]=working_buffer[impulse_positions[j]+k];//take the sample from this frame as we are away from the boundary
+                //}
 
-            Rbw[impulse_length+k]=insamp[impulse_positions[j]+PL+k+1];
+            //Rbw[impulse_length+k]=insamp[impulse_positions[j]+PL+k+1];
+            Rbw[impulse_length+k]=working_buffer[order+PL+impulse_positions[j]+PL+k+1];
 
 
 
@@ -2362,75 +2429,26 @@ void alt_noise_blanking(float* insamp,int Nsam, int order, float* E )
         else
         {
             //finally add the two weighted predictions and insert them into the original signal - thereby eliminating the distortion
-            arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
+            //arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
+            arm_add_f32(&Rfw[order],&Rbw[0],&working_buffer[order+PL+impulse_positions[j]-PL],impulse_length);
         }
 #else
         //finally add the two weighted predictions and insert them into the original signal - thereby eliminating the distortion
-        arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
+        //arm_add_f32(&Rfw[order],&Rbw[0],&insamp[impulse_positions[j]-PL],impulse_length);
+        arm_add_f32(&Rfw[order],&Rbw[0],&working_buffer[order+impulse_positions[j]],impulse_length);
 
 #endif
     }
 
-    for (int p=0; p<(order+PL); p++)
-    {
-        last_frame_end[p]=insamp[NR_FFT_SIZE-1-order-PL+p];// store 13 samples from the current frame to use at the next frame
-    }
+    //for (int p=0; p<(order+PL); p++)
+    //{
+    //    last_frame_end[p]=insamp[NR_FFT_SIZE-1-order-PL+p];// store 13 samples from the current frame to use at the next frame
+    //}
     //end of test timing zone
+memcpy(insamp,&working_buffer[order+PL],NR_FFT_SIZE * sizeof(float32_t));// copy the samples of the current frame back to the insamp-buffer for output
+memcpy(working_buffer,&working_buffer[NR_FFT_SIZE],(2*order + 2*PL) * sizeof(float32_t)); // copy
 }
 
-#ifdef debug_alternate_NR
-
-const float32_t NR_test_samp[128] = { 853.472351,629.066223,864.270813,1012.3078,738.378113,
-        446.268219,635.763123,1062.71118,955.245667,22.6679211,-1130.45386,-1737.12817,
-        -1728.79114,-1594.82227,-1545.75671,-1208.91003,-252.898315,993.880493,1820.26538,
-        1915.65186,1597.90259,1248.58838,809.456909,28.6509247,-961.62677,-1604.66443,-1499.18225,
-        -824.882935,-85.1342163,432.899261,782.52063,1029.38452,1040.57166,692.128662,138.820541,
-        -286.785767,-420.356415,-384.165161,-348.958527,-308.304718,-171.111633,4.52698851,  //last value:4.52698851,
-        -5.53196001,-368.999939,-1031.19165,-1766.01074,-2290.01587,-2293.98853,-1514.0238,
-        23.0157223,1797.16394,3018.3894,3231.77148,2702.38745,2085.92676,1685.99255,1145.43176,
-        -31.9259377,-1722.42847,-3112.2937,-3453.61426,-2790.31763,-1812.12769,-1028.70874,
-        -1812 ,897.985779,2375.50903,3409.33472,3332.44238,2293.16602,1067.26196,183.806381,
-        -548.479553,-1549.47034,-2692.18213,-3288.44702,-2873.70239,-1761.34033,-636.71936,
-        250.664383,1198.7804,2336.43726,3121.80615,2848.64355,1556.67969,110.084801,-724.328186,
-        -1013.82141,-1265.38879,-1506.06091,-1177.04529,-35.6577721,1209.823,1520.28088,679.406555,
-        -514.541626,-1245.55945,-1508.29407,-1707.93408,-1736.12427,-965.137085,752.618347,2518.7168,
-        3185.57031,2563.83838,1472.3927,613.243835,-172.269989,-1311.97058,-2534.06421,-2982.73169,
-        -2282.05859,-1025.64673,12.714426,809.696228,1828.12854,2977.01709,3388.77612,2460.82178,
-        751.800781,-567.183105,-1026.46143,-1190.80762,-1635.05701,-2060.84619,-1785.74683,-841.740173,
-        -62.468441
-
-};
-
-
-
-const float32_t NR_test_sinus_samp[128] = {
-        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
-        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
-
-        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
-        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
-
-        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
-        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
-
-        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
-        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
-
-        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
-        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
-
-        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
-        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
-
-        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
-        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302,
-
-        0, 765.3668647302, 1414.2135623731, 1847.7590650226, 2000, 1847.7590650226, 1414.2135623731, 765.3668647302,
-        0, -765.3668647302, -1414.2135623731, -1847.7590650226, -2000, -1847.7590650226, -1414.2135623731, -765.3668647302
-};
-
-
-#endif
 
 
 #endif
