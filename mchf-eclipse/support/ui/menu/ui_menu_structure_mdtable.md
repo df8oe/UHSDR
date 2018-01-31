@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-01-30T18:00:42  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-01-31T09:23:42  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-01-30T18:00:42  by "./ui_menu_structure_mdtable.py"
+generated at  2018-01-31T09:23:42  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -278,7 +278,6 @@ generated at  2018-01-30T18:00:42  by "./ui_menu_structure_mdtable.py"
 | **TX Audio via USB**          (                        MENU_DEBUG_TX_AUDIO) | If enabled, send generated audio to PC during TX. | 
 | **FT817 Clone Transmit**      (                        MENU_DEBUG_CLONEOUT) | Will in future send out memory data to an FT817 Clone Info (to be used with CHIRP). | 
 | **FT817 Clone Receive**       (                         MENU_DEBUG_CLONEIN) | Will in future get memory data from an FT817 Clone Info (to be used with CHIRP). | 
-| **New Noiseblanker**          (                          MENU_DEBUG_NEW_NB) | New noiseblanker for testing purposes          | 
 | **Show gains**                (                    MENU_DEBUG_NR_GAIN_SHOW) | Debugging: show gains of spectral noise reduction | 
 | **Long tone alpha**           (              MENU_DEBUG_NR_LONG_TONE_ALPHA) | time constant alpha for long tone detection in spectral noise reduction | 
 | **Long tone thresh**          (             MENU_DEBUG_NR_LONG_TONE_THRESH) | threshold for long tone detection in spectral noise reduction | 
@@ -289,6 +288,7 @@ generated at  2018-01-30T18:00:42  by "./ui_menu_structure_mdtable.py"
 | **NR VAD delay**              (                    MENU_DEBUG_NR_VAD_DELAY) | delay for spectral noise reduction voice activity detector | 
 | **NR beta**                   (                         MENU_DEBUG_NR_BETA) | time constant beta for spectral noise reduction, leave at 0.85 | 
 | **NR Mode**                   (                         MENU_DEBUG_NR_Mode) | switch between the released NR and two development NRs | 
+| **NR asnr**                   (                         MENU_DEBUG_NR_ASNR) | Devel 2 NR: asnr                               | 
 | **NR smooth wd.**             (            MENU_DEBUG_NR_GAIN_SMOOTH_WIDTH) | Devel 2 NR: width of gain smoothing window     | 
 | **NR smooth thr.**            (        MENU_DEBUG_NR_GAIN_SMOOTH_THRESHOLD) | Devel 2 NR: threhold for gain smoothing        | 
 | **STEREO Enable**             (                   MENU_DEBUG_ENABLE_STEREO) | Enable stereo demodulation modes               | 

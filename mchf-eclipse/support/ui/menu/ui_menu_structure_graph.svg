@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-12498 752,-12498 752,4 -4,4"/>
 <text text-anchor="middle" x="374" y="-22.8" font-family="Times,serif" font-size="14.00">mcHF v.. &#45; Menus Overview</text>
-<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2018&#45;01&#45;30T18:00:36 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00">generated at &#160;2018&#45;01&#45;31T09:23:38 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node"><title>MENU_TOP</title>
 <image xlink:href="uhsdr-logo.png" width="122px" height="92px" preserveAspectRatio="xMinYMin meet" x="0" y="-4827.5"/>
@@ -2811,137 +2811,137 @@
 <path fill="none" stroke="black" d="M243.543,-789.683C245.025,-853.869 258.695,-1034.87 363,-1121.5 388.982,-1143.08 424.114,-1151.87 457.193,-1154.59"/>
 <polygon fill="black" stroke="black" points="457.176,-1158.09 467.38,-1155.24 457.626,-1151.11 457.176,-1158.09"/>
 </g>
-<!-- MENU_DEBUG_NEW_NB -->
-<g id="node235" class="node"><title>MENU_DEBUG_NEW_NB</title>
-<polygon fill="none" stroke="black" points="468.5,-1074.5 468.5,-1120.5 642.5,-1120.5 642.5,-1074.5 468.5,-1074.5"/>
-<text text-anchor="middle" x="555.5" y="-1105.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NEW_NB</text>
-<polyline fill="none" stroke="black" points="468.5,-1097.5 642.5,-1097.5 "/>
-<text text-anchor="middle" x="555.5" y="-1082.3" font-family="Times,serif" font-size="14.00">New Noiseblanker</text>
-</g>
-<!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NEW_NB -->
-<g id="edge211" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NEW_NB</title>
-<path fill="none" stroke="black" d="M245.011,-789.736C250.118,-847.602 271.968,-998.651 363,-1070.5 389.631,-1091.52 425.075,-1100.15 458.224,-1102.9"/>
-<polygon fill="black" stroke="black" points="458.218,-1106.41 468.426,-1103.57 458.678,-1099.42 458.218,-1106.41"/>
-</g>
 <!-- MENU_DEBUG_NR_GAIN_SHOW -->
-<g id="node236" class="node"><title>MENU_DEBUG_NR_GAIN_SHOW</title>
-<polygon fill="none" stroke="black" points="443.5,-1023.5 443.5,-1069.5 667.5,-1069.5 667.5,-1023.5 443.5,-1023.5"/>
-<text text-anchor="middle" x="555.5" y="-1054.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_GAIN_SHOW</text>
-<polyline fill="none" stroke="black" points="443.5,-1046.5 667.5,-1046.5 "/>
-<text text-anchor="middle" x="555.5" y="-1031.3" font-family="Times,serif" font-size="14.00">Show gains</text>
+<g id="node235" class="node"><title>MENU_DEBUG_NR_GAIN_SHOW</title>
+<polygon fill="none" stroke="black" points="443.5,-1074.5 443.5,-1120.5 667.5,-1120.5 667.5,-1074.5 443.5,-1074.5"/>
+<text text-anchor="middle" x="555.5" y="-1105.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_GAIN_SHOW</text>
+<polyline fill="none" stroke="black" points="443.5,-1097.5 667.5,-1097.5 "/>
+<text text-anchor="middle" x="555.5" y="-1082.3" font-family="Times,serif" font-size="14.00">Show gains</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_GAIN_SHOW -->
-<g id="edge212" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_GAIN_SHOW</title>
-<path fill="none" stroke="black" d="M246.99,-789.633C255.984,-840.485 284.968,-962.031 363,-1019.5 383.287,-1034.44 408.134,-1042.94 433.125,-1047.5"/>
-<polygon fill="black" stroke="black" points="432.644,-1050.96 443.075,-1049.11 433.763,-1044.05 432.644,-1050.96"/>
+<g id="edge211" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_GAIN_SHOW</title>
+<path fill="none" stroke="black" d="M245.011,-789.736C250.118,-847.602 271.968,-998.651 363,-1070.5 383.009,-1086.29 407.994,-1095.09 433.242,-1099.66"/>
+<polygon fill="black" stroke="black" points="432.874,-1103.14 443.3,-1101.26 433.974,-1096.23 432.874,-1103.14"/>
 </g>
 <!-- MENU_DEBUG_NR_LONG_TONE_ALPHA -->
-<g id="node237" class="node"><title>MENU_DEBUG_NR_LONG_TONE_ALPHA</title>
-<polygon fill="none" stroke="black" points="418,-972.5 418,-1018.5 693,-1018.5 693,-972.5 418,-972.5"/>
-<text text-anchor="middle" x="555.5" y="-1003.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_LONG_TONE_ALPHA</text>
-<polyline fill="none" stroke="black" points="418,-995.5 693,-995.5 "/>
-<text text-anchor="middle" x="555.5" y="-980.3" font-family="Times,serif" font-size="14.00">Long tone alpha</text>
+<g id="node236" class="node"><title>MENU_DEBUG_NR_LONG_TONE_ALPHA</title>
+<polygon fill="none" stroke="black" points="418,-1023.5 418,-1069.5 693,-1069.5 693,-1023.5 418,-1023.5"/>
+<text text-anchor="middle" x="555.5" y="-1054.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_LONG_TONE_ALPHA</text>
+<polyline fill="none" stroke="black" points="418,-1046.5 693,-1046.5 "/>
+<text text-anchor="middle" x="555.5" y="-1031.3" font-family="Times,serif" font-size="14.00">Long tone alpha</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_LONG_TONE_ALPHA -->
-<g id="edge213" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_LONG_TONE_ALPHA</title>
-<path fill="none" stroke="black" d="M249.866,-789.585C263.061,-832.687 297.751,-924.97 363,-968.5 376.531,-977.527 391.799,-984.104 407.661,-988.836"/>
-<polygon fill="black" stroke="black" points="407.036,-992.293 417.604,-991.549 408.878,-985.54 407.036,-992.293"/>
+<g id="edge212" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_LONG_TONE_ALPHA</title>
+<path fill="none" stroke="black" d="M246.99,-789.633C255.984,-840.485 284.968,-962.031 363,-1019.5 376.321,-1029.31 391.608,-1036.35 407.612,-1041.31"/>
+<polygon fill="black" stroke="black" points="407.083,-1044.8 417.657,-1044.14 408.981,-1038.06 407.083,-1044.8"/>
 </g>
 <!-- MENU_DEBUG_NR_LONG_TONE_THRESH -->
-<g id="node238" class="node"><title>MENU_DEBUG_NR_LONG_TONE_THRESH</title>
-<polygon fill="none" stroke="black" points="414.5,-921.5 414.5,-967.5 696.5,-967.5 696.5,-921.5 414.5,-921.5"/>
-<text text-anchor="middle" x="555.5" y="-952.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_LONG_TONE_THRESH</text>
-<polyline fill="none" stroke="black" points="414.5,-944.5 696.5,-944.5 "/>
-<text text-anchor="middle" x="555.5" y="-929.3" font-family="Times,serif" font-size="14.00">Long tone thresh</text>
+<g id="node237" class="node"><title>MENU_DEBUG_NR_LONG_TONE_THRESH</title>
+<polygon fill="none" stroke="black" points="414.5,-972.5 414.5,-1018.5 696.5,-1018.5 696.5,-972.5 414.5,-972.5"/>
+<text text-anchor="middle" x="555.5" y="-1003.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_LONG_TONE_THRESH</text>
+<polyline fill="none" stroke="black" points="414.5,-995.5 696.5,-995.5 "/>
+<text text-anchor="middle" x="555.5" y="-980.3" font-family="Times,serif" font-size="14.00">Long tone thresh</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_LONG_TONE_THRESH -->
-<g id="edge214" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_LONG_TONE_THRESH</title>
-<path fill="none" stroke="black" d="M254.598,-789.752C272.296,-824.029 310.364,-887.314 363,-917.5 375.902,-924.899 390.072,-930.546 404.686,-934.825"/>
-<polygon fill="black" stroke="black" points="403.777,-938.205 414.345,-937.445 405.61,-931.449 403.777,-938.205"/>
+<g id="edge213" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_LONG_TONE_THRESH</title>
+<path fill="none" stroke="black" d="M249.866,-789.585C263.061,-832.687 297.751,-924.97 363,-968.5 375.601,-976.907 389.709,-983.189 404.401,-987.834"/>
+<polygon fill="black" stroke="black" points="403.55,-991.232 414.13,-990.657 405.501,-984.509 403.55,-991.232"/>
 </g>
 <!-- MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE -->
-<g id="node239" class="node"><title>MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE</title>
-<polygon fill="none" stroke="black" points="405,-870.5 405,-916.5 706,-916.5 706,-870.5 405,-870.5"/>
-<text text-anchor="middle" x="555.5" y="-901.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE</text>
-<polyline fill="none" stroke="black" points="405,-893.5 706,-893.5 "/>
-<text text-anchor="middle" x="555.5" y="-878.3" font-family="Times,serif" font-size="14.00">SNR gain smooth</text>
+<g id="node238" class="node"><title>MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE</title>
+<polygon fill="none" stroke="black" points="405,-921.5 405,-967.5 706,-967.5 706,-921.5 405,-921.5"/>
+<text text-anchor="middle" x="555.5" y="-952.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE</text>
+<polyline fill="none" stroke="black" points="405,-944.5 706,-944.5 "/>
+<text text-anchor="middle" x="555.5" y="-929.3" font-family="Times,serif" font-size="14.00">SNR gain smooth</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE -->
-<g id="edge215" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE</title>
-<path fill="none" stroke="black" d="M263.806,-789.844C285.739,-813.378 322.956,-848.693 363,-866.5 373.203,-871.037 383.987,-874.851 395.029,-878.053"/>
-<polygon fill="black" stroke="black" points="394.222,-881.461 404.791,-880.713 396.062,-874.707 394.222,-881.461"/>
+<g id="edge214" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE</title>
+<path fill="none" stroke="black" d="M254.598,-789.752C272.296,-824.029 310.364,-887.314 363,-917.5 373.126,-923.307 384.033,-928.035 395.323,-931.869"/>
+<polygon fill="black" stroke="black" points="394.298,-935.216 404.887,-934.884 396.402,-928.54 394.298,-935.216"/>
 </g>
 <!-- MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA -->
-<g id="node240" class="node"><title>MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA</title>
-<polygon fill="none" stroke="black" points="409,-819.5 409,-865.5 702,-865.5 702,-819.5 409,-819.5"/>
-<text text-anchor="middle" x="555.5" y="-850.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA</text>
-<polyline fill="none" stroke="black" points="409,-842.5 702,-842.5 "/>
-<text text-anchor="middle" x="555.5" y="-827.3" font-family="Times,serif" font-size="14.00">SNR gain smooth alpha</text>
+<g id="node239" class="node"><title>MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA</title>
+<polygon fill="none" stroke="black" points="409,-870.5 409,-916.5 702,-916.5 702,-870.5 409,-870.5"/>
+<text text-anchor="middle" x="555.5" y="-901.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA</text>
+<polyline fill="none" stroke="black" points="409,-893.5 702,-893.5 "/>
+<text text-anchor="middle" x="555.5" y="-878.3" font-family="Times,serif" font-size="14.00">SNR gain smooth alpha</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA -->
-<g id="edge216" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA</title>
-<path fill="none" stroke="black" d="M291.962,-789.587C313.32,-798.914 338.977,-808.991 363,-815.5 374.635,-818.653 386.773,-821.452 399.044,-823.935"/>
-<polygon fill="black" stroke="black" points="398.421,-827.379 408.906,-825.859 399.762,-820.509 398.421,-827.379"/>
+<g id="edge215" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA</title>
+<path fill="none" stroke="black" d="M263.806,-789.844C285.739,-813.378 322.956,-848.693 363,-866.5 374.377,-871.559 386.477,-875.72 398.852,-879.135"/>
+<polygon fill="black" stroke="black" points="398.268,-882.599 408.826,-881.717 400.022,-875.823 398.268,-882.599"/>
 </g>
 <!-- MENU_DEBUG_NR_THRESH -->
-<g id="node241" class="node"><title>MENU_DEBUG_NR_THRESH</title>
-<polygon fill="none" stroke="black" points="458,-768.5 458,-814.5 653,-814.5 653,-768.5 458,-768.5"/>
-<text text-anchor="middle" x="555.5" y="-799.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_THRESH</text>
-<polyline fill="none" stroke="black" points="458,-791.5 653,-791.5 "/>
-<text text-anchor="middle" x="555.5" y="-776.3" font-family="Times,serif" font-size="14.00">NR thresh</text>
+<g id="node240" class="node"><title>MENU_DEBUG_NR_THRESH</title>
+<polygon fill="none" stroke="black" points="458,-819.5 458,-865.5 653,-865.5 653,-819.5 458,-819.5"/>
+<text text-anchor="middle" x="555.5" y="-850.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_THRESH</text>
+<polyline fill="none" stroke="black" points="458,-842.5 653,-842.5 "/>
+<text text-anchor="middle" x="555.5" y="-827.3" font-family="Times,serif" font-size="14.00">NR thresh</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_THRESH -->
-<g id="edge217" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_THRESH</title>
-<path fill="none" stroke="black" d="M312.521,-772.048C352.283,-775.245 403.107,-779.33 447.902,-782.931"/>
-<polygon fill="black" stroke="black" points="447.707,-786.427 457.955,-783.739 448.268,-779.449 447.707,-786.427"/>
+<g id="edge216" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_THRESH</title>
+<path fill="none" stroke="black" d="M291.962,-789.587C313.32,-798.914 338.977,-808.991 363,-815.5 389.986,-822.812 419.679,-828.224 447.462,-832.198"/>
+<polygon fill="black" stroke="black" points="447.218,-835.698 457.603,-833.598 448.175,-828.763 447.218,-835.698"/>
 </g>
 <!-- MENU_DEBUG_NR_VAD_TYPE -->
-<g id="node242" class="node"><title>MENU_DEBUG_NR_VAD_TYPE</title>
-<polygon fill="none" stroke="black" points="449.5,-717.5 449.5,-763.5 661.5,-763.5 661.5,-717.5 449.5,-717.5"/>
-<text text-anchor="middle" x="555.5" y="-748.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_VAD_TYPE</text>
-<polyline fill="none" stroke="black" points="449.5,-740.5 661.5,-740.5 "/>
-<text text-anchor="middle" x="555.5" y="-725.3" font-family="Times,serif" font-size="14.00">NR VAD type</text>
+<g id="node241" class="node"><title>MENU_DEBUG_NR_VAD_TYPE</title>
+<polygon fill="none" stroke="black" points="449.5,-768.5 449.5,-814.5 661.5,-814.5 661.5,-768.5 449.5,-768.5"/>
+<text text-anchor="middle" x="555.5" y="-799.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_VAD_TYPE</text>
+<polyline fill="none" stroke="black" points="449.5,-791.5 661.5,-791.5 "/>
+<text text-anchor="middle" x="555.5" y="-776.3" font-family="Times,serif" font-size="14.00">NR VAD type</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_VAD_TYPE -->
-<g id="edge218" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_VAD_TYPE</title>
-<path fill="none" stroke="black" d="M312.521,-760.73C349.714,-757.62 396.585,-753.702 439.148,-750.144"/>
-<polygon fill="black" stroke="black" points="439.621,-753.616 449.294,-749.295 439.037,-746.641 439.621,-753.616"/>
+<g id="edge217" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_VAD_TYPE</title>
+<path fill="none" stroke="black" d="M312.521,-772.048C349.714,-775.038 396.585,-778.806 439.148,-782.227"/>
+<polygon fill="black" stroke="black" points="439.046,-785.73 449.294,-783.043 439.607,-778.753 439.046,-785.73"/>
 </g>
 <!-- MENU_DEBUG_NR_VAD_DELAY -->
-<g id="node243" class="node"><title>MENU_DEBUG_NR_VAD_DELAY</title>
-<polygon fill="none" stroke="black" points="443.5,-666.5 443.5,-712.5 667.5,-712.5 667.5,-666.5 443.5,-666.5"/>
-<text text-anchor="middle" x="555.5" y="-697.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_VAD_DELAY</text>
-<polyline fill="none" stroke="black" points="443.5,-689.5 667.5,-689.5 "/>
-<text text-anchor="middle" x="555.5" y="-674.3" font-family="Times,serif" font-size="14.00">NR VAD delay</text>
+<g id="node242" class="node"><title>MENU_DEBUG_NR_VAD_DELAY</title>
+<polygon fill="none" stroke="black" points="443.5,-717.5 443.5,-763.5 667.5,-763.5 667.5,-717.5 443.5,-717.5"/>
+<text text-anchor="middle" x="555.5" y="-748.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_VAD_DELAY</text>
+<polyline fill="none" stroke="black" points="443.5,-740.5 667.5,-740.5 "/>
+<text text-anchor="middle" x="555.5" y="-725.3" font-family="Times,serif" font-size="14.00">NR VAD delay</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_VAD_DELAY -->
-<g id="edge219" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_VAD_DELAY</title>
-<path fill="none" stroke="black" d="M291.978,-743.472C313.339,-734.155 338.994,-724.071 363,-717.5 385.473,-711.349 409.822,-706.476 433.382,-702.64"/>
-<polygon fill="black" stroke="black" points="434.089,-706.072 443.423,-701.058 433,-699.157 434.089,-706.072"/>
+<g id="edge218" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_VAD_DELAY</title>
+<path fill="none" stroke="black" d="M312.521,-760.73C347.982,-757.765 392.241,-754.065 433.176,-750.643"/>
+<polygon fill="black" stroke="black" points="433.554,-754.124 443.227,-749.803 432.97,-747.148 433.554,-754.124"/>
 </g>
 <!-- MENU_DEBUG_NR_BETA -->
-<g id="node244" class="node"><title>MENU_DEBUG_NR_BETA</title>
-<polygon fill="none" stroke="black" points="466.5,-615.5 466.5,-661.5 644.5,-661.5 644.5,-615.5 466.5,-615.5"/>
-<text text-anchor="middle" x="555.5" y="-646.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_BETA</text>
-<polyline fill="none" stroke="black" points="466.5,-638.5 644.5,-638.5 "/>
-<text text-anchor="middle" x="555.5" y="-623.3" font-family="Times,serif" font-size="14.00">NR beta</text>
+<g id="node243" class="node"><title>MENU_DEBUG_NR_BETA</title>
+<polygon fill="none" stroke="black" points="466.5,-666.5 466.5,-712.5 644.5,-712.5 644.5,-666.5 466.5,-666.5"/>
+<text text-anchor="middle" x="555.5" y="-697.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_BETA</text>
+<polyline fill="none" stroke="black" points="466.5,-689.5 644.5,-689.5 "/>
+<text text-anchor="middle" x="555.5" y="-674.3" font-family="Times,serif" font-size="14.00">NR beta</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_BETA -->
-<g id="edge220" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_BETA</title>
-<path fill="none" stroke="black" d="M263.825,-743.197C285.772,-719.697 323.002,-684.41 363,-666.5 391.792,-653.608 425.222,-646.407 456.016,-642.455"/>
-<polygon fill="black" stroke="black" points="456.827,-645.884 466.348,-641.236 456.006,-638.932 456.827,-645.884"/>
+<g id="edge219" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_BETA</title>
+<path fill="none" stroke="black" d="M291.978,-743.472C313.339,-734.155 338.994,-724.071 363,-717.5 392.845,-709.331 425.998,-703.417 456.218,-699.191"/>
+<polygon fill="black" stroke="black" points="456.904,-702.63 466.345,-697.822 455.966,-695.693 456.904,-702.63"/>
 </g>
 <!-- MENU_DEBUG_NR_Mode -->
-<g id="node245" class="node"><title>MENU_DEBUG_NR_Mode</title>
-<polygon fill="none" stroke="black" points="468,-564.5 468,-610.5 643,-610.5 643,-564.5 468,-564.5"/>
-<text text-anchor="middle" x="555.5" y="-595.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_Mode</text>
-<polyline fill="none" stroke="black" points="468,-587.5 643,-587.5 "/>
-<text text-anchor="middle" x="555.5" y="-572.3" font-family="Times,serif" font-size="14.00">NR Mode</text>
+<g id="node244" class="node"><title>MENU_DEBUG_NR_Mode</title>
+<polygon fill="none" stroke="black" points="468,-615.5 468,-661.5 643,-661.5 643,-615.5 468,-615.5"/>
+<text text-anchor="middle" x="555.5" y="-646.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_Mode</text>
+<polyline fill="none" stroke="black" points="468,-638.5 643,-638.5 "/>
+<text text-anchor="middle" x="555.5" y="-623.3" font-family="Times,serif" font-size="14.00">NR Mode</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_Mode -->
-<g id="edge221" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_Mode</title>
-<path fill="none" stroke="black" d="M254.617,-743.282C272.341,-709.049 310.441,-645.821 363,-615.5 391.232,-599.213 425.563,-591.249 457.319,-587.639"/>
-<polygon fill="black" stroke="black" points="457.927,-591.095 467.528,-586.614 457.228,-584.13 457.927,-591.095"/>
+<g id="edge220" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_Mode</title>
+<path fill="none" stroke="black" d="M263.825,-743.197C285.772,-719.697 323.002,-684.41 363,-666.5 392.332,-653.366 426.478,-646.138 457.747,-642.236"/>
+<polygon fill="black" stroke="black" points="458.253,-645.701 467.788,-641.083 457.454,-638.747 458.253,-645.701"/>
+</g>
+<!-- MENU_DEBUG_NR_ASNR -->
+<g id="node245" class="node"><title>MENU_DEBUG_NR_ASNR</title>
+<polygon fill="none" stroke="black" points="466,-564.5 466,-610.5 645,-610.5 645,-564.5 466,-564.5"/>
+<text text-anchor="middle" x="555.5" y="-595.3" font-family="Times,serif" font-size="14.00">MENU_DEBUG_NR_ASNR</text>
+<polyline fill="none" stroke="black" points="466,-587.5 645,-587.5 "/>
+<text text-anchor="middle" x="555.5" y="-572.3" font-family="Times,serif" font-size="14.00">NR asnr</text>
+</g>
+<!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_ASNR -->
+<g id="edge221" class="edge"><title>MENU_DEBUG&#45;&gt;MENU_DEBUG_NR_ASNR</title>
+<path fill="none" stroke="black" d="M254.617,-743.282C272.341,-709.049 310.441,-645.821 363,-615.5 390.706,-599.516 424.288,-591.548 455.544,-587.845"/>
+<polygon fill="black" stroke="black" points="456.021,-591.314 465.6,-586.787 455.289,-584.352 456.021,-591.314"/>
 </g>
 <!-- MENU_DEBUG_NR_GAIN_SMOOTH_WIDTH -->
 <g id="node246" class="node"><title>MENU_DEBUG_NR_GAIN_SMOOTH_WIDTH</title>
