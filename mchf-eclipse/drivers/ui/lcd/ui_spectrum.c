@@ -148,13 +148,17 @@ void UiSpectrum_ResetSpectrum()
 }
 uint16_t UiSprectrum_CheckNewGraticulePos(uint16_t new_y)
 {
+	if((new_y<sd.Slayout->draw.y))
+	{
+		new_y=sd.Slayout->draw.y+sd.Slayout->draw.h/2-sd.Slayout->graticule.h/2;		//the default setting for graticule location if invalid value detected (first powerup issue)
+	}
 	if((new_y<sd.Slayout->draw.y+MinimumScopeSize))
 	{
 		new_y=sd.Slayout->draw.y+MinimumScopeSize;
 	}
-	if(new_y>(sd.Slayout->draw.y+sd.Slayout->draw.h-MinimumWaterfallSize-slayout.graticule.h))
+	if(new_y>(sd.Slayout->draw.y+sd.Slayout->draw.h-MinimumWaterfallSize-sd.Slayout->graticule.h))
 	{
-		new_y=sd.Slayout->draw.y+sd.Slayout->draw.h-MinimumWaterfallSize-slayout.graticule.h;
+		new_y=sd.Slayout->draw.y+sd.Slayout->draw.h-MinimumWaterfallSize-sd.Slayout->graticule.h;
 	}
 	return new_y;
 }
