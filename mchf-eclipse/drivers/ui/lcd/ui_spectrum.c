@@ -750,10 +750,13 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
         	old_pos[xh-slayout.scope.x]=spec_top_y;
     	}
 
-    	//causing the redraw of all marker lines
+    	//causing the redraw of all marker lines within the bandwidth area
     	for (uint16_t idx = 0; idx < SPECTRUM_MAX_MARKER; idx++)
     	{
-    		sd.marker_line_pos_prev[idx]=65535;
+    		if((sd.marker_line_pos_prev[idx]>=x_start) && (sd.marker_line_pos_prev[idx]<=x_end))
+    		{
+    			sd.marker_line_pos_prev[idx]=65535;
+    		}
     	}
 
 
