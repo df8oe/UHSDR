@@ -1377,29 +1377,29 @@ static void UiSpectrum_RedrawSpectrum()
         {
         	if(NR.gain_display == 1)
         	{
-        	for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+        	for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
         	{
-        		sd.FFT_MagData[(NR_FFT_L / 2 - 1) - bindx] = NR.Hk[bindx] * 150.0;
+        		sd.FFT_MagData[(ts.NR_FFT_L / 2 - 1) - bindx] = NR.Hk[bindx] * 150.0;
         	}
         	}
         	else
         	if(NR.gain_display == 2)
         	{
-            	for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+            	for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
             	{
-            		sd.FFT_MagData[(NR_FFT_L / 2 - 1) - bindx] = NR2.long_tone_gain[bindx] * 150.0;
+            		sd.FFT_MagData[(ts.NR_FFT_L / 2 - 1) - bindx] = NR2.long_tone_gain[bindx] * 150.0;
             	}
         	}
         	else
         	if(NR.gain_display == 3)
         	{
-            	for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
+            	for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
             	{
-            		sd.FFT_MagData[(NR_FFT_L / 2 - 1) - bindx] = NR.Hk[bindx] * NR2.long_tone_gain[bindx] * 150.0;
+            		sd.FFT_MagData[(ts.NR_FFT_L / 2 - 1) - bindx] = NR.Hk[bindx] * NR2.long_tone_gain[bindx] * 150.0;
             	}
         	}
         	// set all other pixels to a low value
-        	for(int bindx = NR_FFT_L / 2; bindx < sd.spec_len; bindx++)
+        	for(int bindx = ts.NR_FFT_L / 2; bindx < sd.spec_len; bindx++)
         	{
         		sd.FFT_MagData[bindx] = 10.0;
         	}

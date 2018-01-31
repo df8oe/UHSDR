@@ -1061,6 +1061,9 @@ typedef struct TransceiverState
 	bool nr_long_tone_reset; // used to reset gains of the long tone detection to 1.0
 	int16_t nr_vad_delay; // how many frames to delay the noise estimate after VAD has detected NOISE
 	int16_t nr_mode;
+	bool nr_fft_256_enable; // debugging: enable FFT256 instead of FFT128 for spectral NR
+	uint16_t NR_FFT_L; // resulting FFT length: 128 or 256
+	uint8_t NR_FFT_LOOP_NO;
 	uint8_t debug_si5351a_pllreset;
 	uint16_t graticulePowerupYpos;	//initial (after powerup) position of graticule (frequency bar)
 	const LcdLayout* Layout;				//current lcd layout (set by lcd detection routine)

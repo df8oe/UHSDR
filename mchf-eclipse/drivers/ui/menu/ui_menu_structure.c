@@ -408,6 +408,9 @@ const MenuDescriptor debugGroup[] =
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_BETA, NULL,"NR beta", UiMenuDesc("time constant beta for spectral noise reduction, leave at 0.85") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_Mode, NULL,"NR Mode", UiMenuDesc("switch between the released NR and two development NRs") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_ASNR, NULL,"NR asnr", UiMenuDesc("Devel 2 NR: asnr") },
+#if defined(STM32F7) || defined(STM32H7)
+	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_FFT_SIZE, NULL,"NR FFT Size256", UiMenuDesc("enable FFT256 instead of FFT128 for devel2 NR") },
+#endif
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_WIDTH, NULL,"NR smooth wd.", UiMenuDesc("Devel 2 NR: width of gain smoothing window") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_THRESHOLD, NULL,"NR smooth thr.", UiMenuDesc("Devel 2 NR: threhold for gain smoothing") },
 
