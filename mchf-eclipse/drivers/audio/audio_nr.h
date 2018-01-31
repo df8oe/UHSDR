@@ -76,7 +76,7 @@ typedef struct NoiseReduction2 // declaration
 	//int16_t						tax_int;
 	//float32_t					tap; // for NR devel2: speech prob smoothing time constant = -tinc/ln(0.9) tinc = frame time (5.33ms)
 	//int16_t						tap_int;
-	//int16_t						asnr; // for NR devel2: active SNR in dB
+	int16_t						asnr; // for NR devel2: active SNR in dB
 	float32_t					ax;
 	float32_t					ap;
 	float32_t					xih1;

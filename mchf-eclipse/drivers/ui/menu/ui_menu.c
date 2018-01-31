@@ -3800,6 +3800,19 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 			}
         break;
 
+            case MENU_DEBUG_NR_ASNR:
+             var_change = UiDriverMenuItemChangeInt16(var, mode, &NR2.asnr,
+                                                   2,
+                                                   30,
+                                                   15,
+                                                   1);
+             if(var_change)      // did something change?
+             {
+             	//ts.nr_first_time = 1;
+             }
+             snprintf(options,32, "  %3u", (unsigned int)NR2.asnr);
+             break;
+
 
         case MENU_DEBUG_NR_GAIN_SMOOTH_WIDTH:
         var_change = UiDriverMenuItemChangeInt16(var, mode, &NR2.width,
@@ -3865,9 +3878,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             clr = Green;
         }
         break;
-     case MENU_DEBUG_NEW_NB:
-         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
-         break;
+//     case MENU_DEBUG_NEW_NB:
+//         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
+//         break;
 //     case MENU_DEBUG_NR_ENABLE:
 //             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_enable,0,options,&clr);
 //         break;
