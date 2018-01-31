@@ -750,10 +750,13 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
         	old_pos[xh-slayout.scope.x]=spec_top_y;
     	}
 
-    	//causing the redraw of all marker lines
+    	//causing the redraw of all marker lines within the bandwidth area
     	for (uint16_t idx = 0; idx < SPECTRUM_MAX_MARKER; idx++)
     	{
-    		sd.marker_line_pos_prev[idx]=65535;
+    		if((sd.marker_line_pos_prev[idx]>=x_start) && (sd.marker_line_pos_prev[idx]<=x_end))
+    		{
+    			sd.marker_line_pos_prev[idx]=65535;
+    		}
     	}
 
 
@@ -773,7 +776,8 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 
         if (marker_line_pos[idx] != sd.marker_line_pos_prev[idx])
         {
-            if (sd.marker_line_pos_prev[idx] < slayout.scope.x + slayout.scope.w)
+            if ((sd.marker_line_pos_prev[idx] < slayout.scope.x + slayout.scope.w)&&
+            		(sd.marker_line_pos_prev[idx] > slayout.scope.x))
             {
             	if((sd.marker_line_pos_prev[idx]>=left_filter_border_pos)&&(sd.marker_line_pos_prev[idx]<=right_filter_border_pos)) //BW highlight control
             	{
@@ -812,7 +816,8 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
                 }
             }
 
-            if (marker_line_pos[idx] < slayout.scope.x + slayout.scope.w)
+            if ((marker_line_pos[idx] < slayout.scope.x + slayout.scope.w)&&
+            		(marker_line_pos[idx] > slayout.scope.x))
             {
 
                 // draw new line if inside screen limits
