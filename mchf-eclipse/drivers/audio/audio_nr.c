@@ -1858,13 +1858,13 @@ static float32_t pslp[NR_FFT_L/2];
 static float32_t xt[NR_FFT_L/2];
 float32_t xtr;
 float32_t ph1y[NR_FFT_L/2];
-static float32_t gain_correction;
+
 
 Board_RedLed(LED_STATE_OFF);
 
     if(ts.nr_first_time == 1)
     { // TODO: properly initialize all the variables
-	gain_correction = 0.0;
+
 	for(int bindx = 0; bindx < NR_FFT_L / 2; bindx++)
         {
               NR.last_sample_buffer_L[bindx] = 0.0;
@@ -1874,9 +1874,9 @@ Board_RedLed(LED_STATE_OFF);
               NR.Nest[bindx][0] = 0.0;
               NR.Nest[bindx][1] = 1.0;
               pslp[bindx] = 0.5;
-              gain_correction += SQRT_van_hann[bindx];
+
         }
-        gain_correction = (NR_FFT_L / 2) / gain_correction;
+
         ts.nr_first_time = 2; // we need to do some more a bit later down
     }
 
@@ -1907,7 +1907,7 @@ Board_RedLed(LED_STATE_OFF);
 
           for (int idx = 0; idx < NR_FFT_L; idx++)
               {
-        	  	  NR.FFT_buffer[idx * 2] *= gain_correction * SQRT_van_hann[idx];
+        	  	  NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
               }
 
     #endif
@@ -2085,7 +2085,7 @@ Board_RedLed(LED_STATE_OFF);
 // Window on exit!
   	for (int idx = 0; idx < NR_FFT_L; idx++)
   	  {
-  	    NR.FFT_buffer[idx * 2] *= gain_correction * SQRT_van_hann[idx];
+  	    NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
 	  }
 
     // do the overlap & add
@@ -2356,8 +2356,8 @@ const float32_t NR_test_sinus_samp[128] = {
     //if ((nr_setting > 20) && (nr_setting <51))
     //    impulse_threshold = impulse_threshold / (0.9 + (nr_setting-20.0)/10);  //scaling the threshold by 1 ... 0.26
 
-    //search_pos = order+PL;  // lower boundary problem has been solved! - so here we start from 1 or 0?
-    search_pos = 1;
+    search_pos = order+PL;  // lower boundary problem has been solved! - so here we start from 1 or 0?
+    //search_pos = 1;
     impulse_count=0;
 
     do {        //going through the filtered samples to find an impulse larger than the threshold
