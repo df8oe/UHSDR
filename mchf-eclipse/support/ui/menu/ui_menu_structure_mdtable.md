@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-02-01T08:54:47  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-02-01T14:18:43  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-02-01T08:54:47  by "./ui_menu_structure_mdtable.py"
+generated at  2018-02-01T14:18:43  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -290,6 +290,7 @@ generated at  2018-02-01T08:54:47  by "./ui_menu_structure_mdtable.py"
 | **NR Mode**                   (                         MENU_DEBUG_NR_Mode) | switch between the released NR and two development NRs | 
 | **NR asnr**                   (                         MENU_DEBUG_NR_ASNR) | Devel 2 NR: asnr                               | 
 | **NR FFT Size256**            (                     MENU_DEBUG_NR_FFT_SIZE) | enable FFT256 instead of FFT128 for devel2 NR  | 
+| **NR decimation**             (                   MENU_DEBUG_NR_DEC_ENABLE) | enable decimation-by-2 down to 6ksps for NR    | 
 | **NR smooth wd.**             (            MENU_DEBUG_NR_GAIN_SMOOTH_WIDTH) | Devel 2 NR: width of gain smoothing window     | 
 | **NR smooth thr.**            (        MENU_DEBUG_NR_GAIN_SMOOTH_THRESHOLD) | Devel 2 NR: threhold for gain smoothing        | 
 | **STEREO Enable**             (                   MENU_DEBUG_ENABLE_STEREO) | Enable stereo demodulation modes               | 
