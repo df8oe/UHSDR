@@ -1837,8 +1837,9 @@ Board_RedLed(LED_STATE_OFF);
               NR.Nest[bindx][0] = 0.0;
               NR.Nest[bindx][1] = 1.0;
               pslp[bindx] = 0.5;
-
         }
+
+
 
         ts.nr_first_time = 2; // we need to do some more a bit later down
     }

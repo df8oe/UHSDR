@@ -362,7 +362,6 @@ void TransceiverStateInit(void)
 	ts.nr_vad_delay = 7;
 	ts.NR_decimation_enable = true;
 	ts.nr_fft_256_enable = true;
-	ts.nr_mode = 2;
 	NR2.width = 2;
 	NR2.power_threshold = 0.60;
 	NR2.power_threshold_int = 60;
