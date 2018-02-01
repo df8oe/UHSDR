@@ -422,7 +422,12 @@ void spectral_noise_reduction (float* in_buffer)
 	  0.1152168405, 0.0998979008, 0.0855580779, 0.0722324638, 0.0599536686, 0.0487517405, 0.0386540925, 0.0296854352,
 	  0.0218677165, 0.0152200676, 0.0097587564, 0.0054971478, 0.0024456704, 0.0006117919, 0};
 */
-uint8_t zero_cross_count=0;
+		float32_t NR_sample_rate = 12000.0;
+		if(ts.NR_decimation_enable)
+		{
+			NR_sample_rate = 6000.0;
+		}
+		uint8_t zero_cross_count=0;
 bool  VAD_ZCR, VAD_EN, VAD_E_Z;
 float32_t VAD_E,VAD_energy_ratio;
 static uint8_t NR_init_counter = 0;
@@ -431,8 +436,8 @@ uint8_t VAD_high=63;
 float32_t NR_temp_sum = 0.0;
 float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
 float32_t offset = FilterPathInfo[ts.filter_path].offset;
-float32_t lf_freq = (offset - width/2) / (12000 / ts.NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
-float32_t uf_freq = (offset + width/2) / (12000 / ts.NR_FFT_L);
+float32_t lf_freq = (offset - width/2) / (NR_sample_rate / ts.NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
+float32_t uf_freq = (offset + width/2) / (NR_sample_rate / ts.NR_FFT_L);
 
     if(ts.nr_first_time == 1)
     { // TODO: properly initialize all the variables
@@ -1233,6 +1238,11 @@ void spectral_noise_reduction_2 (float* in_buffer)
 // FFT128 - inverse FFT128
 // overlap-add
 
+	float32_t NR_sample_rate = 12000.0;
+	if(ts.NR_decimation_enable)
+	{
+		NR_sample_rate = 6000.0;
+	}
 
 static uint8_t NR_init_counter = 0;
 uint8_t VAD_low=0;
@@ -1240,8 +1250,8 @@ uint8_t VAD_high=63;
 //float32_t NR_temp_sum = 0.0;
 float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
 float32_t offset = FilterPathInfo[ts.filter_path].offset;
-float32_t lf_freq = (offset - width/2) / (12000 / ts.NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
-float32_t uf_freq = (offset + width/2) / (12000 / ts.NR_FFT_L);
+float32_t lf_freq = (offset - width/2) / (NR_sample_rate / ts.NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
+float32_t uf_freq = (offset + width/2) / (NR_sample_rate / ts.NR_FFT_L);
 
     if(ts.nr_first_time == 1)
     { // TODO: properly initialize all the variables
@@ -1769,11 +1779,16 @@ void spectral_noise_reduction_3 (float* in_buffer)
 // https://github.com/df8oe/UHSDR/wiki/Noise-reduction
 //
 // half-overlapping input buffers (= overlap 50%)
-// Hann window on 128 samples
-// FFT128 - inverse FFT128
+// Hann window on 128 or 256 samples
+// FFT128 - inverse FFT128 or FFT256 / iFFT256
 // overlap-add
 
 
+float32_t NR_sample_rate = 12000.0;
+if(ts.NR_decimation_enable)
+{
+	NR_sample_rate = 6000.0;
+}
 
 static uint8_t NR_init_counter = 0;
 uint8_t VAD_low=0;
@@ -1781,8 +1796,8 @@ uint8_t VAD_high=63;
 
 float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
 float32_t offset = FilterPathInfo[ts.filter_path].offset;
-float32_t lf_freq = (offset - width/2) / (12000 / ts.NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
-float32_t uf_freq = (offset + width/2) / (12000 / ts.NR_FFT_L);
+float32_t lf_freq = (offset - width/2) / (NR_sample_rate / ts.NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
+float32_t uf_freq = (offset + width/2) / (NR_sample_rate / ts.NR_FFT_L);
 
 
 //const float32_t tinc = 0.00533333; // frame time 5.3333ms

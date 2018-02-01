@@ -184,6 +184,13 @@ float32_t			__MCHF_SPECIALMEM decimZoomFFTQState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RX
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
 float32_t			__MCHF_SPECIALMEM interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
+//#ifdef defined(STM32F7) || define(STM32H7)
+static  arm_fir_decimate_instance_f32   DECIMATE_NR;
+float32_t           decimNRState[FIR_RXAUDIO_BLOCK_SIZE + 4];
+static	arm_fir_interpolate_instance_f32 INTERPOLATE_NR;
+float32_t			interplNRState[FIR_RXAUDIO_BLOCK_SIZE + 4];
+//#endif
+
 #ifdef USE_TWO_CHANNEL_AUDIO
 // Audio RX - Interpolator
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX_L;
@@ -319,6 +326,8 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT_Q =
             0,0,0,0,   0,0,0,0,   0,0,0,0,   0,0,0,0
         } // 2 x 4 = 8 state variables
 };
+
+static float32_t NR_decimate_coeffs [4]= {0.099144206287089282, 0.492752007869707798, 0.492752007869707798, 0.099144206287089282};
 
 static float32_t* mag_coeffs[6] =
 
@@ -1379,6 +1388,19 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     INTERPOLATE_RX_L.pState = interplState;        // Filter state variables
     arm_fill_f32(0.0,interplState,FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS);
 #endif
+
+//#if defined(STM32F7) || defined(STM32H7)
+    DECIMATE_NR.numTaps = 4;
+    DECIMATE_NR.pCoeffs = NR_decimate_coeffs; // should be a very light lowpass @2k7
+    DECIMATE_NR.M = 2;          // Decimation factor
+    DECIMATE_NR.pState = decimNRState;            // Filter state variables
+    arm_fill_f32(0.0,decimNRState,FIR_RXAUDIO_BLOCK_SIZE + 4);
+    INTERPOLATE_NR.L = 2;
+    INTERPOLATE_NR.pCoeffs = NR_decimate_coeffs; // should be a very light lowpass @2k7
+    INTERPOLATE_NR.phaseLength = 2;          // phaseLength=numTaps/L
+    INTERPOLATE_NR.pState = interplNRState;            // Filter state variables
+    arm_fill_f32(0.0,interplNRState,FIR_RXAUDIO_BLOCK_SIZE + 4);
+    //#endif
 
     ads.dsp_zero_count = 0;		// initialize "zero" count to detect if DSP has crashed
 
@@ -3499,6 +3521,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
+	uint16_t no_dec_samples = blockSizeDecim;
 #ifdef USE_TWO_CHANNEL_AUDIO
     const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
 #endif
@@ -3776,10 +3799,33 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     if (ads.decimation_rate == 4)   //  to make sure, that we are at 12Ksamples
 
                     {
-                        for (int k = 0; k < blockSizeDecim; k=k+2) //transfer our noisy audio to our NR-input buffer
+                    	// this would be the right place for another decimation-by-2 to get down to 6ksps
+                    	// in order to further improve the spectral noise reduction
+                    	// TEST!
+                    	//
+                    	// anti-alias-filtering is already provided at this stage by the IIR main filter
+                    	// Only allow another decimation-by-two, if filter bandwidth is <= 2k7
+                    	//
+                    	// Add decimation-by-two HERE
+
+                    	// TODO: insert if to decide whether filter < 2k7!!!
+                    	if(ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701))
+                    	{
+                    		no_dec_samples = blockSizeDecim / 2;
+                    		// decimate-by-2, DECIMATE_NR
+                            arm_fir_decimate_f32(&DECIMATE_NR, adb.a_buffer, adb.NR_dec_buffer, blockSizeDecim);
+                    	}
+                    	else
+                    	{
+                    		arm_copy_f32(adb.a_buffer, adb.NR_dec_buffer, blockSizeDecim);
+                    	}
+
+                    	// attention -> change loop no into no_dec_samples!
+
+                        for (int k = 0; k < no_dec_samples; k=k+2) //transfer our noisy audio to our NR-input buffer
                         {
-                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].real=adb.a_buffer[k];
-                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].imag=adb.a_buffer[k+1];
+                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].real=adb.NR_dec_buffer[k];
+                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].imag=adb.NR_dec_buffer[k+1];
                             //trans_count_in++;
                             trans_count_in++; // count the samples towards FFT-size  -  2 samples per loop
                         }
@@ -3807,10 +3853,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
                         if (out_buffer != NULL)  //NR-routine has finished it's job
                         {
-                            for (int j=0; j < blockSizeDecim; j=j+2) // transfer noise reduced data back to our buffer
+                            for (int j=0; j < no_dec_samples; j=j+2) // transfer noise reduced data back to our buffer
+//                            for (int j=0; j < blockSizeDecim; j=j+2) // transfer noise reduced data back to our buffer
                             {
-                                adb.a_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
-                                adb.a_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
+                                adb.NR_dec_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
+                                adb.NR_dec_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
                                 outbuff_count++;
                                 //outbuff_count++;
                             }
@@ -3825,6 +3872,18 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         }
 
                     }
+                    // interpolation of a_buffer from 6ksps to 12ksps!
+                    // from NR_dec_buffer --> a_buffer
+                    //
+                    if(ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701))
+                    {
+                    	arm_fir_interpolate_f32(&INTERPOLATE_NR, adb.NR_dec_buffer, adb.a_buffer, no_dec_samples);
+                    }
+                    else
+                    {
+                    	arm_copy_f32(adb.NR_dec_buffer, adb.a_buffer, blockSizeDecim);
+                    }
+                    //
 
                 } // end of new nb
 
