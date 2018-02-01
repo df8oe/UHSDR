@@ -22,21 +22,24 @@
 
 #define NR_FFT_SIZE 128
 
-#define NR_FFT_L (NR_FFT_SIZE) // for NR FFT size 128
-//#define NR_FFT_L (NR_FFT_SIZE * 2) // for NR FFT size 256
-
+//#define NR_FFT_L (NR_FFT_SIZE) // for NR FFT size 128
+#if defined(STM32F7) || defined(STM32H7)
+#define NR_FFT_L_2 (NR_FFT_SIZE * 2) // for NR FFT size 256
+#else
+#define NR_FFT_L_2 (NR_FFT_SIZE) // for NR FFT size 128
+#endif
 typedef struct NoiseReduction // declaration
 {
-	float32_t 					last_iFFT_result [NR_FFT_L / 2];
-	float32_t 					last_sample_buffer_L [NR_FFT_L / 2];
-	float32_t 					Hk[NR_FFT_L / 2]; // gain factors
-	float32_t 					FFT_buffer[NR_FFT_L * 2];
-	float32_t 					Nest[NR_FFT_L / 2][2]; // noise estimates for the current and the last FFT frame
+	float32_t 					last_iFFT_result [NR_FFT_L_2 / 2];
+	float32_t 					last_sample_buffer_L [NR_FFT_L_2 / 2];
+	float32_t 					Hk[NR_FFT_L_2 / 2]; // gain factors
+	float32_t 					FFT_buffer[NR_FFT_L_2 * 2];
+	float32_t 					Nest[NR_FFT_L_2 / 2][2]; // noise estimates for the current and the last FFT frame
 	float32_t 					vk; // saved 0.24kbytes
-	float32_t 					SNR_prio[NR_FFT_L / 2];
-	float32_t 					SNR_post[NR_FFT_L / 2];
+	float32_t 					SNR_prio[NR_FFT_L_2 / 2];
+	float32_t 					SNR_post[NR_FFT_L_2 / 2];
 	float32_t 					SNR_post_pos; // saved 0.24kbytes
-	float32_t 					Hk_old[NR_FFT_L / 2];
+	float32_t 					Hk_old[NR_FFT_L_2 / 2];
 	float32_t 					VAD;
 	float32_t					VAD_Esch; // holds the VAD sum for the Esh & Vary 2009 type of VAD
 	int16_t						gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
@@ -53,10 +56,10 @@ typedef struct NoiseReduction // declaration
 //
 typedef struct NoiseReduction2 // declaration
 {
-	float32_t 					X[NR_FFT_L/2][2]; // magnitudes of the current and the last FFT bins
+	float32_t 					X[NR_FFT_L_2 / 2][2]; // magnitudes of the current and the last FFT bins
 	//float32_t 					X[NR_FFT_L/2]; // magnitudes of the current and the last FFT bins
-	float32_t 					long_tone_gain[NR_FFT_L / 2];
-	float32_t 					long_tone[NR_FFT_L / 2][2];
+	float32_t 					long_tone_gain[NR_FFT_L_2 / 2];
+	float32_t 					long_tone[NR_FFT_L_2 / 2][2];
 	int 						VAD_delay;
 	int 						VAD_duration; //takes the duration of the last vowel
 	uint32_t 					VAD_crash_detector; // this is counted upwards during speech detection, if noise is detected, it is reset to zero
@@ -64,7 +67,7 @@ typedef struct NoiseReduction2 // declaration
 	// this helps to get the noise estimate out of a very low position --> "VAD crash"
 	uint8_t						VAD_type; // 0 = Sohn et al. VAD, 1 = Esch & Vary 2009 VAD
 	bool 						notch_change; // indicates that notch filter has to be changed
-	uint32_t					long_tone_counter[NR_FFT_L / 2]; // holds the notch index for every bin, the higher, the more notchworthy is a bin
+	uint32_t					long_tone_counter[NR_FFT_L_2 / 2]; // holds the notch index for every bin, the higher, the more notchworthy is a bin
 	uint8_t						notch1_bin; // frequency bin where notch filter 1 has to work
 	uint8_t						max_bin; // holds the bin number of the strongest persistent tone during tone detection
 	float32_t					long_tone_max; // power value of the strongest persistent tone, used for max search

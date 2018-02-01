@@ -348,6 +348,9 @@ void TransceiverStateInit(void)
 	ts.nr_vad_thresh = 4.0;
 	ts.nr_vad_thresh_int = 4000;
 	ts.nr_enable = false;
+	ts.NR_FFT_L = 128;
+	ts.NR_FFT_LOOP_NO = 2;
+	ts.nr_fft_256_enable = false;
 	ts.nr_gain_smooth_enable = false;
 	ts.nr_gain_smooth_alpha = 0.25;
 	ts.nr_gain_smooth_alpha_int = 250;
@@ -361,6 +364,7 @@ void TransceiverStateInit(void)
 	NR2.width = 2;
 	NR2.power_threshold = 0.60;
 	NR2.power_threshold_int = 60;
+	NR2.asnr = 30;
 
     // development setting for DF8OE
     if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
