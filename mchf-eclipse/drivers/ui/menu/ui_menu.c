@@ -3891,7 +3891,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 	 ts.NR_FFT_LOOP_NO = 1;
                 	 ts.NR_FFT_L = 256;
                  }
-                 break;
+        break;
+     case MENU_DEBUG_NR_DEC_ENABLE:
+                 var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.NR_decimation_enable,0,options,&clr);
+        break;
 #endif
 //     case MENU_DEBUG_NR_ENABLE:
 //             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_enable,0,options,&clr);

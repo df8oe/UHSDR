@@ -361,6 +361,7 @@ void TransceiverStateInit(void)
 	ts.nr_long_tone_reset = true;
 	ts.nr_first_time = 1;
 	ts.nr_vad_delay = 7;
+	ts.NR_decimation_enable = false;
 	NR2.width = 2;
 	NR2.power_threshold = 0.60;
 	NR2.power_threshold_int = 60;

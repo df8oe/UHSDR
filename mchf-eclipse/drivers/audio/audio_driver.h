@@ -71,6 +71,7 @@ typedef struct
 
     float32_t                   a_buffer[IQ_BUFSZ];
     float32_t                   b_buffer[IQ_BUFSZ];
+    float32_t					NR_dec_buffer[16];
 #ifdef USE_TWO_CHANNEL_AUDIO
     float32_t					r_buffer[IQ_BUFSZ]; // used for the right channel in STEREO DEMODULATION
 #endif

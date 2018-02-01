@@ -1064,6 +1064,7 @@ typedef struct TransceiverState
 	bool nr_fft_256_enable; // debugging: enable FFT256 instead of FFT128 for spectral NR
 	uint16_t NR_FFT_L; // resulting FFT length: 128 or 256
 	uint8_t NR_FFT_LOOP_NO;
+	bool NR_decimation_enable; // set to true, if we want to use another decimation step for the spectral NR leading to 6ksps sample rate
 	uint8_t debug_si5351a_pllreset;
 	uint16_t graticulePowerupYpos;	//initial (after powerup) position of graticule (frequency bar)
 	const LcdLayout* Layout;				//current lcd layout (set by lcd detection routine)

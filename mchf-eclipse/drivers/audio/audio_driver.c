@@ -184,6 +184,16 @@ float32_t			__MCHF_SPECIALMEM decimZoomFFTQState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RX
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX;
 float32_t			__MCHF_SPECIALMEM interpState[FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS];
 
+
+
+//#ifdef defined(STM32F7) || define(STM32H7)
+#define NR_INTERPOLATE_NO_TAPS 40
+static  arm_fir_decimate_instance_f32   DECIMATE_NR;
+float32_t           decimNRState[FIR_RXAUDIO_BLOCK_SIZE + 4];
+static	arm_fir_interpolate_instance_f32 INTERPOLATE_NR;
+float32_t			interplNRState[FIR_RXAUDIO_BLOCK_SIZE + NR_INTERPOLATE_NO_TAPS];
+//#endif
+
 #ifdef USE_TWO_CHANNEL_AUDIO
 // Audio RX - Interpolator
 static	arm_fir_interpolate_instance_f32 INTERPOLATE_RX_L;
@@ -319,6 +329,19 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_Zoom_FFT_Q =
             0,0,0,0,   0,0,0,0,   0,0,0,0,   0,0,0,0
         } // 2 x 4 = 8 state variables
 };
+
+// sr = 12ksps, Fstop = 2k7
+static float32_t NR_decimate_coeffs [4] = {0.099144206287089282, 0.492752007869707798, 0.492752007869707798, 0.099144206287089282};
+
+// sr = 6ksps, Fstop = 2.641kHz, 40 taps, Kaiser window, kaiser beta = 5.0
+//static float32_t NR_interpolate_coeffs [4] = {-0.210315569340515734, 0.635988597793577748, 0.635988597793577748, -0.210315569340515734};
+//static float32_t NR_interpolate_coeffs [NR_INTERPOLATE_NO_TAPS] = {-0.001002241209906903, 0.001441708918691522,-0.001706149635852624, 0.001566968932736415,-774.8134765785987380E-6,-888.5883159488162160E-6, 0.003546988638945967,-0.007164366515434106, 0.011489573790162461,-0.016021995229766987, 0.020005638846995594,-0.022451926316905919, 0.022180190560099688,-0.017846818713594014, 0.007898843119052359, 0.009703245834804463,-0.038460922201401890, 0.086909507565687258,-0.186714972155037573, 0.627907800931765348, 0.627907800931765348,-0.186714972155037573, 0.086909507565687258,-0.038460922201401890, 0.009703245834804463, 0.007898843119052359,-0.017846818713594014, 0.022180190560099688,-0.022451926316905919, 0.020005638846995594,-0.016021995229766987, 0.011489573790162461,-0.007164366515434106, 0.003546988638945967,-888.5883159488162160E-6,-774.8134765785987380E-6, 0.001566968932736415,-0.001706149635852624, 0.001441708918691522,-0.001002241209906903};
+
+// 12ksps, Fstop = 2k7, KAISER
+static float32_t NR_interpolate_coeffs [NR_INTERPOLATE_NO_TAPS] = {-495.0757586677611930E-6, 0.001320676868426568, 0.001533845835568487,-0.002357633129357554,-0.003572560455091757, 0.003388797052024843, 0.007032840952358404,-0.003960820803871866,-0.012365795129023015, 0.003357357660531775, 0.020101326014980946,-475.4964584295063900E-6,-0.031094910247864812,-0.006597041050034579, 0.047436525317202147, 0.022324808965607446,-0.076541709512474090,-0.064246467306504046, 0.167750545742874818, 0.427794841657261171, 0.427794841657261171, 0.167750545742874818,-0.064246467306504046,-0.076541709512474090, 0.022324808965607446, 0.047436525317202147,-0.006597041050034579,-0.031094910247864812,-475.4964584295063900E-6, 0.020101326014980946, 0.003357357660531775,-0.012365795129023015,-0.003960820803871866, 0.007032840952358404, 0.003388797052024843,-0.003572560455091757,-0.002357633129357554, 0.001533845835568487, 0.001320676868426568,-495.0757586677611930E-6};
+
+// 6ksps, Fstop = 2k65, KAISER
+//static float32_t NR_interpolate_coeffs [NR_INTERPOLATE_NO_TAPS] = {-903.6623076669911820E-6, 0.001594488333496738,-0.002320508982899863, 0.002832351511451895,-0.002797105957386612, 0.001852836963547170, 308.6133633078010230E-6,-0.003842008360761881, 0.008649943961959465,-0.014305251526745446, 0.020012524686320185,-0.024618364878703208, 0.026664997481476788,-0.024458388333600374, 0.016080841021827566, 818.1032282579135430E-6,-0.029933800539235892, 0.079833661336890141,-0.182038248016552551, 0.626273078268197225, 0.626273078268197225,-0.182038248016552551, 0.079833661336890141,-0.029933800539235892, 818.1032282579135430E-6, 0.016080841021827566,-0.024458388333600374, 0.026664997481476788,-0.024618364878703208, 0.020012524686320185,-0.014305251526745446, 0.008649943961959465,-0.003842008360761881, 308.6133633078010230E-6, 0.001852836963547170,-0.002797105957386612, 0.002832351511451895,-0.002320508982899863, 0.001594488333496738,-903.6623076669911820E-6};
 
 static float32_t* mag_coeffs[6] =
 
@@ -1379,6 +1402,19 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     INTERPOLATE_RX_L.pState = interplState;        // Filter state variables
     arm_fill_f32(0.0,interplState,FIR_RXAUDIO_BLOCK_SIZE + FIR_RXAUDIO_NUM_TAPS);
 #endif
+
+//#if defined(STM32F7) || defined(STM32H7)
+    DECIMATE_NR.numTaps = 4;
+    DECIMATE_NR.pCoeffs = NR_decimate_coeffs; // should be a very light lowpass @2k7
+    DECIMATE_NR.M = 2;          // Decimation factor
+    DECIMATE_NR.pState = decimNRState;            // Filter state variables
+    arm_fill_f32(0.0,decimNRState,FIR_RXAUDIO_BLOCK_SIZE + 4);
+    INTERPOLATE_NR.L = 2;
+    INTERPOLATE_NR.pCoeffs = NR_interpolate_coeffs; // should be a lowpass @2k7
+    INTERPOLATE_NR.phaseLength = NR_INTERPOLATE_NO_TAPS / 2;          // phaseLength=numTaps/L
+    INTERPOLATE_NR.pState = interplNRState;            // Filter state variables
+    arm_fill_f32(0.0,interplNRState,FIR_RXAUDIO_BLOCK_SIZE + NR_INTERPOLATE_NO_TAPS);
+//#endif
 
     ads.dsp_zero_count = 0;		// initialize "zero" count to detect if DSP has crashed
 
@@ -3499,6 +3535,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
+	uint32_t no_dec_samples = blockSizeDecim;
 #ifdef USE_TWO_CHANNEL_AUDIO
     const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
 #endif
@@ -3776,10 +3813,33 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     if (ads.decimation_rate == 4)   //  to make sure, that we are at 12Ksamples
 
                     {
-                        for (int k = 0; k < blockSizeDecim; k=k+2) //transfer our noisy audio to our NR-input buffer
+                    	// this would be the right place for another decimation-by-2 to get down to 6ksps
+                    	// in order to further improve the spectral noise reduction
+                    	// TEST!
+                    	//
+                    	// anti-alias-filtering is already provided at this stage by the IIR main filter
+                    	// Only allow another decimation-by-two, if filter bandwidth is <= 2k7
+                    	//
+                    	// Add decimation-by-two HERE
+
+                    	//  decide whether filter < 2k7!!!
+                    	if(ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701) && (dsp_active & DSP_NR_ENABLE))
+                    	{
+                    		no_dec_samples = blockSizeDecim / 2;
+                    		// decimate-by-2, DECIMATE_NR
+                            arm_fir_decimate_f32(&DECIMATE_NR, adb.a_buffer, adb.NR_dec_buffer, blockSizeDecim);
+                    	}
+                    	else
+                    	{
+                    		arm_copy_f32(adb.a_buffer, adb.NR_dec_buffer, blockSizeDecim);
+                    	}
+
+                    	// attention -> change loop no into no_dec_samples!
+
+                        for (int k = 0; k < no_dec_samples; k=k+2) //transfer our noisy audio to our NR-input buffer
                         {
-                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].real=adb.a_buffer[k];
-                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].imag=adb.a_buffer[k+1];
+                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].real=adb.NR_dec_buffer[k];
+                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].imag=adb.NR_dec_buffer[k+1];
                             //trans_count_in++;
                             trans_count_in++; // count the samples towards FFT-size  -  2 samples per loop
                         }
@@ -3807,10 +3867,11 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
                         if (out_buffer != NULL)  //NR-routine has finished it's job
                         {
-                            for (int j=0; j < blockSizeDecim; j=j+2) // transfer noise reduced data back to our buffer
+                            for (int j=0; j < no_dec_samples; j=j+2) // transfer noise reduced data back to our buffer
+//                            for (int j=0; j < blockSizeDecim; j=j+2) // transfer noise reduced data back to our buffer
                             {
-                                adb.a_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
-                                adb.a_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
+                                adb.NR_dec_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
+                                adb.NR_dec_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
                                 outbuff_count++;
                                 //outbuff_count++;
                             }
@@ -3825,6 +3886,20 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         }
 
                     }
+                    // interpolation of a_buffer from 6ksps to 12ksps!
+                    // from NR_dec_buffer --> a_buffer
+                    // but only, if we have decimated to 6ksps, otherwise just copy the samples into a_buffer
+                    //
+                    if(ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701) && (dsp_active & DSP_NR_ENABLE))
+                    {
+                    	arm_fir_interpolate_f32(&INTERPOLATE_NR, adb.NR_dec_buffer, adb.a_buffer, no_dec_samples);
+                    	arm_scale_f32(adb.a_buffer, 2.0, adb.a_buffer, blockSizeDecim);
+                    }
+                    else
+                    {
+                    	arm_copy_f32(adb.NR_dec_buffer, adb.a_buffer, blockSizeDecim);
+                    }
+                    //
 
                 } // end of new nb
 
