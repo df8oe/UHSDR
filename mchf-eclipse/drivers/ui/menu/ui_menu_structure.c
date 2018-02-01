@@ -229,7 +229,10 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_DOWN, NULL, "Lower Meter Colour", UiMenuDesc("Set the colour of the scale of combined SWR/AUD/ALC-Meter") },
     { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY, NULL, "dBm display", UiMenuDesc("RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. This value is supposed to be quite accurate to +-3dB. Preferably use low spectrum display magnify settings. Accuracy is lower for very very weak and very very strong signals.")},
     { MENU_DISPLAY, MENU_ITEM, MENU_DBM_CALIBRATE, NULL, "dBm calibrate", UiMenuDesc("dBm display calibration. Just an offset (in dB) that is added to the internally calculated dBm or dBm/Hz value.")},
-    { MENU_DISPLAY, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
+#ifdef USE_8bit_FONT
+	{ MENU_DISPLAY, MENU_ITEM, MENU_FREQ_FONT, NULL, "Freq display font", UiMenuDesc("Font selection for frequency display. Allows selection of old/modern fonts")},
+#endif
+	{ MENU_DISPLAY, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
 const MenuDescriptor cwGroup[] =

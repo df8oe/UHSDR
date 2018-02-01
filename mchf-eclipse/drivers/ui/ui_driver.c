@@ -2485,7 +2485,7 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 	default:			// default:  normal sized (large) digits
 		digits_ptr  = df.dial_digits;
 #ifdef USE_8bit_FONT
-		digit_size = 5;
+		digit_size=ts.FreqDisplayFont==0?1:5;
 #else
 		digit_size = 1;
 #endif
