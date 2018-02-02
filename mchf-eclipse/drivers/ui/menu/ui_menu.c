@@ -798,7 +798,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             }
         }
 #ifdef OBSOLETE_NR
-        //
+#ifdef USE_OLD_LMS        //
         if(!(ts.dsp_active & DSP_NR_ENABLE))    // make red if DSP not active
         {
             clr = Orange;
@@ -812,6 +812,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             else if(ts.dsp_nr_strength >= DSP_STRENGTH_YELLOW)
                 clr = Yellow;
         }
+#endif
 #endif
         //
         snprintf(options,32, "  %u", ts.dsp_nr_strength);
@@ -3040,6 +3041,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags2,0,options,&clr, FLAGS2_HIGH_BAND_BIAS_REDUCE);
         break;
 #ifdef OBSOLETE_NR
+#ifdef USE_OLD_LMS
     case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:      // Adjustment of DSP noise reduction de-correlation delay buffer length
         ts.dsp_nr_delaybuf_len &= 0xfff0;   // mask bottom nybble to enforce 16-count boundary
         var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.dsp_nr_delaybuf_len,
@@ -3109,6 +3111,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
 
         break;
+#endif
     case CONFIG_DSP_NOTCH_CONVERGE_RATE:        // Adjustment of DSP noise reduction de-correlation delay buffer length
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_mu,
                                               0,

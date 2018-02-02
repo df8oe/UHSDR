@@ -31,6 +31,8 @@
  *
  */
 
+//#define OBSOLETE_NR
+
 /**
  * This parameter disables certain features / capabilites in order to achieve a minimum build size for
  * the 192k ram / 512k flash STM32F4 machines. Unless you have such a machine, leave this disabled.
