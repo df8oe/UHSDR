@@ -1802,8 +1802,8 @@ float32_t uf_freq = (offset + width/2) / (NR_sample_rate / ts.NR_FFT_L);
 
 //const float32_t tinc = 0.00533333; // frame time 5.3333ms
 //const float32_t tinc = 0.00533333; // frame time 5.3333ms
-//const float32_t tax=0.071;	// noise output smoothing time constant = -tinc/ln(0.8)
-//const float32_t tap=0.152;	// speech prob smoothing time constant = -tinc/ln(0.9) tinc = frame time (5.33ms)
+//const float32_t tax=0.071;	// noise output smoothing time constant - absolut value in seconds
+//const float32_t tap=0.152;	// speech prob smoothing time constant  - absolut value in seconds
 const float32_t psthr=0.99;	// threshold for smoothed speech probability [0.99]
 const float32_t pnsaf=0.01;	// noise probability safety value [0.01]
 //const float32_t asnr=15; 	// active SNR in dB
@@ -1822,6 +1822,29 @@ static float32_t xt[NR_FFT_SIZE];
 float32_t xtr;
 float32_t ph1y[NR_FFT_SIZE];
 
+//ax and ap adjustment according to FFT-size and decimation
+// for 12KS and 128'er FFT we are doing well with the above values
+// This table shows the tinc values in ms for the calculation of the coefficients ax and ap
+//
+// 	   FFT Size:  |	128		256
+//    		______|________________________
+// Samplerate:  12KS  | 5.333		10.666
+//		      |
+//		 6KS  |10.666		21.333
+
+
+if (ts.nr_fft_256_enable && ts.NR_decimation_enable)
+  {
+    NR2.ax = 0.7405;
+    NR2.ap = 0.8691;
+  }
+else
+  if (ts.nr_fft_256_enable || ts.NR_decimation_enable)
+    {
+      NR2.ax = 0.8605;
+      NR2.ap = 0.9322;
+    }
+
 
 Board_RedLed(LED_STATE_OFF);
 
@@ -1837,6 +1860,7 @@ Board_RedLed(LED_STATE_OFF);
               NR.Nest[bindx][0] = 0.0;
               NR.Nest[bindx][1] = 1.0;
               pslp[bindx] = 0.5;
+              NR2.long_tone_gain[bindx] = 1.0;
         }
 
 
@@ -2019,6 +2043,32 @@ Board_RedLed(LED_STATE_OFF);
 		      }
 		    NR.Nest[bindx][0] /= (float32_t)NR2.NN;
 		  }
+
+		// and now the edges - only going NN steps forward and taking the average
+		// lower edge
+		for(int bindx = VAD_low; bindx < VAD_low + NR2.NN/2; bindx++)
+		  {
+		    NR.Nest[bindx][0] = 0.0;
+		    for(int m = bindx; m < (bindx + NR2.NN);m++)
+		      {
+			NR.Nest[bindx][0] += NR.Hk[m];
+		      }
+		    NR.Nest[bindx][0] /= (float32_t)NR2.NN;
+		 }
+
+		// upper edge - only going NN steps backward and taking the average
+		for(int bindx = VAD_high - NR2.NN; bindx < VAD_high; bindx++)
+		  {
+		    NR.Nest[bindx][0] = 0.0;
+		    for(int m = bindx; m > (bindx - NR2.NN); m--)
+		      {
+			NR.Nest[bindx][0] += NR.Hk[m];
+		      }
+		    NR.Nest[bindx][0] /= (float32_t)NR2.NN;
+		 }
+
+		// end of edge treatment
+
 		for(int bindx = VAD_low + NR2.NN/2; bindx < VAD_high - NR2.NN/2; bindx++)
 		  {
 		    NR.Hk[bindx] = NR.Nest[bindx][0];

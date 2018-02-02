@@ -367,6 +367,7 @@ void TransceiverStateInit(void)
 	NR2.power_threshold_int = 60;
 	NR2.asnr = 30;
 
+
     // development setting for DF8OE
     if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
     {
