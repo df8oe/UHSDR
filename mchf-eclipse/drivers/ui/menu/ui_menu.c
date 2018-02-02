@@ -3881,7 +3881,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         //     case MENU_DEBUG_NEW_NB:
         //         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
         //         break;//
-#if defined(STM32F7) || defined(STM32H7)
+//#if defined(STM32F7) || defined(STM32H7)
      case MENU_DEBUG_NR_FFT_SIZE:
                  var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_fft_256_enable,0,options,&clr);
                  ts.NR_FFT_L = 128;
@@ -3895,7 +3895,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
      case MENU_DEBUG_NR_DEC_ENABLE:
                  var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.NR_decimation_enable,0,options,&clr);
         break;
-#endif
+//#endif
 //     case MENU_DEBUG_NR_ENABLE:
 //             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_enable,0,options,&clr);
 //         break;
