@@ -323,7 +323,7 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 }
 
 // debugging switches
-#define OLD_LONG_TONE_DETECTION
+//#define OLD_LONG_TONE_DETECTION
 //#define NR_NOTCHTEST
 //#define NR_FFT_256 // if you change this, also changts.NR_FFT_LFFT_L in audio_nr.h
 
@@ -335,7 +335,7 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 //#define NR_WINDOW_HANN
 //#define NR_WINDOW_SIN2
 //#define NR_WINDOW_SIN4
-#define NR_WINDOW_HANN_CONST
+//#define NR_WINDOW_HANN_CONST
 
 
 #if 0
@@ -1788,7 +1788,8 @@ void spectral_noise_reduction_3 (float* in_buffer)
 
 
 float32_t NR_sample_rate = 12000.0;
-if(ts.NR_decimation_enable)
+// we use further decimation to 6ksps, when filter bandwidth is < 2701Hz
+if(ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701))
 {
 	NR_sample_rate = 6000.0;
 }
@@ -1802,8 +1803,6 @@ float32_t offset = FilterPathInfo[ts.filter_path].offset;
 float32_t lf_freq = (offset - width/2) / (NR_sample_rate / ts.NR_FFT_L); // bin BW is 93.75Hz [12000Hz / 128 bins]
 float32_t uf_freq = (offset + width/2) / (NR_sample_rate / ts.NR_FFT_L);
 
-
-//const float32_t tinc = 0.00533333; // frame time 5.3333ms
 //const float32_t tinc = 0.00533333; // frame time 5.3333ms
 //const float32_t tax=0.071;	// noise output smoothing time constant - absolut value in seconds
 //const float32_t tap=0.152;	// speech prob smoothing time constant  - absolut value in seconds
