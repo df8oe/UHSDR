@@ -22,12 +22,13 @@
 
 #define NR_FFT_SIZE 128
 
-//#define NR_FFT_L (NR_FFT_SIZE) // for NR FFT size 128
-#if defined(STM32F7) || defined(STM32H7)
+// for the mcHF, we would uncomment all those four // !
+//#if defined(STM32F7) || defined(STM32H7)
 #define NR_FFT_L_2 (NR_FFT_SIZE * 2) // for NR FFT size 256
-#else
-#define NR_FFT_L_2 (NR_FFT_SIZE) // for NR FFT size 128
-#endif
+//#else
+//#define NR_FFT_L_2 (NR_FFT_SIZE) // for NR FFT size 128
+//#endif
+
 typedef struct NoiseReduction // declaration
 {
 	float32_t 					last_iFFT_result [NR_FFT_L_2 / 2];
