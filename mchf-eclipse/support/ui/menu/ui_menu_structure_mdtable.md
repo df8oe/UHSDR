@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-02-01T14:18:43  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-02-02T09:32:26  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-02-01T14:18:43  by "./ui_menu_structure_mdtable.py"
+generated at  2018-02-02T09:32:26  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -142,6 +142,7 @@ generated at  2018-02-01T14:18:43  by "./ui_menu_structure_mdtable.py"
 | **Lower Meter Colour**        (                     MENU_METER_COLOUR_DOWN) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
 | **dBm display**               (                           MENU_DBM_DISPLAY) | RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. This value is supposed to be quite accurate to +-3dB. Preferably use low spectrum display magnify settings. Accuracy is lower for very very weak and very very strong signals. | 
 | **dBm calibrate**             (                         MENU_DBM_CALIBRATE) | dBm display calibration. Just an offset (in dB) that is added to the internally calculated dBm or dBm/Hz value. | 
+| **Freq display font**         (                             MENU_FREQ_FONT) | Font selection for frequency display. Allows selection of old/modern fonts | 
 
 
 ## CW Mode Settings (`MENU_CW`)
