@@ -41,8 +41,8 @@ typedef struct NoiseReduction // declaration
 	float32_t 					SNR_post[NR_FFT_L_2 / 2];
 	float32_t 					SNR_post_pos; // saved 0.24kbytes
 	float32_t 					Hk_old[NR_FFT_L_2 / 2];
-	float32_t 					VAD;
-	float32_t					VAD_Esch; // holds the VAD sum for the Esh & Vary 2009 type of VAD
+//	float32_t 					VAD;
+//	float32_t					VAD_Esch; // holds the VAD sum for the Esh & Vary 2009 type of VAD
 	int16_t						gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
 	//											 3 = display bin gain multiplied with long_tone_gain
 //	float32_t					notch1_f;
@@ -59,16 +59,16 @@ typedef struct NoiseReduction2 // declaration
 {
 	float32_t 					X[NR_FFT_L_2 / 2][2]; // magnitudes of the current and the last FFT bins
 	//float32_t 					X[NR_FFT_L/2]; // magnitudes of the current and the last FFT bins
-	float32_t 					long_tone_gain[NR_FFT_L_2 / 2];
-	float32_t 					long_tone[NR_FFT_L_2 / 2][2];
-	int 						VAD_delay;
-	int 						VAD_duration; //takes the duration of the last vowel
-	uint32_t 					VAD_crash_detector; // this is counted upwards during speech detection, if noise is detected, it is reset to zero
+//	float32_t 					long_tone_gain[NR_FFT_L_2 / 2];
+//	float32_t 					long_tone[NR_FFT_L_2 / 2][2];
+//	int 						VAD_delay;
+//	int 						VAD_duration; //takes the duration of the last vowel
+//	uint32_t 					VAD_crash_detector; // this is counted upwards during speech detection, if noise is detected, it is reset to zero
 	// if it exceeds a certain limit, noise estimate is done irrespective of the VAD value
 	// this helps to get the noise estimate out of a very low position --> "VAD crash"
-	uint8_t						VAD_type; // 0 = Sohn et al. VAD, 1 = Esch & Vary 2009 VAD
+//	uint8_t						VAD_type; // 0 = Sohn et al. VAD, 1 = Esch & Vary 2009 VAD
 	bool 						notch_change; // indicates that notch filter has to be changed
-	uint32_t					long_tone_counter[NR_FFT_L_2 / 2]; // holds the notch index for every bin, the higher, the more notchworthy is a bin
+//	uint32_t					long_tone_counter[NR_FFT_L_2 / 2]; // holds the notch index for every bin, the higher, the more notchworthy is a bin
 	uint8_t						notch1_bin; // frequency bin where notch filter 1 has to work
 	uint8_t						max_bin; // holds the bin number of the strongest persistent tone during tone detection
 	float32_t					long_tone_max; // power value of the strongest persistent tone, used for max search
@@ -105,8 +105,8 @@ void alternateNR_handle();
 
 void do_alternate_NR();
 void alt_noise_blanking();
-void spectral_noise_reduction();
-void spectral_noise_reduction_2();
+//void spectral_noise_reduction();
+//void spectral_noise_reduction_2();
 void spectral_noise_reduction_3();
 
 void AudioNr_ActivateAutoNotch(uint8_t notch1_bin, bool notch1_active);

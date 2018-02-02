@@ -1047,20 +1047,20 @@ typedef struct TransceiverState
 	int16_t nr_alpha_int;
 	float32_t nr_beta; // beta smoothing constant for spectral noise reduction
 	int16_t nr_beta_int;
-	float32_t nr_vad_thresh; // threshold for voice activity detector in spectral noise reduction
-	uint32_t nr_vad_thresh_int;
+//	float32_t nr_vad_thresh; // threshold for voice activity detector in spectral noise reduction
+//	uint32_t nr_vad_thresh_int;
 	bool nr_enable; // enable spectral noise reduction
 	uint8_t nr_first_time; // set to 1 for initialization of the NR variables
-	bool nr_gain_smooth_enable; // enable gain smoothing
-	float32_t nr_gain_smooth_alpha; // smoothing constant for gain smoothing in the spectral noise reduction
-	int16_t nr_gain_smooth_alpha_int;
-	bool nr_long_tone_enable; // enable elimination of long tones in the spectral NR algorithm
-	float32_t nr_long_tone_alpha; // time constant for long tone detection
-	uint32_t nr_long_tone_alpha_int; // time constant for long tone detection
-	int16_t nr_long_tone_thresh; // threshold for long tone detection
-	bool nr_long_tone_reset; // used to reset gains of the long tone detection to 1.0
-	int16_t nr_vad_delay; // how many frames to delay the noise estimate after VAD has detected NOISE
-	int16_t nr_mode;
+//	bool nr_gain_smooth_enable; // enable gain smoothing
+//	float32_t nr_gain_smooth_alpha; // smoothing constant for gain smoothing in the spectral noise reduction
+//	int16_t nr_gain_smooth_alpha_int;
+//	bool nr_long_tone_enable; // enable elimination of long tones in the spectral NR algorithm
+//	float32_t nr_long_tone_alpha; // time constant for long tone detection
+//	uint32_t nr_long_tone_alpha_int; // time constant for long tone detection
+//	int16_t nr_long_tone_thresh; // threshold for long tone detection
+//	bool nr_long_tone_reset; // used to reset gains of the long tone detection to 1.0
+//	int16_t nr_vad_delay; // how many frames to delay the noise estimate after VAD has detected NOISE
+//	int16_t nr_mode;
 	bool nr_fft_256_enable; // debugging: enable FFT256 instead of FFT128 for spectral NR
 	uint16_t NR_FFT_L; // resulting FFT length: 128 or 256
 	uint8_t NR_FFT_LOOP_NO;

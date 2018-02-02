@@ -3681,7 +3681,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         case MENU_DEBUG_NR_GAIN_SHOW:      //
             var_change = UiDriverMenuItemChangeInt16(var, mode, &NR.gain_display,
                     0,
-                    3,
+                    1,
                     0,
                     1
             );
@@ -3693,17 +3693,17 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             case 1:
                 txt_ptr = "        Hk";
                 break;
-            case 2:
+            /*case 2:
                 txt_ptr = "     notch";
                 break;
             case 3:
                 txt_ptr = "HK & notch";
-                break;
+                break; */
             }
 
         break;
 
-        case MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA:      //
+        /*case MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA:      //
             var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_gain_smooth_alpha_int,
                     100,
                     990,
@@ -3760,7 +3760,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             }
             snprintf(options, 32, " %5u",(unsigned int)ts.nr_vad_thresh_int);
 
-        break;
+        break;*/
 
         case MENU_DEBUG_NR_BETA:      //
             var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_beta_int,
@@ -3777,7 +3777,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         break;
 
-        case MENU_DEBUG_NR_Mode:      //
+        /*case MENU_DEBUG_NR_Mode:      //
             var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_mode,
                     0,
                     2,
@@ -3818,7 +3818,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 					break;
 				}
 			}
-        break;
+        break; */
 
             case MENU_DEBUG_NR_ASNR:
              var_change = UiDriverMenuItemChangeInt16(var, mode, &NR2.asnr,
@@ -3860,7 +3860,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 snprintf(options,32, "  %3u", (unsigned int)NR2.power_threshold_int);
                 break;
 
-
+/*
         case MENU_DEBUG_NR_VAD_DELAY:      //
             var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_vad_delay,
                     0,
@@ -3875,7 +3875,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             snprintf(options, 32, " %2u",(unsigned int)ts.nr_vad_delay);
 
         break;
-
+*/
         case MENU_DEBUG_CLONEOUT:
         txt_ptr = " Do it!";
         clr = White;
@@ -3902,7 +3902,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         //         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.new_nb,0,options,&clr);
         //         break;//
 //#if defined(STM32F7) || defined(STM32H7)
-     case MENU_DEBUG_NR_FFT_SIZE:
+/*     case MENU_DEBUG_NR_FFT_SIZE:
                  var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_fft_256_enable,0,options,&clr);
                  ts.NR_FFT_L = 128;
                  ts.NR_FFT_LOOP_NO = 2;
@@ -3925,8 +3925,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
              {
             	 ts.nr_long_tone_reset = true;
              }
-         break;
-     case MENU_DEBUG_NR_VAD_TYPE:
+         break;*/
+
+/*     case MENU_DEBUG_NR_VAD_TYPE:
          var_change = UiDriverMenuItemChangeUInt8(var, mode, &NR2.VAD_type,
                  0,
                  2,
@@ -3948,7 +3949,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
      case MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE:
              var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_gain_smooth_enable,0,options,&clr);
-         break;
+         break;*/
 
 //     case MENU_DEBUG_RTTY_ATC:
 //         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.rtty_atc_enable,0,options,&clr);

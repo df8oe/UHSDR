@@ -1215,7 +1215,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     IIR_Squelch_HPF.pState = iir_squelch_rx_state;                  // point to state array for IIR filter
     arm_fill_f32(0.0,iir_squelch_rx_state,IIR_RXAUDIO_BLOCK_SIZE + IIR_RXAUDIO_NUM_STAGES);
 
-    ts.nr_long_tone_reset = true; // reset information about existing notches in filter passband
+//    ts.nr_long_tone_reset = true; // reset information about existing notches in filter passband
 
 #ifdef OBSOLETE_NR
     // Initialize LMS (DSP Noise reduction) filter
@@ -1316,7 +1316,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
 
 // NEW AUTONOTCH
     // set to passthrough
-    AudioNr_ActivateAutoNotch(0, 0);
+    //AudioNr_ActivateAutoNotch(0, 0);
 
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;

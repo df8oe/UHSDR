@@ -28,7 +28,7 @@ __IO int32_t NR_out_tail = 0;
 NR_Buffer* NR_in_buffers[NR_BUFFER_FIFO_SIZE];
 NR_Buffer* NR_out_buffers[NR_BUFFER_FIFO_SIZE];
 
-const float32_t SQRT_van_hann[128]= {0.000000000, 0.024734427, 0.04945372, 0.074142753, 0.098786418, 0.123369638, 0.14787737, 0.172294617,
+/*const float32_t SQRT_van_hann[128]= {0.000000000, 0.024734427, 0.04945372, 0.074142753, 0.098786418, 0.123369638, 0.14787737, 0.172294617,
 	      0.196606441, 0.220797963, 0.244854382, 0.268760979, 0.292503125, 0.316066292, 0.339436063, 0.362598137,
 	      0.385538344, 0.408242645, 0.430697148, 0.452888114, 0.474801964, 0.49642529, 0.51774486, 0.53874763,
 	      0.559420747, 0.579751564, 0.599727639, 0.619336749, 0.638566896, 0.657406313, 0.675843473, 0.693867094,
@@ -44,10 +44,11 @@ const float32_t SQRT_van_hann[128]= {0.000000000, 0.024734427, 0.04945372, 0.074
 	      0.53874763, 0.51774486, 0.49642529, 0.474801964, 0.452888114, 0.430697148, 0.408242645, 0.385538344,
 	      0.362598137, 0.339436063, 0.316066292, 0.292503125, 0.268760979, 0.244854382, 0.220797963, 0.196606441,
 	      0.172294617, 0.14787737, 0.123369638, 0.098786418, 0.074142753, 0.04945372, 0.024734427, 0.00000000};
-
+*/
 const float32_t SQRT_von_Hann_256[256] = {0,0.01231966,0.024637449,0.036951499,0.049259941,0.061560906,0.073852527,0.086132939,0.098400278,0.110652682,0.122888291,0.135105247,0.147301698,0.159475791,0.171625679,0.183749518,0.195845467,0.207911691,0.219946358,0.231947641,0.24391372,0.255842778,0.267733003,0.279582593,0.291389747,0.303152674,0.314869589,0.326538713,0.338158275,0.349726511,0.361241666,0.372701992,0.384105749,0.395451207,0.406736643,0.417960345,0.429120609,0.440215741,0.451244057,0.462203884,0.473093557,0.483911424,0.494655843,0.505325184,0.515917826,0.526432163,0.536866598,0.547219547,0.557489439,0.567674716,0.577773831,0.587785252,0.597707459,0.607538946,0.617278221,0.626923806,0.636474236,0.645928062,0.65528385,0.664540179,0.673695644,0.682748855,0.691698439,0.700543038,0.709281308,0.717911923,0.726433574,0.734844967,0.743144825,0.75133189,0.759404917,0.767362681,0.775203976,0.78292761,0.790532412,0.798017227,0.805380919,0.812622371,0.819740483,0.826734175,0.833602385,0.840344072,0.846958211,0.853443799,0.859799851,0.866025404,0.872119511,0.878081248,0.88390971,0.889604013,0.895163291,0.900586702,0.905873422,0.911022649,0.916033601,0.920905518,0.92563766,0.930229309,0.934679767,0.938988361,0.943154434,0.947177357,0.951056516,0.954791325,0.958381215,0.961825643,0.965124085,0.968276041,0.971281032,0.974138602,0.976848318,0.979409768,0.981822563,0.984086337,0.986200747,0.988165472,0.989980213,0.991644696,0.993158666,0.994521895,0.995734176,0.996795325,0.99770518,0.998463604,0.999070481,0.99952572,0.99982925,0.999981027,0.999981027,0.99982925,0.99952572,0.999070481,0.998463604,0.99770518,0.996795325,0.995734176,0.994521895,0.993158666,0.991644696,0.989980213,0.988165472,0.986200747,0.984086337,0.981822563,0.979409768,0.976848318,0.974138602,0.971281032,0.968276041,0.965124085,0.961825643,0.958381215,0.954791325,0.951056516,0.947177357,0.943154434,0.938988361,0.934679767,0.930229309,0.92563766,0.920905518,0.916033601,0.911022649,0.905873422,0.900586702,0.895163291,0.889604013,0.88390971,0.878081248,0.872119511,0.866025404,0.859799851,0.853443799,0.846958211,0.840344072,0.833602385,0.826734175,0.819740483,0.812622371,0.805380919,0.798017227,0.790532412,0.78292761,0.775203976,0.767362681,0.759404917,0.75133189,0.743144825,0.734844967,0.726433574,0.717911923,0.709281308,0.700543038,0.691698439,0.682748855,0.673695644,0.664540179,0.65528385,0.645928062,0.636474236,0.626923806,0.617278221,0.607538946,0.597707459,0.587785252,0.577773831,0.567674716,0.557489439,0.547219547,0.536866598,0.526432163,0.515917826,0.505325184,0.494655843,0.483911424,0.473093557,0.462203884,0.451244057,0.440215741,0.429120609,0.417960345,0.406736643,0.395451207,0.384105749,0.372701992,0.361241666,0.349726511,0.338158275,0.326538713,0.314869589,0.303152674,0.291389747,0.279582593,0.267733003,0.255842778,0.24391372,0.231947641,0.219946358,0.207911691,0.195845467,0.183749518,0.171625679,0.159475791,0.147301698,0.135105247,0.122888291,0.110652682,0.098400278,0.086132939,0.073852527,0.061560906,0.049259941,0.036951499,0.024637449,0.01231966,0};
 
 
+#if 0
 // biquad IIR filter with a maximum of four notch filters
 // pre-filled with passthrough coefficients
 static arm_biquad_casd_df1_inst_f32 NR_notch_biquad =
@@ -114,7 +115,7 @@ void AudioNr_ActivateAutoNotch(uint8_t notch1_bin, bool notch1_active)
 	// second biquad
 //	AudioNR_SetBiquadCoeffs(&NR_notch_biquad.pCoeffs[5], NR_notch_coeffs, NR_notch_coeffs[0],1.0); // second biquad
 }
-
+#endif
 
 int NR_in_buffer_peek(NR_Buffer** c_ptr)
 {
@@ -298,18 +299,20 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 
     if((ts.dsp_active & DSP_NR_ENABLE) || (ts.dsp_active & DSP_NOTCH_ENABLE))
     {
-	profileTimedEventStart(ProfileTP8);
+		profileTimedEventStart(ProfileTP8);
 
-	// spectral_noise_reduction_2(inputsamples);
-	if (ts.nr_mode == 0)
-	  spectral_noise_reduction(inputsamples);
-	else
-	  if (ts.nr_mode == 1)
-	    spectral_noise_reduction_2(inputsamples);
-	  else
-	    spectral_noise_reduction_3(inputsamples);
+		/*	// spectral_noise_reduction_2(inputsamples);
+		if (ts.nr_mode == 0)
+		  spectral_noise_reduction(inputsamples);
+		else
+		  if (ts.nr_mode == 1)
+			spectral_noise_reduction_2(inputsamples);
+		  else
+			  */
 
-	profileTimedEventStop(ProfileTP8);
+		spectral_noise_reduction_3(inputsamples);
+
+		profileTimedEventStop(ProfileTP8);
     }
 
     for (int k=0; k < NR_FFT_SIZE;  k++)
@@ -335,7 +338,7 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
 #define NR_WINDOW_HANN_CONST
 
 
-#if 1
+#if 0
 void spectral_noise_reduction (float* in_buffer)
 {
 
@@ -1765,7 +1768,7 @@ float32_t uf_freq = (offset + width/2) / (NR_sample_rate / ts.NR_FFT_L);
     // IIR biquad notch filter with four independent notches
    // arm_biquad_cascade_df1_f32 (&NR_notch_biquad, in_buffer, in_buffer, ts.NR_FFT_L);
 }
-
+#endif
 
 void spectral_noise_reduction_3 (float* in_buffer)
 {
@@ -1809,8 +1812,14 @@ const float32_t pnsaf=0.01;	// noise probability safety value [0.01]
 //const float32_t asnr=15; 	// active SNR in dB
 const float32_t psini=0.5;	// initial speech probability [0.5]
 const float32_t pspri=0.5;	// prior speech probability [0.5]
-NR2.ax = 0.9276; 		//expf(-tinc / tax);
-NR2.ap = 0.9655; 		//expf(-tinc / tap);
+
+// for 12ksps and FFT128
+//NR2.ax = 0.9276; 		//expf(-tinc / tax);
+//NR2.ap = 0.9655; 		//expf(-tinc / tap);
+
+// for 6ksps and FFT256
+NR2.ax = 0.7405;
+NR2.ap = 0.8691;
 //NR2.xih1 = 31.62; 		//powf(10, (float32_t)NR2.asnr / 10.0);
 NR2.xih1 = powf(10, (float32_t)NR2.asnr / 10.0);
 NR2.xih1r = 1.0 / (1.0 + NR2.xih1) - 1.0;
@@ -1833,7 +1842,7 @@ float32_t ph1y[NR_FFT_SIZE];
 //		 6KS  |10.666		21.333
 
 
-if (ts.nr_fft_256_enable && ts.NR_decimation_enable)
+/*if (ts.nr_fft_256_enable && ts.NR_decimation_enable)
   {
     NR2.ax = 0.7405;
     NR2.ap = 0.8691;
@@ -1843,7 +1852,7 @@ else
     {
       NR2.ax = 0.8605;
       NR2.ap = 0.9322;
-    }
+    } */
 
 
 Board_RedLed(LED_STATE_OFF);
@@ -1851,20 +1860,17 @@ Board_RedLed(LED_STATE_OFF);
     if(ts.nr_first_time == 1)
     { // TODO: properly initialize all the variables
 
-	for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
-        {
-              NR.last_sample_buffer_L[bindx] = 0.0;
-              NR.Hk[bindx] = 1.0;
-			//xu[bindx] = 1.0;  //has to be replaced by other variable
-              NR.Hk_old[bindx] = 1.0; // old gain or xu in development mode
-              NR.Nest[bindx][0] = 0.0;
-              NR.Nest[bindx][1] = 1.0;
-              pslp[bindx] = 0.5;
-              NR2.long_tone_gain[bindx] = 1.0;
-        }
-
-
-
+		for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
+			{
+				  NR.last_sample_buffer_L[bindx] = 0.0;
+				  NR.Hk[bindx] = 1.0;
+				//xu[bindx] = 1.0;  //has to be replaced by other variable
+				  NR.Hk_old[bindx] = 1.0; // old gain or xu in development mode
+				  NR.Nest[bindx][0] = 0.0;
+				  NR.Nest[bindx][1] = 1.0;
+				  pslp[bindx] = 0.5;
+				  //              NR2.long_tone_gain[bindx] = 1.0;
+			}
         ts.nr_first_time = 2; // we need to do some more a bit later down
     }
 
@@ -1892,7 +1898,7 @@ Board_RedLed(LED_STATE_OFF);
     /////////////////////////////////7
     // WINDOWING
 
-          if(ts.nr_fft_256_enable)
+//          if(ts.nr_fft_256_enable)
           {
         	  for (int idx = 0; idx < ts.NR_FFT_L; idx++)
               {
@@ -1900,31 +1906,28 @@ Board_RedLed(LED_STATE_OFF);
               }
               arm_cfft_f32(&arm_cfft_sR_f32_len256, NR.FFT_buffer, 0, 1);
           }
-          else
+          /*else
           {
               for (int idx = 0; idx < ts.NR_FFT_L; idx++)
               {
             	  NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
               }
               arm_cfft_f32(&arm_cfft_sR_f32_len128, NR.FFT_buffer, 0, 1);
-          }
+          }*/
 
     // NR_FFT
     // calculation is performed in-place the FFT_buffer [re, im, re, im, re, im . . .]
 
 
 
-              for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
-                    {
-                        // this is magnitude for the current frame
-                  if (ts.nr_mode==0)
-                    NR2.X[bindx][0] = sqrtf(NR.FFT_buffer[bindx * 2] * NR.FFT_buffer[bindx * 2] + NR.FFT_buffer[bindx * 2 + 1] * NR.FFT_buffer[bindx * 2 + 1]);
-                  else   //here we need only the squared magnitude
-                    NR2.X[bindx][0] = (NR.FFT_buffer[bindx * 2] * NR.FFT_buffer[bindx * 2] + NR.FFT_buffer[bindx * 2 + 1] * NR.FFT_buffer[bindx * 2 + 1]);
-                    }
+	  for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
+		{
+		  //here we need squared magnitude
+			NR2.X[bindx][0] = (NR.FFT_buffer[bindx * 2] * NR.FFT_buffer[bindx * 2] + NR.FFT_buffer[bindx * 2 + 1] * NR.FFT_buffer[bindx * 2 + 1]);
+		}
 
       if(ts.nr_first_time == 2)
-      { // TODO: properly initialize all the variables
+      {
  		  for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
 		  {
 			  NR.Nest[bindx][0] = NR.Nest[bindx][0] + 0.05* NR2.X[bindx][0];// we do it 20 times to average over 20 frames for app. 100ms only on NR_on/bandswitch/modeswitch,...
@@ -1949,25 +1952,26 @@ Board_RedLed(LED_STATE_OFF);
 		      //ph1y[bindx] = fmin(ph1y[bindx], 1.0 - pnsaf * (pslp[bindx] > psthr)); //?????
 
 		      if (pslp[bindx] > psthr)
-			ph1y[bindx] = 1.0 - pnsaf;
+		      {
+		    	  ph1y[bindx] = 1.0 - pnsaf;
+		      }
 		      else
-			ph1y[bindx] = fmin(ph1y[bindx] , 1.0);
-
+		      {
+		    	  ph1y[bindx] = fmin(ph1y[bindx] , 1.0);
+		      }
 		      xtr = (1.0 - ph1y[bindx]) * NR2.X[bindx][0] + ph1y[bindx] * xt[bindx];
 		      xt[bindx] = NR2.ax * xt[bindx] + (1.0 - NR2.ax) * xtr;
         }
 
 
 	  	  for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)// 1. Step of NR - calculate the SNR's
-	             {
-	               NR.SNR_post[bindx] = fmax(fmin(NR2.X[bindx][0] / xt[bindx],1000.0), NR2.snr_prio_min); // limited to +30 /-15 dB, might be still too much of reduction, let's try it?
+			 {
+			   NR.SNR_post[bindx] = fmax(fmin(NR2.X[bindx][0] / xt[bindx],1000.0), NR2.snr_prio_min); // limited to +30 /-15 dB, might be still too much of reduction, let's try it?
 
-	               NR.SNR_prio[bindx] = fmax(ts.nr_alpha * NR.Hk_old[bindx] + (1.0 - ts.nr_alpha) * fmax(NR.SNR_post[bindx] - 1.0, 0.0), 0.0);
-	             }
+			   NR.SNR_prio[bindx] = fmax(ts.nr_alpha * NR.Hk_old[bindx] + (1.0 - ts.nr_alpha) * fmax(NR.SNR_post[bindx] - 1.0, 0.0), 0.0);
+			 }
 
-
-
-                  VAD_low = (int)lf_freq;
+	  	  	  	  VAD_low = (int)lf_freq;
 
                   VAD_high = (int)uf_freq;
 
@@ -1980,20 +1984,19 @@ Board_RedLed(LED_STATE_OFF);
                 	  VAD_low = 1;
                   }
                   else
-                	  if(VAD_low > ts.NR_FFT_L / 2 - 2)
-                	  {
-                		  VAD_low = ts.NR_FFT_L / 2 - 2;
-                	  }
+				  if(VAD_low > ts.NR_FFT_L / 2 - 2)
+				  {
+					  VAD_low = ts.NR_FFT_L / 2 - 2;
+				  }
                   if(VAD_high < 1)
                   {
                 	  VAD_high = 1;
                   }
                   else
-                	  if(VAD_high > ts.NR_FFT_L / 2)
-                	  {
-                		  VAD_high = ts.NR_FFT_L / 2;
-                	  }
-
+				  if(VAD_high > ts.NR_FFT_L / 2)
+				  {
+					  VAD_high = ts.NR_FFT_L / 2;
+				  }
 
 
   	  // 4    calculate v = SNRprio(n, bin[i]) / (SNRprio(n, bin[i]) + 1) * SNRpost(n, bin[i]) (eq. 12 of Schmitt et al. 2002, eq. 9 of Romanin et al. 2009)
@@ -2008,20 +2011,19 @@ Board_RedLed(LED_STATE_OFF);
 			  NR.Hk_old[bindx] = NR.SNR_post[bindx] * NR.Hk[bindx] * NR.Hk[bindx]; //
 
 
-			  if(!(ts.dsp_active & DSP_NR_ENABLE)) // if NR is not enabled (but notch is enabled !)
+			  /*if(!(ts.dsp_active & DSP_NR_ENABLE)) // if NR is not enabled (but notch is enabled !)
 			  {
 				  NR.Hk[bindx] = 1.0;
-			  }
+			  } */
 		}
-// musical noise "artefact" reduction by dynamic averaging - depending on SNR ratio
+		// musical noise "artefact" reduction by dynamic averaging - depending on SNR ratio
 		NR2.pre_power = 0.0;
 		NR2.post_power = 0.0;
 		for(int bindx = VAD_low; bindx < VAD_high; bindx++)
-		  {
+		{
 		    NR2.pre_power += NR2.X[bindx][0];
 		    NR2.post_power += NR.Hk[bindx] * NR.Hk[bindx]  * NR2.X[bindx][0];
-		  }
-
+		}
 
 		NR2.power_ratio = NR2.post_power / NR2.pre_power;
 		if (NR2.power_ratio > NR2.power_threshold)
@@ -2073,12 +2075,8 @@ Board_RedLed(LED_STATE_OFF);
 		  {
 		    NR.Hk[bindx] = NR.Nest[bindx][0];
 		  }
-
 // end of musical noise reduction
-
-
 	}	//end of "if ts.nr_first_time == 3"
-
 
 
         // FINAL SPECTRAL WEIGHTING: Multiply current FFT results with NR_FFT_buffer for 64 bins with the 64 bin-specific gain factors
@@ -2087,21 +2085,22 @@ Board_RedLed(LED_STATE_OFF);
               //              for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++) // plopping !!!!
                 for(int bindx = VAD_low; bindx < VAD_high; bindx++) // no plopping
               {
-                  NR.FFT_buffer[bindx * 2] = NR.FFT_buffer [bindx * 2] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // real part
-                  NR.FFT_buffer[bindx * 2 + 1] = NR.FFT_buffer [bindx * 2 + 1] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // imag part
-                  NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 2] = NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 2] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // real part conjugate symmetric
-                  NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 1] = NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 1] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // imag part conjugate symmetric
+                  NR.FFT_buffer[bindx * 2] = 						NR.FFT_buffer [bindx * 2] * NR.Hk[bindx]; // real part
+                  NR.FFT_buffer[bindx * 2 + 1] = 					NR.FFT_buffer [bindx * 2 + 1] * NR.Hk[bindx]; // imag part
+                  NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 2] = 	NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 2] * NR.Hk[bindx]; // real part conjugate symmetric
+                  NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 1] = 	NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 1] * NR.Hk[bindx]; // imag part conjugate symmetric
+//                  NR.FFT_buffer[bindx * 2] = NR.FFT_buffer [bindx * 2] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // real part
+//                  NR.FFT_buffer[bindx * 2 + 1] = NR.FFT_buffer [bindx * 2 + 1] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // imag part
+//                  NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 2] = NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 2] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // real part conjugate symmetric
+//                  NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 1] = NR.FFT_buffer[ts.NR_FFT_L * 2 - bindx * 2 - 1] * NR.Hk[bindx] * NR2.long_tone_gain[bindx]; // imag part conjugate symmetric
               }
 
-
-                /*****************************************************************
+         /*****************************************************************
          * NOISE REDUCTION CODE ENDS HERE
          *****************************************************************/
-    // NR_iFFT
-    // perform iFFT (in-place)
-
-// Window on exit!
-      if(ts.nr_fft_256_enable)
+// NR_iFFT
+// & Window on exit!
+//      if(ts.nr_fft_256_enable)
       {
           arm_cfft_f32(&arm_cfft_sR_f32_len256, NR.FFT_buffer, 1, 1);
     	  for (int idx = 0; idx < ts.NR_FFT_L; idx++)
@@ -2109,22 +2108,20 @@ Board_RedLed(LED_STATE_OFF);
     	  	  NR.FFT_buffer[idx * 2] *= SQRT_von_Hann_256[idx];
           }
       }
-      else
+      /*else
       {
           arm_cfft_f32(&arm_cfft_sR_f32_len128, NR.FFT_buffer, 1, 1);
           for (int idx = 0; idx < ts.NR_FFT_L; idx++)
           {
         	  NR.FFT_buffer[idx * 2] *= SQRT_van_hann[idx];
           }
-      }
+      }*/
 
     // do the overlap & add
           for(int i = 0; i < ts.NR_FFT_L / 2; i++)
           { // take real part of first half of current iFFT result and add to 2nd half of last iFFT_result
         	  //              NR_output_audio_buffer[i + k * (ts.NR_FFT_L / 2)] = NR_FFT_buffer[i * 2] + NR_last_iFFT_result[i];
         	  in_buffer[i + k * (ts.NR_FFT_L / 2)] = NR.FFT_buffer[i * 2] + NR.last_iFFT_result[i];
-// FIXME: take out scaling !
-//        	  in_buffer[i + k * (ts.NR_FFT_L / 2)] *= 0.3;
           }
           for(int i = 0; i < ts.NR_FFT_L / 2; i++)
           {
@@ -2136,10 +2133,6 @@ Board_RedLed(LED_STATE_OFF);
     // IIR biquad notch filter with four independent notches
   //  arm_biquad_cascade_df1_f32 (&NR_notch_biquad, in_buffer, in_buffer, ts.NR_FFT_L);
 }
-
-
-#endif
-
 
 //alt noise blanking is trying to localize some impulse noise within the samples and after that
 //trying to replace corrupted samples by linear predicted samples.

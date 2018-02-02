@@ -1420,7 +1420,7 @@ static void UiSpectrum_RedrawSpectrum()
         		sd.FFT_MagData[(ts.NR_FFT_L / 2 - 1) - bindx] = NR.Hk[bindx] * 150.0;
         	}
         	}
-        	else
+        	/*        	else
         	if(NR.gain_display == 2)
         	{
             	for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
@@ -1435,7 +1435,7 @@ static void UiSpectrum_RedrawSpectrum()
             	{
             		sd.FFT_MagData[(ts.NR_FFT_L / 2 - 1) - bindx] = NR.Hk[bindx] * NR2.long_tone_gain[bindx] * 150.0;
             	}
-        	}
+        	} */
         	// set all other pixels to a low value
         	for(int bindx = ts.NR_FFT_L / 2; bindx < sd.spec_len; bindx++)
         	{
