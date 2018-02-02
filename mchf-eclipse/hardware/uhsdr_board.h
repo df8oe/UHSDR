@@ -1068,6 +1068,7 @@ typedef struct TransceiverState
 	uint8_t debug_si5351a_pllreset;
 	uint16_t graticulePowerupYpos;	//initial (after powerup) position of graticule (frequency bar)
 	const LcdLayout* Layout;				//current lcd layout (set by lcd detection routine)
+	uint8_t FreqDisplayFont;		//0= old thin font, 1=new bold 8 bit (if available)
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

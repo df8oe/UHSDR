@@ -2267,7 +2267,27 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             break;
         }
         break;
+#ifdef USE_8bit_FONT
+    case MENU_FREQ_FONT:
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.FreqDisplayFont,
+                                              0,
+                                              1,
+                                              0,
+                                              1
+                                             );
+        switch(ts.FreqDisplayFont)
+        {
+        case 0:
+            txt_ptr = "     old";       //old font
+            break;
+        case 1:
+            txt_ptr = "  modern";       //old font
+            break;
+        }
 
+        UiDriver_FrequencyUpdateLOandDisplay(true);
+        break;
+#endif
     case MENU_METER_COLOUR_UP:              // upper meter colour
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.meter_colour_up,
                                               0,

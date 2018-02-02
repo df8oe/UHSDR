@@ -188,6 +188,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_Int16, EEPROM_RTC_CALIB,&ts.rtc_calib,RTC_CALIB_PPM_DEFAULT, RTC_CALIB_PPM_MIN, RTC_CALIB_PPM_MAX},
     { ConfigEntry_UInt8, EEPROM_CW_DECODER_ENABLE,&ts.cw_decoder_enable,1,0,1},
 	{ ConfigEntry_UInt16, EEPROM_Scope_Graticule_Ypos,&ts.graticulePowerupYpos,0,0,480},
+	{ ConfigEntry_UInt8, EEPROM_Freq_Display_Font,&ts.FreqDisplayFont,0,0,1},
 
 
     UI_C_EEPROM_BAND_5W_PF( 0,80,m)
