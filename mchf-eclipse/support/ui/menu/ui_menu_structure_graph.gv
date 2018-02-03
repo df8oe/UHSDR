@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-02-03T08:29:25  by "./ui_menu_structure_graph.py"
+#  generated at  2018-02-03T12:04:55  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-02-03T08:29:25  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-02-03T12:04:55  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -494,6 +494,21 @@
         
         "CONFIG_DSP_NR_POST_AGC_SELECT" [
              label = "CONFIG_DSP_NR_POST_AGC_SELECT | DSP NR Post-AGC"
+             shape = record
+             ];
+        
+        "CONFIG_DSP_NOTCH_CONVERGE_RATE" [
+             label = "CONFIG_DSP_NOTCH_CONVERGE_RATE | DSP Notch ConvRate"
+             shape = record
+             ];
+        
+        "CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH" [
+             label = "CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH | DSP Notch BufLen"
+             shape = record
+             ];
+        
+        "CONFIG_DSP_NOTCH_FFT_NUMTAPS" [
+             label = "CONFIG_DSP_NOTCH_FFT_NUMTAPS | DSP Notch FIRNumTap"
              shape = record
              ];
         
@@ -1428,6 +1443,12 @@
             MENU_CONF -> CONFIG_DSP_NR_FFT_NUMTAPS
             
             MENU_CONF -> CONFIG_DSP_NR_POST_AGC_SELECT
+            
+            MENU_CONF -> CONFIG_DSP_NOTCH_CONVERGE_RATE
+            
+            MENU_CONF -> CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH
+            
+            MENU_CONF -> CONFIG_DSP_NOTCH_FFT_NUMTAPS
             
             MENU_CONF -> CONFIG_DSP_NOTCH_CONVERGE_RATE
             
