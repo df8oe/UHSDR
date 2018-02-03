@@ -877,7 +877,9 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     }
 
     uint16_t marker_lines_togo = sd.marker_num;
-    for(uint16_t x = slayout.scope.x, idx = 0; idx < slayout.scope.w; x++, idx++)
+
+    // we stop if there is a ptt_request and go straight out of the display update
+    for(uint16_t x = slayout.scope.x, idx = 0; ts.ptt_req == false && idx < slayout.scope.w; x++, idx++)
     {
         if((x>=left_filter_border_pos)&&(x<=right_filter_border_pos)) //BW highlight control
         {
@@ -1181,7 +1183,9 @@ static void UiSpectrum_DrawWaterfall()
 
         //uint16_t lcnt = 0;
         //for(uint16_t lcnt = 0;lcnt < sd.wfall_size; lcnt++)                 // set up counter for number of lines defining height of waterfall
-        for(uint16_t lcnt = 0;lcnt < slayout.wfall.h;)                 // set up counter for number of lines defining height of waterfall
+
+        // we update the display unless there is a ptt request, in this case we skip to the end.
+        for(uint16_t lcnt = 0; ts.ptt_req == false && lcnt < slayout.wfall.h;)                 // set up counter for number of lines defining height of waterfall
         {
             uint8_t  * const waterfallline_ptr = &sd.waterfall[lptr*slayout.wfall.w];
 
@@ -1209,7 +1213,8 @@ static void UiSpectrum_DrawWaterfall()
                 pixel_start = -offset_pixel;
                 right_padding_count = -offset_pixel;
                 pixel_count = slayout.wfall.w + offset_pixel;
-            } else
+            }
+            else
             {
                 // we to start with offset_pixel black padding  and then draw the pixels until we reach spectrum width
                 left_padding_count = offset_pixel;
@@ -1220,6 +1225,7 @@ static void UiSpectrum_DrawWaterfall()
 
 
             uint16_t* pixel_buf_ptr = &spectrum_pixel_buf[0];
+
             // fill from the left border with black pixels
             for(uint16_t i = 0; i < left_padding_count; i++)
             {
