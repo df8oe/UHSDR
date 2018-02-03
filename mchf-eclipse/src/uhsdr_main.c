@@ -212,6 +212,11 @@ void TransceiverStateInit(void)
     ts.dsp_notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;		// default for number of FFT taps for notch filter
     ts.dsp_notch_delaybuf_len =	DSP_NOTCH_DELAYBUF_DEFAULT;
 #endif
+#ifdef USE_LMS_AUTONOTCH
+    ts.dsp_notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;		// default for number of FFT taps for notch filter
+    ts.dsp_notch_delaybuf_len =	DSP_NOTCH_DELAYBUF_DEFAULT;
+    ts.dsp_notch_mu = DSP_NOTCH_MU_DEFAULT;
+#endif
     ts.dsp_inhibit		= 1;					// TRUE if DSP is to be inhibited - power up with DSP disabled
 
     ts.lcd_backlight_brightness = 0;			// = 0 full brightness
