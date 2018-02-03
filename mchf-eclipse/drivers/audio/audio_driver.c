@@ -590,7 +590,8 @@ LMSData            __MCHF_SPECIALMEM lmsData;
 #endif
 
 #ifdef USE_LMS_AUTONOTCH
-LMSData            __MCHF_SPECIALMEM lmsData;
+//LMSData            __MCHF_SPECIALMEM lmsData;
+LMSData            lmsData;
 #endif
 
 #ifdef USE_LEAKY_LMS
