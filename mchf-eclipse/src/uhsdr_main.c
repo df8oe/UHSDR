@@ -206,8 +206,10 @@ void TransceiverStateInit(void)
     ts.dsp_active_toggle	= 0xff;					// used to hold the button G2 "toggle" setting.
     ts.dsp_nr_strength	= 50;					// "Strength" of DSP noise reduction (50 = medium)
 #ifdef OBSOLETE_NR
+#ifdef USE_OLD_LMS
     ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
     ts.dsp_nr_numtaps 	= DSP_NR_NUMTAPS_DEFAULT;		// default for number of FFT taps for noise reduction
+#endif
     ts.dsp_notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;		// default for number of FFT taps for notch filter
     ts.dsp_notch_delaybuf_len =	DSP_NOTCH_DELAYBUF_DEFAULT;
 #endif
@@ -343,28 +345,28 @@ void TransceiverStateInit(void)
 	ts.new_nb = false;	// new nb OFF at poweron
 	ts.nr_alpha = 0.94; // spectral noise reduction
 	ts.nr_alpha_int = 940;
-	ts.nr_beta = 0.85;
-	ts.nr_beta_int = 850;
-	ts.nr_vad_thresh = 4.0;
-	ts.nr_vad_thresh_int = 4000;
+	ts.nr_beta = 0.96;
+	ts.nr_beta_int = 960;
+//	ts.nr_vad_thresh = 4.0;
+//	ts.nr_vad_thresh_int = 4000;
 	ts.nr_enable = false;
 	ts.NR_FFT_L = 256;
 	ts.NR_FFT_LOOP_NO = 1;
-	ts.nr_gain_smooth_enable = false;
-	ts.nr_gain_smooth_alpha = 0.25;
-	ts.nr_gain_smooth_alpha_int = 250;
-	ts.nr_long_tone_enable = false;
-	ts.nr_long_tone_alpha_int = 99900;
-	ts.nr_long_tone_alpha = 0.999;
-	ts.nr_long_tone_thresh = 10000;
-	ts.nr_long_tone_reset = true;
+//	ts.nr_gain_smooth_enable = false;
+//	ts.nr_gain_smooth_alpha = 0.25;
+//	ts.nr_gain_smooth_alpha_int = 250;
+//	ts.nr_long_tone_enable = false;
+//	ts.nr_long_tone_alpha_int = 99900;
+//	ts.nr_long_tone_alpha = 0.999;
+//	ts.nr_long_tone_thresh = 10000;
+//	ts.nr_long_tone_reset = true;
 	ts.nr_first_time = 1;
-	ts.nr_vad_delay = 7;
+//	ts.nr_vad_delay = 7;
 	ts.NR_decimation_enable = true;
 	ts.nr_fft_256_enable = true;
-	NR2.width = 2;
-	NR2.power_threshold = 0.60;
-	NR2.power_threshold_int = 60;
+	NR2.width = 4;
+	NR2.power_threshold = 0.40;
+	NR2.power_threshold_int = 40;
 	NR2.asnr = 30;
 
 

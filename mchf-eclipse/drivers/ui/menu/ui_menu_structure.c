@@ -182,13 +182,16 @@ const MenuDescriptor confGroup[] =
     //{ MENU_CONF, MENU_ITEM, CONFIG_FM_TX_GAIN_BAL,"255","FM  TX IQ Bal.", UiMenuDesc(":soon:") },
 #ifdef OBSOLETE_NR
     // DSP Configuration, probably never touched
-    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH, NULL, "DSP NR BufLen", UiMenuDesc("DSP LMS noise reduction: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources.") },
+#ifdef USE_OLD_LMS
+	{ MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH, NULL, "DSP NR BufLen", UiMenuDesc("DSP LMS noise reduction: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources.") },
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_FFT_NUMTAPS, NULL, "DSP NR FIR NumTaps", UiMenuDesc("DSP LMS noise reduction: Number of taps in the DSP noise reduction FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF.") },
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_POST_AGC_SELECT, NULL, "DSP NR Post-AGC", UiMenuDesc("DSP LMS noise reduction: Perform the DSP LMS noise reduction BEFORE or AFTER the AGC. NO = before AGC, YES = after AGC.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_CONVERGE_RATE, NULL, "DSP Notch ConvRate", UiMenuDesc("DSP LMS automatic notch filter: ") },
+#endif
+	{ MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_CONVERGE_RATE, NULL, "DSP Notch ConvRate", UiMenuDesc("DSP LMS automatic notch filter: ") },
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH, NULL, "DSP Notch BufLen", UiMenuDesc("DSP LMS automatic notch filter: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better -and the slower- the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources.") },
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_FFT_NUMTAPS, NULL, "DSP Notch FIRNumTap", UiMenuDesc("DSP LMS automatic notch filter: Number of taps in the DSP automatic notch FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF.") },
 //    { MENU_CONF, MENU_ITEM, CONFIG_AGC_TIME_CONSTANT, NULL, "NB AGC T/C (<=Slow)", UiMenuDesc("Noise Blanker AGC time constant adjustment: Lower values are equivalent with slower Noise blanker AGC. While the menu is displayed, the noise blanker is switched OFF, so in order to test the effect of adjusting this parameter, leave the menu.") },
+
 #endif
 //    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_TAUR, NULL, "SAM PLL tauR", UiMenuDesc(":soon:") },
 //    { MENU_CONF, MENU_ITEM, CONFIG_SAM_PLL_TAUI, NULL, "SAM PLL tauI", UiMenuDesc(":soon:") },
@@ -399,21 +402,21 @@ const MenuDescriptor debugGroup[] =
 //    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_LONG_TONE_ENABLE, NULL,"Long tone", UiMenuDesc("enable long tone detection in spectral noise reduction for testing purposes") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SHOW, NULL,"Show gains", UiMenuDesc("Debugging: show gains of spectral noise reduction") },
 
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_LONG_TONE_ALPHA, NULL,"Long tone alpha", UiMenuDesc("time constant alpha for long tone detection in spectral noise reduction") },
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_LONG_TONE_THRESH, NULL,"Long tone thresh", UiMenuDesc("threshold for long tone detection in spectral noise reduction") },
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE, NULL,"SNR gain smooth", UiMenuDesc("enable bin gain smoothing for spectral noise reduction for testing purposes") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA, NULL,"SNR gain smooth alpha", UiMenuDesc("alpha = smoothing constant for spectral noise reduction for testing purposes") },
+//	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_LONG_TONE_ALPHA, NULL,"Long tone alpha", UiMenuDesc("time constant alpha for long tone detection in spectral noise reduction") },
+//	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_LONG_TONE_THRESH, NULL,"Long tone thresh", UiMenuDesc("threshold for long tone detection in spectral noise reduction") },
+//	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE, NULL,"SNR gain smooth", UiMenuDesc("enable bin gain smoothing for spectral noise reduction for testing purposes") },
+//    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA, NULL,"SNR gain smooth alpha", UiMenuDesc("alpha = smoothing constant for spectral noise reduction for testing purposes") },
 //	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_ALPHA, NULL,"NR alpha", UiMenuDesc("time constant alpha for spectral noise reduction") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_THRESH, NULL,"NR thresh", UiMenuDesc("threshold for spectral noise reduction voice activity detector") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_VAD_TYPE, NULL,"NR VAD type", UiMenuDesc("VAD type for spectral noise reduction voice activity detector") },
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_VAD_DELAY, NULL,"NR VAD delay", UiMenuDesc("delay for spectral noise reduction voice activity detector") },
+//    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_THRESH, NULL,"NR thresh", UiMenuDesc("threshold for spectral noise reduction voice activity detector") },
+//    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_VAD_TYPE, NULL,"NR VAD type", UiMenuDesc("VAD type for spectral noise reduction voice activity detector") },
+//	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_VAD_DELAY, NULL,"NR VAD delay", UiMenuDesc("delay for spectral noise reduction voice activity detector") },
 
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_BETA, NULL,"NR beta", UiMenuDesc("time constant beta for spectral noise reduction, leave at 0.85") },
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_Mode, NULL,"NR Mode", UiMenuDesc("switch between the released NR and two development NRs") },
+//	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_Mode, NULL,"NR Mode", UiMenuDesc("switch between the released NR and two development NRs") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_ASNR, NULL,"NR asnr", UiMenuDesc("Devel 2 NR: asnr") },
 //#if defined(STM32F7) || defined(STM32H7)
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_FFT_SIZE, NULL,"NR FFT Size256", UiMenuDesc("enable FFT256 instead of FFT128 for devel2 NR") },
-	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_DEC_ENABLE, NULL,"NR decimation", UiMenuDesc("enable decimation-by-2 down to 6ksps for NR") },
+//	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_FFT_SIZE, NULL,"NR FFT Size256", UiMenuDesc("enable FFT256 instead of FFT128 for devel2 NR") },
+//	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_DEC_ENABLE, NULL,"NR decimation", UiMenuDesc("enable decimation-by-2 down to 6ksps for NR") },
 //#endif
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_WIDTH, NULL,"NR smooth wd.", UiMenuDesc("Devel 2 NR: width of gain smoothing window") },
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_NR_GAIN_SMOOTH_THRESHOLD, NULL,"NR smooth thr.", UiMenuDesc("Devel 2 NR: threhold for gain smoothing") },

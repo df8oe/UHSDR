@@ -479,7 +479,7 @@ enum	{
 #define	LMS_NR_DELAYBUF_SIZE_MAX		256 //512	// maximum size of LMS delay buffer for the noise reduction
 //
 //
-
+#ifdef USE_OLD_LMS
 //
 #define	DSP_STRENGTH_YELLOW		25	// Threshold at and above which DSP number is yellow
 #define	DSP_STRENGTH_ORANGE		35	// Threshold at and above which DSP number is orange
@@ -500,6 +500,7 @@ enum	{
 #define	DSP_OUTPUT_MINVAL		1		// minimum out level from DSP LMS NR, indicating "quiet" crash
 #define	DSP_HIGH_LEVEL			10000	// output level from DSP LMS NR, indicating "noisy" crash
 #define	DSP_CRASH_COUNT_THRESHOLD	35	// "hit" detector/counter for determining if the DSP has crashed
+#endif
 //
 // Automatic Notch Filter
 //
