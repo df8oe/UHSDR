@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-02-02T09:32:22  by "./ui_menu_structure_graph.py"
+#  generated at  2018-02-03T08:29:25  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-02-02T09:32:22  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-02-03T08:29:25  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1202,63 +1202,13 @@
              shape = record
              ];
         
-        "MENU_DEBUG_NR_LONG_TONE_ALPHA" [
-             label = "MENU_DEBUG_NR_LONG_TONE_ALPHA | Long tone alpha"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_NR_LONG_TONE_THRESH" [
-             label = "MENU_DEBUG_NR_LONG_TONE_THRESH | Long tone thresh"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE" [
-             label = "MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE | SNR gain smooth"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA" [
-             label = "MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA | SNR gain smooth alpha"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_NR_THRESH" [
-             label = "MENU_DEBUG_NR_THRESH | NR thresh"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_NR_VAD_TYPE" [
-             label = "MENU_DEBUG_NR_VAD_TYPE | NR VAD type"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_NR_VAD_DELAY" [
-             label = "MENU_DEBUG_NR_VAD_DELAY | NR VAD delay"
-             shape = record
-             ];
-        
         "MENU_DEBUG_NR_BETA" [
              label = "MENU_DEBUG_NR_BETA | NR beta"
              shape = record
              ];
         
-        "MENU_DEBUG_NR_Mode" [
-             label = "MENU_DEBUG_NR_Mode | NR Mode"
-             shape = record
-             ];
-        
         "MENU_DEBUG_NR_ASNR" [
              label = "MENU_DEBUG_NR_ASNR | NR asnr"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_NR_FFT_SIZE" [
-             label = "MENU_DEBUG_NR_FFT_SIZE | NR FFT Size256"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_NR_DEC_ENABLE" [
-             label = "MENU_DEBUG_NR_DEC_ENABLE | NR decimation"
              shape = record
              ];
         
@@ -1869,29 +1819,9 @@
             
             MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SHOW
             
-            MENU_DEBUG -> MENU_DEBUG_NR_LONG_TONE_ALPHA
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_LONG_TONE_THRESH
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_THRESH
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_VAD_TYPE
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_VAD_DELAY
-            
             MENU_DEBUG -> MENU_DEBUG_NR_BETA
             
-            MENU_DEBUG -> MENU_DEBUG_NR_Mode
-            
             MENU_DEBUG -> MENU_DEBUG_NR_ASNR
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_FFT_SIZE
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_DEC_ENABLE
             
             MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SMOOTH_WIDTH
             
