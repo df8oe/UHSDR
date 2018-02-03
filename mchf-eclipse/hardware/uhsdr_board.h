@@ -32,6 +32,7 @@
  */
 
 //#define OBSOLETE_NR
+#define USE_LMS_AUTONOTCH
 
 /**
  * This parameter disables certain features / capabilites in order to achieve a minimum build size for

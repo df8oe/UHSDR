@@ -479,7 +479,6 @@ enum	{
 #define	LMS_NR_DELAYBUF_SIZE_MAX		256 //512	// maximum size of LMS delay buffer for the noise reduction
 //
 //
-#ifdef USE_OLD_LMS
 //
 #define	DSP_STRENGTH_YELLOW		25	// Threshold at and above which DSP number is yellow
 #define	DSP_STRENGTH_ORANGE		35	// Threshold at and above which DSP number is orange
@@ -500,7 +499,25 @@ enum	{
 #define	DSP_OUTPUT_MINVAL		1		// minimum out level from DSP LMS NR, indicating "quiet" crash
 #define	DSP_HIGH_LEVEL			10000	// output level from DSP LMS NR, indicating "noisy" crash
 #define	DSP_CRASH_COUNT_THRESHOLD	35	// "hit" detector/counter for determining if the DSP has crashed
+
+//
+// Automatic Notch Filter
+//
+#define	LMS_NOTCH_DELAYBUF_SIZE_MAX	512
+//
+#define	DSP_NOTCH_NUMTAPS_MAX	128
+#define	DSP_NOTCH_NUMTAPS_MIN		32
+#define	DSP_NOTCH_NUMTAPS_DEFAULT	96
+//
+#define	DSP_NOTCH_BUFLEN_MIN	48		// minimum length of decorrelation buffer for the notch filter FIR
+#define	DSP_NOTCH_BUFLEN_MAX	192	// maximum decorrelation buffer length for the notch filter FIR
+#define	DSP_NOTCH_DELAYBUF_DEFAULT	104	// default decorrelation buffer length for the notch filter FIR
+//
+#define	DSP_NOTCH_MU_MAX		40		// maximum "strength" (convergence) setting for the notch
+#define	DSP_NOTCH_MU_DEFAULT	25		// default convergence setting for the notch
 #endif
+
+#ifdef USE_LMS_AUTONOTCH
 //
 // Automatic Notch Filter
 //
