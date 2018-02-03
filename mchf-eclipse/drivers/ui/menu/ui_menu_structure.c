@@ -182,11 +182,9 @@ const MenuDescriptor confGroup[] =
     //{ MENU_CONF, MENU_ITEM, CONFIG_FM_TX_GAIN_BAL,"255","FM  TX IQ Bal.", UiMenuDesc(":soon:") },
 #ifdef OBSOLETE_NR
     // DSP Configuration, probably never touched
-#ifdef USE_OLD_LMS
 	{ MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH, NULL, "DSP NR BufLen", UiMenuDesc("DSP LMS noise reduction: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources.") },
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_FFT_NUMTAPS, NULL, "DSP NR FIR NumTaps", UiMenuDesc("DSP LMS noise reduction: Number of taps in the DSP noise reduction FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF.") },
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NR_POST_AGC_SELECT, NULL, "DSP NR Post-AGC", UiMenuDesc("DSP LMS noise reduction: Perform the DSP LMS noise reduction BEFORE or AFTER the AGC. NO = before AGC, YES = after AGC.") },
-#endif
 	{ MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_CONVERGE_RATE, NULL, "DSP Notch ConvRate", UiMenuDesc("DSP LMS automatic notch filter: ") },
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH, NULL, "DSP Notch BufLen", UiMenuDesc("DSP LMS automatic notch filter: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better -and the slower- the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources.") },
     { MENU_CONF, MENU_ITEM, CONFIG_DSP_NOTCH_FFT_NUMTAPS, NULL, "DSP Notch FIRNumTap", UiMenuDesc("DSP LMS automatic notch filter: Number of taps in the DSP automatic notch FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF.") },

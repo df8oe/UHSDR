@@ -118,7 +118,6 @@ static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treb
 #ifdef OBSOLETE_NR
 typedef struct
 {
-#ifdef USE_OLD_LMS
     float32_t   errsig1[64+10];
     // LMS Filters for RX
     arm_lms_norm_instance_f32	lms1Norm_instance;
@@ -126,8 +125,6 @@ typedef struct
     float32_t	                lms1StateF32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
     float32_t	                lms1NormCoeff_f32[DSP_NR_NUMTAPS_MAX + BUFF_LEN];
     float32_t                   lms1_nr_delay[LMS_NR_DELAYBUF_SIZE_MAX+BUFF_LEN];
-#endif
-
     float32_t   errsig2[64+10];
     arm_lms_norm_instance_f32	lms2Norm_instance;
     arm_lms_instance_f32	    lms2_instance;
@@ -138,6 +135,17 @@ typedef struct
 } LMSData;
 #endif
 
+#ifdef USE_LMS_AUTONOTCH
+typedef struct
+{
+    float32_t   errsig2[64+10];
+    arm_lms_norm_instance_f32	lms2Norm_instance;
+    arm_lms_instance_f32	    lms2_instance;
+    float32_t	                lms2StateF32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
+    float32_t	                lms2NormCoeff_f32[DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN];
+    float32_t	                lms2_nr_delay[LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN];
+} LMSData;
+#endif
 
 static float32_t	__MCHF_SPECIALMEM audio_delay_buffer	[AUDIO_DELAY_BUFSIZE];
 
@@ -578,6 +586,10 @@ __IO SMeter					sm;
 AudioDriverState   __MCHF_SPECIALMEM ads;
 AudioDriverBuffer  __MCHF_SPECIALMEM adb;
 #ifdef OBSOLETE_NR
+LMSData            __MCHF_SPECIALMEM lmsData;
+#endif
+
+#ifdef USE_LMS_AUTONOTCH
 LMSData            __MCHF_SPECIALMEM lmsData;
 #endif
 
@@ -1088,7 +1100,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // WARNING:  You CANNOT reliably use the built-in IIR and FIR "init" functions when using CONST-based coefficient tables!  If you do so, you risk filters
     //  not initializing properly!  If you use the "init" functions, you MUST copy CONST-based coefficient tables to RAM first!
     //  This information is from recommendations by online references for using ARM math/DSP functions
-#ifdef OBSOLETE_NR
+#if defined(OBSOLETE_NR) || defined(USE_LMS_AUTONOTCH)
     float	mu_calc;
     uint16_t	calc_taps;
 #endif
@@ -1224,7 +1236,6 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // It is (sort of) initalized "twice" since this it what it seems to take for the LMS function to
     // start reliably and consistently!
     //
-#ifdef USE_OLD_LMS
     calc_taps = ts.dsp_nr_numtaps;
     if((calc_taps < DSP_NR_NUMTAPS_MIN) || (calc_taps > DSP_NR_NUMTAPS_MAX))
     {
@@ -1277,7 +1288,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     {
         ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
     }
-#endif
+
     // AUTO NOTCH INIT START
     // LMS instance 2 - Automatic Notch Filter
 
@@ -1310,6 +1321,41 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     }
     // AUTO NOTCH INIT END
 #endif
+
+#ifdef USE_LMS_AUTONOTCH
+    // AUTO NOTCH INIT START
+    // LMS instance 2 - Automatic Notch Filter
+
+    calc_taps = ts.dsp_notch_numtaps;
+    lmsData.lms2Norm_instance.numTaps = calc_taps;
+    lmsData.lms2Norm_instance.pCoeffs = lmsData.lms2NormCoeff_f32;
+    lmsData.lms2Norm_instance.pState = lmsData.lms2StateF32;
+
+    // Calculate "mu" (convergence rate) from user "Notch ConvRate" setting
+    mu_calc = ts.dsp_notch_mu;		// get user setting (0 = slowest)
+    mu_calc += 1;
+    mu_calc /= 1500;
+    mu_calc += 1;
+    mu_calc = log10f(mu_calc);
+
+    // use "canned" init to initialize the filter coefficients
+    arm_lms_norm_init_f32(&lmsData.lms2Norm_instance, calc_taps, &lmsData.lms2NormCoeff_f32[0], &lmsData.lms2StateF32[0], mu_calc, 64);
+
+    arm_fill_f32(0.0,lmsData.lms2_nr_delay,LMS_NOTCH_DELAYBUF_SIZE_MAX + BUFF_LEN);
+    arm_fill_f32(0.0,lmsData.lms2StateF32,DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN);
+
+    if(reset_dsp_nr)             // are we to reset the coefficient buffer as well?
+    {
+        arm_fill_f32(0.0,lmsData.lms2NormCoeff_f32,DSP_NOTCH_NUMTAPS_MAX + BUFF_LEN);      // yes - zero coefficient buffers
+    }
+
+    if((ts.dsp_notch_delaybuf_len > DSP_NOTCH_BUFLEN_MAX) || (ts.dsp_notch_delaybuf_len < DSP_NOTCH_BUFLEN_MIN))
+    {
+        ts.dsp_nr_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
+    }
+    // AUTO NOTCH INIT END
+#endif
+
 
 // NEW SPECTRAL NOISE REDUCTION
     // convert user setting of noise reduction to alpha NR parameter
@@ -2837,7 +2883,7 @@ static void AudioDriver_DemodFM(const int16_t blockSize)
 	}
 }
 
-#ifdef OBSOLETE_NR
+#if defined (OBSOLETE_NR) || defined (USE_LMS_AUTONOTCH)
 //
 //
 //*----------------------------------------------------------------------------
@@ -2870,7 +2916,6 @@ static void AudioDriver_NotchFilter(int16_t blockSize, float32_t *notchbuffer)
 
 
 #ifdef OBSOLETE_NR
-#ifdef USE_OLD_LMS
 //
 //
 //*----------------------------------------------------------------------------
@@ -2909,7 +2954,6 @@ static void AudioDriver_NoiseReduction(int16_t blockSize, float32_t *nrbuffer)
     lms1_inbuf %= ts.dsp_nr_delaybuf_len;
     lms1_outbuf %= ts.dsp_nr_delaybuf_len;
 }
-#endif
 #endif
 
 static void AudioDriver_Mix(float32_t* src, float32_t* dst, float32_t scaling, const uint16_t blockSize)
@@ -3738,7 +3782,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         else
 #endif
                         {
-#ifdef OBSOLETE_NR
+//#ifdef OBSOLETE_NR
+#ifdef USE_LMS_AUTONOTCH
                         	AudioDriver_NotchFilter(blockSizeDecim, adb.a_buffer);     // Do notch filter
 #endif
                         }
@@ -3757,9 +3802,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 #endif
                         {
 #ifdef OBSOLETE_NR
-#ifdef USE_OLD_LMS
                         	AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);     //
-#endif
 #endif
                         }
                     }
@@ -3800,9 +3843,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 #endif
                     {
 #ifdef OBSOLETE_NR
-#ifdef USE_OLD_LMS
                     	AudioDriver_NoiseReduction(blockSizeDecim, adb.a_buffer);     //
-#endif
 #endif
                     }
                 }

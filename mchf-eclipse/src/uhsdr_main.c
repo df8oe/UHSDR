@@ -206,10 +206,9 @@ void TransceiverStateInit(void)
     ts.dsp_active_toggle	= 0xff;					// used to hold the button G2 "toggle" setting.
     ts.dsp_nr_strength	= 50;					// "Strength" of DSP noise reduction (50 = medium)
 #ifdef OBSOLETE_NR
-#ifdef USE_OLD_LMS
     ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
     ts.dsp_nr_numtaps 	= DSP_NR_NUMTAPS_DEFAULT;		// default for number of FFT taps for noise reduction
-#endif
+
     ts.dsp_notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;		// default for number of FFT taps for notch filter
     ts.dsp_notch_delaybuf_len =	DSP_NOTCH_DELAYBUF_DEFAULT;
 #endif

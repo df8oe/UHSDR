@@ -798,7 +798,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             }
         }
 #ifdef OBSOLETE_NR
-#ifdef USE_OLD_LMS        //
         if(!(ts.dsp_active & DSP_NR_ENABLE))    // make red if DSP not active
         {
             clr = Orange;
@@ -812,7 +811,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             else if(ts.dsp_nr_strength >= DSP_STRENGTH_YELLOW)
                 clr = Yellow;
         }
-#endif
 #endif
         //
         snprintf(options,32, "  %u", ts.dsp_nr_strength);
@@ -3041,7 +3039,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags2,0,options,&clr, FLAGS2_HIGH_BAND_BIAS_REDUCE);
         break;
 #ifdef OBSOLETE_NR
-#ifdef USE_OLD_LMS
     case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:      // Adjustment of DSP noise reduction de-correlation delay buffer length
         ts.dsp_nr_delaybuf_len &= 0xfff0;   // mask bottom nybble to enforce 16-count boundary
         var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.dsp_nr_delaybuf_len,
@@ -3111,7 +3108,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
 
         break;
-#endif
+
     case CONFIG_DSP_NOTCH_CONVERGE_RATE:        // Adjustment of DSP noise reduction de-correlation delay buffer length
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_mu,
                                               0,
@@ -3202,6 +3199,84 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options,32, "  %u", ts.nb_agc_time_const);
         break;
 */
+#endif
+
+#ifdef USE_LMS_AUTONOTCH
+    case CONFIG_DSP_NOTCH_CONVERGE_RATE:        // Adjustment of DSP noise reduction de-correlation delay buffer length
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_mu,
+                                              0,
+                                              DSP_NOTCH_MU_MAX,
+                                              DSP_NOTCH_MU_DEFAULT,
+                                              1);
+
+        if(var_change)      // did something change?
+        {
+            if(ts.dsp_active & DSP_NOTCH_ENABLE)    // only update if Notch DSP is active
+            {
+                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+            }
+        }
+        if(!(ts.dsp_active & DSP_NOTCH_ENABLE)) // mark orange if Notch DSP not active
+        {
+            clr = Orange;
+        }
+        snprintf(options,32, "  %u", ts.dsp_notch_mu);
+        break;
+    case CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH:       // Adjustment of DSP noise reduction de-correlation delay buffer length
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_delaybuf_len,
+                                              DSP_NOTCH_BUFLEN_MIN,
+                                              DSP_NOTCH_BUFLEN_MAX,
+                                              DSP_NOTCH_DELAYBUF_DEFAULT,
+                                              8);
+
+
+        if(ts.dsp_notch_delaybuf_len <= ts.dsp_notch_numtaps)       // did we try to decrease it smaller than FFT size?
+        {
+            ts.dsp_notch_delaybuf_len = ts.dsp_notch_numtaps + 8;                       // yes - limit it to previous size
+        }
+        if(var_change)      // did something change?
+        {
+            if(ts.dsp_active & DSP_NOTCH_ENABLE)    // only update if DSP Notch active
+            {
+                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+            }
+        }
+        if(!(ts.dsp_active & DSP_NOTCH_ENABLE)) // mark orange if DSP Notch not active
+        {
+            clr = Orange;
+        }
+        if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)
+        {
+            clr = Red;
+        }
+        snprintf(options,32, "  %u", (uint)ts.dsp_notch_delaybuf_len);
+        break;
+    case CONFIG_DSP_NOTCH_FFT_NUMTAPS:      // Adjustment of DSP noise reduction de-correlation delay buffer length
+        ts.dsp_notch_numtaps &= 0xf0;   // mask bottom nybble to enforce 16-count boundary
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_numtaps,
+                                              0,
+                                              DSP_NOTCH_NUMTAPS_MAX,
+                                              DSP_NOTCH_NUMTAPS_DEFAULT,
+                                              16);
+        if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)   // force buffer size to always be larger than number of taps
+            ts.dsp_notch_delaybuf_len = ts.dsp_notch_numtaps + 8;
+        if(var_change)      // did something change?
+        {
+            if(ts.dsp_active & DSP_NOTCH_ENABLE)    // only update if DSP NR active
+            {
+                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+            }
+        }
+        if(!(ts.dsp_active & DSP_NOTCH_ENABLE)) // mark orange if DSP NR not active
+        {
+            clr = Orange;
+        }
+        if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)   // Warn if number of taps greater than/equal buffer length!
+        {
+            clr = Red;
+        }
+        snprintf(options,32, "  %u", ts.dsp_notch_numtaps);
+        break;
 #endif
 
     case CONFIG_AM_TX_FILTER_DISABLE:   // Enable/disable AM TX audio filter

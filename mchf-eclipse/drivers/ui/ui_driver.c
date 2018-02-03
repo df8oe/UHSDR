@@ -2849,7 +2849,6 @@ static void UiDriver_TimeScheduler()
 		}
 
 #ifdef OBSOLETE_NR
-#ifdef USE_OLD_LMS
 		// DSP crash detection
 		if(is_dsp_nr() && !is_dsp_nr_postagc() && !ads.af_disabled && !ts.dsp_inhibit)    // Do this if enabled and "Pre-AGC" DSP NR enabled
 		{
@@ -2872,7 +2871,7 @@ static void UiDriver_TimeScheduler()
 				dsp_crash_count = 0;              // clear crash count flag
 			}
 		}
-#endif
+
 #endif
 	}
 
@@ -3887,7 +3886,6 @@ static void UiDriver_DisplayCmpLevel(bool encoder_active)
 }
 
 #ifdef OBSOLETE_NR
-#ifdef USE_OLD_LMS
 uint32_t dsp_nr_color_map()
 {
 	uint32_t color = White;      // Make it white by default
@@ -3901,7 +3899,7 @@ uint32_t dsp_nr_color_map()
 
 	return color;
 }
-#endif
+
 #endif
 
 static void UiDriver_DisplayDSPMode(bool encoder_active)
@@ -3926,9 +3924,8 @@ static void UiDriver_DisplayDSPMode(bool encoder_active)
 		txt[0] = "NR";
 		snprintf(val_txt,7,"%5u", ts.dsp_nr_strength);
 #ifdef OBSOLETE_NR
-#ifdef USE_OLD_LMS
 		clr_val = dsp_nr_color_map();
-#endif
+
 #endif
 		txt[1] = val_txt;
 		txt_is_value = true;
@@ -3940,9 +3937,8 @@ static void UiDriver_DisplayDSPMode(bool encoder_active)
 	txt[0] = "NR+NOTC";
 	snprintf(val_txt,7,"%5u", ts.dsp_nr_strength);
 #ifdef OBSOLETE_NR
-#ifdef USE_OLD_LMS
 	clr_val = dsp_nr_color_map();
-#endif
+
 #endif
 	txt[1] = val_txt;
 	txt_is_value = true;
