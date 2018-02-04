@@ -3844,7 +3844,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_beta_int,
                     700,
                     999,
-                    850,
+                    960,
                     2
             );
             if(var_change)
@@ -3902,7 +3902,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
              var_change = UiDriverMenuItemChangeInt16(var, mode, &NR2.asnr,
                                                    2,
                                                    30,
-                                                   15,
+                                                   30,
                                                    1);
              if(var_change)      // did something change?
              {
@@ -3916,7 +3916,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         var_change = UiDriverMenuItemChangeInt16(var, mode, &NR2.width,
                                               1,
                                               5,
-                                              2,
+                                              4,
                                               1);
         if(var_change)      // did something change?
         {
@@ -3929,7 +3929,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                 var_change = UiDriverMenuItemChangeInt16(var, mode, &NR2.power_threshold_int,
                                                       10,
                                                       100,
-                                                      60,
+                                                      40,
                                                       5);
                 if(var_change)      // did something change?
                 {
