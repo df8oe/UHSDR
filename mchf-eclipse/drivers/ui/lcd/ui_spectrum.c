@@ -365,7 +365,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
     }
 }
 
-#ifndef IS_SMALL_BUILD
+#ifdef USE_PREDEFINED_WINDOW_DATA
 // Information on these windowing functions may be found on the internet - check the Wikipedia article "Window Function"
 // KA7OEI - 20150602
 // we should hardcode the windows in order to save a considerable amount of processing time DD4WH, Feb 2018
@@ -415,7 +415,7 @@ static void UiSpectrum_FFTWindowFunction(char mode)
         break;
 
     case FFT_WINDOW_HANN:			// Raised Cosine Window (non zero-phase version) - This has the best sidelobe rejection of what is here, but not as narrow as Hamming.
-#ifdef IS_SMALL_BUILD
+#ifndef USE_PREDEFINED_WINDOW_DATA
     	for(int i = 0; i < sd.fft_iq_len; i++)
     	{
     		sd.FFT_Samples[i] = 0.5 * (float32_t)((1 - (arm_cos_f32(PI*2 * (float32_t)i / (float32_t)(sd.fft_iq_len-1)))) * sd.FFT_Samples[i]);

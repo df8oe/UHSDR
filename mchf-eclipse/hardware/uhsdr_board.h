@@ -53,6 +53,7 @@
   #define USE_FFT_1024
 #ifndef IS_SMALL_BUILD
   #define USE_8bit_FONT
+  #define USE_PREDEFINED_WINDOW_DATA
 #endif
 
 // OPTION
