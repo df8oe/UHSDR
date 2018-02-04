@@ -1362,7 +1362,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // convert user setting of noise reduction to alpha NR parameter
     // alpha ranges from 0.9 to 0.999 [float32_t]
     // dsp_nr_strength is from 0 to 100 [uint8_t]
-    ts.nr_alpha = 0.9 + ((float32_t)ts.dsp_nr_strength / 1000.0);
+    ts.nr_alpha = 0.899 + ((float32_t)ts.dsp_nr_strength / 1000.0);
 
 // NEW AUTONOTCH
     // set to passthrough
