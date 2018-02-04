@@ -112,20 +112,52 @@ uint16_t psk_varicode[] = {
 };
 
 
-float32_t PskBndPassB[] = {
-		0.00010805808154678762,
+float32_t PskBndPassB_31[] = {
+		6.6165543533213894e-05,
 		0.0,
-		-0.00021611616309357524,
+		-0.00013233108706642779,
 		0.0,
-		0.00010805808154678762
+		6.6165543533213894e-05
 };
 
-float32_t PskBndPassA[] = {
+float32_t PskBndPassA_31[] = {
 		1.0,
-		-3.8342274008682047,
-		5.6459064237767524,
-		-3.777859323318223,
-		0.9708151307003857
+		-3.8414813063247664,
+		5.6662277107033248,
+		-3.7972899991488904,
+		0.9771256616899302
+};
+
+float32_t PskBndPassB_63[] = {
+		0.0002616526950658905,
+		0.0,
+		-0.000523305390131781,
+		0.0,
+		0.0002616526950658905
+};
+
+float32_t PskBndPassA_63[] = {
+		1.0,
+		-3.8195192250239174,
+		5.6013869366249818,
+		-3.7321386869273105,
+		0.95477455992103932
+};
+
+float32_t PskBndPassB_125[] = {
+		0.0010232176384709002,
+		0.0,
+		-0.0020464352769418003,
+		0.0,
+		0.0010232176384709002
+};
+
+float32_t PskBndPassA_125[] = {
+		1.0,
+		-3.7763786572915334,
+		5.4745855184361272,
+		-3.6055008493327723,
+		0.91159449659996006
 };
 
 float32_t PskCosDDS[] = { 6.123233995736766e-17, -0.09801714032956066, -0.1950903220161282,
@@ -179,9 +211,9 @@ float32_t Psk_IirNext(float32_t b[], float32_t a[], float32_t x[], float32_t y[]
 
 const psk_speed_item_t psk_speeds[PSK_SPEED_NUM] =
 {
-		{ .id =PSK_SPEED_31, .value = 31.25, .zeros = 50, .label = " 31" },
-		{ .id =PSK_SPEED_63, .value = 62.5, .zeros = 100, .label = " 63"  },
-		{ .id =PSK_SPEED_125, .value = 125.0, .zeros = 200, .label = "125" }
+		{ .id =PSK_SPEED_31, .value = 31.25, .zeros = 50, .bpf_b = PskBndPassB_31, .bpf_a = PskBndPassA_31, .rate = 384, .label = " 31" },
+		{ .id =PSK_SPEED_63, .value = 62.5, .zeros = 100, .bpf_b = PskBndPassB_63, .bpf_a = PskBndPassA_63, .rate = 192, .label = " 63"  },
+		{ .id =PSK_SPEED_125, .value = 125.0, .zeros = 200, .bpf_b = PskBndPassB_125, .bpf_a = PskBndPassA_125, .rate = 96, .label = "125" }
 };
 
 psk_ctrl_t psk_ctrl_config =
@@ -247,28 +279,12 @@ void Bpsk_DemodulatorInit(void)
 void PskDecoder_Init(void)
 {
 
-	switch(psk_ctrl_config.speed_idx)
-	{
-	case PSK_SPEED_31:
-		psk_state.rate = 384;
-		break;
-	case PSK_SPEED_63:
-		psk_state.rate = 192;
-		break;
-	case PSK_SPEED_125:
-		psk_state.rate = 96;
-		break;
-	default:
-	{
-		psk_state.rate = 384;
-	}
-	}
-
 	psk_state.tx_idx = 0;
 
 	softdds_setFreqDDS(&psk_dds, PSK_OFFSET, ts.samp_rate, true);
 	psk_state.tx_bit_len = lround(ts.samp_rate / psk_speeds[psk_ctrl_config.speed_idx].value * 2);
 	psk_state.tx_zeros = - psk_speeds[psk_ctrl_config.speed_idx].zeros;
+	psk_state.rate = psk_speeds[psk_ctrl_config.speed_idx].rate;
 	Bpsk_ModulatorInit();
 	Bpsk_DemodulatorInit();
 }
@@ -314,7 +330,7 @@ void BpskDecoder_ProcessSample(float32_t sample)
 	int8_t bit;
 
 	psk_state.rx_samples_in[psk_state.rx_bnd_idx] = sample;
-	fsample = Psk_IirNext(PskBndPassB, PskBndPassA, psk_state.rx_samples_in,
+	fsample = Psk_IirNext(psk_speeds[psk_ctrl_config.speed_idx].bpf_b, psk_speeds[psk_ctrl_config.speed_idx].bpf_a, psk_state.rx_samples_in,
 		psk_state.rx_samples, psk_state.rx_bnd_idx, PSK_BND_FLT_LEN);
 	psk_state.rx_samples[psk_state.rx_bnd_idx] = fsample;
 	psk_state.rx_bnd_idx++;
