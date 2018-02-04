@@ -3009,6 +3009,10 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
 	}
 	break;
 	default:
+		if (ts.enc_thr_mode != ENC_THREE_MODE_RIT)
+		{
+			ts.enc_thr_mode = ENC_THREE_MODE_INPUT_CTRL;
+		}
 		break;
 	}
 	UiDriver_UpdateDisplayAfterParamChange();
@@ -3791,9 +3795,13 @@ static void UiDriver_DisplayEncoderThreeMode()
 		break;
 	default:
 		// this defines what is shown if the lower box is not actively selected
-		if (ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK))
+		if (ts.dmod_mode == DEMOD_CW)
 		{
 			UiDriver_DisplayKeyerSpeed(0);
+		}
+		else if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)
+		{
+			UiDriver_DisplayPskSpeed(0);
 		}
 		else
 		{
