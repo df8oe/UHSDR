@@ -37,6 +37,9 @@ typedef struct
     psk_speed_t id;
     float32_t value;
     uint16_t zeros;
+    float32_t* bpf_b;
+    float32_t* bpf_a;
+    uint16_t rate;
     char* label;
 } psk_speed_item_t;
 
