@@ -784,10 +784,10 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case MENU_DSP_NR_STRENGTH:  // DSP Noise reduction strength
 
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_nr_strength,
-                                              1,
+                                              DSP_NR_STRENGTH_MIN,
                                               DSP_NR_STRENGTH_MAX,
                                               DSP_NR_STRENGTH_DEFAULT,
-											  2
+											  DSP_NR_STRENGTH_STEP
                                              );
         if(var_change)
         {
