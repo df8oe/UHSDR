@@ -502,7 +502,7 @@ void UiDriver_TextMsgClear()
 	}
 	ui_txt_msg_buffer[fillcnt]='\0';
 
-    UiLcdHy28_PrintText(ts.Layout->TextMsgLine_X,ts.Layout->TextMsgLine_Y, ui_txt_msg_buffer,Yellow,Black,ts.Layout->TextMsg_font);
+    UiLcdHy28_PrintText(ts.Layout->TextMsgLine.x,ts.Layout->TextMsgLine.y, ui_txt_msg_buffer,Yellow,Black,ts.Layout->TextMsg_font);
     ui_txt_msg_idx = 0;
     ui_txt_msg_update = true;
 }
@@ -523,8 +523,8 @@ void UiDriver_TextMsgDisplay()
         }
 
         //const char* txt_ptr = ui_txt_msg_idx == 0? ui_txt_empty_line:ui_txt_msg_buffer;
-        //UiLcdHy28_PrintText(POS_TextMsgLine_X,POS_TextMsgLine_Y,txt_ptr,Yellow,Black,4);
-        UiLcdHy28_PrintText(ts.Layout->TextMsgLine_X,ts.Layout->TextMsgLine_Y, ui_txt_msg_buffer,Yellow,Black,ts.Layout->TextMsg_font);
+        //UiLcdHy28_PrintText(POS_TextMsgLine.X,POS_TextMsgLine.Y,txt_ptr,Yellow,Black,4);
+        UiLcdHy28_PrintText(ts.Layout->TextMsgLine.x,ts.Layout->TextMsgLine.y, ui_txt_msg_buffer,Yellow,Black,ts.Layout->TextMsg_font);
     }
 }
 
@@ -573,13 +573,13 @@ static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool e
 	uint16_t posX, posY;
 	if(ts.Layout->LEFTBOXES_MODE==MODE_HORIZONTAL)
 	{
-		posX=ts.Layout->LEFTBOXES_IND_X+ (row * LEFTBOX_WIDTH);
-		posY=ts.Layout->LEFTBOXES_IND_Y;
+		posX=ts.Layout->LEFTBOXES_IND.x+ (row * LEFTBOX_WIDTH);
+		posY=ts.Layout->LEFTBOXES_IND.y;
 	}
 	else
 	{
-		posX=ts.Layout->LEFTBOXES_IND_X;
-		posY=ts.Layout->LEFTBOXES_IND_Y + (row * LEFTBOX_ROW_H);
+		posX=ts.Layout->LEFTBOXES_IND.x;
+		posY=ts.Layout->LEFTBOXES_IND.y + (row * LEFTBOX_ROW_H);
 	}
 
 
@@ -904,18 +904,18 @@ void UiDriver_EncoderDisplay(const uint8_t row, const uint8_t column, const char
 
 	if(ts.Layout->ENCODER_MODE==MODE_HORIZONTAL)
 	{
-		UiLcdHy28_DrawEmptyRect(ts.Layout->ENCODER_IND_X + ENC_COL_W *2 * column + row *ENC_COL_W+column*Xspacing, ts.Layout->ENCODER_IND_Y , ENC_ROW_H - 2, ENC_COL_W - 2, brdr_color);
-		UiLcdHy28_PrintTextCentered((ts.Layout->ENCODER_IND_X + 1 + ENC_COL_W * 2 * column + row *ENC_COL_W+column*Xspacing), (ts.Layout->ENCODER_IND_Y + 1),ENC_COL_W - 3, label,
+		UiLcdHy28_DrawEmptyRect(ts.Layout->ENCODER_IND.x + ENC_COL_W *2 * column + row *ENC_COL_W+column*Xspacing, ts.Layout->ENCODER_IND.y , ENC_ROW_H - 2, ENC_COL_W - 2, brdr_color);
+		UiLcdHy28_PrintTextCentered((ts.Layout->ENCODER_IND.x + 1 + ENC_COL_W * 2 * column + row *ENC_COL_W+column*Xspacing), (ts.Layout->ENCODER_IND.y + 1),ENC_COL_W - 3, label,
 				label_color, bg_color, 0);
-		UiLcdHy28_PrintTextRight((ts.Layout->ENCODER_IND_X + ENC_COL_W - 4 + ENC_COL_W * 2 * column+ row *ENC_COL_W+column*Xspacing), (ts.Layout->ENCODER_IND_Y + 1 + ENC_ROW_2ND_OFF), temp,
+		UiLcdHy28_PrintTextRight((ts.Layout->ENCODER_IND.x + ENC_COL_W - 4 + ENC_COL_W * 2 * column+ row *ENC_COL_W+column*Xspacing), (ts.Layout->ENCODER_IND.y + 1 + ENC_ROW_2ND_OFF), temp,
 				color, Black, 0);
 	}
 	else
 	{
-		UiLcdHy28_DrawEmptyRect(ts.Layout->ENCODER_IND_X + ENC_COL_W * column, ts.Layout->ENCODER_IND_Y + row * ENC_ROW_H, ENC_ROW_H - 2, ENC_COL_W - 2, brdr_color);
-		UiLcdHy28_PrintTextCentered((ts.Layout->ENCODER_IND_X + 1 + ENC_COL_W * column), (ts.Layout->ENCODER_IND_Y + 1 + row * ENC_ROW_H),ENC_COL_W - 3, label,
+		UiLcdHy28_DrawEmptyRect(ts.Layout->ENCODER_IND.x + ENC_COL_W * column, ts.Layout->ENCODER_IND.y + row * ENC_ROW_H, ENC_ROW_H - 2, ENC_COL_W - 2, brdr_color);
+		UiLcdHy28_PrintTextCentered((ts.Layout->ENCODER_IND.x + 1 + ENC_COL_W * column), (ts.Layout->ENCODER_IND.y + 1 + row * ENC_ROW_H),ENC_COL_W - 3, label,
 				label_color, bg_color, 0);
-		UiLcdHy28_PrintTextRight((ts.Layout->ENCODER_IND_X + ENC_COL_W - 4 + ENC_COL_W * column), (ts.Layout->ENCODER_IND_Y + 1 + row * ENC_ROW_H + ENC_ROW_2ND_OFF), temp,
+		UiLcdHy28_PrintTextRight((ts.Layout->ENCODER_IND.x + ENC_COL_W - 4 + ENC_COL_W * column), (ts.Layout->ENCODER_IND.y + 1 + row * ENC_ROW_H + ENC_ROW_2ND_OFF), temp,
 				color, Black, 0);
 	}
 
@@ -1097,7 +1097,7 @@ void UiDriver_DisplaySplitFreqLabels()
 		split_tx = "(A) TX->";  // Place identifying marker for TX frequency
 	}
 	UiLcdHy28_PrintText(ts.Layout->TUNE_SPLIT_MARKER_X - (SMALL_FONT_WIDTH * 5),
-			ts.Layout->TUNE_FREQ_Y, split_rx, RX_Grey, Black,
+			ts.Layout->TUNE_FREQ.y, split_rx, RX_Grey, Black,
 			0);  // Place identifying marker for RX frequency
 	UiLcdHy28_PrintText(ts.Layout->TUNE_SPLIT_MARKER_X - (SMALL_FONT_WIDTH * 5),
 			ts.Layout->TUNE_SPLIT_FREQ_Y_TX, split_tx, TX_Grey, Black,
@@ -1481,7 +1481,7 @@ void UiDriver_DisplayDemodMode()
 		default:
 			break;
 	}
-	UiLcdHy28_PrintTextCentered(ts.Layout->DEMOD_MODE_MASK_X,ts.Layout->DEMOD_MODE_MASK_Y,ts.Layout->DEMOD_MODE_MASK_W,txt,clr_fg,clr_bg,0);
+	UiLcdHy28_PrintTextCentered(ts.Layout->DEMOD_MODE_MASK.x,ts.Layout->DEMOD_MODE_MASK.y,ts.Layout->DEMOD_MODE_MASK.w,txt,clr_fg,clr_bg,0);
 
 	UiDriver_DisplayDigitalMode();
 }
@@ -1501,8 +1501,8 @@ void UiDriver_DisplayFreqStepSize()
 
 	if(step_line)	 	// Remove underline indicating step size if one had been drawn
 	{
-		UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_FREQ_X + (LARGE_FONT_WIDTH * 3)),(ts.Layout->TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
-		UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * 3)),(ts.Layout->TUNE_FREQ_Y + 24),(SMALL_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
+		UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_FREQ.x + (LARGE_FONT_WIDTH * 3)),(ts.Layout->TUNE_FREQ.y + 24),(LARGE_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
+		UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * 3)),(ts.Layout->TUNE_FREQ.y + 24),(SMALL_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
 	}
 
 	// Blank old step size
@@ -1531,11 +1531,11 @@ void UiDriver_DisplayFreqStepSize()
 	{
 		if(is_splitmode())
 		{
-			UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * line_loc)),(ts.Layout->TUNE_FREQ_Y + 24),(SMALL_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
+			UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * line_loc)),(ts.Layout->TUNE_FREQ.y + 24),(SMALL_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
 		}
 		else
 		{
-			UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_FREQ_X + (LARGE_FONT_WIDTH * line_loc)),(ts.Layout->TUNE_FREQ_Y + 24),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
+			UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_FREQ.x + (LARGE_FONT_WIDTH * line_loc)),(ts.Layout->TUNE_FREQ.y + 24),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
 		}
 		step_line = 1;	// indicate that a line under the step size had been drawn
 	}
@@ -1588,7 +1588,7 @@ static void UiDriver_DisplayMemoryLabel()
 	{
 		snprintf(txt,12,"  CAT  ");
 	}
-	UiLcdHy28_PrintText(ts.Layout->MEMORYLABEL_X,  ts.Layout->MEMORYLABEL_Y,txt,col,Black,0);
+	UiLcdHy28_PrintText(ts.Layout->MEMORYLABEL.x,  ts.Layout->MEMORYLABEL.y,txt,col,Black,0);
 }
 
 
@@ -1637,8 +1637,8 @@ static void UiDriver_DisplayBand(uchar band)
 		}
 		if (print_bc_name)
 		{
-			UiLcdHy28_DrawFullRect(ts.Layout->BAND_MODE_MASK_X,ts.Layout->BAND_MODE_MASK_Y,ts.Layout->BAND_MODE_MASK_H,ts.Layout->BAND_MODE_MASK_W,Black);
-			UiLcdHy28_PrintTextRight(ts.Layout->BAND_MODE_X + 5*8,ts.Layout->BAND_MODE_Y,bandName,col,Black,0);
+			UiLcdHy28_DrawFullRect(ts.Layout->BAND_MODE_MASK.x,ts.Layout->BAND_MODE_MASK.y,ts.Layout->BAND_MODE_MASK.h,ts.Layout->BAND_MODE_MASK.w,Black);
+			UiLcdHy28_PrintTextRight(ts.Layout->BAND_MODE.x + 5*8,ts.Layout->BAND_MODE.y,bandName,col,Black,0);
 		}
 
 	}
@@ -1658,7 +1658,7 @@ static void UiDriver_CreateMainFreqDisplay()
 	UiDriver_FButton_F3MemSplit();
 	if((is_splitmode()))	 	// are we in SPLIT mode?
 	{
-		UiLcdHy28_PrintText(ts.Layout->TUNE_FREQ_X-16,ts.Layout->TUNE_FREQ_Y,"          ",White,Black,1);	// clear large frequency digits
+		UiLcdHy28_PrintText(ts.Layout->TUNE_FREQ.x-16,ts.Layout->TUNE_FREQ.y,"          ",White,Black,1);	// clear large frequency digits
 		UiDriver_DisplaySplitFreqLabels();
 	}
 	UiDriver_DisplayFreqStepSize();
@@ -2463,7 +2463,7 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 	case UFM_SMALL_RX:
 		digits_ptr  = df.dial_digits;
 		digit_size = 0;
-		pos_y_loc = ts.Layout->TUNE_FREQ_Y;
+		pos_y_loc = ts.Layout->TUNE_FREQ.y;
 		pos_x_loc = ts.Layout->TUNE_SPLIT_FREQ_X;
 		font_width = SMALL_FONT_WIDTH;
 		break;
@@ -2477,8 +2477,8 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 	case UFM_SECONDARY:
 		digits_ptr  = df.sdial_digits;
 		digit_size = 0;
-		pos_y_loc = ts.Layout->TUNE_SFREQ_Y;
-		pos_x_loc = ts.Layout->TUNE_SFREQ_X;
+		pos_y_loc = ts.Layout->TUNE_SFREQ.y;
+		pos_x_loc = ts.Layout->TUNE_SFREQ.x;
 		font_width = SMALL_FONT_WIDTH;
 		break;
 	case UFM_LARGE:
@@ -2489,8 +2489,8 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 #else
 		digit_size = 1;
 #endif
-		pos_y_loc = ts.Layout->TUNE_FREQ_Y;
-		pos_x_loc = ts.Layout->TUNE_FREQ_X;
+		pos_y_loc = ts.Layout->TUNE_FREQ.y;
+		pos_x_loc = ts.Layout->TUNE_FREQ.x;
 		font_width = LARGE_FONT_WIDTH;
 	}
 	// in SAM mode, never display any RIT etc., but
@@ -2499,8 +2499,8 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 	{
 		digits_ptr  = df.sdial_digits;
 		digit_size = 0;
-		pos_y_loc = ts.Layout->TUNE_SFREQ_Y;
-		pos_x_loc = ts.Layout->TUNE_SFREQ_X;
+		pos_y_loc = ts.Layout->TUNE_SFREQ.y;
+		pos_x_loc = ts.Layout->TUNE_SFREQ.x;
 		font_width = SMALL_FONT_WIDTH;
 		UiDriver_UpdateFreqDisplay(dial_freq + ads.carrier_freq_offset, digits_ptr, pos_x_loc, font_width, pos_y_loc, Yellow, digit_size);
 	}
@@ -4275,7 +4275,7 @@ static void UiDriver_DisplayPowerLevel()
 		break;
 	}
 	// Draw top line
-	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND_X),(ts.Layout->PW_IND_Y),ts.Layout->DEMOD_MODE_MASK_W,txt,color,Blue,0);
+	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->DEMOD_MODE_MASK.w,txt,color,Blue,0);
 }
 
 static void UiDriver_HandleSMeter()
@@ -4403,7 +4403,7 @@ static void UiDriver_HandleTXMeters()
 			}
 			if (txp != NULL)
 			{
-				UiLcdHy28_PrintText(ts.Layout->PWR_NUM_IND_X, ts.Layout->PWR_NUM_IND_Y,txp,Grey,Black,0);
+				UiLcdHy28_PrintText(ts.Layout->PWR_NUM_IND.x, ts.Layout->PWR_NUM_IND.y,txp,Grey,Black,0);
 			}
 		}
 
@@ -4714,7 +4714,7 @@ void UiDriver_CreateTemperatureDisplay()
 	label_color = Black;
 
 	// Top part - name and temperature display
-	UiLcdHy28_DrawEmptyRect(ts.Layout->TEMP_IND.x,ts.Layout->TEMP_IND.y,13,109,Grey);
+	UiLcdHy28_DrawEmptyRect(ts.Layout->TEMP_IND.x, ts.Layout->TEMP_IND.y,13,109,Grey);
 
 	if (enabled)
 	{
@@ -4738,7 +4738,7 @@ void UiDriver_CreateTemperatureDisplay()
 	// Label
 	UiLcdHy28_PrintText((ts.Layout->TEMP_IND.x + 1), (ts.Layout->TEMP_IND.y + 1),label,label_color,Grey,0);
 	// Lock Indicator
-	UiLcdHy28_PrintText(ts.Layout->TEMP_IND.x+TEMP_DATA,(ts.Layout->TEMP_IND.y + 1), txt,txt_color,Black,0);	// show base string
+	UiLcdHy28_PrintText(ts.Layout->TEMP_IND.x + TEMP_DATA,(ts.Layout->TEMP_IND.y + 1), txt,txt_color,Black,0);	// show base string
 }
 
 /**
@@ -4750,7 +4750,7 @@ static void UiDriver_DisplayTemperature(int temp)
 	static int last_disp_temp = -100;
 	uint32_t clr =  RadioManagement_TcxoGetMode() ==TCXO_ON ? Blue:Red;
 
-	UiLcdHy28_PrintText(ts.Layout->TEMP_IND.x+TEMP_DATA,(ts.Layout->TEMP_IND.y + 1),"*",clr,Black,0);
+	UiLcdHy28_PrintText(ts.Layout->TEMP_IND.x + TEMP_DATA,(ts.Layout->TEMP_IND.y + 1),"*",clr,Black,0);
 
 	if (temp != last_disp_temp)
 	{
@@ -4771,7 +4771,7 @@ static void UiDriver_DisplayTemperature(int temp)
 			snprintf(out,10,"%3ld.%1ld",ttemp/10,(ttemp)%10);
 			txt_ptr = out;
 		}
-		UiLcdHy28_PrintText(ts.Layout->TEMP_IND.x+TEMP_DATA + SMALL_FONT_WIDTH*1,(ts.Layout->TEMP_IND.y + 1),txt_ptr,Grey,Black,0);
+		UiLcdHy28_PrintText(ts.Layout->TEMP_IND.x + TEMP_DATA + SMALL_FONT_WIDTH*1,(ts.Layout->TEMP_IND.y + 1),txt_ptr,Grey,Black,0);
 	}
 }
 
@@ -5141,7 +5141,7 @@ static void UiDriver_KeyTestScreen()
 				{
 
 					snprintf(txt_buf,40,"x/y: %04d/%04d x/y raw: %04x/%04x",ts.tp->hr_x,ts.tp->hr_y,ts.tp->xraw,ts.tp->yraw);	//show touched coordinates
-					UiLcdHy28_PrintTextCentered(2,216,ts.Layout->SizeX-4,txt_buf,White,Blue,0);           // identify button on screen
+					UiLcdHy28_PrintTextCentered(2,216,ts.Layout->Size.x-4,txt_buf,White,Blue,0);           // identify button on screen
 					UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
 
 					txt = "Touch";
@@ -5237,7 +5237,7 @@ static void UiDriver_TouchscreenCalibrationRun()
 {
     UiLcdHy28_TouchscreenReadCoordinates();
     ts.tp->state = TP_DATASETS_NONE;
-    uint16_t MAX_X=ts.Layout->SizeX; uint16_t MAX_Y=ts.Layout->SizeY;
+    uint16_t MAX_X=ts.Layout->Size.x; uint16_t MAX_Y=ts.Layout->Size.y;
 
     int16_t cross[5][4] =
     {
@@ -5328,7 +5328,7 @@ static void UiDriver_TouchscreenCalibrationRun()
 static bool UiDriver_TouchscreenCalibration()
 {
 	bool retval = false;
-	uint16_t MAX_X=ts.Layout->SizeX; uint16_t MAX_Y=ts.Layout->SizeY;
+	uint16_t MAX_X=ts.Layout->Size.x; uint16_t MAX_Y=ts.Layout->Size.y;
 
 
 
@@ -5475,7 +5475,7 @@ static bool UiDriver_TouchscreenCalibration()
 #define CrossCheckCount 3
 void UiDriver_DoCrossCheck(int16_t cross[])
 {
-	uint16_t MAX_X=ts.Layout->SizeX;
+	uint16_t MAX_X=ts.Layout->Size.x;
 	uint32_t clr_fg, clr_bg;
 	clr_bg = Black;
 	clr_fg = White;
@@ -5547,7 +5547,7 @@ void UiDriver_StartupScreen_LogIfProblem(bool isProblem, const char* txt)
 {
 	if (isProblem)
 	{
-		startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START_X,startUpScreen_nextLineY,320,txt,Black,Red3,0);
+		startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x,startUpScreen_nextLineY,320,txt,Black,Red3,0);
 		startUpError = true;
 	}
 }
@@ -5594,22 +5594,22 @@ void UiDriver_StartUpScreenInit()
 	uint32_t clr;
 	// Clear all
 	UiLcdHy28_LcdClear(Black);
-	uint16_t nextY = ts.Layout->StartUpScreen_START_Y;
+	uint16_t nextY = ts.Layout->StartUpScreen_START.y;
 	snprintf(tx,100,"%s",DEVICE_STRING);
-	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START_X, nextY, 320, tx, Cyan, Black, 1);
+	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
 
 #ifdef TRX_HW_LIC
 	snprintf(tx,100,"Hardware License: %s",TRX_HW_LIC);
-	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START_X, nextY + 3, 320, tx, White,Black, 0);
+	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 3, 320, tx, White,Black, 0);
 #endif
 #ifdef TRX_HW_CREATOR
-	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START_X, nextY, 320, TRX_HW_CREATOR, White,Black, 0);
+	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, TRX_HW_CREATOR, White,Black, 0);
 #endif
 
 	snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
-	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START_X, nextY + 8, 320, tx, Yellow, Black, 1);
+	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 8, 320, tx, Yellow, Black, 1);
 
-	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START_X, nextY + 3, 320, "Firmware License: " UHSDR_LICENCE "\n" UHSDR_REPO, White, Black, 0);
+	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 3, 320, "Firmware License: " UHSDR_LICENCE "\n" UHSDR_REPO, White, Black, 0);
 
 	// show important error status
 	startUpScreen_nextLineY = nextY + 8; // reset y coord to first line of error messages
@@ -5644,7 +5644,7 @@ void UiDriver_StartUpScreenFinish()
 	{
 		hold_time = 10000; // 15s
 		txp = "Firmware change detected!\nPlease review settings!";
-		startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START_X,startUpScreen_nextLineY + 10,320,txp,White,Black,0);
+		startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x,startUpScreen_nextLineY + 10,320,txp,White,Black,0);
 
 		UiDriver_FirmwareVersionUpdateConfig();
 	}
@@ -5664,7 +5664,7 @@ void UiDriver_StartUpScreenFinish()
 		fg_clr = Green;
 	}
 
-	UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START_X,startUpScreen_nextLineY + 10,320,txp,fg_clr,clr,0);
+	UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x,startUpScreen_nextLineY + 10,320,txp,fg_clr,clr,0);
 
 	HAL_Delay(hold_time);
 
@@ -6771,7 +6771,7 @@ void UiDriver_MainHandler()
 
 					char str[20];
 					snprintf(str,20,"%2u:%02u:%02u",sTime.Hours,sTime.Minutes,sTime.Seconds);
-					UiLcdHy28_PrintText(ts.Layout->RTC_IND.x,ts.Layout->RTC_IND.y,str,White,Black,0);
+					UiLcdHy28_PrintText(ts.Layout->RTC_IND.x, ts.Layout->RTC_IND.y, str, White, Black, 0);
 				}
 			}
 			break;
@@ -6836,7 +6836,7 @@ void UiDriver_MainHandler()
 						txt = "AGC";
 					}
 
-				UiLcdHy28_PrintTextCentered(ts.Layout->DEMOD_MODE_MASK_X - 41,ts.Layout->DEMOD_MODE_MASK_Y,ts.Layout->DEMOD_MODE_MASK_W-6,txt,AGC_fg_clr,AGC_bg_clr,0);
+				UiLcdHy28_PrintTextCentered(ts.Layout->DEMOD_MODE_MASK.x - 41,ts.Layout->DEMOD_MODE_MASK.y,ts.Layout->DEMOD_MODE_MASK.w-6,txt,AGC_fg_clr,AGC_bg_clr,0);
 				// display CW decoder WPM speed
 				if(ts.cw_decoder_enable && ts.dmod_mode == DEMOD_CW)
 				{

@@ -196,7 +196,7 @@ static void FreeDv_DisplayBer()
 
     ber = 1000*freedv_get_total_bit_errors(f_FREEDV)/freedv_get_total_bits(f_FREEDV);
     snprintf(ber_string,12,"0.%03d",ber);  //calculate and display the bit error rate
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_BER_X+ freedv_display_x_offset,ts.Layout->FREEDV_BER_Y,ber_string,Yellow,Black, ts.Layout->FREEDV_FONT);
+    UiLcdHy28_PrintText(ts.Layout->FREEDV_BER.x + freedv_display_x_offset,ts.Layout->FREEDV_BER.y, ber_string,Yellow,Black, ts.Layout->FREEDV_FONT);
 
 }
 
@@ -212,21 +212,21 @@ static void FreeDv_DisplaySnr()
     SNR = 0.95*SNR + 0.05 * SNR_est; //some averaging to keep it more calm
     if (SNR<0) SNR=0.0;
     snprintf(SNR_string,12,"%02d",(int)(SNR+0.5));  //Display the current SNR and round it up to the next int
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR_X+ freedv_display_x_offset, ts.Layout->FREEDV_SNR_Y,SNR_string,Yellow,Black, ts.Layout->FREEDV_FONT);
+    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x + freedv_display_x_offset, ts.Layout->FREEDV_SNR.y ,SNR_string,Yellow,Black, ts.Layout->FREEDV_FONT);
 }
 
 void FreeDv_DisplayClear()
 {
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR_X,ts.Layout->FREEDV_SNR_Y,"            ",Yellow,Black,ts.Layout->FREEDV_FONT);
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_BER_X,ts.Layout->FREEDV_BER_Y,"            ",Yellow,Black,ts.Layout->FREEDV_FONT);
+    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x, ts.Layout->FREEDV_SNR.y,"            ",Yellow,Black,ts.Layout->FREEDV_FONT);
+    UiLcdHy28_PrintText(ts.Layout->FREEDV_BER.x, ts.Layout->FREEDV_BER.y,"            ",Yellow,Black,ts.Layout->FREEDV_FONT);
     UiDriver_TextMsgClear();
 }
 
 void FreeDv_DisplayPrepare()
 {
 	freedv_display_x_offset = UiLcdHy28_TextWidth("SNR=", ts.Layout->FREEDV_FONT);
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR_X,ts.Layout->FREEDV_SNR_Y,"SNR=",Yellow,Black, ts.Layout->FREEDV_FONT);
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_BER_X,ts.Layout->FREEDV_BER_Y,"BER=",Yellow,Black, ts.Layout->FREEDV_FONT);
+    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x, ts.Layout->FREEDV_SNR.y,"SNR=",Yellow,Black, ts.Layout->FREEDV_FONT);
+    UiLcdHy28_PrintText(ts.Layout->FREEDV_BER.x, ts.Layout->FREEDV_BER.y,"BER=",Yellow,Black, ts.Layout->FREEDV_FONT);
     UiDriver_TextMsgClear();
 }
 

@@ -375,15 +375,15 @@ bool UiMenu_FillSlotWithEntry(MenuDisplaySlot* here, const MenuDescriptor* entry
 // DISPLAY SPECIFIC CODE BEGIN
 void UiMenu_DisplayValue(const char* value,uint32_t clr,uint16_t pos)
 {
-    UiLcdHy28_PrintTextRight(ts.Layout->MENU_CURSOR_X - 4, ts.Layout->MENU_IND_Y + (pos * 12), value, clr, Black, 0);       // yes, normal position
+    UiLcdHy28_PrintTextRight(ts.Layout->MENU_CURSOR_X - 4, ts.Layout->MENU_IND.y + (pos * 12), value, clr, Black, 0);       // yes, normal position
 }
 static void UiMenu_DisplayLabel(const char* label,uint32_t clr,uint16_t pos)
 {
-    UiLcdHy28_PrintText(ts.Layout->MENU_IND_X, ts.Layout->MENU_IND_Y+(12*(pos)),label,clr,Black,0);
+    UiLcdHy28_PrintText(ts.Layout->MENU_IND.x, ts.Layout->MENU_IND.y + (12*(pos)),label,clr,Black,0);
 }
 static void UiMenu_DisplayCursor(const char* label,uint32_t clr,uint16_t pos)
 {
-    UiLcdHy28_PrintText(ts.Layout->MENU_CURSOR_X, ts.Layout->MENU_IND_Y+(12*(pos)),label,clr,Black,0);
+    UiLcdHy28_PrintText(ts.Layout->MENU_CURSOR_X, ts.Layout->MENU_IND.y + (12*(pos)),label,clr,Black,0);
 }
 // DISPLAY SPECIFIC CODE END
 
