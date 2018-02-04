@@ -53,89 +53,71 @@ typedef struct
 	int32_t size;
 } touchaction_list_descr_t;
 
-typedef struct {
-	uint16_t SizeX;					// Lcd dimension
-	uint16_t SizeY;					// Lcd dimension
+typedef struct
+{
+    uint16_t x;
+    uint16_t y;
+} UiCoord_t ;
 
-	uint16_t StartUpScreen_START_X;
-	uint16_t StartUpScreen_START_Y;
+typedef struct {
+	UiCoord_t Size;					// Lcd dimension
+
+	UiCoord_t StartUpScreen_START;
 
 	UiArea_t SpectrumWindow;		// Definition of spectrum window parameters
 
-	uint16_t TUNE_FREQ_X;			// Frequency display control
-	uint16_t TUNE_FREQ_Y;			// Frequency display control
+	UiCoord_t TUNE_FREQ;			// Frequency display control
 
 	uint16_t TUNE_SPLIT_FREQ_X; 	//Shift with a small split to the right to close the frequency digits
 	uint16_t TUNE_SPLIT_MARKER_X;
 	uint16_t TUNE_SPLIT_FREQ_Y_TX;
 
-	uint16_t TUNE_SFREQ_X;			// Second frequency display control
-	uint16_t TUNE_SFREQ_Y;
+	UiCoord_t TUNE_SFREQ;			// Second frequency display control
 
-	uint16_t BAND_MODE_X;			// Band selection control
-	uint16_t BAND_MODE_Y;
-	uint16_t BAND_MODE_MASK_X;
-	uint16_t BAND_MODE_MASK_Y;
-	uint16_t BAND_MODE_MASK_H;
-	uint16_t BAND_MODE_MASK_W;
+	UiCoord_t BAND_MODE;			// Band selection control
+	UiArea_t BAND_MODE_MASK;
 
-	uint16_t DEMOD_MODE_X;          // Demodulator mode control
-	uint16_t DEMOD_MODE_Y;
-	uint16_t DEMOD_MODE_MASK_X;
-	uint16_t DEMOD_MODE_MASK_Y;
-	uint16_t DEMOD_MODE_MASK_H;
-	uint16_t DEMOD_MODE_MASK_W;
+	UiCoord_t DEMOD_MODE;          // Demodulator mode control
+	UiArea_t DEMOD_MODE_MASK;
 
 	UiArea_t TUNE_STEP; 			// Tunning step control
 
 	UiArea_t BOTTOM_BAR;			// Bottom bar
 
-	uint16_t ENCODER_IND_X;			// Encoder controls indicator
-	uint16_t ENCODER_IND_Y;
+	UiCoord_t ENCODER_IND;			// Encoder controls indicator
 	uint8_t ENCODER_MODE;			//horizontal/vertical draw order
 
-	uint16_t LEFTBOXES_IND_X;		// Lower DSP box
-	uint16_t LEFTBOXES_IND_Y;
+	UiCoord_t LEFTBOXES_IND;		// Lower DSP box
 	uint16_t LEFTBOXES_WIDTH;		// used for the lower left side controls
 	uint16_t LEFTBOXES_ROW_H;
 	uint16_t LEFTBOXES_ROW_2ND_OFF;
 	uint8_t LEFTBOXES_MODE;
 
-	uint16_t PW_IND_X;				// Power level
-	uint16_t PW_IND_Y;
+	UiCoord_t PW_IND;				// Power level
 
 	UiArea_t DIGMODE;				// Digimode item
 	UiArea_t SM_IND;				// S meter position
-	UiArea_t PWR_IND;				// Supply Voltage indicator
-	UiArea_t TEMP_IND;				// Temperature Indicator
-	UiArea_t RTC_IND;				// RTC
+	UiCoord_t PWR_IND;				// Supply Voltage indicator
+	UiCoord_t TEMP_IND;				// Temperature Indicator
+	UiCoord_t RTC_IND;				// RTC
 
-	uint16_t CW_DECODER_WPM_X;
-	uint16_t CW_DECODER_WPM_Y;
+	UiCoord_t CW_DECODER_WPM;
 
-	uint16_t TextMsgLine_X;			// coordinates for text line (CW decoder or freedv output)
-	uint16_t TextMsgLine_Y;
+	UiCoord_t TextMsgLine;			// coordinates for text line (CW decoder or freedv output)
 	uint16_t TextMsg_buffer_max;	// Text message buffer size
 	uint8_t  TextMsg_font;
 
-	uint16_t SNAP_CARRIER_X;		// central position of variable freq marker
-	uint16_t SNAP_CARRIER_Y;
+	UiCoord_t SNAP_CARRIER;		// central position of variable freq marker
 
-	uint16_t PWR_NUM_IND_X;	// Location of numerical FWD/REV power indicator
-	uint16_t PWR_NUM_IND_Y;
+	UiCoord_t PWR_NUM_IND;	// Location of numerical FWD/REV power indicator
 
-
-	uint16_t FREEDV_SNR_X;	//freeDV coordinates for status display
-	uint16_t FREEDV_BER_X;
-	uint16_t FREEDV_SNR_Y;
-	uint16_t FREEDV_BER_Y;
+	UiCoord_t FREEDV_SNR;	//freeDV coordinates for status display
+	UiCoord_t FREEDV_BER;
 	uint16_t FREEDV_FONT;
 
-	uint16_t DisplayDbm_X;
-	uint16_t DisplayDbm_Y;
+	UiCoord_t DisplayDbm;
 
-	uint16_t MEMORYLABEL_X;
-	uint16_t MEMORYLABEL_Y;
+	UiCoord_t MEMORYLABEL;
 
 	uint16_t LOADANDDEBUG_Y;
 	uint16_t DEBUG_X;
@@ -144,8 +126,7 @@ typedef struct {
 
 	uint16_t MENUSIZE;				// number of menu items per page/screen
 
-	uint16_t MENU_IND_X;       	// X position of description of menu item being changed
-	uint16_t MENU_IND_Y;        // Y position of first (top) item being changed
+	UiCoord_t MENU_IND;       	// X position of description of menu item being changed
 	uint16_t MENU_CHANGE_X;     // Position of variable being changed
 	uint16_t MENU_CURSOR_X;     // Position of cursor used to indicate selected item
 	uint8_t MENU_TEXT_SIZE_MAX;	// One line maximum length

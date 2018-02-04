@@ -1817,8 +1817,8 @@ static void UiSpectrum_DisplayDbm()
         {
             char txt[12];
             snprintf(txt,12,"%4ld      ", val);
-            UiLcdHy28_PrintText(ts.Layout->DisplayDbm_X,ts.Layout->DisplayDbm_Y,txt,White,Blue,0);
-            UiLcdHy28_PrintText(ts.Layout->DisplayDbm_X+SMALL_FONT_WIDTH * 4,ts.Layout->DisplayDbm_Y,unit_label,White,Blue,4);
+            UiLcdHy28_PrintText(ts.Layout->DisplayDbm.x,ts.Layout->DisplayDbm.y,txt,White,Blue,0);
+            UiLcdHy28_PrintText(ts.Layout->DisplayDbm.x+SMALL_FONT_WIDTH * 4,ts.Layout->DisplayDbm.y,unit_label,White,Blue,4);
             oldVal=val;		//this will prevent from useless redrawing the same
             dBmShown=1;		//for indicate that dms are shown and erase function may it clear when needed
         }
@@ -1827,7 +1827,7 @@ static void UiSpectrum_DisplayDbm()
     // clear the display since we are not showing dBm or dBm/Hz or we are in TX mode
     if ((display_something == false) && (dBmShown==1))
     {
-        UiLcdHy28_DrawFullRect(ts.Layout->DisplayDbm_X, ts.Layout->DisplayDbm_Y, 15, SMALL_FONT_WIDTH * 10 , Black);
+        UiLcdHy28_DrawFullRect(ts.Layout->DisplayDbm.x, ts.Layout->DisplayDbm.y, 15, SMALL_FONT_WIDTH * 10 , Black);
         dBmShown=0;		//just to indicate that dbm is erased
         oldVal=99999;	//some value that will enforce refresh when user enable display dbm
     }
@@ -1843,37 +1843,37 @@ void UiSpectrum_InitCwSnapDisplay (bool visible)
 	{
 		color = Black;
 		// also erase yellow indicator
-        UiLcdHy28_DrawFullRect(ts.Layout->SNAP_CARRIER_X-27, ts.Layout->SNAP_CARRIER_Y, 6, 57, Black);
+        UiLcdHy28_DrawFullRect(ts.Layout->SNAP_CARRIER.x-27, ts.Layout->SNAP_CARRIER.y, 6, 57, Black);
 	}
 	//Horizontal lines of box
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X-27,
-			ts.Layout->SNAP_CARRIER_Y + 6,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x-27,
+			ts.Layout->SNAP_CARRIER.y + 6,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X+5,
-			ts.Layout->SNAP_CARRIER_Y + 6,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x+5,
+			ts.Layout->SNAP_CARRIER.y + 6,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X-27,
-			ts.Layout->SNAP_CARRIER_Y - 1,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x-27,
+			ts.Layout->SNAP_CARRIER.y - 1,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X+5,
-			ts.Layout->SNAP_CARRIER_Y - 1,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x+5,
+			ts.Layout->SNAP_CARRIER.y - 1,
             27,
             LCD_DIR_HORIZONTAL,
             color);
 	// vertical lines of box
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X-27,
-			ts.Layout->SNAP_CARRIER_Y - 1,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x-27,
+			ts.Layout->SNAP_CARRIER.y - 1,
             8,
             LCD_DIR_VERTICAL,
             color);
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER_X+31,
-			ts.Layout->SNAP_CARRIER_Y - 1,
+	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x+31,
+			ts.Layout->SNAP_CARRIER.y - 1,
             8,
             LCD_DIR_VERTICAL,
             color);
@@ -1907,14 +1907,14 @@ void UiSpectrum_CwSnapDisplay (float32_t delta)
 
 	if(delta_p != old_delta_p)
 	{
-	    UiLcdHy28_DrawStraightLineDouble( ts.Layout->SNAP_CARRIER_X + old_delta_p + 1,
-	    		ts.Layout->SNAP_CARRIER_Y,
+	    UiLcdHy28_DrawStraightLineDouble( ts.Layout->SNAP_CARRIER.x + old_delta_p + 1,
+	    		ts.Layout->SNAP_CARRIER.y,
 	            6,
 	            LCD_DIR_VERTICAL,
 	            Black);
 
-	    UiLcdHy28_DrawStraightLineDouble( ts.Layout->SNAP_CARRIER_X + delta_p + 1,
-	    		ts.Layout->SNAP_CARRIER_Y,
+	    UiLcdHy28_DrawStraightLineDouble( ts.Layout->SNAP_CARRIER.x + delta_p + 1,
+	    		ts.Layout->SNAP_CARRIER.y,
 	            6,
 	            LCD_DIR_VERTICAL,
 	            Yellow);

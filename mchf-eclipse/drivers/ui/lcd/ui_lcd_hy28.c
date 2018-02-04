@@ -2219,8 +2219,8 @@ uint8_t UiLcdHy28_Init()
     	disp_resolution=RESOLUTION_320_240;
     	break;
     }
-    mchf_display.MAX_X=ts.Layout->SizeX;
-    mchf_display.MAX_Y=ts.Layout->SizeY;
+    mchf_display.MAX_X=ts.Layout->Size.x;
+    mchf_display.MAX_Y=ts.Layout->Size.y;
 #else
     switch(mchf_display.DeviceCode)
     {
