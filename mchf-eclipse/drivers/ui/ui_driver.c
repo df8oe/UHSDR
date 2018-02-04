@@ -496,7 +496,7 @@ static bool ui_txt_msg_update = false;
 void UiDriver_TextMsgClear()
 {
 	uint32_t fillcnt;
-	for(fillcnt=0; fillcnt<ts.Layout->TextMsg_buffer_max;fillcnt++)
+	for(fillcnt=0; fillcnt<ts.Layout->TextMsg_buffer_max-1;fillcnt++)
 	{
 		ui_txt_msg_buffer[fillcnt]=' ';
 	}
@@ -515,7 +515,7 @@ void UiDriver_TextMsgDisplay()
         if(ui_txt_msg_idx==0)
         {
         	uint32_t fillcnt;
-        	for(fillcnt=0; fillcnt<ts.Layout->TextMsg_buffer_max;fillcnt++)
+        	for(fillcnt=0; fillcnt<ts.Layout->TextMsg_buffer_max-1;fillcnt++)
         	{
         		ui_txt_msg_buffer[fillcnt]=' ';
         	}
