@@ -1,3 +1,4 @@
+#
 # Author: Harald Baumgart DL4SAI
 # everybody may  copy, use or modify this file
 # there is no guarantee for anything by the author
@@ -65,7 +66,7 @@ endif
 
 COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
 	  -DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" $(CONFIGFLAGS) \
-	  -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function
+	  -ffunction-sections -fdata-sections -flto -Wall -Wno-unused-function -g3
 
 # identifying of "official builds by DF8OE"
 ifneq (,$(wildcard ../DF8OE))
@@ -74,7 +75,7 @@ endif
 
 # compilation options
 MACHFLAGS_F4 := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -DARM_MATH_CM4 -DCORTEX_M4 -DSTM32F407xx -D__FPU_PRESENT=1U
-MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32F767xx -D__FPU_PRESENT=1 
+MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32F767xx -D__FPU_PRESENT=1 
 
 #COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
 #	-DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" -DOFFICIAL_BUILD=\"$(OFFICIAL_BUILD)\" \
@@ -86,7 +87,7 @@ BASECFLAGS_F7  = $(MACHFLAGS_F7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
 
 LINKERLOC=$(ROOTLOC)/linker
 
-LDFLAGS_BASE := -L$(LINKERLOC) -flto --specs=nano.specs
+LDFLAGS_BASE := -L$(LINKERLOC) -flto --specs=nano.specs -g3
 LDFLAGS_F4 := $(LDFLAGS_BASE) $(MACHFLAGS_F4)
 LDFLAGS_F7 := $(LDFLAGS_BASE) $(MACHFLAGS_F7) 
 
@@ -141,7 +142,7 @@ endif
 ifeq ($(BUILDFOR),F7)
 
 $(BOOTLOADER).elf: CFLAGS = ${BASECFLAGS_F7} -Os -DBOOTLOADER_BUILD
-$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F7} -O3
+$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F7} -O2
 $(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F7} -T$(LINKERLOC)/arm-gcc-link-bootloader_f7.ld
 $(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F7} -T$(LINKERLOC)/arm-gcc-link_f7.ld
 
@@ -276,12 +277,12 @@ $(BOOTLOADER):  $(BOOTLOADER).bin $(BOOTLOADER).dfu
 	# compile the bootloader ARM-executables .bin / .elf and .dfu for mcHF SDR TRx, generate .map and .dmp
 
 # compilation
-$(FIRMWARE).elf:  $(OBJS) $(HAL_OBJS) $(DSPLIB_OBJS)
+$(FIRMWARE).elf:  $(HAL_OBJS) $(DSPLIB_OBJS) $(OBJS)
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ $^ $(LIBS)
+	@$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ $^ $(LIBS)
 
 # compilation
-$(BOOTLOADER).elf:  $(BL_OBJS) $(BL_HAL_OBJS)
+$(BOOTLOADER).elf:  $(BL_HAL_OBJS) $(BL_OBJS)
 	$(ECHO) "  [LD] $@"
 	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ $^ $(LIBS)
 
