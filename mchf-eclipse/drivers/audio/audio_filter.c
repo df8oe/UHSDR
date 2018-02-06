@@ -1072,10 +1072,8 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint16_
 arm_fir_instance_f32    FIR_I;
 arm_fir_instance_f32    FIR_Q;
 
-//static float32_t    __MCHF_SPECIALMEM FirState_I[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
-//static float32_t    __MCHF_SPECIALMEM FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS];
-static float32_t    __MCHF_SPECIALMEM FirState_I[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS_HI];
-static float32_t    __MCHF_SPECIALMEM FirState_Q[FIR_RXAUDIO_BLOCK_SIZE+Q_NUM_TAPS_HI];
+static float32_t    __MCHF_SPECIALMEM FirState_I[I_BLOCK_SIZE+Q_NUM_TAPS_HI];
+static float32_t    __MCHF_SPECIALMEM FirState_Q[Q_BLOCK_SIZE+Q_NUM_TAPS_HI];
 
 //
 // TX Hilbert transform (90 degree) FIR filter state tables and instances
