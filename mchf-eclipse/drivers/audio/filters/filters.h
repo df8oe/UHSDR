@@ -5,14 +5,12 @@
 #include "uhsdr_board.h"
 #include "arm_math.h"
 
-#define I_BLOCK_SIZE		IQ_BUFSZ
-#define Q_BLOCK_SIZE        IQ_BUFSZ
+#define IQ_RX_BLOCK_SIZE		IQ_BLOCK_SIZE
+#define IQ_RX_NUM_TAPS          89
+#define IQ_RX_NUM_TAPS_HI      199
+#define IQ_RX_NUM_TAPS_MAX     199
 
-#define I_NUM_TAPS          89
-#define Q_NUM_TAPS          89
-
-#define I_NUM_TAPS_HI      199
-#define Q_NUM_TAPS_HI      199
+#define FIR_TX_FREEDV_INTERPOLATE_NUM_TAPS 30
 
 typedef struct {
     const float32_t* i;
@@ -28,36 +26,36 @@ extern const arm_fir_interpolate_instance_f32 FirRxInterpolate;
 extern const arm_fir_interpolate_instance_f32 FirRxInterpolate_4_5k;
 extern const arm_fir_interpolate_instance_f32 FirRxInterpolate_4_10k;
 extern const arm_fir_interpolate_instance_f32 FirRxInterpolate10KHZ;
-extern const arm_fir_instance_f32 FirFreeDVInterpolate;
-extern const float FreeDV_FIR_interpolate[24];
+extern const arm_fir_instance_f32 Fir_TxFreeDV_Interpolate;
+extern const float Fir_Rx_FreeDV_Interpolate_Coeffs[24];
 
-extern const float iq_rx_am_10k_coeffs[Q_NUM_TAPS];
-extern const float iq_rx_am_2k3_coeffs[Q_NUM_TAPS];
-extern const float iq_rx_am_3k6_coeffs[Q_NUM_TAPS];
-extern const float iq_rx_am_5k_coeffs[Q_NUM_TAPS];
-extern const float iq_rx_am_4k5_coeffs[Q_NUM_TAPS];
-extern const float iq_rx_am_6k_coeffs[Q_NUM_TAPS];
-extern const float iq_rx_am_7k5_coeffs[Q_NUM_TAPS];
+extern const float iq_rx_am_10k_coeffs[IQ_RX_NUM_TAPS];
+extern const float iq_rx_am_2k3_coeffs[IQ_RX_NUM_TAPS];
+extern const float iq_rx_am_3k6_coeffs[IQ_RX_NUM_TAPS];
+extern const float iq_rx_am_5k_coeffs[IQ_RX_NUM_TAPS];
+extern const float iq_rx_am_4k5_coeffs[IQ_RX_NUM_TAPS];
+extern const float iq_rx_am_6k_coeffs[IQ_RX_NUM_TAPS];
+extern const float iq_rx_am_7k5_coeffs[IQ_RX_NUM_TAPS];
 
-extern const float i_rx_10k_coeffs[I_NUM_TAPS];
-extern const float i_rx_3k6_coeffs[I_NUM_TAPS];
-extern const float i_rx_4k5_coeffs[I_NUM_TAPS];
-extern const float i_rx_5k_coeffs[I_NUM_TAPS];
-extern const float i_rx_6k_coeffs[I_NUM_TAPS];
-extern const float i_rx_7k5_coeffs[I_NUM_TAPS];
-//extern const float i_rx_coeffs[I_NUM_TAPS];
-extern const float i_rx_wow_coeffs[I_NUM_TAPS_HI];
-extern const float i_rx_new_coeffs[I_NUM_TAPS_HI];
+extern const float i_rx_10k_coeffs[IQ_RX_NUM_TAPS];
+extern const float i_rx_3k6_coeffs[IQ_RX_NUM_TAPS];
+extern const float i_rx_4k5_coeffs[IQ_RX_NUM_TAPS];
+extern const float i_rx_5k_coeffs[IQ_RX_NUM_TAPS];
+extern const float i_rx_6k_coeffs[IQ_RX_NUM_TAPS];
+extern const float i_rx_7k5_coeffs[IQ_RX_NUM_TAPS];
+//extern const float i_rx_coeffs[IQ_NUM_TAPS];
+extern const float i_rx_wow_coeffs[IQ_RX_NUM_TAPS_HI];
+extern const float i_rx_new_coeffs[IQ_RX_NUM_TAPS_HI];
 
-extern const float q_rx_new_coeffs[Q_NUM_TAPS_HI];
-extern const float q_rx_wow_coeffs[Q_NUM_TAPS_HI];
-//extern const float q_rx_coeffs[Q_NUM_TAPS];
-extern const float q_rx_10k_coeffs[Q_NUM_TAPS];
-extern const float q_rx_3k6_coeffs[Q_NUM_TAPS];
-extern const float q_rx_4k5_coeffs[Q_NUM_TAPS];
-extern const float q_rx_5k_coeffs[Q_NUM_TAPS];
-extern const float q_rx_6k_coeffs[Q_NUM_TAPS];
-extern const float q_rx_7k5_coeffs[Q_NUM_TAPS];
+extern const float q_rx_new_coeffs[IQ_RX_NUM_TAPS_HI];
+extern const float q_rx_wow_coeffs[IQ_RX_NUM_TAPS_HI];
+//extern const float q_rx_coeffs[IQ_NUM_TAPS];
+extern const float q_rx_10k_coeffs[IQ_RX_NUM_TAPS];
+extern const float q_rx_3k6_coeffs[IQ_RX_NUM_TAPS];
+extern const float q_rx_4k5_coeffs[IQ_RX_NUM_TAPS];
+extern const float q_rx_5k_coeffs[IQ_RX_NUM_TAPS];
+extern const float q_rx_6k_coeffs[IQ_RX_NUM_TAPS];
+extern const float q_rx_7k5_coeffs[IQ_RX_NUM_TAPS];
 
 
 extern const arm_iir_lattice_instance_f32 IIR_1k4_LPF;

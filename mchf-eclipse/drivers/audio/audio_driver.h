@@ -44,13 +44,16 @@
 
 //
 // -----------------------------
-// Half of total buffer
+// Half of total buffer, since in each interrupte we get half of the total buffer filled
 #define	IQ_BUFSZ 	(BUFF_LEN/2)
 
+// number of samples is half of size since we have 2 values (l/r or i/q) per sample.
+#define IQ_BLOCK_SIZE    (IQ_BUFSZ/2)
+
 // Audio filter
-#define FIR_RXAUDIO_BLOCK_SIZE		(IQ_BUFSZ/2) // block size is 64, but size/2 is used in audio_rx_driver
+#define FIR_RXAUDIO_BLOCK_SIZE		IQ_BLOCK_SIZE
 #define FIR_RXAUDIO_NUM_TAPS		16 // maximum number of taps in the decimation and interpolation FIR filters
-#define IIR_RXAUDIO_BLOCK_SIZE		(IQ_BUFSZ/2) // block size is 64, but size/2 is used in audio_rx_driver
+#define IIR_RXAUDIO_BLOCK_SIZE		IQ_BLOCK_SIZE
 #define IIR_RXAUDIO_NUM_STAGES		12 // we use a maximum stage number of 10 at the moment, so this is 12 just to be safe
 //
 #define CODEC_DEFAULT_GAIN		0x1F	// Gain of line input to start with
