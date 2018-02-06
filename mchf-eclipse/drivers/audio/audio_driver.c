@@ -3575,7 +3575,11 @@ void AudioDriver_LeakyLmsNr (float32_t *in_buff, float32_t *out_buff, int buff_s
 //*----------------------------------------------------------------------------
 static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
 {
-    const int16_t blockSizeDecim = blockSize/(int16_t)ads.decimation_rate;
+    // this is the main RX audio function
+	// it is driven with 32 samples in the complex buffer scr, meaning 32 * I AND 32 * Q
+	// blockSize is thus 32, DD4WH 2018_02_06
+
+	const int16_t blockSizeDecim = blockSize/(int16_t)ads.decimation_rate;
     // we copy volatile variables which are used multiple times to local consts to let the compiler to its optimization magic
     // since we are in an interrupt, no one will change these anyway
     // shaved off a few bytes of code
@@ -3583,7 +3587,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
-	uint32_t no_dec_samples = blockSizeDecim;
+	uint32_t no_dec_samples = blockSizeDecim; // only used for the noise reduction decimation-by-two handling
 #ifdef USE_TWO_CHANNEL_AUDIO
     const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
 #endif
