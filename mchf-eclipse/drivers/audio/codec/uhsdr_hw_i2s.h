@@ -15,7 +15,13 @@
 #ifndef __MCHF_HW_I2S_H
 #define __MCHF_HW_I2S_H
 
+// #define BUFF_LEN (2*(32*2)) // == 128
 #define BUFF_LEN 128
+
+/*
+ * BUFF_LEN is derived from 2* 32 LR Samples per Audio-Interrupt (== 64 * int16_t )
+ * since we get half of the buffer in each DMA Interrupt for processing
+ */
 
 typedef struct
 {

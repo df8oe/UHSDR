@@ -26,7 +26,7 @@
      * 20141205 by KA7OEI using Iowa Hills Hilbert Filter Designer
 */
 
-const float iq_rx_am_10k_coeffs[Q_NUM_TAPS] =
+const float iq_rx_am_10k_coeffs[IQ_RX_NUM_TAPS] =
 {
     0.000117722483050164,
     -0.000190826378141535,
@@ -137,7 +137,7 @@ const float iq_rx_am_10k_coeffs[Q_NUM_TAPS] =
      * 20141205 by KA7OEI using Iowa Hills Hilbert Filter Designer
 */
 
-const float iq_rx_am_2k3_coeffs[Q_NUM_TAPS] =
+const float iq_rx_am_2k3_coeffs[IQ_RX_NUM_TAPS] =
 {
     -0.000196778133038791,
     -0.000275755280074211,
@@ -243,7 +243,7 @@ const float iq_rx_am_2k3_coeffs[Q_NUM_TAPS] =
      * 20141205 by KA7OEI using Iowa Hills Hilbert Filter Designer
 */
 
-const float iq_rx_am_3k6_coeffs[Q_NUM_TAPS] =
+const float iq_rx_am_3k6_coeffs[IQ_RX_NUM_TAPS] =
 {
     0.000194236006761998,
     0.000282693396615949,
@@ -350,7 +350,7 @@ const float iq_rx_am_3k6_coeffs[Q_NUM_TAPS] =
  * Window off, transition width 0.06
  *
  */
-const float iq_rx_am_4k5_coeffs[Q_NUM_TAPS] =
+const float iq_rx_am_4k5_coeffs[IQ_RX_NUM_TAPS] =
 {
     12.62505461280822420E-6,
     -0.001023781148748946,
@@ -461,7 +461,7 @@ const float iq_rx_am_4k5_coeffs[Q_NUM_TAPS] =
      *
 */
 
-const float iq_rx_am_5k_coeffs[Q_NUM_TAPS] =
+const float iq_rx_am_5k_coeffs[IQ_RX_NUM_TAPS] =
 {
     -0.000045392289047881,
     -0.000004812442917794,
@@ -570,7 +570,7 @@ const float iq_rx_am_5k_coeffs[Q_NUM_TAPS] =
      *
 */
 
-const float iq_rx_am_6k_coeffs[Q_NUM_TAPS] =
+const float iq_rx_am_6k_coeffs[IQ_RX_NUM_TAPS] =
 {
     -0.000004880093665016,
     0.000056249601206470,
@@ -680,7 +680,7 @@ const float iq_rx_am_6k_coeffs[Q_NUM_TAPS] =
 
 */
 
-const float iq_rx_am_7k5_coeffs[Q_NUM_TAPS] =
+const float iq_rx_am_7k5_coeffs[IQ_RX_NUM_TAPS] =
 {
     -0.000054368878976464,
     -0.000109470418324297,

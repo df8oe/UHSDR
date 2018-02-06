@@ -269,14 +269,14 @@ void AudioManagement_CalcSubaudibleGenFreq(void)
  */
 void AudioManagement_CalcSubaudibleDetFreq(void)
 {
-    const uint32_t size = BUFF_LEN;
+    const uint32_t size = BUFF_LEN/2;
 
     ads.fm_subaudible_tone_det_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select];       // look up tone frequency (in Hz)
 
     // Calculate Goertzel terms for tone detector(s)
-    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_HIGH], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2,FM_GOERTZEL_HIGH, IQ_SAMPLE_RATE);
-    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_LOW], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2,FM_GOERTZEL_LOW, IQ_SAMPLE_RATE);
-    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_CTR], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size/2,1.0, IQ_SAMPLE_RATE);
+    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_HIGH], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_HIGH, IQ_SAMPLE_RATE);
+    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_LOW], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_LOW, IQ_SAMPLE_RATE);
+    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_CTR], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,1.0, IQ_SAMPLE_RATE);
 }
 
 //

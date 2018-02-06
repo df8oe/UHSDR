@@ -108,13 +108,13 @@ const arm_fir_interpolate_instance_f32 FirRxInterpolate_4_10k=
     }
 };
 
-
+// FIXME: Is this the right file for a FreeDV TX filter?
 // this is meant to be an interpolation filter for FreeDV
-// cutoff 2.4kHz
+// cutoff 2.4kHz (30 Taps)
 
-const arm_fir_instance_f32 FirFreeDVInterpolate=
+const arm_fir_instance_f32 Fir_TxFreeDV_Interpolate =
 {
-    .numTaps = 30,
+    .numTaps = FIR_TX_FREEDV_INTERPOLATE_NUM_TAPS,
     .pCoeffs = (float*) (const float[])
     {
     	-0.001351058376639693,
@@ -147,8 +147,6 @@ const arm_fir_instance_f32 FirFreeDVInterpolate=
     	-0.005575655191465650,
     	-0.003185783059285283,
     	-0.001351058376639693
-
-
     }
 };
 /*
@@ -225,9 +223,10 @@ const arm_fir_instance_f32 FirFreeDVInterpolate=
     }
 };
  */
-const float FreeDV_FIR_interpolate[24] =
 
-    {   -0.017405444562935534,
+const float32_t Fir_Rx_FreeDV_Interpolate_Coeffs[24] =
+{
+    -0.017405444562935534,
 	-0.017108768884742161,
 	-0.013120768604810904,
 	-0.004804294719432716,
@@ -251,4 +250,4 @@ const float FreeDV_FIR_interpolate[24] =
 	-0.013120768604810904,
 	-0.017108768884742161,
 	-0.017405444562935534
-    };
+};

@@ -1952,10 +1952,10 @@ static bool AudioDriver_RxProcessorFreeDV (AudioSample_t * const src, float32_t 
             if (outbuff_count >=0)  // here we are not at an block-overlapping region
             {
                 dst[j]=
-                        FreeDV_FIR_interpolate[5-mod_count]*out_buffer->samples[outbuff_count] +
-                        FreeDV_FIR_interpolate[11-mod_count]*out_buffer->samples[outbuff_count+1]+
-                        FreeDV_FIR_interpolate[17-mod_count]*out_buffer->samples[outbuff_count+2]+
-                        FreeDV_FIR_interpolate[23-mod_count]*out_buffer->samples[outbuff_count+3];
+                        Fir_Rx_FreeDV_Interpolate_Coeffs[5-mod_count]*out_buffer->samples[outbuff_count] +
+                        Fir_Rx_FreeDV_Interpolate_Coeffs[11-mod_count]*out_buffer->samples[outbuff_count+1]+
+                        Fir_Rx_FreeDV_Interpolate_Coeffs[17-mod_count]*out_buffer->samples[outbuff_count+2]+
+                        Fir_Rx_FreeDV_Interpolate_Coeffs[23-mod_count]*out_buffer->samples[outbuff_count+3];
                 // here we are actually calculation the interpolation for the current "up"-sample
             }
             else
@@ -1964,28 +1964,28 @@ static bool AudioDriver_RxProcessorFreeDV (AudioSample_t * const src, float32_t 
                 if (outbuff_count == -3)
                 {
                     dst[j] =
-                            FreeDV_FIR_interpolate[5-mod_count] * History[0] +
-                            FreeDV_FIR_interpolate[11-mod_count] * History[1] +
-                            FreeDV_FIR_interpolate[17-mod_count] * History[2] +
-                            FreeDV_FIR_interpolate[23-mod_count] * out_buffer->samples[0];
+                            Fir_Rx_FreeDV_Interpolate_Coeffs[5-mod_count] * History[0] +
+                            Fir_Rx_FreeDV_Interpolate_Coeffs[11-mod_count] * History[1] +
+                            Fir_Rx_FreeDV_Interpolate_Coeffs[17-mod_count] * History[2] +
+                            Fir_Rx_FreeDV_Interpolate_Coeffs[23-mod_count] * out_buffer->samples[0];
                 }
                 else
                 {
                     if (outbuff_count == -2)
                     {
                         dst[j] =
-                                FreeDV_FIR_interpolate[5-mod_count] * History[1] +
-                                FreeDV_FIR_interpolate[11-mod_count] * History[2] +
-                                FreeDV_FIR_interpolate[17-mod_count] * out_buffer->samples[0] +
-                                FreeDV_FIR_interpolate[23-mod_count] * out_buffer->samples[1];
+                                Fir_Rx_FreeDV_Interpolate_Coeffs[5-mod_count] * History[1] +
+                                Fir_Rx_FreeDV_Interpolate_Coeffs[11-mod_count] * History[2] +
+                                Fir_Rx_FreeDV_Interpolate_Coeffs[17-mod_count] * out_buffer->samples[0] +
+                                Fir_Rx_FreeDV_Interpolate_Coeffs[23-mod_count] * out_buffer->samples[1];
                     }
                     else
                     {
                         dst[j] =
-                                FreeDV_FIR_interpolate[5-mod_count] * History[2] +
-                                FreeDV_FIR_interpolate[11-mod_count] * out_buffer->samples[0] +
-                                FreeDV_FIR_interpolate[17-mod_count] * out_buffer->samples[1] +
-                                FreeDV_FIR_interpolate[23-mod_count] * out_buffer->samples[2];
+                                Fir_Rx_FreeDV_Interpolate_Coeffs[5-mod_count] * History[2] +
+                                Fir_Rx_FreeDV_Interpolate_Coeffs[11-mod_count] * out_buffer->samples[0] +
+                                Fir_Rx_FreeDV_Interpolate_Coeffs[17-mod_count] * out_buffer->samples[1] +
+                                Fir_Rx_FreeDV_Interpolate_Coeffs[23-mod_count] * out_buffer->samples[2];
                     }
                 }
             }
@@ -3190,8 +3190,8 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
     //*****************************
 
     // First of all: decimation of I and Q path
-    arm_fir_decimate_f32(&DECIMATE_SAM_I, adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
-    arm_fir_decimate_f32(&DECIMATE_SAM_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+    arm_fir_decimate_f32(&FirDecim_RxSam_I, adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+    arm_fir_decimate_f32(&FirDecim_RxSam_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
 
     switch(ts.dmod_mode)
     {
@@ -3688,14 +3688,14 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     // TODO HILBERT
                     arm_fir_decimate_f32(&DECIMATE_RX,   adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                     arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
-                    arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer, blockSizeDecim);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
-                    arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer, blockSizeDecim);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
+                    arm_fir_f32(&Fir_Rx_Hilbert_I,adb.i_buffer, adb.i_buffer, blockSizeDecim);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
+                    arm_fir_f32(&Fir_Rx_Hilbert_Q,adb.q_buffer, adb.q_buffer, blockSizeDecim);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
                 }
                 else
                 { // not SAM/AM AND higher filter bandwidths (> 4k8)
                 	// attention, this could be called with decimated audio !??? DD4WH, 19.10.2017
-                    arm_fir_f32(&FIR_I,adb.i_buffer, adb.i_buffer, blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
-                    arm_fir_f32(&FIR_Q,adb.q_buffer, adb.q_buffer, blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
+                    arm_fir_f32(&Fir_Rx_Hilbert_I,adb.i_buffer, adb.i_buffer, blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass 0 degrees
+                    arm_fir_f32(&Fir_Rx_Hilbert_Q,adb.q_buffer, adb.q_buffer, blockSize);   // in AM: lowpass filter, in other modes: Hilbert lowpass -90 degrees
                 }
             }
 
@@ -4416,9 +4416,9 @@ static void AudioDriver_TxProcessorModulatorSSB(AudioSample_t * const dst, const
     // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
     // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
     // + 0 deg to I data
-    arm_fir_f32(&FIR_I_TX, adb.a_buffer, adb.i_buffer, blockSize);
+    arm_fir_f32(&Fir_Tx_Hilbert_I, adb.a_buffer, adb.i_buffer, blockSize);
     // - 90 deg to Q data
-    arm_fir_f32(&FIR_Q_TX, adb.a_buffer, adb.q_buffer, blockSize);
+    arm_fir_f32(&Fir_Tx_Hilbert_Q, adb.a_buffer, adb.q_buffer, blockSize);
 
     if(iq_freq_mode)
     {
@@ -4676,8 +4676,8 @@ static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSamp
 
             // INTERPOLATION FILTER [after the interpolation has taken place]
             // the samples are now in adb.i_buffer and adb.q_buffer, so lets filter them
-            arm_fir_f32(&FIR_I_FREEDV, adb.i_buffer, adb.i_buffer,blockSize);
-            arm_fir_f32(&FIR_Q_FREEDV, adb.q_buffer, adb.q_buffer, blockSize);
+            arm_fir_f32(&Fir_TxFreeDV_Interpolate_I, adb.i_buffer, adb.i_buffer,blockSize);
+            arm_fir_f32(&Fir_TxFreeDV_Interpolate_Q, adb.q_buffer, adb.q_buffer, blockSize);
 
 
 
@@ -4702,9 +4702,9 @@ static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSamp
         // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
         // + 0 deg to I data
 
-        arm_fir_f32(&FIR_I_TX,adb.a_buffer, adb.i_buffer,blockSize);
+        arm_fir_f32(&Fir_Tx_Hilbert_I,adb.a_buffer, adb.i_buffer,blockSize);
         // - 90 deg to Q data
-        arm_fir_f32(&FIR_Q_TX,adb.a_buffer, adb.q_buffer, blockSize);
+        arm_fir_f32(&Fir_Tx_Hilbert_Q,adb.a_buffer, adb.q_buffer, blockSize);
         // audio_tx_compressor(blockSize, SSB_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
 
         if(ts.iq_freq_mode)
@@ -4912,9 +4912,9 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
 
             AudioDriver_TxCompressor(adb.a_buffer, blockSize, AM_ALC_GAIN_CORRECTION);    // Do the TX ALC and speech compression/processing
 
-            arm_fir_f32(&FIR_I_TX, adb.a_buffer, adb.i_buffer, blockSize);
+            arm_fir_f32(&Fir_Tx_Hilbert_I, adb.a_buffer, adb.i_buffer, blockSize);
             // - 90 deg to Q data
-            arm_fir_f32(&FIR_Q_TX, adb.a_buffer, adb.q_buffer, blockSize);
+            arm_fir_f32(&Fir_Tx_Hilbert_Q, adb.a_buffer, adb.q_buffer, blockSize);
 
             // COMMENT:  It would be trivial to add the option of generating AM with just a single (Upper or Lower) sideband since we are generating the two, separately anyway
             // and putting them back together!  [KA7OEI]

@@ -17,20 +17,26 @@
 
 #include "uhsdr_types.h"
 #include "arm_math.h"
-//
-extern arm_fir_instance_f32    FIR_Q_TX;
-extern arm_fir_instance_f32    FIR_I_TX;
-extern arm_fir_instance_f32    FIR_Q;
-extern arm_fir_instance_f32    FIR_I;
-extern arm_fir_instance_f32    FIR_Q_FREEDV;
-extern arm_fir_instance_f32    FIR_I_FREEDV;
-extern arm_fir_decimate_instance_f32 DECIMATE_SAM_I;
-extern arm_fir_decimate_instance_f32 DECIMATE_SAM_Q;
+
+// TODO: Decide if we switch to use this struct
+typedef struct
+{
+    arm_fir_instance_f32 I;
+    arm_fir_instance_f32 Q;
+} FIR_IQ_t;
+
+extern arm_fir_instance_f32    Fir_Tx_Hilbert_Q;
+extern arm_fir_instance_f32    Fir_Tx_Hilbert_I;
+extern arm_fir_instance_f32    Fir_Rx_Hilbert_Q;
+extern arm_fir_instance_f32    Fir_Rx_Hilbert_I;
+extern arm_fir_instance_f32    Fir_TxFreeDV_Interpolate_Q;
+extern arm_fir_instance_f32    Fir_TxFreeDV_Interpolate_I;
+extern arm_fir_decimate_instance_f32 FirDecim_RxSam_I;
+extern arm_fir_decimate_instance_f32 FirDecim_RxSam_Q;
 
 
 
 // Audio filter select enumeration
-//
 void 	AudioFilter_InitRxHilbertFIR(uint8_t dmod_mode);
 //void    AudioFilter_CalcRxPhaseAdj(void);
 void 	AudioFilter_InitTxHilbertFIR(void);
@@ -38,34 +44,6 @@ void 	AudioFilter_InitTxHilbertFIR(void);
 
 
 
-typedef struct FilterCoeffs
-{
-    //    float   rx_filt_q[128];
-    float   rx_filt_q[199];
-    uint16_t    rx_q_num_taps;
-    uint32_t    rx_q_block_size;
-//    float   rx_filt_i[128];
-    float   rx_filt_i[199];
-    uint16_t    rx_i_num_taps;
-    uint32_t    rx_i_block_size;
-    //
-    //    float   tx_filt_q[128];
-    float   tx_filt_q[201];
-    uint16_t    tx_q_num_taps;
-    uint32_t    tx_q_block_size;
-    //    float   tx_filt_i[128];
-    float   tx_filt_i[201];
-    uint16_t    tx_i_num_taps;
-    uint32_t    tx_i_block_size;
-
-    uint16_t    freedv_q_num_taps;
-    uint32_t    freedv_q_block_size;
-
-    uint16_t    freedv_i_num_taps;
-    uint32_t    freedv_i_block_size;
-
-
-} FilterCoeffs;
 
 
 
