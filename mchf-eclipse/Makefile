@@ -142,7 +142,7 @@ endif
 ifeq ($(BUILDFOR),F7)
 
 $(BOOTLOADER).elf: CFLAGS = ${BASECFLAGS_F7} -Os -DBOOTLOADER_BUILD
-$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F7} -O3
+$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F7} -O2
 $(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F7} -T$(LINKERLOC)/arm-gcc-link-bootloader_f7.ld
 $(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F7} -T$(LINKERLOC)/arm-gcc-link_f7.ld
 
