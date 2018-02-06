@@ -299,10 +299,10 @@ typedef struct SMeter
 //
 //#define NBLANK_AGC_DECAY	0.002	// Decay rate multiplier for "Fast" AGC
 //
-#define	MAX_NB_SETTING		40
-#define	NB_WARNING1_SETTING	8		// setting at or above which NB warning1 (yellow) is given
+#define	MAX_NB_SETTING		15
+#define	NB_WARNING1_SETTING	7		// setting at or above which NB warning1 (yellow) is given
 #define	NB_WARNING2_SETTING	12		// setting at or above which NB warning2 (orange) is given
-#define	NB_WARNING3_SETTING	16		// setting at or above which NB warning3 (red) is given
+#define	NB_WARNING3_SETTING	15		// setting at or above which NB warning3 (red) is given
 //#define	NB_DURATION			4
 //
 //#define	NB_AGC_FILT			0.999	// Component of IIR filter for recyling previous AGC value
