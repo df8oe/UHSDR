@@ -3438,7 +3438,16 @@ static void UiDriver_CheckEncoderTwo()
 				case ENC_TWO_MODE_NR:
 					if (is_dsp_nr())        // only allow adjustment if DSP NR is active
 					{	//
-						ts.dsp_nr_strength = change_and_limit_uint(ts.dsp_nr_strength,pot_diff_step * DSP_NR_STRENGTH_STEP,DSP_NR_STRENGTH_MIN,DSP_NR_STRENGTH_MAX);
+				    	uint8_t nr_step = DSP_NR_STRENGTH_STEP;
+				    	if(ts.dsp_nr_strength >= 90)
+				    	{
+				    		nr_step = 1;
+				    	}
+						ts.dsp_nr_strength = change_and_limit_uint(ts.dsp_nr_strength,pot_diff_step * nr_step,DSP_NR_STRENGTH_MIN,DSP_NR_STRENGTH_MAX);
+			        	if(ts.dsp_nr_strength == 89)
+			        	{
+			        		ts.dsp_nr_strength = 85;
+			        	}
 
 						// this causes considerable noise
 						//AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);

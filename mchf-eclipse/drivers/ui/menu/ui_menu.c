@@ -758,6 +758,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
     const char* txt_ptr = NULL;
     uint32_t clr = *clr_ptr;
+	uint8_t nr_step;
 
     // case statement local variables defined for convenience here
     bool var_change = false;
@@ -782,19 +783,30 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     switch(select)          //  DSP_NR_STRENGTH_MAX
     {
     case MENU_DSP_NR_STRENGTH:  // DSP Noise reduction strength
-
+    	nr_step = DSP_NR_STRENGTH_STEP;
+    	if(ts.dsp_nr_strength >= 90)
+    	{
+    		nr_step = 1;
+    	}
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_nr_strength,
                                               DSP_NR_STRENGTH_MIN,
                                               DSP_NR_STRENGTH_MAX,
                                               DSP_NR_STRENGTH_DEFAULT,
-											  DSP_NR_STRENGTH_STEP
+											  nr_step
                                              );
         if(var_change)
         {
-            // did it change?
+        	if(ts.dsp_nr_strength == 89)
+        	{
+        		ts.dsp_nr_strength = 85;
+        	}
+        	// did it change?
             if(ts.dsp_active & DSP_NR_ENABLE)   // only change if DSP active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+				// this causes considerable noise
+				//AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+				// we do this instead
+			    ts.nr_alpha = 0.899 + ((float32_t)ts.dsp_nr_strength / 1000.0);
             }
         }
 #ifdef OBSOLETE_NR
