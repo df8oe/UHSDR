@@ -522,8 +522,6 @@ void UiDriver_TextMsgDisplay()
         	ui_txt_msg_buffer[fillcnt]='\0';
         }
 
-        //const char* txt_ptr = ui_txt_msg_idx == 0? ui_txt_empty_line:ui_txt_msg_buffer;
-        //UiLcdHy28_PrintText(POS_TextMsgLine.X,POS_TextMsgLine.Y,txt_ptr,Yellow,Black,4);
         UiLcdHy28_PrintText(ts.Layout->TextMsgLine.x,ts.Layout->TextMsgLine.y, ui_txt_msg_buffer,Yellow,Black,ts.Layout->TextMsg_font);
     }
 }
