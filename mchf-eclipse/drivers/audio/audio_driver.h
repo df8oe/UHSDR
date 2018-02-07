@@ -528,16 +528,16 @@ enum	{
 //
 #define	LMS_NOTCH_DELAYBUF_SIZE_MAX	512
 //
-#define	DSP_NOTCH_NUMTAPS_MAX	128
+#define	DSP_NOTCH_NUMTAPS_MAX	32//128
 #define	DSP_NOTCH_NUMTAPS_MIN		32
-#define	DSP_NOTCH_NUMTAPS_DEFAULT	96
+#define	DSP_NOTCH_NUMTAPS_DEFAULT	32//96
 //
-#define	DSP_NOTCH_BUFLEN_MIN	48		// minimum length of decorrelation buffer for the notch filter FIR
-#define	DSP_NOTCH_BUFLEN_MAX	192	// maximum decorrelation buffer length for the notch filter FIR
-#define	DSP_NOTCH_DELAYBUF_DEFAULT	104	// default decorrelation buffer length for the notch filter FIR
+#define	DSP_NOTCH_BUFLEN_MIN	128//48		// minimum length of decorrelation buffer for the notch filter FIR
+#define	DSP_NOTCH_BUFLEN_MAX	128//192	// maximum decorrelation buffer length for the notch filter FIR
+#define	DSP_NOTCH_DELAYBUF_DEFAULT	128//104	// default decorrelation buffer length for the notch filter FIR
 //
-#define	DSP_NOTCH_MU_MAX		40		// maximum "strength" (convergence) setting for the notch
-#define	DSP_NOTCH_MU_DEFAULT	25		// default convergence setting for the notch
+#define	DSP_NOTCH_MU_MAX		10//40		// maximum "strength" (convergence) setting for the notch
+#define	DSP_NOTCH_MU_DEFAULT	10//25		// default convergence setting for the notch
 #endif
 
 #define DSP_SWITCH_OFF				0
