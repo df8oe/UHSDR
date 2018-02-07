@@ -1578,7 +1578,7 @@ static void UiLcdHy28_DrawChar_1bit(ushort x, ushort y, char symb,ushort Color, 
 
 void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkColor,const sFONT *cf)
 {
-//	if((x==0) && (y==302))		//this is only for catching the faulty new line drawing event for decided text line. Need some grace period.
+//	if((x==0) && (y==302))		//this is only for catching the faulty new line drawing event for decoded text line.
 //		debtxt++;
 #ifdef USE_8bit_FONT
 	switch(cf->BitCount)
@@ -1678,7 +1678,7 @@ uint16_t UiLcdHy28_PrintText(uint16_t XposStart, uint16_t YposStart, const char 
             {
                 // last character in string
                 //str_start = str_end;
-            	break;					//this line was added to prevent a kind of race condition causing accident newline print of characters (for example in CW decoder). It need testing.
+            	break;					//this line was added to prevent a kind of race condition causing random newline print of characters (for example in CW decoder). It needs testing.
             							//Feb 2018 SP9BSL
             }
         }
