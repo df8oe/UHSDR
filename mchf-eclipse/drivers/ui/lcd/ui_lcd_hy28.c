@@ -1574,9 +1574,12 @@ static void UiLcdHy28_DrawChar_1bit(ushort x, ushort y, char symb,ushort Color, 
     // flush all not yet  transferred pixel to display.
     UiLcdHy28_CloseBulkWrite();
 }
+//volatile int debtxt=0;
 
 void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkColor,const sFONT *cf)
 {
+//	if((x==0) && (y==302))		//this is only for catching the faulty new line drawing event for decoded text line.
+//		debtxt++;
 #ifdef USE_8bit_FONT
 	switch(cf->BitCount)
 	{
@@ -1647,7 +1650,6 @@ static const char * UiLcdHy28_StringGetLine(const char* str)
     for (retval = str; *retval != '\0' && *retval != '\n'; retval++ );
     return retval;
 }
-
 /**
  * @brief Print multi-line text. New lines start right at XposStart
  * @returns next unused Y line (i.e. the Y coordinate just below the last printed text line).
@@ -1675,7 +1677,9 @@ uint16_t UiLcdHy28_PrintText(uint16_t XposStart, uint16_t YposStart, const char 
             else
             {
                 // last character in string
-                str_start = str_end;
+                //str_start = str_end;
+            	break;					//this line was added to prevent a kind of race condition causing random newline print of characters (for example in CW decoder). It needs testing.
+            							//Feb 2018 SP9BSL
             }
         }
     }
