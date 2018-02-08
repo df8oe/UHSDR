@@ -3266,12 +3266,12 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     case CONFIG_DSP_NOTCH_FFT_NUMTAPS:      // Adjustment of DSP noise reduction de-correlation delay buffer length
         ts.dsp_notch_numtaps &= 0xf0;   // mask bottom nybble to enforce 16-count boundary
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_numtaps,
-                                              0,
+                                              16,
                                               DSP_NOTCH_NUMTAPS_MAX,
                                               DSP_NOTCH_NUMTAPS_DEFAULT,
                                               16);
-        if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)   // force buffer size to always be larger than number of taps
-            ts.dsp_notch_delaybuf_len = ts.dsp_notch_numtaps + 8;
+//        if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)   // force buffer size to always be larger than number of taps
+//            ts.dsp_notch_delaybuf_len = ts.dsp_notch_numtaps + 8;
         if(var_change)      // did something change?
         {
             if(ts.dsp_active & DSP_NOTCH_ENABLE)    // only update if DSP NR active

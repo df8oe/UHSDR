@@ -297,7 +297,8 @@ void do_alternate_NR(float32_t* inputsamples, float32_t* outputsamples )
         alt_noise_blanking(inputsamples,NR_FFT_SIZE,Energy);
     }
 
-    if((ts.dsp_active & DSP_NR_ENABLE) || (ts.dsp_active & DSP_NOTCH_ENABLE))
+    //    if((ts.dsp_active & DSP_NR_ENABLE) || (ts.dsp_active & DSP_NOTCH_ENABLE))
+    if(ts.dsp_active & DSP_NR_ENABLE)
     {
 		profileTimedEventStart(ProfileTP8);
 
