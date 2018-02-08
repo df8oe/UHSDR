@@ -34,8 +34,11 @@
 //#define OBSOLETE_NR
 #define USE_LMS_AUTONOTCH
 
+// save processor time for the STM32F4
+// changes lowpass decimation filters to 89 taps instead of 199 taps
+// because they run at 48ksps, this is a considerable decrease in processing power
 #ifdef STM32F4
-#define USE_SMALL_HILBERT_DECIMATION_FILTERS
+//#define USE_SMALL_HILBERT_DECIMATION_FILTERS
 #endif
 
 /**
