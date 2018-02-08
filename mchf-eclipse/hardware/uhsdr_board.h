@@ -31,11 +31,19 @@
  *
  */
 
+// old LMS noise reduction
+// will probably never used any more
 //#define OBSOLETE_NR
+
+// this switches on the autonotch filter based on LMS algorithm
+// leave this switched on, until we have a new autonotch filter approach
 #define USE_LMS_AUTONOTCH
 
+// save processor time for the STM32F4
+// changes lowpass decimation filters to 89 taps instead of 199 taps
+// because they run at 48ksps, this is a considerable decrease in processing power
 #ifdef STM32F4
-#define USE_SMALL_HILBERT_DECIMATION_FILTERS
+//#define USE_SMALL_HILBERT_DECIMATION_FILTERS
 #endif
 
 /**
@@ -48,6 +56,7 @@
 //#define 	DEBUG_BUILD
 
 // if enabled the alternate (read new and better) noise reduction is active
+// this is the standard NR now (Febr 2018)
 #define USE_ALTERNATE_NR
 
 
