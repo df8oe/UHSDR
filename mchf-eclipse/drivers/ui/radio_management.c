@@ -48,6 +48,7 @@
 #include "cw_decoder.h"
 
 #include "psk.h"
+#include "rtty.h"
 
 #define SWR_SAMPLES_SKP             1   //5000
 #define SWR_SAMPLES_CNT             5//10
@@ -935,6 +936,7 @@ void RadioManagement_SetBandPowerFactor(uchar band)
 void RadioManagement_SetDemodMode(uint8_t new_mode)
 {
 
+	DigiModes_TxBufferReset();
 
     ts.dsp_inhibit++;
     ads.af_disabled++;
