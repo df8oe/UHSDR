@@ -3222,7 +3222,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 #endif
 
 #ifdef USE_LMS_AUTONOTCH
-    case CONFIG_DSP_NOTCH_CONVERGE_RATE:        // Adjustment of DSP noise reduction de-correlation delay buffer length
+    case CONFIG_DSP_NOTCH_CONVERGE_RATE:        // Adjustment of DSP autonotch convergence rate
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_mu,
                                               0,
                                               DSP_NOTCH_MU_MAX,
