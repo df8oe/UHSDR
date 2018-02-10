@@ -332,8 +332,9 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
                 sd.marker_num = 2;
                 break;
             case DigitalMode_BPSK:
-            	mode_marker[0] = PSK_OFFSET;
-            	sd.marker_num = 1;
+                mode_marker[0] = PSK_OFFSET - psk_speeds[psk_ctrl_config.speed_idx].value / 2;
+                mode_marker[1] = PSK_OFFSET + psk_speeds[psk_ctrl_config.speed_idx].value / 2;
+                sd.marker_num = 2;
             	break;
             default:
                 mode_marker[0] = 0;
