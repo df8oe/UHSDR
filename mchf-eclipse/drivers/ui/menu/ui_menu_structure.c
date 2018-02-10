@@ -237,6 +237,7 @@ const MenuDescriptor displayGroup[] =
 #ifdef USE_8bit_FONT
 	{ MENU_DISPLAY, MENU_ITEM, MENU_FREQ_FONT, NULL, "Freq display font", UiMenuDesc("Font selection for frequency display. Allows selection of old/modern fonts")},
 #endif
+    { MENU_DISPLAY, MENU_ITEM, MENU_UI_INVERSE_SCROLLING, NULL, "Menu Inverse Scrolling", UiMenuDesc("Inverts Enc2/Enc3 behavior in menu up/down and show/hide UI scrolling actions, used for side-mounted encoder dials.")},
 	{ MENU_DISPLAY, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 

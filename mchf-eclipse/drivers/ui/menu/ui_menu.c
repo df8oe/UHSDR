@@ -1201,6 +1201,14 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         snprintf(options, 32, "  %ddB", ts.dbm_constant);
         break;
 
+     case MENU_UI_INVERSE_SCROLLING:      //
+         var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags2,0,options,&clr,FLAGS2_UI_INVERSE_SCROLLING);
+         if(var_change)
+         {
+             UiMenu_RenderMenu(MENU_RENDER_ONLY);
+         }
+         break;
+
     case MENU_AGC_WDSP_HANG_TIME:      //
         var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_hang_time,
                                             10,
