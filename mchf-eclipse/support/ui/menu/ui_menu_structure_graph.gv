@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-02-03T12:04:55  by "./ui_menu_structure_graph.py"
+#  generated at  2018-02-10T09:41:53  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-02-03T12:04:55  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-02-10T09:41:53  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -649,6 +649,11 @@
         
         "MENU_FREQ_FONT" [
              label = "MENU_FREQ_FONT | Freq display font"
+             shape = record
+             ];
+        
+        "MENU_UI_INVERSE_SCROLLING" [
+             label = "MENU_UI_INVERSE_SCROLLING | Menu Inverse Scrolling"
              shape = record
              ];
         
@@ -1953,6 +1958,8 @@
             MENU_DISPLAY -> MENU_DBM_CALIBRATE
             
             MENU_DISPLAY -> MENU_FREQ_FONT
+            
+            MENU_DISPLAY -> MENU_UI_INVERSE_SCROLLING
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
