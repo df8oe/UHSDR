@@ -577,6 +577,31 @@ static void __attribute__ ((noinline)) UiConfiguration_ReadConfigEntries()
     }
 }
 
+void UiConfiguration_UpdateMacroCap(void)
+{
+	int c;
+	uint8_t* pmacro;
+
+	for (int i = 0; i < KEYER_BUTTONS; i++)
+	{
+		if (ts.keyer_mode.macro[i] != '\0')
+		{
+			// Make button label from start of the macro
+			pmacro = (uint8_t *)ts.keyer_mode.macro[i];
+			c = 0;
+			while(*pmacro != ' ' && *pmacro != '\0' && c < KEYER_CAP_LEN)
+			{
+				ts.keyer_mode.cap[i][c++] = *pmacro++;
+			}
+			ts.keyer_mode.cap[i][c] = '\0';
+		}
+		else
+		{
+			strcpy((char *) ts.keyer_mode.cap[i], "BTN");
+		}
+
+	}
+}
 
 //
 //*----------------------------------------------------------------------------
@@ -653,6 +678,9 @@ void UiConfiguration_LoadEepromValues(void)
     UiReadSettingEEPROM_UInt32( EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,&ts.xverter_offset,0,0,XVERTER_OFFSET_MAX);
 
     UiReadSettingEEPROM_Filter();
+
+    ConfigStorage_CopySerial2Array(EEPROM_KEYER_MEMORY_ADDRESS, (uint8_t *)ts.keyer_mode.macro, sizeof(ts.keyer_mode.macro));
+    UiConfiguration_UpdateMacroCap();
 
     // post configuration loading actions below
     df.tuning_step  = tune_steps[df.selected_idx];
@@ -774,6 +802,9 @@ uint16_t UiConfiguration_SaveEepromValues(void)
             retval = ConfigStorage_CopyRAMCache2Serial();
             // write ram cache to EEPROM and switch back to I2C EEPROM use
         }
+
+        retval = ConfigStorage_CopyArray2Serial(EEPROM_KEYER_MEMORY_ADDRESS, (uint8_t *)ts.keyer_mode.macro, sizeof(ts.keyer_mode.macro));
+
     }
     return retval;
 }

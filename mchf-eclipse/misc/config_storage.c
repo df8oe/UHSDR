@@ -188,6 +188,28 @@ void ConfigStorage_CopySerial2Flash(void)
     }
 }
 
+//copy array directly to serial EEPROM
+uint16_t ConfigStorage_CopyArray2Serial(uint32_t Addr, const uint8_t *buffer, uint16_t length)
+{
+	uint16_t retval = HAL_OK;
+    if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
+    {
+        retval = SerialEEPROM_24Cxx_WriteBulk(Addr, buffer, length, ts.ser_eeprom_type);
+    }
+
+	return retval;
+}
+
+//read array directly from serial EEPROM
+void ConfigStorage_CopySerial2Array(uint32_t Addr, uint8_t *buffer, uint16_t length)
+{
+    if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
+    {
+    	SerialEEPROM_24Cxx_ReadBulk(Addr, buffer, length, ts.ser_eeprom_type);
+    }
+
+}
+
 /**
  * verify data serial / virtual EEPROM
  * sets ts.configstore_in_use to CONFIGSTORE_IN_USE_ERROR if
