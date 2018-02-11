@@ -471,9 +471,9 @@ enum	{
 #define RX_DECIMATION_RATE_48KHZ		1		// Deimcation/Interpolation rate in receive function for 48 kHz sample rate (e.g. no decimation!)
 
 #define DSP_NR_STRENGTH_MIN		5
-#define	DSP_NR_STRENGTH_MAX		100	// Maximum menu setting for DSP "Strength"
+#define	DSP_NR_STRENGTH_MAX		200	// Maximum menu setting for DSP "Strength"
 #define DSP_NR_STRENGTH_STEP	5
-#define	DSP_NR_STRENGTH_DEFAULT	60	// Default setting
+#define	DSP_NR_STRENGTH_DEFAULT	160	// Default setting
 #ifdef OBSOLETE_NR
 //
 // ************
@@ -528,15 +528,15 @@ enum	{
 //
 #define	LMS_NOTCH_DELAYBUF_SIZE_MAX	512
 //
-#define	DSP_NOTCH_NUMTAPS_MAX		32//128
-#define	DSP_NOTCH_NUMTAPS_MIN		32
-#define	DSP_NOTCH_NUMTAPS_DEFAULT	32//96
+#define	DSP_NOTCH_NUMTAPS_MAX		64//128
+#define	DSP_NOTCH_NUMTAPS_MIN		64
+#define	DSP_NOTCH_NUMTAPS_DEFAULT	64//96
 //
 #define	DSP_NOTCH_BUFLEN_MIN		128//64//48		// minimum length of decorrelation buffer for the notch filter FIR
 #define	DSP_NOTCH_BUFLEN_MAX		128//192	// maximum decorrelation buffer length for the notch filter FIR
 #define	DSP_NOTCH_DELAYBUF_DEFAULT	128//104	// default decorrelation buffer length for the notch filter FIR
 //
-#define	DSP_NOTCH_MU_MAX			10//40		// maximum "strength" (convergence) setting for the notch
+#define	DSP_NOTCH_MU_MAX			40//40		// maximum "strength" (convergence) setting for the notch
 #define	DSP_NOTCH_MU_DEFAULT		10//25		// default convergence setting for the notch
 #endif
 
