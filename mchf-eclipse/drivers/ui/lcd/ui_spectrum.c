@@ -92,42 +92,6 @@ void UiSpectrum_CalculateLayout(const bool is_big, const bool scope_enabled, con
     slayout.wfall.h = slayout.draw.y+slayout.draw.h-slayout.wfall.y;
 }
 
-/*
-//old Danilo's nice calculation
-{
-    slayout.full.x = full_ptr->x;
-    slayout.full.y = full_ptr->y;
-    slayout.full.w = full_ptr->w;
-    slayout.full.h = full_ptr->h;
-
-    slayout.draw.x = slayout.full.x + padding;
-    slayout.draw.y = slayout.full.y + padding;
-    slayout.draw.w = slayout.full.w - 2*padding;
-    slayout.draw.h = slayout.full.h - 2*padding;
-
-    slayout.title.x = slayout.draw.x;
-    slayout.title.y = slayout.draw.y;
-    slayout.title.w = slayout.draw.w;
-    slayout.title.h = is_big?0:16; // hide title if big
-
-    slayout.graticule.h = 16;
-
-    slayout.scope.x = slayout.draw.x;
-    slayout.scope.y = slayout.title.y + slayout.title.h;
-    slayout.scope.w = slayout.draw.w;
-    slayout.scope.h = scope_enabled?(slayout.draw.h - slayout.title.h - slayout.graticule.h)/(wfall_enabled?2:1) : 0;
-
-    slayout.graticule.x = slayout.draw.x;
-    slayout.graticule.y = slayout.scope.y + slayout.scope.h;
-    slayout.graticule.w = slayout.draw.w;
-
-    slayout.wfall.x = slayout.draw.x;
-    slayout.wfall.y = slayout.graticule.y + slayout.graticule.h;
-    slayout.wfall.w = slayout.draw.w;
-    slayout.wfall.h = wfall_enabled?(slayout.draw.h - slayout.title.h - slayout.graticule.h)/(scope_enabled?2:1) : 0;
-}
- */
-
 //sets graticule position according to control bits (to default for particular case)
 void UiSpectrum_ResetSpectrum()
 {
@@ -1377,6 +1341,12 @@ static void UiSpectrum_ScaleFFT2SpectrumWidth(float32_t samples[], uint16_t from
  */
 static void UiSpectrum_RedrawSpectrum()
 {
+	bool is_RedrawActive=(ts.menu_mode == false)					//if this flag is false we do only dBm calculation (for S-meter and tune helper)
+						&& (sd.enabled == true)
+						&& (ts.mem_disp == false)
+						&& (ts.SpectrumResize_flag == false);
+
+
     // Process implemented as state machine
     switch(sd.state)
     {
@@ -1457,13 +1427,6 @@ static void UiSpectrum_RedrawSpectrum()
     case 4:
     {
         float32_t filt_factor = 1/(float)ts.spectrum_filter;		// use stored filter setting inverted to allow multiplication
-
-        if(ts.dial_moved)
-        {
-            ts.dial_moved = 0;	// Dial moved - reset indicator
-            UiSpectrum_DrawFrequencyBar();	// redraw frequency bar on the bottom of the display
-        }
-
         arm_scale_f32(sd.FFT_AVGData, filt_factor, sd.FFT_Samples, sd.spec_len);	// get scaled version of previous data
         arm_sub_f32(sd.FFT_AVGData, sd.FFT_Samples, sd.FFT_AVGData, sd.spec_len);	// subtract scaled information from old, average data
         arm_scale_f32(sd.FFT_MagData, filt_factor, sd.FFT_Samples, sd.spec_len);	// get scaled version of new, input data
@@ -1479,56 +1442,77 @@ static void UiSpectrum_RedrawSpectrum()
 
         UiSpectrum_CalculateDBm();
 
-        sd.state++;
+        if (is_RedrawActive)
+        {   //continue if there is no objection to display spectrum or waterfall
+            if(ts.dial_moved)
+            {
+                ts.dial_moved = 0;	// Dial moved - reset indicator
+                UiSpectrum_DrawFrequencyBar();	// redraw frequency bar on the bottom of the display
+            }
+        	sd.state++;
+        }
+        else
+        {
+        	sd.RedrawType=0;
+        	sd.state=0;
+        }
         break;
     }
 
     // De-linearize and normalize display data and do AGC processing
     case 5:
-    {
-        float32_t	min1=100000;
-        // De-linearize data with dB/division
-        // Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
-        // TODO: if we would use a different data structure here (e.g. q15), we could speed up collection of enough samples in driver
-        // we could let it run as soon as last FFT_Samples read has been done here
-        UiSpectrum_ScaleFFT(sd.FFT_Samples,sd.FFT_AVGData,&min1);
+    	if (is_RedrawActive)		//this is needed for overwrite prevention if menu was drawn when sd.state>4
+    	{
+    		float32_t	min1=100000;
+    		// De-linearize data with dB/division
+    		// Transfer data to the waterfall display circular buffer, putting the bins in frequency-sequential order!
+    		// TODO: if we would use a different data structure here (e.g. q15), we could speed up collection of enough samples in driver
+    		// we could let it run as soon as last FFT_Samples read has been done here
+    		UiSpectrum_ScaleFFT(sd.FFT_Samples,sd.FFT_AVGData,&min1);
 
-        if (sd.spec_len != slayout.scope.w)
-        {
-            // in place downscaling (!)
-            UiSpectrum_ScaleFFT2SpectrumWidth(sd.FFT_Samples,sd.spec_len, slayout.scope.w);
-        }
+    		if (sd.spec_len != slayout.scope.w)
+    		{
+    			// in place downscaling (!)
+    			UiSpectrum_ScaleFFT2SpectrumWidth(sd.FFT_Samples,sd.spec_len, slayout.scope.w);
+    		}
 
-        // Adjust the sliding window so that the lowest signal is always black
-        sd.display_offset -= sd.agc_rate*min1/5;
+    		// Adjust the sliding window so that the lowest signal is always black
+    		sd.display_offset -= sd.agc_rate*min1/5;
+    	}
+    	sd.state++;
+    	break;
 
-        sd.state++;
-        break;
-    }
     case 6:	// rescale waterfall horizontally, apply brightness/contrast, process pallate and put vertical line on screen, if enabled.
-    {
-    	if(sd.RedrawType&Redraw_SCOPE)
+    	if (is_RedrawActive)		//this is needed for overwrite prevention if menu was drawn when sd.state>4
     	{
-    		UiSpectrum_DrawScope(sd.Old_PosData, sd.FFT_Samples);
-    	}
+    		if(sd.RedrawType&Redraw_SCOPE)
+    		{
+    			UiSpectrum_DrawScope(sd.Old_PosData, sd.FFT_Samples);
+    		}
 
-    	if(sd.RedrawType&Redraw_WATERFALL)
+    		if(sd.RedrawType&Redraw_WATERFALL)
+    		{
+    			UiSpectrum_DrawWaterfall();
+    		}
+
+
+    		if(((ts.waterfall.speed == 0)
+    				&&(ts.scope_speed == 0))
+					||(sd.RedrawType != 0)
+    		)
+    		{
+    			sd.state = 0;
+    		}
+    	}
+    	else
     	{
-    		UiSpectrum_DrawWaterfall();
+    		sd.state = 0;
     	}
-
-    	if (sd.RedrawType != 0)
-    	{
-    	    sd.RedrawType=0;
-    	    sd.state = 0;
-    	}
-        break;
-
-    }
-
+		sd.RedrawType=0;
+    	break;
     default:
-        sd.state = 0;
-        break;
+    	sd.state = 0;
+    	break;
     }
 }
 
@@ -1759,12 +1743,12 @@ void UiSpectrum_Redraw()
     // Only in RX mode and NOT while powering down or in menu mode or if displaying memory information
     if (
             (ts.txrx_mode == TRX_MODE_RX)
-            && (ts.menu_mode == false)
+          //&& (ts.menu_mode == false)
             && (ts.powering_down == false)
-            && (ts.mem_disp == false)
-            && (sd.enabled == true)
+          //&& (ts.mem_disp == false)
+          //&& (sd.enabled == true)
             && (ts.lcd_blanking_flag == false)
-			&& (ts.SpectrumResize_flag == false)
+		  //&& (ts.SpectrumResize_flag == false)
     )
     {
         if(ts.waterfall.scheduler == 0 && is_waterfallmode())   // is waterfall mode enabled?
