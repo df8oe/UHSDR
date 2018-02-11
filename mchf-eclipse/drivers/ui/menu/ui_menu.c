@@ -784,7 +784,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
     {
     case MENU_DSP_NR_STRENGTH:  // DSP Noise reduction strength
     	nr_step = DSP_NR_STRENGTH_STEP;
-    	if(ts.dsp_nr_strength >= 90)
+    	if(ts.dsp_nr_strength >= 190)
     	{
     		nr_step = 1;
     	}
@@ -796,9 +796,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                              );
         if(var_change)
         {
-        	if(ts.dsp_nr_strength == 89)
+        	if(ts.dsp_nr_strength == 189)
         	{
-        		ts.dsp_nr_strength = 85;
+        		ts.dsp_nr_strength = 185;
         	}
         	// did it change?
             if(ts.dsp_active & DSP_NR_ENABLE)   // only change if DSP active
@@ -806,7 +806,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 				// this causes considerable noise
 				//AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
 				// we do this instead
-			    ts.nr_alpha = 0.899 + ((float32_t)ts.dsp_nr_strength / 1000.0);
+			    ts.nr_alpha = 0.799 + ((float32_t)ts.dsp_nr_strength / 1000.0);
             }
         }
 #ifdef OBSOLETE_NR

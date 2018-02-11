@@ -471,9 +471,9 @@ enum	{
 #define RX_DECIMATION_RATE_48KHZ		1		// Deimcation/Interpolation rate in receive function for 48 kHz sample rate (e.g. no decimation!)
 
 #define DSP_NR_STRENGTH_MIN		5
-#define	DSP_NR_STRENGTH_MAX		100	// Maximum menu setting for DSP "Strength"
+#define	DSP_NR_STRENGTH_MAX		200	// Maximum menu setting for DSP "Strength"
 #define DSP_NR_STRENGTH_STEP	5
-#define	DSP_NR_STRENGTH_DEFAULT	60	// Default setting
+#define	DSP_NR_STRENGTH_DEFAULT	160	// Default setting
 #ifdef OBSOLETE_NR
 //
 // ************
