@@ -36,11 +36,10 @@ typedef struct
 #define DMA_AUDIO_NUM 2
 #endif
 
-extern __IO dma_audio_buffer_t audio_buf[DMA_AUDIO_NUM];
+void UhsdrHwI2s_Codec_StartDMA();
+void UhsdrHwI2s_Codec_StopDMA();
 
-
-void MchfHw_Codec_StartDMA();
-void MchfHw_Codec_StopDMA();
+void UhsdrHwI2s_Codec_ClearTxDmaBuffer();
 
 #endif
 
