@@ -18,6 +18,9 @@
 #include "uhsdr_board.h"
 
 #ifdef USE_ALTERNATE_NR
+// this contains our shared buffer structure, since FreeDV and NR are mutually exclusive
+// they can use the same set of buffers for exchanging data between audio interrupt and
+// user code
 #include "freedv_uhsdr.h"
 
 #define NR_FFT_SIZE 128
@@ -52,9 +55,9 @@ typedef struct NoiseReduction // declaration
 	//ulong						long_tone_counter;
 } NoiseReduction;
 
+
 // we need another struct, because of the need for strict allocation of memory for users of the
 // mcHF hardware with small RAM (192 kb)
-//
 typedef struct NoiseReduction2 // declaration
 {
 	float32_t 					X[NR_FFT_L_2 / 2][2]; // magnitudes of the current and the last FFT bins
