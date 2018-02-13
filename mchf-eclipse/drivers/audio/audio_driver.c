@@ -2083,7 +2083,7 @@ void AudioDriver_SetupAgcWdsp()
 	    initialised = true;
     }
     //    var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
-    agc_wdsp.var_gain = powf (10.0, (float32_t)ts.agc_wdsp_slope / 200.0); // 10 * 10^(slope / 20)
+    agc_wdsp.var_gain = 10 * powf (10.0, (float32_t)ts.agc_wdsp_slope / 20.0); // 10 * 10^(slope / 20)
 
     //    hangtime = 0.250;                // hangtime
     agc_wdsp.hangtime = (float32_t)ts.agc_wdsp_hang_time / 1000.0;
