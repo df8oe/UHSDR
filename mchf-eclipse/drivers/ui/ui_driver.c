@@ -1337,7 +1337,7 @@ void UiDriver_UpdateDisplayAfterParamChange()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_PressHoldStep(uchar is_up)
+static void UiDriver_PressHoldStep(uchar is_up)//[QBS] added ability for 1mhz and 10mhz step option
 {
 	ulong	minus_idx, plus_idx;
 
@@ -1357,6 +1357,17 @@ static void UiDriver_PressHoldStep(uchar is_up)
 		minus_idx = T_STEP_100HZ_IDX;	// use 100 Hz as small step size
 		plus_idx = T_STEP_100KHZ_IDX;	// use 100 kHz as large step size
 		break;
+//[QBS]s
+	case T_STEP_1MHZ_IDX:	// 1MHz step size T_STEP_1MHZ_IDX,
+		minus_idx = T_STEP_100KHZ_IDX;	// use 100 Hz as small step size
+		plus_idx = T_STEP_1MHZ_IDX;	// use 1MHz as large step size
+		break;
+
+	case T_STEP_10MHZ_IDX:	// 10MHz step size T_STEP_1MHZ_IDX,
+		minus_idx = T_STEP_1MHZ_IDX;	// use 1 mHz as small step size
+		plus_idx = T_STEP_10MHZ_IDX;	// use 10 mHz as large step size
+		break;
+//[QBS]e
 	case T_STEP_1KHZ_IDX:	// 1 kHz step size
 	default:
 		minus_idx = T_STEP_10HZ_IDX;	// use 10 Hz as small step size
@@ -1570,6 +1581,17 @@ const BandGenInfo bandGenInfo[] =
 		{21450000, 21750000, "13m" },
 		{25670000, 26100000, "11m" },
 		{26965000, 27405000, "11m" },
+//[QBS]s
+		{27415000, 27595000, "555" },//[QBS] Triple Five
+		{27600000, 27995000, "UkFM" },//[QBS] Uk40
+		{50000000, 52000000, "6m"},//[QBS] 6M
+		{70000000, 70500000, "4m"},//[QBS] 4M
+		{88000000, 108000000, "FMb"},//[QBS] FM Broadcast Band
+		{108000001, 137000000, "Air"},//[QBS] Air Band
+		{144000000, 146000000, "2m"},//[QBS] 2M
+		{430000000, 440000000, "70cm"},//[QBS] 70cm
+		{446000000, 446500000, "PMR"},//[QBS] Pmr
+//[QBS]e
 		{ 0,  0,             "Gen" }
 };
 
@@ -1616,9 +1638,22 @@ static void UiDriver_DisplayBand(uchar band)
 			else
 				col = Orange;
 
-			if  (bandGenInfo[idx].start == 26965000)
+//			if  (bandGenInfo[idx].start == 26965000)
+//				col = Blue;		// CB radio == blue
+
+//[QBS]s
+			if  (bandGenInfo[idx].start == 26965000)//[QBS] bottom of CB MID BLOCK
 				col = Blue;		// CB radio == blue
 
+//[QBS]s CB 555
+			if  (bandGenInfo[idx].start == 27415000)//[QBS] 555
+				col = Blue;		// CB radio == blue
+//[QBS]e
+
+//[QBS]s UK40 CB BAND
+			if  (bandGenInfo[idx].start == 27600000)//[QBS] bottom of UK40 CB BAND
+				col = Blue;		// CB radio == blue
+//[QBS]e
 
 			if (idx == ts.bc_band)
 				print_bc_name = false;
