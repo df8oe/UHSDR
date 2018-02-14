@@ -99,10 +99,9 @@ void softdds_genIQSingleTone(soft_dds_t* dds, float32_t *i_buff,float32_t *q_buf
  */
 void softdds_genIQTwoTone(soft_dds_t* ddsA, soft_dds_t* ddsB, float *i_buff,float *q_buff,ushort size)
 {
-    ulong   i,k[2];
-
-    for(i = 0; i < size; i++)
+    for(int i = 0; i < size; i++)
     {
+        uint32_t k[2];
         // Calculate next sample
         k[0]    = softdds_nextSampleIndex(ddsA);
         k[1]    = softdds_nextSampleIndex(ddsB);

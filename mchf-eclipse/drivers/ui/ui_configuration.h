@@ -93,6 +93,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define MAGNIFY_MIN                 0
 #define MAGNIFY_MAX                 5
 #define MAGNIFY_DEFAULT             0
+#define MAGNIFY_NUM                 (MAGNIFY_MAX+1)
 
 //
 #define PA_BIAS_MAX         115     // Maximum PA Bias Setting

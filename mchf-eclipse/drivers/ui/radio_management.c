@@ -1247,13 +1247,24 @@ uint32_t RadioManagement_NextNormalDemodMode(uint32_t loc_mode)
 
 bool RadioManagement_UsesBothSidebands(uint16_t dmod_mode)
 {
+    bool retval =
+            (
+                    (dmod_mode == DEMOD_AM)
+                    ||(dmod_mode == DEMOD_SAM && (ads.sam_sideband == SAM_SIDEBAND_BOTH))
+                    || (dmod_mode == DEMOD_FM)
+            );
+
+
 #ifdef USE_TWO_CHANNEL_AUDIO
-    return ((dmod_mode == DEMOD_SSBSTEREO) || (dmod_mode == DEMOD_IQ) || (dmod_mode == DEMOD_AM) ||
-    		(dmod_mode == DEMOD_SAM && (ads.sam_sideband == SAM_SIDEBAND_BOTH || ads.sam_sideband == SAM_SIDEBAND_STEREO )) ||
-			(dmod_mode == DEMOD_FM));
-#else
-    return ((dmod_mode == DEMOD_AM) ||(dmod_mode == DEMOD_SAM && (ads.sam_sideband == SAM_SIDEBAND_BOTH)) || (dmod_mode == DEMOD_FM));
+    // if we support two channel audio, then both bands are used by some additional modes
+    retval = retval ||
+            (
+                    (dmod_mode == DEMOD_SSBSTEREO)
+                    || (dmod_mode == DEMOD_IQ)
+                    || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO )
+            );
 #endif
+    return retval;
 }
 
 bool RadioManagement_LSBActive(uint16_t dmod_mode)

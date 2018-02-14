@@ -54,7 +54,7 @@
 #define FIR_RXAUDIO_BLOCK_SIZE		IQ_BLOCK_SIZE
 #define FIR_RXAUDIO_NUM_TAPS		16 // maximum number of taps in the decimation and interpolation FIR filters
 #define IIR_RXAUDIO_BLOCK_SIZE		IQ_BLOCK_SIZE
-#define IIR_RXAUDIO_NUM_STAGES		12 // we use a maximum stage number of 10 at the moment, so this is 12 just to be safe
+#define IIR_RXAUDIO_NUM_STAGES_MAX	12 // we use a maximum stage number of 10 at the moment, so this is 12 just to be safe
 //
 #define CODEC_DEFAULT_GAIN		0x1F	// Gain of line input to start with
 #define	ADC_CLIP_WARN_THRESHOLD	4096	// This is at least 12dB below the clipping threshold of the A/D converter itself
@@ -66,19 +66,22 @@
 
 #define SAM_PLL_HILBERT_STAGES 7
 
+
+#ifdef USE_TWO_CHANNEL_AUDIO
+    #define NUM_AUDIO_CHANNELS 2
+#else
+    #define NUM_AUDIO_CHANNELS 1
+#endif
+
 typedef struct
 {
     // Stereo buffers
-    float32_t                   i_buffer[IQ_BUFSZ];
-    float32_t                   q_buffer[IQ_BUFSZ];
+    float32_t               i_buffer[IQ_BLOCK_SIZE];
+    float32_t               q_buffer[IQ_BLOCK_SIZE];
 
-    float32_t                   a_buffer[IQ_BUFSZ];
-    float32_t                   b_buffer[IQ_BUFSZ];
-    float32_t					NR_dec_buffer[16];
-#ifdef USE_TWO_CHANNEL_AUDIO
-    float32_t					r_buffer[IQ_BUFSZ]; // used for the right channel in STEREO DEMODULATION
-#endif
-    float32_t               agc_valbuf[BUFF_LEN];   // holder for "running" AGC value
+    float32_t               a_buffer[2][IQ_BLOCK_SIZE];
+    float32_t				NR_dec_buffer[16];
+    float32_t               agc_valbuf[IQ_BLOCK_SIZE];   // holder for "running" AGC value
     float32_t               DF;
     float32_t               pll_fmax;
     // DX adjustments: zeta = 0.15, omegaN = 100.0

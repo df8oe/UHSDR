@@ -52,6 +52,11 @@ typedef int16_t audio_data_t;
 #define CODEC_ANA_IDX 0
 #endif
 
+void UhsdrHwI2s_Codec_ClearTxDmaBuffer()
+{
+    memset((void*)&audio_buf[CODEC_IQ_IDX].out, 0, sizeof(audio_buf[CODEC_IQ_IDX].out));
+}
+
 static void MchfHw_Codec_HandleBlock(uint16_t which)
 {
 #ifdef PROFILE_EVENTS
@@ -140,7 +145,7 @@ void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hi2s)
 }
 #endif
 
-void MchfHw_Codec_StartDMA()
+void UhsdrHwI2s_Codec_StartDMA()
 {
     szbuf = BUFF_LEN;
 
@@ -158,7 +163,7 @@ void MchfHw_Codec_StartDMA()
 }
 
 
-void MchfHw_Codec_StopDMA(void)
+void UhsdrHwI2s_Codec_StopDMA(void)
 {
 #ifdef UI_BRD_MCHF
     HAL_I2S_DMAStop(&hi2s3);
