@@ -937,7 +937,7 @@ void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
 
     // the notch filter is in biquad 1 and works at the decimated sample rate FSdec
 
-    float32_t coeffs[5];
+    float32_t coeffs[6];
     float32_t *coeffs_ptr;
     // setting the Coefficients in the notch filter instance
     // while not using pointers
@@ -1051,12 +1051,12 @@ void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
     //
     // Bass
     // lowShelf
-    float32_t lsCoeffs[5];
+    float32_t lsCoeffs[6];
     AudioDriver_CalcLowShelf(lsCoeffs, 250, 0.7, ts.bass_gain, FSdec);
 
     // Treble = highShelf
     // the treble filter is in biquad 2 and works at 48000ksps
-    float32_t hsCoeffs[5];
+    float32_t hsCoeffs[6];
     AudioDriver_CalcHighShelf(hsCoeffs, 3500, 0.9, ts.treble_gain, FS);
 
     for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
