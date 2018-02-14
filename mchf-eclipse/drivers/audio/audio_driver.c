@@ -749,7 +749,7 @@ void AudioDriver_Init(void)
     ts.codec_present = Codec_Reset(ts.samp_rate,word_size) == HAL_OK;
 
     // Start DMA transfers
-    MchfHw_Codec_StartDMA();
+    UhsdrHwI2s_Codec_StartDMA();
 
     // Audio filter enabled
     ads.af_disabled = 0;
@@ -5056,6 +5056,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
             if (to_rx)
             {
                 AudioDriver_ClearAudioDelayBuffer();
+                UhsdrHwI2s_Codec_ClearTxDmaBuffer();
             }
             if ( ts.audio_processor_input_mute_counter >0)
             {
@@ -5086,14 +5087,10 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
     }
     else  			// Transmit mode
     {
-        if((to_tx) || (ts.audio_processor_input_mute_counter>0))	 	// the first time back to RX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
+        if((to_tx) || (ts.audio_processor_input_mute_counter>0))	 	// the first time back to TX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
         {
             muted = true;
             arm_fill_q15(0, src, size);
-            if (to_rx)
-            {
-                AudioDriver_ClearAudioDelayBuffer();
-            }
             to_tx = false;                          // caused by the content of the buffers from TX - used on return from SSB TX
             if ( ts.audio_processor_input_mute_counter >0)
             {
