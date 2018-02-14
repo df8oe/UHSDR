@@ -34,18 +34,8 @@ extern arm_fir_instance_f32    Fir_TxFreeDV_Interpolate_I;
 extern arm_fir_decimate_instance_f32 FirDecim_RxSam_I;
 extern arm_fir_decimate_instance_f32 FirDecim_RxSam_Q;
 
-
-
-// Audio filter select enumeration
 void 	AudioFilter_InitRxHilbertFIR(uint8_t dmod_mode);
-//void    AudioFilter_CalcRxPhaseAdj(void);
 void 	AudioFilter_InitTxHilbertFIR(void);
-//void    AudioFilter_CalcTxPhaseAdj(void);
-
-
-
-
-
 
 enum
 {
@@ -93,8 +83,6 @@ enum
     FILTER_MODE_MAX
 };
 
-//
-//
 #define AUDIO_DEFAULT_FILTER        AUDIO_2P3KHZ
 //
 // use below to define the lowest-used filter number
@@ -104,7 +92,6 @@ enum
 // use below to define the highest-used filter number-1
 //
 #define AUDIO_MAX_FILTER        (AUDIO_FILTER_NUM-1)
-//
 
 
 typedef struct FilterDescriptor_s
@@ -151,15 +138,6 @@ typedef struct FilterPathDescriptor_s
 #define AUDIO_FILTER_PATH_NUM 87
 
 extern const FilterPathDescriptor FilterPathInfo[AUDIO_FILTER_PATH_NUM];
-//
-// Define visual widths of audio filters for on-screen indicator in Hz
-//
-//
-#define HILBERT_3600HZ_WIDTH        3800    // Approximate bandwidth of 3.6 kHz wide Hilbert - This used to depict FM detection bandwidth
-//
-//
-#define HILBERT3600         1900    // "width" of "3.6 kHz" Hilbert filter - This used to depict FM detection bandwidth
-//
 
 enum
 {
@@ -179,6 +157,7 @@ void     AudioFilter_GetNamesOfFilterPath(uint16_t filter_path,const char** filt
 uint16_t AudioFilter_GetFilterModeFromDemodMode(uint8_t dmod_mode);
 uint8_t  AudioFilter_NextApplicableFilter();
 void     AudioFilter_SetDefaultMemories();
+
 
 typedef struct
 {
