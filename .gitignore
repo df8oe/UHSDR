@@ -2,3 +2,4 @@ docs/
 mchf-eclipse/.settings/org.eclipse.cdt.managedbuilder.core.prefs
 .metadata
 RemoteSystemsTempFiles
+*.txt
