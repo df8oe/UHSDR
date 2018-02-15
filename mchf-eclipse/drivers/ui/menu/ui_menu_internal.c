@@ -673,6 +673,7 @@ void UiMenu_RenderMenu(uint16_t mode)
         {
             UiMenu_UpdateMenuEntry(menu[idx].entryItem,mode, idx);
         }
+        UiMenu_MoveCursor(ts.menu_item%ts.Layout->MENUSIZE);		//redraw of cursor
     }
     break;
 
@@ -746,14 +747,12 @@ void UiMenu_RenderLastScreen()
         UiMenu_DisplayMoveSlotsForward(ts.Layout->MENUSIZE);
     }
     UiMenu_RenderMenu(MENU_RENDER_ONLY);
-    UiMenu_MoveCursor(ts.menu_item%ts.Layout->MENUSIZE);	//Update menu item to show the current line marker
 }
 
 void UiMenu_RenderFirstScreen()
 {
     init_done = false;
     UiMenu_RenderMenu(MENU_RENDER_ONLY);
-    UiMenu_MoveCursor(ts.menu_item%ts.Layout->MENUSIZE);	//Update menu item to show the current line marker
 }
 
 bool UiMenu_RenderNextScreen()
@@ -762,7 +761,6 @@ bool UiMenu_RenderNextScreen()
     if (retval)
     {
         UiMenu_RenderMenu(MENU_RENDER_ONLY);
-        UiMenu_MoveCursor(ts.menu_item%ts.Layout->MENUSIZE);	//Update menu item to show the current line marker
     }
     return retval;
 }
@@ -773,8 +771,6 @@ bool UiMenu_RenderPrevScreen()
     if (retval)
     {
         UiMenu_RenderMenu(MENU_RENDER_ONLY);
-        UiMenu_MoveCursor(ts.menu_item%ts.Layout->MENUSIZE);	//Update menu item to show the current line marker
-
     }
     return retval;
 }
