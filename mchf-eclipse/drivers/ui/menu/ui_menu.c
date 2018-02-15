@@ -561,15 +561,15 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 //[QBS]s Device Electronic Signature
 	case INFO_UUID_P1:
 	// do something with the first 32bits of unique 96 bits
-			snprintf(out,32," 0x%08X\n", uuidPart1);//0x00290033
+			snprintf(out,32," 0x%08X\n", uuidPart1);
 			break;
 	case INFO_UUID_P2:
 		// do something with the second 32bits of unique 96 bits
-			snprintf(out,32," 0x%08X\n", uuidPart2);//0x32355106
+			snprintf(out,32," 0x%08X\n", uuidPart2);
 			break;
 	case INFO_UUID_P3:
 		// do something with the third 32bits of unique 96 bits
-			snprintf(out,32," 0x%08X\n", uuidPart3);//0x34313338
+			snprintf(out,32," 0x%08X\n", uuidPart3);
 			break;
  //[QBS]e
     case INFO_CPU:
