@@ -377,7 +377,7 @@ const MenuDescriptor infoGroup[] =
     { MENU_SYSINFO, MENU_INFO, INFO_EEPROM, NULL,"EEPROM", UiMenuDesc("type of serial EEPROM and its capacity") },
     { MENU_SYSINFO, MENU_INFO, INFO_TP, NULL,"Touchscreen", UiMenuDesc("touchscreen state") },
     { MENU_SYSINFO, MENU_INFO, INFO_CPU, NULL,"CPU", UiMenuDesc("identification of fitted MCU") },
-    { MENU_SYSINFO, MENU_INFO, INFO_FLASH, NULL,"Flash Size (kB)", UiMenuDesc("flash size of MCU") },
+	{ MENU_SYSINFO, MENU_INFO, INFO_FLASH, NULL,"Flash Size (kB)", UiMenuDesc("flash size of MCU") },
     { MENU_SYSINFO, MENU_INFO, INFO_RAM, NULL,"RAM Size (kB)", UiMenuDesc("RAM size of MCU") },
     { MENU_SYSINFO, MENU_INFO, INFO_FW_VERSION, NULL,"Firmware", UiMenuDesc("firmware version") },
     { MENU_SYSINFO, MENU_INFO, INFO_BUILD, NULL,"Build", UiMenuDesc("firmware: timestamp of building") },
@@ -389,6 +389,9 @@ const MenuDescriptor infoGroup[] =
     { MENU_SYSINFO, MENU_INFO, INFO_RTC, NULL,"Real Time Clock", UiMenuDesc("Battery Supported Real Time Clock present?") },
     { MENU_SYSINFO, MENU_INFO, INFO_LICENCE, NULL,"FW license", UiMenuDesc("Display license of firmware") },
     { MENU_SYSINFO, MENU_INFO, INFO_HWLICENCE, NULL,"HW license", UiMenuDesc("Display license of hardware") },
+	{ MENU_SYSINFO, MENU_INFO,INFO_UUID_P1, NULL,"CPU UUID1", UiMenuDesc("identification of fitted MCU UUID") },//[QBS]
+	{ MENU_SYSINFO, MENU_INFO,INFO_UUID_P2, NULL,"CPU UUID2", UiMenuDesc("identification of fitted MCU UUID") },//[QBS]
+	{ MENU_SYSINFO, MENU_INFO,INFO_UUID_P3, NULL,"CPU UUID3", UiMenuDesc("identification of fitted MCU UUID") },//[QBS]
 
     { MENU_SYSINFO, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };

@@ -490,7 +490,11 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     *m_clr_ptr = White;
 
     out[0] = 0;
-
+//[QBS]s
+    uint32_t uuidPart1 = STM32_UUID[0];
+    uint32_t uuidPart2 = STM32_UUID[1];
+    uint32_t uuidPart3 = STM32_UUID[2];
+//[QBS]
     switch (info_item)
     {
     case INFO_DISPLAY:
@@ -554,6 +558,26 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     case INFO_FLASH:
             snprintf(out,32,"%d",(STM32_GetFlashSize()));
             break;
+//[QBS]s
+	case INFO_UUID_P1:
+	// do something with the first 32bits of unique 96 bits
+			snprintf(out,32," 0x%08X\n", uuidPart1);//0x00290033
+//			snprintf(out,32,"idPart2: 0x%08X\n", uuidPart2);//
+//			snprintf(out,32,"idPart3: 0x%08X\n", uuidPart3);
+			break;
+	case INFO_UUID_P2:
+		// do something with the second 32bits of unique 96 bits
+//			snprintf(out,32,"idPart1: 0x%08X\n", uuidPart1);
+			snprintf(out,32," 0x%08X\n", uuidPart2);//0x32355106
+	//		snprintf(out,32,"idPart3: 0x%08X\n", uuidPart3);//
+			break;
+	case INFO_UUID_P3:
+		// do something with the third 32bits of unique 96 bits
+//			snprintf(out,32,"idPart1: 0x%08X\n", uuidPart1);
+//			snprintf(out,32,"idPart2: 0x%08X\n", uuidPart2);//
+			snprintf(out,32," 0x%08X\n", uuidPart3);//0x34313338
+			break;
+ //[QBS]e
     case INFO_CPU:
             snprintf(out,32,"%xh",(STM32_GetSignature()));
             break;

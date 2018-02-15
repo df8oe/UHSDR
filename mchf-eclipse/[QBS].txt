@@ -1,4 +1,0 @@
-  Area for Richard 2E0DVK
-  Coder Tag [QBS] to document code changes or additions he has made
-  
-  2.7.95   07-02-2018 intial intigration of Mega-McHF code into main Official McHF code base.
