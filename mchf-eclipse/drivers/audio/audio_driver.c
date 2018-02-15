@@ -215,7 +215,7 @@ static arm_iir_lattice_instance_f32	IIR_AntiAlias[NUM_AUDIO_CHANNELS];
 
 // static float32_t Koeff[20];
 // variables for RX manual notch, manual peak & bass shelf IIR biquad filter
-static arm_biquad_casd_df1_inst_f32 IIR_biquad_1[NUM_AUDIO_CHANNELS] =
+arm_biquad_casd_df1_inst_f32 IIR_biquad_1[NUM_AUDIO_CHANNELS] =
 {
         {
                 .numStages = 4,
@@ -247,7 +247,7 @@ static arm_biquad_casd_df1_inst_f32 IIR_biquad_1[NUM_AUDIO_CHANNELS] =
 
 
 // variables for RX treble shelf IIR biquad filter
-static arm_biquad_casd_df1_inst_f32 IIR_biquad_2[NUM_AUDIO_CHANNELS] =
+arm_biquad_casd_df1_inst_f32 IIR_biquad_2[NUM_AUDIO_CHANNELS] =
 {
         {
                 .numStages = 1,
@@ -807,23 +807,156 @@ void AudioDriver_SetRxAudioProcessingSAM(uint8_t dmod_mode)
     adb.teta3_old = 0.0;
 }
 
+
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Cascaded biquad (notch, peak, lowShelf, highShelf) [DD4WH, april 2016]
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+// biquad_1 :   Notch & peak filters & lowShelf (Bass) in the decimated path
+// biquad 2 :   Treble in the 48kHz path
+// TX_biquad:   Bass & Treble in the 48kHz path
+// DSP Audio-EQ-cookbook for generating the coeffs of the filters on the fly
+// www.musicdsp.org/files/Audio-EQ-Cookbook.txt  [by Robert Bristow-Johnson]
+//
+// the ARM algorithm assumes the biquad form
+// y[n] = coeffs[B0] * x[n] + coeffs[B1] * x[n-1] + coeffs[B2] * x[n-2] + coeffs[A1] * y[n-1] + a2 * y[n-2]
+//
+// However, the cookbook formulae by Robert Bristow-Johnson AND the Iowa Hills IIR Filter designer
+// use this formula:
+//
+// y[n] = coeffs[B0] * x[n] + coeffs[B1] * x[n-1] + coeffs[B2] * x[n-2] - coeffs[A1] * y[n-1] - coeffs[A2] * y[n-2]
+//
+// Therefore, we have to use negated coeffs[A1] and coeffs[A2] for use with the ARM function
+// notch implementation
+//
+// we also have to divide every coefficient by a0 !
+// y[n] = coeffs[B0]/a0 * x[n] + coeffs[B1]/a0 * x[n-1] + coeffs[B2]/a0 * x[n-2] - coeffs[A1]/a0 * y[n-1] - coeffs[A2]/a0 * y[n-2]
+//
+//
+
 #define B0 0
 #define B1 1
 #define B2 2
 #define A1 3
 #define A2 4
-#define A0 5
 
-void AudioDriver_SetBiquadCoeffs(float32_t* coeffsTo,const float32_t* coeffsFrom, float scaling)
+/**
+ * @brief Biquad Filter Init Helper function which copies the biquad coefficients into the filter array itself
+ */
+void AudioDriver_SetBiquadCoeffs(float32_t* coeffsTo,const float32_t* coeffsFrom)
 {
-    coeffsTo[0] = coeffsFrom[0]/scaling;
-    coeffsTo[1] = coeffsFrom[1]/scaling;
-    coeffsTo[2] = coeffsFrom[2]/scaling;
-    coeffsTo[3] = coeffsFrom[3]/scaling;
-    coeffsTo[4] = coeffsFrom[4]/scaling;
+    coeffsTo[0] = coeffsFrom[0];
+    coeffsTo[1] = coeffsFrom[1];
+    coeffsTo[2] = coeffsFrom[2];
+    coeffsTo[3] = coeffsFrom[3];
+    coeffsTo[4] = coeffsFrom[4];
 }
 
-void AudioDriver_CalcHighShelf(float32_t coeffs[6], float32_t f0, float32_t S, float32_t gain, float32_t FS)
+/**
+ * @brief Biquad Filter Init Helper function which copies the biquad coefficients into all filter instances of the 1 or 2 channel audio
+ * @param biquad_inst_array a pointer to an either 1 or 2 element sized array of biquad filter instances. Make sure the array has the expected size!
+ * @param idx of first element of stage coefficients (i.e. 0, 5, 10, ... ) since we have 5 element coeff arrays per stage
+ */
+void AudioDriver_SetBiquadCoeffsAllInstances(arm_biquad_casd_df1_inst_f32 biquad_inst_array[NUM_AUDIO_CHANNELS], uint32_t idx, const float32_t* coeffsFrom)
+{
+    for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
+     {
+         AudioDriver_SetBiquadCoeffs(&biquad_inst_array[chan].pCoeffs[idx],coeffsFrom);
+     }
+}
+
+/**
+ * @brief Biquad Filter Init Helper function which applies the filter specific scaling to calculated coefficients
+ */
+void AudioDriver_ScaleBiquadCoeffs(float32_t coeffs[5],const float32_t scalingA, const float32_t scalingB)
+{
+    coeffs[A1] = coeffs[A1] / scalingA;
+    coeffs[A2] = coeffs[A2] / scalingA;
+
+    coeffs[B0] = coeffs[B0] / scalingB;
+    coeffs[B1] = coeffs[B1] / scalingB;
+    coeffs[B2] = coeffs[B2] / scalingB;
+}
+
+/**
+ * @brief Biquad Filter Init Helper function to calculate a notch filter aka narrow bandstop filter
+ */
+void AudioDriver_CalcBandstop(float32_t coeffs[5], float32_t f0, float32_t FS)
+{
+     float32_t Q = 10; // larger Q gives narrower notch
+     float32_t w0 = 2 * PI * f0 / FS;
+     float32_t alpha = sinf(w0) / (2 * Q);
+
+     coeffs[B0] = 1;
+     coeffs[B1] = - 2 * cosf(w0);
+     coeffs[B2] = 1;
+     float32_t scaling = 1 + alpha;
+     coeffs[A1] = 2 * cosf(w0); // already negated!
+     coeffs[A2] = alpha - 1; // already negated!
+
+     AudioDriver_ScaleBiquadCoeffs(coeffs,scaling, scaling);
+}
+
+/**
+ * @brief Biquad Filter Init Helper function to calculate a peak filter aka a narrow bandpass filter
+ */
+void AudioDriver_CalcBandpass(float32_t coeffs[5], float32_t f0, float32_t FS)
+{
+    /*       // peak filter = peaking EQ
+    f0 = ts.peak_frequency;
+    //Q = 15; //
+    // bandwidth in octaves between midpoint (Gain / 2) gain frequencies
+    float32_t BW = 0.05;
+    w0 = 2 * PI * f0 / FSdec;
+    //alpha = sin(w0) / (2 * Q);
+    alpha = sin (w0) * sinh( log(2) / 2 * BW * w0 / sin(w0) );
+    float32_t Gain = 12;
+    A = powf(10.0, (Gain/40.0));
+    coeffs[B0] = 1 + (alpha * A);
+    coeffs[B1] = - 2 * cos(w0);
+    coeffs[B2] = 1 - (alpha * A);
+    a0 = 1 + (alpha / A);
+    coeffs[A1] = 2 * cos(w0); // already negated!
+    coeffs[A2] = (alpha/A) - 1; // already negated!
+     */
+    /*        // test the BPF coefficients, because actually we want a "peak" filter without gain!
+    // Bandpass filter constant 0dB peak gain
+    // this filter was tested: "should have more gain and less Q"
+    f0 = ts.peak_frequency;
+    Q = 20; //
+    w0 = 2 * PI * f0 / FSdec;
+    alpha = sin(w0) / (2 * Q);
+//        A = 1; // gain = 1
+    //        A = 3; // 10^(10/40); 15dB gain
+
+    coeffs[B0] = alpha;
+    coeffs[B1] = 0;
+    coeffs[B2] = - alpha;
+    a0 = 1 + alpha;
+    coeffs[A1] = 2 * cos(w0); // already negated!
+    coeffs[A2] = alpha - 1; // already negated!
+     */
+    // BPF: constant skirt gain, peak gain = Q
+    float32_t Q = 4; //
+    float32_t BW = 0.03;
+    float32_t w0 = 2 * PI * f0 / FS;
+    float32_t alpha = sinf (w0) * sinhf( log(2) / 2 * BW * w0 / sinf(w0) ); //
+
+    coeffs[B0] = Q * alpha;
+    coeffs[B1] = 0;
+    coeffs[B2] = - Q * alpha;
+    float32_t scaling = 1 + alpha;
+    coeffs[A1] = 2 * cosf(w0); // already negated!
+    coeffs[A2] = alpha - 1; // already negated!
+
+    AudioDriver_ScaleBiquadCoeffs(coeffs,scaling, scaling);
+
+}
+
+/**
+ * @brief Biquad Filter Init Helper function to calculate a treble adjustment filter aka high shelf filter
+ */
+void AudioDriver_CalcHighShelf(float32_t coeffs[5], float32_t f0, float32_t S, float32_t gain, float32_t FS)
 {
     float32_t w0 = 2 * PI * f0 / FS;
     float32_t A = pow10f(gain/40.0); // gain ranges from -20 to 5
@@ -835,22 +968,22 @@ void AudioDriver_CalcHighShelf(float32_t coeffs[6], float32_t f0, float32_t S, f
     coeffs[B0] = A *        ( (A + 1) + (A - 1) * cosw0 + twoAa );
     coeffs[B1] = - 2 * A *  ( (A - 1) + (A + 1) * cosw0         );
     coeffs[B2] = A *        ( (A + 1) + (A - 1) * cosw0 - twoAa );
-    coeffs[A0] =              (A + 1) - (A - 1) * cosw0 + twoAa ;
+    float32_t scaling =       (A + 1) - (A - 1) * cosw0 + twoAa ;
     coeffs[A1] = - 2 *      ( (A - 1) - (A + 1) * cosw0         ); // already negated!
     coeffs[A2] = twoAa      - (A + 1) + (A - 1) * cosw0; // already negated!
 
 
     //    DCgain = 2; //
     //    DCgain = (coeffs[B0] + coeffs[B1] + coeffs[B2]) / (1 - (- coeffs[A1] - coeffs[A2])); // takes into account that coeffs[A1] and coeffs[A2] are already negated!
-    float32_t DCgain = 1; //
+    float32_t DCgain = 1.0 * scaling;
 
-    coeffs[B0] = coeffs[B0] / DCgain;
-    coeffs[B1] = coeffs[B1] / DCgain;
-    coeffs[B2] = coeffs[B2] / DCgain;
-
+    AudioDriver_ScaleBiquadCoeffs(coeffs,scaling, DCgain);
 }
 
-void AudioDriver_CalcLowShelf(float32_t coeffs[6], float32_t f0, float32_t S, float32_t gain, float32_t FS)
+/**
+ * @brief Biquad Filter Init Helper function to calculate a bass adjustment filter aka low shelf filter
+ */
+void AudioDriver_CalcLowShelf(float32_t coeffs[5], float32_t f0, float32_t S, float32_t gain, float32_t FS)
 {
 
     float32_t w0 = 2 * PI * f0 / FS;
@@ -864,7 +997,7 @@ void AudioDriver_CalcLowShelf(float32_t coeffs[6], float32_t f0, float32_t S, fl
     coeffs[B0] = A *        ( (A + 1) - (A - 1) * cosw0 + twoAa );
     coeffs[B1] = 2 * A *    ( (A - 1) - (A + 1) * cosw0         );
     coeffs[B2] = A *        ( (A + 1) - (A - 1) * cosw0 - twoAa );
-    coeffs[A0] =              (A + 1) + (A - 1) * cosw0 + twoAa ;
+    float32_t scaling =       (A + 1) + (A - 1) * cosw0 + twoAa ;
     coeffs[A1] = 2 *        ( (A - 1) + (A + 1) * cosw0         ); // already negated!
     coeffs[A2] = twoAa      - (A + 1) - (A - 1) * cosw0; // already negated!
 
@@ -874,16 +1007,19 @@ void AudioDriver_CalcLowShelf(float32_t coeffs[6], float32_t f0, float32_t S, fl
     //    float32_t DCgain = (coeffs[B0] + coeffs[B1] + coeffs[B2]) / (1 - (coeffs[A1] + coeffs[A2]));
     // does not work for some reason?
     // I take a divide by a constant instead !
-    float32_t DCgain = 1; //
     //    DCgain = (coeffs[B0] + coeffs[B1] + coeffs[B2]) / (1 - (- coeffs[A1] - coeffs[A2])); // takes into account that coeffs[A1] and coeffs[A2] are already negated!
-    coeffs[B0] = coeffs[B0] / DCgain;
-    coeffs[B1] = coeffs[B1] / DCgain;
-    coeffs[B2] = coeffs[B2] / DCgain;
 
+    float32_t DCgain = 1.0 * scaling; //
+
+
+    AudioDriver_ScaleBiquadCoeffs(coeffs,scaling, DCgain);
 
 }
 
-void AudioDriver_CalcNotch(float32_t coeffs[6], float32_t f0, float32_t BW, float32_t FS)
+/**
+ * @brief Biquad Filter Init Helper function to calculate a notch filter aka narrow bandstop filter with variable bandwidth
+ */
+void AudioDriver_CalcNotch(float32_t coeffs[5], float32_t f0, float32_t BW, float32_t FS)
 {
 
     float32_t w0 = 2 * PI * f0 / FS;
@@ -892,40 +1028,22 @@ void AudioDriver_CalcNotch(float32_t coeffs[6], float32_t f0, float32_t BW, floa
     coeffs[B0] = 1;
     coeffs[B1] = - 2 * cosf(w0);
     coeffs[B2] = 1;
-    coeffs[A0] = 1 + alpha;
+    float32_t scaling = 1 + alpha;
     coeffs[A1] = 2 * cosf(w0); // already negated!
     coeffs[A2] = alpha - 1; // already negated!
 
+
+    AudioDriver_ScaleBiquadCoeffs(coeffs,scaling, scaling);
 }
 
 static const float32_t biquad_passthrough[] = { 1, 0, 0, 0, 0 };
 
-void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
+
+/**
+ * @brief Biquad Filter Init used for processing audio for RX and TX
+ */
+void AudioDriver_SetRxTxAudioProcessingAudioFilters()
 {
-    /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     * Cascaded biquad (notch, peak, lowShelf, highShelf) [DD4WH, april 2016]
-     ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-    // biquad_1 :   Notch & peak filters & lowShelf (Bass) in the decimated path
-    // biquad 2 :   Treble in the 48kHz path
-    // TX_biquad:   Bass & Treble in the 48kHz path
-    // DSP Audio-EQ-cookbook for generating the coeffs of the filters on the fly
-    // www.musicdsp.org/files/Audio-EQ-Cookbook.txt  [by Robert Bristow-Johnson]
-    //
-    // the ARM algorithm assumes the biquad form
-    // y[n] = coeffs[B0] * x[n] + coeffs[B1] * x[n-1] + coeffs[B2] * x[n-2] + coeffs[A1] * y[n-1] + a2 * y[n-2]
-    //
-    // However, the cookbook formulae by Robert Bristow-Johnson AND the Iowa Hills IIR Filter designer
-    // use this formula:
-    //
-    // y[n] = coeffs[B0] * x[n] + coeffs[B1] * x[n-1] + coeffs[B2] * x[n-2] - coeffs[A1] * y[n-1] - coeffs[A2] * y[n-2]
-    //
-    // Therefore, we have to use negated coeffs[A1] and coeffs[A2] for use with the ARM function
-    // notch implementation
-    //
-    // we also have to divide every coefficient by a0 !
-    // y[n] = coeffs[B0]/a0 * x[n] + coeffs[B1]/a0 * x[n-1] + coeffs[B2]/a0 * x[n-2] - coeffs[A1]/a0 * y[n-1] - coeffs[A2]/a0 * y[n-2]
-    //
-    //
     float32_t FSdec = 24000.0; // we need the sampling rate in the decimated path for calculation of the coefficients
 
     if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
@@ -937,144 +1055,65 @@ void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
 
     // the notch filter is in biquad 1 and works at the decimated sample rate FSdec
 
-    float32_t coeffs[6];
-    float32_t *coeffs_ptr;
+    float32_t coeffs[5];
+    const float32_t *coeffs_ptr;
+
     // setting the Coefficients in the notch filter instance
-    // while not using pointers
     if (ts.dsp_active & DSP_MNOTCH_ENABLE)
     {
-        float32_t f0 = ts.notch_frequency;
-        float32_t Q = 10; // larger Q gives narrower notch
-        float32_t w0 = 2 * PI * f0 / FSdec;
-        float32_t alpha = sinf(w0) / (2 * Q);
-
-        coeffs[B0] = 1;
-        coeffs[B1] = - 2 * cosf(w0);
-        coeffs[B2] = 1;
-        coeffs[A0] = 1 + alpha;
-        coeffs[A1] = 2 * cosf(w0); // already negated!
-        coeffs[A2] = alpha - 1; // already negated!
-
+        AudioDriver_CalcBandstop(coeffs, ts.notch_frequency , FSdec);
         coeffs_ptr = coeffs;
     }
     else   // passthru
     {
-        coeffs_ptr = (float32_t*)biquad_passthrough;
-        // we need to cast here in order to keep the compiler happy
-
-        coeffs[A0] = 1;
+        coeffs_ptr = biquad_passthrough;
     }
 
-    for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
-    {
-        AudioDriver_SetBiquadCoeffs(IIR_biquad_1[chan].pCoeffs,coeffs_ptr,coeffs[A0]);
-    }
+    AudioDriver_SetBiquadCoeffsAllInstances(IIR_biquad_1, 0, coeffs_ptr);
 
     // this is an auto-notch-filter detected by the NR algorithm
     // biquad 1, 4th stage
     //    if(0) // temporarily deactivated
     //    if((ts.dsp_active & DSP_NOTCH_ENABLE) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ))
 
-    for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
-    {
-        AudioDriver_SetBiquadCoeffs(&IIR_biquad_1[chan].pCoeffs[15],biquad_passthrough,1);
-    }
+    AudioDriver_SetBiquadCoeffsAllInstances(IIR_biquad_1, 15, biquad_passthrough);
 
     // the peak filter is in biquad 1 and works at the decimated sample rate FSdec
     if(ts.dsp_active & DSP_MPEAK_ENABLE)
     {
-        /*       // peak filter = peaking EQ
-        f0 = ts.peak_frequency;
-        //Q = 15; //
-        // bandwidth in octaves between midpoint (Gain / 2) gain frequencies
-        float32_t BW = 0.05;
-        w0 = 2 * PI * f0 / FSdec;
-        //alpha = sin(w0) / (2 * Q);
-        alpha = sin (w0) * sinh( log(2) / 2 * BW * w0 / sin(w0) );
-        float32_t Gain = 12;
-        A = powf(10.0, (Gain/40.0));
-        coeffs[B0] = 1 + (alpha * A);
-        coeffs[B1] = - 2 * cos(w0);
-        coeffs[B2] = 1 - (alpha * A);
-        a0 = 1 + (alpha / A);
-        coeffs[A1] = 2 * cos(w0); // already negated!
-        coeffs[A2] = (alpha/A) - 1; // already negated!
-         */
-        /*        // test the BPF coefficients, because actually we want a "peak" filter without gain!
-        // Bandpass filter constant 0dB peak gain
-        // this filter was tested: "should have more gain and less Q"
-        f0 = ts.peak_frequency;
-        Q = 20; //
-        w0 = 2 * PI * f0 / FSdec;
-        alpha = sin(w0) / (2 * Q);
-//        A = 1; // gain = 1
-        //        A = 3; // 10^(10/40); 15dB gain
-
-        coeffs[B0] = alpha;
-        coeffs[B1] = 0;
-        coeffs[B2] = - alpha;
-        a0 = 1 + alpha;
-        coeffs[A1] = 2 * cos(w0); // already negated!
-        coeffs[A2] = alpha - 1; // already negated!
-         */
-        // BPF: constant skirt gain, peak gain = Q
-        float32_t f0 = ts.peak_frequency;
-        float32_t Q = 4; //
-        float32_t BW = 0.03;
-        float32_t w0 = 2 * PI * f0 / FSdec;
-        float32_t alpha = sinf (w0) * sinhf( log(2) / 2 * BW * w0 / sinf(w0) ); //
-
-        coeffs[B0] = Q * alpha;
-        coeffs[B1] = 0;
-        coeffs[B2] = - Q * alpha;
-        coeffs[A0] = 1 + alpha;
-        coeffs[A1] = 2 * cosf(w0); // already negated!
-        coeffs[A2] = alpha - 1; // already negated!
-
+        AudioDriver_CalcBandpass(coeffs, ts.peak_frequency, FSdec);
         coeffs_ptr = coeffs;
     }
     else   //passthru
     {
-        coeffs_ptr = (float32_t*)biquad_passthrough;
-        // we need to cast here in order to keep the compiler happy
-        coeffs[A0] = 1;
+        coeffs_ptr = biquad_passthrough;
     }
 
-    for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
-    {
-        AudioDriver_SetBiquadCoeffs(&IIR_biquad_1[chan].pCoeffs[5],coeffs_ptr,coeffs[A0]);
-    }
+    AudioDriver_SetBiquadCoeffsAllInstances(IIR_biquad_1, 5, coeffs_ptr);
 
     // EQ shelving filters
     //
     // the bass filter is in biquad 1 and works at the decimated sample rate FSdec
     //
-    // Bass
-    // lowShelf
-    float32_t lsCoeffs[6];
-    AudioDriver_CalcLowShelf(lsCoeffs, 250, 0.7, ts.bass_gain, FSdec);
+    // Bass / lowShelf
+    AudioDriver_CalcLowShelf(coeffs, 250, 0.7, ts.bass_gain, FSdec);
+    AudioDriver_SetBiquadCoeffsAllInstances(IIR_biquad_1, 10, coeffs);
 
     // Treble = highShelf
     // the treble filter is in biquad 2 and works at 48000ksps
-    float32_t hsCoeffs[6];
-    AudioDriver_CalcHighShelf(hsCoeffs, 3500, 0.9, ts.treble_gain, FS);
+    AudioDriver_CalcHighShelf(coeffs, 3500, 0.9, ts.treble_gain, FS);
+    AudioDriver_SetBiquadCoeffsAllInstances(IIR_biquad_2, 0, coeffs);
 
-    for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
-    {
-        AudioDriver_SetBiquadCoeffs(&IIR_biquad_1[chan].pCoeffs[10],lsCoeffs,lsCoeffs[A0]);
-        AudioDriver_SetBiquadCoeffs(&IIR_biquad_2[chan].pCoeffs[0],hsCoeffs,hsCoeffs[A0]);
-    }
 
-    // insert coefficient calculation for TX bass & treble adjustment here!
+    // coefficient calculation for TX bass & treble adjustment
     // the TX treble filter is in IIR_TX_biquad and works at 48000ksps
     AudioDriver_CalcHighShelf(coeffs, 1700, 0.9, ts.tx_treble_gain, FS);
-    AudioDriver_SetBiquadCoeffs(&IIR_TX_biquad.pCoeffs[0],coeffs,coeffs[A0]);
+    AudioDriver_SetBiquadCoeffs(&IIR_TX_biquad.pCoeffs[0],coeffs);
 
-    // the TX bass filter is in TX_biquad and works at 48000 sample rate
+    // the TX bass filter is in IIR_TX_biquad and works at 48000 sample rate
     AudioDriver_CalcLowShelf(coeffs, 300, 0.7, ts.tx_bass_gain, FS);
-    AudioDriver_SetBiquadCoeffs(&IIR_TX_biquad.pCoeffs[5],coeffs,coeffs[A0]);
+    AudioDriver_SetBiquadCoeffs(&IIR_TX_biquad.pCoeffs[5],coeffs);
 
-    CwDecode_FilterInit();
 }
 
 
@@ -1144,7 +1183,10 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
 
     // TODO: We only have to do this, if the audio signal filter configuration changes
     // RX+ TX Bass, Treble, Peak, Notch
-    AudioDriver_SetRxTxAudioProcessingAudioFilters(dmod_mode);
+    AudioDriver_SetRxTxAudioProcessingAudioFilters();
+
+    // initialize the goertzel filter used to detect CW signals at a given frequency in the audio stream
+    CwDecode_FilterInit();
 
     // this sets the coefficients for the ZoomFFT decimation filter
     // according to the desired magnification mode sd.magnify
@@ -1419,12 +1461,12 @@ void AudioDriver_TxFilterInit(uint8_t dmod_mode)
         IIR_TXFilterSelected_ptr = &IIR_TX_2k7_FM;
     }
 
-    IIR_TXFilter.numStages = IIR_TXFilterSelected_ptr->numStages;       // number of stages
-    IIR_TXFilter.pkCoeffs = IIR_TXFilterSelected_ptr->pkCoeffs; // point to reflection coefficients
-    IIR_TXFilter.pvCoeffs = IIR_TXFilterSelected_ptr->pvCoeffs; // point to ladder coefficients
-    IIR_TXFilter.pState = iir_tx_state;
-    arm_fill_f32(0.0,iir_tx_state,IIR_RX_STATE_ARRAY_SIZE);
-
+    arm_iir_lattice_init_f32(&IIR_TXFilter,
+            IIR_TXFilterSelected_ptr->numStages,       // number of stages
+            IIR_TXFilterSelected_ptr->pkCoeffs, // point to reflection coefficients
+            IIR_TXFilterSelected_ptr->pvCoeffs, // point to ladder coefficients
+            IIR_TXFilter.pState = iir_tx_state,
+            IIR_RXAUDIO_BLOCK_SIZE);
 }
 
 //*----------------------------------------------------------------------------
