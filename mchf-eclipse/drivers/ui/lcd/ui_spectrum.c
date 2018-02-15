@@ -1868,6 +1868,7 @@ void UiSpectrum_CwSnapDisplay (float32_t delta)
 {
 #define max_delta 140.0
 #define divider 5.0
+#define alpha 0.7
 #if	defined(STM32F7) || defined(STM32H7)
 	static float32_t old_delta = 0.0;
 #endif
@@ -1884,7 +1885,7 @@ void UiSpectrum_CwSnapDisplay (float32_t delta)
 
 	// lowpass filtering only for fast processors
 #if	defined(STM32F7) || defined(STM32H7)
-    delta = 0.3 * delta + 0.7 * old_delta;
+    delta = (1.0 - alpha) * delta + alpha * old_delta;
 #endif
 
 

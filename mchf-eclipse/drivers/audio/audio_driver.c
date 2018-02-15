@@ -746,7 +746,7 @@ void AudioDriver_SetSamPllParameters()
 
     // definitions and intializations for synchronous AM demodulation = SAM
     //    adb.DF = 1.0; //ads.decimation_rate;
-    adb.DF = ads.decimation_rate;
+    adb.DF = (float32_t)(ads.decimation_rate);
     //ads.pll_fmax_int = 2500;
     adb.pll_fmax = (float32_t)ads.pll_fmax_int;
     // DX adjustments: zeta = 0.15, omegaN = 100.0
@@ -2027,7 +2027,7 @@ void AudioDriver_SetupAgcWdsp()
 {
     static bool initialised = false;
 	float32_t tmp;
-    float32_t sample_rate = IQ_SAMPLE_RATE_F / ads.decimation_rate;
+    float32_t sample_rate = IQ_SAMPLE_RATE_F / (float32_t)ads.decimation_rate;
     // Start variables taken from wdsp
     // RXA.c !!!!
     /*
@@ -2053,7 +2053,7 @@ void AudioDriver_SetupAgcWdsp()
     {
     	agc_wdsp.ring_buffsize = AGC_WDSP_RB_SIZE; //192; //96;
 		//do one-time initialization
-    	agc_wdsp.out_index = agc_wdsp.ring_buffsize;
+    	agc_wdsp.out_index = -1; //agc_wdsp.ring_buffsize; // or -1 ??
     	agc_wdsp.fixed_gain = 1.0;
     	agc_wdsp.ring_max = 0.0;
     	agc_wdsp.volts = 0.0;
@@ -2070,7 +2070,7 @@ void AudioDriver_SetupAgcWdsp()
 	    //    max_gain = 1000.0; // 1000.0; determines the AGC threshold = knee level
 	    //  max_gain is powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
 	    //    fixed_gain = ads.agc_rf_gain; //0.7; // if AGC == OFF, this gain is used
-	    agc_wdsp.max_input = (float32_t)ADC_CLIP_WARN_THRESHOLD * 2.0; // which is 8192 at the moment
+	    agc_wdsp.max_input = (float32_t)ADC_CLIP_WARN_THRESHOLD; // which is 4096 at the moment
 	    //32767.0; // maximum value of 16-bit audio //  1.0; //
 	    agc_wdsp.out_targ = (float32_t)ADC_CLIP_WARN_THRESHOLD; // 4096, tweaked, so that volume when switching between the two AGCs remains equal
 	    //12000.0; // target value of audio after AGC
@@ -2083,7 +2083,7 @@ void AudioDriver_SetupAgcWdsp()
 	    initialised = true;
     }
     //    var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
-    agc_wdsp.var_gain = 10 * powf (10.0, (float32_t)ts.agc_wdsp_slope / 20.0); // 10 * 10^(slope / 20)
+    agc_wdsp.var_gain = powf (10.0, (float32_t)ts.agc_wdsp_slope / 20.0 / 10.0); // 10^(slope / 200)
 
     //    hangtime = 0.250;                // hangtime
     agc_wdsp.hangtime = (float32_t)ts.agc_wdsp_hang_time / 1000.0;
@@ -2244,11 +2244,13 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
         //        agc_wdsp.ring[agc_wdsp.in_index] = adb.a_buffer[i];
         //        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(adb.a_buffer[i]);
 //        agc_wdsp.ring[agc_wdsp.in_index] = agcbuffer[i];
-        agc_wdsp.ring[2 * agc_wdsp.in_index] = agcbuffer1[i];
+        // FIXME
+        agc_wdsp.ring[2 * agc_wdsp.in_index] = agcbuffer1[i] * 0.1;
 #ifdef USE_TWO_CHANNEL_AUDIO
         if(use_stereo)
         	{
-        		agc_wdsp.ring[2 * agc_wdsp.in_index + 1] = agcbuffer2[i];
+        	// FIXME
+        		agc_wdsp.ring[2 * agc_wdsp.in_index + 1] = agcbuffer2[i] * 0.1;
         	}
 #endif
         //        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer[i]);
