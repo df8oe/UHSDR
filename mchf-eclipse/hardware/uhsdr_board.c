@@ -223,7 +223,7 @@ static void mchf_board_power_button_irq_init(void)
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(BUTTON_PWR_PIO, &GPIO_InitStructure);
 
-    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 15, 0);
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 14, 0);
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
     /*

@@ -531,7 +531,7 @@ int mchfMain(void)
     for(;;)
     {
         // UI events processing
-        UiDriver_MainHandler();
+        UiDriver_TaskHandler_MainTasks();
         // Reset WD - not working
         //wd_reset();
     }
