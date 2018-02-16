@@ -6669,7 +6669,7 @@ void UiDriver_TaskHandler_MainTasks()
 
 	CatDriver_HandleProtocol();
 
-#ifdef USE_PENDSV_FOR_HIGHPRIO_TASKS
+#ifndef USE_PENDSV_FOR_HIGHPRIO_TASKS
 	UiDriver_TaskHandler_HighPrioTasks();
 #endif
 
