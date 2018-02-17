@@ -106,6 +106,15 @@
 #define USE_OSC_SI5351A
 // AT LEAST ONE GROUP END USE_OSC
 
+
+// Option: If defined, high priority tasks are executed in the context of an PendSV interrupt
+// which gives finishing these tasks a priority over "normal", less real-time critical longer running user control tasks
+// such as display redraw.
+// In general this should be defined but in case of issues one may want to execute High Prio tasks not concurrently
+// to normal tasks, comment this in this case and see if the issue goes away. But this may cause other problems
+// of course.
+#define USE_PENDSV_FOR_HIGHPRIO_TASKS
+
 #include "uhsdr_mcu.h"
 // HW libs
 #ifdef STM32F7
@@ -1272,5 +1281,9 @@ inline bool is_waterfallmode()
 {
     return (ts.flags1 & FLAGS1_WFALL_ENABLED) != 0;
 }
+
+#ifdef USE_PENDSV_FOR_HIGHPRIO_TASKS
+extern void UiDriver_TaskHandler_HighPrioTasks();
+#endif
 
 #endif

@@ -174,7 +174,7 @@ typedef enum
 // --------------------------------------------------------------------------
 // Exports
 void 	UiDriver_Init(void);
-void 	UiDriver_MainHandler(void);
+void 	UiDriver_TaskHandler_MainTasks();
 
 void 	UiDriver_CreateTemperatureDisplay();
 void 	UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode);

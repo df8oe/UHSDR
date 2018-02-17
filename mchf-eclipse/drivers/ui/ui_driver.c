@@ -6657,13 +6657,56 @@ bool UiDriver_TimerExpireAndRewind(SysClockTimers sct,uint32_t now, uint32_t div
 extern USBH_HandleTypeDef hUsbHostHS;
 #endif
 
-void UiDriver_MainHandler()
+/**
+ * This handler is activated by the Audio-Interrupt with a frequency of 1500 Hz via PendSV interrupt.
+ * However, since this handler may run longer than 0.66uS it cannot be used to keep track of time
+ * or you cannot count on it called every 0.66uS. It will be next activate no longer than 0.66uS after
+ * last finishing the handler.
+ *
+ * This handler is executed as PendSV interrupt handler with lowest possible priority, i.e. its execution
+ * is interrupted by all other interrupts with a higher priority.
+ *
+ * Please note: Do not call any UI related functions here, essentially we should only include high prio
+ * tasks such as longer running audio processing (e.g. FreeDV or the NR processing) which should be executed
+ * with as low latency as possible but take too long for being included in the audio interrupt handler itself
+ * Also relevant: If this handler function does take too long, the UI handling including display updates
+ * will feel sluggish or will not work at all since all processing time is spend here then and
+ * the main tasks will never get executed.
+ *
+ * In a nutshell, unless there is a very, very good reason, do not add or change anything here.
+ *
+ */
+void UiDriver_TaskHandler_HighPrioTasks()
+{
+    // READ THE LENGTHY COMMENT ABOVE BEFORE CHANGING ANYTHING BELOW!!!
+    // YES, READ IT! Thank you!
+#ifdef USE_FREEDV
+    if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_FreeDV)
+    {
+        FreeDv_HandleFreeDv();
+    }
+#endif // USE_FREEDV
+
+#ifdef USE_ALTERNATE_NR
+    if ((ts.nb_setting > 0 || (ts.dsp_active & DSP_NR_ENABLE)) && (ads.decimation_rate == 4))
+    {
+
+        alternateNR_handle();
+    }
+#endif
+}
+
+void UiDriver_TaskHandler_MainTasks()
 {
 
 	uint32_t now = ts.sysclock;
 	//        HAL_GetTick()/10;
 
 	CatDriver_HandleProtocol();
+
+#ifndef USE_PENDSV_FOR_HIGHPRIO_TASKS
+	UiDriver_TaskHandler_HighPrioTasks();
+#endif
 
 #ifdef USE_USBHOST
 	MX_USB_HOST_Process();
@@ -6700,25 +6743,7 @@ void UiDriver_MainHandler()
 	}
 #endif
 #endif
-
-	// START CALLED AS OFTEN AS POSSIBLE
-#ifdef USE_FREEDV
-	if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_FreeDV)
-	{
-		FreeDv_HandleFreeDv();
-	}
-#endif // USE_FREEDV
-
-#ifdef USE_ALTERNATE_NR
-	if ((ts.nb_setting > 0 || (ts.dsp_active & DSP_NR_ENABLE)) && (ads.decimation_rate == 4))
-	{
-
-		alternateNR_handle();
-
-	}
-
-#endif
-
+    // START CALLED AS OFTEN AS POSSIBLE
 
 	if (ts.tx_stop_req == true  || ts.ptt_req == true)
 	{
@@ -6756,6 +6781,13 @@ void UiDriver_MainHandler()
 			if (UiDriver_TimerExpireAndRewind(SCTimer_SMETER,now,4))
 			{
 				UiDriver_HandleSMeter();
+#ifdef USE_FREEDV
+				if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_FreeDV)
+				{
+			        FreeDv_DisplayUpdate();
+				}
+#endif // USE_FREEDV
+
 			}
 			break;
 		case STATE_SWR_METER:
