@@ -5046,6 +5046,11 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
     {
         Board_GreenLed(LED_STATE_OFF);
     }
+
+#ifdef USE_PENDSV_FOR_HIGHPRIO_TASKS
+    // let us trigger a pendsv irq here in order to trigger execution of UiDriver_HighPrioHandler()
+    SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+#endif
 }
 
 

@@ -427,8 +427,6 @@ void FreeDv_HandleFreeDv()
                 }
             }
         }
-        // MchfBoard_GreenLed(LED_STATE_ON);
-        FreeDv_DisplayUpdate();
     }
     // END Freedv Test DL2FW
 }
