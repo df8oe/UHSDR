@@ -673,6 +673,7 @@ void UiMenu_RenderMenu(uint16_t mode)
         {
             UiMenu_UpdateMenuEntry(menu[idx].entryItem,mode, idx);
         }
+        UiMenu_MoveCursor(ts.menu_item%ts.Layout->MENUSIZE);		//redraw of cursor
     }
     break;
 
