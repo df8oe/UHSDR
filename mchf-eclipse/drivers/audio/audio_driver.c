@@ -3500,7 +3500,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
-	uint32_t no_dec_samples = blockSizeDecim; // only used for the noise reduction decimation-by-two handling
 #ifdef USE_TWO_CHANNEL_AUDIO
     const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
 #endif
@@ -3775,33 +3774,38 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     if (ads.decimation_rate == 4)   //  to make sure, that we are at 12Ksamples
 
                     {
-                    	// this would be the right place for another decimation-by-2 to get down to 6ksps
-                    	// in order to further improve the spectral noise reduction
-                    	// TEST!
-                    	//
-                    	// anti-alias-filtering is already provided at this stage by the IIR main filter
-                    	// Only allow another decimation-by-two, if filter bandwidth is <= 2k7
-                    	//
-                    	// Add decimation-by-two HERE
+                        // this would be the right place for another decimation-by-2 to get down to 6ksps
+                        // in order to further improve the spectral noise reduction
+                        // TEST!
+                        //
+                        // anti-alias-filtering is already provided at this stage by the IIR main filter
+                        // Only allow another decimation-by-two, if filter bandwidth is <= 2k7
+                        //
+                        // Add decimation-by-two HERE
 
-                    	//  decide whether filter < 2k7!!!
-                    	if(ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701) && (dsp_active & DSP_NR_ENABLE))
-                    	{
-                    		no_dec_samples = blockSizeDecim / 2;
-                    		// decimate-by-2, DECIMATE_NR
-                            arm_fir_decimate_f32(&DECIMATE_NR, adb.a_buffer[0], adb.NR_dec_buffer, blockSizeDecim);
-                    	}
-                    	else
-                    	{
-                    		arm_copy_f32(adb.a_buffer[0], adb.NR_dec_buffer, blockSizeDecim);
-                    	}
+                        //  decide whether filter < 2k7!!!
+                        float32_t NR_dec_buffer[blockSizeDecim];
+                        uint32_t no_dec_samples = blockSizeDecim; // only used for the noise reduction decimation-by-two handling
+                        // buffer needs max blockSizeDecim , may be less if second decimation is done
+                        // see below
 
-                    	// attention -> change loop no into no_dec_samples!
+                        if(ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701) && (dsp_active & DSP_NR_ENABLE))
+                        {
+                            no_dec_samples = blockSizeDecim / 2;
+                            // decimate-by-2, DECIMATE_NR
+                            arm_fir_decimate_f32(&DECIMATE_NR, adb.a_buffer[0], NR_dec_buffer, blockSizeDecim);
+                        }
+                        else
+                        {
+                            arm_copy_f32(adb.a_buffer[0], NR_dec_buffer, blockSizeDecim);
+                        }
+
+                        // attention -> change loop no into no_dec_samples!
 
                         for (int k = 0; k < no_dec_samples; k=k+2) //transfer our noisy audio to our NR-input buffer
                         {
-                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].real=adb.NR_dec_buffer[k];
-                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].imag=adb.NR_dec_buffer[k+1];
+                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].real=NR_dec_buffer[k];
+                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].imag=NR_dec_buffer[k+1];
                             //trans_count_in++;
                             trans_count_in++; // count the samples towards FFT-size  -  2 samples per loop
                         }
@@ -3830,10 +3834,10 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         if (out_buffer != NULL)  //NR-routine has finished it's job
                         {
                             for (int j=0; j < no_dec_samples; j=j+2) // transfer noise reduced data back to our buffer
-//                            for (int j=0; j < blockSizeDecim; j=j+2) // transfer noise reduced data back to our buffer
+                                //                            for (int j=0; j < blockSizeDecim; j=j+2) // transfer noise reduced data back to our buffer
                             {
-                                adb.NR_dec_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
-                                adb.NR_dec_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
+                                NR_dec_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
+                                NR_dec_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
                                 outbuff_count++;
                                 //outbuff_count++;
                             }
@@ -3848,20 +3852,20 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         }
 
 
-                    // interpolation of a_buffer from 6ksps to 12ksps!
-                    // from NR_dec_buffer --> a_buffer
-                    // but only, if we have decimated to 6ksps, otherwise just copy the samples into a_buffer
-                    //
-                    if(ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701) && (dsp_active & DSP_NR_ENABLE))
-                    {
-                    	arm_fir_interpolate_f32(&INTERPOLATE_NR, adb.NR_dec_buffer, adb.a_buffer[0], no_dec_samples);
-                    	arm_scale_f32(adb.a_buffer[0], 2.0, adb.a_buffer[0], blockSizeDecim);
-                    }
-                    else
-                    {
-                    	arm_copy_f32(adb.NR_dec_buffer, adb.a_buffer[0], blockSizeDecim);
-                    }
-                    //
+                        // interpolation of a_buffer from 6ksps to 12ksps!
+                        // from NR_dec_buffer --> a_buffer
+                        // but only, if we have decimated to 6ksps, otherwise just copy the samples into a_buffer
+                        //
+                        if(ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701) && (dsp_active & DSP_NR_ENABLE))
+                        {
+                            arm_fir_interpolate_f32(&INTERPOLATE_NR, NR_dec_buffer, adb.a_buffer[0], no_dec_samples);
+                            arm_scale_f32(adb.a_buffer[0], 2.0, adb.a_buffer[0], blockSizeDecim);
+                        }
+                        else
+                        {
+                            arm_copy_f32(NR_dec_buffer, adb.a_buffer[0], blockSizeDecim);
+                        }
+
                     }
                 } // end of new nb
 
@@ -3887,7 +3891,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
                 arm_scale_f32(adb.a_buffer[0],scale_gain, adb.a_buffer[0], blockSizeDecim); // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
 #ifdef USE_TWO_CHANNEL_AUDIO
-
                 if(use_stereo)
                 {
                     arm_scale_f32(adb.a_buffer[1],scale_gain, adb.a_buffer[1], blockSizeDecim); // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
