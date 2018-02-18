@@ -42,6 +42,7 @@
 #include "cw_decoder.h"
 #include "freedv_uhsdr.h"
 
+
 typedef struct
 {
 	// AGC
@@ -49,6 +50,7 @@ typedef struct
 	//#define MAX_N_TAU           (8)
 	//#define MAX_TAU_ATTACK      (0.01)
 	//#define RB_SIZE       (int) (MAX_SAMPLE_RATE * MAX_N_TAU * MAX_TAU_ATTACK + 1)
+#define AGC_WDSP_RB_SIZE 96
 	//int8_t AGC_mode = 2;
 	int pmode;// = 1; // if 0, calculate magnitude by max(|I|, |Q|), if 1, calculate sqrtf(I*I+Q*Q)
 	float32_t out_sample[2];
@@ -69,8 +71,8 @@ typedef struct
 	float32_t hangtime;
 	float32_t hang_thresh;
 	float32_t tau_hang_decay;
-	float32_t ring[192]; //192]; //96];
-	float32_t abs_ring[96];// 192 //96]; // abs_ring is half the size of ring
+	float32_t ring[2*AGC_WDSP_RB_SIZE]; //192]; //96];
+	float32_t abs_ring[AGC_WDSP_RB_SIZE];// 192 //96]; // abs_ring is half the size of ring
 	//assign constants
 	int ring_buffsize; // = 96;
 	//do one-time initialization
@@ -1985,10 +1987,6 @@ return true;
 
 // RTTY Experiment based on code from the DSP Tutorial at http://dp.nonoo.hu/projects/ham-dsp-tutorial/18-rtty-decoder-using-iir-filters/
 // Used with permission from Norbert Varga, HA2NON under GPLv3 license
-
-/*
- * Experimental Code
- */
 #ifdef USE_RTTY_PROCESSOR
 static void AudioDriver_RxProcessor_Rtty(float32_t * const src, int16_t blockSize)
 {
@@ -1998,7 +1996,6 @@ static void AudioDriver_RxProcessor_Rtty(float32_t * const src, int16_t blockSiz
         RttyDecoder_ProcessSample(src[idx]);
     }
 }
-// END RTTY Experiment
 #endif
 
 static void AudioDriver_RxProcessor_Bpsk(float32_t * const src, int16_t blockSize)
@@ -2038,7 +2035,7 @@ void AudioDriver_SetupAgcWdsp()
     // one time initialization
     if(!initialised)
     {
-    	agc_wdsp.ring_buffsize = 96; //192; //96;
+    	agc_wdsp.ring_buffsize = AGC_WDSP_RB_SIZE; //192; //96;
 		//do one-time initialization
     	agc_wdsp.out_index = agc_wdsp.ring_buffsize;
     	agc_wdsp.fixed_gain = 1.0;
@@ -3475,6 +3472,104 @@ void AudioDriver_LeakyLmsNr (float32_t *in_buff, float32_t *out_buff, int buff_s
 
 #endif
 
+void AudioDriver_RxProcessorNoiseReduction(uint16_t blockSizeDecim, float32_t* inout_buffer)
+{
+#ifdef USE_ALTERNATE_NR
+    const uint8_t  dsp_active = ts.dsp_active;
+    static int trans_count_in=0;
+    static int outbuff_count=0;
+    static int NR_fill_in_pt=0;
+    static NR_Buffer* out_buffer = NULL;
+    // this would be the right place for another decimation-by-2 to get down to 6ksps
+    // in order to further improve the spectral noise reduction
+    // TEST!
+    //
+    // anti-alias-filtering is already provided at this stage by the IIR main filter
+    // Only allow another decimation-by-two, if filter bandwidth is <= 2k7
+    //
+    // Add decimation-by-two HERE
+
+    //  decide whether filter < 2k7!!!
+    uint32_t no_dec_samples = blockSizeDecim; // only used for the noise reduction decimation-by-two handling
+    // buffer needs max blockSizeDecim , less if second decimation is done
+    // see below
+
+    bool doSecondDecimation = ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701) && (dsp_active & DSP_NR_ENABLE);
+
+    if (doSecondDecimation == true)
+    {
+        no_dec_samples = blockSizeDecim / 2;
+        // decimate-by-2, DECIMATE_NR, in place
+        arm_fir_decimate_f32(&DECIMATE_NR, inout_buffer, inout_buffer, blockSizeDecim);
+    }
+
+    // attention -> change loop no into no_dec_samples!
+
+    for (int k = 0; k < no_dec_samples; k=k+2) //transfer our noisy audio to our NR-input buffer
+    {
+        mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].real=inout_buffer[k];
+        mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].imag=inout_buffer[k+1];
+        //trans_count_in++;
+        trans_count_in++; // count the samples towards FFT-size  -  2 samples per loop
+    }
+
+    if (trans_count_in >= (NR_FFT_SIZE/2))
+        //NR_FFT_SIZE has to be an integer mult. of blockSizeDecim!!!
+    {
+        NR_in_buffer_add(&mmb.nr_audio_buff[NR_fill_in_pt]); // save pointer to full buffer
+        trans_count_in=0;                              // set counter to 0
+        NR_fill_in_pt++;                               // increase pointer index
+        NR_fill_in_pt %= NR_BUFFER_NUM;            // make sure, that index stays in range
+
+        //at this point we have transfered one complete block of 128 (?) samples to one buffer
+    }
+
+    //**********************************************************************************
+    //don't worry!  in the mean time the noise reduction routine is (hopefully) doing it's job within ui
+    //as soon as "fdv_audio_has_data" we can start harvesting the output
+    //**********************************************************************************
+
+    if (out_buffer == NULL && NR_out_has_data() > 1)
+    {
+        NR_out_buffer_peek(&out_buffer);
+    }
+
+    float32_t NR_dec_buffer[no_dec_samples];
+
+    if (out_buffer != NULL)  //NR-routine has finished it's job
+    {
+        for (int j=0; j < no_dec_samples; j=j+2) // transfer noise reduced data back to our buffer
+            //                            for (int j=0; j < blockSizeDecim; j=j+2) // transfer noise reduced data back to our buffer
+        {
+            NR_dec_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
+            NR_dec_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
+            outbuff_count++;
+        }
+
+        if (outbuff_count >= (NR_FFT_SIZE/2)) // we reached the end of the buffer coming from NR
+        {
+            outbuff_count = 0;
+            NR_out_buffer_remove(&out_buffer);
+            out_buffer = NULL;
+            NR_out_buffer_peek(&out_buffer);
+        }
+    }
+
+
+    // interpolation of a_buffer from 6ksps to 12ksps!
+    // from NR_dec_buffer --> a_buffer
+    // but only, if we have decimated to 6ksps, otherwise just copy the samples into a_buffer
+    if (doSecondDecimation == true)
+    {
+        arm_fir_interpolate_f32(&INTERPOLATE_NR, NR_dec_buffer, inout_buffer, no_dec_samples);
+        arm_scale_f32(inout_buffer, 2.0, inout_buffer, blockSizeDecim);
+    }
+    else
+    {
+        arm_copy_f32(NR_dec_buffer, inout_buffer, blockSizeDecim);
+    }
+#endif
+}
 
 
 //
@@ -3504,14 +3599,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
 #endif
     float post_agc_gain_scaling;
-
-#ifdef USE_ALTERNATE_NR
-    static int trans_count_in=0;
-    static int outbuff_count=0;
-    static int NR_fill_in_pt=0;
-    static NR_Buffer* out_buffer = NULL;
-#endif
-
 
     if (tx_audio_source == TX_AUDIO_DIGIQ)
     {
@@ -3772,99 +3859,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                     // .real and .imag are loosing there meaning here as they represent consecutive real samples
 
                     if (ads.decimation_rate == 4)   //  to make sure, that we are at 12Ksamples
-
                     {
-                        // this would be the right place for another decimation-by-2 to get down to 6ksps
-                        // in order to further improve the spectral noise reduction
-                        // TEST!
-                        //
-                        // anti-alias-filtering is already provided at this stage by the IIR main filter
-                        // Only allow another decimation-by-two, if filter bandwidth is <= 2k7
-                        //
-                        // Add decimation-by-two HERE
-
-                        //  decide whether filter < 2k7!!!
-                        float32_t NR_dec_buffer[blockSizeDecim];
-                        uint32_t no_dec_samples = blockSizeDecim; // only used for the noise reduction decimation-by-two handling
-                        // buffer needs max blockSizeDecim , may be less if second decimation is done
-                        // see below
-
-                        if(ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701) && (dsp_active & DSP_NR_ENABLE))
-                        {
-                            no_dec_samples = blockSizeDecim / 2;
-                            // decimate-by-2, DECIMATE_NR
-                            arm_fir_decimate_f32(&DECIMATE_NR, adb.a_buffer[0], NR_dec_buffer, blockSizeDecim);
-                        }
-                        else
-                        {
-                            arm_copy_f32(adb.a_buffer[0], NR_dec_buffer, blockSizeDecim);
-                        }
-
-                        // attention -> change loop no into no_dec_samples!
-
-                        for (int k = 0; k < no_dec_samples; k=k+2) //transfer our noisy audio to our NR-input buffer
-                        {
-                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].real=NR_dec_buffer[k];
-                            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].imag=NR_dec_buffer[k+1];
-                            //trans_count_in++;
-                            trans_count_in++; // count the samples towards FFT-size  -  2 samples per loop
-                        }
-
-                        if (trans_count_in >= (NR_FFT_SIZE/2))  // buffer limited to 320!! as in FreeDV used
-                            //NR_FFT_SIZE has to be an integer mult. of blockSizeDecim!!!
-                        {
-                            NR_in_buffer_add(&mmb.nr_audio_buff[NR_fill_in_pt]); // save pointer to full buffer
-                            trans_count_in=0;                              // set counter to 0
-                            NR_fill_in_pt++;                               // increase pointer index
-                            NR_fill_in_pt %= NR_BUFFER_NUM;            // make sure, that index stays in range
-
-                            //at this point we have transfered one complete block of 128 (?) samples to one buffer
-                        }
-
-                        //**********************************************************************************
-                        //don't worry!  in the mean time the noise reduction routine is (hopefully) doing it's job within ui
-                        //as soon as "fdv_audio_has_data" we can start harvesting the output
-                        //**********************************************************************************
-
-                        if (out_buffer == NULL && NR_out_has_data() > 1)
-                        {
-                            NR_out_buffer_peek(&out_buffer);
-                        }
-
-                        if (out_buffer != NULL)  //NR-routine has finished it's job
-                        {
-                            for (int j=0; j < no_dec_samples; j=j+2) // transfer noise reduced data back to our buffer
-                                //                            for (int j=0; j < blockSizeDecim; j=j+2) // transfer noise reduced data back to our buffer
-                            {
-                                NR_dec_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
-                                NR_dec_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
-                                outbuff_count++;
-                                //outbuff_count++;
-                            }
-
-                            if (outbuff_count >= (NR_FFT_SIZE/2)) // we reached the end of the buffer coming from NR
-                            {
-                                outbuff_count = 0;
-                                NR_out_buffer_remove(&out_buffer);
-                                out_buffer = NULL;
-                                NR_out_buffer_peek(&out_buffer);
-                            }
-                        }
-
-
-                        // interpolation of a_buffer from 6ksps to 12ksps!
-                        // from NR_dec_buffer --> a_buffer
-                        // but only, if we have decimated to 6ksps, otherwise just copy the samples into a_buffer
-                        //
-                        if(ts.NR_decimation_enable && (FilterInfo[FilterPathInfo[ts.filter_path].id].width < 2701) && (dsp_active & DSP_NR_ENABLE))
-                        {
-                            arm_fir_interpolate_f32(&INTERPOLATE_NR, NR_dec_buffer, adb.a_buffer[0], no_dec_samples);
-                            arm_scale_f32(adb.a_buffer[0], 2.0, adb.a_buffer[0], blockSizeDecim);
-                        }
-                        else
-                        {
-                            arm_copy_f32(NR_dec_buffer, adb.a_buffer[0], blockSizeDecim);
-                        }
+                        AudioDriver_RxProcessorNoiseReduction(blockSizeDecim, adb.a_buffer[0]);
 
                     }
                 } // end of new nb
@@ -4524,8 +4520,6 @@ static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSamp
         if (out_buffer != NULL) // freeDV encode has finished (running in ui_driver.c)?
         {
 
-
-
             // Best thing here would be to use the arm_fir_decimate function! Why?
             // --> we need phase linear filters, because we have to filter I & Q and preserve their phase relationship
             // IIR filters are power saving, but they do not care about phase, so useless at this point
@@ -4587,30 +4581,6 @@ static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSamp
             out_buffer = NULL;
             fdv_iq_buffer_remove(&out_buffer);
         }
-
-
-#if 0
-        //
-        // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
-        // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
-        // + 0 deg to I data
-
-        arm_fir_f32(&Fir_Tx_Hilbert_I,adb.a_buffer[0], adb.i_buffer,blockSize);
-        // - 90 deg to Q data
-        arm_fir_f32(&Fir_Tx_Hilbert_Q,adb.a_buffer[0], adb.q_buffer, blockSize);
-        // audio_tx_compressor(blockSize, SSB_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
-
-        if(ts.iq_freq_mode)
-        {
-            // is transmit frequency conversion to be done?
-            // USB && (-6kHz || -12kHz) --> false, else true
-            // LSB && (+6kHz || +12kHz) --> false, else true
-            bool swap = ts.dmod_mode == DEMOD_LSB && (ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
-            swap = swap || ((ts.dmod_mode == DEMOD_USB) && (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
-
-            AudioDriver_FreqConversion(blockSize, swap);
-        }
-#endif
 
         // apply I/Q amplitude & phase adjustments
         bool swap = ts.dmod_mode == DEMOD_USB || (ts.dmod_mode == DEMOD_DIGI && ts.digi_lsb == false);
