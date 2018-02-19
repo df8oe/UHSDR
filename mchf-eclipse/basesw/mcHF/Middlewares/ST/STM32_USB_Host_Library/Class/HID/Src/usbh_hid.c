@@ -363,6 +363,7 @@ static USBH_StatusTypeDef USBH_HID_Process(USBH_HandleTypeDef *phost)
   {
   case HID_INIT:
     HID_Handle->Init(phost); 
+    break;//[QBS] possible bugfix (break was missing)
   case HID_IDLE:
     if(USBH_HID_GetReport (phost,
                            0x01,
