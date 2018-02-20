@@ -6567,8 +6567,8 @@ typedef enum {
 	SCTimer_VOLTAGE, // 8 * 10ms
 	SCTimer_SMETER, // 4 * 10ms
 	SCTimer_MAIN, // 4 * 10ms
-	SCTimer_AGC, // 25 * 10ms
 	SCTimer_LEDBLINK, // 64 * 10ms
+    SCTimer_SAM, // 25 * 10ms
 	SCTimer_NUM
 } SysClockTimers;
 
@@ -6743,8 +6743,10 @@ void UiDriver_TaskHandler_MainTasks()
 		switch(drv_state)
 		{
 		case STATE_S_METER:
+		    // we update all the meters (either TX or RX) no more than 25 times a second
 			if (UiDriver_TimerExpireAndRewind(SCTimer_SMETER,now,4))
 			{
+	            UiDriver_HandleTXMeters();
 				UiDriver_HandleSMeter();
 #ifdef USE_FREEDV
 				if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_FreeDV)
@@ -6754,9 +6756,6 @@ void UiDriver_TaskHandler_MainTasks()
 #endif // USE_FREEDV
 
 			}
-			break;
-		case STATE_SWR_METER:
-			UiDriver_HandleTXMeters();
 			break;
 		case STATE_HANDLE_POWERSUPPLY:
 			Board_HandlePowerDown();
@@ -6838,7 +6837,7 @@ void UiDriver_TaskHandler_MainTasks()
 			UiDriver_HandleKeyboard();
 			break;
 		case STATE_DISPLAY_SAM_CARRIER:
-			if (UiDriver_TimerExpireAndRewind(SCTimer_RTC,now,25))
+			if (UiDriver_TimerExpireAndRewind(SCTimer_SAM,now,25))
 			{
 				if(ts.dmod_mode == DEMOD_SAM)
 				{

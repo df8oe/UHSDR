@@ -80,7 +80,6 @@ typedef struct
     float32_t               q_buffer[IQ_BLOCK_SIZE];
 
     float32_t               a_buffer[2][IQ_BLOCK_SIZE];
-    float32_t				NR_dec_buffer[16];
     float32_t               agc_valbuf[IQ_BLOCK_SIZE];   // holder for "running" AGC value
     float32_t               DF;
     float32_t               pll_fmax;

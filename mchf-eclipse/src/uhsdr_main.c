@@ -15,6 +15,7 @@
 // Common
 #include "uhsdr_board.h"
 #include <stdio.h>
+#include <malloc.h>
 #include "uhsdr_rtc.h"
 #include "ui_spectrum.h"
 
@@ -406,6 +407,30 @@ void MiscInit(void)
     softdds_configRunIQ(freq,ts.samp_rate,0);
 }
 
+
+const static uint8_t canary_word[16] = { 'D', 'O',' ' ,'N', 'O', 'T', ' ', 'O', 'V', 'E', 'R' , 'W', 'R' , 'I', 'T','E' };
+uint8_t* canary_word_ptr;
+
+// in hex 44 4f 20 4e 4f 54 20 4f 56 45 52 57 52 49 54 45
+// this has to be called after all dynamic memory allocation has happened
+void Canary_Create()
+{
+    canary_word_ptr = (uint8_t*)malloc(sizeof(canary_word));
+    memcpy(canary_word_ptr,canary_word,16);
+}
+// in hex 44 4f 20 4e 4f 54 20 4f 56 45 52 57 52 49 54 45
+// this has to be called after all dynamic memory allocation has happened
+bool Canary_IsIntact()
+{
+    return memcmp(canary_word_ptr,canary_word,16) == 0;
+}
+
+uint8_t* Canary_GetAddr()
+{
+    return canary_word_ptr;
+}
+
+
 // #include "Trace.h"
 #if 0
 void timeTest1()
@@ -515,7 +540,12 @@ int mchfMain(void)
 
 #ifdef USE_FREEDV
     FreeDV_mcHF_init();
+    // we now try to place a marker after last dynamically
+    // allocated memory
+    Canary_Create();
 #endif
+
+
 
     UiDriver_StartUpScreenFinish(2000);
     Board_RedLed(LED_STATE_OFF);
@@ -532,8 +562,6 @@ int mchfMain(void)
     {
         // UI events processing
         UiDriver_TaskHandler_MainTasks();
-        // Reset WD - not working
-        //wd_reset();
     }
     return 0;
 }
