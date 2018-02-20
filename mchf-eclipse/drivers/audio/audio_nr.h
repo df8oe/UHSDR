@@ -100,8 +100,8 @@ typedef struct NoiseReduction2 // declaration
 	int16_t						power_threshold_int;
 } NoiseReduction2;
 
-extern NoiseReduction __MCHF_SPECIALMEM 	NR; // declaration, definition is in audio_nr.c
-extern NoiseReduction2 						NR2; // declaration, definition is in audio_nr.c
+extern NoiseReduction  	NR; // declaration, definition is in audio_nr.c
+extern NoiseReduction2  NR2; // declaration, definition is in audio_nr.c
 
 
 void alternateNR_handle();
