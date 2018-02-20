@@ -494,7 +494,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     uint32_t uuidPart1 = STM32_UUID[0];
     uint32_t uuidPart2 = STM32_UUID[1];
     uint32_t uuidPart3 = STM32_UUID[2];
-//[QBS]
+//[QBS]e
     switch (info_item)
     {
     case INFO_DISPLAY:
