@@ -563,5 +563,16 @@ int mchfMain(void)
         // UI events processing
         UiDriver_TaskHandler_MainTasks();
     }
+/*
+   //[QBS]s TEST AREA
+           int a;
+
+              // for loop execution
+              for( a = 1; a < 3567000; a = a + 1 )
+              {
+           	   UiDriver_MainHandler();
+              }
+   //[QBS]e
+*/
     return 0;
 }

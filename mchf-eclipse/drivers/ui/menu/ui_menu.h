@@ -56,6 +56,9 @@ enum MENU_INFO_ITEM
     INFO_VHFUHFMOD,
     INFO_CPU,
     INFO_FLASH,
+	INFO_UUID_P1,//[QBS] unique 96bit holds first 32bits
+	INFO_UUID_P2,//[QBS] unique 96bit holds second 32bits
+	INFO_UUID_P3,//[QBS] unique 96bit holds third 32bits
     INFO_RAM,
     INFO_FW_VERSION,
     INFO_BL_VERSION,
@@ -68,7 +71,9 @@ enum MENU_INFO_ITEM
 };
 
 const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item);
-#define MAX_MENUSIZE 14		//memory allocation of displayed menuitems at once, must be higher or equal to highest ts.Layout->MENUSIZE
+//#define MAX_MENUSIZE 14		//memory allocation of displayed menuitems at once, must be higher or equal to highest ts.Layout->MENUSIZE
+#define MAX_MENUSIZE 17		//[QBS] memory allocation of displayed menuitems at once, must be higher or equal to highest ts.Layout->MENUSIZE
+
 /*
 #ifdef USE_DISP_480_320
 //

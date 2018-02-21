@@ -1444,7 +1444,7 @@ void AudioDriver_TxFilterInit(uint8_t dmod_mode)
 
     const arm_iir_lattice_instance_f32* IIR_TXFilterSelected_ptr;
 
-    if(dmod_mode != DEMOD_FM)	 						// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
+    if(dmod_mode != DEMOD_FM)// not FM - use bandpass filter that restricts low and, stops at 2.7 kHz
     {
         switch(ts.tx_filter)
         {
