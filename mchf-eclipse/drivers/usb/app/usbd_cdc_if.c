@@ -110,6 +110,23 @@ uint32_t CDC_Tx_Length  = 0;
 
 uint8_t  CDC_Tx_State = 0;
 
+typedef struct
+{
+    uint32_t speed;
+    uint8_t stop;
+    uint8_t parity;
+    uint8_t bits;
+} CdvVcp_LineCoding_t;
+
+static CdvVcp_LineCoding_t CDC_Linecoding =
+{
+        // 9600 8n1
+        .speed = 9600,
+        .stop  = 0, // 1 stop bit
+        .bits  = 8, // 8 data bits
+        .parity = 0, // parity none
+};
+
 /* USER CODE BEGIN PRIVATE_VARIABLES */
 /* USER CODE END PRIVATE_VARIABLES */
 
@@ -238,12 +255,15 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   /*                                        4 - Space                            */
   /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
   /*******************************************************************************/
-  case CDC_SET_LINE_CODING:   
-	
+  case CDC_SET_LINE_CODING:
+      // just copy the requested line coding
+      // we ignore it for now but keep it to
+      // satisfy the host when it asks for the current
+      // line coding
+	memcpy(&CDC_Linecoding,pbuf,sizeof(CDC_Linecoding));
     break;
-
   case CDC_GET_LINE_CODING:     
-
+    memcpy(pbuf,&CDC_Linecoding,length);
     break;
 
   case CDC_SET_CONTROL_LINE_STATE:
@@ -258,7 +278,6 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
     break;
 
   case CDC_SEND_BREAK:
- 
     break;    
     
   default:
