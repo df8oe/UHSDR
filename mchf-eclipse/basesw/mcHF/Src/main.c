@@ -104,6 +104,7 @@ int main(void)
   HAL_Init();
 
 
+  HAL_RCC_DeInit();
 
   /* Configure the system clock */
   SystemClock_Config();

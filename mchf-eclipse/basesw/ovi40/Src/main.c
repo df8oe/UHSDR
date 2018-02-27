@@ -117,6 +117,9 @@ int main(void)
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
+  /* Ensure we have a clock configuration as in reset state, i.e. PLL clock is off and we are using HSI */
+  HAL_RCC_DeInit();
+
   /* Configure the system clock */
   SystemClock_Config();
 
