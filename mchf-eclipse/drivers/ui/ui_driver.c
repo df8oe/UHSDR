@@ -814,11 +814,13 @@ void UiDriver_Init()
 
 	if(mchf_touchscreen.present)
 	{
-		//touchscreen calibration test
+		//Touchscreen calibration test.
+		//We cannot distinguish when touchscreen is uncalibrated with other method than comparing calibration values to empty state of EEPROM (0xff).
+	    //It would be nice if someone has better idea how to do it without digging into calibration matrix computation to describe the allowed range of coefficients. Feb 2018, SP9BSL.
 		bool IS_TSCalibrated=0;
 		for(int16_t m=0; m<6; m++)
 		{
-			IS_TSCalibrated|=ts.tp->cal[m]!=0;
+			IS_TSCalibrated|=ts.tp->cal[m]!=0xffffffff;
 		}
 
 		UiDriver_StartupScreen_LogIfProblem(IS_TSCalibrated == 0,
