@@ -4489,7 +4489,7 @@ static bool UiDriver_SaveConfiguration()
 		txp = "Detected problems: Not saving";
 		savedConfiguration = false;
 	}
-	UiLcdHy28_PrintTextCentered(60,176,260,txp,Blue,Black,0);
+	UiLcdHy28_PrintTextCentered(sd.Slayout->full.x,sd.Slayout->full.h/2+sd.Slayout->full.y-6,sd.Slayout->full.w,txp,Blue,Black,0);
 
 	if (savedConfiguration)
 	{
@@ -4505,7 +4505,7 @@ static bool UiDriver_SaveConfiguration()
 			txc = Red;
 			savedConfiguration = false;
 		}
-		UiLcdHy28_PrintTextCentered(60,188,260,txp,txc,Black,0);
+		UiLcdHy28_PrintTextCentered(sd.Slayout->full.x,sd.Slayout->full.h/2+sd.Slayout->full.y+6,sd.Slayout->full.w,txp,txc,Black,0);
 	}
 	return savedConfiguration;
 }
@@ -5074,10 +5074,10 @@ static void UiDriver_KeyTestScreen()
 	if(stat) {			// a button was pressed
 		UiLcdHy28_LcdClear(Blue);							// clear the screen
 		snprintf(txt_buf,40,"Initial keys: %lx",stat);
-		UiLcdHy28_PrintText(0,0,txt_buf,White,Blue,1);
-		UiLcdHy28_PrintText(10,35,"Input Elements Test",White,Blue,1);
-		UiLcdHy28_PrintText(15,70,"press & hold POWER button to poweroff",White,Blue,0);
-		UiLcdHy28_PrintText(20,90,"press & hold BAND- button to reboot",White,Blue,0);
+		UiLcdHy28_PrintTextCentered(0,0,ts.Layout->Size.x,txt_buf,White,Blue,1);
+		UiLcdHy28_PrintTextCentered(0,35,ts.Layout->Size.x,"Input Elements Test",White,Blue,1);
+		UiLcdHy28_PrintTextCentered(0,70,ts.Layout->Size.x,"press & hold POWER button to poweroff",White,Blue,0);
+		UiLcdHy28_PrintTextCentered(0,90,ts.Layout->Size.x,"press & hold BAND- button to reboot",White,Blue,0);
 
 		for(;;)	 		// get stuck here for test duration
 		{
@@ -5192,11 +5192,11 @@ static void UiDriver_KeyTestScreen()
 
 			if(txt[0])
 			{
-				UiLcdHy28_PrintTextCentered(10,120,300,txt,White,Blue,1);			// identify button on screen
+				UiLcdHy28_PrintTextCentered(0,120,ts.Layout->Size.x,txt,White,Blue,1);			// identify button on screen
 			}
 
 			snprintf(txt_buf,40, "# of buttons pressed: %d  ", (int)k);
-			UiLcdHy28_PrintText(75,160,txt_buf,White,Blue,0);			// show number of buttons pressed on screen
+			UiLcdHy28_PrintTextCentered(0,160,ts.Layout->Size.x,txt_buf,White,Blue,0);			// show number of buttons pressed on screen
 
 			if(ts.tp->present)			// show translation of touchscreen if present
 			{
@@ -5207,7 +5207,7 @@ static void UiDriver_KeyTestScreen()
 				txt = "Touch Controller not present";
 			}
 
-			UiLcdHy28_PrintTextCentered(10,200,300,txt,White,Blue,0);
+			UiLcdHy28_PrintTextCentered(0,200,ts.Layout->Size.x,txt,White,Blue,0);
 
 			if(p_o_state == 1)
 			{
