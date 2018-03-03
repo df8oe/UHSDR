@@ -119,6 +119,9 @@
     // OPTION TO USE FLASH BASED CONFIGURATION STORAGE
 #endif
 
+#ifdef STM32H7
+    #define USE_DB4PLE_BROKEN_H7
+#endif
 
 // Option: If defined, high priority tasks are executed in the context of an PendSV interrupt
 // which gives finishing these tasks a priority over "normal", less real-time critical longer running user control tasks
