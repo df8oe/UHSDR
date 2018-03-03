@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    STM32h7xx_hal_hrtim.h
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   Header file of HRTIM HAL module.
   ******************************************************************************
   * @attention
@@ -2167,7 +2167,7 @@ typedef struct {
 #define IS_HRTIM_TIMUPDATETRIGGER(TIMUPDATETRIGGER) (((TIMUPDATETRIGGER) & 0xFE07FFFFU) == 0x00000000U)
 #define IS_HRTIM_TIMUPDATETRIGGER(TIMUPDATETRIGGER) (((TIMUPDATETRIGGER) & 0xFE07FFFFU) == 0x00000000U)
 
-#define IS_HRTIM_TIMRESETTRIGGER(TIMRESETTRIGGER) (((TIMRESETTRIGGER) & 0x800000001U) == 0x00000000U)
+#define IS_HRTIM_TIMRESETTRIGGER(TIMRESETTRIGGER) (((TIMRESETTRIGGER) & 0x80000001U) == 0x00000000U)
 
 #define IS_HRTIM_TIMUPDATEONRESET(TIMUPDATEONRESET)                       \
               (((TIMUPDATEONRESET) == HRTIM_TIMUPDATEONRESET_DISABLED) || \

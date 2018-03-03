@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_conf_template.h
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   HAL configuration template file. 
   *          This file should be copied to the application folder and renamed
   *          to stm32h7xx_hal_conf.h.
@@ -187,6 +187,15 @@
   *        HAL drivers code
   */
 /* #define USE_FULL_ASSERT    1 */
+
+/* ################## SPI peripheral configuration ########################## */
+/** 
+  * @brief Used to activate CRC feature inside HAL SPI Driver
+  *        Activated   (1U): CRC code is compiled within HAL SPI driver
+  *        Deactivated (0U): CRC code excluded from HAL SPI driver
+  */
+
+#define USE_SPI_CRC                   1U
 
 
 /* Includes ------------------------------------------------------------------*/

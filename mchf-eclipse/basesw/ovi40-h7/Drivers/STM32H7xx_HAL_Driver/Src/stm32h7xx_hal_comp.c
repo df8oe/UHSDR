@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_comp.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   COMP HAL module driver. 
   *          This file provides firmware functions to manage the following 
   *          functionalities of the COMP peripheral:
@@ -337,11 +337,9 @@ HAL_StatusTypeDef HAL_COMP_Init(COMP_HandleTypeDef *hcomp)
       {
         CLEAR_BIT(EXTI->FTSR1, exti_line);
       }
-     
       /* Clear COMP EXTI pending bit (if any) */
       WRITE_REG(EXTI_D1->PR1, exti_line);
       
-
       /* Configure EXTI event mode */
       if((hcomp->Init.TriggerMode & COMP_EXTI_EVENT) != RESET)
       {
@@ -616,7 +614,6 @@ HAL_StatusTypeDef HAL_COMP_Start_IT(COMP_HandleTypeDef *hcomp)
 HAL_StatusTypeDef HAL_COMP_Stop_IT(COMP_HandleTypeDef *hcomp)
 {  
   HAL_StatusTypeDef status = HAL_OK;
-  
   /* Disable the EXTI Line interrupt mode */
    CLEAR_BIT(EXTI_D1->IMR1, COMP_GET_EXTI_LINE(hcomp->Instance));
   /* Disable the Interrupt comparator */

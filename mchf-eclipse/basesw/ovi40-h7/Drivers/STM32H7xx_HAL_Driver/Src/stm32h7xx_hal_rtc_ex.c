@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_rtc_ex.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   Extended RTC HAL module driver.
   *          This file provides firmware functions to manage the following 
   *          functionalities of the Real Time Clock (RTC) Extended peripheral:
@@ -261,11 +261,9 @@ HAL_StatusTypeDef HAL_RTCEx_SetTimeStamp_IT(RTC_HandleTypeDef *hrtc, uint32_t Ti
   /* Enable IT timestamp */
   __HAL_RTC_TIMESTAMP_ENABLE_IT(hrtc,RTC_IT_TS);
 
-  /* RTC timestamp Interrupt Configuration: EXTI configuration */
-
+    /* RTC timestamp Interrupt Configuration: EXTI configuration */
     __HAL_RTC_TAMPER_TIMESTAMP_EXTI_ENABLE_IT();
     
-
   __HAL_RTC_TAMPER_TIMESTAMP_EXTI_ENABLE_RISING_EDGE();
 
   /* Enable the write protection for RTC registers */
@@ -604,9 +602,8 @@ HAL_StatusTypeDef HAL_RTCEx_SetTamper_IT(RTC_HandleTypeDef *hrtc, RTC_TamperType
                                        (uint32_t)RTC_TAMPCR_TAMP2MF | (uint32_t)RTC_TAMPCR_TAMP3MF);
 
   hrtc->Instance->TAMPCR |= tmpreg;
-
-  /* RTC Tamper Interrupt Configuration: EXTI configuration */
-
+  
+    /* RTC Tamper Interrupt Configuration: EXTI configuration */
      __HAL_RTC_TAMPER_TIMESTAMP_EXTI_ENABLE_IT();
  
   
@@ -1112,9 +1109,10 @@ HAL_StatusTypeDef HAL_RTCEx_SetWakeUpTimer_IT(RTC_HandleTypeDef *hrtc, uint32_t 
   /* Configure the clock source */
   hrtc->Instance->CR |= (uint32_t)WakeUpClock;
 
-  /* RTC WakeUpTimer Interrupt Configuration: EXTI configuration */
 
-    __HAL_RTC_WAKEUPTIMER_EXTI_ENABLE_IT();
+  /* RTC WakeUpTimer Interrupt Configuration: EXTI configuration */
+   __HAL_RTC_WAKEUPTIMER_EXTI_ENABLE_IT();
+   
    
    __HAL_RTC_WAKEUPTIMER_EXTI_ENABLE_RISING_EDGE();
   /* Configure the Interrupt in the RTC_CR register */

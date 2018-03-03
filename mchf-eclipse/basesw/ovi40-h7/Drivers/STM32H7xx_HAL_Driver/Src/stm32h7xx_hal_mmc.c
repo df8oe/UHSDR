@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_mmc.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   MMC card HAL module driver.
   *          This file provides firmware functions to manage the following 
   *          functionalities of the Secure Digital (MMC) peripheral:
@@ -1581,7 +1581,7 @@ HAL_StatusTypeDef HAL_MMC_GetCardCID(MMC_HandleTypeDef *hmmc, HAL_MMC_CardCIDTyp
   pCID->OEM_AppliID = tmp << 8;
   
   /* Byte 2 */
-  tmp = (uint8_t)((hmmc->CID[0] & 0x000000FF00) >> 8);
+  tmp = (uint8_t)((hmmc->CID[0] & 0x0000FF00) >> 8);
   pCID->OEM_AppliID |= tmp;
   
   /* Byte 3 */

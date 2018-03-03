@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    usbh_diskio.c (based on usbh_diskio_template.c)
+  * @file    usbh_diskio.c (based on usbh_diskio_template.c v2.0.2)
   * @brief   USB Host Disk I/O driver
   ******************************************************************************
   * This notice applies to any and all portions of this file
@@ -9,7 +9,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2017 STMicroelectronics International N.V. 
+  * Copyright (c) 2018 STMicroelectronics International N.V. 
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without 
@@ -55,6 +55,9 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+
+#define USB_DEFAULT_BLOCK_SIZE 512
+
 /* Private variables ---------------------------------------------------------*/
 extern USBH_HandleTypeDef  hUSB_Host;
 
@@ -70,15 +73,15 @@ DRESULT USBH_read (BYTE, BYTE*, DWORD, UINT);
 #if _USE_IOCTL == 1
   DRESULT USBH_ioctl (BYTE, BYTE, void*);
 #endif /* _USE_IOCTL == 1 */
-  
+
 const Diskio_drvTypeDef  USBH_Driver =
 {
   USBH_initialize,
   USBH_status,
-  USBH_read, 
+  USBH_read,
 #if  _USE_WRITE == 1
   USBH_write,
-#endif /* _USE_WRITE == 1 */  
+#endif /* _USE_WRITE == 1 */
 #if  _USE_IOCTL == 1
   USBH_ioctl,
 #endif /* _USE_IOCTL == 1 */
@@ -98,7 +101,7 @@ const Diskio_drvTypeDef  USBH_Driver =
 DSTATUS USBH_initialize(BYTE lun)
 {
   /* CAUTION : USB Host library has to be initialized in the application */
-  
+
   return RES_OK;
 }
 
@@ -110,7 +113,7 @@ DSTATUS USBH_initialize(BYTE lun)
 DSTATUS USBH_status(BYTE lun)
 {
   DRESULT res = RES_ERROR;
-  
+
   if(USBH_MSC_UnitIsReady(&hUSB_Host, lun))
   {
     res = RES_OK;
@@ -119,7 +122,7 @@ DSTATUS USBH_status(BYTE lun)
   {
     res = RES_ERROR;
   }
-  
+
   return res;
 }
 
@@ -128,7 +131,7 @@ DSTATUS USBH_status(BYTE lun)
 /* USER CODE END beforeReadSection */
 
 /**
-  * @brief  Reads Sector(s) 
+  * @brief  Reads Sector(s)
   * @param  lun : lun id
   * @param  *buff: Data buffer to store read data
   * @param  sector: Sector address (LBA)
@@ -146,23 +149,23 @@ DRESULT USBH_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
   }
   else
   {
-    USBH_MSC_GetLUNInfo(&hUSB_Host, lun, &info); 
-    
+    USBH_MSC_GetLUNInfo(&hUSB_Host, lun, &info);
+
     switch (info.sense.asc)
     {
     case SCSI_ASC_LOGICAL_UNIT_NOT_READY:
     case SCSI_ASC_MEDIUM_NOT_PRESENT:
-    case SCSI_ASC_NOT_READY_TO_READY_CHANGE: 
-      USBH_ErrLog ("USB Disk is not ready!");  
+    case SCSI_ASC_NOT_READY_TO_READY_CHANGE:
+      USBH_ErrLog ("USB Disk is not ready!");
       res = RES_NOTRDY;
       break; 
-      
+
     default:
       res = RES_ERROR;
       break;
     }
   }
-  
+
   return res;
 }
 
@@ -172,7 +175,7 @@ DRESULT USBH_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 
 /**
   * @brief  Writes Sector(s)
-  * @param  lun : lun id 
+  * @param  lun : lun id
   * @param  *buff: Data to be written
   * @param  sector: Sector address (LBA)
   * @param  count: Number of sectors to write (1..128)
@@ -181,7 +184,7 @@ DRESULT USBH_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 #if _USE_WRITE == 1
 DRESULT USBH_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 {
-  DRESULT res = RES_ERROR; 
+  DRESULT res = RES_ERROR;
   MSC_LUNTypeDef info;
 
   if(USBH_MSC_Write(&hUSB_Host, lun, sector, (BYTE *)buff, count) == USBH_OK)
@@ -190,29 +193,29 @@ DRESULT USBH_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
   }
   else
   {
-    USBH_MSC_GetLUNInfo(&hUSB_Host, lun, &info); 
-    
+    USBH_MSC_GetLUNInfo(&hUSB_Host, lun, &info);
+
     switch (info.sense.asc)
     {
     case SCSI_ASC_WRITE_PROTECTED:
       USBH_ErrLog("USB Disk is Write protected!");
       res = RES_WRPRT;
       break;
-      
+
     case SCSI_ASC_LOGICAL_UNIT_NOT_READY:
     case SCSI_ASC_MEDIUM_NOT_PRESENT:
     case SCSI_ASC_NOT_READY_TO_READY_CHANGE:
-      USBH_ErrLog("USB Disk is not ready!");      
+      USBH_ErrLog("USB Disk is not ready!");
       res = RES_NOTRDY;
-      break; 
-      
+      break;
+
     default:
       res = RES_ERROR;
       break;
     }
   }
-  
-  return res;   
+
+  return res;
 }
 #endif /* _USE_WRITE == 1 */
 
@@ -232,16 +235,16 @@ DRESULT USBH_ioctl(BYTE lun, BYTE cmd, void *buff)
 {
   DRESULT res = RES_ERROR;
   MSC_LUNTypeDef info;
-  
+
   switch (cmd)
   {
   /* Make sure that no pending write process */
-  case CTRL_SYNC: 
+  case CTRL_SYNC:
     res = RES_OK;
     break;
-    
-  /* Get number of sectors on the disk (DWORD) */  
-  case GET_SECTOR_COUNT : 
+
+  /* Get number of sectors on the disk (DWORD) */
+  case GET_SECTOR_COUNT :
     if(USBH_MSC_GetLUNInfo(&hUSB_Host, lun, &info) == USBH_OK)
     {
       *(DWORD*)buff = info.capacity.block_nbr;
@@ -252,9 +255,9 @@ DRESULT USBH_ioctl(BYTE lun, BYTE cmd, void *buff)
       res = RES_ERROR;
     }
     break;
-    
-  /* Get R/W sector size (WORD) */  
-  case GET_SECTOR_SIZE :	
+
+  /* Get R/W sector size (WORD) */
+  case GET_SECTOR_SIZE :
     if(USBH_MSC_GetLUNInfo(&hUSB_Host, lun, &info) == USBH_OK)
     {
       *(DWORD*)buff = info.capacity.block_size;
@@ -265,13 +268,13 @@ DRESULT USBH_ioctl(BYTE lun, BYTE cmd, void *buff)
       res = RES_ERROR;
     }
     break;
-    
-    /* Get erase block size in unit of sector (DWORD) */ 
-  case GET_BLOCK_SIZE : 
-    
+
+    /* Get erase block size in unit of sector (DWORD) */
+  case GET_BLOCK_SIZE :
+
     if(USBH_MSC_GetLUNInfo(&hUSB_Host, lun, &info) == USBH_OK)
     {
-      *(DWORD*)buff = info.capacity.block_size;
+      *(DWORD*)buff = info.capacity.block_size / USB_DEFAULT_BLOCK_SIZE;
       res = RES_OK;
     }
     else
@@ -279,11 +282,11 @@ DRESULT USBH_ioctl(BYTE lun, BYTE cmd, void *buff)
       res = RES_ERROR;
     }
     break;
-    
+
   default:
     res = RES_PARERR;
   }
-  
+
   return res;
 }
 #endif /* _USE_IOCTL == 1 */

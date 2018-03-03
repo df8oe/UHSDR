@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_nand.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   NAND HAL module driver.
   *          This file provides a generic firmware to drive NAND memories mounted 
   *          as external device.
@@ -430,7 +430,7 @@ HAL_StatusTypeDef  HAL_NAND_ConfigDevice(NAND_HandleTypeDef *hnand, NAND_DeviceC
   hnand->Config.BlockSize          = pDeviceConfig->BlockSize;
   hnand->Config.BlockNbr           = pDeviceConfig->BlockNbr;
   hnand->Config.PlaneSize          = pDeviceConfig->PlaneSize;
-  hnand->Config.PlaneNbr           = pDeviceConfig->BlockNbr;
+  hnand->Config.PlaneNbr           = pDeviceConfig->PlaneNbr;
   hnand->Config.ExtraCommandEnable = pDeviceConfig->ExtraCommandEnable;
   
   return HAL_OK;

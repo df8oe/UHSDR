@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    usbh_diskio.h (based on usbh_diskio_template.h)
+  * @file    usbh_diskio.h (based on usbh_diskio_template.h v2.0.2)
   * @brief   Header for usbh_diskio.c module
   ******************************************************************************
   * This notice applies to any and all portions of this file
@@ -9,7 +9,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2017 STMicroelectronics International N.V. 
+  * Copyright (c) 2018 STMicroelectronics International N.V. 
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without 

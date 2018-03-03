@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_dac_ex.h
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   Header file of DAC HAL Extended module.
   ******************************************************************************
   * @attention
@@ -125,9 +125,9 @@
                                  ((TRIGGER) == DAC_TRIGGER_EXT_IT9) || \
                                  ((TRIGGER) == DAC_TRIGGER_SOFTWARE)) 
  
-#define IS_DAC_SAMPLETIME(TIME) ((TIME) <= 0x0000003FF)
+#define IS_DAC_SAMPLETIME(TIME) ((TIME) <= 0x000003FF)
 
-#define IS_DAC_HOLDTIME(TIME)   ((TIME) <= 0x0000003FF)
+#define IS_DAC_HOLDTIME(TIME)   ((TIME) <= 0x000003FF)
 
 #define IS_DAC_SAMPLEANDHOLD(MODE) (((MODE) == DAC_SAMPLEANDHOLD_DISABLE) || \
                                     ((MODE) == DAC_SAMPLEANDHOLD_ENABLE))

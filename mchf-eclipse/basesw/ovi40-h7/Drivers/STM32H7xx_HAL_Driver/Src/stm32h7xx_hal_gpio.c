@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_gpio.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   GPIO HAL module driver.
   *          This file provides firmware functions to manage the following 
   *          functionalities of the General Purpose Input/Output (GPIO) peripheral:
@@ -267,7 +267,7 @@ void HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
         temp &= ~(((uint32_t)0x0F) << (4 * (position & 0x03)));
         temp |= ((uint32_t)(GPIO_GET_INDEX(GPIOx)) << (4 * (position & 0x03)));
         SYSCFG->EXTICR[position >> 2] = temp;
-
+     
         /* Clear EXTI line configuration */
         temp = EXTI_Ptr->IMR1;
         temp &= ~((uint32_t)iocurrent);

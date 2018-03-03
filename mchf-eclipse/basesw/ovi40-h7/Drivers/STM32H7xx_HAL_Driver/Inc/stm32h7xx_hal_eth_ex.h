@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_eth_ex.h
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   Header file of ETH HAL Extended module.
   ******************************************************************************
   * @attention
@@ -36,8 +36,8 @@
   */ 
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32H7xx_HAL_ETH_EX_H
-#define __STM32H7xx_HAL_ETH_EX_H
+#ifndef STM32H7xx_HAL_ETH_EX_H
+#define STM32H7xx_HAL_ETH_EX_H
 
 #ifdef __cplusplus
  extern "C" {
@@ -366,6 +366,6 @@ uint32_t          HAL_ETHEx_GetMACLPIEvent(ETH_HandleTypeDef *heth);
 }
 #endif
 
-#endif /* __STM32H7xx_HAL_ETH_EX_H */
+#endif /* STM32H7xx_HAL_ETH_EX_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

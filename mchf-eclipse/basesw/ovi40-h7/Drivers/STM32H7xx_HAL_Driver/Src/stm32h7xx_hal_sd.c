@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_sd.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   SD card HAL module driver.
   *          This file provides firmware functions to manage the following 
   *          functionalities of the Secure Digital (SD) peripheral:
@@ -1620,7 +1620,7 @@ HAL_StatusTypeDef HAL_SD_GetCardCID(SD_HandleTypeDef *hsd, HAL_SD_CardCIDTypedef
   pCID->OEM_AppliID = tmp << 8;
   
   /* Byte 2 */
-  tmp = (uint8_t)((hsd->CID[0] & 0x000000FF00) >> 8);
+  tmp = (uint8_t)((hsd->CID[0] & 0x0000FF00) >> 8);
   pCID->OEM_AppliID |= tmp;
   
   /* Byte 3 */

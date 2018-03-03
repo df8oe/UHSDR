@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_def.h
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   This file contains HAL common defines, enumeration, macros and
   *          structures definitions.
   ******************************************************************************
@@ -157,6 +157,15 @@ typedef enum
     #endif /* __CC_ARM */
   #endif /* __ALIGN_BEGIN */
 #endif /* __GNUC__ */
+
+/* Macro to get variable aligned on 32-bytes,needed for cache maintenance purpose */
+#if defined   (__GNUC__)        /* GNU Compiler */
+  #define ALIGN_32BYTES(buf)  buf __attribute__ ((aligned (32)))                                    
+#elif defined (__ICCARM__)    /* IAR Compiler */
+  #define ALIGN_32BYTES(buf) _Pragma("data_alignment=32") buf  
+#elif defined   (__CC_ARM)      /* ARM Compiler */
+  #define ALIGN_32BYTES(buf) __align(32) buf  
+#endif
 
 /**
   * @brief  __RAM_FUNC definition

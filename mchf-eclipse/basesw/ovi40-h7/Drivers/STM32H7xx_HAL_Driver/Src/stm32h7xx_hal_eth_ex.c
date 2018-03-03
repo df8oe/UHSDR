@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_eth_ex.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   ETH HAL Extended module driver.
   *
   ******************************************************************************
@@ -127,7 +127,7 @@ void HAL_ETHEx_DisableARPOffload(ETH_HandleTypeDef *heth)
   * @brief  Set the ARP Match IP address 
   * @param  heth: pointer to a ETH_HandleTypeDef structure that contains
   *         the configuration information for ETHERNET module
-  *  @param IpAddress: IP Address to be matched for incoming ARP requests
+  * @param  IpAddress: IP Address to be matched for incoming ARP requests
   * @retval None
   */
 void HAL_ETHEx_SetARPAddressMatch(ETH_HandleTypeDef *heth, uint32_t IpAddress)
@@ -150,31 +150,23 @@ void HAL_ETHEx_SetARPAddressMatch(ETH_HandleTypeDef *heth, uint32_t IpAddress)
   */
 HAL_StatusTypeDef HAL_ETHEx_SetL4FilterConfig(ETH_HandleTypeDef *heth, uint32_t Filter , ETH_L4FilterConfigTypeDef *pL4FilterConfig)
 {
-  uint32_t l4filteraddr;
-  uint32_t l4filterval = 0;
+  __IO uint32_t *configreg = ((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter));
   
   if(pL4FilterConfig == NULL)
   {
     return HAL_ERROR;
   }
   
-  l4filteraddr = (uint32_t)(&(heth->Instance->MACL3L4C0R) + Filter);
-  
-  l4filterval = (pL4FilterConfig->Protocol |
-             pL4FilterConfig->SrcPortFilterMatch |
-             pL4FilterConfig->DestPortFilterMatch);
-  
   /* Write configuration to (MACL3L4C0R + filter )register */
-  MODIFY_REG((*(__IO uint32_t *)l4filteraddr), ETH_MACL4CR_MASK ,l4filterval);
+  MODIFY_REG(*configreg, ETH_MACL4CR_MASK ,(pL4FilterConfig->Protocol | 
+                                            pL4FilterConfig->SrcPortFilterMatch | 
+                                              pL4FilterConfig->DestPortFilterMatch));
   
-  /* Get address of  (MACL4A0R + filter) register */
-  l4filteraddr = (uint32_t)(&(heth->Instance->MACL4A0R) + Filter);
-  
-  l4filterval = (pL4FilterConfig->SourcePort |
-             (pL4FilterConfig->DestinationPort << 16));
+  configreg = ((__IO uint32_t *)(&(heth->Instance->MACL4A0R) + Filter)); 
   
   /* Write configuration to (MACL4A0R + filter )register */
-  MODIFY_REG((*(__IO uint32_t *)l4filteraddr), (ETH_MACL4AR_L4DP | ETH_MACL4AR_L4SP) , l4filterval);
+  MODIFY_REG(*configreg, (ETH_MACL4AR_L4DP | ETH_MACL4AR_L4SP) , (pL4FilterConfig->SourcePort |
+                                                                                                                  (pL4FilterConfig->DestinationPort << 16)));
   
   /* Enable L4 filter */
   SET_BIT(heth->Instance->MACPFR, ETH_MACPFR_IPFE);
@@ -197,24 +189,19 @@ HAL_StatusTypeDef HAL_ETHEx_SetL4FilterConfig(ETH_HandleTypeDef *heth, uint32_t 
   */
 HAL_StatusTypeDef HAL_ETHEx_GetL4FilterConfig(ETH_HandleTypeDef *heth, uint32_t Filter, ETH_L4FilterConfigTypeDef *pL4FilterConfig)
 {
-  uint32_t l4filterval = *((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter));
-  
   if(pL4FilterConfig == NULL)
   {
     return HAL_ERROR;
   }
   
   /* Get configuration to (MACL3L4C0R + filter )register */
-  pL4FilterConfig->Protocol = READ_BIT(l4filterval, ETH_MACL3L4CR_L4PEN);
-  pL4FilterConfig->DestPortFilterMatch = READ_BIT(l4filterval, (ETH_MACL3L4CR_L4DPM | ETH_MACL3L4CR_L4DPIM));
-  pL4FilterConfig->SrcPortFilterMatch = READ_BIT(l4filterval, (ETH_MACL3L4CR_L4SPM | ETH_MACL3L4CR_L4SPIM));
-  
-  /* Get address of  (MACL4A0R + filter) register */
-  l4filterval = *((__IO uint32_t *)(&(heth->Instance->MACL4A0R) + Filter));
+  pL4FilterConfig->Protocol = READ_BIT(*((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter)), ETH_MACL3L4CR_L4PEN);
+  pL4FilterConfig->DestPortFilterMatch = READ_BIT(*((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter)), (ETH_MACL3L4CR_L4DPM | ETH_MACL3L4CR_L4DPIM));
+  pL4FilterConfig->SrcPortFilterMatch = READ_BIT(*((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter)), (ETH_MACL3L4CR_L4SPM | ETH_MACL3L4CR_L4SPIM));
   
   /* Get configuration to (MACL3L4C0R + filter )register */
-  pL4FilterConfig->DestinationPort = (READ_BIT(l4filterval, ETH_MACL4AR_L4DP) >> 16);
-  pL4FilterConfig->SourcePort = READ_BIT(l4filterval, ETH_MACL4AR_L4SP);
+  pL4FilterConfig->DestinationPort = (READ_BIT(*((__IO uint32_t *)(&(heth->Instance->MACL4A0R) + Filter)), ETH_MACL4AR_L4DP) >> 16);
+  pL4FilterConfig->SourcePort = READ_BIT(*((__IO uint32_t *)(&(heth->Instance->MACL4A0R) + Filter)), ETH_MACL4AR_L4SP);
   
   return HAL_OK;
 }
@@ -234,27 +221,22 @@ HAL_StatusTypeDef HAL_ETHEx_GetL4FilterConfig(ETH_HandleTypeDef *heth, uint32_t 
   */
 HAL_StatusTypeDef HAL_ETHEx_SetL3FilterConfig(ETH_HandleTypeDef *heth, uint32_t Filter, ETH_L3FilterConfigTypeDef *pL3FilterConfig)
 {
-  __IO uint32_t *l3filteraddr;
-  uint32_t l3filterval = 0;
+  __IO uint32_t *configreg = ((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter));
   
   if(pL3FilterConfig == NULL)
   {
     return HAL_ERROR;
   }
-  
-  l3filteraddr = (__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter);
- 
-  l3filterval = (pL3FilterConfig->Protocol | 
-                 pL3FilterConfig->SrcAddrFilterMatch |
-                   pL3FilterConfig->DestAddrFilterMatch |
-                     (pL3FilterConfig->SrcAddrHigherBitsMatch << 6) | 
-                       (pL3FilterConfig->DestAddrHigherBitsMatch << 11));
-  
+
   /* Write configuration to (MACL3L4C0R + filter )register */
-  MODIFY_REG(*l3filteraddr, ETH_MACL3CR_MASK, l3filterval);
+  MODIFY_REG(*configreg, ETH_MACL3CR_MASK, (pL3FilterConfig->Protocol | 
+                                            pL3FilterConfig->SrcAddrFilterMatch |
+                                              pL3FilterConfig->DestAddrFilterMatch |
+                                                (pL3FilterConfig->SrcAddrHigherBitsMatch << 6) | 
+                                                  (pL3FilterConfig->DestAddrHigherBitsMatch << 11)));
   
   /* Check if IPv6 protocol is selected */
-  if(pL3FilterConfig->Protocol)
+  if(pL3FilterConfig->Protocol != ETH_L3_IPV4_MATCH)
   {
     /* Set the IPv6 address match */
     /* Set Bits[31:0] of 128-bit IP addr */
@@ -292,20 +274,18 @@ HAL_StatusTypeDef HAL_ETHEx_SetL3FilterConfig(ETH_HandleTypeDef *heth, uint32_t 
   */
 HAL_StatusTypeDef HAL_ETHEx_GetL3FilterConfig(ETH_HandleTypeDef *heth, uint32_t Filter, ETH_L3FilterConfigTypeDef *pL3FilterConfig)
 {
-  uint32_t l3filterval = *((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter));
-  
   if(pL3FilterConfig == NULL)
   {
     return HAL_ERROR;
   }
   
-  pL3FilterConfig->Protocol = READ_BIT(l3filterval, ETH_MACL3L4CR_L3PEN);
-  pL3FilterConfig->SrcAddrFilterMatch = READ_BIT(l3filterval, (ETH_MACL3L4CR_L3SAM | ETH_MACL3L4CR_L3SAIM));
-  pL3FilterConfig->DestAddrFilterMatch = READ_BIT(l3filterval, (ETH_MACL3L4CR_L3DAM | ETH_MACL3L4CR_L3DAIM));
-  pL3FilterConfig->SrcAddrHigherBitsMatch = (READ_BIT(l3filterval, ETH_MACL3L4CR_L3HSBM) >> 6);
-  pL3FilterConfig->DestAddrHigherBitsMatch = (READ_BIT(l3filterval, ETH_MACL3L4CR_L3HDBM) >> 11);
+  pL3FilterConfig->Protocol = READ_BIT(*((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter)), ETH_MACL3L4CR_L3PEN);
+  pL3FilterConfig->SrcAddrFilterMatch = READ_BIT(*((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter)), (ETH_MACL3L4CR_L3SAM | ETH_MACL3L4CR_L3SAIM));
+  pL3FilterConfig->DestAddrFilterMatch = READ_BIT(*((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter)), (ETH_MACL3L4CR_L3DAM | ETH_MACL3L4CR_L3DAIM));
+  pL3FilterConfig->SrcAddrHigherBitsMatch = (READ_BIT(*((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter)), ETH_MACL3L4CR_L3HSBM) >> 6);
+  pL3FilterConfig->DestAddrHigherBitsMatch = (READ_BIT(*((__IO uint32_t *)(&(heth->Instance->MACL3L4C0R) + Filter)), ETH_MACL3L4CR_L3HDBM) >> 11);
   
-  if(pL3FilterConfig->Protocol)
+  if(pL3FilterConfig->Protocol != ETH_L3_IPV4_MATCH)
   {
     pL3FilterConfig->Ip6Addr[0] = *((__IO uint32_t *)(&(heth->Instance->MACL3A0R0R) + Filter));
     pL3FilterConfig->Ip6Addr[1] = *((__IO uint32_t *)(&(heth->Instance->MACL3A1R0R) + Filter));
@@ -383,25 +363,21 @@ HAL_StatusTypeDef HAL_ETHEx_GetRxVLANConfig(ETH_HandleTypeDef *heth, ETH_RxVLANC
   */
 HAL_StatusTypeDef HAL_ETHEx_SetRxVLANConfig(ETH_HandleTypeDef *heth, ETH_RxVLANConfigTypeDef *pVlanConfig)
 {
-  uint32_t rxvlanval = 0;
-  
   if(pVlanConfig == NULL)
   {
     return HAL_ERROR;
   }
- 
-  rxvlanval = ((uint32_t)(pVlanConfig->InnerVLANTagInStatus << 31) |
-               pVlanConfig->StripInnerVLANTag |
-                 (uint32_t)(pVlanConfig->InnerVLANTag << 27) |
-                   (uint32_t)(pVlanConfig->DoubleVLANProcessing << 26) |
-                     (uint32_t)(pVlanConfig->VLANTagHashTableMatch << 25) |
-                       (uint32_t)(pVlanConfig->VLANTagInStatus << 24) |
-                         pVlanConfig->StripVLANTag |
-                           pVlanConfig->VLANTypeCheck |
-                             (uint32_t)(pVlanConfig->VLANTagInverceMatch << 17));
   
   /* Write config to MACVTR */
-  MODIFY_REG(heth->Instance->MACVTR, ETH_MACRXVLAN_MASK, rxvlanval);
+  MODIFY_REG(heth->Instance->MACVTR, ETH_MACRXVLAN_MASK, ((uint32_t)(pVlanConfig->InnerVLANTagInStatus << 31) |
+                                                          pVlanConfig->StripInnerVLANTag |
+                                                            (uint32_t)(pVlanConfig->InnerVLANTag << 27) |
+                                                              (uint32_t)(pVlanConfig->DoubleVLANProcessing << 26) |
+                                                                (uint32_t)(pVlanConfig->VLANTagHashTableMatch << 25) |
+                                                                  (uint32_t)(pVlanConfig->VLANTagInStatus << 24) |
+                                                                    pVlanConfig->StripVLANTag |
+                                                                      pVlanConfig->VLANTypeCheck |
+                                                                        (uint32_t)(pVlanConfig->VLANTagInverceMatch << 17)));
 
   return HAL_OK;
 }
@@ -431,8 +407,6 @@ void HAL_ETHEx_SetVLANHashTable(ETH_HandleTypeDef *heth, uint32_t VLANHashTable)
   */
 HAL_StatusTypeDef HAL_ETHEx_GetTxVLANConfig(ETH_HandleTypeDef *heth, uint32_t VLANTag ,ETH_TxVLANConfigTypeDef *pVlanConfig)
 {
-  uint32_t vlanreg;
-  
   if (pVlanConfig == NULL)
   {
     return HAL_ERROR;
@@ -440,18 +414,17 @@ HAL_StatusTypeDef HAL_ETHEx_GetTxVLANConfig(ETH_HandleTypeDef *heth, uint32_t VL
   
   if(VLANTag == ETH_INNER_TX_VLANTAG)
   {
-    vlanreg = heth->Instance->MACIVIR;
+    pVlanConfig->SourceTxDesc = (FunctionalState)(READ_BIT(heth->Instance->MACIVIR, ETH_MACVIR_VLTI) >> 20);
+    pVlanConfig->SVLANType = (FunctionalState)(READ_BIT(heth->Instance->MACIVIR, ETH_MACVIR_CSVL) >> 19); 
+    pVlanConfig->VLANTagControl = READ_BIT(heth->Instance->MACIVIR, (ETH_MACVIR_VLP | ETH_MACVIR_VLC));
   }
   else
   {
-    vlanreg = heth->Instance->MACVIR;
+    pVlanConfig->SourceTxDesc = (FunctionalState)(READ_BIT(heth->Instance->MACVIR, ETH_MACVIR_VLTI) >> 20);
+    pVlanConfig->SVLANType = (FunctionalState)(READ_BIT(heth->Instance->MACVIR, ETH_MACVIR_CSVL) >> 19); 
+    pVlanConfig->VLANTagControl = READ_BIT(heth->Instance->MACVIR, (ETH_MACVIR_VLP | ETH_MACVIR_VLC));
   }
-  
-  
-  pVlanConfig->SourceTxDesc = (FunctionalState)(READ_BIT(vlanreg, ETH_MACVIR_VLTI) >> 20);
-  pVlanConfig->SVLANType = (FunctionalState)(READ_BIT(vlanreg, ETH_MACVIR_CSVL) >> 19); 
-  pVlanConfig->VLANTagControl = READ_BIT(vlanreg, (ETH_MACVIR_VLP | ETH_MACVIR_VLC));
-  
+   
   return HAL_OK;;
 }
 
@@ -468,25 +441,20 @@ HAL_StatusTypeDef HAL_ETHEx_GetTxVLANConfig(ETH_HandleTypeDef *heth, uint32_t VL
   */
 HAL_StatusTypeDef HAL_ETHEx_SetTxVLANConfig(ETH_HandleTypeDef *heth, uint32_t VLANTag ,ETH_TxVLANConfigTypeDef *pVlanConfig)
 {
-  uint32_t vlanconfigval = 0;
-  uint32_t vlanreg;
-  
   if(VLANTag == ETH_INNER_TX_VLANTAG)
   {
-    vlanreg = (uint32_t)&(heth->Instance->MACIVIR);
+    MODIFY_REG(heth->Instance->MACIVIR, ETH_MACTXVLAN_MASK, ((uint32_t)(pVlanConfig->SourceTxDesc << 20) |
+                                                            (uint32_t)(pVlanConfig->SVLANType << 19) |
+                                                              pVlanConfig->VLANTagControl));
     /* Enable Double VLAN processing */
     SET_BIT(heth->Instance->MACVTR, ETH_MACVTR_EDVLP);
   }
   else
   {
-    vlanreg = (uint32_t)&(heth->Instance->MACVIR);
+    MODIFY_REG(heth->Instance->MACVIR, ETH_MACTXVLAN_MASK, ((uint32_t)(pVlanConfig->SourceTxDesc << 20) |
+                                                            (uint32_t)(pVlanConfig->SVLANType << 19) |
+                                                              pVlanConfig->VLANTagControl));
   }
-  
-  vlanconfigval = ((uint32_t)(pVlanConfig->SourceTxDesc << 20) |
-                   (uint32_t)(pVlanConfig->SVLANType << 19) |
-                     pVlanConfig->VLANTagControl);
-  
-  MODIFY_REG(*((uint32_t *)vlanreg), ETH_MACTXVLAN_MASK, vlanconfigval);
   
   return HAL_OK;
 }
@@ -503,18 +471,14 @@ HAL_StatusTypeDef HAL_ETHEx_SetTxVLANConfig(ETH_HandleTypeDef *heth, uint32_t VL
   */
 void HAL_ETHEx_SetTxVLANIdentifier(ETH_HandleTypeDef *heth, uint32_t VLANTag ,uint32_t VLANIdentifier)
 {
-  uint32_t vlanreg;
-  
   if(VLANTag == ETH_INNER_TX_VLANTAG)
   {
-    vlanreg = (uint32_t)&(heth->Instance->MACIVIR);
+    MODIFY_REG(heth->Instance->MACIVIR, ETH_MACVIR_VLT, VLANIdentifier);
   }
   else
   {
-    vlanreg = (uint32_t)&(heth->Instance->MACVIR);
+    MODIFY_REG(heth->Instance->MACVIR, ETH_MACVIR_VLT, VLANIdentifier);
   }
-  
-  MODIFY_REG(*((uint32_t *)vlanreg), ETH_MACVIR_VLT, VLANIdentifier);
 }
 
 /**
@@ -551,17 +515,13 @@ void HAL_ETHEx_DisableVLANProcessing(ETH_HandleTypeDef *heth)
   */
 void HAL_ETHEx_EnterLPIMode(ETH_HandleTypeDef *heth, FunctionalState TxAutomate, FunctionalState TxClockStop)
 {
-  uint32_t lpiconfig;
-  
-  lpiconfig = (((uint32_t)TxAutomate << 19) | 
-               ((uint32_t)TxClockStop << 21) |
-                 ETH_MACLCSR_LPIEN);
-
   /* Enable LPI Interrupts */
   __HAL_ETH_MAC_ENABLE_IT(heth, ETH_MACIER_LPIIE);
   
   /* Write to LPI Control register: Enter low power mode */
-  MODIFY_REG(heth->Instance->MACLCSR, (ETH_MACLCSR_LPIEN | ETH_MACLCSR_LPITXA | ETH_MACLCSR_LPITCSE), lpiconfig);
+  MODIFY_REG(heth->Instance->MACLCSR, (ETH_MACLCSR_LPIEN | ETH_MACLCSR_LPITXA | ETH_MACLCSR_LPITCSE), (((uint32_t)TxAutomate << 19) | 
+                                                                                                       ((uint32_t)TxClockStop << 21) |
+                                                                                                         ETH_MACLCSR_LPIEN));
 }
 
 /**

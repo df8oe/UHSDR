@@ -1,8 +1,8 @@
 /**
- ******************************************************************************
-  * @file            : USB_HOST
-  * @version         : v1.0_Cube
-  * @brief           : Header for usb_host file.
+  ******************************************************************************
+  * @file           : usb_host.h
+  * @version        : v1.0_Cube
+  * @brief          : Header for usb_host.c file.
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2017 STMicroelectronics International N.V. 
+  * Copyright (c) 2018 STMicroelectronics International N.V. 
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without 
@@ -45,11 +45,12 @@
   * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
-*/
+  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __usb_host_H
-#define __usb_host_H
+#ifndef __USB_HOST__H__
+#define __USB_HOST__H__
+
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -58,27 +59,64 @@
 #include "stm32h7xx.h"
 #include "stm32h7xx_hal.h"
 
+/* USER CODE BEGIN INCLUDE */
+
+/* USER CODE END INCLUDE */
+
+/** @addtogroup USBH_OTG_DRIVER
+  * @{
+  */
+
+/** @defgroup USBH_HOST USBH_HOST
+  * @brief Host file for Usb otg low level driver.
+  * @{
+  */
+
+/** @defgroup USBH_HOST_Exported_Variables USBH_HOST_Exported_Variables
+  * @brief Public variables.
+  * @{
+  */
+
+/**
+  * @}
+  */
+
+/** Status of the application. */
 typedef enum {
-  APPLICATION_IDLE = 0,  
-  APPLICATION_START,   
+  APPLICATION_IDLE = 0,
+  APPLICATION_START,
   APPLICATION_READY,
-  APPLICATION_DISCONNECT,
+  APPLICATION_DISCONNECT
 }ApplicationTypeDef;
-		
+
+/** @defgroup USBH_HOST_Exported_FunctionsPrototype USBH_HOST_Exported_FunctionsPrototype
+  * @brief Declaration of public functions for Usb host.
+  * @{
+  */
+
+/* Exported functions -------------------------------------------------------*/
+
+/** @brief USB Host initialization function. */
 void MX_USB_HOST_Init(void);
+
 void MX_USB_HOST_Process(void);
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 #ifdef __cplusplus
 }
 #endif
-#endif /*__usb_host_H */
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
+#endif /* __USB_HOST__H__ */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

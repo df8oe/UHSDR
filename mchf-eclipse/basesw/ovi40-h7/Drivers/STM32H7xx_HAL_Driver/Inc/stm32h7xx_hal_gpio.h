@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_gpio.h
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   Header file of GPIO HAL module.
   ******************************************************************************
   * @attention
@@ -141,15 +141,14 @@ typedef enum
 #define  GPIO_MODE_AF_OD                        ((uint32_t)0x00000012U)   /*!< Alternate Function Open Drain Mode    */
 
 #define  GPIO_MODE_ANALOG                       ((uint32_t)0x00000003U)   /*!< Analog Mode  */
-    
-#define  GPIO_MODE_IT_RISING                    ((uint32_t)0x11110000U)   /*!< External Interrupt Mode with Rising edge trigger detection          */
-#define  GPIO_MODE_IT_FALLING                   ((uint32_t)0x11210000U)   /*!< External Interrupt Mode with Falling edge trigger detection         */
-#define  GPIO_MODE_IT_RISING_FALLING            ((uint32_t)0x11310000U)   /*!< External Interrupt Mode with Rising/Falling edge trigger detection  */
- 
-#define  GPIO_MODE_EVT_RISING                   ((uint32_t)0x11120000U)   /*!< External Event Mode with Rising edge trigger detection               */
-#define  GPIO_MODE_EVT_FALLING                  ((uint32_t)0x11220000U)   /*!< External Event Mode with Falling edge trigger detection              */
-#define  GPIO_MODE_EVT_RISING_FALLING           ((uint32_t)0x11320000U)   /*!< External Event Mode with Rising/Falling edge trigger detection       */
 
+#define  GPIO_MODE_IT_RISING                ((uint32_t)0x11110000U)   /*!< External Interrupt Mode with Rising edge trigger detection          */
+#define  GPIO_MODE_IT_FALLING               ((uint32_t)0x11210000U)   /*!< External Interrupt Mode with Falling edge trigger detection         */
+#define  GPIO_MODE_IT_RISING_FALLING        ((uint32_t)0x11310000U)   /*!< External Interrupt Mode with Rising/Falling edge trigger detection  */
+ 
+#define  GPIO_MODE_EVT_RISING               ((uint32_t)0x11120000U)   /*!< External Event Mode with Rising edge trigger detection               */
+#define  GPIO_MODE_EVT_FALLING              ((uint32_t)0x11220000U)   /*!< External Event Mode with Falling edge trigger detection              */
+#define  GPIO_MODE_EVT_RISING_FALLING       ((uint32_t)0x11320000U)   /*!< External Event Mode with Rising/Falling edge trigger detection       */
 /**
   * @}
   */

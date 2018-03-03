@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    system_stm32h7xx.h
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date    29-December-2017
   * @brief   CMSIS Cortex-Mx Device System Source File for STM32H7xx devices.
   ******************************************************************************
   * @attention
@@ -46,8 +46,8 @@
 /**
   * @brief Define to prevent recursive inclusion
   */
-#ifndef __SYSTEM_STM32H7XX_H
-#define __SYSTEM_STM32H7XX_H
+#ifndef SYSTEM_STM32H7XX_H
+#define SYSTEM_STM32H7XX_H
 
 #ifdef __cplusplus
  extern "C" {
@@ -111,7 +111,7 @@ extern void SystemCoreClockUpdate(void);
 }
 #endif
 
-#endif /*__SYSTEM_STM32H7XX_H */
+#endif /* SYSTEM_STM32H7XX_H */
 
 /**
   * @}

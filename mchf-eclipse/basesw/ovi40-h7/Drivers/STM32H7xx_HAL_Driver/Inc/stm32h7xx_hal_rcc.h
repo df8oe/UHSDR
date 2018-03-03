@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_rcc.h
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   Header file of RCC HAL module.
   ******************************************************************************
   * @attention
@@ -615,7 +615,6 @@ typedef struct
 #define RCC_FLAG_RMVF                  ((uint8_t)0x90)
 #define RCC_FLAG_CPURST                ((uint8_t)0x91)
 
-
 #define RCC_FLAG_D1RST                 ((uint8_t)0x93)
 #define RCC_FLAG_D2RST                 ((uint8_t)0x94)
 #define RCC_FLAG_BORRST                ((uint8_t)0x95)
@@ -626,6 +625,7 @@ typedef struct
 #define RCC_FLAG_WWDG1RST              ((uint8_t)0x9C)
 #define RCC_FLAG_LPWR1RST              ((uint8_t)0x9E)
 #define RCC_FLAG_LPWR2RST              ((uint8_t)0x9F)
+
 
 
 /**

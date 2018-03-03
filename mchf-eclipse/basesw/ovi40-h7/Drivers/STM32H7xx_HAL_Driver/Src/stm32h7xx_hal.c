@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   HAL module driver.
   *          This is the common part of the HAL initialization
   *
@@ -65,10 +65,10 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /**
- * @brief STM32H7xx HAL Driver version number V1.1.0
+ * @brief STM32H7xx HAL Driver version number V1.2.0
    */
 #define __STM32H7xx_HAL_VERSION_MAIN   (0x01) /*!< [31:24] main version */
-#define __STM32H7xx_HAL_VERSION_SUB1   (0x01) /*!< [23:16] sub1 version */
+#define __STM32H7xx_HAL_VERSION_SUB1   (0x02) /*!< [23:16] sub1 version */
 #define __STM32H7xx_HAL_VERSION_SUB2   (0x00) /*!< [15:8]  sub2 version */
 #define __STM32H7xx_HAL_VERSION_RC     (0x00) /*!< [7:0]  release candidate */
 #define __STM32H7xx_HAL_VERSION         ((__STM32H7xx_HAL_VERSION_MAIN << 24)\
@@ -81,7 +81,9 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-__IO uint32_t uwTick;
+static __IO uint32_t uwTick;
+static uint32_t uwTickPrio   = (1UL << __NVIC_PRIO_BITS); /* Invalid PRIO */
+static HAL_TickFreqTypeDef uwTickFreq = HAL_TICK_FREQ_DEFAULT;  /* 1KHz */
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -101,10 +103,10 @@ __IO uint32_t uwTick;
       (+) Initializes the Flash interface the NVIC allocation and initial clock
           configuration. It initializes the systick also when timeout is needed
           and the backup domain when enabled.
-      (+) de-Initializes common part of the HAL
+      (+) De-Initializes common part of the HAL.
       (+) Configure The time base source to have 1ms time base with a dedicated
           Tick interrupt priority.
-        (++) Systick timer is used by default as source of time base, but user
+        (++) SysTick timer is used by default as source of time base, but user
              can eventually implement his proper time base source (a general purpose
              timer for example or other time source), keeping in mind that Time base
              duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and
@@ -141,12 +143,14 @@ __IO uint32_t uwTick;
   */
 HAL_StatusTypeDef HAL_Init(void)
 {
-
   /* Set Interrupt Group Priority */
   HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 
   /* Use systick as time base source and configure 1ms tick (default clock after Reset is HSI) */
-   HAL_InitTick(TICK_INT_PRIORITY);
+  if(HAL_InitTick(TICK_INT_PRIORITY) != HAL_OK)
+  {
+    return HAL_ERROR;
+  }
 
   /* Init the low level hardware */
   HAL_MspInit();
@@ -237,11 +241,22 @@ __weak void HAL_MspDeInit(void)
   */
 __weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 {
-  /*Configure the SysTick to have interrupt in 1ms time basis*/
-  HAL_SYSTICK_Config(SystemCoreClock/1000);
+  /* Configure the SysTick to have interrupt in 1ms time basis*/
+  if (HAL_SYSTICK_Config(SystemCoreClock / (1000U / uwTickFreq)) > 0U)
+  {
+    return HAL_ERROR;
+  }
 
-  /*Configure the SysTick IRQ priority */
-  HAL_NVIC_SetPriority(SysTick_IRQn, TickPriority ,0);
+  /* Configure the SysTick IRQ priority */
+  if (TickPriority < (1UL << __NVIC_PRIO_BITS))
+  {
+    HAL_NVIC_SetPriority(SysTick_IRQn, TickPriority, 0U);
+    uwTickPrio = TickPriority;
+  }
+  else
+  {
+    return HAL_ERROR;
+  }
 
   /* Return function status */
   return HAL_OK;
@@ -285,7 +300,7 @@ __weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   */
 __weak void HAL_IncTick(void)
 {
-  uwTick++;
+  uwTick += (uint32_t)uwTickFreq;
 }
 
 /**
@@ -300,21 +315,66 @@ __weak uint32_t HAL_GetTick(void)
 }
 
 /**
-  * @brief This function provides accurate delay (in milliseconds) based
+  * @brief This function returns a tick priority.
+  * @retval tick priority
+  */
+uint32_t HAL_GetTickPrio(void)
+{
+  return uwTickPrio;
+}
+
+/**
+  * @brief Set new tick Freq.
+  * @retval Status
+  */
+HAL_StatusTypeDef HAL_SetTickFreq(HAL_TickFreqTypeDef Freq)
+{
+  HAL_StatusTypeDef status  = HAL_OK;
+  assert_param(IS_TICKFREQ(Freq));
+
+  if (uwTickFreq != Freq)
+  {
+    uwTickFreq = Freq;
+
+    /* Apply the new tick Freq  */
+    status = HAL_InitTick(uwTickPrio);
+  }
+
+  return status;
+}
+
+/**
+  * @brief Return tick frequency.
+  * @retval tick period in Hz
+  */
+HAL_TickFreqTypeDef HAL_GetTickFreq(void)
+{
+  return uwTickFreq;
+}
+
+/**
+  * @brief This function provides minimum delay (in milliseconds) based
   *        on variable incremented.
   * @note In the default implementation , SysTick timer is the source of time base.
   *       It is used to generate interrupts at regular time intervals where uwTick
   *       is incremented.
-  * @note ThiS function is declared as __weak to be overwritten in case of other
+  * @note This function is declared as __weak to be overwritten in case of other
   *       implementations in user file.
-  * @param Delay: specifies the delay time length, in milliseconds.
+  * @param Delay  specifies the delay time length, in milliseconds.
   * @retval None
   */
-__weak void HAL_Delay(__IO uint32_t Delay)
+__weak void HAL_Delay(uint32_t Delay)
 {
-  uint32_t tickstart = 0;
-  tickstart = HAL_GetTick();
-  while((HAL_GetTick() - tickstart) < Delay)
+  uint32_t tickstart = HAL_GetTick();
+  uint32_t wait = Delay;
+
+  /* Add a freq to guarantee minimum wait */
+  if (wait < HAL_MAX_DELAY)
+  {
+    wait += (uint32_t)(uwTickFreq);
+  }
+
+  while ((HAL_GetTick() - tickstart) < wait)
   {
   }
 }
@@ -700,6 +760,8 @@ void HAL_DisableDBGStandbyMode(void)
   CLEAR_BIT(DBGMCU->CR, DBGMCU_CR_DBG_STANDBYD1);
 }
 
+
+
 /**
   * @brief  Enable the Debug Module during Domain3 STOP mode
   * @retval None
@@ -762,9 +824,9 @@ uint32_t HAL_GetFMCMemorySwappingConfig(void)
 /**
   * @brief  Configure the EXTI input event line edge
   * @note    No edge configuration for direct lines but for configurable lines:(EXTI_LINE0..EXTI_LINE21),
-  *          EXTI_LINE49,EXTI_LINE51,EXTI_LINE85 and EXTI_LINE86.
+  *          EXTI_LINE49,EXTI_LINE51,EXTI_LINE82,EXTI_LINE84,EXTI_LINE85 and EXTI_LINE86.
   * @param   EXTI_Line: Specifies the EXTI LINE, it can be one of the following values,
-  *         (EXTI_LINE0....EXTI_LINE87)excluding :line45,line46 and line77 to line84 which are reserved  
+  *         (EXTI_LINE0....EXTI_LINE88)excluding :line45, line81,line83 which are reserved  
   * @param   EXTI_Edge: Specifies  EXTI line Edge used.
   *          This parameter can be one of the following values :
   *   @arg EXTI_RISING_EDGE : Configurable line, with Rising edge trigger detection
@@ -794,7 +856,7 @@ void HAL_EXTI_EdgeConfig(uint32_t EXTI_Line , uint32_t EXTI_Edge )
 /**
   * @brief  Generates a Software interrupt on selected EXTI line.
   * @param   EXTI_Line: Specifies the EXTI LINE, it can be one of the following values,
-  *          (EXTI_LINE0..EXTI_LINE21),EXTI_LINE49,EXTI_LINE51,EXTI_LINE85 and EXTI_LINE86.
+  *          (EXTI_LINE0..EXTI_LINE21),EXTI_LINE49,EXTI_LINE51,EXTI_LINE82,EXTI_LINE84,EXTI_LINE85 and EXTI_LINE86.
   * @retval None
   */
 void HAL_EXTI_GenerateSWInterrupt(uint32_t EXTI_Line)
@@ -809,7 +871,7 @@ void HAL_EXTI_GenerateSWInterrupt(uint32_t EXTI_Line)
 /**
   * @brief  Clears the EXTI's line pending flags for Domain D1
   * @param   EXTI_Line: Specifies the EXTI LINE, it can be one of the following values,
-  *         (EXTI_LINE0....EXTI_LINE87)excluding :line45,line46 and line77 to line84 which are reserved  
+  *         (EXTI_LINE0....EXTI_LINE88)excluding :line45, line81,line83 which are reserved 
   * @retval None
   */
 void HAL_EXTI_D1_ClearFlag(uint32_t EXTI_Line)
@@ -823,7 +885,7 @@ void HAL_EXTI_D1_ClearFlag(uint32_t EXTI_Line)
 /**
   * @brief  Configure the EXTI input event line for Domain D1
   * @param   EXTI_Line: Specifies the EXTI LINE, it can be one of the following values,
-  *         (EXTI_LINE0 to EXTI_LINE87)excluding :line45,line46 and line77 to line84 which are reserved  
+  *         (EXTI_LINE0....EXTI_LINE88)excluding :line45, line81,line83 which are reserved  
   * @param   EXTI_Mode: Specifies which EXTI line is used as interrupt or an event. 
   *          This parameter can be one or a combination of the following values :
   *   @arg EXTI_MODE_IT :  Interrupt Mode selected
@@ -869,8 +931,8 @@ void HAL_EXTI_D1_EventInputConfig(uint32_t EXTI_Line , uint32_t EXTI_Mode,  uint
 /**
   * @brief  Configure the EXTI input event line for Domain D3 
   * @param   EXTI_Line: Specifies the EXTI LINE, it can be one of the following values,
-  *         (EXTI_LINE0 to EXTI_LINE15),(EXTI_LINE19 to EXTI_LINE21),EXTI_LINE25, EXTI_LINE34,
-  *          EXTI_LINE35,EXTI_LINE41,(EXTI_LINE48 to EXTI_LINE53)  
+  *         (EXTI_LINE0...EXTI_LINE15),(EXTI_LINE19...EXTI_LINE21),EXTI_LINE25, EXTI_LINE34,
+  *          EXTI_LINE35,EXTI_LINE41,(EXTI_LINE48...EXTI_LINE53),EXTI_LINE88 
   * @param   EXTI_LineCmd controls (Enable/Disable) the EXTI line.
   * @param   EXTI_ClearSrc: Specifies the clear source of D3 pending event.
   *          This parameter can be one of the following values :

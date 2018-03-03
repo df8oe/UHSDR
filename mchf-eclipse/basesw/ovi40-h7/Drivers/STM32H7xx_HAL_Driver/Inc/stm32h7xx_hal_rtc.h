@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_rtc.h
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   Header file of RTC HAL module.
   ******************************************************************************
   * @attention
@@ -269,8 +269,8 @@ typedef struct
 /** @defgroup RTC_Input_parameter_format_definitions RTC Input Parameter Format Definitions
   * @{
   */
-#define RTC_FORMAT_BIN                  ((uint32_t)0x000000000)
-#define RTC_FORMAT_BCD                  ((uint32_t)0x000000001)
+#define RTC_FORMAT_BIN                  ((uint32_t)0x00000000)
+#define RTC_FORMAT_BCD                  ((uint32_t)0x00000001)
 /**
   * @}
   */

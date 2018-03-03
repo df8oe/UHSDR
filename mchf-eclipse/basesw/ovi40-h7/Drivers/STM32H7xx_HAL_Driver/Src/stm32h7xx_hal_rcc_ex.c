@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_rcc_ex.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   Extended RCC HAL module driver.
   *          This file provides firmware functions to manage the following
   *          functionalities RCC extension peripheral:
@@ -1280,7 +1280,7 @@ HAL_StatusTypeDef HAL_RCCEx_PeriphCLKConfig(RCC_PeriphCLKInitTypeDef  *PeriphClk
       
       /* RNG clock source configuration done later after clock selection check */
       break;
-    case RCC_USBCLKSOURCE_HSI48:
+    case RCC_RNGCLKSOURCE_HSI48:
       /* HSI48 oscillator is used as source of RNG clock */
       /* RNG clock source configuration done later after clock selection check */
       break;

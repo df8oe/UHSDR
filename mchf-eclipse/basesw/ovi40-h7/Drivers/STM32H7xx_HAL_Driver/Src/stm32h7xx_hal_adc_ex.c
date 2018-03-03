@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_adc_ex.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   This file provides firmware functions to manage the following
   *          functionalities of the Analog to Digital Convertor (ADC)
   *          peripheral:
@@ -1967,6 +1967,8 @@ HAL_StatusTypeDef HAL_ADCEx_InjectedConfigChannel(ADC_HandleTypeDef* hadc, ADC_I
   /*    mode is disabled.                                                     */
   if (ADC_IS_CONVERSION_ONGOING_INJECTED(hadc) == RESET)
   {
+    /* ADC channels preselection */
+    hadc->Instance->PCSEL |= (1U << sConfigInjected->InjectedChannel);
 
     /* If auto-injected mode is disabled: no constraint                       */
     if (sConfigInjected->AutoInjectedConv == DISABLE)

@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal.h
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   This file contains all the functions prototypes for the HAL
   *          module driver.
   ******************************************************************************
@@ -56,6 +56,20 @@
   */
 
 /* Exported types ------------------------------------------------------------*/
+/** @defgroup HAL_TICK_FREQ Tick Frequency
+  * @{
+  */
+typedef enum
+{
+  HAL_TICK_FREQ_10HZ         = 100U,
+  HAL_TICK_FREQ_100HZ        = 10U,
+  HAL_TICK_FREQ_1KHZ         = 1U,
+  HAL_TICK_FREQ_DEFAULT      = HAL_TICK_FREQ_1KHZ
+} HAL_TickFreqTypeDef;
+/**
+  * @}
+  */
+
 /* Exported constants --------------------------------------------------------*/
 
 /** @defgroup SYSCFG_VREFBUF_VoltageScale VREFBUF Voltage Scale
@@ -234,7 +248,7 @@
 #define EXTI_LINE42      ((uint32_t)0x2A)                                                                                     
 #define EXTI_LINE43      ((uint32_t)0x2B)                                           
 #define EXTI_LINE44      ((uint32_t)0x2C)                                                                                     
-/* EXTI_LINE45 Reserved */                                                                                    
+/* EXTI_LINE45 Reserved */                                                                                     
 /* EXTI_LINE46 Reserved */                                                                                    
 #define EXTI_LINE47      ((uint32_t)0x2F)                                                                                       
 #define EXTI_LINE48      ((uint32_t)0x30)                                                                                      
@@ -268,20 +282,20 @@
 #define EXTI_LINE73      ((uint32_t)0x49)                                           
 #define EXTI_LINE74      ((uint32_t)0x4A)                                                                                     
 #define EXTI_LINE75      ((uint32_t)0x4B)                                                                                      
-#define EXTI_LINE76      ((uint32_t)0x4C)
+#define EXTI_LINE76      ((uint32_t)0x4C)                                                                                      
 
 /* EXTI_LINE77   Reserved */                                                                           
 /* EXTI_LINE78   Reserved */                                                                          
 /* EXTI_LINE79   Reserved */   
 /* EXTI_LINE80   Reserved */   
-/* EXTI_LINE81   Reserved */   
+/* EXTI_LINE81   Reserved */
 /* EXTI_LINE82   Reserved */                                                                         
-/* EXTI_LINE83   Reserved */                                        
+/* EXTI_LINE83   Reserved */                                      
 /* EXTI_LINE84   Reserved */                                                                         
 
 #define EXTI_LINE85      ((uint32_t)0x55)                                                                                      
 #define EXTI_LINE86      ((uint32_t)0x56)                                                                                      
-#define EXTI_LINE87      ((uint32_t)0x57)
+#define EXTI_LINE87      ((uint32_t)0x57)                                                                                       
 
 /* EXTI_LINE88   Reserved */ 
 
@@ -501,8 +515,15 @@
 
 
 
-
-
+/** @defgroup HAL_Private_Macros HAL Private Macros
+  * @{
+  */
+#define IS_TICKFREQ(FREQ) (((FREQ) == HAL_TICK_FREQ_10HZ)  || \
+                           ((FREQ) == HAL_TICK_FREQ_100HZ) || \
+                           ((FREQ) == HAL_TICK_FREQ_1KHZ))
+/**
+  * @}
+  */
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -517,6 +538,9 @@ HAL_StatusTypeDef HAL_InitTick (uint32_t TickPriority);
 void HAL_IncTick(void);
 void HAL_Delay(__IO uint32_t Delay);
 uint32_t HAL_GetTick(void);
+uint32_t HAL_GetTickPrio(void);
+HAL_StatusTypeDef HAL_SetTickFreq(HAL_TickFreqTypeDef Freq);
+HAL_TickFreqTypeDef HAL_GetTickFreq(void);
 void HAL_SuspendTick(void);
 void HAL_ResumeTick(void);
 uint32_t HAL_GetHalVersion(void);

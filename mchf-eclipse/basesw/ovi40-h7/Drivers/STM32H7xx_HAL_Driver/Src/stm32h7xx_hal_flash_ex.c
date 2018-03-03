@@ -2,8 +2,8 @@
   ******************************************************************************
   * @file    stm32h7xx_hal_flash_ex.c
   * @author  MCD Application Team
-  * @version V1.1.0
-  * @date    31-August-2017
+  * @version V1.2.0
+  * @date   29-December-2017
   * @brief   Extended FLASH HAL module driver.
   *          This file provides firmware functions to manage the following 
   *          functionalities of the FLASH extension peripheral:
@@ -123,6 +123,10 @@ static HAL_StatusTypeDef FLASH_OB_BootAddConfig(uint32_t BootOption, uint32_t Bo
 static void FLASH_OB_GetBootAdd(uint32_t *BootAddress0, uint32_t *BootAddress1);
 static HAL_StatusTypeDef FLASH_OB_SecureAreaConfig(uint32_t SecureAreaConfig, uint32_t SecureAreaStartAddr, uint32_t SecureAreaEndAddr, uint32_t Banks);
 static void FLASH_OB_GetSecureArea(uint32_t *SecureAreaConfig, uint32_t *SecureAreaStartAddr, uint32_t *SecureAreaEndAddr, uint32_t Bank);
+
+
+
+
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -439,7 +443,7 @@ HAL_StatusTypeDef HAL_FLASHEx_OBProgram(FLASH_OBProgramInitTypeDef *pOBInit)
       __HAL_UNLOCK(&pFlash);
       return status;
     }
-  }
+  }  
   /*Bank1 secure area  configuration*/
   if((pOBInit->OptionType & OPTIONBYTE_SECURE_AREA) == OPTIONBYTE_SECURE_AREA)
   {
@@ -1244,13 +1248,13 @@ static HAL_StatusTypeDef FLASH_OB_BootAddConfig(uint32_t BootOption, uint32_t Bo
 static void FLASH_OB_GetBootAdd(uint32_t *BootAddress0, uint32_t *BootAddress1)
 {
   uint32_t regvalue = 0;
-  
+
   regvalue = FLASH->BOOT_CUR;  
 
   (*BootAddress0) = (regvalue & FLASH_BOOT_ADD0) << 16;
 
   (*BootAddress1) = (regvalue & FLASH_BOOT_ADD1);
-  
+
 }
 
 /**
