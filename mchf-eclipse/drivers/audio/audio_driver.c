@@ -2244,13 +2244,11 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
         //        agc_wdsp.ring[agc_wdsp.in_index] = adb.a_buffer[i];
         //        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(adb.a_buffer[i]);
 //        agc_wdsp.ring[agc_wdsp.in_index] = agcbuffer[i];
-        // FIXME
-        agc_wdsp.ring[2 * agc_wdsp.in_index] = agcbuffer1[i] * 0.1;
+        agc_wdsp.ring[2 * agc_wdsp.in_index] = agcbuffer1[i];
 #ifdef USE_TWO_CHANNEL_AUDIO
         if(use_stereo)
         	{
-        	// FIXME
-        		agc_wdsp.ring[2 * agc_wdsp.in_index + 1] = agcbuffer2[i] * 0.1;
+        		agc_wdsp.ring[2 * agc_wdsp.in_index + 1] = agcbuffer2[i];
         	}
 #endif
         //        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer[i]);
