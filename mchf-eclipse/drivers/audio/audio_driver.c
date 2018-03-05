@@ -1374,17 +1374,33 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // Set up RX decimation/filter
     if (FilterPathInfo[ts.filter_path].dec != NULL)
     {
+        const arm_fir_decimate_instance_f32* dec = FilterPathInfo[ts.filter_path].dec;
+
+#if defined(STM32F4) && defined(USE_LMS_AUTONOTCH)
+        // FIXME: Better solution (e.g. improve graphics performance, better data structures ... )
+        // this code is a hack to reduce processor load for STM32F4 && SPI display
+        // which causes UI lag
+        // in this case we simply use a less power-eating filter (lower number of taps)
+        // one problem is that we use the not so good filter
+        // even if the autonotch / nr is not active and we could use the good filter
+        if (dec == &FirRxDecimate_sideband_supp && ts.display->use_spi == true)
+        {
+            dec = &FirRxDecimate;
+        }
+#endif
+
         arm_fir_decimate_init_f32(&DECIMATE_RX_I,
-                FilterPathInfo[ts.filter_path].dec->numTaps,      // Number of taps in FIR filter
+
+                dec->numTaps,      // Number of taps in FIR filter
                 ads.decimation_rate,
-                FilterPathInfo[ts.filter_path].dec->pCoeffs,       // Filter coefficients
+                dec->pCoeffs,       // Filter coefficients
                 decimState_I,            // Filter state variables
                 FIR_RXAUDIO_BLOCK_SIZE);
 
         arm_fir_decimate_init_f32(&DECIMATE_RX_Q,
-                FilterPathInfo[ts.filter_path].dec->numTaps,      // Number of taps in FIR filter
+                dec->numTaps,      // Number of taps in FIR filter
                 ads.decimation_rate,
-                FilterPathInfo[ts.filter_path].dec->pCoeffs,       // Filter coefficients
+                dec->pCoeffs,       // Filter coefficients
                 decimState_Q,            // Filter state variables
                 FIR_RXAUDIO_BLOCK_SIZE);
     }
