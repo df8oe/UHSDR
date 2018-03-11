@@ -6157,22 +6157,7 @@ static void UiAction_PlayKeyerBtnN(int8_t n)
 		}
 		*pmacro = '\0';
 
-		if (c)
-		{
-			// Make button label from start of the macro
-			pmacro = (uint8_t *)ts.keyer_mode.macro[n];
-			c = 0;
-			while(*pmacro != ' ' && *pmacro != '\0' && c < KEYER_CAP_LEN)
-			{
-				ts.keyer_mode.cap[n][c++] = *pmacro++;
-			}
-			ts.keyer_mode.cap[n][c] = '\0';
-		}
-		else
-		{
-			strcpy((char *) ts.keyer_mode.cap[n], "BTN");
-		}
-
+		UiConfiguration_UpdateMacroCap();
 		UiDriver_TextMsgPutChar('<');
 		ts.keyer_mode.button_recording = KEYER_BUTTON_NONE;
 	}

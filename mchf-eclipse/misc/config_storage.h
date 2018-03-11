@@ -28,5 +28,7 @@ void ConfigStorage_CopySerial2Flash(void);
 void ConfigStorage_CopySerial2RAMCache();
 uint16_t ConfigStorage_CopyRAMCache2Serial();
 
+uint16_t ConfigStorage_CopyArray2Serial(uint32_t Addr, const uint8_t *buffer, uint16_t length);
+void ConfigStorage_CopySerial2Array(uint32_t Addr, uint8_t *buffer, uint16_t length);
 
 #endif

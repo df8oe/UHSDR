@@ -45,6 +45,7 @@ const ConfigEntryDescriptor* UiConfiguration_GetEntry(uint16_t id);
 
 void        UiConfiguration_LoadEepromValues(void);
 uint16_t    UiConfiguration_SaveEepromValues(void);
+void		UiConfiguration_UpdateMacroCap(void);
 
 // Configuration Value Definitions Follow
 //
@@ -596,5 +597,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 
 // Note: EEPROM addresses up to 383 are currently defined. If this value is passed you
 // need to modify virtual EEPROM routines otherwise system may crash
+
+#define EEPROM_KEYER_MEMORY_ADDRESS		0x1000
 
 #endif /* DRIVERS_UI_UI_CONFIGURATION_H_ */
