@@ -456,7 +456,6 @@ void timeTest()
 // Power on
 int mchfMain(void)
 {
-
 	unsigned int loopcnt = 0; //grg
 
     ///trace_puts("Hello mcHF World!");
