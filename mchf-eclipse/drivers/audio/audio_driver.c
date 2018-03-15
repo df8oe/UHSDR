@@ -2033,8 +2033,10 @@ void AudioDriver_SetupAgcWdsp()
     // this is a quick and dirty hack
     // it initialises the AGC variables once again,
     // if the decimation rate is changed
-    // this should prevent confusion between the in_index and out_index variables
+    // this should prevent confusion between the distance of in_index and out_index variables
     // because these are freshly initialised
+    // in_index and out_index have a distance of 48 (sample rate 12000) or 96 (sample rate 24000)
+    // so that has to be defined very well when filter from 4k8 to 5k0 (changing decimation rate from 4 to 2)
     if(decimation_rate_old != ads.decimation_rate)
     {
     	initialised = false; // force initialisation
