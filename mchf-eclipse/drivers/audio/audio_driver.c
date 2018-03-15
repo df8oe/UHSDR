@@ -2028,6 +2028,18 @@ void AudioDriver_SetupAgcWdsp()
     static bool initialised = false;
 	float32_t tmp;
     float32_t sample_rate = IQ_SAMPLE_RATE_F / (float32_t)ads.decimation_rate;
+    static uchar decimation_rate_old = 0; // will be set to current decimation rate in first round
+
+    // this is a quick and dirty hack
+    // it initialises the AGC variables once again,
+    // if the decimation rate is changed
+    // this should prevent confusion between the in_index and out_index variables
+    // because these are freshly initialised
+    if(decimation_rate_old != ads.decimation_rate)
+    {
+    	initialised = false; // force initialisation
+    	decimation_rate_old = ads.decimation_rate; // remember decimation rate for next time
+    }
     // Start variables taken from wdsp
     // RXA.c !!!!
     /*
@@ -2141,7 +2153,9 @@ void AudioDriver_SetupAgcWdsp()
     agc_wdsp.tau_decay = (float32_t)ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode] / 1000.0;
     agc_wdsp.max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
     agc_wdsp.fixed_gain = agc_wdsp.max_gain / 10.0;
-    agc_wdsp.attack_buffsize = (int)ceil(sample_rate * agc_wdsp.n_tau * agc_wdsp.tau_attack); // 48
+    // attack_buff_size is 48 for sample rate == 12000 and
+    // 96 for sample rate == 24000
+    agc_wdsp.attack_buffsize = (int)ceil(sample_rate * agc_wdsp.n_tau * agc_wdsp.tau_attack);
 
     agc_wdsp.in_index = agc_wdsp.attack_buffsize + agc_wdsp.out_index; // attack_buffsize + out_index can be more than 2x ring_bufsize !!!
     agc_wdsp.in_index %= agc_wdsp.ring_buffsize; // need to keep this within the index boundaries
@@ -2150,7 +2164,6 @@ void AudioDriver_SetupAgcWdsp()
     agc_wdsp.decay_mult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_decay));
     agc_wdsp.fast_decay_mult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_fast_decay));
     agc_wdsp.fast_backmult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_fast_backaverage));
-
     agc_wdsp.onemfast_backmult = 1.0 - agc_wdsp.fast_backmult;
 
     agc_wdsp.out_target = agc_wdsp.out_targ * (1.0 - expf(-(float32_t)agc_wdsp.n_tau)) * 0.9999;
