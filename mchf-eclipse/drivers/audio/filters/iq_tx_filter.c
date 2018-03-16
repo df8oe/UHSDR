@@ -15,7 +15,10 @@
 #include "filters.h"
 #include "iq_tx_filter.h"
 
-#if 1
+// at the moment, we only use iq_tx_wide, so I comment out the narrow filter
+// DD4WH 2018_02_24
+
+#if 0
 /*
  * Hilbert 0/90 Degree, "Phase-added" bandpass filter
  * Kaiser Window FIR Filter, Beta = 3.25, Raised Cosine = 9.30
@@ -217,7 +220,8 @@ const IQ_FilterDescriptor iq_tx_narrow =
             -0.0003506543
         }
 };
-#else
+
+
 /*
  * Hilbert +/-45 Degree, "Phase-added" bandpass filter
  * Kaiser Window FIR Filter, Beta = 3.25, Raised Cosine = .880
@@ -226,7 +230,7 @@ const IQ_FilterDescriptor iq_tx_narrow =
  * 89 Taps
  * using Iowa Hills Hilbert Filter Designer
  */
-
+/*
 const IQ_FilterDescriptor iq_tx_narrow =
 {
         .num_taps = IQ_TX_NUM_TAPS,
@@ -415,7 +419,10 @@ const IQ_FilterDescriptor iq_tx_narrow =
                 -0.005381649710336490,
         }
 };
+*/
 #endif
+
+
 
 #if 0
 // trial with +/-45 degrees!!!

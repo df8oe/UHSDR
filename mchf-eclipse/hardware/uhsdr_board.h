@@ -46,6 +46,14 @@
 //#define USE_SMALL_HILBERT_DECIMATION_FILTERS
 #endif
 
+// save processor time for the STM32F4
+// changes lowpass decimation filters to 89 taps instead of 199 taps
+// because they run at 48ksps, this is a considerable decrease in processing power
+// this is ONLY relevant for STM32F4 which has SPI !
+// in those machines when enabling NR and other features, ui slows down . . .
+// thus we should enable the small decimation filter in those machines
+
+
 /**
  * This parameter disables certain features / capabilites in order to achieve a minimum build size for
  * the 192k ram / 512k flash STM32F4 machines. Unless you have such a machine, leave this disabled.
