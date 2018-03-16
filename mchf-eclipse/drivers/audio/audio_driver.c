@@ -50,7 +50,7 @@ typedef struct
 	//#define MAX_N_TAU           (8)
 	//#define MAX_TAU_ATTACK      (0.01)
 	//#define RB_SIZE       (int) (MAX_SAMPLE_RATE * MAX_N_TAU * MAX_TAU_ATTACK + 1)
-#define AGC_WDSP_RB_SIZE 96
+#define AGC_WDSP_RB_SIZE 192
 	//int8_t AGC_mode = 2;
 	int pmode;// = 1; // if 0, calculate magnitude by max(|I|, |Q|), if 1, calculate sqrtf(I*I+Q*Q)
 	float32_t out_sample[2];
@@ -71,7 +71,7 @@ typedef struct
 	float32_t hangtime;
 	float32_t hang_thresh;
 	float32_t tau_hang_decay;
-	float32_t ring[2*AGC_WDSP_RB_SIZE]; //192]; //96];
+	float32_t ring[2 * AGC_WDSP_RB_SIZE]; //192]; //96];
 	float32_t abs_ring[AGC_WDSP_RB_SIZE];// 192 //96]; // abs_ring is half the size of ring
 	//assign constants
 	int ring_buffsize; // = 96;
@@ -2065,6 +2065,28 @@ void AudioDriver_SetupAgcWdsp()
     // one time initialization
     if(!initialised)
     {
+
+    	/*
+    	 *
+    	 * 	//assign constants
+	a->ring_buffsize = RB_SIZE;
+	//do one-time initialization
+	a->out_index = -1;
+	a->ring_max = 0.0;
+	a->volts = 0.0;
+	a->save_volts = 0.0;
+	a->fast_backaverage = 0.0;
+	a->hang_backaverage = 0.0;
+	a->hang_counter = 0;
+	a->decay_type = 0;
+	a->state = 0;
+	a->ring = (double *)malloc0(RB_SIZE * sizeof(complex));
+	a->abs_ring = (double *)malloc0(RB_SIZE * sizeof(double));
+loadWcpAGC(a);
+    	 *
+    	 *
+    	 * */
+
     	agc_wdsp.ring_buffsize = AGC_WDSP_RB_SIZE; //192; //96;
 		//do one-time initialization
     	agc_wdsp.out_index = -1; //agc_wdsp.ring_buffsize; // or -1 ??
@@ -2077,6 +2099,15 @@ void AudioDriver_SetupAgcWdsp()
 		agc_wdsp.hang_counter = 0;
 		agc_wdsp.decay_type = 0;
 		agc_wdsp.state = 0;
+		for(int idx = 0; idx < AGC_WDSP_RB_SIZE; idx++)
+		{
+			agc_wdsp.ring[idx * 2 + 0] = 0.0;
+			agc_wdsp.ring[idx * 2 + 1] = 0.0;
+			agc_wdsp.abs_ring[idx] = 0.0;
+		}
+
+
+
 	    agc_wdsp.tau_attack = 0.001;               // tau_attack
 	    //    tau_decay = ts.agc_wdsp_tau_decay / 1000.0; // 0.250;                // tau_decay
 	    agc_wdsp.n_tau = 4;                        // n_tau
