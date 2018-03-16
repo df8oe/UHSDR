@@ -746,7 +746,7 @@ void AudioDriver_SetSamPllParameters()
 
     // definitions and intializations for synchronous AM demodulation = SAM
     //    adb.DF = 1.0; //ads.decimation_rate;
-    adb.DF = ads.decimation_rate;
+    adb.DF = (float32_t)(ads.decimation_rate);
     //ads.pll_fmax_int = 2500;
     adb.pll_fmax = (float32_t)ads.pll_fmax_int;
     // DX adjustments: zeta = 0.15, omegaN = 100.0
@@ -2027,7 +2027,21 @@ void AudioDriver_SetupAgcWdsp()
 {
     static bool initialised = false;
 	float32_t tmp;
-    float32_t sample_rate = IQ_SAMPLE_RATE_F / ads.decimation_rate;
+    float32_t sample_rate = IQ_SAMPLE_RATE_F / (float32_t)ads.decimation_rate;
+    static uchar decimation_rate_old = 0; // will be set to current decimation rate in first round
+
+    // this is a quick and dirty hack
+    // it initialises the AGC variables once again,
+    // if the decimation rate is changed
+    // this should prevent confusion between the distance of in_index and out_index variables
+    // because these are freshly initialised
+    // in_index and out_index have a distance of 48 (sample rate 12000) or 96 (sample rate 24000)
+    // so that has to be defined very well when filter from 4k8 to 5k0 (changing decimation rate from 4 to 2)
+    if(decimation_rate_old != ads.decimation_rate)
+    {
+    	initialised = false; // force initialisation
+    	decimation_rate_old = ads.decimation_rate; // remember decimation rate for next time
+    }
     // Start variables taken from wdsp
     // RXA.c !!!!
     /*
@@ -2053,7 +2067,7 @@ void AudioDriver_SetupAgcWdsp()
     {
     	agc_wdsp.ring_buffsize = AGC_WDSP_RB_SIZE; //192; //96;
 		//do one-time initialization
-    	agc_wdsp.out_index = agc_wdsp.ring_buffsize;
+    	agc_wdsp.out_index = -1; //agc_wdsp.ring_buffsize; // or -1 ??
     	agc_wdsp.fixed_gain = 1.0;
     	agc_wdsp.ring_max = 0.0;
     	agc_wdsp.volts = 0.0;
@@ -2070,7 +2084,7 @@ void AudioDriver_SetupAgcWdsp()
 	    //    max_gain = 1000.0; // 1000.0; determines the AGC threshold = knee level
 	    //  max_gain is powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
 	    //    fixed_gain = ads.agc_rf_gain; //0.7; // if AGC == OFF, this gain is used
-	    agc_wdsp.max_input = (float32_t)ADC_CLIP_WARN_THRESHOLD * 2.0; // which is 8192 at the moment
+	    agc_wdsp.max_input = (float32_t)ADC_CLIP_WARN_THRESHOLD; // which is 4096 at the moment
 	    //32767.0; // maximum value of 16-bit audio //  1.0; //
 	    agc_wdsp.out_targ = (float32_t)ADC_CLIP_WARN_THRESHOLD; // 4096, tweaked, so that volume when switching between the two AGCs remains equal
 	    //12000.0; // target value of audio after AGC
@@ -2083,7 +2097,7 @@ void AudioDriver_SetupAgcWdsp()
 	    initialised = true;
     }
     //    var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
-    agc_wdsp.var_gain = powf (10.0, (float32_t)ts.agc_wdsp_slope / 200.0); // 10 * 10^(slope / 20)
+    agc_wdsp.var_gain = powf (10.0, (float32_t)ts.agc_wdsp_slope / 20.0 / 10.0); // 10^(slope / 200)
 
     //    hangtime = 0.250;                // hangtime
     agc_wdsp.hangtime = (float32_t)ts.agc_wdsp_hang_time / 1000.0;
@@ -2141,7 +2155,9 @@ void AudioDriver_SetupAgcWdsp()
     agc_wdsp.tau_decay = (float32_t)ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode] / 1000.0;
     agc_wdsp.max_gain = powf (10.0, (float32_t)ts.agc_wdsp_thresh / 20.0);
     agc_wdsp.fixed_gain = agc_wdsp.max_gain / 10.0;
-    agc_wdsp.attack_buffsize = (int)ceil(sample_rate * agc_wdsp.n_tau * agc_wdsp.tau_attack); // 48
+    // attack_buff_size is 48 for sample rate == 12000 and
+    // 96 for sample rate == 24000
+    agc_wdsp.attack_buffsize = (int)ceil(sample_rate * agc_wdsp.n_tau * agc_wdsp.tau_attack);
 
     agc_wdsp.in_index = agc_wdsp.attack_buffsize + agc_wdsp.out_index; // attack_buffsize + out_index can be more than 2x ring_bufsize !!!
     agc_wdsp.in_index %= agc_wdsp.ring_buffsize; // need to keep this within the index boundaries
@@ -2150,7 +2166,6 @@ void AudioDriver_SetupAgcWdsp()
     agc_wdsp.decay_mult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_decay));
     agc_wdsp.fast_decay_mult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_fast_decay));
     agc_wdsp.fast_backmult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_fast_backaverage));
-
     agc_wdsp.onemfast_backmult = 1.0 - agc_wdsp.fast_backmult;
 
     agc_wdsp.out_target = agc_wdsp.out_targ * (1.0 - expf(-(float32_t)agc_wdsp.n_tau)) * 0.9999;
