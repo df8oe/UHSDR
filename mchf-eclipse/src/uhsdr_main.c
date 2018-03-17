@@ -457,7 +457,7 @@ void timeTest()
 int mchfMain(void)
 {
 
-	unsigned int loopcnt; //grg
+	unsigned int loopcnt = 0; //grg
 
     ///trace_puts("Hello mcHF World!");
     // trace_printf(" %u\n", 1u);

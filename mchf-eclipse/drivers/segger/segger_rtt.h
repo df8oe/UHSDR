@@ -67,7 +67,7 @@ Revision: $Rev: 9599 $
 #ifndef SEGGER_RTT_H
 #define SEGGER_RTT_H
 
-#include "drivers\segger\segger_rtt_conf.h"
+#include "drivers/segger/segger_rtt_conf.h"
 
 /*********************************************************************
 *
