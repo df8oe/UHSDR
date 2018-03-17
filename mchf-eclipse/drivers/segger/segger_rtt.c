@@ -83,7 +83,7 @@ Additional information:
 ----------------------------------------------------------------------
 */
 
-#include "drivers\segger\segger_rtt.h"
+#include "drivers/segger/segger_rtt.h"
 
 #include <string.h>                 // for memcpy
 

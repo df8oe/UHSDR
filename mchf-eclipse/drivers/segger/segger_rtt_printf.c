@@ -61,8 +61,8 @@ Purpose : Replacement for printf to write formatted data via RTT
 Revision: $Rev: 9599 $
 ----------------------------------------------------------------------
 */
-#include "drivers\segger\segger_rtt.h"
-#include "drivers\segger\segger_rtt_conf.h"
+#include "drivers/segger/segger_rtt.h"
+#include "drivers/segger/segger_rtt_conf.h"
 
 /*********************************************************************
 *
