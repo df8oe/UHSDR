@@ -57,6 +57,8 @@
 
 #include "misc/TestCPlusPlusInterface.h"
 
+#include "drivers/segger/segger_rtt.h"   //grg
+
 void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
 {
     switch(GPIO_Pin)
@@ -454,10 +456,11 @@ void timeTest()
 // Power on
 int mchfMain(void)
 {
+	unsigned int loopcnt = 0; //grg
 
     ///trace_puts("Hello mcHF World!");
     // trace_printf(" %u\n", 1u);
-
+	SEGGER_RTT_WriteString(0, "OVI40 mchfMain(): \r\n\r\n"); //grg
 
     *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
 
@@ -561,6 +564,8 @@ int mchfMain(void)
     for(;;)
     {
         // UI events processing
+    	// SEGGER_RTT_WriteString(0, "OVI40 mchfMain(): event loop\r\n"); //grg
+     	SEGGER_RTT_printf(0, "mchfMain(): eventloop counter: %u.\r\n", loopcnt++);
         UiDriver_TaskHandler_MainTasks();
     }
     return 0;

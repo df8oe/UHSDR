@@ -129,3 +129,6 @@ drivers/audio/freedv_test_data.c \
 drivers/audio/rtty.c \
 drivers/audio/psk.c \
 drivers/ui/lcd/ui_lcd_layouts.c \
+drivers/segger/segger_rtt_printf.c \
+drivers/segger/segger_rtt.c \
+

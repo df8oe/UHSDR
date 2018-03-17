@@ -23,4 +23,6 @@ drivers/usb/device/class/composite \
 drivers/usb/device/class/AUDIO/Inc \
 drivers/usb/device/class/CDC/Inc \
 drivers/usb/app \
+drivers/segger/segger_rtt_conf.h \
+drivers/segger/segger_rtt.h \
 
