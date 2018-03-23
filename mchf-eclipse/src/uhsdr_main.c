@@ -526,7 +526,7 @@ int mchfMain(void)
     AudioDriver_Init();
 
     UiDriver_StartupScreen_LogIfProblem(ts.codec_present == false,
-            "Audiocodec WM8371 NOT detected!");
+            "Audiocodec WM8731 NOT detected!");
 
     AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
     AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
