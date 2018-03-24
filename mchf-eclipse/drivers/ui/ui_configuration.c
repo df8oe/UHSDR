@@ -32,6 +32,7 @@
 // If more EEPROM variables are added, make sure that you add to this table - and the index to it in "eeprom.h"
 // and correct MAX_VAR_ADDR in uhsdr_board.h
 
+static uint16_t dummy_val16; // we need this to be able to read config values without modifying anything
 
 #define UI_C_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) { ConfigEntry_UInt8, EEPROM_BAND##bandNo##_5W,&ts.pwr_adj[ADJ_5W][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX },
 #define UI_C_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) { ConfigEntry_UInt8, EEPROM_BAND##bandNo##_FULL,&ts.pwr_adj[ADJ_FULL_POWER][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX },
@@ -240,6 +241,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
 	{ ConfigEntry_Int32, EEPROM_TScal3_High,&mchf_touchscreen.cal[3], -1,-2147483648,2147483647},
 	{ ConfigEntry_Int32, EEPROM_TScal4_High,&mchf_touchscreen.cal[4], 74886,-2147483648,2147483647},
 	{ ConfigEntry_Int32, EEPROM_TScal5_High,&mchf_touchscreen.cal[5], -1630326,-2147483648,2147483647},
+	{ ConfigEntry_UInt16, EEPROM_NUMBER_OF_ENTRIES,&dummy_val16,EEPROM_FIRST_UNUSED,EEPROM_FIRST_UNUSED,EEPROM_FIRST_UNUSED},
     // the entry below MUST be the last entry, and only at the last position Stop is allowed
     {
         ConfigEntry_Stop
@@ -584,7 +586,7 @@ void UiConfiguration_UpdateMacroCap(void)
 
 	for (int i = 0; i < KEYER_BUTTONS; i++)
 	{
-		if (ts.keyer_mode.macro[i] != '\0')
+		if (*ts.keyer_mode.macro[i] != '\0')
 		{
 			// Make button label from start of the macro
 			pmacro = (uint8_t *)ts.keyer_mode.macro[i];
@@ -620,10 +622,9 @@ void UiConfiguration_LoadEepromValues(void)
     uint16_t value16;
     uint32_t value32;
 
-    // Do a sample reads to "prime the pump" before we start...
-    // This is to make the function work reliabily after boot-up
-    UiReadSettingEEPROM_UInt16(EEPROM_ZERO_LOC_UNRELIABLE,&value16,0,0,0xffff);
-    // Let's use location zero - which may not work reliably, anyway!
+    // Do a sample read to "prime the pump" before we start...
+    UiReadSettingEEPROM_UInt16(EEPROM_ZERO_LOC,&value16,0,0,0xffff);
+
 
     UiReadSettingEEPROM_UInt16(EEPROM_FLAGS2,&ts.flags2,0,0,255);
     // ------------------------------------------------------------------------------------

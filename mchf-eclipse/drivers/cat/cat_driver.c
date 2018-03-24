@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include "audio_driver.h"
 #include "radio_management.h"
+#include "config_storage.h"
 
 uint8_t limit_4bits(uint32_t in)
 {
@@ -718,7 +719,9 @@ typedef enum
     FT817_READ_TX_STATE = 0xbd,
     FT817_READ_RX_STATE = 0xe7,
     FT817_PTT_STATE     = 0xf7,
-    FT817_NOOP          = 0xff
+    FT817_NOOP          = 0xff,
+
+    UHSDR_ID            = 0x42, // this command is not known to the FT817 so we can use this to identify a UHSDR
 } Ft817_CatCmd_t;
 
 struct FT817 ft817;
@@ -1215,6 +1218,12 @@ static void CatDriver_HandleCommands()
                 CatDriver_Ft817_EEPROM_Read(ee_addr+1,&resp[1]);
                 bc = 2;
             }
+            // we now check if we are supposed to return config values
+            else if (ee_addr > 0x7FFF)
+            {
+                ConfigStorage_ReadVariable(ee_addr & 0x7FFF, (uint16_t*)&resp[0]);
+                bc = 2;
+            }
             else
             {
                 bc = 1;
@@ -1265,10 +1274,22 @@ static void CatDriver_HandleCommands()
             }
             bc = 1;
             break;
-        case 255: /* FF sent out by HRD */
+        case FT817_NOOP: /* FF sent out by HRD */
             break;
             // default:
             // while (1);
+
+        case UHSDR_ID: /* used to identify the UHSDR EXTEND CAT SUPPORT */
+            resp[0] = 'U';
+            resp[1] = 'H';
+            resp[2] = 'S';
+            resp[3] = 'D';
+            resp[4] = 'R';
+            bc = 5;
+            break;
+            // default:
+            // while (1);
+
         }
         CatDriver_InterfaceBufferPutData(resp,bc);
         /* Return data back */
