@@ -1,13 +1,8 @@
 from __future__ import print_function
-
-
-#comPort="COM15"
-#comPort="/dev/ttyACM0"
-comPort = ""
-
 import serial
 import sys
 import json
+import os
 
 # we list all used cat command codes here
 # this list includes the officially known FT817 codes (including the "undocumented" ones)
@@ -102,32 +97,65 @@ class UhsdrConfig():
         return self.catObj.readUHSDRConfig(index)
 
 
-if __name__ == "__main__":   
-    if (len(comPort) > 0):
+
+
+
+if __name__ == "__main__":
+
+    from datetime import datetime
+    if "idlelib" in sys.modules:
+        eprint("Running in IDLE GUI, please set parameters directly in script, search for #change ")
+        #change parameters here
+        sys.argv = [sys.argv[0],'--port','15','-b']
+        #no more changes below
+        
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-b","--backup", help="save the configuration in file", action="store_true")
+    parser.add_argument("-r","--restore", help="restore the configuration from file", action="store_true")
+    parser.add_argument("-p","--port", help="UHSDR serial port (COM<num> in Windows, Linux /dev/ttyACM<num>)", type=int, default=-1)
+    parser.add_argument("-f","--file", help="filename to store/restore from", type=str, default="uhsdr_config.json")
+
+    args = parser.parse_args()
+
+    if args.port == -1:
+        import serial.tools.list_ports; print([ name + device  for port,name,device in serial.tools.list_ports.comports()])
+        eprint("please specify valid UHSDR TRX com port number with -p / --port")
+    
+    else:
+            
+        comPort= ("COM" if os.name == "nt" else "/dev/ttyACM") + str(args.port) 
+        
         mySer = serial.Serial(comPort, 38400, timeout=0.500, parity=serial.PARITY_NONE)
         myCom = catSerial(mySer)
         myCAT = catCommands(myCom)
         myUHSDR = UhsdrConfig(myCAT)
 
         if myUHSDR.isUhsdrConnected():
-            print("UHSDR Firmware Version", myUHSDR.getVersion())
-            valList = []
-            data = {}
-            data['eeprom'] = []
-            numberOfValues = myUHSDR.getConfigValueCount()
-            for index in range(numberOfValues):
-                val = myUHSDR.getValue(index)
-                valList.append(val)
-                data['eeprom'].append({ 'addr' : index , 'value' : val })
-            #print(valList)
-                
-            if all(val is not False for val in valList) or len(valList) != 0:
-                with open('uhsdr_config.json', 'w') as outfile:  
-                    json.dump(data, outfile, indent=4)
-                    outfile.close()
-                    print("saved data to uhsdr_config.json file")
+            version = myUHSDR.getVersion()
+            print("Detected UHSDR Firmware Version", version)
+            if args.backup:
+                valList = []
+                data = {}
+                data['version'] = version
+                data['when'] = str(datetime.utcnow())
+                data['eeprom'] = []
+                numberOfValues = myUHSDR.getConfigValueCount()
+                for index in range(numberOfValues):
+                    val = myUHSDR.getValue(index)
+                    valList.append(val)
+                    data['eeprom'].append({ 'addr' : index , 'value' : val })
+                #print(valList)
+                    
+                if all(val is not False for val in valList) or len(valList) != 0:
+                    with open(args.file, 'w') as outfile:  
+                        json.dump(data, outfile, indent=4)
+                        outfile.close()
+                        print("saved data to " + args.file + " file")
+                else:
+                    eprint("Could not read list sucessfully")
             else:
-                eprint("Could not read list sucessfully")
+                eprint("Restore not yet implemented")
         else:   
             eprint("Could not find a connected UHSDR with extended CAT commands (required)")
             
@@ -135,8 +163,6 @@ if __name__ == "__main__":
         #print myCAT.readUHSDRConfig(512);
         #print myCAT.writeEEPROM(512,0xabcd);
         #print myCAT.writeUHSDRConfig(512,0xfedc);
-    else:
-        eprint("please specify UHSDR TRX com port at begin of file")
 
-
+        mySer.close()
 
