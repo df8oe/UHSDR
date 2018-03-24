@@ -156,7 +156,7 @@ void		UiConfiguration_UpdateMacroCap(void);
 //
 //
 
-#define EEPROM_ZERO_LOC_UNRELIABLE			0       // DO NOT USE LOCATION ZERO AS IT MAY BE UNRELIABLE!!!!
+#define EEPROM_ZERO_LOC			            0
 #define EEPROM_BAND_MODE					1
 #define EEPROM_FREQ_HIGH					2
 #define EEPROM_FREQ_LOW						3
@@ -585,8 +585,10 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_CW_DECODER_ENABLE				404
 #define EEPROM_Scope_Graticule_Ypos				405
 #define EEPROM_Freq_Display_Font				406
+#define EEPROM_NUMBER_OF_ENTRIES                407 // this is the index of the config value which holds the number of used config entries
+                                                    // , not the value itself (which is in fact EEPROM_FIRST_UNUSED)
 
-#define EEPROM_FIRST_UNUSED 				407		// change this if new value ids are introduced
+#define EEPROM_FIRST_UNUSED 				408		// change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
