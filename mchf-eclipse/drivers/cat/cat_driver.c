@@ -1241,6 +1241,12 @@ static void CatDriver_HandleCommands()
                 CatDriver_Ft817_EEPROM_Write(ee_addr,&ft817.req[2]);
                 CatDriver_Ft817_EEPROM_Write(ee_addr+1,&ft817.req[3]);
             }
+            else if (ee_addr > 0x7FFF)
+            {
+                uint16_t ee_value16 = (ft817.req[3] << 8) | ft817.req[2];
+                ConfigStorage_WriteVariable(ee_addr & 0x7FFF, ee_value16);
+            }
+
             break;
         }
         case FT817_READ_TX_STATE:

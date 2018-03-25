@@ -177,7 +177,8 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_TX_IQ_80M_PHASE_BALANCE		18      // TX phase balance
 #define EEPROM_RX_IQ_80M_GAIN_BALANCE		19
 #define EEPROM_RX_IQ_80M_PHASE_BALANCE		20
-//
+
+#if 0 /* config value locations below are no longer in use since 2.5.18 */
 #define EEPROM_BAND0_MODE					21      // Band/mode/filter memory per-band - bands indexed from here
 #define EEPROM_BAND1_MODE					22
 #define EEPROM_BAND2_MODE					23
@@ -236,6 +237,8 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_BAND15_FREQ_LOW				72
 #define EEPROM_BAND16_FREQ_LOW				73
 #define EEPROM_BAND17_FREQ_LOW				74      // "Floating" General coverage band
+
+#endif
 //
 //
 #define EEPROM_FREQ_CAL						75      // Frequency calibration
