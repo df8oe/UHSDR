@@ -169,7 +169,6 @@ typedef enum
     SPECTRUM_DUAL = 3
 } SpectrumMode_t;
 
-
 //
 // --------------------------------------------------------------------------
 // Exports
@@ -234,6 +233,7 @@ void UiAction_ChangeRfModPresence();
 void UiAction_ChangeVhfUhfModPresence();
 void UiAction_ChangeFrequencyByTouch();
 void Codec_RestartI2S();
+void UiAction_DSPVirtualKeys();
 
 //
 // Items that are timed using ts.sysclock (operates at 100 Hz)

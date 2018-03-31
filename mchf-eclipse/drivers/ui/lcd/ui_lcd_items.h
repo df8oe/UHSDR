@@ -131,6 +131,10 @@ typedef struct {
 	uint16_t MENU_CURSOR_X;     // Position of cursor used to indicate selected item
 	uint8_t MENU_TEXT_SIZE_MAX;	// One line maximum length
 
+	uint8_t VbtnHeight;			//virtual button X size
+	uint8_t VbtnWidth;			//virtual button Y size
+	uint8_t VbtnSpacing;		//gap between buttons in pixels
+
 	const touchaction_list_descr_t* touchaction_list;
 } LcdLayout;
 
