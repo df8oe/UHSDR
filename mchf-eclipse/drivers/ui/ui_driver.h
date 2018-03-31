@@ -233,7 +233,9 @@ void UiAction_ChangeRfModPresence();
 void UiAction_ChangeVhfUhfModPresence();
 void UiAction_ChangeFrequencyByTouch();
 void Codec_RestartI2S();
-void UiAction_DSPVirtualKeys();
+uint32_t UiDriver_GetActiveDSPFunctions();
+void UiDriver_UpdateDSPmode();
+bool UiDriver_CheckTouchRegion(const UiArea_t* tr_p);
 
 //
 // Items that are timed using ts.sysclock (operates at 100 Hz)

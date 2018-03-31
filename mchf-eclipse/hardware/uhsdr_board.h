@@ -180,33 +180,7 @@
 #include "dac.h"
 
 #include "uhsdr_board_config.h"
-
-//virtual keypad structures
-typedef uint8_t (*VKeyStateFunc)(uint8_t KeyNum);
-typedef void (*TouchFunc)(uint8_t KeyNum);
-
-typedef struct
-{
-	char KeyText[16];
-	uint8_t SizeX;	//multiply of normal key size, 0=normal size defined by layout VbtnHeight and VbtnWidth
-	uint8_t SizeY;
-	uint8_t KeyWarning;	//1= this key will be marked with warning
-	uint16_t TextColor;	//Color Of Key Text when key is not pressed
-	uint16_t PressedTextColor;	//Color Of Key Text when key is pressed
-	TouchFunc ShortFnc;		//called function for short press
-	TouchFunc LongFnc;		//called function for short press
-} VKey;
-
-
-typedef struct
-{
-	uint8_t NumberOfKeys;
-	uint8_t Rows;
-	uint8_t Columns;
-	const VKey* Keys;
-	uint8_t VKeyGroupMode;	//type of key press: see Vkey_Group_
-	VKeyStateFunc VKeyStateCallBack;
-} VKeypad;
+#include "ui_vkeybrd.h"
 
 // Buttons map structure
 typedef struct ButtonMap
