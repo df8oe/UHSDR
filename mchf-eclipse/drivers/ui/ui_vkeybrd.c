@@ -54,28 +54,34 @@ static void UiVk_DrawButton(uint16_t Xpos, uint16_t Ypos, bool Warning, uint8_t 
 	UiLcdHy28_PrintTextCentered(Xpos+2,Ypos+8,ts.Layout->VbtnWidth-4,txt,col_Text,col_Bcgr,0);
 }
 
+static void UiVk_GetKeybArea(UiArea_t* KeybArea)
+{
+	KeybArea->w=ts.VirtualKeyPad->Columns*(ts.Layout->VbtnWidth)+
+			(ts.VirtualKeyPad->Columns-1)*ts.Layout->VbtnSpacing;
+	KeybArea->h=ts.VirtualKeyPad->Rows*(ts.Layout->VbtnHeight)+
+			(ts.VirtualKeyPad->Rows-1)*ts.Layout->VbtnSpacing;
+
+	KeybArea->x=sd.Slayout->full.x+sd.Slayout->full.w/2-KeybArea->w/2;
+	KeybArea->y=sd.Slayout->full.y+sd.Slayout->full.h/2-KeybArea->h/2;
+}
+
 static void UiVk_GetButtonRgn(uint8_t Key, UiArea_t *bp)
 {
 	int row, col;
 	row=Key/ts.VirtualKeyPad->Columns;
 	col=Key-row*ts.VirtualKeyPad->Columns;
+	UiArea_t KeybArea;
+	UiVk_GetKeybArea(&KeybArea);
 
-	int16_t KeyPadWidth=ts.VirtualKeyPad->Columns*(ts.Layout->VbtnWidth)+
-			(ts.VirtualKeyPad->Columns-1)*ts.Layout->VbtnSpacing;
-	int16_t KeyPadHeight=ts.VirtualKeyPad->Columns*(ts.Layout->VbtnHeight)+
-			(ts.VirtualKeyPad->Rows-1)*ts.Layout->VbtnSpacing;
-
-	int16_t KeyStartX=sd.Slayout->full.x+sd.Slayout->full.w/2-KeyPadWidth/2;
-	int16_t KeyStartY=sd.Slayout->full.y+sd.Slayout->full.h/2-KeyPadHeight/2;
-
-	bp->x=KeyStartX+col*(ts.Layout->VbtnWidth+ts.Layout->VbtnSpacing);
-	bp->y=KeyStartY+row*(ts.Layout->VbtnHeight+ts.Layout->VbtnSpacing);
+	bp->x=KeybArea.x+col*(ts.Layout->VbtnWidth+ts.Layout->VbtnSpacing);
+	bp->y=KeybArea.y+row*(ts.Layout->VbtnHeight+ts.Layout->VbtnSpacing);
 	bp->w=ts.Layout->VbtnWidth;
 	bp->h=ts.Layout->VbtnHeight;
 }
 
-static void UiVk_DrawVKeypad(const VKeypad* VKpad)
+static void UiVk_DrawVKeypad()
 {
+	const VKeypad* VKpad=ts.VirtualKeyPad;
 	int row, col, keycnt=0;
 	UiArea_t b_area;
 	for(row=0;row<VKpad->Rows;row++)
@@ -112,6 +118,29 @@ bool UiVk_Process_VirtualKeypad(bool is_long_press)
 	}
 
 	return TouchProcessed;
+}
+
+
+static void UiVk_DrawBackGround()
+{
+	UiArea_t Ka;//drawing the background
+	UiVk_GetKeybArea(&Ka);
+
+	Ka.x-=2;
+	Ka.y-=2;
+	Ka.w+=4;
+	Ka.h+=4;
+	uint16_t col_LeftUP=Col_BtnLightLeftTop;
+	uint16_t col_RightBot=Col_BtnLightRightBot;
+	uint16_t col_Bcgr=Col_BtnForeCol;
+
+	UiLcdHy28_DrawFullRect(Ka.x+1,Ka.y+1,Ka.h-2,Ka.w-2,col_Bcgr);
+
+	UiLcdHy28_DrawStraightLine(Ka.x,Ka.y,Ka.h,LCD_DIR_VERTICAL,col_LeftUP);
+	UiLcdHy28_DrawStraightLine(Ka.x+1,Ka.y,Ka.w-1,LCD_DIR_HORIZONTAL,col_LeftUP);
+	UiLcdHy28_DrawStraightLine(Ka.x+Ka.w,Ka.y+1,Ka.h-1,LCD_DIR_VERTICAL,col_RightBot);
+	UiLcdHy28_DrawStraightLine(Ka.x+1,Ka.y+Ka.h,Ka.w-1,LCD_DIR_HORIZONTAL,col_RightBot);
+
 }
 
 //End of main body of virtual keyboard
@@ -226,7 +255,7 @@ void UiVk_RedrawDSPVirtualKeys()
 		if(prev_dsp_functions_active!=dsp_functions_active)
 		{
 			prev_dsp_functions_active=dsp_functions_active;
-			UiVk_DrawVKeypad(&Keypad_DSP);
+			UiVk_DrawVKeypad();
 		}
 	}
 }
@@ -244,6 +273,7 @@ void UiVk_DSPVirtualKeys()
 		prev_dsp_functions_active=-1;
 		ts.VirtualKeysShown_flag=true;
 		UiSpectrum_Clear();
+		UiVk_DrawBackGround();
 		UiVk_RedrawDSPVirtualKeys();
 	}
 }
