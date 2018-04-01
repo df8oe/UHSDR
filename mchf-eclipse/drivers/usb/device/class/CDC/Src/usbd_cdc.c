@@ -651,7 +651,8 @@ static uint8_t  USBD_CDC_Setup (USBD_HandleTypeDef *pdev,
     case USB_REQ_SET_INTERFACE :
       break;
     }
- 
+    break;
+
   default: 
     break;
   }
