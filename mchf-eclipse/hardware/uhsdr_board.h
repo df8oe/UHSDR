@@ -590,7 +590,8 @@ keyer_mode_t;
 struct vfo_reg_s
 {
     uint32_t dial_value;
-    uint32_t decod_mode;
+    uint8_t  decod_mode;
+    uint8_t  digital_mode;
 //    uint32_t filter_mode;
 };
 

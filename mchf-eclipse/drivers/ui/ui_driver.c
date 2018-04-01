@@ -1107,7 +1107,7 @@ void UiDriver_DisplaySplitFreqLabels()
 void UiAction_CopyVfoAB()
 {
 	// not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
-	__IO VfoReg* vfo_store;
+	VfoReg* vfo_store;
 	if(is_vfo_b())      // are we in VFO B mode?
 	{
 		vfo_store = &vfo[VFO_A].band[ts.band];
@@ -1117,7 +1117,8 @@ void UiAction_CopyVfoAB()
 		vfo_store = &vfo[VFO_B].band[ts.band];
 	}
 	vfo_store->dial_value = df.tune_new;
-	vfo_store->decod_mode = ts.dmod_mode;                   // copy active VFO (A) settings into B
+	vfo_store->decod_mode = ts.dmod_mode;                   // copy active VFO settings into other VFO
+	vfo_store->digital_mode = ts.digital_mode;
 
 	UiDriver_FrequencyUpdateLOandDisplay(true);
 
@@ -2182,8 +2183,11 @@ static void UiDriver_InitFrequency()
 	{
 		vfo[VFO_A].band[i].dial_value = 0xFFFFFFFF;	// clear dial values
 		vfo[VFO_A].band[i].decod_mode = DEMOD_USB; 	// clear decode mode
+        vfo[VFO_A].band[i].decod_mode = DigitalMode_FreeDV;   // clear decode mode
 		vfo[VFO_B].band[i].dial_value = 0xFFFFFFFF;  // clear dial values
 		vfo[VFO_B].band[i].decod_mode = DEMOD_USB;   // clear decode mode
+        vfo[VFO_B].band[i].decod_mode = DigitalMode_FreeDV;   // clear decode mode
+
 	}
 
 	// Lower bands default to LSB mode
@@ -3059,6 +3063,7 @@ static void UiDriver_ChangeBand(uchar is_up)
 			// Save dial
 			vfo[vfo_sel].band[curr_band_index].dial_value = df.tune_old;
 			vfo[vfo_sel].band[curr_band_index].decod_mode = ts.dmod_mode;
+			vfo[vfo_sel].band[curr_band_index].digital_mode = ts.digital_mode;
 		}
 		else
 		{
@@ -3144,12 +3149,17 @@ static void UiDriver_ChangeBand(uchar is_up)
 		bool new_lsb = RadioManagement_CalculateCWSidebandMode();
 
 		uint16_t new_dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
+		uint16_t new_digital_mode = vfo[vfo_sel].band[new_band_index].digital_mode;
+
+		bool isNewDigitalMode = ts.digital_mode != new_digital_mode && new_dmod_mode == DEMOD_DIGI;
+
 
 		// we need to mute here since changing bands may cause audible click/pops
 		RadioManagement_MuteTemporarilyRxAudio();
 
+		ts.digital_mode = new_digital_mode;
 
-		if(ts.dmod_mode != new_dmod_mode || (new_dmod_mode == DEMOD_CW && ts.cw_lsb != new_lsb))
+		if(ts.dmod_mode != new_dmod_mode || (new_dmod_mode == DEMOD_CW && ts.cw_lsb != new_lsb) || isNewDigitalMode)
 		{
 			// Update mode
 			ts.cw_lsb = new_lsb;

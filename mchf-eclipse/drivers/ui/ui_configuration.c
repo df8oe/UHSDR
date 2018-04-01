@@ -45,8 +45,12 @@ static uint16_t dummy_val16; // we need this to be able to read config values wi
 // It is also important to use the matching typeId otherwise data will not be (re)store in a number of cases
 // Some configuration values are currently not in this structure since saving them is more complex. See LoadEeprom/SaveEeprom functions.
 
+static uint16_t dummy_value16;
+
 const ConfigEntryDescriptor ConfigEntryInfo[] =
 {
+    { ConfigEntry_UInt16, EEPROM_ZERO_LOC,&dummy_value16,0,0,0xffff},
+    { ConfigEntry_UInt16, EEPROM_FLAGS2,&ts.flags2,0,0,0xff},
     { ConfigEntry_UInt8, EEPROM_SPEC_SCOPE_SPEED,&ts.scope_speed,SPECTRUM_SCOPE_SPEED_DEFAULT,0,SPECTRUM_SCOPE_SPEED_MAX},
     { ConfigEntry_UInt32_16, EEPROM_FREQ_STEP,&df.selected_idx,3,0,T_STEP_MAX_STEPS-2},
     { ConfigEntry_UInt8, EEPROM_TX_AUDIO_SRC,&ts.tx_audio_source,0,0,TX_AUDIO_MAX_ITEMS},
@@ -292,6 +296,26 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8(uint16_t addr, 
     }
 }
 
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8x2(uint16_t addr, volatile uint16_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val )
+{
+    uint16_t value;
+    if(ConfigStorage_ReadVariable(addr, &value) == 0)
+    {
+        *val_ptr = value;
+
+        if ( (((*val_ptr >> 8) && 0xff)  < ((min_val >> 8) && 0xff)) || (((*val_ptr >> 8) && 0xff)  > ((max_val >> 8) && 0xff)) || ts.load_eeprom_defaults)
+        {
+            *val_ptr = (*val_ptr & 0xff) | (default_val & 0xff00);
+        }
+
+        if ( ((*val_ptr && 0xff)  < (min_val && 0xff)) || ((*val_ptr && 0xff)  > (max_val && 0xff)) || ts.load_eeprom_defaults)
+        {
+            *val_ptr = (*val_ptr & 0xff00) | (default_val & 0x00ff);
+        }
+    }
+}
+
+
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt16(uint16_t addr, volatile uint16_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val )
 {
     uint16_t value;
@@ -362,17 +386,23 @@ static void UiReadSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, volatile 
     }
 }
 
-static uint16_t __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val, uint16_t default_val )
+static uint16_t UiWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val)
 {
     return ConfigStorage_WriteVariable(addr, set_val);
 }
 
-static uint16_t __attribute__ ((noinline)) UiWriteSettingEEPROM_Int16(uint16_t addr, int16_t set_val, int16_t default_val )
+static uint16_t UiWriteSettingEEPROM_UInt8x2(uint16_t addr, uint16_t set_val)
+{
+    return ConfigStorage_WriteVariable(addr, set_val);
+}
+
+
+static uint16_t UiWriteSettingEEPROM_Int16(uint16_t addr, int16_t set_val)
 {
     return ConfigStorage_WriteVariable(addr, (uint16_t)set_val);
 }
 
-static uint16_t __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint32_t set_val, uint32_t default_val )
+static uint16_t UiWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint32_t set_val)
 {
     uint16_t retval = ConfigStorage_WriteVariable(addrH, (uint16_t)(set_val >> 16));
 
@@ -383,44 +413,47 @@ static uint16_t __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32(uint16_t 
     return retval;
 }
 
-void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low,__IO VfoReg* vforeg)
+static uint32_t UiConfiguration_LimitFrequency(const BandInfo* bandInfo, const uint32_t freq)
 {
-    uint32_t value32;
-    uint16_t value16;
+    uint32_t retval = freq;
 
-    UiReadSettingEEPROM_UInt16(band_mode + i,&value16,0,0,0xffff);
+    if(ts.load_eeprom_defaults || ts.load_freq_mode_defaults)
     {
-        // Note that ts.band will, by definition, be equal to index "i"
-        vforeg->decod_mode = (value16 >> 8) & 0x0F;     // demodulator mode might not be right for saved band!
-        if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)       // valid mode value from EEPROM? or defaults loaded?
-            vforeg->decod_mode = DEMOD_LSB;         // no - set to LSB
-        //
+        // Load default for this band
+        retval = bandInfo->tune + DEFAULT_FREQ_OFFSET;
     }
-
-    // Try to read Freq saved values
-    UiReadSettingEEPROM_UInt32(band_freq_high + i, band_freq_low + i,&value32,bandInfo[i].tune + DEFAULT_FREQ_OFFSET,0,0xffffffff);
+    else
     {
-        //
-        // We have loaded from eeprom the last used band, but can't just
-        // load saved frequency, as it could be out of band, so do a
-        // boundary check first (also check to see if defaults should be loaded)
-        //
-        if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= bandInfo[i].tune) && (value32 <= (bandInfo[i].tune + bandInfo[i].size)))
+        if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) || RadioManagement_FreqIsInBand(bandInfo,freq))       // xxxx relax memory-save frequency restrictions and is it within the allowed range?
         {
-            vforeg->dial_value = value32;
-        }
-        else if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))
-        {
-            // xxxx relax memory-save frequency restrictions and is it within the allowed range?
-            vforeg->dial_value = value32;
+            retval = freq;
         }
         else
         {
             // Load default for this band
-            vforeg->dial_value = bandInfo[i].tune + DEFAULT_FREQ_OFFSET;
+            retval = bandInfo->tune + DEFAULT_FREQ_OFFSET;
         }
     }
+    return retval;
+}
 
+void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low, VfoReg* vforeg)
+{
+    uint32_t value32;
+    uint16_t value16;
+
+    UiReadSettingEEPROM_UInt8x2(band_mode + i, &value16, (DEMOD_LSB << 8) | (DigitalMode_RTTY), 0 ,(DEMOD_MAX_MODE << 8)| (DigitalMode_Num_Modes-1));
+
+    vforeg->decod_mode = (value16 >> 8) & 0xFF;     // demodulator mode might not be right for saved band!
+    vforeg->digital_mode = value16 & 0xFF;
+
+    // Try to read Freq saved values
+    UiReadSettingEEPROM_UInt32(band_freq_high + i, band_freq_low + i,&value32,bandInfo[i].tune + DEFAULT_FREQ_OFFSET,0,0xffffffff);
+    {
+        // We make sure to read only frequency which are permitted for band in given
+        // configuration.
+        vforeg->dial_value = UiConfiguration_LimitFrequency(&bandInfo[i],value32);
+    }
 }
 
 /*
@@ -429,34 +462,49 @@ static void __attribute__ ((noinline)) UiWriteSettingEEPROM_Bool(uint16_t addr, 
 }
 */
 
-static uint16_t __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32_16(uint16_t addr, uint32_t set_val, uint16_t default_val )
+static uint16_t __attribute__ ((noinline)) UiWriteSettingEEPROM_UInt32_16(uint16_t addr, uint32_t set_val)
 {
-    return UiWriteSettingEEPROM_UInt16(addr,set_val,default_val);
+    return UiWriteSettingEEPROM_UInt16(addr,set_val);
 }
 
-static uint16_t __attribute__ ((noinline)) UiWriteSettingEEPROM_Int32_16(uint16_t addr, int32_t set_val, int32_t default_val )
+static uint16_t __attribute__ ((noinline)) UiWriteSettingEEPROM_Int32_16(uint16_t addr, int32_t set_val)
 {
-    return UiWriteSettingEEPROM_UInt16(addr,(uint16_t)(int16_t)set_val,default_val);
+    return UiWriteSettingEEPROM_UInt16(addr,(uint16_t)(int16_t)set_val);
 }
 
 
-static uint16_t UiWriteSettingsBandMode(const uint16_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low, __IO VfoReg* vforeg)
+static uint16_t UiWriteSettingsBandMode(const uint16_t i,const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t band_freq_low, VfoReg* vforeg)
 {
 
     // ------------------------------------------------------------------------------------
     // Read Band and Mode saved values - update if changed
-    uint16_t retval = UiWriteSettingEEPROM_UInt16(band_mode + i,
-                                (vforeg->decod_mode << 8),
-                                ((vforeg->decod_mode & 0x0f) << 8)
-                               );
+    uint16_t value = (vforeg->decod_mode << 8) | (vforeg->digital_mode);
+    uint16_t retval = UiWriteSettingEEPROM_UInt8x2(band_mode + i, value);
+
     // Try to read Freq saved values - update if changed
     if (retval == HAL_OK)
     {
-        retval = UiWriteSettingEEPROM_UInt32(band_freq_high+i,band_freq_low+i, vforeg->dial_value, vforeg->dial_value);
+        retval = UiWriteSettingEEPROM_UInt32(band_freq_high+i,band_freq_low+i, vforeg->dial_value);
     }
 
     return retval;
 }
+
+#if 0
+static uint16_t UiWriteSettingEEPROM_UInt16_Array_2_Dim(uint16_t* array_ptr, const uint16_t base_idx, const size_t dim1, const size_t dim2)
+{
+    uint16_t retval = HAL_OK;
+
+    for (uint16_t idx1 = 0; retval == HAL_OK && idx1 < dim1; idx1++)
+    {
+        for (uint16_t idx2 = 0; retval == HAL_OK && idx2 < dim2; idx2++)
+        {
+            retval = UiWriteSettingEEPROM_UInt16(base_idx+(idx1*dim2)+idx2, array_ptr+(idx1*dim2)+idx2);
+        }
+    }
+    return retval;
+}
+#endif
 
 static uint16_t UiWriteSettingEEPROM_Filter()
 {
@@ -466,7 +514,7 @@ static uint16_t UiWriteSettingEEPROM_Filter()
     {
         for (uint16_t mem_idx = 0; retval == HAL_OK && mem_idx < FILTER_PATH_MEM_MAX; mem_idx++)
         {
-            retval = UiWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,ts.filter_path_mem[idx][mem_idx],0);
+            retval = UiWriteSettingEEPROM_UInt16(EEPROM_FILTER_PATH_MAP_BASE+idx*FILTER_PATH_MEM_MAX+mem_idx,ts.filter_path_mem[idx][mem_idx]);
         }
     }
     return retval;
@@ -527,19 +575,19 @@ uint16_t UiConfiguration_WriteConfigEntryData(const ConfigEntryDescriptor* ced_p
     {
 
     case ConfigEntry_UInt8:
-        retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id,*(uint8_t*)ced_ptr->val_ptr,ced_ptr->val_default);
+        retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id,*(uint8_t*)ced_ptr->val_ptr);
         break;
     case ConfigEntry_UInt16:
-        retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id,*(uint16_t*)ced_ptr->val_ptr,ced_ptr->val_default);
+        retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id,*(uint16_t*)ced_ptr->val_ptr);
         break;
     case ConfigEntry_UInt32_16:
-        retval = UiWriteSettingEEPROM_UInt32_16(ced_ptr->id,*(uint32_t*)ced_ptr->val_ptr,ced_ptr->val_default);
+        retval = UiWriteSettingEEPROM_UInt32_16(ced_ptr->id,*(uint32_t*)ced_ptr->val_ptr);
         break;
     case ConfigEntry_Int32_16:
-        retval = UiWriteSettingEEPROM_Int32_16(ced_ptr->id,*(int32_t*)ced_ptr->val_ptr,ced_ptr->val_default);
+        retval = UiWriteSettingEEPROM_Int32_16(ced_ptr->id,*(int32_t*)ced_ptr->val_ptr);
         break;
     case ConfigEntry_Int16:
-        retval = UiWriteSettingEEPROM_Int16(ced_ptr->id,*(int16_t*)ced_ptr->val_ptr,ced_ptr->val_default);
+        retval = UiWriteSettingEEPROM_Int16(ced_ptr->id,*(int16_t*)ced_ptr->val_ptr);
         break;
     case ConfigEntry_Int32:
     {
@@ -548,8 +596,8 @@ uint16_t UiConfiguration_WriteConfigEntryData(const ConfigEntryDescriptor* ced_p
     	DataHi=(uint16_t)((Data>>16)&0xffff);
     	DataLo=(uint16_t)(Data&0xffff);
 
-        retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id,DataHi,ced_ptr->val_default);
-        retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id+1,DataLo,ced_ptr->val_default);
+        retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id,DataHi);
+        retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id+1,DataLo);
     }
     	break;
 //  case ConfigEntry_Bool:
@@ -581,16 +629,13 @@ static void __attribute__ ((noinline)) UiConfiguration_ReadConfigEntries()
 
 void UiConfiguration_UpdateMacroCap(void)
 {
-	int c;
-	uint8_t* pmacro;
-
 	for (int i = 0; i < KEYER_BUTTONS; i++)
 	{
 		if (*ts.keyer_mode.macro[i] != '\0')
 		{
 			// Make button label from start of the macro
-			pmacro = (uint8_t *)ts.keyer_mode.macro[i];
-			c = 0;
+		    uint8_t* pmacro = (uint8_t *)ts.keyer_mode.macro[i];
+			int c = 0;
 			while(*pmacro != ' ' && *pmacro != '\0' && c < KEYER_CAP_LEN)
 			{
 				ts.keyer_mode.cap[i][c++] = *pmacro++;
@@ -601,7 +646,6 @@ void UiConfiguration_UpdateMacroCap(void)
 		{
 			strcpy((char *) ts.keyer_mode.cap[i], "BTN");
 		}
-
 	}
 }
 
@@ -622,22 +666,18 @@ void UiConfiguration_LoadEepromValues(void)
     uint16_t value16;
     uint32_t value32;
 
-    // Do a sample read to "prime the pump" before we start...
-    UiReadSettingEEPROM_UInt16(EEPROM_ZERO_LOC,&value16,0,0,0xffff);
+    UiConfiguration_ReadConfigEntries();
 
-
-    UiReadSettingEEPROM_UInt16(EEPROM_FLAGS2,&ts.flags2,0,0,255);
     // ------------------------------------------------------------------------------------
     // Try to read Band and Mode saved values, but read freq-limit-settings before
-    UiReadSettingEEPROM_UInt16(EEPROM_BAND_MODE,&value16,0,0,0xffff);
+    UiReadSettingEEPROM_UInt8x2(EEPROM_BAND_MODE,&value16,(DEMOD_LSB<< 8) | (BAND_MODE_80),0, (DEMOD_MAX_MODE<< 8) | (MAX_BANDS -1));
     {
-        ts.band = value16 & 0x00FF;
-        if(ts.band > MAX_BANDS-1)           // did we get an insane value from EEPROM?
-            ts.band = BAND_MODE_80;     //  yes - set to 80 meters
-        //
-        ts.dmod_mode = (value16 >> 8) & 0x0F;       // demodulator mode might not be right for saved band!
-        if((ts.dmod_mode > DEMOD_MAX_MODE)  || ts.load_eeprom_defaults || ts.load_freq_mode_defaults)       // valid mode value from EEPROM? or defaults loaded?
-            ts.dmod_mode = DEMOD_LSB;           // no - set to LSB
+        ts.band = value16 & 0xFF;
+        ts.dmod_mode = (value16 >> 8) & 0xFF;       // demodulator mode might not be right for saved band!
+        if(ts.load_freq_mode_defaults)       // freq defaults to be loaded?
+        {
+            ts.dmod_mode = DEMOD_LSB;           // yes - set to LSB
+        }
 
     }
     // ------------------------------------------------------------------------------------
@@ -648,19 +688,7 @@ void UiConfiguration_LoadEepromValues(void)
         // We have loaded from eeprom the last used band, but can't just
         // load saved frequency, as it could be out of band, so do a
         // boundary check first (also check to see if defaults should be loaded)
-        if((!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults) && (value32 >= bandInfo[ts.band].tune) && (value32 <= (bandInfo[ts.band].tune + bandInfo[ts.band].size)))
-        {
-            df.tune_new = value32;
-        }
-        else if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) && (!ts.load_eeprom_defaults) && (!ts.load_freq_mode_defaults))       // xxxx relax memory-save frequency restrictions and is it within the allowed range?
-        {
-            df.tune_new = value32;
-        }
-        else
-        {
-            // Load default for this band
-            df.tune_new = bandInfo[ts.band].tune;
-        }
+        df.tune_new = UiConfiguration_LimitFrequency(&bandInfo[ts.band], value32);
     }
     // Try to read saved per-band values for frequency, mode and filter
 
@@ -674,7 +702,6 @@ void UiConfiguration_LoadEepromValues(void)
         UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i]);
     }
 
-    UiConfiguration_ReadConfigEntries();
 
     UiReadSettingEEPROM_UInt32( EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,&ts.xverter_offset,0,0,XVERTER_OFFSET_MAX);
 
@@ -751,19 +778,15 @@ uint16_t UiConfiguration_SaveEepromValues(void)
             vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value = df.tune_new;
             // Save decode mode
             vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].decod_mode = dmod_mode;
-            // use the "real" demod mode, instead of the possibly changed one (FM gets USB during save)
-            // FIXME: Either we use demod_mode also here or we remove the special FM handling and use ts.dmod_mode everywehre
-            // FIXME: Right now it is inconsistent and should be left like this.
 
             // TODO: move value to a static variable, so that it can be read/written with standard approach
-            retval = UiWriteSettingEEPROM_UInt16(EEPROM_BAND_MODE,
-                                        (uint16_t)((uint16_t)ts.band| ((uint16_t)dmod_mode << 8)),
-                                        (uint16_t)((uint16_t)ts.band |((uint16_t)dmod_mode << 8)));
+            retval = UiWriteSettingEEPROM_UInt8x2(EEPROM_BAND_MODE,
+                                       ((uint16_t)ts.band| dmod_mode << 8));
 
             // TODO: move value to a static variable, so that it can be read/written with standard approach
             if (retval == HAL_OK)
             {
-                retval = UiWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new, df.tune_new);
+                retval = UiWriteSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW, df.tune_new);
             }
         }
         else
@@ -790,7 +813,7 @@ uint16_t UiConfiguration_SaveEepromValues(void)
 
         if (retval == HAL_OK)
         {
-            retval = UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset,0);
+            retval = UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset);
         }
 
         if (retval == HAL_OK)

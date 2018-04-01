@@ -1002,8 +1002,15 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
 
 }
 
+/**
+ * @param freq the frequency to check multiplied with TUNE_MULT
+ */
+bool RadioManagement_FreqIsInBand(const BandInfo* bandinfo, const uint32_t freq)
+{
+    return (freq >= bandinfo->tune) && (freq <= (bandinfo->tune + bandinfo->size));
+}
 
-uint8_t RadioManagement_GetBand(ulong freq)
+uint8_t RadioManagement_GetBand(uint32_t freq)
 {
     static uint8_t band_scan_old = 99;
     uchar   band_scan;
@@ -1021,7 +1028,7 @@ uint8_t RadioManagement_GetBand(ulong freq)
     {
         for(band_scan = 0; band_scan < MAX_BANDS; band_scan++)
         {
-            if((freq >= bandInfo[band_scan].tune) && (freq <= (bandInfo[band_scan].tune + bandInfo[band_scan].size)))   // Is this frequency within this band?
+            if(RadioManagement_FreqIsInBand(&bandInfo[band_scan],freq))   // Is this frequency within this band?
             {
                 break;  // yes - stop the scan
             }
@@ -1541,10 +1548,15 @@ void RadioManagement_ToggleVfoAB()
     }
     vfo[vfo_active].band[ts.band].dial_value = df.tune_old; //band_dial_value[ts.band];     // save "VFO B" settings
     vfo[vfo_active].band[ts.band].decod_mode = ts.dmod_mode;    //band_decod_mode[ts.band];
+    vfo[vfo_active].band[ts.band].digital_mode = ts.digital_mode;
 
     df.tune_new = vfo[vfo_new].band[ts.band].dial_value;
 
-    if(ts.dmod_mode != vfo[vfo_new].band[ts.band].decod_mode)
+    bool digitalModeDiffers = ts.digital_mode != vfo[vfo_new].band[ts.band].digital_mode;
+    bool newIsDigitalMode = vfo[vfo_new].band[ts.band].decod_mode == DEMOD_DIGI;
+    ts.digital_mode = vfo[vfo_new].band[ts.band].digital_mode;
+
+    if(ts.dmod_mode != vfo[vfo_new].band[ts.band].decod_mode || (newIsDigitalMode &&  digitalModeDiffers) )
     {
         RadioManagement_SetDemodMode(vfo[vfo_new].band[ts.band].decod_mode);
     }
