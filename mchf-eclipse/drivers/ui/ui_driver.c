@@ -2183,10 +2183,10 @@ static void UiDriver_InitFrequency()
 	{
 		vfo[VFO_A].band[i].dial_value = 0xFFFFFFFF;	// clear dial values
 		vfo[VFO_A].band[i].decod_mode = DEMOD_USB; 	// clear decode mode
-        vfo[VFO_A].band[i].decod_mode = DigitalMode_FreeDV;   // clear decode mode
+        vfo[VFO_A].band[i].decod_mode = DigitalMode_None;   // clear decode mode
 		vfo[VFO_B].band[i].dial_value = 0xFFFFFFFF;  // clear dial values
 		vfo[VFO_B].band[i].decod_mode = DEMOD_USB;   // clear decode mode
-        vfo[VFO_B].band[i].decod_mode = DigitalMode_FreeDV;   // clear decode mode
+        vfo[VFO_B].band[i].decod_mode = DigitalMode_None;   // clear decode mode
 	}
 
 

@@ -184,7 +184,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_DISPLAY_DBM,&ts.display_dbm,0,0,2},
     { ConfigEntry_Int32_16, EEPROM_DBM_CALIBRATE,&ts.dbm_constant,0,-100,100},
 //    { ConfigEntry_UInt8, EEPROM_S_METER,&ts.s_meter,0,0,2},
-    { ConfigEntry_UInt8, EEPROM_DIGI_MODE_CONF,&ts.digital_mode,0,0,DigitalMode_Num_Modes-1},
+    { ConfigEntry_UInt8, EEPROM_DIGI_MODE_CONF,&ts.digital_mode,DigitalMode_None,0,DigitalMode_Num_Modes-1},
 	{ ConfigEntry_Int32_16, EEPROM_BASS_GAIN,&ts.bass_gain,2,-20,20},
     { ConfigEntry_Int32_16, EEPROM_TREBLE_GAIN,&ts.treble_gain,0,-20,20},
     { ConfigEntry_UInt8, EEPROM_TX_FILTER,&ts.tx_filter,0,0,TX_FILTER_BASS},
@@ -442,7 +442,7 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
     uint32_t value32;
     uint16_t value16;
 
-    UiReadSettingEEPROM_UInt8x2(band_mode + i, &value16, (DEMOD_LSB << 8) | (DigitalMode_RTTY), 0 ,(DEMOD_MAX_MODE << 8)| (DigitalMode_Num_Modes-1));
+    UiReadSettingEEPROM_UInt8x2(band_mode + i, &value16, (DEMOD_LSB << 8) | (DigitalMode_None), 0 ,(DEMOD_MAX_MODE << 8)| (DigitalMode_Num_Modes-1));
 
     vforeg->decod_mode = (value16 >> 8) & 0xFF;     // demodulator mode might not be right for saved band!
     vforeg->digital_mode = value16 & 0xFF;
