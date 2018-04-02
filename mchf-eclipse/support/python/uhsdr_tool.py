@@ -29,6 +29,11 @@ import os
 import uhsdr
 
 def listUHSDRSerial():
+    """
+    list serial ports. For new pySerial version we return only the real UHSDR device, otherwise just a list of serial port objects
+    
+    returns tupel (Boolean,List) True if UHSDR filter was active, False otherwise, second element is actual list of info for com ports. 
+    """
     import serial
     import serial.tools.list_ports;
     from distutils.version import StrictVersion    
