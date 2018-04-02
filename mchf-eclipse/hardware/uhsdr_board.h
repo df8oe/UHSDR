@@ -587,21 +587,19 @@ keyer_mode_t;
 // Bands tuning values - WORKING registers - used "live" during transceiver operation
 // (May contain VFO A, B or "Memory" channel values)
 //
-struct vfo_reg_s
+typedef struct vfo_reg_s
 {
     uint32_t dial_value;
     uint8_t  decod_mode;
     uint8_t  digital_mode;
 //    uint32_t filter_mode;
-};
+} VfoReg;
 
-typedef struct vfo_reg_s VfoReg;
-
-struct band_regs_s
+typedef struct band_regs_s
 {
-    VfoReg band[MAX_BANDS+1];
-};
-typedef struct band_regs_s BandRegs;
+    VfoReg band[MAX_BAND_NUM];
+    bool enabled[MAX_BAND_NUM]; // we store which band is to be used (or ignored)
+} BandRegs;
 
 enum
 {

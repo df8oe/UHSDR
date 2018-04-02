@@ -2187,8 +2187,9 @@ static void UiDriver_InitFrequency()
 		vfo[VFO_B].band[i].dial_value = 0xFFFFFFFF;  // clear dial values
 		vfo[VFO_B].band[i].decod_mode = DEMOD_USB;   // clear decode mode
         vfo[VFO_B].band[i].decod_mode = DigitalMode_FreeDV;   // clear decode mode
-
 	}
+
+
 
 	// Lower bands default to LSB mode
 	// TODO: This needs to be checked, some even lower bands have higher numbers now
@@ -2205,6 +2206,38 @@ static void UiDriver_InitFrequency()
 	df.temp_factor	= 0;
 	df.temp_factor_changed = false;
 	df.temp_enabled = 0;		// startup state of TCXO
+
+    // TODO: Do this setting based on the detected RF board capabilities
+    // set the enabled bands
+    for(i = 0; i < MAX_BANDS; i++)
+    {
+        vfo[VFO_A].enabled[i] = true; // we enable all bands but right below we turn off a few
+        vfo[VFO_B].enabled[i] = true;
+    }
+    if (ts.vhfuhfmod_present == false)
+    {
+        vfo[VFO_A].enabled[BAND_MODE_2] = false;
+        vfo[VFO_B].enabled[BAND_MODE_2] = false;
+        vfo[VFO_A].enabled[BAND_MODE_70] = false;
+        vfo[VFO_B].enabled[BAND_MODE_70] = false;
+        vfo[VFO_A].enabled[BAND_MODE_23] = false;
+        vfo[VFO_B].enabled[BAND_MODE_23] = false;
+        vfo[VFO_A].enabled[BAND_MODE_23] = false;
+        vfo[VFO_B].enabled[BAND_MODE_23] = false;
+    }
+
+    if (ts.rfmod_present == false)
+    {
+        vfo[VFO_A].enabled[BAND_MODE_4] = false;
+        vfo[VFO_B].enabled[BAND_MODE_4] = false;
+        vfo[VFO_A].enabled[BAND_MODE_6] = false;
+        vfo[VFO_B].enabled[BAND_MODE_6] = false;
+        vfo[VFO_A].enabled[BAND_MODE_630] = false;
+        vfo[VFO_B].enabled[BAND_MODE_630] = false;
+        vfo[VFO_A].enabled[BAND_MODE_2200] = false;
+        vfo[VFO_B].enabled[BAND_MODE_2200] = false;
+    }
+
 
 	// Set virtual segments initial value (diff than zero!)
 	df.dial_digits[8]	= 0;
@@ -3049,13 +3082,13 @@ static void UiDriver_ChangeBand(uchar is_up)
 	// Do not allow band change during TX
 	if(ts.txrx_mode != TRX_MODE_TX)
 	{
-		ulong   curr_band_index;    // index in band table of currently selected band
-		ulong   new_band_index;     // index of the new selected band
+
 
 
 		uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 
-		curr_band_index = ts.band;
+		uint8_t curr_band_index = ts.band; // index in band table of currently selected band
+
 
 		// Save old band values
 		if(curr_band_index < (MAX_BANDS) && ts.cat_band_index == 255)
@@ -3070,67 +3103,37 @@ static void UiDriver_ChangeBand(uchar is_up)
 			ts.cat_band_index = 255;
 		}
 
+		uint8_t   new_band_index = curr_band_index;     // index of the new selected band
+		// in case of no other band enabled, we stay in this band
+
 		// Handle direction
 		if(is_up)
 		{
-			if(curr_band_index < (MAX_BANDS - 1))
-			{
-				// Increase
-				new_band_index = curr_band_index + 1;
-				if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 0 && curr_band_index == 8)
-				{
-					// jump 10m --> 160m
-					new_band_index = MAX_BANDS-1;
-				}
-				if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 1 && curr_band_index == 8)
-				{
-					// jump 10m --> 2m
-					new_band_index = 11;
-				}
-				if(ts.rfmod_present == 0 && ts.vhfuhfmod_present == 1 && curr_band_index == 13)
-				{
-					// jump 2200m --> 16m
-					new_band_index = 16;
-				}
-				if(ts.rfmod_present == 1 && ts.vhfuhfmod_present == 0 && curr_band_index == 10)
-				{
-					// jump 4m --> 2200m
-					new_band_index = 14;
-				}
-
-			}
-			else	 	// wrap around to the lowest band
-			{
-				new_band_index = MIN_BANDS;
-			}
+		    // we start checking the index following the current one
+		    // until we reach an enabled band
+		    for (int idx  = 1; idx <= MAX_BANDS; idx++)
+		    {
+		        uint32_t test_idx = (curr_band_index + idx) % MAX_BANDS;
+		        if (vfo[vfo_sel].enabled[test_idx])
+		        {
+		            new_band_index = test_idx;
+		            break; // we found the first enabled band following the current one
+		        }
+		    }
 		}
 		else
 		{
-			if(curr_band_index)
-			{
-				// Decrease
-				new_band_index = curr_band_index - 1;
-				if(ts.rfmod_present == 0 && curr_band_index == MAX_BANDS-1)
-				{
-					// jump 160m --> 23cm
-					new_band_index = 13;
-				}
-				if(ts.vhfuhfmod_present == 0 && new_band_index == 13)
-				{
-					// jump 2200m --> 6m
-					new_band_index = 10;
-				}
-				if(ts.rfmod_present == 0 && new_band_index == 10)
-				{
-					// jump 2m --> 10m
-					new_band_index = 8;
-				}
-			}
-			else
-			{
-				// wrap around to the highest band
-				new_band_index = MAX_BANDS-1;
-			}
+            // we start checking the index before the current one
+            // until we reach an enabled band
+            for (int idx = MAX_BANDS-1; idx >= 0; idx--)
+            {
+                uint32_t test_idx = (curr_band_index + idx) % MAX_BANDS;
+                if (vfo[vfo_sel].enabled[test_idx])
+                {
+                    new_band_index = test_idx;
+                    break; // we found the first enabled band before the current one
+                }
+            }
 		}
 
 
