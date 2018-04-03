@@ -9,8 +9,8 @@
 #define UI_UI_VKEYBRD_H_
 
 
-typedef uint8_t (*VKeyStateFunc)(uint8_t KeyNum);
-typedef void (*TouchFunc)(uint8_t KeyNum);
+typedef uint8_t (*VKeyStateFunc)(uint8_t KeyNum, uint32_t param);
+typedef void (*TouchFunc)(uint8_t KeyNum, uint32_t param);
 
 typedef struct
 {
@@ -21,7 +21,9 @@ typedef struct
 	uint16_t TextColor;	//Color Of Key Text when key is not pressed
 	uint16_t PressedTextColor;	//Color Of Key Text when key is pressed
 	TouchFunc ShortFnc;		//called function for short press
+	uint32_t ShortPar;		//short press function calling parameter
 	TouchFunc LongFnc;		//called function for short press
+	uint32_t LongPar;		//long press function calling parameter
 } VKey;
 
 
