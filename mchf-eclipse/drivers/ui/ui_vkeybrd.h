@@ -32,6 +32,7 @@ typedef struct
 	uint8_t NumberOfKeys;
 	uint8_t Rows;
 	uint8_t Columns;
+	uint8_t KeyFont;
 	const VKey* Keys;
 	uint8_t VKeyGroupMode;	//type of key press: see Vkey_Group_
 	VKeyStateFunc VKeyStateCallBack;

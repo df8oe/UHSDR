@@ -9,7 +9,6 @@
 #include "ui_spectrum.h"
 #include "ui_driver.h"
 
-
 #define Col_BtnForeCol RGB(0xA0,0xA0,0xA0)
 #define Col_BtnForePressed RGB(0x80,0x80,0x80)
 #define Col_BtnLightLeftTop RGB(0xE0,0xE0,0xE0)
@@ -44,7 +43,7 @@ static void UiVk_DrawButtonBody(UiArea_t* Ka, uint16_t col_Bcgr, uint16_t col_Le
  * @param text_color_NotPressed text colour of not pressed button
  * @param text_color_Pressed text colour of pressed (normal) button
  */
-static void UiVk_DrawButton(uint16_t Xpos, uint16_t Ypos, bool Warning, uint8_t Vbtn_State, const char* txt, uint16_t text_color_NotPressed, uint16_t text_color_Pressed)
+static void UiVk_DrawButton(uint16_t Xpos, uint16_t Ypos, bool Warning, uint8_t Vbtn_State, const char* txt, uint16_t text_color_NotPressed, uint16_t text_color_Pressed, uint8_t font)
 {
 	uint16_t col_LeftUP, col_RightBot, col_Bcgr, col_Text;
 
@@ -70,13 +69,26 @@ static void UiVk_DrawButton(uint16_t Xpos, uint16_t Ypos, bool Warning, uint8_t 
 		break;
 	}
 
+    uint8_t FontHeight=UiLcdHy28_TextHeight(font);
+    uint16_t TextHeight =  FontHeight;
+
+    const char* txt_=txt;
+    while(*txt_!=0)
+    {
+    	if(*txt_=='\n')
+    	{
+    		TextHeight+=FontHeight;
+    	}
+    	txt_++;
+    }
+
 	UiArea_t Btn_area;
 	Btn_area.x=Xpos;
 	Btn_area.y=Ypos;
 	Btn_area.w=ts.Layout->VbtnWidth;
 	Btn_area.h=ts.Layout->VbtnHeight;
 	UiVk_DrawButtonBody(&Btn_area,col_Bcgr,col_LeftUP,col_RightBot);
-	UiLcdHy28_PrintTextCentered(Xpos+2,Ypos+8,ts.Layout->VbtnWidth-4,txt,col_Text,col_Bcgr,0);
+	UiLcdHy28_PrintTextCentered(Xpos+2,Ypos+Btn_area.h/2-TextHeight/2,ts.Layout->VbtnWidth-4,txt,col_Text,col_Bcgr,font);
 }
 
 /**
@@ -132,7 +144,8 @@ static void UiVk_DrawVKeypad()
 			UiVk_GetButtonRgn(keycnt,&b_area);
 
 			UiVk_DrawButton(b_area.x,b_area.y,
-					VKpad->Keys[keycnt].KeyWarning,VKpad->VKeyStateCallBack(keycnt,0),VKpad->Keys[keycnt].KeyText,VKpad->Keys[keycnt].TextColor,VKpad->Keys[keycnt].PressedTextColor);
+					VKpad->Keys[keycnt].KeyWarning,VKpad->VKeyStateCallBack(keycnt,0),VKpad->Keys[keycnt].KeyText,
+					VKpad->Keys[keycnt].TextColor,VKpad->Keys[keycnt].PressedTextColor,VKpad->KeyFont);
 
 			keycnt++;
 		}
@@ -217,14 +230,14 @@ static uint8_t UiVk_DSPVKeyInitTypeDraw(uint8_t Keynum, uint32_t param)
 	return Keystate;
 }
 #define col_Keys_DSP_pr RGB(0x20,0xff,0x20)		//text color when pressed
-#define col_Keys_DSP_npr RGB(0,0x20,0x20)		//text color when in normal state
+#define col_Keys_DSP_npr Black		//text color when in normal state
 
 const VKey Keys_DSP[]={
-		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_OFF, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="DSP\nOFF", .TextColor=RGB(0,0x20,0x20), .PressedTextColor=RGB(0,0xff,0xff)},
+		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_OFF, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="DSP\nOFF", .TextColor=Black, .PressedTextColor=RGB(0,0xff,0xff)},
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NR, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="NR", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
-		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NOTCH, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="A\nNOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
+		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NOTCH, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="AUTO\nNOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NR_AND_NOTCH, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="NR\n+NOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
-		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NOTCH_MANUAL, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="M\nNOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
+		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NOTCH_MANUAL, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="MAN\nNOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_PEAK_FILTER, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="PEAK", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr}
 };
 
@@ -232,6 +245,7 @@ const VKeypad Keypad_DSP={
 	.NumberOfKeys=6,
 	.Rows=2,
 	.Columns=3,
+	.KeyFont=0,
 	.Keys=Keys_DSP,
 	.VKeyGroupMode=Vkey_Group_OneAllowed,
 	.VKeyStateCallBack=UiVk_DSPVKeyInitTypeDraw
@@ -263,8 +277,8 @@ void UiVk_DSPVirtualKeys()
 	{
 		ts.VirtualKeyPad=&Keypad_DSP;
 		prev_dsp_functions_active=-1;
-		ts.VirtualKeysShown_flag=true;
 		UiSpectrum_Clear();
+		ts.VirtualKeysShown_flag=true;	//always after UiSpectrum_Clear, because it is cleared there
 		UiVk_DrawBackGround(4,4);
 		UiVk_RedrawDSPVirtualKeys();
 	}

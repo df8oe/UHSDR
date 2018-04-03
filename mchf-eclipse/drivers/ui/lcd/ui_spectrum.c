@@ -651,6 +651,7 @@ static void UiSpectrum_CreateDrawArea()
 void UiSpectrum_Clear()
 {
     UiLcdHy28_DrawFullRect(slayout.full.x, slayout.full.y, slayout.full.h, slayout.full.w, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
+    ts.VirtualKeysShown_flag=false;	//if virtual keypad was shown, switch it off
 }
 
 // This version of "Draw Scope" is revised from the original in that it interleaves the erasure with the drawing

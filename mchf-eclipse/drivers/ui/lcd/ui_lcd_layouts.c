@@ -175,7 +175,7 @@ static const touchaction_descr_t R320240_touchactions_normal[] =
 		{ {R320240_ENCODER_IND_X+ENC_COL_W*2,R320240_ENCODER_IND_Y+ENC_ROW_H,ENC_COL_W,ENC_ROW_H}, UiAction_ChangeAudioSource,NULL }, // Audio In Box: Switch Source
 		{ {R320240_BAND_MODE_X,R320240_BAND_MODE_Y,R320240_BAND_MODE_MASK_W/2,R320240_BAND_MODE_MASK_H}, UiAction_ChangeBandDownOrUp,NULL }, // Left Part Band Display: Band down
 		{ {R320240_BAND_MODE_X+R320240_BAND_MODE_MASK_W*3/4,R320240_BAND_MODE_Y,R320240_BAND_MODE_MASK_W/2,R320240_BAND_MODE_MASK_H}, UiAction_ChangeBandUpOrDown,NULL }, // Right Part Band Display: Band up
-		{ {R320240_LEFTBOXES_IND_X,R320240_LEFTBOXES_IND_Y,LEFTBOX_WIDTH,LEFTBOX_ROW_H}, Codec_RestartI2S,NULL }, // DSP Box: Restart I2S
+		{ {R320240_LEFTBOXES_IND_X,R320240_LEFTBOXES_IND_Y,LEFTBOX_WIDTH,LEFTBOX_ROW_H}, UiVk_DSPVirtualKeys, Codec_RestartI2S }, // DSP Box: Restart I2S
 		{ {60,128,256,90}, UiAction_ChangeFrequencyByTouch, UiAction_CheckSpectrumTouchActions }, // Scope Draw Area: Tune to Touch
 		{ {R320240_DIGMODE_IND_X,R320240_DIGMODE_IND_Y,R320240_DIGMODE_IND_H,16}, UiAction_ChangeDigitalMode,NULL }, // Digital Mode Box: Switch Digi Mode
 		{ {R320240_TUNE_STEP_X,R320240_TUNE_STEP_Y,R320240_TUNE_STEP_MASK_W,R320240_TUNE_STEP_MASK_H}, UiAction_ChangeDynamicTuning,NULL }, // Step Box: Dynamic Tuning Toggle
@@ -262,6 +262,10 @@ const LcdLayout LcdLayouts[LcdLayoutsCount]=
 				.MENU_CHANGE_X=244,
 				.MENU_CURSOR_X=311,
 				.MENU_TEXT_SIZE_MAX=34,
+
+				.VbtnHeight=32,
+				.VbtnWidth=52,
+				.VbtnSpacing=4,
 
 				.touchaction_list=R320240__touch_regions
 		},

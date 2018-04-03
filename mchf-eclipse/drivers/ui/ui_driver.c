@@ -6274,7 +6274,6 @@ static void UiAction_ToggleMenuMode()
 		if(ts.menu_mode == false)	 	// go into menu mode if NOT already in menu mode and not to halt on startup
 		{
 			ts.menu_mode = true;
-			ts.VirtualKeysShown_flag=false;
 			ts.encoder3state = filter_path_change;
 			filter_path_change = false;			// deactivate while in menu mode
 			UiDriver_DisplayFilter();
