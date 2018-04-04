@@ -13,7 +13,8 @@
 #define Col_BtnForePressed RGB(0x80,0x80,0x80)
 #define Col_BtnLightLeftTop RGB(0xE0,0xE0,0xE0)
 #define Col_BtnLightRightBot RGB(0x60,0x60,0x60)
-#define Col_BtnDisabled RGB(0x80,0x80,0x80)
+#define Col_BtnDisabled RGB(0x70,0x70,0x70)
+#define Col_Warning RGB(0xC0,0xC0,0x80)
 
 
 /**
@@ -52,7 +53,7 @@ static void UiVk_DrawButton(uint16_t Xpos, uint16_t Ypos, bool Warning, uint8_t 
 	case Vbtn_State_Disabled:
 		col_LeftUP=Col_BtnDisabled;
 		col_RightBot=Col_BtnDisabled;
-		col_Bcgr=Black;
+		col_Bcgr=Col_BtnForeCol;
 		col_Text=Col_BtnDisabled;
 		break;
 	case Vbtn_State_Pressed:
@@ -64,7 +65,7 @@ static void UiVk_DrawButton(uint16_t Xpos, uint16_t Ypos, bool Warning, uint8_t 
 	case Vbtn_State_Normal:
 		col_LeftUP=Col_BtnLightLeftTop;
 		col_RightBot=Col_BtnLightRightBot;
-		col_Bcgr=Col_BtnForeCol;
+		col_Bcgr=Warning?Col_Warning:Col_BtnForeCol;
 		col_Text=text_color_NotPressed;
 		break;
 	}
@@ -85,10 +86,10 @@ static void UiVk_DrawButton(uint16_t Xpos, uint16_t Ypos, bool Warning, uint8_t 
 	UiArea_t Btn_area;
 	Btn_area.x=Xpos;
 	Btn_area.y=Ypos;
-	Btn_area.w=ts.Layout->VbtnWidth;
-	Btn_area.h=ts.Layout->VbtnHeight;
+	Btn_area.w=ts.VirtualKeyPad->KeyWidth;
+	Btn_area.h=ts.VirtualKeyPad->KeyHeight;
 	UiVk_DrawButtonBody(&Btn_area,col_Bcgr,col_LeftUP,col_RightBot);
-	UiLcdHy28_PrintTextCentered(Xpos+2,Ypos+Btn_area.h/2-TextHeight/2,ts.Layout->VbtnWidth-4,txt,col_Text,col_Bcgr,font);
+	UiLcdHy28_PrintTextCentered(Xpos+2,Ypos+Btn_area.h/2-TextHeight/2,ts.VirtualKeyPad->KeyWidth-4,txt,col_Text,col_Bcgr,font);
 }
 
 /**
@@ -97,10 +98,10 @@ static void UiVk_DrawButton(uint16_t Xpos, uint16_t Ypos, bool Warning, uint8_t 
  */
 static void UiVk_GetKeybArea(UiArea_t* KeybArea)
 {
-	KeybArea->w=ts.VirtualKeyPad->Columns*(ts.Layout->VbtnWidth)+
-			(ts.VirtualKeyPad->Columns-1)*ts.Layout->VbtnSpacing;
-	KeybArea->h=ts.VirtualKeyPad->Rows*(ts.Layout->VbtnHeight)+
-			(ts.VirtualKeyPad->Rows-1)*ts.Layout->VbtnSpacing;
+	KeybArea->w=ts.VirtualKeyPad->Columns*ts.VirtualKeyPad->KeyWidth+
+			(ts.VirtualKeyPad->Columns-1)*ts.VirtualKeyPad->KeySpacing;
+	KeybArea->h=ts.VirtualKeyPad->Rows*(ts.VirtualKeyPad->KeyHeight)+
+			(ts.VirtualKeyPad->Rows-1)*ts.VirtualKeyPad->KeySpacing;
 
 	KeybArea->x=sd.Slayout->full.x+sd.Slayout->full.w/2-KeybArea->w/2;
 	KeybArea->y=sd.Slayout->full.y+sd.Slayout->full.h/2-KeybArea->h/2;
@@ -119,10 +120,10 @@ static void UiVk_GetButtonRgn(uint8_t Key, UiArea_t *bp)
 	UiArea_t KeybArea;
 	UiVk_GetKeybArea(&KeybArea);
 
-	bp->x=KeybArea.x+col*(ts.Layout->VbtnWidth+ts.Layout->VbtnSpacing);
-	bp->y=KeybArea.y+row*(ts.Layout->VbtnHeight+ts.Layout->VbtnSpacing);
-	bp->w=ts.Layout->VbtnWidth;
-	bp->h=ts.Layout->VbtnHeight;
+	bp->x=KeybArea.x+col*(ts.VirtualKeyPad->KeyWidth+ts.VirtualKeyPad->KeySpacing);
+	bp->y=KeybArea.y+row*(ts.VirtualKeyPad->KeyHeight+ts.VirtualKeyPad->KeySpacing);
+	bp->w=ts.VirtualKeyPad->KeyWidth;
+	bp->h=ts.VirtualKeyPad->KeyHeight;
 }
 
 /**
@@ -168,13 +169,13 @@ bool UiVk_Process_VirtualKeypad(bool is_long_press)
 		UiVk_GetButtonRgn(i,&bp);
 		if(UiDriver_CheckTouchRegion(&bp))
 		{
-			if(is_long_press)
+			if(is_long_press && ts.VirtualKeyPad->Keys[i].LongFnc)
 			{
-				ts.VirtualKeyPad->Keys[i].LongFnc(i,ts.VirtualKeyPad->Keys[i].LongPar);
+					ts.VirtualKeyPad->Keys[i].LongFnc(i,ts.VirtualKeyPad->Keys[i].LongPar);
 			}
-			else
+			else if(ts.VirtualKeyPad->Keys[i].ShortFnc)
 			{
-				ts.VirtualKeyPad->Keys[i].ShortFnc(i,ts.VirtualKeyPad->Keys[i].ShortPar);
+					ts.VirtualKeyPad->Keys[i].ShortFnc(i,ts.VirtualKeyPad->Keys[i].ShortPar);
 			}
 		}
 	}
@@ -187,15 +188,15 @@ bool UiVk_Process_VirtualKeypad(bool is_long_press)
  * @param X_enlarge Keyboard background enlarge in pixels (real X size is enlarged by this value multiplied by 2)
  * @param Y_enlarge Keyboard background enlarge in pixels (real Y size is enlarged by this value multiplied by 2)
  */
-static void UiVk_DrawBackGround(uint16_t X_enlarge, uint16_t Y_enlarge)
+static void UiVk_DrawBackGround()
 {
 	UiArea_t Ka;//drawing the background
 	UiVk_GetKeybArea(&Ka);
 
-	Ka.x-=X_enlarge;
-	Ka.y-=Y_enlarge;
-	Ka.w+=2*X_enlarge;
-	Ka.h+=2*Y_enlarge;
+	Ka.x-=ts.VirtualKeyPad->Backgr_Wnlarge;
+	Ka.y-=ts.VirtualKeyPad->Backgr_Hnlarge;
+	Ka.w+=2*ts.VirtualKeyPad->Backgr_Wnlarge;
+	Ka.h+=2*ts.VirtualKeyPad->Backgr_Hnlarge;
 
 	UiVk_DrawButtonBody(&Ka,Col_BtnForeCol,Col_BtnLightLeftTop,Col_BtnLightRightBot);
 
@@ -206,26 +207,39 @@ static void UiVk_DrawBackGround(uint16_t X_enlarge, uint16_t Y_enlarge)
 
 
 //DSP box VKeyboard=================================================================
+
+
+uint32_t prev_dsp_functions_active;	//used for virtual DSP keys redraw detections
+//this array is needed because different bit definitions are used for ts.dsp_mode and ts.dsp_active, so we cannot simply pass the CallBackShort parameter
+const uint32_t dsp_functions[]={0, DSP_NR_ENABLE, DSP_NOTCH_ENABLE, DSP_NOTCH_ENABLE|DSP_NR_ENABLE, DSP_MNOTCH_ENABLE, DSP_MPEAK_ENABLE};
+
 static void UiVk_DSPVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 {
-	ts.dsp_mode=param;
+	if(((ts.dsp_mode_mask&(1<<KeyNum))!=0) || (KeyNum==0))
+	{
+		ts.dsp_mode=param;
+	}
 	UiDriver_UpdateDSPmode();
 }
 
 static void UiVk_DSPVKeyCallBackLong(uint8_t KeyNum, uint32_t param)
 {
-
+	ts.dsp_mode_mask^=1<<KeyNum;
+	prev_dsp_functions_active=-1;
+	UiDriver_UpdateDSPmode();
 }
-
-//this array is needed because different bit definitions are used for ts.dsp_mode and ts.dsp_active, so we cannot simply pass the CallBackShort parameter
-const uint32_t dsp_functions[]={0, DSP_NR_ENABLE, DSP_NOTCH_ENABLE, DSP_NOTCH_ENABLE|DSP_NR_ENABLE, DSP_MNOTCH_ENABLE, DSP_MPEAK_ENABLE};
-
-static uint8_t UiVk_DSPVKeyInitTypeDraw(uint8_t Keynum, uint32_t param)
+static uint8_t UiVk_DSPVKeyInitTypeDraw(uint8_t KeyNum, uint32_t param)
 {
 	uint8_t Keystate=Vbtn_State_Normal;
 	uint32_t dsp_functions_active =UiDriver_GetActiveDSPFunctions();
-	if(dsp_functions_active==dsp_functions[Keynum])
+	if(((ts.dsp_mode_mask&(1<<KeyNum))==0) && (KeyNum>0))
+	{
+		Keystate=Vbtn_State_Disabled;
+	}
+	else if(dsp_functions_active==dsp_functions[KeyNum])
+	{
 		Keystate=Vbtn_State_Pressed;
+	}
 
 	return Keystate;
 }
@@ -233,25 +247,43 @@ static uint8_t UiVk_DSPVKeyInitTypeDraw(uint8_t Keynum, uint32_t param)
 #define col_Keys_DSP_npr Black		//text color when in normal state
 
 const VKey Keys_DSP[]={
-		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_OFF, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="DSP\nOFF", .TextColor=Black, .PressedTextColor=RGB(0,0xff,0xff)},
+		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_OFF, .KeyText="DSP\nOFF", .TextColor=Black, .PressedTextColor=RGB(0,0xff,0xff)},
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NR, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="NR", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NOTCH, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="AUTO\nNOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
-		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NR_AND_NOTCH, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="NR\n+NOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
+		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NR_AND_NOTCH,.KeyWarning=1, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="NR\n+NOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NOTCH_MANUAL, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="MAN\nNOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_PEAK_FILTER, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="PEAK", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr}
 };
 
-const VKeypad Keypad_DSP={
+const VKeypad Keypad_DSP480x320={
 	.NumberOfKeys=6,
 	.Rows=2,
 	.Columns=3,
 	.KeyFont=0,
 	.Keys=Keys_DSP,
+	.KeyWidth=60,
+	.KeyHeight=40,
+	.KeySpacing=8,
+	.Backgr_Wnlarge=4,
+	.Backgr_Hnlarge=4,
 	.VKeyGroupMode=Vkey_Group_OneAllowed,
 	.VKeyStateCallBack=UiVk_DSPVKeyInitTypeDraw
 };
 
-uint32_t prev_dsp_functions_active;	//used for virtual DSP keys redraw detection
+const VKeypad Keypad_DSP320x240={
+	.NumberOfKeys=6,
+	.Rows=2,
+	.Columns=3,
+	.KeyFont=0,
+	.Keys=Keys_DSP,
+	.KeyWidth=52,
+	.KeyHeight=32,
+	.KeySpacing=4,
+	.Backgr_Wnlarge=4,
+	.Backgr_Hnlarge=4,
+	.VKeyGroupMode=Vkey_Group_OneAllowed,
+	.VKeyStateCallBack=UiVk_DSPVKeyInitTypeDraw
+};
 
 void UiVk_RedrawDSPVirtualKeys()
 {
@@ -275,11 +307,15 @@ void UiVk_DSPVirtualKeys()
 	}
 	else
 	{
-		ts.VirtualKeyPad=&Keypad_DSP;
+		if(disp_resolution==RESOLUTION_480_320)
+			ts.VirtualKeyPad=&Keypad_DSP480x320;
+		else
+			ts.VirtualKeyPad=&Keypad_DSP320x240;
+
 		prev_dsp_functions_active=-1;
 		UiSpectrum_Clear();
 		ts.VirtualKeysShown_flag=true;	//always after UiSpectrum_Clear, because it is cleared there
-		UiVk_DrawBackGround(4,4);
+		UiVk_DrawBackGround();
 		UiVk_RedrawDSPVirtualKeys();
 	}
 }

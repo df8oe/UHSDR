@@ -591,7 +591,8 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_NUMBER_OF_ENTRIES                407 // this is the index of the config value which holds the number of used config entries
                                                     // , not the value itself (which is in fact EEPROM_FIRST_UNUSED)
 
-#define EEPROM_FIRST_UNUSED 				408		// change this if new value ids are introduced, must be correct at any time
+#define EEPROM_DSP_MODE_MASK				408
+#define EEPROM_FIRST_UNUSED 				409		// change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

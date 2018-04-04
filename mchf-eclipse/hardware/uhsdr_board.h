@@ -826,6 +826,7 @@ typedef struct TransceiverState
 
     uint8_t	dsp_active;					// Used to hold various aspects of DSP mode selection
     uint8_t	dsp_mode;					// holds the mode chosen in the DSP
+    uint16_t	dsp_mode_mask;				// holds the DSP mode mask (to be chosen by virtual dsp keyboard)
 	uint8_t	temp_nb;
     uint8_t 	digital_mode;				// holds actual digital mode
     uint8_t	dsp_active_toggle;			// holder used on the press-hold of button G2 to "remember" the previous setting

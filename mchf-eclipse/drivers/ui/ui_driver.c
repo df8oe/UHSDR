@@ -5727,15 +5727,29 @@ void UiAction_ChangeLowerMeterUp()
 }
 void UiDriver_UpdateDSPmode()
 {
-	//
-	// prevent certain modes to prevent CPU crash
-	//
-	// prevent NR AND NOTCH, when in CW
-	if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
-	// prevent NOTCH, when in CW
-	if (ts.dsp_mode == DSP_SWITCH_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
-	// prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
-	if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ )) ts.dsp_mode++;
+
+	do{
+		//
+		// prevent certain modes to prevent CPU crash
+		//
+		// prevent NR AND NOTCH, when in CW
+		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
+		// prevent NOTCH, when in CW
+		if (ts.dsp_mode == DSP_SWITCH_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
+		// prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
+		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ )) ts.dsp_mode++;
+
+		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
+
+		if(((ts.dsp_mode_mask&(1<<ts.dsp_mode))==0)) ts.dsp_mode++;
+		else break;
+
+		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
+
+		if(ts.dsp_mode==0)	break;
+
+	}while(1);
+
 
 	switch (ts.dsp_mode)
 	{

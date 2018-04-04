@@ -263,10 +263,6 @@ const LcdLayout LcdLayouts[LcdLayoutsCount]=
 				.MENU_CURSOR_X=311,
 				.MENU_TEXT_SIZE_MAX=34,
 
-				.VbtnHeight=32,
-				.VbtnWidth=52,
-				.VbtnSpacing=4,
-
 				.touchaction_list=R320240__touch_regions
 		},
 
@@ -336,9 +332,6 @@ const LcdLayout LcdLayouts[LcdLayoutsCount]=
 				.MENU_CHANGE_X=280,
 				.MENU_CURSOR_X=360,
 				.MENU_TEXT_SIZE_MAX=40,
-				.VbtnHeight=40,
-				.VbtnWidth=60,
-				.VbtnSpacing=8,
 
 				.touchaction_list=R480320_touch_regions
 		}

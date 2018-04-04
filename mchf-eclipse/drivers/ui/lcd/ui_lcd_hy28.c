@@ -2356,7 +2356,7 @@ static void UiLcdHy28_TouchscreenReadData(uint16_t* x_p,uint16_t* y_p)
 
     UiLcdHy28_TouchscreenStartSpiTransfer();
 
-    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)xpt2046_command, xpt_response,XPT2046_COMMAND_LEN,10);
+    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)xpt2046_command, xpt_response,XPT2046_COMMAND_LEN,20);
 
     UiLcdHy28_TouchscreenFinishSpiTransfer();
 

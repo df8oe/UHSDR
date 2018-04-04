@@ -15,8 +15,8 @@ typedef void (*TouchFunc)(uint8_t KeyNum, uint32_t param);
 typedef struct
 {
 	char KeyText[16];
-	uint8_t SizeX;	//multiply of normal key size, 0=normal size defined by layout VbtnHeight and VbtnWidth
-	uint8_t SizeY;
+	uint8_t SizeX;	//multiply of normal key size, 0=normal size defined by VKeypad's KeyWidth
+	uint8_t SizeY;	//multiply of normal key size, 0=normal size defined by VKeypad's KeyHeight
 	uint8_t KeyWarning;	//1= this key will be marked with warning
 	uint16_t TextColor;	//Color Of Key Text when key is not pressed
 	uint16_t PressedTextColor;	//Color Of Key Text when key is pressed
@@ -29,11 +29,16 @@ typedef struct
 
 typedef struct
 {
-	uint8_t NumberOfKeys;
-	uint8_t Rows;
-	uint8_t Columns;
-	uint8_t KeyFont;
-	const VKey* Keys;
+	uint8_t NumberOfKeys;	//Number of keys in keyborad
+	uint8_t Rows;			//Numer of rows
+	uint8_t Columns;		//Numer of columns
+	uint8_t KeyFont;		//font number
+	uint16_t KeyWidth;		//Width of single key
+	uint16_t KeyHeight;		//Height of single key
+	uint8_t KeySpacing;		//gap between keys
+	uint8_t Backgr_Wnlarge;	//background of keyboard width enlarge
+	uint8_t Backgr_Hnlarge;	//background of keyboard width enlarge
+	const VKey* Keys;		//pointer to keyboard data
 	uint8_t VKeyGroupMode;	//type of key press: see Vkey_Group_
 	VKeyStateFunc VKeyStateCallBack;
 } VKeypad;
