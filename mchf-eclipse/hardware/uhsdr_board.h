@@ -180,6 +180,7 @@
 #include "dac.h"
 
 #include "uhsdr_board_config.h"
+#include "ui_vkeybrd.h"
 
 // Buttons map structure
 typedef struct ButtonMap
@@ -825,6 +826,7 @@ typedef struct TransceiverState
 
     uint8_t	dsp_active;					// Used to hold various aspects of DSP mode selection
     uint8_t	dsp_mode;					// holds the mode chosen in the DSP
+    uint16_t	dsp_mode_mask;				// holds the DSP mode mask (to be chosen by virtual dsp keyboard)
 	uint8_t	temp_nb;
     uint8_t 	digital_mode;				// holds actual digital mode
     uint8_t	dsp_active_toggle;			// holder used on the press-hold of button G2 to "remember" the previous setting
@@ -929,6 +931,8 @@ typedef struct TransceiverState
     bool	lcd_blanking_flag;			// if TRUE, the LCD is blanked completely (e.g. backlight is off)
     bool	xvtr_adjust_flag;			// set TRUE if transverter offset adjustment is in process
     bool	SpectrumResize_flag;		// set TRUE if waterfall/spectrum resize request from touchscreen action
+    bool	VirtualKeysShown_flag;		// set TRUE if virtual keypad displayed instead of spectrum/waterfall
+    const VKeypad* VirtualKeyPad;				// pointer to virtual keyboard definition (if VirtualKeysShown_flag is set)
     uint32_t SpectrumResize_timer;		//
 #define VFO_MEM_MODE_SPLIT 0x80
 #define VFO_MEM_MODE_VFO_B 0x40

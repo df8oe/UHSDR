@@ -651,6 +651,7 @@ static void UiSpectrum_CreateDrawArea()
 void UiSpectrum_Clear()
 {
     UiLcdHy28_DrawFullRect(slayout.full.x, slayout.full.y, slayout.full.h, slayout.full.w, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
+    ts.VirtualKeysShown_flag=false;	//if virtual keypad was shown, switch it off
 }
 
 // This version of "Draw Scope" is revised from the original in that it interleaves the erasure with the drawing
@@ -1344,7 +1345,8 @@ static void UiSpectrum_RedrawSpectrum()
 	bool is_RedrawActive=(ts.menu_mode == false)					//if this flag is false we do only dBm calculation (for S-meter and tune helper)
 						&& (sd.enabled == true)
 						&& (ts.mem_disp == false)
-						&& (ts.SpectrumResize_flag == false);
+						&& (ts.SpectrumResize_flag == false)
+						&& (ts.VirtualKeysShown_flag ==false);
 
 
     // Process implemented as state machine

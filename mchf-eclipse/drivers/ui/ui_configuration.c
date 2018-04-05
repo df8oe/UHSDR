@@ -246,6 +246,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
 	{ ConfigEntry_Int32, EEPROM_TScal4_High,&mchf_touchscreen.cal[4], 74886,-2147483648,2147483647},
 	{ ConfigEntry_Int32, EEPROM_TScal5_High,&mchf_touchscreen.cal[5], -1630326,-2147483648,2147483647},
 	{ ConfigEntry_UInt16, EEPROM_NUMBER_OF_ENTRIES,&dummy_val16,EEPROM_FIRST_UNUSED,EEPROM_FIRST_UNUSED,EEPROM_FIRST_UNUSED},
+	{ ConfigEntry_UInt16, EEPROM_DSP_MODE_MASK,&ts.dsp_mode_mask,0xffff,0,0xffff},
     // the entry below MUST be the last entry, and only at the last position Stop is allowed
     {
         ConfigEntry_Stop

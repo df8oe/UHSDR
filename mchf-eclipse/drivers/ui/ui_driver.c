@@ -138,8 +138,6 @@ static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
 static void UiDriver_DisplayPskSpeed(bool encoder_active);
 
-
-
 // Tuning steps
 const ulong tune_steps[T_STEP_MAX_STEPS] =
 {
@@ -255,7 +253,7 @@ uchar drv_state = 0;
 bool filter_path_change = false;
 
 // check if touched point is within rectangle of valid action
-static bool UiDriver_CheckTouchRegion(const UiArea_t* tr_p)
+bool UiDriver_CheckTouchRegion(const UiArea_t* tr_p)
 {
 	return ((ts.tp->hr_x <= (tr_p->x+tr_p->w)) &&
 				(ts.tp->hr_x >= (tr_p->x)) &&
@@ -3932,6 +3930,11 @@ uint32_t dsp_nr_color_map()
 
 #endif
 
+uint32_t UiDriver_GetActiveDSPFunctions()
+{
+	return ts.dsp_active & (DSP_NOTCH_ENABLE|DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE);
+}
+
 static void UiDriver_DisplayDSPMode(bool encoder_active)
 {
 	uint32_t clr = White;
@@ -3941,8 +3944,10 @@ static void UiDriver_DisplayDSPMode(bool encoder_active)
 	bool txt_is_value = false;
 	const char* txt[2] = { "DSP", NULL };
 
-	uint32_t dsp_functions_active = ts.dsp_active & (DSP_NOTCH_ENABLE|DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE);
+	//uint32_t dsp_functions_active = ts.dsp_active & (DSP_NOTCH_ENABLE|DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE);
+	uint32_t dsp_functions_active =UiDriver_GetActiveDSPFunctions();
 
+	UiVk_RedrawDSPVirtualKeys();
 
 	switch (dsp_functions_active)
 	{
@@ -5720,6 +5725,68 @@ void UiAction_ChangeLowerMeterUp()
 	UiDriver_DeleteMeters();
 	UiDriver_CreateMeters();	// redraw meter
 }
+void UiDriver_UpdateDSPmode()
+{
+
+	do{
+		//
+		// prevent certain modes to prevent CPU crash
+		//
+		// prevent NR AND NOTCH, when in CW
+		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
+		// prevent NOTCH, when in CW
+		if (ts.dsp_mode == DSP_SWITCH_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
+		// prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
+		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ )) ts.dsp_mode++;
+
+		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
+
+		if(((ts.dsp_mode_mask&(1<<ts.dsp_mode))==0)) ts.dsp_mode++;
+		else break;
+
+		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
+
+		if(ts.dsp_mode==0)	break;
+
+	}while(1);
+
+
+	switch (ts.dsp_mode)
+	{
+
+	case DSP_SWITCH_OFF: // switch off everything
+		ts.dsp_active =  (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+		ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+		break;
+	case DSP_SWITCH_NR:
+		ts.dsp_active =  DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+		ts.enc_two_mode = ENC_TWO_MODE_NR;
+		break;
+	case DSP_SWITCH_NOTCH:
+		ts.dsp_active =  DSP_NOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+		ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
+		break;
+	case DSP_SWITCH_NR_AND_NOTCH:
+		ts.dsp_active =  DSP_NOTCH_ENABLE | DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+		ts.enc_two_mode = ENC_TWO_MODE_NR;
+		break;
+	case DSP_SWITCH_NOTCH_MANUAL:
+		ts.dsp_active =  DSP_MNOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MPEAK_ENABLE));
+		ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
+		break;
+	case DSP_SWITCH_PEAK_FILTER:
+		ts.dsp_active =  DSP_MPEAK_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE));
+		ts.enc_two_mode = ENC_TWO_MODE_PEAK_F;
+		break;
+	default:
+		break;
+	}
+
+	ts.dsp_active_toggle = ts.dsp_active;  // save update in "toggle" variable
+	// reset DSP NR coefficients
+	AudioDriver_SetRxAudioProcessing(ts.dmod_mode, true);        // update DSP/filter settings
+	UiDriver_DisplayEncoderTwoMode();         // DSP control is mapped to column 2
+}
 
 static void UiAction_ChangeToNextDspMode()
 {
@@ -5737,51 +5804,8 @@ static void UiAction_ChangeToNextDspMode()
 		ts.dsp_mode ++; // switch mode
 		// 0 = everything OFF, 1 = NR, 2 = automatic NOTCH, 3 = NR + NOTCH, 4 = manual NOTCH, 5 = BASS adjustment, 6 = TREBLE adjustment
 		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
-		//
-		// prevent certain modes to prevent CPU crash
-		//
-		// prevent NR AND NOTCH, when in CW
-		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
-		// prevent NOTCH, when in CW
-		if (ts.dsp_mode == DSP_SWITCH_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
-		// prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
-		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ )) ts.dsp_mode++;
 
-		switch (ts.dsp_mode)
-		{
-
-		case DSP_SWITCH_OFF: // switch off everything
-			ts.dsp_active =  (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-			break;
-		case DSP_SWITCH_NR:
-			ts.dsp_active =  DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_NR;
-			break;
-		case DSP_SWITCH_NOTCH:
-			ts.dsp_active =  DSP_NOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
-			break;
-		case DSP_SWITCH_NR_AND_NOTCH:
-			ts.dsp_active =  DSP_NOTCH_ENABLE | DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_NR;
-			break;
-		case DSP_SWITCH_NOTCH_MANUAL:
-			ts.dsp_active =  DSP_MNOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MPEAK_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
-			break;
-		case DSP_SWITCH_PEAK_FILTER:
-			ts.dsp_active =  DSP_MPEAK_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE));
-			ts.enc_two_mode = ENC_TWO_MODE_PEAK_F;
-			break;
-		default:
-			break;
-		}
-
-		ts.dsp_active_toggle = ts.dsp_active;  // save update in "toggle" variable
-		// reset DSP NR coefficients
-		AudioDriver_SetRxAudioProcessing(ts.dmod_mode, true);        // update DSP/filter settings
-		UiDriver_DisplayEncoderTwoMode();         // DSP control is mapped to column 2
+		UiDriver_UpdateDSPmode();
 	}
 }
 
@@ -5942,6 +5966,8 @@ void UiAction_CheckSpectrumTouchActions()
 		}
 	}
 }
+
+//SpectrumVirtualKeys_flag
 
 void UiAction_ChangeFrequencyByTouch()
 {
@@ -6395,6 +6421,48 @@ static void UiAction_StepPlusHold()
 	}
 }
 
+static bool UiDriver_Process_WFscope_RatioChange()
+{
+	bool TouchProcessed=false;
+
+	UiArea_t OKArea;
+	OKArea.x=sd.Slayout->graticule.x+sd.Slayout->graticule.w-65;
+	OKArea.y=sd.Slayout->graticule.y;
+	OKArea.h=sd.Slayout->graticule.h;
+	OKArea.w=25;
+	UiArea_t ExitArea;
+	ExitArea.x=sd.Slayout->graticule.x+sd.Slayout->graticule.w-30;
+	ExitArea.y=sd.Slayout->graticule.y;
+	ExitArea.h=sd.Slayout->graticule.h;
+	ExitArea.w=30;
+
+	if(UiDriver_CheckTouchRegion(&OKArea))
+	{
+		ts.SpectrumResize_flag=0;
+		ts.graticulePowerupYpos=sd.Slayout->graticule.y;		//store current graticule position for future eeprom save
+		UiDriver_DisplayFButton_F1MenuExit();		//redraw the menu button to indicate the changed item
+		ts.menu_var_changed=1;
+		ts.flags1 |= FLAGS1_SCOPE_ENABLED;
+		ts.flags1 |= FLAGS1_WFALL_ENABLED;
+		UiSpectrum_Init();
+		TouchProcessed=true;
+	}
+	else if(UiDriver_CheckTouchRegion(&ExitArea))
+	{
+		ts.SpectrumResize_flag=0;
+		UiSpectrum_Init();
+		TouchProcessed=true;
+	}
+	else if(UiDriver_CheckTouchRegion(&sd.Slayout->full))
+	{
+		UiDriver_DrawGraticule_Rect(false); 	 //clear graticule current area
+		sd.Slayout->graticule.y=UiSprectrum_CheckNewGraticulePos(ts.tp->hr_y);
+		UiDriver_DrawGraticule_Rect(true);		//draw new graticule control
+		TouchProcessed=true;
+	}
+
+	return TouchProcessed;
+}
 #define TOUCH_SHOW_REGIONS_AND_POINTS	//this definition enables the drawing of boxes of regions and put the pixel in touch point
 
 static void UiDriver_HandleTouchScreen(bool is_long_press)
@@ -6405,9 +6473,6 @@ static void UiDriver_HandleTouchScreen(bool is_long_press)
 
 		if (ts.show_debug_info)					// show coordinates for coding purposes
 		{
-
-
-
 			char text[14];
 			snprintf(text,14,"%04d%s%04d%s",ts.tp->hr_x," : ",ts.tp->hr_y,"  ");
 
@@ -6429,47 +6494,18 @@ static void UiDriver_HandleTouchScreen(bool is_long_press)
 			UiLcdHy28_PrintText(0,ts.Layout->LOADANDDEBUG_Y,text,White,Black,0);
 		}
 
+		bool TouchProcessed=0;
 		if(ts.SpectrumResize_flag==true
 				&& ts.menu_mode==0)
 		{
-			UiArea_t OKArea;
-			OKArea.x=sd.Slayout->graticule.x+sd.Slayout->graticule.w-65;
-			OKArea.y=sd.Slayout->graticule.y;
-			OKArea.h=sd.Slayout->graticule.h;
-			OKArea.w=25;
-			UiArea_t ExitArea;
-			ExitArea.x=sd.Slayout->graticule.x+sd.Slayout->graticule.w-30;
-			ExitArea.y=sd.Slayout->graticule.y;
-			ExitArea.h=sd.Slayout->graticule.h;
-			ExitArea.w=30;
-
-			if(UiDriver_CheckTouchRegion(&OKArea))
-			{
-				ts.SpectrumResize_flag=0;
-				ts.graticulePowerupYpos=sd.Slayout->graticule.y;		//store current graticule position for future eeprom save
-				UiDriver_DisplayFButton_F1MenuExit();		//redraw the menu button to indicate the changed item
-				ts.menu_var_changed=1;
-				ts.flags1 |= FLAGS1_SCOPE_ENABLED;
-				ts.flags1 |= FLAGS1_WFALL_ENABLED;
-				UiSpectrum_Init();
-			}
-			else if(UiDriver_CheckTouchRegion(&ExitArea))
-			{
-				ts.SpectrumResize_flag=0;
-				UiSpectrum_Init();
-			}
-			else if(UiDriver_CheckTouchRegion(&sd.Slayout->full))
-			{
-				UiDriver_DrawGraticule_Rect(false); 	 //clear graticule current area
-				sd.Slayout->graticule.y=UiSprectrum_CheckNewGraticulePos(ts.tp->hr_y);
-				UiDriver_DrawGraticule_Rect(true);		//draw new graticule control
-			}
-			else
-			{
-				UiDriver_ProcessTouchActions(&ts.Layout->touchaction_list[touchaction_idx], is_long_press);
-			}
+			TouchProcessed=UiDriver_Process_WFscope_RatioChange();
 		}
-		else
+		else if(ts.VirtualKeysShown_flag)
+		{
+			TouchProcessed=UiVk_Process_VirtualKeypad(is_long_press);
+		}
+
+		if(!TouchProcessed)
 		{
 			UiDriver_ProcessTouchActions(&ts.Layout->touchaction_list[touchaction_idx], is_long_press);
 		}
@@ -6928,3 +6964,4 @@ void UiDriver_BacklightDimHandler()
 		UiLcdHy28_BacklightEnable(false);
 	}
 }
+
