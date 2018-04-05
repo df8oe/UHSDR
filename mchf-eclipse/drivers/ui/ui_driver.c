@@ -5728,7 +5728,9 @@ void UiAction_ChangeLowerMeterUp()
 void UiDriver_UpdateDSPmode()
 {
 
-	do{
+	//loop for detection of first possible DSP function to switch it on if others are disabled/not allowed
+	for(int i=0;i<DSP_SWITCH_MAX;i++)
+	{
 		//
 		// prevent certain modes to prevent CPU crash
 		//
@@ -5746,9 +5748,8 @@ void UiDriver_UpdateDSPmode()
 
 		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
 
-		if(ts.dsp_mode==0)	break;
-
-	}while(1);
+		if(ts.dsp_mode==0)	break;	//safe exit because there is always DSP OFF option at which we can stop
+	}
 
 
 	switch (ts.dsp_mode)

@@ -500,6 +500,11 @@ int mchfMain(void)
     // UI HW init
     UiDriver_Init();
 
+    //preventing DSP functions mask to have not proper value
+    ts.dsp_mode_mask|=1;
+    ts.dsp_mode_mask&=(1<<DSP_SWITCH_MAX)-1;
+
+
 	// Si5351a only present at OVI40 and supports VLF...2m
 	if (Si5351a_IsPresent()) {
 		ts.rfmod_present = true;
