@@ -14,7 +14,7 @@
 #define Col_BtnLightLeftTop RGB(0xE0,0xE0,0xE0)
 #define Col_BtnLightRightBot RGB(0x60,0x60,0x60)
 #define Col_BtnDisabled RGB(0x70,0x70,0x70)
-#define Col_Warning RGB(0xC0,0xC0,0x80)
+#define Col_Warning RGB(0xC0,0xC0,0x60)
 
 
 /**
@@ -27,11 +27,11 @@
 
 static void UiVk_DrawButtonBody(UiArea_t* Ka, uint16_t col_Bcgr, uint16_t col_LeftUP, uint16_t col_RightBot)
 {
-	UiLcdHy28_DrawFullRect(Ka->x+1,Ka->y+1,Ka->h-2,Ka->w-2,col_Bcgr);
-	UiLcdHy28_DrawStraightLine(Ka->x,Ka->y,Ka->h,LCD_DIR_VERTICAL,col_LeftUP);
-	UiLcdHy28_DrawStraightLine(Ka->x+1,Ka->y,Ka->w-1,LCD_DIR_HORIZONTAL,col_LeftUP);
-	UiLcdHy28_DrawStraightLine(Ka->x+Ka->w,Ka->y+1,Ka->h-1,LCD_DIR_VERTICAL,col_RightBot);
-	UiLcdHy28_DrawStraightLine(Ka->x+1,Ka->y+Ka->h,Ka->w-1,LCD_DIR_HORIZONTAL,col_RightBot);
+	UiLcdHy28_DrawFullRect(Ka->x+1,Ka->y+1,Ka->h-1,Ka->w-1,col_Bcgr);
+	UiLcdHy28_DrawStraightLine(Ka->x,Ka->y,Ka->h+1,LCD_DIR_VERTICAL,col_LeftUP);	//left
+	UiLcdHy28_DrawStraightLine(Ka->x+1,Ka->y,Ka->w,LCD_DIR_HORIZONTAL,col_LeftUP);	//top
+	UiLcdHy28_DrawStraightLine(Ka->x+Ka->w,Ka->y+1,Ka->h-1,LCD_DIR_VERTICAL,col_RightBot);	//right
+	UiLcdHy28_DrawStraightLine(Ka->x+1,Ka->y+Ka->h,Ka->w,LCD_DIR_HORIZONTAL,col_RightBot); //bottom
 }
 
 /**
