@@ -4384,10 +4384,14 @@ static void UiDriver_HandleTXMeters()
 		swrm.vswr_dampened = 0;		// reset averaged readings when not in TX mode
 		swrm.fwd_pwr_avg = -1;
 		swrm.rev_pwr_avg = -1;
-	}
-	else if (RadioManagement_UpdatePowerAndVSWR())
-	{
 
+        swrm.p_curr   = 0;
+        swrm.fwd_calc = 0;
+        swrm.rev_calc = 0;
+
+	}
+	else
+	{
 		static uint8_t    old_power_level = 99;
 
 		// display FWD, REV power, in milliwatts - used for calibration - IF ENABLED
@@ -6766,6 +6770,7 @@ void UiDriver_TaskHandler_MainTasks()
 		UiDriver_CheckFrequencyEncoder();
 		UiDriver_KeyboardProcessOldClicks();
 		RadioManagement_HandlePttOnOff();
+		RadioManagement_UpdatePowerAndVSWR();
 	}
 
 	UiSpectrum_Redraw();
