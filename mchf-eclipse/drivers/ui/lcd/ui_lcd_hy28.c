@@ -78,6 +78,7 @@
 #define SPI_DATA    (0x02)              /* RS bit 1 within start byte         */
 #define SPI_INDEX   (0x00)              /* RS bit 0 within start byte         */
 
+#define SPI_TIMEOUT 100
 
 mchf_display_t mchf_display;
 
@@ -740,7 +741,7 @@ static inline void UiLcdHy28_SpiSendByte(uint8_t byte)
 
 #ifdef USE_SPI_HAL
     uint8_t dummy;
-    HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,10);
+    HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,SPI_TIMEOUT);
 #else
     while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
     SPI2->DR = byte;
@@ -788,7 +789,7 @@ uint8_t UiLcdHy28_SpiReadByte()
     uint8_t retval = 0;
 
     /* Send a Transmit a dummy byte and Receive Byte through the SPI peripheral */
-    HAL_SPI_TransmitReceive(&hspi2, &dummy,&retval,1,10);
+    HAL_SPI_TransmitReceive(&hspi2, &dummy,&retval,1,SPI_TIMEOUT);
 
     return retval;
 }
@@ -799,7 +800,7 @@ uint8_t UiLcdHy28_SpiReadByteFast()
 
 #ifdef USE_SPI_HAL
     uint8_t dummy = 0;
-    HAL_SPI_TransmitReceive(&hspi2, &dummy, &retval,1,10);
+    HAL_SPI_TransmitReceive(&hspi2, &dummy, &retval,1,SPI_TIMEOUT);
 #else
 
     /* Send a Transmit a dummy byte and Receive Byte through the SPI peripheral */
@@ -2356,7 +2357,7 @@ static void UiLcdHy28_TouchscreenReadData(uint16_t* x_p,uint16_t* y_p)
 
     UiLcdHy28_TouchscreenStartSpiTransfer();
 
-    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)xpt2046_command, xpt_response,XPT2046_COMMAND_LEN,20);
+    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)xpt2046_command, xpt_response,XPT2046_COMMAND_LEN,SPI_TIMEOUT);
 
     UiLcdHy28_TouchscreenFinishSpiTransfer();
 
