@@ -132,7 +132,25 @@ No one will be happy with all rules, but as long as the rules are usable, please
 	    *value_p = value_float; 
 	}
 ```
-	
+
+#### File headers
+All code files should bear the appropriate license in them. I.e. if using external files as a whole (like we do with FreeDV), leave the original license header in place. For our own files, license GPLv3 is to be used.
+Please use the following header:
+
+```
+/*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
+/************************************************************************************
+ **                                                                                **
+ **                                        UHSDR                                   **
+ **               a powerful firmware for STM32 based SDR transceivers             **
+ **                                                                                **
+ **--------------------------------------------------------------------------------**
+ **                                                                                **
+ **  Description:   Please provide one                                             **
+ **  Licence:		GNU GPLv3                                                      **
+ ************************************************************************************/
+```	
+You may add Author / Maintainer fields, if this is appropriate.
 
 ### WIKI
 To keep slowly changing documents up-2-date it will be great if you help to set up such documents in the WIKI area. They are quick-&-easy access to newcomers and will pleasure building and reduce questions which repeat frequently. The following documents can be accessed in the WIKI area:
