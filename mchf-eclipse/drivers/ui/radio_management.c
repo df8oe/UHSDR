@@ -1337,7 +1337,7 @@ static void RadioManagement_PowerFromADCValue(float val, float sensor_null, floa
 }
 
 /*
- * @brief Measures and calculates TX Power Output and SWR, has to be called regularily
+ * @brief Measures and calculates TX Power Output and SWR, has to be called regularly
  * @returns true if new values have been calculated
  */
 bool RadioManagement_UpdatePowerAndVSWR()
@@ -1363,39 +1363,31 @@ bool RadioManagement_UpdatePowerAndVSWR()
         }
 
         // Add to accumulator to average A/D values
-        swrm.fwd_calc += (float)val_p;
-        swrm.rev_calc += (float)val_s;
+        swrm.fwd_calc += val_p;
+        swrm.rev_calc += val_s;
 
         swrm.p_curr++;
     }
     else
     {
         // obtain and calculate power meter coupling coefficients
-        coupling_calc = swrm.coupling_calc[ts.filter_band];
-        coupling_calc -= 100;                       // offset to zero
-        coupling_calc /= 10;                        // rescale to 0.1 dB/unit
+        coupling_calc = (swrm.coupling_calc[ts.filter_band] - 100.0)/10.0;
+        // offset to zero and rescale to 0.1 dB/unit
 
 
-        sensor_null = (float)swrm.sensor_null;  // get calibration factor
-        sensor_null -= 100;                     // offset it so that 100 = 0
-        sensor_null /= 1000;                    // divide so that each step = 1 millivolt
+        sensor_null = (swrm.sensor_null - 100.0) / 1000 ;
+        // get calibration factor
+        // offset it so that 100 = 0
+        // divide so that each step = 1 millivolt
 
         // Compute average values
-
-        swrm.fwd_calc /= SWR_SAMPLES_CNT;
-        swrm.rev_calc /= SWR_SAMPLES_CNT;
-
-        RadioManagement_PowerFromADCValue(swrm.fwd_calc, sensor_null, coupling_calc,&swrm.fwd_pwr, &swrm.fwd_dbm);
-        RadioManagement_PowerFromADCValue(swrm.rev_calc, sensor_null, coupling_calc,&swrm.rev_pwr, &swrm.rev_dbm);
+        RadioManagement_PowerFromADCValue(swrm.fwd_calc / SWR_SAMPLES_CNT, sensor_null, coupling_calc,&swrm.fwd_pwr, &swrm.fwd_dbm);
+        RadioManagement_PowerFromADCValue(swrm.rev_calc / SWR_SAMPLES_CNT, sensor_null, coupling_calc,&swrm.rev_pwr, &swrm.rev_dbm);
 
         // Reset accumulators and variables for power measurements
         swrm.p_curr   = 0;
         swrm.fwd_calc = 0;
         swrm.rev_calc = 0;
-
-
-        // swrm.vswr = swrm.fwd_dbm-swrm.rev_dbm;      // calculate VSWR
-
         // Calculate VSWR from power readings
 
         swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrtf(swrm.rev_pwr/swrm.fwd_pwr));
