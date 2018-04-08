@@ -495,10 +495,8 @@
 #define XBUTTON_G4               GPIO_PIN_0
 #define XBUTTON_G4_PIO           GPIOC
 // pin 1
-#ifndef USE_DB4PLE_BROKEN_H7
 #define BUTTON_M3               GPIO_PIN_1
 #define BUTTON_M3_PIO           GPIOC
-#endif
 // pin 2
 #define LCD_MISO                GPIO_PIN_2
 #define LCD_MISO_PIO            GPIOC
@@ -652,10 +650,8 @@
 // ----                         PORT F                                      ----
 // -----------------------------------------------------------------------------
 // pin 0
-#ifndef USE_DB4PLE_BROKEN_H7
 #define BUTTON_M1               GPIO_PIN_0
 #define BUTTON_M1_PIO           GPIOF
-#endif
 
 // pin 1
 // pin 2
@@ -671,13 +667,8 @@
 // pin 8
 // pin 9
 // pin 10
-#ifdef USE_DB4PLE_BROKEN_H7
-#define BUTTON_M3               GPIO_PIN_10
-#define BUTTON_M3_PIO           GPIOF
-#else
 #define BUTTON_E3               GPIO_PIN_10
 #define BUTTON_E3_PIO           GPIOF
-#endif
 // pin 11
 #define BUTTON_S18              GPIO_PIN_11
 #define BUTTON_S18_PIO          GPIOF
@@ -685,13 +676,8 @@
 #define BLUE_LED                GPIO_PIN_12
 #define BLUE_LED_PIO            GPIOF
 // pin 13
-#ifdef USE_DB4PLE_BROKEN_H7
-#define BUTTON_M1               GPIO_PIN_13
-#define BUTTON_M1_PIO           GPIOF
-#else
 #define BUTTON_E1               GPIO_PIN_13
 #define BUTTON_E1_PIO           GPIOF
-#endif
 // pin 14
 // pin 15
 #define BUTTON_F3               GPIO_PIN_15
