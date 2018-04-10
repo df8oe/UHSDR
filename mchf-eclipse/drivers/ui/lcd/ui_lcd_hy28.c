@@ -1800,6 +1800,9 @@ static void UiLcdHy28_PrintTextCenteredLen(const uint16_t XposStart,const uint16
     }
 }
 
+/*
+ * Print text centered inside the bounding box. Using '\n' to print multline text
+ */
 uint16_t UiLcdHy28_PrintTextCentered(const uint16_t XposStart,const uint16_t YposStart,const uint16_t bbW,const char* str,uint32_t clr_fg,uint32_t clr_bg,uint8_t font)
 {
     // this code is a full clone of the PrintText function, with exception of the function call to PrintTextCenteredLen

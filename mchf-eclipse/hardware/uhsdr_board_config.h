@@ -716,6 +716,11 @@
 // pin 14
 // pin 15
 
+// PORT H
+// pin1
+#define BUTTON_S19              GPIO_PIN_1
+#define BUTTON_S19_PIO          GPIOH
+
 #ifdef STM32H7
 #define hdac hdac1
 #define FLASHSIZE_BASE 0x1FF1E880
