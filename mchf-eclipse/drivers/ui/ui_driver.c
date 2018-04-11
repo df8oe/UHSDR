@@ -27,6 +27,7 @@
 #include "adc.h"
 #include "drivers/ui/oscillator/osc_si5351a.h"
 #include "audio_nr.h"
+#include "uhsdr_keypad.h"
 //
 //
 #include "ui.h"
@@ -2588,31 +2589,24 @@ void UiDriver_ChangeTuningStep(uchar is_up)
 
 /*----------------------------------------------------------------------------
  * @brief Scans buttons 0-16:  0-15 are normal buttons, 16 is power button, 17 touch
- * @param button_num - 0-17
+ * @param button_num - 0-BUTTON_NUM - 1
  * @returns true if button is pressed
  */
 
 static bool UiDriver_IsButtonPressed(ulong button_num)
 {
-	bool retval = false;
-
-	// TODO: This is fragile code, as it depends on being called multiple times in short periods (ms)
+	// FIXME: This is fragile code, as it depends on being called multiple times in short periods (ms)
 	// This works, since regularily the button matrix is queried.
 	UiLcdHy28_TouchscreenDetectPress();
-
-	if(button_num < BUTTON_NUM)  				// buttons 0-15 are the normal keypad buttons
-	{
-		retval = HAL_GPIO_ReadPin(buttons.map[button_num].port,buttons.map[button_num].button) == 0;		// in normal mode - return key value
-	}
-	return retval;
+	return Board_IsKeyPressed(button_num);
 }
 
 
 void UiDriver_KeyboardProcessOldClicks()
 {
-	unsigned int i;
-
 	static uchar press_hold_release_delay = 0;
+
+	Board_KeypadScan(); // update all key states
 
 	// State machine - processing old click
 	if(ks.button_processed == false)
@@ -2620,10 +2614,10 @@ void UiDriver_KeyboardProcessOldClicks()
 		// State machine - click or release(debounce filter)
 		if(!ks.button_pressed)
 		{
-			// Scan inputs - 16 buttons in total, but on different ports
-			for(i = 0; i < 18; i++)           // button "17" is touchscreen
+			// Scan logical button inputs (the result of the HW keypad scan)
+		    // this algorithm favors the pressed button with the lowest number
+			for(int i = 0; i < BUTTON_NUM; i++)
 			{
-				// Read each pin of the port, based on the declared pin map
 				if(UiDriver_IsButtonPressed(i))
 				{
 					// Change state to clicked
@@ -2648,7 +2642,9 @@ void UiDriver_KeyboardProcessOldClicks()
 				ks.debounce_check_complete = 1; // indicate that the debounce check was completed
 			}
 			else
+			{
 				ks.button_pressed = 0;          // debounce incomplete, button released - cancel detection
+			}
 		}
 		else if((ks.debounce_time >= BUTTON_HOLD_TIME) && (!ks.press_hold))     // press-and-hold processing
 		{
@@ -2660,7 +2656,9 @@ void UiDriver_KeyboardProcessOldClicks()
 		else if(ks.press_hold && (!UiDriver_IsButtonPressed(ks.button_id)))     // was there a press-and-hold and the button is now released?
 		{
 			if(press_hold_release_delay)                  // press-and-hold delay expired?
+			{
 				press_hold_release_delay--;                 // no - continue counting down before cancelling "press-and-hold" mode
+			}
 			else                              // Press-and-hold mode time expired!
 			{
 				ks.button_pressed = 0;          // reset and exit press-and-hold mode, this to prevent extraneous button-presses when using multiple buttons
@@ -5008,14 +5006,14 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 				"Press BAND+ and BAND-\n"
 				"to confirm loading",clr_fg,clr_bg,0);
 
-		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
+		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false)
 		{
 			HAL_Delay(10);
 		}
 
 		const char* txp;
 
-		if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
+		if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))
 		{
 			clr_bg = Black;							// clear the screen
 			clr_fg = White;
@@ -5067,14 +5065,13 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 //*----------------------------------------------------------------------------
 static void UiDriver_KeyTestScreen()
 {
-	ushort i, j, k, p_o_state, rb_state, new_state;
-	uint32_t poweroffcount, rbcount, enccount;
-	int direction;
-	uint32_t stat = 0;
-	poweroffcount = rbcount = enccount = 0;
-	p_o_state = rb_state = new_state = 0;
-	char txt_buf[40];
-	const char* txt;
+	ushort p_o_state = 0, rb_state = 0, new_state = 0;
+	uint32_t poweroffCount = 0, rebootCount = 0;
+
+	// int direction;
+
+	uint32_t keyScanState = 0;
+
 
 	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
 	{
@@ -5084,87 +5081,119 @@ static void UiDriver_KeyTestScreen()
 	    // some TRX seem to see touchscreen events even if not pressed
 	    HAL_Delay(500);
 	}
-	for(i = 0; i < buttons.num ; i++)	 			// scan all buttons
-	{
 
-		if(UiDriver_IsButtonPressed(i))	 		// is one button being pressed?
-		{
-			stat |= 1<<i;						// yes - remember which one
-		}
-	}
+    Board_KeypadScan(); // read and map the keys to their logical buttons
+    // not all keys may have a button or some keys may go to the same button
 
-	if(stat) {			// a button was pressed
+
+    keyScanState = Board_KeyStates();	// remember which one was pressed
+
+	if(Board_IsAnyKeyPressed()) {			// at least one button was pressed
+
+        char txt_buf[40];
+        const char* txt;
+        uint32_t encoderCount = 0;
+        const uint32_t clr_fg = White;
+        const uint32_t clr_bg = Blue;
+
 		UiLcdHy28_LcdClear(Blue);							// clear the screen
-		snprintf(txt_buf,40,"Initial keys: %lx",stat);
-		UiLcdHy28_PrintTextCentered(0,0,ts.Layout->Size.x,txt_buf,White,Blue,1);
-		UiLcdHy28_PrintTextCentered(0,35,ts.Layout->Size.x,"Input Elements Test",White,Blue,1);
-		UiLcdHy28_PrintTextCentered(0,70,ts.Layout->Size.x,"press & hold POWER button to poweroff",White,Blue,0);
-		UiLcdHy28_PrintTextCentered(0,90,ts.Layout->Size.x,"press & hold BAND- button to reboot",White,Blue,0);
+        UiLcdHy28_PrintTextCentered(2,05,ts.Layout->Size.x-4,"INPUT TEST SCREEN",clr_fg,clr_bg,1);
+
+		snprintf(txt_buf,40,"Keys Initial: %08lx",keyScanState);
+		UiLcdHy28_PrintTextCentered(0,30,ts.Layout->Size.x,txt_buf,White,Blue,0);
+
+		UiLcdHy28_PrintTextCentered(0,70,ts.Layout->Size.x,"press & hold POWER button to poweroff\npress & hold BAND- button to reboot",White,Blue,0);
 
 		for(;;)	 		// get stuck here for test duration
 		{
-			j = 99;		// load with flag value
-			k = 0;
+			uint32_t idxFirstPressedButton = 99;		// load with flag value
+			uint32_t numOfPressedButtons = 0;
 
-			for(i = 0; i < buttons.num ; i++)
+			// we slow down the loop a bit so that our wait counters take some time to go down.
+            HAL_Delay(10);
+
+	        Board_KeypadScan();
+	        // read and map the hw keys to their logical buttons
+	        // not all keys may have a button or some keys may go to the same button
+
+
+	        uint32_t newKeyScanState = Board_KeyStates();   // check which hw keys are pressed
+
+	        if (newKeyScanState != keyScanState)
+	        {
+	            keyScanState = newKeyScanState;
+	            snprintf(txt_buf,40,"Keys Current: %08lx",keyScanState);
+	            UiLcdHy28_PrintTextCentered(0,45,ts.Layout->Size.x,txt_buf,White,Blue,0);
+	        }
+
+
+	        //  now find out which buttons are pressed (logical buttons, not hw keys)
+			for(int buttonIdx = 0; buttonIdx < BUTTON_NUM ; buttonIdx++)
 			{
 				// scan all buttons
-				if(UiDriver_IsButtonPressed(i))
+				if(UiDriver_IsButtonPressed(buttonIdx))
 				{
 					// is this button pressed?
-					k++;
-					if(j == 99)						// is this the first button pressed?
-						j = i;						// save button number
+					numOfPressedButtons++;
+					if(idxFirstPressedButton == 99)						// is this the first button pressed?
+					{
+						idxFirstPressedButton = buttonIdx;						// save button number
+					}
 				}
 			}
 
-			if(j == BUTTON_BNDM_PRESSED && new_state == 0)	// delay if BANDM was used to enter button test mode
+			if(idxFirstPressedButton == BUTTON_BNDM_PRESSED && new_state == 0)	// delay if BANDM was used to enter button test mode
 			{
-				rbcount = 0;
+				rebootCount = 0;
 				new_state = 1;
 			}
 
-			char t;
-			for(t = 0; t < ENC_MAX; t++)
+
+			// now find out if an encoder was moved (we detect this by seeing a encoder value != 0)
+			int32_t encoderDirection;
+
+			uint32_t encoderIdx;
+			for(encoderIdx = 0; encoderIdx < ENC_MAX; encoderIdx++)
 			{
-				direction = UiDriverEncoderRead(t);
-				if(direction)
+				encoderDirection = UiDriverEncoderRead(encoderIdx);
+				if(encoderDirection != 0)
 				{
-					enccount = 50;
+					encoderCount = 200;
 					break;
 				}
 			}
-			if(t != ENC_MAX)
+
+			if(encoderIdx != ENC_MAX)
 			{
-				snprintf(txt_buf,40," Encoder %d <%s>", t+1, direction>0 ? "right":"left");		// building string for encoders
-				j = 18+t;					// add encoders behind buttons;
+				snprintf(txt_buf,40," Encoder %ld <%s>", encoderIdx+1, encoderDirection>0 ? "right":"left");		// building string for encoders
+				idxFirstPressedButton = BUTTON_NUM+encoderIdx;					// add encoders behind buttons;
 			}
 
-			if (j < buttons.num)
+			if (idxFirstPressedButton < BUTTON_NUM)
 			{
-				txt = buttons.map[j].label;
+				txt = buttons[idxFirstPressedButton].label;
 			}
 			else
 			{
 				txt = NULL;
 			}
-			switch(j)	 				// decode button to text
+			switch(idxFirstPressedButton)	 				// decode keyPin to text
 			{
-			case	BUTTON_POWER_PRESSED:
-				if(poweroffcount > 75)
+			case	BUTTON_PWR_PRESSED:
+				if(poweroffCount > 75)
 				{
 					txt = "powering off...";
 					p_o_state = 1;
 				}
-				poweroffcount++;
+				poweroffCount++;
 				break;
 			case	BUTTON_BNDM_PRESSED:
-				if(rbcount > 75)
+				if(rebootCount > 75)
 				{
 					txt = "rebooting...";
 					rb_state = 1;
 				}
-				rbcount++;
+				rebootCount++;
 				break;
 			case	TOUCHSCREEN_ACTIVE:
 
@@ -5189,35 +5218,34 @@ static void UiDriver_KeyTestScreen()
 					}
 				}
 				break;
-			case	18+ENC1:							// handle encoder event
-			case	18+ENC2:
-			case	18+ENC3:
-			case	18+ENCFREQ:
-			txt = txt_buf;
-			break;
+			case	BUTTON_NUM+ENC1:							// handle encoder event
+			case	BUTTON_NUM+ENC2:
+			case	BUTTON_NUM+ENC3:
+            case    BUTTON_NUM+ENCFREQ:
+			    txt = txt_buf;
+			    break;
 			default:
 				if (txt == NULL)
 				{
-					if(!enccount)
+					if(encoderCount == 0)
 					{
-						txt = "<no button>";				// no button pressed
+						txt = "<no key>";				// no keyPin pressed
 					}
 					else
 					{
-						txt = "";
-						enccount--;
+						encoderCount--;
 					}
-					poweroffcount = 0;
-					rbcount = 0;
+					poweroffCount = 0;
+					rebootCount = 0;
 				}
 			}
 
-			if(txt[0])
+			if(txt != NULL)
 			{
 				UiLcdHy28_PrintTextCentered(0,120,ts.Layout->Size.x,txt,White,Blue,1);			// identify button on screen
 			}
 
-			snprintf(txt_buf,40, "# of buttons pressed: %d  ", (int)k);
+			snprintf(txt_buf,40, "# of buttons pressed: %ld  ", numOfPressedButtons);
 			UiLcdHy28_PrintTextCentered(0,160,ts.Layout->Size.x,txt_buf,White,Blue,0);			// show number of buttons pressed on screen
 
 			if(ts.tp->present)			// show translation of touchscreen if present
@@ -5233,12 +5261,15 @@ static void UiDriver_KeyTestScreen()
 
 			if(p_o_state == 1)
 			{
-				Board_Powerdown();
+                if(idxFirstPressedButton != BUTTON_PWR_PRESSED)
+                {
+                    Board_Powerdown();
+                }
 				// never reached
 			}
 			if(rb_state == 1)
 			{
-				if(j != BUTTON_BNDM_PRESSED)
+				if(idxFirstPressedButton != BUTTON_BNDM_PRESSED)
 				{
 					Board_Reboot();
 				}
@@ -5394,13 +5425,13 @@ static bool UiDriver_TouchscreenCalibration()
                 UiLcdHy28_PrintTextCentered(2, 195, MAX_X-4, "Press BAND+ and BAND-\n"
                         "to start calibration",clr_fg,clr_bg,0);
 
-                while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
+                while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false)
                 {
                     HAL_Delay(10);
                 }
 
 
-                if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
+                if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))
                 {
                     UiLcdHy28_LcdClear(Black);							// clear the screen
                     UiLcdHy28_PrintTextCentered(2,108,MAX_X-4,"      ...performing normal start...",White,Black,0);
@@ -5456,12 +5487,12 @@ static bool UiDriver_TouchscreenCalibration()
 	            "to run drawing on screen\n"
 	            "or Power to save and reboot",clr_fg,clr_bg,0);
 
-	    while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false)
+	    while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false)
 	    {
 	        HAL_Delay(10);
 	    }
 
-	    if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))
+	    if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))
 	    {
 	        UiLcdHy28_LcdClear(Black);							// clear the screen
 	        UiLcdHy28_PrintTextCentered(2,108,MAX_X-4,"      ...performing normal start...",White,Black,0);
@@ -5476,12 +5507,12 @@ static bool UiDriver_TouchscreenCalibration()
 	                "Press Power to save and reboot",clr_fg,clr_bg,0);
 	        while(1)
 	        {
-	            while((UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false) && (UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == false))
+	            while((UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false) && (UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false))
 	            {
 	                HAL_Delay(40);
 	            }
 
-	            if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED) == true)
+	            if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == true)
 	                break;
 
 	            if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
@@ -6335,7 +6366,7 @@ static void UiAction_ToggleKeyerMode()
 
 static void UiAction_BandMinusHold()
 {
-	if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	 	// and POWER button pressed-and-held at the same time?
+	if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))	 	// and POWER button pressed-and-held at the same time?
 	{
 		UiDriver_LcdBlankingStealthSwitch();
 	}
@@ -6357,7 +6388,7 @@ static void UiAction_BandPlusHold()
 			UiAction_ToggleWaterfallScopeDisplay();
 		}
 	}
-	if(UiDriver_IsButtonPressed(BUTTON_POWER_PRESSED))	 	// and POWER button pressed-and-held at the same time?
+	if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))	 	// and POWER button pressed-and-held at the same time?
 	{
 		UiDriver_PowerDownCleanup(false); // do not save the configuration
 	}
@@ -6365,7 +6396,7 @@ static void UiAction_BandPlusHold()
 
 static void UiAction_PowerHold()
 {
-	if(UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED))	 	// was button BAND- pressed at the same time?
+	if(UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED))	 	// was keyPin BAND- pressed at the same time?
 	{
 		UiDriver_LcdBlankingStealthSwitch();
 	}
@@ -6381,7 +6412,7 @@ static void UiAction_PowerHold()
 
 static void UiAction_StepMinusHold()
 {
-	if(UiDriver_IsButtonPressed(BUTTON_STEPP_PRESSED))	 	// was button STEP+ pressed at the same time?
+	if(UiDriver_IsButtonPressed(BUTTON_STEPP_PRESSED))	 	// was keyPin STEP+ pressed at the same time?
 	{
 		ts.frequency_lock = !ts.frequency_lock;
 		// update frequency display
@@ -6389,11 +6420,11 @@ static void UiAction_StepMinusHold()
 	}
 	else
 	{
-		if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))	  // button swap NOT enabled
+		if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))	  // keyPin swap NOT enabled
 		{
 			UiDriver_PressHoldStep(0);	// decrease step size
 		}
-		else  		// button swap enabled
+		else  		// keyPin swap enabled
 		{
 			UiDriver_PressHoldStep(1);	// increase step size
 		}
@@ -6407,7 +6438,7 @@ static void UiAction_MenuSetDefaultValue()
 
 static void UiAction_StepPlusHold()
 {
-	if(UiDriver_IsButtonPressed(BUTTON_STEPM_PRESSED))	 	// was button STEP- pressed at the same time?
+	if(UiDriver_IsButtonPressed(BUTTON_STEPM_PRESSED))	 	// was keyPin STEP- pressed at the same time?
 	{
 		ts.frequency_lock = !ts.frequency_lock;
 		// update frequency display
@@ -6415,11 +6446,11 @@ static void UiAction_StepPlusHold()
 	}
 	else
 	{
-		if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))  	// button swap NOT enabled
+		if(!(ts.freq_step_config & FREQ_STEP_SWAP_BTN))  	// keyPin swap NOT enabled
 		{
 			UiDriver_PressHoldStep(1);	// increase step size
 		}
-		else  		// button swap enabled
+		else  		// keyPin swap enabled
 		{
 			UiDriver_PressHoldStep(0);	// decrease step size
 		}
@@ -6547,7 +6578,7 @@ static const keyaction_descr_t keyactions_normal[] =
 		{ BUTTON_STEPP_PRESSED, UiAction_ChangeTuningStepUpOrDown,			UiAction_StepPlusHold },
 		{ BUTTON_BNDM_PRESSED, 	UiAction_ChangeBandDownOrUp,				UiAction_BandMinusHold },
 		{ BUTTON_BNDP_PRESSED,  UiAction_ChangeBandUpOrDown,				UiAction_BandPlusHold },
-		{ BUTTON_POWER_PRESSED, UiAction_ChangeBacklightBrightness,			UiAction_PowerHold },
+		{ BUTTON_PWR_PRESSED, UiAction_ChangeBacklightBrightness,			UiAction_PowerHold },
 };
 
 static const keyaction_descr_t keyactions_menu[] =

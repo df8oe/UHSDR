@@ -182,50 +182,6 @@
 #include "uhsdr_board_config.h"
 #include "ui_vkeybrd.h"
 
-// Buttons map structure
-typedef struct ButtonMap
-{
-    GPIO_TypeDef 	*port;
-    ushort			button;
-    const char*     label;
-
-} ButtonMap;
-
-typedef struct
-{
-    const ButtonMap* map;
-    uint32_t num;
-} mchf_buttons_t;
-
-// Button definitions
-//
-enum
-{
-    BUTTON_M2_PRESSED = 0,  // 0
-    BUTTON_G3_PRESSED,  	// 1
-    BUTTON_G2_PRESSED,  	// 2
-    BUTTON_BNDM_PRESSED,    // 3
-    BUTTON_G4_PRESSED,  	// 4
-    BUTTON_M3_PRESSED,  	// 5
-    BUTTON_STEPM_PRESSED,   // 6
-    BUTTON_STEPP_PRESSED,   // 7
-    BUTTON_M1_PRESSED,  	// 8
-    BUTTON_F3_PRESSED,  	// 9 - Press and release handled in UiDriverProcessFunctionKeyClick()
-    BUTTON_F1_PRESSED,  	// 10 - Press and release handled in UiDriverProcessFunctionKeyClick()
-    BUTTON_F2_PRESSED,  	// 11 - Press and release handled in UiDriverProcessFunctionKeyClick()
-    BUTTON_F4_PRESSED,  	// 12 - Press and release handled in UiDriverProcessFunctionKeyClick()
-    BUTTON_BNDP_PRESSED,    // 13
-    BUTTON_F5_PRESSED,  	// 14 - Press and release handled in UiDriverProcessFunctionKeyClick()
-    BUTTON_G1_PRESSED,  	// 15
-    BUTTON_POWER_PRESSED,   // 16 - Used for press and release
-    TOUCHSCREEN_ACTIVE, 	// 17 - Touchscreen touched, needs to last entry before BUTTON_NUM,
-    //      init code relies on this
-    BUTTON_NUM // How many buttons we have defined
-};
-
-extern mchf_buttons_t  buttons;
-extern const ButtonMap  bm_sets[2][BUTTON_NUM];
-
 struct mchf_waterfall
 {
     uint8_t	color_scheme;			// stores waterfall color scheme
