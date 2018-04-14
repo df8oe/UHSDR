@@ -545,11 +545,16 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     case INFO_TP:
         outs = (ts.tp->present == 0)?"n/a":"XPT2046";
         break;
-    case INFO_RFMOD:
-        outs = (ts.rfmod_present == 0)?"n/a":"present";
-        break;
-    case INFO_VHFUHFMOD:
-        outs = (ts.vhfuhfmod_present == 0)?"n/a":"present";
+    case INFO_RFBOARD:
+        switch(ts.rf_board)
+        {
+        case FOUND_RF_BOARD_OVI40:
+            outs = "OVI40 RF Board";
+            break;
+        default:
+            outs = "mcHF RF Board";
+            break;
+        }
         break;
     case INFO_FLASH:
             snprintf(out,32,"%d",(STM32_GetFlashSize()));

@@ -2167,14 +2167,51 @@ static void UiDriver_UpdateBtmMeter(float val, uchar warn)
 	UiDriver_UpdateMeter(val,warn,clr,METER_BTM);
 }
 
+// FIXME: Move to RadioManagement()
+void UiDriver_InitBandSet()
+{
+    // TODO: Do this setting based on the detected RF board capabilities
+    // set the enabled bands
+    for(int i = 0; i < MAX_BANDS; i++)
+    {
+        vfo[VFO_A].enabled[i] = true; // we enable all bands but right below we turn off a few
+        vfo[VFO_B].enabled[i] = true;
+    }
+
+    switch (ts.rf_board)
+    {
+    case FOUND_RF_BOARD_MCHF:
+        vfo[VFO_A].enabled[BAND_MODE_2] = false;
+        vfo[VFO_B].enabled[BAND_MODE_2] = false;
+        vfo[VFO_A].enabled[BAND_MODE_70] = false;
+        vfo[VFO_B].enabled[BAND_MODE_70] = false;
+        vfo[VFO_A].enabled[BAND_MODE_23] = false;
+        vfo[VFO_B].enabled[BAND_MODE_23] = false;
+        vfo[VFO_A].enabled[BAND_MODE_23] = false;
+        vfo[VFO_B].enabled[BAND_MODE_23] = false;
+        vfo[VFO_A].enabled[BAND_MODE_4] = false;
+        vfo[VFO_B].enabled[BAND_MODE_4] = false;
+        vfo[VFO_A].enabled[BAND_MODE_6] = false;
+        vfo[VFO_B].enabled[BAND_MODE_6] = false;
+        vfo[VFO_A].enabled[BAND_MODE_630] = false;
+        vfo[VFO_B].enabled[BAND_MODE_630] = false;
+        vfo[VFO_A].enabled[BAND_MODE_2200] = false;
+        vfo[VFO_B].enabled[BAND_MODE_2200] = false;
+        break;
+    case FOUND_RF_BOARD_OVI40:
+        vfo[VFO_A].enabled[BAND_MODE_70] = false;
+        vfo[VFO_B].enabled[BAND_MODE_70] = false;
+        vfo[VFO_A].enabled[BAND_MODE_23] = false;
+        vfo[VFO_B].enabled[BAND_MODE_23] = false;
+        vfo[VFO_A].enabled[BAND_MODE_23] = false;
+        vfo[VFO_B].enabled[BAND_MODE_23] = false;
+        break;
+    }
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverInitFrequency
 //* Object              : set default values, some could be overwritten later
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void UiDriver_InitFrequency()
 {
 	ulong i;
@@ -2208,37 +2245,7 @@ static void UiDriver_InitFrequency()
 	df.temp_factor_changed = false;
 	df.temp_enabled = 0;		// startup state of TCXO
 
-    // TODO: Do this setting based on the detected RF board capabilities
-    // set the enabled bands
-    for(i = 0; i < MAX_BANDS; i++)
-    {
-        vfo[VFO_A].enabled[i] = true; // we enable all bands but right below we turn off a few
-        vfo[VFO_B].enabled[i] = true;
-    }
-    if (ts.vhfuhfmod_present == false)
-    {
-        vfo[VFO_A].enabled[BAND_MODE_2] = false;
-        vfo[VFO_B].enabled[BAND_MODE_2] = false;
-        vfo[VFO_A].enabled[BAND_MODE_70] = false;
-        vfo[VFO_B].enabled[BAND_MODE_70] = false;
-        vfo[VFO_A].enabled[BAND_MODE_23] = false;
-        vfo[VFO_B].enabled[BAND_MODE_23] = false;
-        vfo[VFO_A].enabled[BAND_MODE_23] = false;
-        vfo[VFO_B].enabled[BAND_MODE_23] = false;
-    }
-
-    if (ts.rfmod_present == false)
-    {
-        vfo[VFO_A].enabled[BAND_MODE_4] = false;
-        vfo[VFO_B].enabled[BAND_MODE_4] = false;
-        vfo[VFO_A].enabled[BAND_MODE_6] = false;
-        vfo[VFO_B].enabled[BAND_MODE_6] = false;
-        vfo[VFO_A].enabled[BAND_MODE_630] = false;
-        vfo[VFO_B].enabled[BAND_MODE_630] = false;
-        vfo[VFO_A].enabled[BAND_MODE_2200] = false;
-        vfo[VFO_B].enabled[BAND_MODE_2200] = false;
-    }
-
+	UiDriver_InitBandSet();
 
 	// Set virtual segments initial value (diff than zero!)
 	df.dial_digits[8]	= 0;
@@ -6080,16 +6087,6 @@ void UiAction_ChangeDynamicTuning()
 void UiAction_ChangeDebugInfoDisplay()
 {
 	UiDriver_DebugInfo_DisplayEnable(!ts.show_debug_info);
-}
-
-void UiAction_ChangeRfModPresence()
-{
-	ts.rfmod_present = !ts.rfmod_present;
-}
-
-void UiAction_ChangeVhfUhfModPresence()
-{
-	ts.vhfuhfmod_present = !ts.vhfuhfmod_present;
 }
 
 static void UiAction_ChangeFilterBW()

@@ -699,7 +699,7 @@ static Oscillator_ResultCodes_t Si570_PrepareNextFrequency(ulong freq, int temp_
         {
             // tuning inside known working spec
             retval = Si570_PrepareChangeFrequency(freq_calc/((float64_t)1000000.0));
-            if ((freq_calc > SI570_MAX_FREQ  || freq_calc < SI570_MIN_FREQ) && *(__IO uint32_t*)(SRAM2_BASE+5) != 0x29)
+            if ((freq_calc > SI570_MAX_FREQ  || freq_calc < SI570_MIN_FREQ))
             {
                 // outside official spec but known to work
                 if (retval == OSC_OK)

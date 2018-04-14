@@ -376,6 +376,12 @@ typedef enum {
     ENC_THREE_NUM_MODES
 } EncoderThreeModes;
 
+// opposed to the RF_BRD_MCHF / RF_BRD_OVI40 which are
+// compile time constants, the FOUND_RF_BOARD_xx is a runtime detected property
+typedef enum {
+    FOUND_RF_BOARD_MCHF = 0,
+    FOUND_RF_BOARD_OVI40 = 1,
+} RfBoard_t;
 
 #define CW_KEYER_MODE_IAM_B				0
 #define CW_KEYER_MODE_IAM_A				1
@@ -934,8 +940,6 @@ typedef struct TransceiverState
     mchf_touchscreen_t *tp;
 
     bool	show_debug_info;	// show coordinates on LCD
-    bool	rfmod_present;			// 0 = not present
-    bool	vhfuhfmod_present;		// 0 = not present
     uint8_t	multi;					// actual translate factor
     uint8_t	tune_power_level;		// TX power in antenna tuning function
     uint8_t	power_temp;				// temporary tx power if tune is different from actual tx power
@@ -1063,6 +1067,9 @@ typedef struct TransceiverState
 	uint16_t graticulePowerupYpos;	//initial (after powerup) position of graticule (frequency bar)
 	const LcdLayout* Layout;				//current lcd layout (set by lcd detection routine)
 	uint8_t FreqDisplayFont;		//0= old thin font, 1=new bold 8 bit (if available)
+
+	RfBoard_t rf_board; // the detected rf board connected to the control logic
+
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
