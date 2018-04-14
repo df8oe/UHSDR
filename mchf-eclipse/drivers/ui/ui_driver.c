@@ -807,6 +807,8 @@ void UiDriver_Init()
 	// Init frequency publics
 	UiDriver_InitFrequency();
 
+	Keypad_Scan();
+
 	// Load stored data from eeprom or calibrate touchscreen
 	bool run_keytest = (UiDriver_LoadSavedConfigurationAtStartup() == false && UiDriver_TouchscreenCalibration() == false);
 
@@ -2598,95 +2600,95 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 	// FIXME: This is fragile code, as it depends on being called multiple times in short periods (ms)
 	// This works, since regularily the button matrix is queried.
 	UiLcdHy28_TouchscreenDetectPress();
-	return Board_IsKeyPressed(button_num);
+	return Keypad_IsKeyPressed(button_num);
 }
 
 
 void UiDriver_KeyboardProcessOldClicks()
 {
-	static uchar press_hold_release_delay = 0;
+    static uchar press_hold_release_delay = 0;
 
-	Board_KeypadScan(); // update all key states
+    Keypad_Scan(); // update all key states
 
-	// State machine - processing old click
-	if(ks.button_processed == false)
-	{
-		// State machine - click or release(debounce filter)
-		if(!ks.button_pressed)
-		{
-			// Scan logical button inputs (the result of the HW keypad scan)
-		    // this algorithm favors the pressed button with the lowest number
-			for(int i = 0; i < BUTTON_NUM; i++)
-			{
-				if(UiDriver_IsButtonPressed(i))
-				{
-					// Change state to clicked
-					ks.button_id      = i;
-					ks.button_pressed = 1;
-					ks.button_released    = 0;
-					ks.button_just_pressed    = 0;
-					ks.debounce_time  = 0;
-					ks.debounce_check_complete    = 0;
-					ks.press_hold         = 0;
-					//printf("button_pressed %02x\n\r",ks.button_id);
-					// Exit, we process just one click at a time
-					break;
-				}
-			}
-		}
-		else if((ks.debounce_time >= BUTTON_PRESS_DEBOUNCE) && (!ks.debounce_check_complete))
-		{
-			if(UiDriver_IsButtonPressed(ks.button_id))        // button still pressed?
-			{
-				ks.button_just_pressed = 1; // yes!
-				ks.debounce_check_complete = 1; // indicate that the debounce check was completed
-			}
-			else
-			{
-				ks.button_pressed = 0;          // debounce incomplete, button released - cancel detection
-			}
-		}
-		else if((ks.debounce_time >= BUTTON_HOLD_TIME) && (!ks.press_hold))     // press-and-hold processing
-		{
-			ks.button_processed = 1;                      // indicate that a button was processed
-			ks.button_just_pressed = 0;                   // clear this flag so that the release (below) won't be detected
-			ks.press_hold = 1;
-			press_hold_release_delay = PRESS_HOLD_RELEASE_DELAY_TIME; // Set up a bit of delay for when press-and-hold is released
-		}
-		else if(ks.press_hold && (!UiDriver_IsButtonPressed(ks.button_id)))     // was there a press-and-hold and the button is now released?
-		{
-			if(press_hold_release_delay)                  // press-and-hold delay expired?
-			{
-				press_hold_release_delay--;                 // no - continue counting down before cancelling "press-and-hold" mode
-			}
-			else                              // Press-and-hold mode time expired!
-			{
-				ks.button_pressed = 0;          // reset and exit press-and-hold mode, this to prevent extraneous button-presses when using multiple buttons
-				ks.button_released = 0;
-				ks.press_hold = 0;
-				ks.button_just_pressed = 0;
-			}
-		}
-		else if(!UiDriver_IsButtonPressed(ks.button_id) && (!ks.press_hold))        // button released and had been debounced?
-		{
-			// Change state from click to released, and processing flag on - if the button had been held down adequately
-			ks.button_pressed     = 0;
-			ks.button_released    = 1;
-			ks.button_processed   = 1;
-			ks.button_just_pressed = 0;
-			//printf("button_released %02x\n\r",ks.button_id);
-		}
-		//
-		// Handle press-and-hold tuning step adjustment
-		//
-		if((ts.tune_step != 0) && (!ks.press_hold))     // are we in press-and-hold step size mode and did the button get released?
-		{
-			ts.tune_step = STEP_PRESS_OFF;                        // yes, cancel offset
-			df.selected_idx = ts.tune_step_idx_holder;            // restore previous setting
-			df.tuning_step    = tune_steps[df.selected_idx];
-			UiDriver_DisplayFreqStepSize();
-		}
-	}
+    // State machine - processing old click
+    if(ks.button_processed == false)
+    {
+        // State machine - click or release(debounce filter)
+        if(ks.button_pressed == false)
+        {
+            // Scan logical button inputs (the result of the HW keypad scan)
+            // this algorithm favors the pressed button with the lowest number
+            for(int i = 0; i < BUTTON_NUM; i++)
+            {
+                if(UiDriver_IsButtonPressed(i))
+                {
+                    // Change state to clicked
+                    ks.button_id      = i;
+                    ks.button_pressed = true;
+                    ks.button_released    = 0;
+                    ks.button_just_pressed    = 0;
+                    ks.debounce_time  = 0;
+                    ks.debounce_check_complete    = 0;
+                    ks.press_hold         = 0;
+                    //printf("button_pressed %02x\n\r",ks.button_id);
+                    // Exit, we process just one click at a time
+                    break;
+                }
+            }
+        }
+        else if((ks.debounce_time >= BUTTON_PRESS_DEBOUNCE) && (!ks.debounce_check_complete))
+        {
+            if(UiDriver_IsButtonPressed(ks.button_id))        // button still pressed?
+            {
+                ks.button_just_pressed = 1; // yes!
+                ks.debounce_check_complete = 1; // indicate that the debounce check was completed
+            }
+            else
+            {
+                ks.button_pressed = false;          // debounce incomplete, button released - cancel detection
+            }
+        }
+        else if((ks.debounce_time >= BUTTON_HOLD_TIME) && (!ks.press_hold))     // press-and-hold processing
+        {
+            ks.button_processed = 1;                      // indicate that a button was processed
+            ks.button_just_pressed = 0;                   // clear this flag so that the release (below) won't be detected
+            ks.press_hold = 1;
+            press_hold_release_delay = PRESS_HOLD_RELEASE_DELAY_TIME; // Set up a bit of delay for when press-and-hold is released
+        }
+        else if(ks.press_hold && (!UiDriver_IsButtonPressed(ks.button_id)))     // was there a press-and-hold and the button is now released?
+        {
+            if(press_hold_release_delay)                  // press-and-hold delay expired?
+            {
+                press_hold_release_delay--;                 // no - continue counting down before cancelling "press-and-hold" mode
+            }
+            else                              // Press-and-hold mode time expired!
+            {
+                ks.button_pressed = 0;          // reset and exit press-and-hold mode, this to prevent extraneous button-presses when using multiple buttons
+                ks.button_released = 0;
+                ks.press_hold = 0;
+                ks.button_just_pressed = 0;
+            }
+        }
+        else if(!UiDriver_IsButtonPressed(ks.button_id) && (!ks.press_hold))        // button released and had been debounced?
+        {
+            // Change state from click to released, and processing flag on - if the button had been held down adequately
+            ks.button_pressed     = 0;
+            ks.button_released    = 1;
+            ks.button_processed   = 1;
+            ks.button_just_pressed = 0;
+            //printf("button_released %02x\n\r",ks.button_id);
+        }
+        //
+        // Handle press-and-hold tuning step adjustment
+        //
+        if((ts.tune_step != STEP_PRESS_OFF) && (!ks.press_hold))     // are we in press-and-hold step size mode and did the button get released?
+        {
+            ts.tune_step = STEP_PRESS_OFF;                        // yes, cancel offset
+            df.selected_idx = ts.tune_step_idx_holder;            // restore previous setting
+            df.tuning_step    = tune_steps[df.selected_idx];
+            UiDriver_DisplayFreqStepSize();
+        }
+    }
 }
 
 
@@ -5009,6 +5011,7 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false)
 		{
 			HAL_Delay(10);
+            Keypad_Scan();
 		}
 
 		const char* txp;
@@ -5072,6 +5075,8 @@ static void UiDriver_KeyTestScreen()
 
 	uint32_t keyScanState = 0;
 
+    Keypad_Scan(); // read and map the keys to their logical buttons
+    // not all keys may have a button or some keys may go to the same button
 
 	if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
 	{
@@ -5082,13 +5087,11 @@ static void UiDriver_KeyTestScreen()
 	    HAL_Delay(500);
 	}
 
-    Board_KeypadScan(); // read and map the keys to their logical buttons
-    // not all keys may have a button or some keys may go to the same button
+	Keypad_Scan();
 
+    keyScanState = Keypad_KeyStates();	// remember which one was pressed
 
-    keyScanState = Board_KeyStates();	// remember which one was pressed
-
-	if(Board_IsAnyKeyPressed()) {			// at least one button was pressed
+	if(Keypad_IsAnyKeyPressed()) {			// at least one button was pressed
 
         char txt_buf[40];
         const char* txt;
@@ -5112,12 +5115,12 @@ static void UiDriver_KeyTestScreen()
 			// we slow down the loop a bit so that our wait counters take some time to go down.
             HAL_Delay(10);
 
-	        Board_KeypadScan();
+	        Keypad_Scan();
 	        // read and map the hw keys to their logical buttons
 	        // not all keys may have a button or some keys may go to the same button
 
 
-	        uint32_t newKeyScanState = Board_KeyStates();   // check which hw keys are pressed
+	        uint32_t newKeyScanState = Keypad_KeyStates();   // check which hw keys are pressed
 
 	        if (newKeyScanState != keyScanState)
 	        {
@@ -5399,11 +5402,15 @@ static bool UiDriver_TouchscreenCalibration()
     const uint32_t clr_bg = Black;
     const uint32_t clr_fg = White;
 
+    Keypad_Scan();
+
     //if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) && UiDriver_IsButtonPressed(BUTTON_F5_PRESSED))
     if (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
     {
         //wait for a moment to filter out some unwanted spikes
         HAL_Delay(500);
+        Keypad_Scan();
+
         if(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE))
         {
 
@@ -5427,6 +5434,7 @@ static bool UiDriver_TouchscreenCalibration()
 
                 while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false)
                 {
+                    Keypad_Scan();
                     HAL_Delay(10);
                 }
 
@@ -5472,6 +5480,7 @@ static bool UiDriver_TouchscreenCalibration()
 	    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
 	    {
 	        HAL_Delay(40);
+	        Keypad_Scan();
 	    }
 
 	    UiLcdHy28_LcdClear(clr_bg);
@@ -5490,6 +5499,7 @@ static bool UiDriver_TouchscreenCalibration()
 	    while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false)
 	    {
 	        HAL_Delay(10);
+	        Keypad_Scan();
 	    }
 
 	    if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))
@@ -5510,6 +5520,7 @@ static bool UiDriver_TouchscreenCalibration()
 	            while((UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false) && (UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false))
 	            {
 	                HAL_Delay(40);
+	                Keypad_Scan();
 	            }
 
 	            if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == true)
