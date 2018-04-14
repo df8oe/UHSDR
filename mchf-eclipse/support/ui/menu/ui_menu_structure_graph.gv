@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-04-02T21:29:04  by "./ui_menu_structure_graph.py"
+#  generated at  2018-04-14T22:11:24  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-04-02T21:29:04  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-04-14T22:11:24  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1157,13 +1157,8 @@
              shape = record
              ];
         
-        "INFO_RFMOD" [
-             label = "INFO_RFMOD | RF Bands Mod"
-             shape = record
-             ];
-        
-        "INFO_VHFUHFMOD" [
-             label = "INFO_VHFUHFMOD | V/UHF Mod"
+        "INFO_RFBOARD" [
+             label = "INFO_RFBOARD | RF Board"
              shape = record
              ];
         
@@ -1769,9 +1764,7 @@
             
             MENU_SYSINFO -> INFO_BL_VERSION
             
-            MENU_SYSINFO -> INFO_RFMOD
-            
-            MENU_SYSINFO -> INFO_VHFUHFMOD
+            MENU_SYSINFO -> INFO_RFBOARD
             
             MENU_SYSINFO -> INFO_CODEC
             

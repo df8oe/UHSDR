@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-04-02T21:29:08  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-04-14T22:11:29  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-04-02T21:29:08  by "./ui_menu_structure_mdtable.py"
+generated at  2018-04-14T22:11:29  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -265,8 +265,7 @@ generated at  2018-04-02T21:29:08  by "./ui_menu_structure_mdtable.py"
 | **Firmware**                  (                            INFO_FW_VERSION) | firmware version                               | 
 | **Build**                     (                                 INFO_BUILD) | firmware: timestamp of building                | 
 | **Bootloader**                (                            INFO_BL_VERSION) | bootloader version                             | 
-| **RF Bands Mod**              (                                 INFO_RFMOD) | RF bands expansion PCB present?                | 
-| **V/UHF Mod**                 (                             INFO_VHFUHFMOD) | VHF/UHF bands expansion PCB present?           | 
+| **RF Board**                  (                               INFO_RFBOARD) | Displays the detected RF Board hardware identification. | 
 | **Audio Codec Presence**      (                                 INFO_CODEC) | Audio Codec I2C communication successfully tested? This is not a full test of the Audio Codec functionality, it only reports if I2C communication reported no problem talking to the codec. | 
 | **Backup RAM Battery**        (                                  INFO_VBAT) | Battery Support for Backup RAM present?        | 
 | **Real Time Clock**           (                                   INFO_RTC) | Battery Supported Real Time Clock present?     | 
