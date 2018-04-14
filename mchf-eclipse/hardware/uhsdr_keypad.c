@@ -186,7 +186,7 @@ void Keypad_Scan()
 {
     for (int key_num = 0; key_num < hwKeys.num; key_num++)
     {
-        if (Keypad_GetKeyGPIOState(&hwKeys.map[key_num]) == 0)
+        if (Keypad_GetKeyGPIOState(&hwKeys.map[key_num]))
         {
             // in normal mode - return key value
             buttonStates |= (1 << hwKeys.map[key_num].button_id);
