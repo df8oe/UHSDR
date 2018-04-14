@@ -33,6 +33,7 @@
 #include "adc.h"
 
 #include "uhsdr_keypad.h"
+#include "osc_si5351a.h"
 
 // Transceiver state public structure
 __IO __MCHF_SPECIALMEM TransceiverState ts;
@@ -313,7 +314,7 @@ void Board_InitMinimal()
     // I2C init
     mchf_hw_i2c1_init();
 
-    // Initialize Si570, by DF8OE, 201506
+    // Initialize LO
     Osc_Init();
 
     // Codec control interface
@@ -324,6 +325,10 @@ void Board_InitMinimal()
     // TODO: It seems that some SPI display need some time to get started...
     // LCD Init
     UiLcdHy28_Init();
+
+    // we determine and set the correct RF board here
+    ts.rf_board = Si5351a_IsPresent()?FOUND_RF_BOARD_OVI40:FOUND_RF_BOARD_MCHF;
+
 }
 
 void Board_InitFull()

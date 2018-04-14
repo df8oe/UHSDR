@@ -237,6 +237,7 @@ uint32_t UiDriver_GetActiveDSPFunctions();
 void UiDriver_UpdateDSPmode();
 bool UiDriver_CheckTouchRegion(const UiArea_t* tr_p);
 
+void UiDriver_InitBandSet();
 //
 // Items that are timed using ts.sysclock (operates at 100 Hz)
 //

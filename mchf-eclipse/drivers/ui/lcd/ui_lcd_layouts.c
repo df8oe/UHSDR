@@ -150,8 +150,6 @@ static const touchaction_descr_t R480320_touchactions_normal[] =
 static const touchaction_descr_t R480320_touchactions_menu[] =
 {
 		{ { R480320_SM_IND_X+R480320_SM_IND_W-16,R480320_SM_IND_Y,16,16 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
-		{ { R480320_SM_IND_X+R480320_SM_IND_W-60,R480320_SM_IND_Y,16,16 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
-		{ { R480320_SM_IND_X+R480320_SM_IND_W-40,R480320_SM_IND_Y,16,16 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
 };
 
 static const touchaction_list_descr_t R480320_touch_regions[] =
@@ -185,8 +183,6 @@ static const touchaction_descr_t R320240_touchactions_normal[] =
 static const touchaction_descr_t R320240_touchactions_menu[] =
 {
 		{ { R320240_SM_IND_X+R320240_SM_IND_W-16,R320240_SM_IND_Y,16,16 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
-		{ { R320240_SM_IND_X+R320240_SM_IND_W-60,R320240_SM_IND_Y,16,16 }, UiAction_ChangeRfModPresence}, // S-Meter 40: toogle rf band mod present
-		{ { R320240_SM_IND_X+R320240_SM_IND_W-40,R320240_SM_IND_Y,16,16 }, UiAction_ChangeVhfUhfModPresence}, // S-Meter 60: toggle vhf/uhf band mod present
 };
 
 static const touchaction_list_descr_t R320240__touch_regions[] =

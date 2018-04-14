@@ -302,8 +302,6 @@ void TransceiverStateInit(void)
     ts.display = &mchf_display;
 
     ts.show_debug_info = false;					// dont show coordinates on LCD
-    ts.rfmod_present = false;						// rfmod not present
-    ts.vhfuhfmod_present = false;					// VHF/UHF mod not present
     ts.multi = 0;							// non-translate
     ts.tune_power_level = 0;					// Tune with FULL POWER
     ts.xlat = 0;							// 0 = report base frequency, 1 = report xlat-frequency;
@@ -373,13 +371,6 @@ void TransceiverStateInit(void)
 	NR2.power_threshold = 0.40;
 	NR2.power_threshold_int = 40;
 	NR2.asnr = 30;
-
-
-    // development setting for DF8OE
-    if( *(__IO uint32_t*)(SRAM2_BASE+5) == 0x29)
-    {
-        ts.rfmod_present = 1;					// activate rfmod-board handling
-    }
 
 
     ts.i2c_speed[I2C_BUS_1] = I2C1_SPEED_DEFAULT; // Si570, MCP9801
@@ -503,13 +494,6 @@ int mchfMain(void)
     //preventing DSP functions mask to have not proper value
     ts.dsp_mode_mask|=1;
     ts.dsp_mode_mask&=(1<<DSP_SWITCH_MAX)-1;
-
-
-	// Si5351a only present at OVI40 and supports VLF...2m
-	if (Si5351a_IsPresent()) {
-		ts.rfmod_present = true;
-		ts.vhfuhfmod_present = true;
-	}
 
     // we now reinit the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!
     mchf_hw_i2c1_init();
