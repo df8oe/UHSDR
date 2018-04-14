@@ -21,7 +21,7 @@ typedef struct
     uint16_t         button_id;
     const char*     label;
 
-} ButtonPhys_t;
+} Keypad_KeyPhys_t;
 
 // represents a logical button
 typedef struct
@@ -32,7 +32,7 @@ typedef struct
 
 typedef struct
 {
-    const ButtonPhys_t* map;
+    const Keypad_KeyPhys_t* map;
     uint32_t num;
 } UhsdrHwKey_t;
 
@@ -73,15 +73,19 @@ enum
 extern UhsdrHwKey_t  hwKeys; // these buttons represent the gpio to logical button id mapping
 extern const UhsdrButtonLogical_t  buttons[]; // this array gives us the names of the available logical buttons
 
+const Keypad_KeyPhys_t* bm_set_normal;
+#ifdef UI_BRD_MCHF
+const Keypad_KeyPhys_t* bm_set_rtc;
+#endif
 
-bool Board_IsButtonPressed(uint32_t button_num);
-bool Board_IsAnyButtonPressed();
-bool Board_IsKeyPressed(uint32_t key_num);
-bool Board_IsAnyKeyPressed();
-uint32_t Board_KeyStates();
-uint32_t Board_ButtonStates();
-void Board_KeypadScan();
+bool Keypad_IsButtonPressed(uint32_t button_num);
+bool Keypad_IsAnyButtonPressed();
+bool Keypad_IsKeyPressed(uint32_t key_num);
+bool Keypad_IsAnyKeyPressed();
+uint32_t Keypad_KeyStates();
+uint32_t Keypad_ButtonStates();
+void Keypad_Scan();
 
-
+void Keypad_KeypadInit(UhsdrHwKey_t* keyMap);
 
 #endif
