@@ -2055,7 +2055,8 @@ static void UiSpectrum_CalculateDBm()
         if( ts.txrx_mode == TRX_MODE_RX)
         {
             const float32_t slope = 19.8; // 19.6; --> empirical values derived from measurements by DL8MBY, 2016/06/30, Thanks!
-            const float32_t cons = ts.dbm_constant - 225; // -225; //- 227.0;
+            const float32_t cons = ts.dbm_constant - 225 - (sd.fft_iq_len == 1024?3:0);
+            // the last term is for correcting the dbm value when a twice as large fft is being used (512 vs. 256)
             const int buff_len_int = sd.fft_iq_len;
             const float32_t buff_len = buff_len_int;
 
@@ -2189,7 +2190,7 @@ static void UiSpectrum_CalculateDBm()
             if (sum_db > 0)
             {
                 sm.dbm = slope * log10f_fast (sum_db) + cons;
-                sm.dbmhz = slope * log10f_fast (sum_db) -  10 * log10f_fast ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) + cons;
+                sm.dbmhz = sm.dbm -  10 * log10f_fast ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) ;
             }
             else
             {
