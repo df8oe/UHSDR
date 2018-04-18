@@ -2602,7 +2602,7 @@ void UiDriver_ChangeTuningStep(uchar is_up)
  * @returns true if button is pressed
  */
 
-static bool UiDriver_IsButtonPressed(ulong button_num)
+static bool UiDriver_IsButtonPressed(uint32_t button_num)
 {
 	// FIXME: This is fragile code, as it depends on being called multiple times in short periods (ms)
 	// This works, since regularily the button matrix is queried.
@@ -2610,6 +2610,18 @@ static bool UiDriver_IsButtonPressed(ulong button_num)
 	return Keypad_IsKeyPressed(button_num);
 }
 
+static void UiDriver_WaitForButtonPressed(uint32_t button_num)
+{
+    while (true)
+    {
+        Keypad_Scan();
+        if (UiDriver_IsButtonPressed(button_num))
+        {
+            break;
+        }
+        HAL_Delay(20);
+    }
+}
 
 void UiDriver_KeyboardProcessOldClicks()
 {
@@ -4949,6 +4961,16 @@ typedef enum
 } CONFIG_DEFAULTS;
 
 
+static void UiDriver_WaitForBandMAndBandPorPWR()
+{
+    while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false)
+    {
+        HAL_Delay(20);
+        Keypad_Scan();
+    }
+}
+
+
 /*
  * @brief Handles the loading of the configuration at startup (including the load of defaults if requested)
  * @returns false if it is a normal startup, true if defaults have been loaded
@@ -5015,11 +5037,7 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 				"Press BAND+ and BAND-\n"
 				"to confirm loading",clr_fg,clr_bg,0);
 
-		while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false)
-		{
-			HAL_Delay(10);
-            Keypad_Scan();
-		}
+		UiDriver_WaitForBandMAndBandPorPWR();
 
 		const char* txp;
 
@@ -5402,8 +5420,6 @@ static bool UiDriver_TouchscreenCalibration()
 	bool retval = false;
 	uint16_t MAX_X=ts.Layout->Size.x; uint16_t MAX_Y=ts.Layout->Size.y;
 
-
-
     bool run_calibration = false;
 
     const uint32_t clr_bg = Black;
@@ -5439,14 +5455,9 @@ static bool UiDriver_TouchscreenCalibration()
                 UiLcdHy28_PrintTextCentered(2, 195, MAX_X-4, "Press BAND+ and BAND-\n"
                         "to start calibration",clr_fg,clr_bg,0);
 
-                while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false)
-                {
-                    Keypad_Scan();
-                    HAL_Delay(10);
-                }
+                UiDriver_WaitForBandMAndBandPorPWR();
 
-
-                if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))
+                if (UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))
                 {
                     UiLcdHy28_LcdClear(Black);							// clear the screen
                     UiLcdHy28_PrintTextCentered(2,108,MAX_X-4,"      ...performing normal start...",White,Black,0);
@@ -5466,7 +5477,6 @@ static bool UiDriver_TouchscreenCalibration()
                         ,clr_fg,clr_bg,0);
                 // delay a bit...
                 HAL_Delay(3000);
-
             }
 		}
 	}
@@ -5484,11 +5494,7 @@ static bool UiDriver_TouchscreenCalibration()
 
 	    UiLcdHy28_PrintTextCentered(2,195,MAX_X-4,"Touch at any position to start.",clr_fg,clr_bg,0);
 
-	    while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
-	    {
-	        HAL_Delay(40);
-	        Keypad_Scan();
-	    }
+ 	    UiDriver_WaitForButtonPressed(TOUCHSCREEN_ACTIVE);
 
 	    UiLcdHy28_LcdClear(clr_bg);
 	    UiLcdHy28_PrintTextCentered(2,100,MAX_X-4,"Wait one moment please...",Yellow,clr_bg,0);
@@ -5501,49 +5507,45 @@ static bool UiDriver_TouchscreenCalibration()
 #ifdef Touch_ShowTestscreen
 	    UiLcdHy28_PrintTextCentered(2, 195, MAX_X-4, "Press BAND+ and BAND-\n"
 	            "to run drawing on screen\n"
-	            "or Power to save and reboot",clr_fg,clr_bg,0);
+	            "or POWER to boot",clr_fg,clr_bg,0);
 
-	    while((((UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED)) && (UiDriver_IsButtonPressed(BUTTON_BNDP_PRESSED))) == false) && UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false)
-	    {
-	        HAL_Delay(10);
-	        Keypad_Scan();
-	    }
+	    UiDriver_WaitForBandMAndBandPorPWR();
 
-	    if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))
+	    if (UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))
 	    {
-	        UiLcdHy28_LcdClear(Black);							// clear the screen
+	        UiLcdHy28_LcdClear(Black);                          // clear the screen
 	        UiLcdHy28_PrintTextCentered(2,108,MAX_X-4,"      ...performing normal start...",White,Black,0);
-	        HAL_Delay(2000);
-	        retval = true;
 	    }
 	    else
-	    {
-	        UiLcdHy28_LcdClear(clr_bg);
-	        UiLcdHy28_PrintTextCentered(2, MAX_Y/2-8, MAX_X-4, "Test screen.\n"
-	                "You can draw by pressing the screen.\n"
-	                "Press Power to save and reboot",clr_fg,clr_bg,0);
-	        while(1)
-	        {
-	            while((UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false) && (UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false))
-	            {
-	                HAL_Delay(40);
-	                Keypad_Scan();
-	            }
+        {
+            UiLcdHy28_LcdClear(clr_bg);
+            UiLcdHy28_PrintTextCentered(2, MAX_Y/2-8, MAX_X-4, "Test screen.\n"
+                    "You can draw by pressing the screen.\n"
+                    "Press Power to boot",clr_fg,clr_bg,0);
+            while(1)
+            {
+                do
+                {
+                    HAL_Delay(10);
+                    Keypad_Scan();
+                } while (UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false && UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == false);
 
-	            if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == true)
-	                break;
+                if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED) == true)
+                {
+                    UiLcdHy28_LcdClear(Black);                          // clear the screen
+                    UiLcdHy28_PrintTextCentered(2,108,MAX_X-4,"      ...performing normal start...",White,Black,0);
+                    break;
+                }
 
-	            if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
-	            {
-	                //			*xt_corr += (ts.tp->hr_x - cross[0]);
-	                //			*yt_corr += (ts.tp->hr_y - cross[1]);
-	                UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
+                if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
+                {
+                    //          *xt_corr += (ts.tp->hr_x - cross[0]);
+                    //          *yt_corr += (ts.tp->hr_y - cross[1]);
+                    UiLcdHy28_DrawColorPoint(ts.tp->hr_x,ts.tp->hr_y,White);
+                }
 
-	            }
-
-	        }
-	        UiLcdHy28_LcdClear(clr_bg);
-	    }
+            }
+        }
 #endif
 	    HAL_Delay(2000);
 	    retval = true;
@@ -5574,10 +5576,7 @@ void UiDriver_DoCrossCheck(int16_t cross[])
 
 	do
 	{
-		while(UiDriver_IsButtonPressed(TOUCHSCREEN_ACTIVE) == false)
-		{
-			HAL_Delay(40);
-		}
+	    UiDriver_WaitForButtonPressed(TOUCHSCREEN_ACTIVE);
 
 		if (UiLcdHy28_TouchscreenHasProcessableCoordinates())
 		{
