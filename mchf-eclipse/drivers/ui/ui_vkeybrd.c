@@ -250,7 +250,7 @@ static uint8_t UiVk_DSPVKeyInitTypeDraw(uint8_t KeyNum, uint32_t param)
 
 	return Keystate;
 }
-#define col_Keys_DSP_pr RGB(0x20,0xff,0x20)		//text color when pressed
+#define col_Keys_DSP_pr RGB(0xff,0xff,0xff)		//text color when pressed
 #define col_Keys_DSP_npr Black		//text color when in normal state
 
 const VKey Keys_DSP[]={
