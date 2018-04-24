@@ -13,12 +13,10 @@
  ************************************************************************************/
 #include "ui_driver.h"
 #include "freedv_uhsdr.h"
-#include "ui_lcd_items.h"
-
+#include "ui_lcd_layouts.h"
 #include "profiling.h"
 #include "ui_lcd_hy28.h"
 #include "radio_management.h"
-
 
 #if defined(USE_FREEDV) || defined(USE_ALTERNATE_NR)
 

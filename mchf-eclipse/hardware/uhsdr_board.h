@@ -173,7 +173,7 @@
 #include "uhsdr_types.h"
 #include "audio_filter.h"
 #include "osc_interface.h"
-#include "ui_lcd_items.h"
+#include "ui_lcd_layouts.h"
 #include "ui_lcd_hy28.h"
 
 #include "comp.h"

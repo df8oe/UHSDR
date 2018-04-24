@@ -1,9 +1,16 @@
-/*
- * ui_vkeybrd.h
- *
- *  Created on: 31.03.2018
- *      Author: Slawomir Balon SP9BSL
- */
+/*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
+/************************************************************************************
+ **                                                                                **
+ **                                        UHSDR                                   **
+ **               a powerful firmware for STM32 based SDR transceivers             **
+ **                                                                                **
+ **--------------------------------------------------------------------------------**
+ **                                                                                **
+ **  File name:		ui_vkeybrd.h                                                   **
+ **  Description:   Virtual keyboard definitions header file                       **
+ **  Licence:		GNU GPLv3                                                      **
+ **  Author: 		Slawomir Balon/SP9BSL                                          **
+ ************************************************************************************/
 
 #ifndef UI_UI_VKEYBRD_H_
 #define UI_UI_VKEYBRD_H_

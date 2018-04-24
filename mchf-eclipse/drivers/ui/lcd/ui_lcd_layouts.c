@@ -1,14 +1,21 @@
-/*
- * ui_lcd_layouts.c
- *
- *  Created on: 27.01.2018
- *      Author: Slawomir Balon (SP9BSL)
- */
+/*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
+/************************************************************************************
+ **                                                                                **
+ **                                        UHSDR                                   **
+ **               a powerful firmware for STM32 based SDR transceivers             **
+ **                                                                                **
+ **--------------------------------------------------------------------------------**
+ **                                                                                **
+ **  File name:		ui_lcd_layouts.c                                               **
+ **  Description:   Layout definitions file                                        **
+ **  Licence:		GNU GPLv3                                                      **
+ **  Author: 		Slawomir Balon/SP9BSL                                          **
+ ************************************************************************************/
+
 #ifndef BOOTLOADER_BUILD
 #include "uhsdr_board.h"
-#include "ui_lcd_items.h"
+#include "ui_lcd_layouts.h"
 #include "ui_driver.h"
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //some local 480x320 calculations to make life easier in case of change something
@@ -68,6 +75,7 @@
 #define R480320_DIGMODE_IND_X              		215
 #define R480320_DIGMODE_IND_Y              		0
 #define R480320_DIGMODE_IND_H					58
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 //some local 320x240 calculations to make life easier in case of change something
 #define R320240_TUNE_FREQ_X             		116
