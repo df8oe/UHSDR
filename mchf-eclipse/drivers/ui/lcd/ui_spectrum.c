@@ -1618,7 +1618,7 @@ void UiSpectrum_CalculateDisplayFilterBW(float32_t* width_pixel_, float32_t* lef
 void UiSpectrum_DisplayFilterBW()
 {
 
-    if(ts.menu_mode == 0)
+    if((ts.menu_mode == 0) && (ts.VirtualKeysShown_flag == 0))
     {// bail out if in menu mode
         // Update screen indicator - first get the width and center-frequency offset of the currently-selected filter
 

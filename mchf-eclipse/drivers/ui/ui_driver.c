@@ -21,7 +21,7 @@
 #include <math.h>
 #include <src/uhsdr_version.h>
 #include "hardware/uhsdr_board_config.h"
-#include "ui_lcd_items.h"
+#include "ui_lcd_layouts.h"
 #include "ui_menu.h"
 #include "uhsdr_rtc.h"
 #include "adc.h"

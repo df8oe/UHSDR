@@ -491,9 +491,17 @@ int mchfMain(void)
     // UI HW init
     UiDriver_Init();
 
-    //preventing DSP functions mask to have not proper value
-    ts.dsp_mode_mask|=1;
-    ts.dsp_mode_mask&=(1<<DSP_SWITCH_MAX)-1;
+
+    if(mchf_touchscreen.present)
+    {
+    	//preventing DSP functions mask to have not proper value
+    	ts.dsp_mode_mask|=1;
+    	ts.dsp_mode_mask&=(1<<DSP_SWITCH_MAX)-1;
+    }
+    else
+    {
+    	ts.dsp_mode_mask=(1<<DSP_SWITCH_MAX)-1;		//disable masking when no touchscreen controller detected
+    }
 
     // we now reinit the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!
     mchf_hw_i2c1_init();

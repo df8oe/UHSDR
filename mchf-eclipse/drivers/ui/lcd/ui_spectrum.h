@@ -13,12 +13,12 @@
 **  Last Modified:                                                                 **
 **  Licence:      GNU GPLv3                                                      **
 ************************************************************************************/
+
 #include "uhsdr_board.h"
 #include "uhsdr_types.h"
 #include "audio_driver.h"
 #include "arm_const_structs.h"
-#include "ui_lcd_items.h"
-
+#include "ui_lcd_layouts.h"
 
 typedef struct
 {

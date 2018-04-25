@@ -1,9 +1,16 @@
-/*
- * ui_vkeybrd.c
- *
- *  Created on: 31.03.2018
- *      Author: Slawomir Balon SP9BSL
- */
+/*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
+/************************************************************************************
+ **                                                                                **
+ **                                        UHSDR                                   **
+ **               a powerful firmware for STM32 based SDR transceivers             **
+ **                                                                                **
+ **--------------------------------------------------------------------------------**
+ **                                                                                **
+ **  File name:		ui_vkeybrd.c                                                   **
+ **  Description:   Virtual keyboard functions                                     **
+ **  Licence:		GNU GPLv3                                                      **
+ **  Author: 		Slawomir Balon/SP9BSL                                          **
+ ************************************************************************************/
 
 #include "uhsdr_board.h"
 #include "ui_spectrum.h"
@@ -243,7 +250,7 @@ static uint8_t UiVk_DSPVKeyInitTypeDraw(uint8_t KeyNum, uint32_t param)
 
 	return Keystate;
 }
-#define col_Keys_DSP_pr RGB(0x20,0xff,0x20)		//text color when pressed
+#define col_Keys_DSP_pr RGB(0xff,0xff,0xff)		//text color when pressed
 #define col_Keys_DSP_npr Black		//text color when in normal state
 
 const VKey Keys_DSP[]={
