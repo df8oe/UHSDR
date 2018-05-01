@@ -37,16 +37,13 @@
 #include "lpc.h"
 #include "lsp.h"
 #include "codec2_fft.h"
+#include "phase.h"
+#include "mbest.h"
+
 #undef PROFILE
 #include "machdep.h"
 
 #define LSP_DELTA1 0.01         /* grid spacing for LSP root searches */
-// #define MBEST_PRINT_OUT
-#ifdef MBEST_PRINT_OUT
- #define MBEST_PRINT(a,b) mbest_print((a),(b))
-#else
- #define MBEST_PRINT(a,b) 
-#endif
 
 /*---------------------------------------------------------------------------*\
 
@@ -55,7 +52,7 @@
 \*---------------------------------------------------------------------------*/
 
 float speech_to_uq_lsps(float lsp[], float ak[], float Sn[], float w[],
-			int order);
+			int m_pitch, int order);
 
 /*---------------------------------------------------------------------------*\
 
@@ -592,125 +589,6 @@ float lspmelvq_quantise(float *x, float *xq, int order)
   return mse;
 }
 
-#define MBEST_STAGES 4
-
-struct MBEST_LIST {
-    int   index[MBEST_STAGES];    /* index of each stage that lead us to this error */
-    float error;
-};
-
-struct MBEST {
-    int                entries;   /* number of entries in mbest list   */
-    struct MBEST_LIST *list;
-};
-
-
-static struct MBEST *mbest_create(int entries) {
-    int           i,j;
-    struct MBEST *mbest;
-
-    assert(entries > 0);
-    mbest = (struct MBEST *)malloc(sizeof(struct MBEST));
-    assert(mbest != NULL);
-
-    mbest->entries = entries;
-    mbest->list = (struct MBEST_LIST *)malloc(entries*sizeof(struct MBEST_LIST));
-    assert(mbest->list != NULL);
-
-    for(i=0; i<mbest->entries; i++) {
-	for(j=0; j<MBEST_STAGES; j++)
-	    mbest->list[i].index[j] = 0;
-	mbest->list[i].error = 1E32;
-    }
-
-    return mbest;
-}
-
-
-static void mbest_destroy(struct MBEST *mbest) {
-    assert(mbest != NULL);
-    free(mbest->list);
-    free(mbest);
-}
-
-
-/*---------------------------------------------------------------------------*\
-
-  mbest_insert
-
-  Insert the results of a vector to codebook entry comparison. The
-  list is ordered in order or error, so those entries with the
-  smallest error will be first on the list.
-
-\*---------------------------------------------------------------------------*/
-
-static void mbest_insert(struct MBEST *mbest, int index[], float error) {
-    int                i, j, found;
-    struct MBEST_LIST *list    = mbest->list;
-    int                entries = mbest->entries;
-
-    found = 0;
-    for(i=0; i<entries && !found; i++)
-	if (error < list[i].error) {
-	    found = 1;
-	    for(j=entries-1; j>i; j--)
-		list[j] = list[j-1];
-	    for(j=0; j<MBEST_STAGES; j++)
-		list[i].index[j] = index[j];
-	    list[i].error = error;
-	}
-}
-
-
-#ifdef MBEST_PRINT_OUT
-static void mbest_print(char title[], struct MBEST *mbest) {
-    int i,j;
-
-    fprintf(stderr, "%s\n", title);
-    for(i=0; i<mbest->entries; i++) {
-	for(j=0; j<MBEST_STAGES; j++)
-	    fprintf(stderr, "  %4d ", mbest->list[i].index[j]);
-	fprintf(stderr, " %f\n", mbest->list[i].error);
-    }
-}
-#endif
-
-
-/*---------------------------------------------------------------------------*\
-
-  mbest_search
-
-  Searches vec[] to a codebbook of vectors, and maintains a list of the mbest
-  closest matches.
-
-\*---------------------------------------------------------------------------*/
-
-static void mbest_search(
-		  const float  *cb,     /* VQ codebook to search         */
-		  float         vec[],  /* target vector                 */
-		  float         w[],    /* weighting vector              */
-		  int           k,      /* dimension of vector           */
-		  int           m,      /* number on entries in codebook */
-		  struct MBEST *mbest,  /* list of closest matches       */
-		  int           index[] /* indexes that lead us here     */
-)
-{
-   float   e;
-   int     i,j;
-   float   diff;
-
-   for(j=0; j<m; j++) {
-	e = 0.0;
-	for(i=0; i<k; i++) {
-	    diff = cb[j*k+i]-vec[i];
-	    e += powf(diff*w[i],2.0);
-	}
-	index[0] = j;
-	mbest_insert(mbest, index, e);
-   }
-}
-
-
 /* 3 stage VQ LSP quantiser useing mbest search.  Design and guidance kindly submitted by Anssi, OH3GDD */
 
 float lspmelvq_mbest_encode(int *indexes, float *x, float *xq, int ndim, int mbest_entries)
@@ -1106,11 +984,11 @@ void aks_to_M2(
 
 \*---------------------------------------------------------------------------*/
 
-int encode_Wo(float Wo, int bits)
+int encode_Wo(C2CONST *c2const, float Wo, int bits)
 {
     int   index, Wo_levels = 1<<bits;
-    float Wo_min = TWO_PI/P_MAX;
-    float Wo_max = TWO_PI/P_MIN;
+    float Wo_min = c2const->Wo_min;
+    float Wo_max = c2const->Wo_max;
     float norm;
 
     norm = (Wo - Wo_min)/(Wo_max - Wo_min);
@@ -1131,10 +1009,10 @@ int encode_Wo(float Wo, int bits)
 
 \*---------------------------------------------------------------------------*/
 
-float decode_Wo(int index, int bits)
+float decode_Wo(C2CONST *c2const, int index, int bits)
 {
-    float Wo_min = TWO_PI/P_MAX;
-    float Wo_max = TWO_PI/P_MIN;
+    float Wo_min = c2const->Wo_min;
+    float Wo_max = c2const->Wo_max;
     float step;
     float Wo;
     int   Wo_levels = 1<<bits;
@@ -1155,11 +1033,11 @@ float decode_Wo(int index, int bits)
 
 \*---------------------------------------------------------------------------*/
 
-int encode_log_Wo(float Wo, int bits)
+int encode_log_Wo(C2CONST *c2const, float Wo, int bits)
 {
     int   index, Wo_levels = 1<<bits;
-    float Wo_min = TWO_PI/P_MAX;
-    float Wo_max = TWO_PI/P_MIN;
+    float Wo_min = c2const->Wo_min;
+    float Wo_max = c2const->Wo_max;
     float norm;
 
     norm = (log10f(Wo) - log10f(Wo_min))/(log10f(Wo_max) - log10f(Wo_min));
@@ -1180,10 +1058,10 @@ int encode_log_Wo(float Wo, int bits)
 
 \*---------------------------------------------------------------------------*/
 
-float decode_log_Wo(int index, int bits)
+float decode_log_Wo(C2CONST *c2const, int index, int bits)
 {
-    float Wo_min = TWO_PI/P_MAX;
-    float Wo_max = TWO_PI/P_MIN;
+    float Wo_min = c2const->Wo_min;
+    float Wo_max = c2const->Wo_max;
     float step;
     float Wo;
     int   Wo_levels = 1<<bits;
@@ -1194,6 +1072,7 @@ float decode_log_Wo(int index, int bits)
     return powf(10,Wo);
 }
 
+#if 0
 /*---------------------------------------------------------------------------*\
 
   FUNCTION....: encode_Wo_dt()
@@ -1204,11 +1083,11 @@ float decode_log_Wo(int index, int bits)
 
 \*---------------------------------------------------------------------------*/
 
-int encode_Wo_dt(float Wo, float prev_Wo)
+int encode_Wo_dt(C2CONST *c2const, float Wo, float prev_Wo)
 {
     int   index, mask, max_index, min_index;
-    float Wo_min = TWO_PI/P_MAX;
-    float Wo_max = TWO_PI/P_MIN;
+    float Wo_min = c2const->Wo_min;
+    float Wo_max = c2const->Wo_max;
     float norm;
 
     norm = (Wo - prev_Wo)/(Wo_max - Wo_min);
@@ -1243,10 +1122,10 @@ int encode_Wo_dt(float Wo, float prev_Wo)
 
 \*---------------------------------------------------------------------------*/
 
-float decode_Wo_dt(int index, float prev_Wo)
+float decode_Wo_dt(C2CONST *c2const, int index, float prev_Wo)
 {
-    float Wo_min = TWO_PI/P_MAX;
-    float Wo_max = TWO_PI/P_MIN;
+    float Wo_min = c2const->Wo_min;
+    float Wo_max = c2const->Wo_max;
     float step;
     float Wo;
     int   mask;
@@ -1271,6 +1150,7 @@ float decode_Wo_dt(int index, float prev_Wo)
 
     return Wo;
 }
+#endif
 
 /*---------------------------------------------------------------------------*\
 
@@ -1288,16 +1168,17 @@ float speech_to_uq_lsps(float lsp[],
 			float ak[],
 		        float Sn[],
 		        float w[],
-		        int   order
+		        int m_pitch,
+                        int   order
 )
 {
     int   i, roots;
-    float Wn[M_PITCH];
+    float Wn[m_pitch];
     float R[order+1];
     float e, E;
 
     e = 0.0;
-    for(i=0; i<M_PITCH; i++) {
+    for(i=0; i<m_pitch; i++) {
 	Wn[i] = Sn[i]*w[i];
 	e += Wn[i]*Wn[i];
     }
@@ -1310,7 +1191,7 @@ float speech_to_uq_lsps(float lsp[],
 	return 0.0;
     }
 
-    autocorrelate(Wn, R, M_PITCH, order);
+    autocorrelate(Wn, R, m_pitch, order);
     levinson_durbin(R, ak, order);
 
     E = 0.0;
@@ -2039,7 +1920,7 @@ void compute_weights2(const float *x, const float *xp, float *w)
 
 \*---------------------------------------------------------------------------*/
 
-void quantise_WoE(MODEL *model, float *e, float xq[])
+void quantise_WoE(C2CONST *c2const, MODEL *model, float *e, float xq[])
 {
   int          i, n1;
   float        x[2];
@@ -2048,8 +1929,13 @@ void quantise_WoE(MODEL *model, float *e, float xq[])
   const float *codebook1 = ge_cb[0].cb;
   int          nb_entries = ge_cb[0].m;
   int          ndim = ge_cb[0].k;
-  float Wo_min = TWO_PI/P_MAX;
-  float Wo_max = TWO_PI/P_MIN;
+  float Wo_min = c2const->Wo_min;
+  float Wo_max = c2const->Wo_max;
+  float Fs = c2const->Fs;
+
+  /* VQ is only trained for Fs = 8000 Hz */
+
+  assert(Fs == 8000);
 
   x[0] = log10f((model->Wo/PI)*4000.0/50.0)/log10f(2);
   x[1] = 10.0*log10f(1e-4 + *e);
@@ -2140,13 +2026,13 @@ int encode_WoE(MODEL *model, float e, float xq[])
 
 \*---------------------------------------------------------------------------*/
 
-void decode_WoE(MODEL *model, float *e, float xq[], int n1)
+void decode_WoE(C2CONST *c2const, MODEL *model, float *e, float xq[], int n1)
 {
   int          i;
   const float *codebook1 = ge_cb[0].cb;
   int          ndim = ge_cb[0].k;
-  float Wo_min = TWO_PI/P_MAX;
-  float Wo_max = TWO_PI/P_MIN;
+  float Wo_min = c2const->Wo_min;
+  float Wo_max = c2const->Wo_max;
 
   for (i=0;i<ndim;i++)
   {

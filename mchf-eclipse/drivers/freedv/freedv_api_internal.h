@@ -35,7 +35,8 @@
   extern "C" {
 #endif
 
-#ifndef __FREEDV__
+#ifndef __FREEDV_API_INTERNAL__
+#define __FREEDV_API_INTERNAL__
 
 #include "varicode.h"
 #include "fsk.h"
@@ -61,44 +62,56 @@ static float quiskFilt120t480[480];
 struct freedv {
     int                  mode;
 
+    /* states for various modems we support */
+    
     struct CODEC2       *codec2;
     struct FDMDV        *fdmdv;
-    struct MODEM_STATS   stats;
     struct COHPSK       *cohpsk;
     struct FSK          *fsk;
     struct FMFSK        *fmfsk;
+    struct OFDM         *ofdm;
+    struct LDPC         *ldpc;
+    struct MODEM_STATS   stats;
     
-    struct freedv_vhf_deframer * deframer;      //Extracts frames from VHF stream
+    struct freedv_vhf_deframer * deframer;      // Extracts frames from VHF stream
 
-    struct quisk_cfFilter * ptFilter7500to8000;     // Filters to change to/from 7500 and 8000 sps
+    struct quisk_cfFilter * ptFilter7500to8000; // Filters to change to/from 7500 and 8000 sps for 700 .... 700C
     struct quisk_cfFilter * ptFilter8000to7500;
 
-    int                  n_speech_samples;
+    int                  n_speech_samples;       // number of speech samples we need for each freedv_tx() call
+                                                 // num of speech samples output by freedv_rx() call
     int                  n_nom_modem_samples;    // size of tx and most rx modem sample buffers
     int                  n_max_modem_samples;    // make your rx modem sample buffers this big
     int                  n_nat_modem_samples;    // tx modem sample block length as used by the modem before interpolation to output
-
-    int                  modem_sample_rate;      // ATM caller is responsible for meeting this (TBC)
+                                                 // usually the same as n_nom_modem_samples, except for 700..700C
+    int                  modem_sample_rate;      // ATM caller is responsible for meeting this
     int                  clip;                   // non-zero for cohpsk modem output clipping for low PAPR
 
     unsigned char       *packed_codec_bits;
+    unsigned char       *packed_codec_bits_tx;   // for 700D we separate packed bits to maintain state due to interleaving
     int                 *codec_bits;
     int                 *tx_bits;
     int                 *fdmdv_bits;
     int                 *rx_bits;
+    int                  n_codec_bits;           // number of codec bits in a frame
+
     int                  tx_sync_bit;
     int                  smooth_symbols;
-    float               *prev_rx_bits;
-    int                  n_codec_bits;           // amount of codec bits in a frame
 
+    /* test frame states -------------------------------------------------------------------------*/
+    
     int                 *ptest_bits_coh;
     int                 *ptest_bits_coh_end;
 
     int                  test_frames;            // set this baby for 1 to tx/rx test frames to look at bit error stats
+    int                  test_frames_diversity;  // 1 -> used combined carriers for error counting on 700 waveforms
     int                  test_frame_sync_state;
+    int                  test_frame_sync_state_upper;  // when test_frames_diveristy==0 we need extra states for upper carriers
     int                  test_frame_count;
     int                  total_bits;
     int                  total_bit_errors;
+    int                  total_bits_coded;
+    int                  total_bit_errors_coded;
     int                  sz_error_pattern;
 
     /* optional user defined function to pass error pattern when a test frame is received */
@@ -113,11 +126,22 @@ struct freedv {
     int                  squelch_en;
     int                  nin;
 
+    /* Varicode txt channel states ----------------------------------------------------------------------*/
+    
     struct VARICODE_DEC  varicode_dec_states;
     short                tx_varicode_bits[VARICODE_MAX_BITS];
     int                  nvaricode_bits;
     int                  varicode_bit_index;
 
+    /* interleaved LDPC OFDM states ---------------------------------------------------------------------*/
+
+    int                  interleave_frames;          // number of OFDM modem frames in interleaver, e.g. 1,2,4,8,16
+    COMP                *codeword_symbols;
+    float               *codeword_amps;
+    int                  modem_frame_count_tx;       // modem frame counter for tx side
+    int                  modem_frame_count_rx;       // modem frame counter for rx side
+    COMP                *mod_out;                    // output buffer of intereaved frames
+    
     /* user defined function ptrs to produce and consume ASCII
       characters using aux txt channel */
 

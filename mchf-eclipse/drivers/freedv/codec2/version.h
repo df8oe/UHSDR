@@ -1,15 +1,15 @@
 /*---------------------------------------------------------------------------*\
 
-  FILE........: nlp.c
-  AUTHOR......: David Rowe
-  DATE CREATED: 23/3/93
+  FILE........: version.h
+  AUTHOR......: Tomas Härdin
+  DATE CREATED: 03 November 2017
 
-  Non Linear Pitch (NLP) estimation functions.
+  Codec 2 VERSION #defines
 
 \*---------------------------------------------------------------------------*/
 
 /*
-  Copyright (C) 2009 David Rowe
+  Copyright (C) 2017 Tomas Härdin
 
   All rights reserved.
 
@@ -25,14 +25,13 @@
   along with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __NLP__
-#define __NLP__
+//this functions both as an include guard and your typical HAVE macro
+#ifndef CODEC2_HAVE_VERSION
+#define CODEC2_HAVE_VERSION
 
-#include "comp.h"
+#define CODEC2_VERSION_MAJOR 0
+#define CODEC2_VERSION_MINOR 8
+/* #undef CODEC2_VERSION_PATCH */
+#define CODEC2_VERSION "0.8"
 
-void *nlp_create(C2CONST *c2const);
-void nlp_destroy(void *nlp_state);
-float nlp(void *nlp_state, float Sn[], int n, 
-	  float *pitch_samples, COMP Sw[], COMP W[], float *prev_f0);
-
-#endif
+#endif //CODEC2_HAVE_VERSION
