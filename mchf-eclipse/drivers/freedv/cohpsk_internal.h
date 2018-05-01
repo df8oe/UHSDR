@@ -38,7 +38,6 @@
 #define COHPSK_NFILTER    (COHPSK_NSYM*COHPSK_M)
 #define COHPSK_EXCESS_BW  0.5                         /* excess BW factor of root nyq filter */
 #define COHPSK_NT         5                           /* number of symbols we estimate timing over */
-#define COHPSK_CLIP       6.5                         /* hard clipping for Nc*Nc=14 to reduce PAPR */
 
 #include "fdmdv_internal.h"
 #include "kiss_fft.h"
@@ -46,9 +45,9 @@
 struct COHPSK {
     COMP         ch_fdm_frame_buf[NSW*NSYMROWPILOT*COHPSK_M];  /* buffer of several frames of symbols from channel      */
     float        pilot2[2*NPILOTSFRAME][COHPSK_NC];
-    float        phi_[NSYMROW][COHPSK_NC*ND];           /* phase estimates for this frame of rx data symbols     */
+    float        phi_[NSYMROWPILOT][COHPSK_NC*ND];      /* phase estimates for this frame of rx data symbols     */
     float        amp_[NSYMROW][COHPSK_NC*ND];           /* amplitude estimates for this frame of rx data symbols */
-    COMP         rx_symb[NSYMROW][COHPSK_NC*ND];        /* demodulated symbols                                   */
+    COMP         rx_symb[NSYMROWPILOT][COHPSK_NC*ND];   /* demodulated symbols                                   */
     float        f_est;
     COMP         rx_filter_memory[COHPSK_NC*ND][COHPSK_NFILTER];
     COMP         ct_symb_buf[NCT_SYMB_BUF][COHPSK_NC*ND];
@@ -73,8 +72,13 @@ struct COHPSK {
     int           verbose;
 
     int          *ptest_bits_coh_tx;
-    int          *ptest_bits_coh_rx;
+    int          *ptest_bits_coh_rx[2];
     int          *ptest_bits_coh_end;
+
+    /* counting bit errors using pilots */
+
+    int           npilotbits;
+    int           npilotbiterrors;
 
     /* optional log variables used for testing Octave to C port */
 
@@ -92,11 +96,23 @@ struct COHPSK {
 
     float         *rx_timing_log;
     int            rx_timing_log_index;
+
+    /* demodulated bits before diversity combination for test/instrumentation purposes */
+
+    float          rx_bits_lower[COHPSK_BITS_PER_FRAME];
+    float          rx_bits_upper[COHPSK_BITS_PER_FRAME];
+
+    /* tx amplitude weights for each carrier for test/instrumentation */
+
+    float          carrier_ampl[COHPSK_NC*ND];
+
+    /* Flag enabling simple freq est mode */
+    int            freq_est_mode_reduced;
 };
 
 void bits_to_qpsk_symbols(COMP tx_symb[][COHPSK_NC*COHPSK_ND], int tx_bits[], int nbits);
 void qpsk_symbols_to_bits(struct COHPSK *coh, float rx_bits[], COMP ct_symb_buf[][COHPSK_NC*COHPSK_ND]);
-void tx_filter_and_upconvert_coh(COMP tx_fdm[], int Nc, COMP tx_symbols[],
+void tx_filter_and_upconvert_coh(COMP tx_fdm[], int Nc, const COMP tx_symbols[],
                                  COMP tx_filter_memory[COHPSK_NC][COHPSK_NSYM],
                                  COMP phase_tx[], COMP freq[],
                                  COMP *fbb_phase, COMP fbb_rect);

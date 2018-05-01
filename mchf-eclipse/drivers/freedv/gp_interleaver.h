@@ -1,20 +1,23 @@
 /*---------------------------------------------------------------------------*\
 
-  FILE........: nlp.c
+  FILE........: gp_interleaver.h
   AUTHOR......: David Rowe
-  DATE CREATED: 23/3/93
+  DATE CREATED: April 2018
 
-  Non Linear Pitch (NLP) estimation functions.
+  Golden Prime Interleaver. My interprestation of "On the Analysis and
+  Design of Good Algebraic Interleavers", Xie et al,eq (5).
+
+  See also octvae/gp_interleaver.m
 
 \*---------------------------------------------------------------------------*/
 
 /*
-  Copyright (C) 2009 David Rowe
+  Copyright (C) 2018 David Rowe
 
   All rights reserved.
 
   This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU Lesser General Public License version 2.1, as
+  it under the terms of the GNU Lesser General Public License version 2, as
   published by the Free Software Foundation.  This program is
   distributed in the hope that it will be useful, but WITHOUT ANY
   WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -25,14 +28,14 @@
   along with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __NLP__
-#define __NLP__
+#ifndef __GP_INTERLEAVER__
+#define __GP_INTERLEAVER__
 
 #include "comp.h"
 
-void *nlp_create(C2CONST *c2const);
-void nlp_destroy(void *nlp_state);
-float nlp(void *nlp_state, float Sn[], int n, 
-	  float *pitch_samples, COMP Sw[], COMP W[], float *prev_f0);
+void gp_interleave_comp(COMP interleaved_frame[], COMP frame[], int Nbits);
+void gp_deinterleave_comp(COMP frame[], COMP interleaved_frame[], int Nbits);
+void gp_interleave_float(float frame[], float interleaved_frame[], int Nbits);
+void gp_deinterleave_float(float interleaved_frame[], float frame[], int Nbits);
 
 #endif

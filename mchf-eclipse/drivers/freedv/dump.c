@@ -140,7 +140,7 @@ void dump_off(){
 	fclose(fhephase);
 }
 
-void dump_Sn(float Sn[]) {
+void dump_Sn(int m_pitch, float Sn[]) {
     int i;
     char s[MAX_STR];
 
@@ -155,10 +155,10 @@ void dump_Sn(float Sn[]) {
     /* split across two lines to avoid max line length problems */
     /* reconstruct in Octave */
 
-    for(i=0; i<M/2; i++)
+    for(i=0; i<m_pitch/2; i++)
 	fprintf(fsn,"%f\t",Sn[i]);
     fprintf(fsn,"\n");
-    for(i=M/2; i<M; i++)
+    for(i=m_pitch/2; i<m_pitch; i++)
 	fprintf(fsn,"%f\t",Sn[i]);
     fprintf(fsn,"\n");
 }
@@ -238,7 +238,7 @@ void dump_softdec(float *softdec, int n)
 void dump_model(MODEL *model) {
     int l;
     char s[MAX_STR];
-    char line[2048];
+    char line[MAX_STR*10];
 
     if (!dumpon) return;
 
@@ -252,10 +252,12 @@ void dump_model(MODEL *model) {
     for(l=1; l<=model->L; l++) {
 	sprintf(s,"%12f ",model->A[l]);
         strcat(line, s);
+        assert(strlen(line) < MAX_STR*10);
     }
     for(l=model->L+1; l<=MAX_AMP; l++) {
 	sprintf(s,"%12f ", 0.0);
         strcat(line,s);
+        assert(strlen(line) < MAX_STR*10);
     }
 
     sprintf(s,"%d\n",model->voiced);
@@ -378,7 +380,7 @@ void dump_lpc_snr(float snr) {
 
 /* Pw "before" post filter so we can plot before and after */
 
-void dump_Pwb(COMP Pwb[]) {
+void dump_Pwb(float Pwb[]) {
     int i;
     char s[MAX_STR];
 
@@ -391,11 +393,11 @@ void dump_Pwb(COMP Pwb[]) {
     }
 
     for(i=0; i<FFT_ENC/2; i++)
-	fprintf(fpwb,"%f\t",Pwb[i].real);
+	fprintf(fpwb,"%f\t",Pwb[i]);
     fprintf(fpwb,"\n");
 }
 
-void dump_Pw(COMP Pw[]) {
+void dump_Pw(float Pw[]) {
     int i;
     char s[MAX_STR];
 
@@ -408,7 +410,7 @@ void dump_Pw(COMP Pw[]) {
     }
 
     for(i=0; i<FFT_ENC/2; i++)
-	fprintf(fpw,"%f\t",Pw[i].real);
+	fprintf(fpw,"%f\t",Pw[i]);
     fprintf(fpw,"\n");
 }
 
@@ -585,7 +587,7 @@ void dump_e(float e_hz[]) {
     fprintf(fe,"\n");
 }
 
-void dump_sq(float sq[]) {
+void dump_sq(int m_pitch, float sq[]) {
     int i;
     char s[MAX_STR];
 
@@ -597,10 +599,10 @@ void dump_sq(float sq[]) {
 	assert(fsq != NULL);
     }
 
-    for(i=0; i<M/2; i++)
+    for(i=0; i<m_pitch/2; i++)
 	fprintf(fsq,"%f\t",sq[i]);
     fprintf(fsq,"\n");
-    for(i=M/2; i<M; i++)
+    for(i=m_pitch/2; i<m_pitch; i++)
 	fprintf(fsq,"%f\t",sq[i]);
     fprintf(fsq,"\n");
 }
@@ -650,6 +652,7 @@ void dump_E(float E) {
     fprintf(fE,"%f\n", 10.0*log10(E));
 }
 
+#if 0
 void dump_Rk(float Rk[]) {
     int i;
     char s[MAX_STR];
@@ -666,5 +669,6 @@ void dump_Rk(float Rk[]) {
 	fprintf(frk,"%f\t",Rk[i]);
     fprintf(frk,"\n");
 }
+#endif
 
 #endif

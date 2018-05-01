@@ -1,15 +1,15 @@
 /*---------------------------------------------------------------------------*\
 
-  FILE........: nlp.c
-  AUTHOR......: David Rowe
-  DATE CREATED: 23/3/93
+  FILE........: dct2.h
+  AUTHOR......: Phil Ayres
+  DATE CREATED: July 2017
 
-  Non Linear Pitch (NLP) estimation functions.
-
+ * DCT functions based on existing Codec 2 FFT
+ * 
 \*---------------------------------------------------------------------------*/
 
 /*
-  Copyright (C) 2009 David Rowe
+  Copyright David Rowe 2017
 
   All rights reserved.
 
@@ -23,16 +23,25 @@
 
   You should have received a copy of the GNU Lesser General Public License
   along with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
 
-#ifndef __NLP__
-#define __NLP__
+ */
 
+#ifndef DCT2_H
+#define	DCT2_H
+
+#include "codec2_fft.h"
 #include "comp.h"
+#include "comp_prim.h"
 
-void *nlp_create(C2CONST *c2const);
-void nlp_destroy(void *nlp_state);
-float nlp(void *nlp_state, float Sn[], int n, 
-	  float *pitch_samples, COMP Sw[], COMP W[], float *prev_f0);
+typedef codec2_fftr_cfg codec2_dct_cfg;
 
-#endif
+void dct(codec2_dct_cfg cfg, const int N, float y[], float res[]);
+void dct2(codec2_dct_cfg cfg_m, codec2_dct_cfg cfg_n, const int M, const int N, float y[M][N], float res[M][N]);
+void idct(codec2_dct_cfg cfg, const int N, float a[N], float res[N]);
+void idct2(codec2_dct_cfg cfg_m, codec2_dct_cfg cfg_n, int M, int N, float y[M][N], float res[M][N]);
+codec2_dct_cfg dct_config(int P);
+codec2_dct_cfg idct_config(int P);
+void dct_cfg_free(codec2_dct_cfg cfg);
+
+#endif	/* DCT2_H */
+
