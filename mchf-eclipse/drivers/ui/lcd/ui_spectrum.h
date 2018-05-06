@@ -98,8 +98,8 @@ enum
 #define WATERFALL_NOSIG_ADJUST_DEFAULT      20
 
 //
-#define WATERFALL_SPEED_WARN        5
-#define WATERFALL_SPEED_WARN1       9
+#define WATERFALL_SPEED_WARN        1//5
+#define WATERFALL_SPEED_WARN1       3//9
 //
 // Constants for waterfall size settings
 //

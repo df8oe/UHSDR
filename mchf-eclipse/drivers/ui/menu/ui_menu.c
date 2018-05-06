@@ -3515,7 +3515,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         switch(ts.stream_tx_audio)
         {
         case STREAM_TX_AUDIO_OFF:
-            txt_ptr = "     Off";
+            txt_ptr = "     OFF";
             break;
         case STREAM_TX_AUDIO_SRC:
             txt_ptr = "  Source";
