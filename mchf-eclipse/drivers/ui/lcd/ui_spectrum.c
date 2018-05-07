@@ -1050,7 +1050,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
         sd.repeatWaterfallLine = 0;
     }*/
 
-    sd.repeatWaterfallLine = slayout.wfall.h/(sd.wfall_size);		//-1 for prewention of doubling lines for equal size
+    sd.repeatWaterfallLine = slayout.wfall.h/(sd.wfall_size);
 
     //no need for this variable because we have slayout.wfall.h
     //sd.wfall_disp_lines = sd.wfall_size * (sd.doubleWaterfallLine==true? 2:1);
@@ -1111,10 +1111,15 @@ static void UiSpectrum_DrawWaterfall()
     }
 
     sd.waterfall_frequencies[sd.wfall_line] = sd.FFT_frequency;
+    static uint8_t doubleLineStart=0;
 
-
-    // Draw lines from buffer
-    sd.wfall_line++;        // bump to the next line in the circular buffer for next go-around
+	// Draw lines from buffer
+    doubleLineStart--;			//changing the size of repeat of first line (for low RAM devices) to make it look more smooth
+    if(doubleLineStart==0xff)
+    {
+    	doubleLineStart=sd.repeatWaterfallLine;
+    	sd.wfall_line++;        // bump to the next line in the circular buffer for next go-around
+    }
 
     uint16_t lptr = sd.wfall_line;      // get current line of "bottom" of waterfall in circular buffer
 
@@ -1123,12 +1128,9 @@ static void UiSpectrum_DrawWaterfall()
 
     if(!sd.wfall_line_update)                               // if it's count is zero, it's time to move the waterfall up
     {
-    	//if(sd.wfall_DrawDirection==1)
-    	//{
     	    // can't use modulo here, doesn't work if we use uint16_t,
     	    // since it 0-1 == 65536 and not -1 (it is an unsigned integer after all)
     	    lptr = lptr?lptr-1 : sd.wfall_size-1;
-    	//}
 
         lptr %= sd.wfall_size;      // do modulus limit of spectrum high
 
@@ -1137,17 +1139,13 @@ static void UiSpectrum_DrawWaterfall()
         // the location of any of the display data - as long as we "blindly" write precisely the correct number of pixels per
         // line and the number of lines.
 
-
-
-        //UiLcdHy28_BulkPixel_OpenWrite(slayout.wfall.x, slayout.wfall.w, (sd.wfall_ystart), sd.wfall_disp_lines);
         UiLcdHy28_BulkPixel_OpenWrite(slayout.wfall.x, slayout.wfall.w, slayout.wfall.y, slayout.wfall.h);
 
         uint16_t spectrum_pixel_buf[slayout.wfall.w];
 
         const int32_t cur_center_hz = sd.FFT_frequency;
 
-        //uint16_t lcnt = 0;
-        //for(uint16_t lcnt = 0;lcnt < sd.wfall_size; lcnt++)                 // set up counter for number of lines defining height of waterfall
+        uint8_t doubleLine=doubleLineStart;
 
         // we update the display unless there is a ptt request, in this case we skip to the end.
         for(uint16_t lcnt = 0; ts.ptt_req == false && lcnt < slayout.wfall.h;)                 // set up counter for number of lines defining height of waterfall
@@ -1218,9 +1216,8 @@ static void UiSpectrum_DrawWaterfall()
             }
 
 
-            //UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, slayout.wfall.w);
 
-            for(uint8_t doubleLine=0;doubleLine<sd.repeatWaterfallLine+1;doubleLine++)
+            for(;doubleLine<sd.repeatWaterfallLine+1;doubleLine++)
             {
                 UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, slayout.wfall.w);
                 lcnt++;
@@ -1229,20 +1226,13 @@ static void UiSpectrum_DrawWaterfall()
                 	break;
                 }
             }
+            doubleLine=0;
             lptr = lptr?lptr-1 : sd.wfall_size-1;
-            /*
-            // point to next/prev line in circular display buffer:
-            if(sd.wfall_DrawDirection==1)
-            {
-                lptr = lptr?lptr-1 : sd.wfall_size-1;
-            }
-            else
-            {
-            	lptr++;                         //moving upward (water fountain, "normal" in 320x240)
-            }*/
             lptr %= sd.wfall_size;              // clip to display height
 
         }
+
+
         UiLcdHy28_BulkPixel_CloseWrite();                   // we are done updating the display - return to normal full-screen mode
     }
 
@@ -1758,7 +1748,7 @@ void UiSpectrum_Redraw()
             if(ts.waterfall.speed > 0)  // is it time to update the scan, or is this scope to be disabled?
             {
                 //ts.waterfall.scheduler = (ts.waterfall.speed)*(sd.doubleWaterfallLine?50:25); // we need to use half the speed if in double line drawing mode
-            	ts.waterfall.scheduler = (ts.waterfall.speed)*(25*(sd.repeatWaterfallLine)); // we need to use half the speed if in double line drawing mode
+            	ts.waterfall.scheduler = (ts.waterfall.speed)*(10*(sd.repeatWaterfallLine)); // we need to use half the speed if in double line drawing mode
                 sd.RedrawType|=Redraw_WATERFALL;
             }
         }
