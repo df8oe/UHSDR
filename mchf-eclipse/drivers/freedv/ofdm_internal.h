@@ -34,6 +34,7 @@ extern "C" {
 
 #include <complex.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "codec2_ofdm.h"
 
@@ -64,6 +65,8 @@ extern "C" {
 #define OFDM_NCP    ((int)(OFDM_TCP * OFDM_FS))
 #endif
 
+#define OFDM_INVERSE_M           (1.0f / (float) OFDM_M)
+
 /* number of symbols we estimate fine timing over */
 #define OFDM_FTWINDOWWIDTH       11
 /* Bits per frame (duh) */
@@ -76,7 +79,7 @@ extern "C" {
 #define OFDM_MAX_SAMPLESPERFRAME (OFDM_SAMPLESPERFRAME + (OFDM_M + OFDM_NCP)/4)
 #define OFDM_RXBUF               (3 * OFDM_SAMPLESPERFRAME + 3 * (OFDM_M + OFDM_NCP))
 
-#define OFDM_TIMING_MX_THRESH    0.3
+#define OFDM_TIMING_MX_THRESH    0.25
 
 /* reserve 4 bits/frame for auxillary text information */
 
@@ -105,7 +108,6 @@ struct OFDM {
     int timing_valid;
     float timing_mx;
     float coarse_foff_est_hz;
-    complex float foff_running;
     int nin;
 
     bool timing_en;
@@ -127,6 +129,7 @@ struct OFDM {
     float sig_var;
     float noise_var;
     float mean_amp;
+    complex float foff_metric;
     
     /* modem sync state machine */
 
@@ -153,7 +156,12 @@ struct OFDM {
 complex float qpsk_mod(int *);
 void qpsk_demod(complex float, int *);
 void ofdm_txframe(struct OFDM *, complex float tx_samples[OFDM_SAMPLESPERFRAME], complex float tx_symbols_lin[]);
-
+void ofdm_assemble_modem_frame(complex float modem_frame[], COMP payload_syms[], uint8_t txt_bits[]);
+void ofdm_disassemble_modem_frame(struct OFDM   *ofdm,
+                                  int            rx_uw[],
+                                  COMP           codeword_syms[],
+                                  float          codeword_amps[],
+                                  short          txt_bits[]);
 #ifdef __cplusplus
 }
 #endif
