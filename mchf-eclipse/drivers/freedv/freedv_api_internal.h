@@ -88,7 +88,8 @@ struct freedv {
     int                  clip;                   // non-zero for cohpsk modem output clipping for low PAPR
 
     unsigned char       *packed_codec_bits;
-    unsigned char       *packed_codec_bits_tx;   // for 700D we separate packed bits to maintain state due to interleaving
+    unsigned char       *packed_codec_bits_tx;    // for 700D we separate packed bits to maintain state due to interleaving
+    int                  nbyte_packed_codec_bits; // keep track of size of above arrays in 700D 
     int                 *codec_bits;
     int                 *tx_bits;
     int                 *fdmdv_bits;
@@ -125,7 +126,8 @@ struct freedv {
     float                snr_squelch_thresh;
     int                  squelch_en;
     int                  nin;
-
+    int                  verbose;
+    
     /* Varicode txt channel states ----------------------------------------------------------------------*/
     
     struct VARICODE_DEC  varicode_dec_states;
