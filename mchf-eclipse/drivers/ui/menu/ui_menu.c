@@ -405,7 +405,7 @@ void UiMenu_HandleIQAdjust(int var, uint8_t mode, char* options, uint32_t* clr_p
                 1);
         if(tchange)
         {
-            AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq/TUNE_MULT);
+            AudioManagement_CalcIqPhaseGainAdjust(ts.tune_freq);
         }
     }
     else        // Orange if not in correct mode

@@ -39,6 +39,8 @@ typedef struct
 	void  (*setPPM)(float32_t ppm);
 
 	// normal operations interface
+	// freq is given in Hz, is QSD mixing frequency,
+	// internally multiplied by 4 for Johnson Counter clock counters if needed by circuit
 	Oscillator_ResultCodes_t (*prepareNextFrequency)(ulong freq, int temp_factor);
 	Oscillator_ResultCodes_t (*changeToNextFrequency)();
 	bool 			  (*isNextStepLarge)();
