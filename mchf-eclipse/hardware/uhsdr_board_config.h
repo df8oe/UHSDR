@@ -507,8 +507,8 @@
 #define POWER_DOWN              GPIO_PIN_8
 #define POWER_DOWN_PIO          GPIOC
 // pin 9
-#define CODEC_CLOCK             GPIO_PIN_9
-#define CODEC_CLOCK_PIO         GPIOC
+#define IQ_CLOCK_DIV4_SIG             GPIO_PIN_9
+#define IQ_CLOCK_DIV4_SIG_PIO         GPIOC
 // pin 10
 #define CODEC_I2S_SCK           GPIO_PIN_10
 #define CODEC_I2S_SCK_PIO       GPIOC

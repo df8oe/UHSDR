@@ -298,7 +298,7 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
         tune_freq += (ts.rit_value*20); // Add RIT on receive
     }
 
-    return tune_freq*TUNE_MULT;
+    return tune_freq;
 }
 
 /**
@@ -406,7 +406,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
                 ts.tx_disable |= TX_DISABLE_OUTOFRANGE;
             }
 
-            uint32_t tune_freq_real = ts.tune_freq/TUNE_MULT;
+            uint32_t tune_freq_real = ts.tune_freq;
 
             RadioManagement_SetHWFiltersForFrequency(tune_freq_real);  // check the filter status with the new frequency update
             AudioManagement_CalcIqPhaseGainAdjust(tune_freq_real);

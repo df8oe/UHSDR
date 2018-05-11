@@ -307,8 +307,16 @@ static bool Si5351a_ApplyConfig(Si5351a_Config_t* config)
 	// final R division stage
 	if (result == true)
 	{
-		result = Si5351a_SetupMultisynthInteger(SI5351_SYNTH_MS_0, config->multisynth_divider, config->multisynth_rdiv);
-		result |= Si5351a_SetupMultisynthInteger(SI5351_SYNTH_MS_1, config->multisynth_divider, config->multisynth_rdiv);
+	    if (config->phasedOutput)
+	    {
+	        result = Si5351a_SetupMultisynthInteger(SI5351_SYNTH_MS_0, config->multisynth_divider, config->multisynth_rdiv);
+	        result &= Si5351a_SetupMultisynthInteger(SI5351_SYNTH_MS_1, config->multisynth_divider, config->multisynth_rdiv);
+	    }
+	    else
+	    {
+	        result = Si5351a_SetupMultisynthInteger(SI5351_SYNTH_MS_2, config->multisynth_divider, config->multisynth_rdiv);
+	    }
+
 	}
 
 	// Reset the PLL. This causes a glitch in the output. For small changes to
@@ -317,11 +325,27 @@ static bool Si5351a_ApplyConfig(Si5351a_Config_t* config)
 	// and set the MultiSynth0 input to be PLL A
 	if (result == true)
 	{
-		Si5351a_WriteRegister(SI5351_CLK0_PHASE_OFFSET, 0);
-		Si5351a_WriteRegister(SI5351_CLK1_PHASE_OFFSET, config->phasedOutput?config->multisynth_divider:0);
+	    // only if phased output is active, we need to care about phase offset of CLK1
+	    if (config->phasedOutput)
+	    {
+	        Si5351a_WriteRegister(SI5351_CLK1_PHASE_OFFSET, config->multisynth_divider);
+	    }
+#ifdef IQ_CLOCK_DIV4_SIG
+	    if (config->phasedOutput)
+	    {
+            GPIO_ResetBits(IQ_CLOCK_DIV4_SIG_PIO,IQ_CLOCK_DIV4_SIG);
+	    }
+	    else
+	    {
+	        GPIO_SetBits(IQ_CLOCK_DIV4_SIG_PIO,IQ_CLOCK_DIV4_SIG);
+	    }
+#endif
 
-		Si5351a_WriteRegister( SI5351_CLK0_CONTROL, SI5351_OUTPUT_ON);
-		Si5351a_WriteRegister( SI5351_CLK1_CONTROL, config->phasedOutput?SI5351_OUTPUT_ON:SI5351_OUTPUT_OFF);
+		// Phase of CLK0 and CLK2 are never changed after startup, so we don't set it.
+
+		Si5351a_WriteRegister( SI5351_CLK0_CONTROL, config->phasedOutput==true?SI5351_OUTPUT_ON:SI5351_OUTPUT_OFF);
+		Si5351a_WriteRegister( SI5351_CLK1_CONTROL, config->phasedOutput==true?SI5351_OUTPUT_ON:SI5351_OUTPUT_OFF);
+        Si5351a_WriteRegister( SI5351_CLK2_CONTROL, config->phasedOutput==false?SI5351_OUTPUT_ON:SI5351_OUTPUT_OFF);
 
 		if (config->pllreset)
 		{
@@ -346,10 +370,12 @@ static Oscillator_ResultCodes_t Si5351a_PrepareNextFrequency(uint32_t freq, int 
 {
 #ifdef TEST_QUADRATURE
 	// TODO: Replace this with a proper configurable switch point, the current limit is the minimum frequency we can do 90 degree phase
-	si5351a_state.next.phasedOutput = freq > SI5351_MIN_FREQ_PHASE90*TUNE_MULT;
-	if (si5351a_state.next.phasedOutput == true)
+	si5351a_state.next.phasedOutput = freq > SI5351_MIN_FREQ_PHASE90;
+	if (si5351a_state.next.phasedOutput == false)
 	{
-		freq /= TUNE_MULT;
+		freq *= 4;
+		// we are going to drive a johnson counter with 4x desired frequency
+		// to get two 1/4 clock aka 90 degrees phase shifted clocks with frequency freq
 	}
 #endif
 	return Si5351a_CalculateConfig(freq, &si5351a_state.next, &si5351a_state.current) == true?OSC_OK:OSC_TUNE_IMPOSSIBLE;
@@ -390,6 +416,19 @@ void Si5351a_Init()
 
 	si5351a_state.is_present = MCHF_I2C_DeviceReady(SI5351A_I2C,SI5351_I2C_WRITE) == HAL_OK;
 
+	if (si5351a_state.is_present)
+	{
+	    Si5351a_WriteRegister(SI5351_CLK0_PHASE_OFFSET, 0);
+        Si5351a_WriteRegister(SI5351_CLK1_PHASE_OFFSET, 0);
+	    Si5351a_WriteRegister(SI5351_CLK2_PHASE_OFFSET, 0);
+        Si5351a_WriteRegister( SI5351_CLK0_CONTROL, SI5351_OUTPUT_OFF);
+        Si5351a_WriteRegister( SI5351_CLK1_CONTROL, SI5351_OUTPUT_OFF);
+        Si5351a_WriteRegister( SI5351_CLK2_CONTROL, SI5351_OUTPUT_OFF);
+	}
+
+
 	osc = Si5351a_IsPresent()?&osc_si5351a:NULL;
+
+
 }
 #endif

@@ -3028,7 +3028,7 @@ static void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
                     sd.samp_ptr = 0;
                 }
             }
-            sd.FFT_frequency = (ts.tune_freq / TUNE_MULT); // spectrum shows all, LO is center frequency;
+            sd.FFT_frequency = (ts.tune_freq); // spectrum shows all, LO is center frequency;
         }
     }
 }
@@ -3090,7 +3090,7 @@ static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
                     sd.samp_ptr = 0;
                 }
             } // end for
-            sd.FFT_frequency = (ts.tune_freq / TUNE_MULT) + AudioDriver_GetTranslateFreq(); // spectrum shows center at translate frequency, LO + Translate Freq  is center frequency;
+            sd.FFT_frequency = (ts.tune_freq) + AudioDriver_GetTranslateFreq(); // spectrum shows center at translate frequency, LO + Translate Freq  is center frequency;
 
 
             // TODO: also insert sample collection for snap carrier here

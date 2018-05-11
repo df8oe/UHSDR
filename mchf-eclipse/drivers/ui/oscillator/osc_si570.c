@@ -687,14 +687,15 @@ static Oscillator_ResultCodes_t Si570_PrepareNextFrequency(ulong freq, int temp_
     if (osc->isPresent() == true) {
         float64_t  freq_calc, temp_scale;
 
-        freq_calc = freq;     // copy frequency
+        freq_calc = freq * 4.0;
+        // frequency multiplied with 4 since we drive a johnson counter for phased clock generation
 
-        temp_scale = temp_factor;    // get temperature factor
-        temp_scale /= 14000000;     // calculate scaling factor for the temperature correction (referenced to 14.000 MHz)
+        temp_scale = ((float64_t)temp_factor)/14000000.0;
+        // calculate scaling factor for the temperature correction (referenced to 14.000 MHz)
 
         freq_calc *= (1 + temp_scale);  // rescale by temperature correction factor
 
-        // new DF8OE disabler of system crash when tuning frequency is outside SI570 hard limits
+        // when tuning frequency is outside SI570 hard limits, don't do it
         if (freq_calc <= SI570_HARD_MAX_FREQ && freq_calc >= SI570_HARD_MIN_FREQ)
         {
             // tuning inside known working spec
