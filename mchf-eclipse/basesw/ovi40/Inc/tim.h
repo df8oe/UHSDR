@@ -53,7 +53,9 @@
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#define ENC_filter 15									//encoder input sampling filter (amount of same input samples to be threated as stable state)
+#define ENC_ClockDivision TIM_CLOCKDIVISION_DIV4		//clock divider for encoder filter
+#define ENCODER_RANGE	0xFFF							// Maximum pot value
 /* USER CODE END Includes */
 
 extern TIM_HandleTypeDef htim3;

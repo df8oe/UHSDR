@@ -25,14 +25,24 @@
 // capacitors
 #define ENCODER_FLICKR_BAND	4
 
-// --------------------------------
-// Maximum pot value
-#define ENCODER_RANGE	0xFFF
-
 // Divider to create non linearity
 #define ENCODER_LOG_D	1
 
 // Audio Gain public structure
+
+typedef struct EncoderSelection
+{
+    // pot values
+    //
+    uint16_t value_old;			// previous value
+    uint16_t value_new;			// most current value
+    uint8_t	de_detent;			// sw de-detent flag
+    TIM_TypeDef* tim;
+
+} EncoderSelection;
+
+//left only for reference:
+/*
 typedef struct EncoderSelection
 {
     // pot values
@@ -43,7 +53,7 @@ typedef struct EncoderSelection
     TIM_TypeDef* tim;
 
 } EncoderSelection;
-
+*/
 
 void UiRotaryFreqEncoderInit(void);
 

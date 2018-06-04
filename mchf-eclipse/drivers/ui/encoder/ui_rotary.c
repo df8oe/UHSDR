@@ -174,6 +174,66 @@ int UiDriverEncoderRead(const uint32_t encId)
 {
     bool no_change = false;
     int pot_diff = 0;
+    int32_t delta;
+
+    if (encId < ENC_MAX)
+    {
+        encSel[encId].value_new = encSel[encId].tim->CNT;
+
+        if (encSel[encId].value_old != encSel[encId].value_new)
+        {
+        	//checking for the overflow/underflow crossing
+        	delta=encSel[encId].value_new - encSel[encId].value_old;
+        	if(delta>(ENCODER_RANGE/2))
+        	{
+        		delta-=ENCODER_RANGE+1;
+        	}
+        	else if(delta<-(ENCODER_RANGE/2))
+        	{
+        		delta+=ENCODER_RANGE+1;
+        	}
+        }
+        else
+        {
+        	no_change = true;
+        }
+
+
+        // SW de-detent routine
+        //left this code but think that it is useless because in our encoders (detent count)=(steps per rotation). 03.06.2018 SP9BSL
+
+        if (no_change == false)
+        {
+            encSel[encId].de_detent+=abs(delta);// corrected detent behaviour
+            // double counts are now processed - not count lost!
+            if (encSel[encId].de_detent < USE_DETENTED_VALUE)
+            {
+                encSel[encId].value_old = encSel[encId].value_new;  // update and skip
+                no_change = true;
+            }
+            else
+            {
+                encSel[encId].de_detent = 0;
+            }
+        }
+        // Encoder value to difference
+        if (no_change == false)
+        {
+            pot_diff = delta;
+            encSel[encId].value_old = encSel[encId].value_new;
+        }
+    }
+    return pot_diff;
+}
+
+//left for some time only for reference.
+
+/*
+
+int UiDriverEncoderRead(const uint32_t encId)
+{
+    bool no_change = false;
+    int pot_diff = 0;
 
     if (encId < ENC_MAX)
     {
@@ -218,3 +278,4 @@ int UiDriverEncoderRead(const uint32_t encId)
     }
     return pot_diff;
 }
+  */
