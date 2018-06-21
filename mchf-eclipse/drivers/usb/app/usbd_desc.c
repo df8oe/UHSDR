@@ -142,8 +142,12 @@ __ALIGN_BEGIN uint8_t USBD_FS_DeviceDesc[USB_LEN_DEV_DESC] __ALIGN_END =
     0x00,                       /* bcdUSB */
 #endif
     0x02,
-    0xEF,                       /*bDeviceClass*/
-    0x02,                       /*bDeviceSubClass*/
+	/* Typically only the bDeviceClass is set at the device level.
+	 * Most class specifications choose to identify itself at the interface level
+	 * and as a result set the bDeviceClass as 0x00.
+	 * This allows for the one device to support multiple classes. */
+    0x00,                       /*0xEF bDeviceClass*/
+    0x00,                       /*0x02 bDeviceSubClass*/
     0x01,                       /*bDeviceProtocol*/
     USB_MAX_EP0_SIZE,          /*bMaxPacketSize*/
     LOBYTE(USBD_VID),           /*idVendor*/

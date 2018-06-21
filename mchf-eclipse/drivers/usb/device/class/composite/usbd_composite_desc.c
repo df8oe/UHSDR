@@ -273,8 +273,12 @@ __ALIGN_BEGIN uint8_t USBD_COMP_CfgDesc[USB_AUDIO_CONFIG_DESC_SIZ] __ALIGN_END =
         0x01,                                 /* wTerminalType AUDIO_TERMINAL_USB_STREAMING   0x0101 */
         0x01,
         0x00,                                 /* bAssocTerminal */
-        0x01,                                 /* bNrChannels */
-        0x00,                                 /* wChannelConfig 0x0000  Mono */
+		/* bNrChannels conflict
+		 * In the "Type III Format" (actually type I) descriptor, bNrChannels is set to 2
+		 * But in the input terminal desc, bNrChannels is 1
+		 * Also, wChannelConfig is wrong, even if it was mono */
+        0x02,                                 /* bNrChannels */
+        0x03,                                 /* wChannelConfig 0x0000  Mono; 0x03, 0x00 (L/R front) */
         0x00,
         0x00,                                 /* iChannelNames */
         0x00,                                 /* iTerminal */
@@ -312,7 +316,7 @@ __ALIGN_BEGIN uint8_t USBD_COMP_CfgDesc[USB_AUDIO_CONFIG_DESC_SIZ] __ALIGN_END =
         0x01,0x02,                    // Terminal is Microphone (0x01,0x02)
         0x00,                         // No association
         USBD_AUDIO_IN_CHANNELS,       // One or two channel
-        0x00,0x00,                    // Mono sets no position bits
+        0x03,0x00,                    /* wChannelConfig 0x0000  Mono; 0x03, 0x00 (L/R front) */
         0x00,                         // Unused.
         0x00,                         // Unused.
 
@@ -384,11 +388,13 @@ __ALIGN_BEGIN uint8_t USBD_COMP_CfgDesc[USB_AUDIO_CONFIG_DESC_SIZ] __ALIGN_END =
         0x00,
         /* 07 byte*/
 
-        /* USB Speaker Audio Type III Format Interface Descriptor */
+        /* USB Speaker Audio Type I Format Interface Descriptor */
         0x0B,                                 /* bLength */
         AUDIO_INTERFACE_DESCRIPTOR_TYPE,      /* bDescriptorType */
         AUDIO_STREAMING_FORMAT_TYPE,          /* bDescriptorSubtype */
-        AUDIO_FORMAT_TYPE_III,                /* bFormatType */
+		/* Type III" format descriptor is assigned, but wFormatTag on AS interface desc is set to PCM
+		 * (type III is not PCM). As Type III is not a popular one, it should be of Type I */
+        AUDIO_FORMAT_TYPE_I,                  /* bFormatType */
         0x02,                                 /* bNrChannels */
         0x02,                                 /* bSubFrameSize :  2 Bytes per frame (16bits) */
         16,                                   /* bBitResolution (16-bits per sample) */
@@ -419,29 +425,39 @@ __ALIGN_BEGIN uint8_t USBD_COMP_CfgDesc[USB_AUDIO_CONFIG_DESC_SIZ] __ALIGN_END =
 
         /* From Here is the Microphone */
         /* USB Microphone Standard AS Interface Descriptor (Alt. Set. 0) (CODE == 3)*/ //zero-bandwidth interface
-        0x09,                         // Size of the descriptor, in bytes (bLength)
-        USB_DESC_TYPE_INTERFACE,    // INTERFACE descriptor type (bDescriptorType) 0x04
+
+		/*
+		* Microphone Standard AS Interface Descriptor - Audio Streaming Zero Bandwith
+		* Interface 1, Alternate Setting 0
+		*/
+		AUDIO_INTERFACE_DESC_SIZE,    // Size of the descriptor, in bytes (bLength)
+        USB_DESC_TYPE_INTERFACE,      // INTERFACE descriptor type (bDescriptorType) 0x04
         AUDIO_IN_IF, // Index of this interface. (bInterfaceNumber) ?????????? (3<) (1<<) (1<M)
         0x00,                         // Index of this alternate setting. (bAlternateSetting)
         0x00,                         // 0 endpoints.   (bNumEndpoints)
         USB_DEVICE_CLASS_AUDIO,       // AUDIO (bInterfaceClass)
         AUDIO_SUBCLASS_AUDIOSTREAMING, // AUDIO_STREAMING (bInterfaceSubclass)
-        0x00,                         // Unused. (bInterfaceProtocol)
+		AUDIO_PROTOCOL_UNDEFINED,     // Unused. (bInterfaceProtocol)
         0x00,                         // Unused. (iInterface)
 
         /* USB Microphone Standard AS Interface Descriptor (Alt. Set. 1) (CODE == 4)*/
-        0x09,                         // Size of the descriptor, in bytes (bLength)
+
+		/*
+		* Microphone Standard AS Interface Descriptor - Audio Streaming Zero Bandwith
+		* Interface 1, Alternate Setting 1
+		*/
+		AUDIO_INTERFACE_DESC_SIZE,   // Size of the descriptor, in bytes (bLength)
         USB_DESC_TYPE_INTERFACE,     // INTERFACE descriptor type (bDescriptorType)
         AUDIO_IN_IF, // Index of this interface. (bInterfaceNumber)
         0x01,                         // Index of this alternate setting. (bAlternateSetting)
         0x01,                         // 1 endpoint (bNumEndpoints)
         USB_DEVICE_CLASS_AUDIO,       // AUDIO (bInterfaceClass)
         AUDIO_SUBCLASS_AUDIOSTREAMING,   // AUDIO_STREAMING (bInterfaceSubclass)
-        0x00,                         // Unused. (bInterfaceProtocol)
+		AUDIO_PROTOCOL_UNDEFINED,     // Unused. (bInterfaceProtocol)
         0x00,                         // Unused. (iInterface)
 
         /*  USB Microphone Class-specific AS General Interface Descriptor (CODE == 5)*/
-        0x07,                         // Size of the descriptor, in bytes (bLength)
+		AUDIO_STREAMING_INTERFACE_DESC_SIZE, // Size of the descriptor, in bytes (bLength)
         AUDIO_INTERFACE_DESCRIPTOR_TYPE, // CS_INTERFACE Descriptor Type (bDescriptorType) 0x24
         AUDIO_STREAMING_GENERAL,         // GENERAL subtype (bDescriptorSubtype) 0x01
         0x05,             // Unit ID of the Output Terminal.(bTerminalLink)
@@ -449,6 +465,7 @@ __ALIGN_BEGIN uint8_t USBD_COMP_CfgDesc[USB_AUDIO_CONFIG_DESC_SIZ] __ALIGN_END =
         0x01,0x00,                    // PCM Format (wFormatTag)
 
         /*  USB Microphone Type I Format Type Descriptor (CODE == 6)*/
+		/* Microphone Audio Type I Format Interface Descriptor */
         0x0B,                        // Size of the descriptor, in bytes (bLength)
         AUDIO_INTERFACE_DESCRIPTOR_TYPE,// CS_INTERFACE Descriptor Type (bDescriptorType) 0x24
         AUDIO_STREAMING_FORMAT_TYPE,   // FORMAT_TYPE subtype. (bDescriptorSubtype) 0x02
@@ -460,8 +477,9 @@ __ALIGN_BEGIN uint8_t USBD_COMP_CfgDesc[USB_AUDIO_CONFIG_DESC_SIZ] __ALIGN_END =
         (USBD_AUDIO_IN_FREQ&0xFF),((USBD_AUDIO_IN_FREQ>>8)&0xFF),0x00,  // (tSamFreq) (NOT COMPLETE!!!)
 
         /*  USB Microphone Standard Endpoint Descriptor (CODE == 8)*/ //Standard AS Isochronous Audio Data Endpoint Descriptor
-        0x09,                       // Size of the descriptor, in bytes (bLength)
-        0x05,                       // ENDPOINT descriptor (bDescriptorType)
+		/* Endpoint 1 - Standard Descriptor */
+		AUDIO_STANDARD_ENDPOINT_DESC_SIZE, // Size of the descriptor, in bytes (bLength)
+		USB_DESC_TYPE_ENDPOINT, // ENDPOINT descriptor (bDescriptorType)
         AUDIO_IN_EP,                    // IN Endpoint 1. (bEndpointAddress)
         USB_ENDPOINT_TYPE_ISOCHRONOUS, // Isochronous, not shared. (bmAttributes)//USB_ENDPOINT_TYPE_asynchronous USB_ENDPOINT_TYPE_ISOCHRONOUS
         (AUDIO_IN_PACKET&0xFF),((AUDIO_IN_PACKET>>8)&0xFF),                  //bytes per packet (wMaxPacketSize)
@@ -470,7 +488,7 @@ __ALIGN_BEGIN uint8_t USBD_COMP_CfgDesc[USB_AUDIO_CONFIG_DESC_SIZ] __ALIGN_END =
         0x00,                       // Unused. (bSynchAddress)
 
         /* USB Microphone Class-specific Isoc. Audio Data Endpoint Descriptor */
-        0x07,                       // Size of the descriptor, in bytes (bLength)
+        0x07,                              // Size of the descriptor, in bytes (bLength)
         AUDIO_ENDPOINT_DESCRIPTOR_TYPE,    // CS_ENDPOINT Descriptor Type (bDescriptorType) 0x25
         AUDIO_ENDPOINT_GENERAL,            // GENERAL subtype. (bDescriptorSubtype) 0x01
         0x00,                              // No sampling frequency control, no pitch control, no packet padding.(bmAttributes)
