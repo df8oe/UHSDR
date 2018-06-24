@@ -8,8 +8,13 @@
 #ifndef AUDIO_CW_CW_DECODER_H_
 #define AUDIO_CW_CW_DECODER_H_
 
+#define CW_DECODER_BLOCKSIZE_MIN		8
+#define CW_DECODER_BLOCKSIZE_MAX		128
+#define CW_DECODER_BLOCKSIZE_DEFAULT	32
 
-
+#define CW_DECODER_THRESH_MIN			1000
+#define CW_DECODER_THRESH_MAX			50000
+#define CW_DECODER_THRESH_DEFAULT		32000
 
 typedef struct
 {
@@ -20,9 +25,6 @@ typedef struct
 //	uint8_t average;
 	uint32_t thresh;
 	uint8_t blocksize;
-#define CW_DECODER_BLOCKSIZE_MIN 8
-#define CW_DECODER_BLOCKSIZE_MAX 128
-#define CW_DECODER_BLOCKSIZE_DEFAULT 32
 
 //	uint8_t AGC_enable;
 	uint8_t noisecancel_enable;

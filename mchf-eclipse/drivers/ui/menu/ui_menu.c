@@ -1869,9 +1869,9 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
     case MENU_CW_DECODER_THRESH:   //
         var_change = UiDriverMenuItemChangeUInt32(var, mode, &cw_decoder_config.thresh,
-                                               1000,
-                                               50000,
-                                               15000,
+                                               CW_DECODER_THRESH_MIN,
+                                               CW_DECODER_THRESH_MAX,
+                                               CW_DECODER_THRESH_DEFAULT,
                                                500
                                               );
         snprintf(options,32, "  %u", (unsigned int)cw_decoder_config.thresh);

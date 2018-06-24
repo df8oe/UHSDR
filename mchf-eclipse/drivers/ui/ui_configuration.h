@@ -592,7 +592,10 @@ void		UiConfiguration_UpdateMacroCap(void);
                                                     // , not the value itself (which is in fact EEPROM_FIRST_UNUSED)
 
 #define EEPROM_DSP_MODE_MASK				408
-#define EEPROM_FIRST_UNUSED 				409		// change this if new value ids are introduced, must be correct at any time
+#define EEPROM_ENABLE_PTT_RTS				409
+#define EEPROM_CW_DECODER_THRESH					410
+#define EEPROM_CW_DECODER_BLOCKSIZE				411
+#define EEPROM_FIRST_UNUSED 				412		// change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

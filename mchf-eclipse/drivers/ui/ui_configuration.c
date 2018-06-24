@@ -18,6 +18,7 @@
 #include "ui_driver.h"
 
 #include "audio_driver.h"
+#include "cw_decoder.h"
 
 #include "ui_spectrum.h"
 #include "radio_management.h"
@@ -247,6 +248,9 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
 	{ ConfigEntry_Int32, EEPROM_TScal5_High,&mchf_touchscreen.cal[5], -1630326,-2147483648,2147483647},
 	{ ConfigEntry_UInt16, EEPROM_NUMBER_OF_ENTRIES,&dummy_val16,EEPROM_FIRST_UNUSED,EEPROM_FIRST_UNUSED,EEPROM_FIRST_UNUSED},
 	{ ConfigEntry_UInt16, EEPROM_DSP_MODE_MASK,&ts.dsp_mode_mask,(1<<DSP_SWITCH_MAX)-1,1,(1<<DSP_SWITCH_MAX)-1},
+    { ConfigEntry_UInt8, EEPROM_ENABLE_PTT_RTS,&ts.enable_ptt_rts,0,0,1},
+	{ ConfigEntry_Int32_16, EEPROM_CW_DECODER_THRESH,&cw_decoder_config.thresh,CW_DECODER_THRESH_DEFAULT,CW_DECODER_THRESH_MIN,CW_DECODER_THRESH_MAX},
+	{ ConfigEntry_Int32_16, EEPROM_CW_DECODER_BLOCKSIZE,&cw_decoder_config.blocksize,CW_DECODER_BLOCKSIZE_DEFAULT,CW_DECODER_BLOCKSIZE_MIN,CW_DECODER_BLOCKSIZE_MAX},
     // the entry below MUST be the last entry, and only at the last position Stop is allowed
     {
         ConfigEntry_Stop
