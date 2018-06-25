@@ -96,8 +96,8 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_ALC_POSTFILT_GAIN, NULL, "TX ALC Input Gain", UiMenuDesc("If Audio Compressor Config is set to CUSTOM, sets the value of the ALC Input Gain. Otherwise shows predefined value of selected compression level.") },
     { MENU_BASE, MENU_ITEM, MENU_NOISE_BLANKER_SETTING, NULL, "RX NB Setting", UiMenuDesc("Set the Noise Blanker strength. Higher values mean more agressive blanking. Also changeable using Encoder 2 if Noise Blanker is active.") },
     { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, NULL, "DSP NR Strength", UiMenuDesc("Set the Noise Reduction Strength. Higher values mean more agressive noise reduction but also higher CPU load. Use with extreme care. Also changeable using Encoder 2 if DSP is active.") }, // via knob
-    { MENU_BASE, MENU_ITEM, MENU_TCXO_MODE, NULL, "TCXO Off/On/Stop", UiMenuDesc("The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement).") },
-    { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F, NULL, "TCXO Temp. (C/F)", UiMenuDesc("Show the measure TCXO temperature in Celsius or Fahrenheit.") },
+    { MENU_BASE, MENU_ITEM, MENU_TCXO_MODE, &ts.si570_is_present, "TCXO Off/On/Stop", UiMenuDesc("The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement).") },
+    { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F, &ts.si570_is_present, "TCXO Temp. (C/F)", UiMenuDesc("Show the measure TCXO temperature in Celsius or Fahrenheit.") },
     { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG, NULL, "Backup Config", UiMenuDesc("Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
     { MENU_BASE, MENU_ITEM, MENU_LOW_POWER_SHUTDOWN, NULL, "Low Voltage Shutdown", UiMenuDesc("Shutdown automatically when supply voltage is below threshold for 60 seconds (only in RX).") },
     { MENU_BASE, MENU_ITEM, MENU_RESTORE_CONFIG, NULL, "Restore Config", UiMenuDesc("Restore your I2C Configuration from flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
@@ -454,6 +454,7 @@ const MenuDescriptor hall_of_fameGroup[] =
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"UA9OLB (Dmitri)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"S53DZ  (Bojan)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"SP9BSL (Slawek)", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"HB9GND (Dimce)", UiMenuDesc("") },
 
     { MENU_HALL_OF_FAME, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };

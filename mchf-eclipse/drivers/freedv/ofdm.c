@@ -88,7 +88,7 @@ static const char pilotvalues[] = {
 
 static const int tx_uw[]          = {0,0,0,0,0,0,0,0,0,0};            /* UW bits    */
 static complex float tx_uw_syms[] = {1.0f,1.0f,1.0f,1.0f,1.0f};       /* UW QPSK symbols */
-static const int uw_ind[]         = {19,20,37,38,55,56,73,74,91,92};  /* index in modem frame of UW bits */
+// static const int uw_ind[]         = {19,20,37,38,55,56,73,74,91,92};  /* index in modem frame of UW bits - ununsed yet (DF8OE)*/
 static const int uw_ind_sym[]     = {10,19,28,37,46};                 /* index into modem frame of UW symbols */
 
 /* Functions -------------------------------------------------------------------*/

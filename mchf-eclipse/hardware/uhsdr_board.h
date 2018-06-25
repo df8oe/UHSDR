@@ -1069,7 +1069,7 @@ typedef struct TransceiverState
 	uint8_t FreqDisplayFont;		//0= old thin font, 1=new bold 8 bit (if available)
 
 	RfBoard_t rf_board; // the detected rf board connected to the control logic
-
+	bool si570_is_present;
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

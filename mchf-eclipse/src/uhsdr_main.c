@@ -41,6 +41,7 @@
 #include "drivers/ui/menu/ui_menu.h"
 #include "drivers/ui/oscillator/osc_interface.h"
 #include "drivers/ui/oscillator/osc_si5351a.h"
+#include "drivers/ui/oscillator/osc_si570.h"
 #include "drivers/audio/codec/codec.h"
 #include "misc/profiling.h"
 // Keyboard Driver
@@ -471,6 +472,16 @@ int mchfMain(void)
         // TODO: Better indication of non-detected display
         Board_GreenLed(LED_STATE_ON);
     }
+
+	if(Si570_IsPresent())
+	{
+	  ts.si570_is_present = true;
+	}
+	else
+	{
+	  ts.si570_is_present = false;
+	}
+
 
     Board_InitFull();
 
