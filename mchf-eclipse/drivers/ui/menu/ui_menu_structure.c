@@ -200,7 +200,7 @@ const MenuDescriptor confGroup[] =
 //    { MENU_CONF, MENU_ITEM, CONFIG_SAM_SIDEBAND, NULL, "SAM Sideband", UiMenuDesc(":soon:") },
 
     // Reset I2C Config EEPROM to empty state
-    { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM, NULL, "Reset Config EEPROM", UiMenuDesc("Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore).") },
+    { MENU_CONF, MENU_ITEM, CONFIG_RESET_SER_EEPROM, NULL, "Rst Conf EEPROM", UiMenuDesc("Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore).") },
 
     { MENU_CONF, MENU_STOP, 0, NULL , NULL, UiMenuDesc("") }
 };

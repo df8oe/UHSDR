@@ -2428,31 +2428,51 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         txt_ptr = "n/a";
         if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
         {
-            txt_ptr = " Do it!";
-            clr = White;
-            if(var>=1)
-            {
-                UiMenu_DisplayValue("Working",Red,pos);
-                ConfigStorage_CopySerial2Flash();
-                txt_ptr = " Done...";
-                clr = Green;
-            }
-        }
+		  uint8_t test = 0;
+      	  clr = White;
+      	  UiDriverMenuItemChangeUInt8(var, mode, &test,
+                                              0,
+                                              0,
+                                              10,
+                                              1
+                                             );
+      	  switch(test)
+      	  {
+      		case 0:
+          	  txt_ptr = "press DEFLT";
+          	  break;
+      		case 10:
+          	  UiMenu_DisplayValue("    Working",Red,pos);
+              ConfigStorage_CopySerial2Flash();
+          	  UiMenu_DisplayValue("    Done...",Red,pos);
+          	  break;
+      	  }
+		}
         break;
     case MENU_RESTORE_CONFIG:
         txt_ptr = "n/a";
         if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
         {
-            txt_ptr = "Do it!";
-            clr = White;
-            if(var>=1)
-            {
-
-                UiMenu_DisplayValue("Working",Red,pos);
-                ConfigStorage_CopyFlash2Serial();
-                Board_Reboot();
-            }
-        }
+		  uint8_t test = 0;
+      	  clr = White;
+      	  UiDriverMenuItemChangeUInt8(var, mode, &test,
+                                              0,
+                                              0,
+                                              10,
+                                              1
+                                             );
+      	  switch(test)
+      	  {
+      		case 0:
+          	  txt_ptr = "press DEFLT";
+          	  break;
+      		case 10:
+          	  UiMenu_DisplayValue("    Working",Red,pos);
+              ConfigStorage_CopyFlash2Serial();
+              Board_Reboot();
+          	  break;
+      	  }
+		}
         break;
     case MENU_RESTART_CODEC:
         txt_ptr = " Do it!";
@@ -3459,15 +3479,27 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         else
         {
-            txt_ptr = "Do it!";
-            clr = White;
-            if(var>=1)
-            {
-                // clear EEPROM
-                UiMenu_DisplayValue("Working",Red,pos);
-                SerialEEPROM_Clear_Signature();
-                Board_Reboot();
-            }
+      		txt_ptr = "n/a";
+			uint8_t test = 0;
+      		clr = White;
+      		UiDriverMenuItemChangeUInt8(var, mode, &test,
+        	                            	0,
+                                        	0,
+                                            10,
+                                            1
+                                           );
+      		switch(test)
+      		{
+      		  case 0:
+          		txt_ptr = "press DEFLT";
+          		break;
+      		  case 10:
+          		UiMenu_DisplayValue("    Working",Red,pos);
+          		// clear EEPROM
+          		SerialEEPROM_Clear_Signature();
+          		Board_Reboot();
+          		break;
+      		}
         }
         break;
     case    MENU_FP_CW_01:
