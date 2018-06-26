@@ -2425,7 +2425,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         break;
     case MENU_BACKUP_CONFIG:
-        txt_ptr = "n/a";
+      	txt_ptr = "n/a";
         if(ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
         {
 		  uint8_t test = 0;
@@ -2444,7 +2444,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
       		case 10:
           	  UiMenu_DisplayValue("    Working",Red,pos);
               ConfigStorage_CopySerial2Flash();
-          	  UiMenu_DisplayValue("    Done...",Red,pos);
+    		  clr = Green;
+          	  txt_ptr = "    Done...";
           	  break;
       	  }
 		}
