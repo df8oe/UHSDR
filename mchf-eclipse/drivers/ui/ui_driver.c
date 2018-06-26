@@ -1503,8 +1503,8 @@ void UiDriver_DisplayFreqStepSize()
 
 	if(step_line)	 	// Remove underline indicating step size if one had been drawn
 	{
-		UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_FREQ.x + (LARGE_FONT_WIDTH * 3)),(ts.Layout->TUNE_FREQ.y + 24),(LARGE_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
-		UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * 3)),(ts.Layout->TUNE_FREQ.y + 24),(SMALL_FONT_WIDTH*7),LCD_DIR_HORIZONTAL,Black);
+		UiLcdHy28_DrawStraightLineDouble(ts.Layout->TUNE_FREQ.x,(ts.Layout->TUNE_FREQ.y + 24),(LARGE_FONT_WIDTH*10),LCD_DIR_HORIZONTAL,Black);
+		UiLcdHy28_DrawStraightLineDouble(ts.Layout->TUNE_SPLIT_FREQ_X,(ts.Layout->TUNE_FREQ.y + 24),(SMALL_FONT_WIDTH*10),LCD_DIR_HORIZONTAL,Black);
 	}
 
 	// Blank old step size
@@ -1521,7 +1521,7 @@ void UiDriver_DisplayFreqStepSize()
 		line_loc = 9 - pow10 - pow10/3;
 		if (line_loc < 0)
 		{
-			line_loc = 0;
+			line_loc = -1;
 		}
 		const char* stepUnitPrefix[] = { "","k","M","G","T"};
 		snprintf(step_name,10,"%d%sHz",(int)(df.tuning_step/exp10((pow10/3)*3)), stepUnitPrefix[pow10/3]);
@@ -1529,7 +1529,7 @@ void UiDriver_DisplayFreqStepSize()
 		UiLcdHy28_PrintTextCentered(ts.Layout->TUNE_STEP.x,ts.Layout->TUNE_STEP.y,ts.Layout->TUNE_STEP.w,step_name,color,stepsize_background,0);
 	}
 	//
-	if((ts.freq_step_config & FREQ_STEP_SHOW_MARKER) && line_loc > 0)	 		// is frequency step marker line enabled?
+	if((ts.freq_step_config & FREQ_STEP_SHOW_MARKER) && line_loc >= 0)	 		// is frequency step marker line enabled?
 	{
 		if(is_splitmode())
 		{
