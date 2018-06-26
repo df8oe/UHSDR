@@ -321,7 +321,7 @@ void AudioManagement_LoadBeepFreq()
         softdds_setFreqDDS(&ads.beep, 0,ts.samp_rate,true); // not enabled - zero out frequency word
     }
 
-    calc = (float)ts.beep_loudness;     // range 0-20
+    calc = (float)(ts.beep_loudness-1);  // range 0-20
     calc /= 2;                          // range 0-10
     calc *= calc;                       // range 0-100
     calc += 3;                          // range 3-103

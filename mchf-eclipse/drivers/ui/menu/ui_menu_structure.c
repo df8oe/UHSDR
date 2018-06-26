@@ -121,9 +121,8 @@ const MenuDescriptor confGroup[] =
     { MENU_CONF, MENU_ITEM, CONFIG_LINEOUT_GAIN, NULL, "Lineout Gain", UiMenuDesc("Set the constant gain level for the analog lineout jack") },
 
     // UI Behavior / Key Beep
-    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_ENABLE, NULL, "Key Beep", UiMenuDesc("If ON each keypress will generate a short beep") },
-    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_FREQ, NULL, "Beep Frequency", UiMenuDesc("Set beep frequency in Hz.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_VOLUME, NULL, "Beep Volume", UiMenuDesc("Set beep volume.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_FREQ, NULL, "Key Beep Frequency", UiMenuDesc("Set key beep frequency in Hz.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_BEEP_VOLUME, NULL, "Key Beep Volume", UiMenuDesc("Set key beep volume.") },
 
     // USB CAT Related
     { MENU_CONF, MENU_ITEM, CONFIG_CAT_IN_SANDBOX, NULL, "CAT Running In Sandbox", UiMenuDesc("If On, frequency Changes made via CAT will not automatically switch bands and affect the manually selected frequencies.") },

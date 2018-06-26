@@ -456,7 +456,7 @@ enum	{
 #define	BEEP_DURATION		2			// duration of beep in 100ths of a second
 #define	SIDETONE_REF_BEEP_DURATION	50	// duration of "Sidetone Reference Beep" (press-and-hold) in 100ths of a second
 //
-#define MAX_BEEP_LOUDNESS		20		// maximum setting for beep loudness
+#define MAX_BEEP_LOUDNESS		21		// maximum setting for beep loudness
 #define DEFAULT_BEEP_LOUDNESS	10		// default loudness for the keyboard/CW sidetone test beep
 //
 // Factors used in audio compressor adjustment limits

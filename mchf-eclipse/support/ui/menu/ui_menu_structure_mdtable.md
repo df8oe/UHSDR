@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-06-26T10:02:40  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-06-26T15:38:47  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-06-26T10:02:40  by "./ui_menu_structure_mdtable.py"
+generated at  2018-06-26T15:38:47  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -69,9 +69,8 @@ generated at  2018-06-26T10:02:40  by "./ui_menu_structure_mdtable.py"
 | **TX Initial Muting Time**    (              CONFIG_TXRX_SWITCH_AUDIO_MUTE) | When switching from RX to TX the audio and HF output will be muted for roughly VALUE ms. There are now several minimum times for muting defined in the firmware:<br/><br/> Input from Mic: 40ms<br/> Input from Line In: 40ms<br/> Digital Inputs (CW, USB): less than 1ms.<br/><br/> If the user defined 'TX Initial Muting Time' is set to more than zero, the maximum of both fixed input time and user defined time is used. Your microphone PTT switch is a potential source of noise if Mic is input! You need to increase the delay or change switches! | 
 | **Max Volume**                (                          CONFIG_MAX_VOLUME) | Set maximum speaker&headphone volume.          | 
 | **Lineout Gain**              (                        CONFIG_LINEOUT_GAIN) | Set the constant gain level for the analog lineout jack | 
-| **Key Beep**                  (                         CONFIG_BEEP_ENABLE) | If ON each keypress will generate a short beep | 
-| **Beep Frequency**            (                           CONFIG_BEEP_FREQ) | Set beep frequency in Hz.                      | 
-| **Beep Volume**               (                         CONFIG_BEEP_VOLUME) | Set beep volume.                               | 
+| **Key Beep Frequency**        (                           CONFIG_BEEP_FREQ) | Set beep frequency in Hz.                      | 
+| **Key Beep Volume**           (                         CONFIG_BEEP_VOLUME) | Set beep volume.                               | 
 | **CAT Running In Sandbox**    (                      CONFIG_CAT_IN_SANDBOX) | If On, frequency Changes made via CAT will not automatically switch bands and affect the manually selected frequencies. | 
 | **CAT-DIQ-FREQ-XLAT**         (                            CONFIG_CAT_XLAT) | Select which frequency is reported via CAT Interface to the connected PC in Digital IQ Mode. If ON, it reports the displayed frequency. If OFF, it reports the center frequency, which is more useful with SDR programs. | 
 | **PTT via virtual RTS**       (                         CONFIG_CAT_PTT_RTS) | The virtual serial port signal RTS can be used to switch to TX. Use with care, many CAT-able programs also set RTS to aktiv and make the TRX go to TX mode. | 

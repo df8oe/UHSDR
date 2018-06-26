@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-06-26T10:02:38  by "./ui_menu_structure_graph.py"
+#  generated at  2018-06-26T15:38:45  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-06-26T10:02:38  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-06-26T15:38:45  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -297,18 +297,13 @@
              shape = record
              ];
         
-        "CONFIG_BEEP_ENABLE" [
-             label = "CONFIG_BEEP_ENABLE | Key Beep"
-             shape = record
-             ];
-        
         "CONFIG_BEEP_FREQ" [
-             label = "CONFIG_BEEP_FREQ | Beep Frequency"
+             label = "CONFIG_BEEP_FREQ | Key Beep Frequency"
              shape = record
              ];
         
         "CONFIG_BEEP_VOLUME" [
-             label = "CONFIG_BEEP_VOLUME | Beep Volume"
+             label = "CONFIG_BEEP_VOLUME | Key Beep Volume"
              shape = record
              ];
         
@@ -1368,8 +1363,6 @@
             MENU_CONF -> CONFIG_MAX_VOLUME
             
             MENU_CONF -> CONFIG_LINEOUT_GAIN
-            
-            MENU_CONF -> CONFIG_BEEP_ENABLE
             
             MENU_CONF -> CONFIG_BEEP_FREQ
             

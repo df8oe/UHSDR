@@ -2664,13 +2664,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         }
         snprintf(options,32, "%3u", ts.lineout_gain);
         break;
-    case CONFIG_BEEP_ENABLE:    //
-        var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags2,0,options,&clr,FLAGS2_KEY_BEEP_ENABLE);
-        if(var_change)
-        {
-            UiMenu_RenderMenu(MENU_RENDER_ONLY);
-        }
-        break;
     case CONFIG_BEEP_FREQ:      // Beep frequency
         if(ts.flags2 & FLAGS2_KEY_BEEP_ENABLE)      // is beep enabled?
         {
@@ -2698,10 +2691,26 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                               1);
         if(var_change)
         {
-            AudioManagement_LoadBeepFreq(); // calculate new beep loudness values
-            AudioManagement_KeyBeep();      // make beep to demonstrate loudness
+      		if(ts.beep_loudness)
+      		{
+      		  ts.flags2 |= FLAGS2_KEY_BEEP_ENABLE;
+          	  AudioManagement_LoadBeepFreq(); // calculate new beep loudness values
+          	  AudioManagement_KeyBeep();      // make beep to demonstrate loudness
+          	}
+          	else
+          	{
+      		  ts.flags2 &= ~FLAGS2_KEY_BEEP_ENABLE;
+          	}
         }
-        snprintf(options,32, "    %u", ts.beep_loudness);
+
+      	if(ts.beep_loudness)
+      	{
+    	  snprintf(options,32, "    %u", ts.beep_loudness);
+    	}
+    	else
+    	{
+    	  snprintf(options,32, "%s", "OFF");
+    	}
         break;
     case CONFIG_FREQUENCY_CALIBRATE:        // Frequency Calibration
         if(var >= 1)        // setting increase?
