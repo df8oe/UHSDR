@@ -206,7 +206,7 @@ typedef struct
     float32_t value;
     const char* label;
 } scope_scaling_info_t;
-
+/*
 static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM+1] =
 {
         // scaling factors for the various dB/division settings
@@ -220,6 +220,20 @@ static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM+1] =
         { DB_SCALING_S2,            "SC(2S-Unit/div)" },
         { DB_SCALING_S3,            "SC(3S-Unit/div)" },
         { 0,                        "Dual (10dB/div)" }, // just a small trick, the scope will never use scaling index SCOPE_SCALE_NUM
+};*/
+
+static const scope_scaling_info_t scope_scaling_factors[SCOPE_SCALE_NUM+1] =
+{
+        // scaling factors for the various dB/division settings
+        { 0,                        "Waterfall  " }, // just a small trick, the scope will never use scaling index 0
+        { DB_SCALING_5,             "(5dB/div)  " },
+        { DB_SCALING_7,             "(7.5dB/div)" },
+        { DB_SCALING_10,            "(10dB/div) " },
+        { DB_SCALING_15,            "(15dB/div) " },
+        { DB_SCALING_20,            "(20dB/div) " },
+        { DB_SCALING_S1,            "(1S/div)   " },
+        { DB_SCALING_S2,            "(2S/div)   " },
+        { DB_SCALING_S3,            "(3S/div)   " },
 };
 
 static void     UiSpectrum_DrawFrequencyBar();
@@ -423,22 +437,21 @@ static void UiSpectrum_FFTWindowFunction(char mode)
 
 static void UiSpectrum_SpectrumTopBar_GetText(char* wfbartext)
 {
-    const char* lefttext;
 
     if(is_waterfallmode() && is_scopemode())           // dual waterfall
     {
-        lefttext = scope_scaling_factors[SCOPE_SCALE_NUM].label; // a small trick, we use the empty location of index SCOPE_SCALE_NUM in the table
+        sprintf(wfbartext,"Dual%s < Magnify %2ux >",scope_scaling_factors[ts.spectrum_db_scale].label, (1<<sd.magnify));
     }
     else if(is_waterfallmode())           //waterfall
     {
-        lefttext = scope_scaling_factors[0].label; // a small trick, we use the empty location of index 0 in the table
+        sprintf(wfbartext,"  %s   < Magnify %2ux >",scope_scaling_factors[0].label, (1<<sd.magnify));	// a small trick, we use the empty location of index 0 in the table
     }
     else                                                // scope
     {
-        lefttext = scope_scaling_factors[ts.spectrum_db_scale].label;
+        sprintf(wfbartext," SC %s < Magnify %2ux >",scope_scaling_factors[ts.spectrum_db_scale].label, (1<<sd.magnify));	// a small trick, we use the empty location of index 0 in the table
     }
 
-    sprintf(wfbartext,"%s < Magnify %2ux >",lefttext, (1<<sd.magnify));
+
 }
 
 /**
@@ -995,19 +1008,11 @@ static void UiSpectrum_InitSpectrumDisplayData()
     // Load "top" color of palette (the 65th) with that to be used for the center grid color
     sd.waterfall_colours[NUMBER_WATERFALL_COLOURS] = sd.scope_centre_grid_colour_active;
 
-    if (is_waterfallmode())
+    if (ts.spectrum_db_scale >= SCOPE_SCALE_NUM)
     {
-        sd.db_scale = scope_scaling_factors[DB_DIV_10].value;
-        // waterfall has fixed 10db scaling
+    	ts.spectrum_db_scale = DB_DIV_ADJUST_DEFAULT;
     }
-    else
-    {
-        if (ts.spectrum_db_scale >= SCOPE_SCALE_NUM)
-        {
-            ts.spectrum_db_scale = DB_DIV_ADJUST_DEFAULT;
-        }
-        sd.db_scale = scope_scaling_factors[ts.spectrum_db_scale].value;
-    }
+    sd.db_scale = scope_scaling_factors[ts.spectrum_db_scale].value;
 
     // if we later scale the spectrum width from the fft width, we incorporate
     // the required negative gain for the downsampling here.
@@ -1418,7 +1423,7 @@ static void UiSpectrum_RedrawSpectrum()
     //  Low-pass filter amplitude magnitude data
     case 4:
     {
-        float32_t filt_factor = 1/(float)ts.spectrum_filter;		// use stored filter setting inverted to allow multiplication
+    	float32_t filt_factor = 1/(float)ts.spectrum_filter;		// use stored filter setting inverted to allow multiplication
         arm_scale_f32(sd.FFT_AVGData, filt_factor, sd.FFT_Samples, sd.spec_len);	// get scaled version of previous data
         arm_sub_f32(sd.FFT_AVGData, sd.FFT_Samples, sd.FFT_AVGData, sd.spec_len);	// subtract scaled information from old, average data
         arm_scale_f32(sd.FFT_MagData, filt_factor, sd.FFT_Samples, sd.spec_len);	// get scaled version of new, input data
