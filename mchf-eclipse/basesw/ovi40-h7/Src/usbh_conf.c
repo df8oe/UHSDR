@@ -63,7 +63,7 @@
 
 /* USER CODE END PV */
 
-HCD_HandleTypeDef hhcd_USB_OTG_HS;
+                HCD_HandleTypeDef hhcd_USB_OTG_HS;
 void _Error_Handler(char * file, int line);
 
 /* USER CODE BEGIN 0 */
@@ -109,7 +109,7 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef* hcdHandle)
     __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(OTG_HS_IRQn, 15, 0);
+    HAL_NVIC_SetPriority(OTG_HS_IRQn, 14, 0);
     HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
   /* USER CODE BEGIN USB_OTG_HS_MspInit 1 */
 
