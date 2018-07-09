@@ -77,9 +77,13 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
+// NEW IMPL DUE TO ISSUE IN HAL FW 1.2.0 see https://community.st.com/thread/50204-stm32h743-errata
+static HAL_StatusTypeDef RCCEx_PLL2_Config(RCC_PLL2InitTypeDef *pll2, uint32_t Divider);
+static HAL_StatusTypeDef RCCEx_PLL3_Config(RCC_PLL3InitTypeDef *pll3, uint32_t Divider);
+#if 0
 static HAL_StatusTypeDef RCCEx_PLL2_Config(RCC_PLL2InitTypeDef *pll2);
 static HAL_StatusTypeDef RCCEx_PLL3_Config(RCC_PLL3InitTypeDef *pll3);
-
+#endif
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -121,6 +125,1211 @@ static HAL_StatusTypeDef RCCEx_PLL3_Config(RCC_PLL3InitTypeDef *pll3);
   *
   * @retval HAL status
   */
+// NEW IMPL DUE TO ISSUE IN HAL FW 1.2.0
+#define DIVIDER_P_UPDATE          0U
+#define DIVIDER_Q_UPDATE          1U
+#define DIVIDER_R_UPDATE          2U
+
+HAL_StatusTypeDef HAL_RCCEx_PeriphCLKConfig(RCC_PeriphCLKInitTypeDef  *PeriphClkInit)
+{
+  uint32_t tmpreg;
+  uint32_t tickstart;
+  HAL_StatusTypeDef ret = HAL_OK;      /* Intermediate status */
+  HAL_StatusTypeDef status = HAL_OK;   /* Final status */
+
+  /*---------------------------- SPDIFRX configuration -------------------------------*/
+
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_SPDIFRX) == RCC_PERIPHCLK_SPDIFRX)
+  {
+
+    switch(PeriphClkInit->SpdifrxClockSelection)
+    {
+    case RCC_SPDIFRXCLKSOURCE_PLL:      /* PLL is used as clock source for SPDIFRX*/
+      /* Enable SAI Clock output generated form System PLL . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPDIFRXCLKSOURCE_PLL2: /* PLL2 is used as clock source for SPDIFRX*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_R_UPDATE);
+
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPDIFRXCLKSOURCE_PLL3:  /* PLL3 is used as clock source for SPDIFRX*/
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_R_UPDATE);
+
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPDIFRXCLKSOURCE_HSI:
+      /* Internal OSC clock is used as source of SPDIFRX clock*/
+      /* SPDIFRX clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of SPDIFRX clock*/
+      __HAL_RCC_SPDIFRX_CONFIG(PeriphClkInit->SpdifrxClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*---------------------------- SAI1 configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_SAI1) == RCC_PERIPHCLK_SAI1)
+  {
+    switch(PeriphClkInit->Sai1ClockSelection)
+    {
+    case RCC_SAI1CLKSOURCE_PLL:      /* PLL is used as clock source for SAI1*/
+      /* Enable SAI Clock output generated form System PLL . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI1CLKSOURCE_PLL2: /* PLL2 is used as clock source for SAI1*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_P_UPDATE);
+
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI1CLKSOURCE_PLL3:  /* PLL3 is used as clock source for SAI1*/
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_P_UPDATE);
+
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI1CLKSOURCE_PIN:
+      /* External clock is used as source of SAI1 clock*/
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI1CLKSOURCE_CLKP:
+      /* HSI, HSE, or CSI oscillator is used as source of SAI1 clock */
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of SAI1 clock*/
+      __HAL_RCC_SAI1_CONFIG(PeriphClkInit->Sai1ClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*---------------------------- SAI2/3 configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_SAI23) == RCC_PERIPHCLK_SAI23)
+  {
+    switch(PeriphClkInit->Sai23ClockSelection)
+    {
+    case RCC_SAI23CLKSOURCE_PLL:      /* PLL is used as clock source for SAI2/3 */
+      /* Enable SAI Clock output generated form System PLL . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* SAI2/3 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI23CLKSOURCE_PLL2: /* PLL2 is used as clock source for SAI2/3 */
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_P_UPDATE);
+
+      /* SAI2/3 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI23CLKSOURCE_PLL3:  /* PLL3 is used as clock source for SAI2/3 */
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_P_UPDATE);
+
+      /* SAI2/3 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI23CLKSOURCE_PIN:
+      /* External clock is used as source of SAI2/3 clock*/
+      /* SAI2/3 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI23CLKSOURCE_CLKP:
+      /* HSI, HSE, or CSI oscillator is used as source of SAI2/3 clock */
+      /* SAI2/3 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of SAI2/3 clock*/
+      __HAL_RCC_SAI23_CONFIG(PeriphClkInit->Sai23ClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*---------------------------- SAI4A configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_SAI4A) == RCC_PERIPHCLK_SAI4A)
+  {
+    switch(PeriphClkInit->Sai4AClockSelection)
+    {
+    case RCC_SAI4ACLKSOURCE_PLL:      /* PLL is used as clock source for SAI2*/
+      /* Enable SAI Clock output generated form System PLL . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI4ACLKSOURCE_PLL2: /* PLL2 is used as clock source for SAI2*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_P_UPDATE);
+
+      /* SAI2 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI4ACLKSOURCE_PLL3:  /* PLL3 is used as clock source for SAI2*/
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_P_UPDATE);
+
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI4ACLKSOURCE_PIN:
+      /* External clock is used as source of SAI2 clock*/
+      /* SAI2 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI4ACLKSOURCE_CLKP:
+      /* HSI, HSE, or CSI oscillator is used as source of SAI2 clock */
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of SAI2 clock*/
+      __HAL_RCC_SAI4A_CONFIG(PeriphClkInit->Sai4AClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+  /*---------------------------- SAI4B configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_SAI4B) == RCC_PERIPHCLK_SAI4B)
+  {
+    switch(PeriphClkInit->Sai4BClockSelection)
+    {
+    case RCC_SAI4BCLKSOURCE_PLL:      /* PLL is used as clock source for SAI2*/
+      /* Enable SAI Clock output generated form System PLL . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI4BCLKSOURCE_PLL2: /* PLL2 is used as clock source for SAI2*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_P_UPDATE);
+
+      /* SAI2 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI4BCLKSOURCE_PLL3:  /* PLL3 is used as clock source for SAI2*/
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3), DIVIDER_P_UPDATE);
+
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI4BCLKSOURCE_PIN:
+      /* External clock is used as source of SAI2 clock*/
+      /* SAI2 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SAI4BCLKSOURCE_CLKP:
+      /* HSI, HSE, or CSI oscillator is used as source of SAI2 clock */
+      /* SAI1 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of SAI2 clock*/
+      __HAL_RCC_SAI4B_CONFIG(PeriphClkInit->Sai4BClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+  /*---------------------------- QSPI configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_QSPI) == RCC_PERIPHCLK_QSPI)
+  {
+    switch(PeriphClkInit->QspiClockSelection)
+    {
+    case RCC_QSPICLKSOURCE_PLL:      /* PLL is used as clock source for QSPI*/
+      /* Enable QSPI Clock output generated form System PLL . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* QSPI clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_QSPICLKSOURCE_PLL2: /* PLL2 is used as clock source for QSPI*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_R_UPDATE);
+
+      /* QSPI clock source configuration done later after clock selection check */
+      break;
+
+
+    case RCC_QSPICLKSOURCE_CLKP:
+      /* HSI, HSE, or CSI oscillator is used as source of QSPI clock */
+      /* QSPI clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_QSPICLKSOURCE_D1HCLK:
+      /* Domain1 HCLK  clock selected as QSPI kernel peripheral clock */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of QSPI clock*/
+      __HAL_RCC_QSPI_CONFIG(PeriphClkInit->QspiClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*---------------------------- SPI1/2/3 configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_SPI123) == RCC_PERIPHCLK_SPI123)
+  {
+    switch(PeriphClkInit->Spi123ClockSelection)
+    {
+    case RCC_SPI123CLKSOURCE_PLL:      /* PLL is used as clock source for SPI1/2/3 */
+      /* Enable SPI Clock output generated form System PLL . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* SPI1/2/3 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI123CLKSOURCE_PLL2: /* PLL2 is used as clock source for SPI1/2/3 */
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_P_UPDATE);
+
+      /* SPI1/2/3 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI123CLKSOURCE_PLL3:  /* PLL3 is used as clock source for SPI1/2/3 */
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_P_UPDATE);
+
+      /* SPI1/2/3 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI123CLKSOURCE_PIN:
+      /* External clock is used as source of SPI1/2/3 clock*/
+      /* SPI1/2/3 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI123CLKSOURCE_CLKP:
+      /* HSI, HSE, or CSI oscillator is used as source of SPI1/2/3 clock */
+      /* SPI1/2/3 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of SPI1/2/3 clock*/
+      __HAL_RCC_SPI123_CONFIG(PeriphClkInit->Spi123ClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*---------------------------- SPI4/5 configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_SPI45) == RCC_PERIPHCLK_SPI45)
+  {
+    switch(PeriphClkInit->Spi45ClockSelection)
+    {
+    case RCC_SPI45CLKSOURCE_D2PCLK1:      /* D2PCLK1 as clock source for SPI4/5 */
+      /* SPI4/5 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI45CLKSOURCE_PLL2: /* PLL2 is used as clock source for SPI4/5 */
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_Q_UPDATE);
+
+      /* SPI4/5 clock source configuration done later after clock selection check */
+      break;
+    case RCC_SPI45CLKSOURCE_PLL3:  /* PLL3 is used as clock source for SPI4/5 */
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_Q_UPDATE);
+      /* SPI4/5 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI45CLKSOURCE_HSI:
+      /* HSI oscillator clock is used as source of SPI4/5 clock*/
+      /* SPI4/5 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI45CLKSOURCE_CSI:
+      /*  CSI oscillator clock is used as source of SPI4/5 clock */
+      /* SPI4/5 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI45CLKSOURCE_HSE:
+      /* HSE,  oscillator is used as source of SPI4/5 clock */
+      /* SPI4/5 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of SPI4/5 clock*/
+      __HAL_RCC_SPI45_CONFIG(PeriphClkInit->Spi45ClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*---------------------------- SPI6 configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_SPI6) == RCC_PERIPHCLK_SPI6)
+  {
+    switch(PeriphClkInit->Spi6ClockSelection)
+    {
+    case RCC_SPI6CLKSOURCE_D3PCLK1:      /* D3PCLK1 as clock source for SPI6*/
+      /* SPI6 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI6CLKSOURCE_PLL2: /* PLL2 is used as clock source for SPI6*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_Q_UPDATE);
+
+      /* SPI6 clock source configuration done later after clock selection check */
+      break;
+    case RCC_SPI6CLKSOURCE_PLL3:  /* PLL3 is used as clock source for SPI6*/
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_Q_UPDATE);
+      /* SPI6 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI6CLKSOURCE_HSI:
+      /* HSI oscillator clock is used as source of SPI6 clock*/
+      /* SPI6 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI6CLKSOURCE_CSI:
+      /*  CSI oscillator clock is used as source of SPI6 clock */
+      /* SPI6 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SPI6CLKSOURCE_HSE:
+      /* HSE,  oscillator is used as source of SPI6 clock */
+      /* SPI6 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of SPI6 clock*/
+      __HAL_RCC_SPI6_CONFIG(PeriphClkInit->Spi6ClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+#if defined(FDCAN1) || defined(FDCAN2)
+  /*---------------------------- FDCAN configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_FDCAN) == RCC_PERIPHCLK_FDCAN)
+  {
+    switch(PeriphClkInit->FdcanClockSelection)
+    {
+    case RCC_FDCANCLKSOURCE_PLL:      /* PLL is used as clock source for FDCAN*/
+      /* Enable FDCAN Clock output generated form System PLL . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* FDCAN clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_FDCANCLKSOURCE_PLL2: /* PLL2 is used as clock source for FDCAN*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_Q_UPDATE);
+
+      /* FDCAN clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_FDCANCLKSOURCE_HSE:
+      /* HSE is used as clock source for FDCAN*/
+      /* FDCAN clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of FDCAN clock*/
+      __HAL_RCC_FDCAN_CONFIG(PeriphClkInit->FdcanClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+#endif /*FDCAN1 || FDCAN2*/
+  /*---------------------------- FMC configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_FMC) == RCC_PERIPHCLK_FMC)
+  {
+    switch(PeriphClkInit->FmcClockSelection)
+    {
+    case RCC_FMCCLKSOURCE_PLL:      /* PLL is used as clock source for FMC*/
+      /* Enable FMC Clock output generated form System PLL . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* FMC clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_FMCCLKSOURCE_PLL2: /* PLL2 is used as clock source for FMC*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_R_UPDATE);
+
+      /* FMC clock source configuration done later after clock selection check */
+      break;
+
+
+    case RCC_FMCCLKSOURCE_CLKP:
+      /* HSI, HSE, or CSI oscillator is used as source of FMC clock */
+      /* FMC clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_FMCCLKSOURCE_D1HCLK:
+      /* Domain1 HCLK  clock selected as QSPI kernel peripheral clock */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of FMC clock*/
+      __HAL_RCC_FMC_CONFIG(PeriphClkInit->FmcClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*---------------------------- RTC configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_RTC) == RCC_PERIPHCLK_RTC)
+  {
+    /* check for RTC Parameters used to output RTCCLK */
+    assert_param(IS_RCC_RTCCLKSOURCE(PeriphClkInit->RTCClockSelection));
+
+    /* Enable write access to Backup domain */
+    SET_BIT(PWR->CR1, PWR_CR1_DBP);
+
+    /* Wait for Backup domain Write protection disable */
+    tickstart = HAL_GetTick();
+
+    while((PWR->CR1 & PWR_CR1_DBP) == RESET)
+    {
+      if((HAL_GetTick() - tickstart) > RCC_DBP_TIMEOUT_VALUE)
+      {
+        ret = HAL_TIMEOUT;
+        break;
+      }
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Reset the Backup domain only if the RTC Clock source selection is modified */
+      if((RCC->BDCR & RCC_BDCR_RTCSEL) != (PeriphClkInit->RTCClockSelection & RCC_BDCR_RTCSEL))
+      {
+        /* Store the content of BDCR register before the reset of Backup Domain */
+        tmpreg = (RCC->BDCR & ~(RCC_BDCR_RTCSEL));
+        /* RTC Clock selection can be changed only if the Backup Domain is reset */
+        __HAL_RCC_BACKUPRESET_FORCE();
+        __HAL_RCC_BACKUPRESET_RELEASE();
+        /* Restore the Content of BDCR register */
+        RCC->BDCR = tmpreg;
+      }
+
+      /* If LSE is selected as RTC clock source, wait for LSE reactivation */
+      if(PeriphClkInit->RTCClockSelection == RCC_RTCCLKSOURCE_LSE)
+      {
+        /* Get Start Tick*/
+        tickstart = HAL_GetTick();
+
+        /* Wait till LSE is ready */
+        while(__HAL_RCC_GET_FLAG(RCC_FLAG_LSERDY) == RESET)
+        {
+          if((HAL_GetTick() - tickstart) > RCC_LSE_TIMEOUT_VALUE)
+          {
+            ret = HAL_TIMEOUT;
+            break;
+          }
+        }
+      }
+
+      if(ret == HAL_OK)
+      {
+        __HAL_RCC_RTC_CONFIG(PeriphClkInit->RTCClockSelection);
+      }
+      else
+      {
+        /* set overall return value */
+        status |= ret;
+      }
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+
+  /*-------------------------- USART1/6 configuration --------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_USART16) == RCC_PERIPHCLK_USART16)
+  {
+    switch(PeriphClkInit->Usart16ClockSelection)
+    {
+    case RCC_USART16CLKSOURCE_D2PCLK2: /* D2PCLK2 as clock source for USART1/6 */
+      /* USART1/6 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USART16CLKSOURCE_PLL2: /* PLL2 is used as clock source for USART1/6 */
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_Q_UPDATE);
+      /* USART1/6 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USART16CLKSOURCE_PLL3: /* PLL3 is used as clock source for USART1/6 */
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_Q_UPDATE);
+      /* USART1/6 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USART16CLKSOURCE_HSI:
+      /* HSI oscillator clock is used as source of USART1/6 clock */
+      /* USART1/6 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USART16CLKSOURCE_CSI:
+      /* CSI oscillator clock is used as source of USART1/6 clock */
+      /* USART1/6 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USART16CLKSOURCE_LSE:
+      /* LSE,  oscillator is used as source of USART1/6 clock */
+      /* USART1/6 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of USART1/6 clock */
+      __HAL_RCC_USART16_CONFIG(PeriphClkInit->Usart16ClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*-------------------------- USART2/3/4/5/7/8 Configuration --------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_USART234578) == RCC_PERIPHCLK_USART234578)
+  {
+    switch(PeriphClkInit->Usart234578ClockSelection)
+    {
+    case RCC_USART234578CLKSOURCE_D2PCLK1: /* D2PCLK1 as clock source for USART2/3/4/5/7/8 */
+      /* USART2/3/4/5/7/8 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USART234578CLKSOURCE_PLL2: /* PLL2 is used as clock source for USART2/3/4/5/7/8 */
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_Q_UPDATE);
+      /* USART2/3/4/5/7/8 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USART234578CLKSOURCE_PLL3: /* PLL3 is used as clock source for USART2/3/4/5/7/8 */
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_Q_UPDATE);
+      /* USART2/3/4/5/7/8 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USART234578CLKSOURCE_HSI:
+      /* HSI oscillator clock is used as source of USART2/3/4/5/7/8 clock */
+      /* USART2/3/4/5/7/8 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USART234578CLKSOURCE_CSI:
+      /* CSI oscillator clock is used as source of USART2/3/4/5/7/8 clock */
+      /* USART2/3/4/5/7/8 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USART234578CLKSOURCE_LSE:
+      /* LSE,  oscillator is used as source of USART2/3/4/5/7/8 clock */
+      /* USART2/3/4/5/7/8 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of USART2/3/4/5/7/8 clock */
+      __HAL_RCC_USART234578_CONFIG(PeriphClkInit->Usart234578ClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*-------------------------- LPUART1 Configuration -------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_LPUART1) == RCC_PERIPHCLK_LPUART1)
+  {
+    switch(PeriphClkInit->Lpuart1ClockSelection)
+    {
+    case RCC_LPUART1CLKSOURCE_D3PCLK1: /* D3PCLK1 as clock source for LPUART1 */
+      /* LPUART1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPUART1CLKSOURCE_PLL2: /* PLL2 is used as clock source for LPUART1 */
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_Q_UPDATE);
+      /* LPUART1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPUART1CLKSOURCE_PLL3: /* PLL3 is used as clock source for LPUART1 */
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_Q_UPDATE);
+      /* LPUART1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPUART1CLKSOURCE_HSI:
+      /* HSI oscillator clock is used as source of LPUART1 clock */
+      /* LPUART1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPUART1CLKSOURCE_CSI:
+      /* CSI oscillator clock is used as source of LPUART1 clock */
+      /* LPUART1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPUART1CLKSOURCE_LSE:
+      /* LSE,  oscillator is used as source of LPUART1 clock */
+      /* LPUART1 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of LPUART1 clock */
+      __HAL_RCC_LPUART1_CONFIG(PeriphClkInit->Lpuart1ClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*---------------------------- LPTIM1 configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_LPTIM1) == RCC_PERIPHCLK_LPTIM1)
+  {
+    switch(PeriphClkInit->Lptim1ClockSelection)
+    {
+    case RCC_LPTIM1CLKSOURCE_D2PCLK1:      /* D2PCLK1 as clock source for LPTIM1*/
+      /* LPTIM1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM1CLKSOURCE_PLL2: /* PLL2 is used as clock source for LPTIM1*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_P_UPDATE);
+
+      /* LPTIM1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM1CLKSOURCE_PLL3:  /* PLL3 is used as clock source for LPTIM1*/
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_R_UPDATE);
+
+      /* LPTIM1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM1CLKSOURCE_LSE:
+      /* External low speed OSC clock is used as source of LPTIM1 clock*/
+      /* LPTIM1 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM1CLKSOURCE_LSI:
+      /* Internal  low speed OSC clock is used  as source of LPTIM1 clock*/
+      /* LPTIM1 clock source configuration done later after clock selection check */
+      break;
+    case RCC_LPTIM1CLKSOURCE_CLKP:
+      /* HSI, HSE, or CSI oscillator is used as source of LPTIM1 clock */
+      /* LPTIM1 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of LPTIM1 clock*/
+      __HAL_RCC_LPTIM1_CONFIG(PeriphClkInit->Lptim1ClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*---------------------------- LPTIM2 configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_LPTIM2) == RCC_PERIPHCLK_LPTIM2)
+  {
+    switch(PeriphClkInit->Lptim2ClockSelection)
+    {
+    case RCC_LPTIM2CLKSOURCE_D3PCLK1:      /* D3PCLK1 as clock source for LPTIM2*/
+      /* LPTIM2 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM2CLKSOURCE_PLL2: /* PLL2 is used as clock source for LPTIM2*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_P_UPDATE);
+
+      /* LPTIM2 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM2CLKSOURCE_PLL3:  /* PLL3 is used as clock source for LPTIM2*/
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_R_UPDATE);
+
+      /* LPTIM2 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM2CLKSOURCE_LSE:
+      /* External low speed OSC clock is used as source of LPTIM2 clock*/
+      /* LPTIM2 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM2CLKSOURCE_LSI:
+      /* Internal  low speed OSC clock is used  as source of LPTIM2 clock*/
+      /* LPTIM2 clock source configuration done later after clock selection check */
+      break;
+    case RCC_LPTIM2CLKSOURCE_CLKP:
+      /* HSI, HSE, or CSI oscillator is used as source of LPTIM2 clock */
+      /* LPTIM2 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of LPTIM2 clock*/
+      __HAL_RCC_LPTIM2_CONFIG(PeriphClkInit->Lptim2ClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*---------------------------- LPTIM345 configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_LPTIM345) == RCC_PERIPHCLK_LPTIM345)
+  {
+    switch(PeriphClkInit->Lptim345ClockSelection)
+    {
+
+    case RCC_LPTIM345CLKSOURCE_D3PCLK1:      /* D3PCLK1 as clock source for LPTIM3/4/5 */
+      /* LPTIM3/4/5 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM345CLKSOURCE_PLL2: /* PLL2 is used as clock source for LPTIM3/4/5 */
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_P_UPDATE);
+
+      /* LPTIM3/4/5 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM345CLKSOURCE_PLL3:  /* PLL3 is used as clock source for LPTIM3/4/5 */
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_R_UPDATE);
+
+      /* LPTIM3/4/5 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM345CLKSOURCE_LSE:
+      /* External low speed OSC clock is used as source of LPTIM3/4/5 clock */
+      /* LPTIM3/4/5 clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_LPTIM345CLKSOURCE_LSI:
+      /* Internal  low speed OSC clock is used  as source of LPTIM3/4/5 clock */
+      /* LPTIM3/4/5 clock source configuration done later after clock selection check */
+      break;
+    case RCC_LPTIM345CLKSOURCE_CLKP:
+      /* HSI, HSE, or CSI oscillator is used as source of LPTIM3/4/5 clock */
+      /* LPTIM3/4/5 clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of LPTIM3/4/5 clock */
+      __HAL_RCC_LPTIM345_CONFIG(PeriphClkInit->Lptim345ClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*------------------------------ I2C1/2/3 Configuration ------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_I2C123) == RCC_PERIPHCLK_I2C123)
+  {
+    /* Check the parameters */
+    assert_param(IS_RCC_I2C123CLKSOURCE(PeriphClkInit->I2c123ClockSelection));
+
+    if ((PeriphClkInit->I2c123ClockSelection )== RCC_I2C123CLKSOURCE_PLL3 )
+    {
+      status |= RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_R_UPDATE);
+    }
+
+    else
+    {
+      __HAL_RCC_I2C123_CONFIG(PeriphClkInit->I2c123ClockSelection);
+    }
+
+  }
+
+  /*------------------------------ I2C4 Configuration ------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_I2C4) == RCC_PERIPHCLK_I2C4)
+  {
+    /* Check the parameters */
+    assert_param(IS_RCC_I2C4CLKSOURCE(PeriphClkInit->I2c4ClockSelection));
+
+    if ((PeriphClkInit->I2c4ClockSelection) == RCC_I2C4CLKSOURCE_PLL3 )
+    {
+      status |= RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_R_UPDATE);
+    }
+
+    else
+    {
+      __HAL_RCC_I2C4_CONFIG(PeriphClkInit->I2c4ClockSelection);
+    }
+  }
+
+  /*---------------------------- ADC configuration -------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_ADC) == RCC_PERIPHCLK_ADC)
+  {
+    switch(PeriphClkInit->AdcClockSelection)
+    {
+
+    case RCC_ADCCLKSOURCE_PLL2: /* PLL2 is used as clock source for ADC*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_P_UPDATE);
+
+      /* ADC clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_ADCCLKSOURCE_PLL3:  /* PLL3 is used as clock source for ADC*/
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_R_UPDATE);
+
+      /* ADC clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_ADCCLKSOURCE_CLKP:
+      /* HSI, HSE, or CSI oscillator is used as source of ADC clock */
+      /* ADC clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of ADC clock*/
+      __HAL_RCC_ADC_CONFIG(PeriphClkInit->AdcClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*------------------------------ USB Configuration -------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_USB) == RCC_PERIPHCLK_USB)
+  {
+
+    switch(PeriphClkInit->UsbClockSelection)
+    {
+    case RCC_USBCLKSOURCE_PLL:      /* PLL is used as clock source for USB*/
+      /* Enable USB Clock output generated form System USB . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* USB clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USBCLKSOURCE_PLL3: /* PLL3 is used as clock source for USB*/
+
+      ret = RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_Q_UPDATE);
+
+      /* USB clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_USBCLKSOURCE_HSI48:
+      /* HSI48 oscillator is used as source of USB clock */
+      /* USB clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of USB clock*/
+      __HAL_RCC_USB_CONFIG(PeriphClkInit->UsbClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+
+  }
+
+  /*------------------------------------- SDMMC Configuration ------------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_SDMMC) == RCC_PERIPHCLK_SDMMC)
+  {
+    /* Check the parameters */
+    assert_param(IS_RCC_SDMMC(PeriphClkInit->SdmmcClockSelection));
+
+    switch(PeriphClkInit->SdmmcClockSelection)
+    {
+    case RCC_SDMMCCLKSOURCE_PLL:      /* PLL is used as clock source for SDMMC*/
+      /* Enable SDMMC Clock output generated form System PLL . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* SDMMC clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_SDMMCCLKSOURCE_PLL2: /* PLL2 is used as clock source for SDMMC*/
+
+      ret = RCCEx_PLL2_Config(&(PeriphClkInit->PLL2),DIVIDER_R_UPDATE);
+
+      /* SDMMC clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of SDMMC clock*/
+      __HAL_RCC_SDMMC_CONFIG(PeriphClkInit->SdmmcClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+  }
+
+  /*-------------------------------------- LTDC Configuration -----------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_LTDC) == RCC_PERIPHCLK_LTDC)
+  {
+    status |= RCCEx_PLL3_Config(&(PeriphClkInit->PLL3),DIVIDER_R_UPDATE);
+  }
+
+  /*------------------------------ RNG Configuration -------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_RNG) == RCC_PERIPHCLK_RNG)
+  {
+
+    switch(PeriphClkInit->RngClockSelection)
+    {
+    case RCC_RNGCLKSOURCE_PLL:     /* PLL is used as clock source for RNG*/
+      /* Enable RNG Clock output generated form System RNG . */
+      __HAL_RCC_PLLCLKOUT_ENABLE(RCC_PLL1_DIVQ);
+
+      /* RNG clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_RNGCLKSOURCE_LSE: /* LSE is used as clock source for RNG*/
+
+      /* RNG clock source configuration done later after clock selection check */
+      break;
+
+    case RCC_RNGCLKSOURCE_LSI: /* LSI is used as clock source for RNG*/
+
+      /* RNG clock source configuration done later after clock selection check */
+      break;
+    case RCC_RNGCLKSOURCE_HSI48:
+      /* HSI48 oscillator is used as source of RNG clock */
+      /* RNG clock source configuration done later after clock selection check */
+      break;
+
+    default:
+      ret = HAL_ERROR;
+      break;
+    }
+
+    if(ret == HAL_OK)
+    {
+      /* Set the source of RNG clock*/
+      __HAL_RCC_RNG_CONFIG(PeriphClkInit->RngClockSelection);
+    }
+    else
+    {
+      /* set overall return value */
+      status |= ret;
+    }
+
+  }
+
+  /*------------------------------ SWPMI1 Configuration ------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_SWPMI1) == RCC_PERIPHCLK_SWPMI1)
+  {
+    /* Check the parameters */
+    assert_param(IS_RCC_SWPMI1CLKSOURCE(PeriphClkInit->Swpmi1ClockSelection));
+
+    /* Configure the SWPMI1 interface clock source */
+    __HAL_RCC_SWPMI1_CONFIG(PeriphClkInit->Swpmi1ClockSelection);
+  }
+
+  /*------------------------------ HRTIM1 clock Configuration ----------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_HRTIM1) == RCC_PERIPHCLK_HRTIM1)
+  {
+    /* Check the parameters */
+    assert_param(IS_RCC_HRTIM1CLKSOURCE(PeriphClkInit->Hrtim1ClockSelection));
+
+    /* Configure the HRTIM1 clock source */
+    __HAL_RCC_HRTIM1_CONFIG(PeriphClkInit->Hrtim1ClockSelection);
+  }
+
+  /*------------------------------ DFSDM1 Configuration ------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_DFSDM1) == RCC_PERIPHCLK_DFSDM1)
+  {
+    /* Check the parameters */
+    assert_param(IS_RCC_DFSDM1CLKSOURCE(PeriphClkInit->Dfsdm1ClockSelection));
+
+    /* Configure the DFSDM1 interface clock source */
+    __HAL_RCC_DFSDM1_CONFIG(PeriphClkInit->Dfsdm1ClockSelection);
+  }
+
+  /*------------------------------------ TIM configuration --------------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_TIM) == RCC_PERIPHCLK_TIM)
+  {
+    /* Check the parameters */
+    assert_param(IS_RCC_TIMPRES(PeriphClkInit->TIMPresSelection));
+
+    /* Configure Timer Prescaler */
+    __HAL_RCC_TIMCLKPRESCALER(PeriphClkInit->TIMPresSelection);
+  }
+
+  /*------------------------------------ CKPER configuration --------------------------------------*/
+  if(((PeriphClkInit->PeriphClockSelection) & RCC_PERIPHCLK_CKPER) == RCC_PERIPHCLK_CKPER)
+  {
+    /* Check the parameters */
+    assert_param(IS_RCC_CLKPSOURCE(PeriphClkInit->CkperClockSelection));
+
+    /* Configure the CKPER clock source */
+    __HAL_RCC_CLKP_CONFIG(PeriphClkInit->CkperClockSelection);
+  }
+
+  if (status == HAL_OK)
+  {
+    return HAL_OK;
+  }
+  return HAL_ERROR;
+}
+
+#if 0 // DISABLED DUE TO ISSUE IN HAL 1.2.0
 HAL_StatusTypeDef HAL_RCCEx_PeriphCLKConfig(RCC_PeriphCLKInitTypeDef  *PeriphClkInit)
 {
   uint32_t tmpreg = 0;
@@ -1357,7 +2566,7 @@ HAL_StatusTypeDef HAL_RCCEx_PeriphCLKConfig(RCC_PeriphCLKInitTypeDef  *PeriphClk
     return HAL_OK;
   return HAL_ERROR;
 }
-
+#endif
 /**
   * @brief  Get the RCC_ClkInitStruct according to the internal RCC configuration registers.
   * @param  PeriphClkInit: pointer to an RCC_PeriphCLKInitTypeDef structure that
@@ -2491,6 +3700,91 @@ __weak void HAL_RCCEx_CRS_ErrorCallback(uint32_t Error)
   *
   * @retval HAL status
   */
+// NEW IMPL DUE TO ISSUE IN HAL FW 1.2.0
+static HAL_StatusTypeDef RCCEx_PLL2_Config(RCC_PLL2InitTypeDef *pll2, uint32_t Divider)
+{
+
+  uint32_t tickstart;
+  HAL_StatusTypeDef status = HAL_OK;
+  assert_param(IS_RCC_PLL2M_VALUE(pll2->PLL2M));
+  assert_param(IS_RCC_PLL2N_VALUE(pll2->PLL2N));
+  assert_param(IS_RCC_PLL2P_VALUE(pll2->PLL2P));
+  assert_param(IS_RCC_PLL2R_VALUE(pll2->PLL2R));
+  assert_param(IS_RCC_PLL2Q_VALUE(pll2->PLL2Q));
+
+  /* Check that PLL2 OSC clock source is already set */
+  if(__HAL_RCC_GET_PLL_OSCSOURCE() == RCC_PLLSOURCE_NONE)
+  {
+    return HAL_ERROR;
+  }
+
+
+  else
+  {
+    /* Disable  PLL2. */
+    __HAL_RCC_PLL2_DISABLE();
+
+    /* Get Start Tick*/
+    tickstart = HAL_GetTick();
+
+    /* Wait till PLL is ready */
+    while(__HAL_RCC_GET_FLAG(RCC_FLAG_PLL2RDY) != RESET)
+    {
+      if((int32_t) (HAL_GetTick() - tickstart ) > PLL2_TIMEOUT_VALUE)
+      {
+        return HAL_TIMEOUT;
+      }
+    }
+
+    /* Configure PLL2 multiplication and division factors. */
+    __HAL_RCC_PLL2_CONFIG(pll2->PLL2M,
+                          pll2->PLL2N,
+                          pll2->PLL2P,
+                          pll2->PLL2Q,
+                          pll2->PLL2R);
+
+    /* Select PLL2 input reference frequency range: VCI */
+    __HAL_RCC_PLL2_VCIRANGE(pll2->PLL2RGE) ;
+
+    /* Select PLL2 output frequency range : VCO */
+    __HAL_RCC_PLL2_VCORANGE(pll2->PLL2VCOSEL) ;
+
+    /* Enable the PLL2 clock output */
+    if(Divider == DIVIDER_P_UPDATE)
+    {
+      __HAL_RCC_PLL2CLKOUT_ENABLE(RCC_PLL2_DIVP);
+    }
+    else if(Divider == DIVIDER_Q_UPDATE)
+    {
+      __HAL_RCC_PLL2CLKOUT_ENABLE(RCC_PLL2_DIVQ);
+    }
+    else
+    {
+      __HAL_RCC_PLL2CLKOUT_ENABLE(RCC_PLL2_DIVR);
+    }
+
+    /* Enable  PLL2. */
+    __HAL_RCC_PLL2_ENABLE();
+
+    /* Get Start Tick*/
+    tickstart = HAL_GetTick();
+
+    /* Wait till PLL2 is ready */
+    while(__HAL_RCC_GET_FLAG(RCC_FLAG_PLL2RDY) == RESET)
+    {
+      if((int32_t) (HAL_GetTick() - tickstart ) > PLL2_TIMEOUT_VALUE)
+      {
+        return HAL_TIMEOUT;
+      }
+    }
+
+  }
+
+
+  return status;
+}
+
+#if 0
 static HAL_StatusTypeDef RCCEx_PLL2_Config(RCC_PLL2InitTypeDef *pll2)
 {
   
@@ -2560,7 +3854,7 @@ static HAL_StatusTypeDef RCCEx_PLL2_Config(RCC_PLL2InitTypeDef *pll2)
   
   return status;
 }
-
+#endif
 
 /**
   * @brief  Configure the PLL3 VCI,VCO ranges, multiplication and division factors and enable it
@@ -2570,6 +3864,88 @@ static HAL_StatusTypeDef RCCEx_PLL2_Config(RCC_PLL2InitTypeDef *pll2)
   *
   * @retval HAL status
   */
+// NEW IMPL DUE TO ISSUE IN HAL FW 1.2.0
+static HAL_StatusTypeDef RCCEx_PLL3_Config(RCC_PLL3InitTypeDef *pll3, uint32_t Divider)
+{
+  uint32_t tickstart;
+  HAL_StatusTypeDef status = HAL_OK;
+  assert_param(IS_RCC_PLL3M_VALUE(pll3->PLL3M));
+  assert_param(IS_RCC_PLL3N_VALUE(pll3->PLL3N));
+  assert_param(IS_RCC_PLL3P_VALUE(pll3->PLL3P));
+  assert_param(IS_RCC_PLL3R_VALUE(pll3->PLL3R));
+  assert_param(IS_RCC_PLL3Q_VALUE(pll3->PLL3Q));
+
+  /* Check that PLL3 OSC clock source is already set */
+  if(__HAL_RCC_GET_PLL_OSCSOURCE() == RCC_PLLSOURCE_NONE)
+  {
+    return HAL_ERROR;
+  }
+
+
+  else
+  {
+    /* Disable  PLL3. */
+    __HAL_RCC_PLL3_DISABLE();
+
+    /* Get Start Tick*/
+    tickstart = HAL_GetTick();
+    /* Wait till PLL3 is ready */
+    while(__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) != RESET)
+    {
+      if((int32_t) (HAL_GetTick() - tickstart ) > PLL3_TIMEOUT_VALUE)
+      {
+        return HAL_TIMEOUT;
+      }
+    }
+
+    /* Configure the PLL3  multiplication and division factors. */
+    __HAL_RCC_PLL3_CONFIG(pll3->PLL3M,
+                          pll3->PLL3N,
+                          pll3->PLL3P,
+                          pll3->PLL3Q,
+                          pll3->PLL3R);
+
+    /* Select PLL3 input reference frequency range: VCI */
+    __HAL_RCC_PLL3_VCIRANGE(pll3->PLL3RGE) ;
+
+    /* Select PLL3 output frequency range : VCO */
+    __HAL_RCC_PLL3_VCORANGE(pll3->PLL3VCOSEL) ;
+
+    /* Enable the PLL3 clock output */
+    if(Divider == DIVIDER_P_UPDATE)
+    {
+      __HAL_RCC_PLL3CLKOUT_ENABLE(RCC_PLL3_DIVP);
+    }
+    else if(Divider == DIVIDER_Q_UPDATE)
+    {
+      __HAL_RCC_PLL3CLKOUT_ENABLE(RCC_PLL3_DIVQ);
+    }
+    else
+    {
+      __HAL_RCC_PLL3CLKOUT_ENABLE(RCC_PLL3_DIVR);
+    }
+
+    /* Enable  PLL3. */
+    __HAL_RCC_PLL3_ENABLE();
+
+    /* Get Start Tick*/
+    tickstart = HAL_GetTick();
+
+    /* Wait till PLL3 is ready */
+    while(__HAL_RCC_GET_FLAG(RCC_FLAG_PLL3RDY) == RESET)
+    {
+      if((int32_t) (HAL_GetTick() - tickstart ) > PLL3_TIMEOUT_VALUE)
+      {
+        return HAL_TIMEOUT;
+      }
+    }
+
+  }
+
+
+  return status;
+}
+#if 0
 static HAL_StatusTypeDef RCCEx_PLL3_Config(RCC_PLL3InitTypeDef *pll3)
 {
   
@@ -2638,7 +4014,7 @@ static HAL_StatusTypeDef RCCEx_PLL3_Config(RCC_PLL3InitTypeDef *pll3)
   
   return status;
 }
-
+#endif
 
 
 
