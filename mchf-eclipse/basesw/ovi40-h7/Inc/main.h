@@ -59,7 +59,7 @@
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
-#define ENCODER_RANGE 0xfff
+#define ENCODER_RANGE 0xFFF
 #define ENC_filter 15
 
 #define Button_F2_Pin GPIO_PIN_2
