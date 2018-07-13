@@ -231,12 +231,15 @@ void BSP_Init(void)
  */
 
 // __attribute__ ( ( naked ) )
+extern const uint32_t* _linker_ram_start; // we get this from the linker script
+static const uint32_t linker_ram_start_addr = (uint32_t)&_linker_ram_start;
+
 void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
 {
     uint32_t* const APPLICATION_PTR = (uint32_t*)ApplicationAddress;
 
     // check if the stackpointer points into a likely ram area (normal RAM start + 1MB)
-    if (APPLICATION_PTR[0] <= 0x20000000 + (1024 * 1024) && ( APPLICATION_PTR[0] > 0x20000000))
+    if (APPLICATION_PTR[0] <= (linker_ram_start_addr + (1024 * 1024)) && ( APPLICATION_PTR[0] >= linker_ram_start_addr))
     {
         __set_MSP(APPLICATION_PTR[0]);
         /* Jump to user application */

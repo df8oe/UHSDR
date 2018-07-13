@@ -40,25 +40,24 @@ extern const char* author; */
     /* Define the flash memory start address */
     #define USER_FLASH_STARTADDRESS    ((uint32_t)0x08000000) /* Flash Start Address */
 
-    /* Define the address from where user application will be loaded.
-       Note: the 1st sector 0x08000000-0x08007FFF is reserved for the Firmware upgrade code */
-    #define APPLICATION_ADDRESS        ((uint32_t)0x08010000)
-
     /* End of the Flash address for the largest device, dynamically sized down based on real processor flash */
     #define USER_FLASH_END_ADDRESS     ((uint32_t)0x081FFFFF)
-    #define MCHF_FLASHRESERVED      64
+
+    #define MCHF_FLASHRESERVED      (64)
 #else
     /* Define the flash memory start address */
     #define USER_FLASH_STARTADDRESS    ((uint32_t)0x08000000) /* Flash Start Address */
 
-    /* Define the address from where user application will be loaded.
-       Note: the 1st sector 0x08000000-0x08007FFF is reserved for the Firmware upgrade code */
-    #define APPLICATION_ADDRESS        ((uint32_t)0x08020000)
-
-    /* End of the Flash address for the largest device, dynamically sized down based on real processor flash */
+/* End of the Flash address for the largest device, dynamically sized down based on real processor flash */
     #define USER_FLASH_END_ADDRESS     ((uint32_t)0x081FFFFF)
-    #define MCHF_FLASHRESERVED      128
+
+    #define MCHF_FLASHRESERVED      (384)
 #endif
+
+/* Define the address from where user application will be loaded. */
+#define APPLICATION_ADDRESS        (USER_FLASH_STARTADDRESS + (MCHF_FLASHRESERVED * 1024))
+
+
 /**
  * @brief real user flash size of microprocessor (flash size - bootloader/config flash size)
  * @returns size of user flash in bytes

@@ -9,10 +9,13 @@ MEMORY
 
 _estack = ORIGIN(ram) + LENGTH(ram);
 
+_linker_ram_start = ORIGIN(ram);
+
 SECTIONS
 {
 	.text :
 	{
+	    PROVIDE(_linker_isr_loc = .);
 		KEEP(*(.isr_vector))
 		*(.text*)
 		

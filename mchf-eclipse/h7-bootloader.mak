@@ -94,5 +94,5 @@ basesw/ovi40-h7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_fmc.c \
 basesw/ovi40-h7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_sdmmc.c \
 basesw/ovi40-h7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c \
 basesw/ovi40-h7/Src/startup_stm32h743xx.S \
-basesw/ovi40-h7/Drivers/CMSIS/Device/ST/STM32H7xx/Source/Templates/system_stm32h7xx.c \
+basesw/ovi40-h7/Src/system_stm32h7xx.c \
 

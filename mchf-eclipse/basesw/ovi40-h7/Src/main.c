@@ -111,11 +111,14 @@ int main(void)
   /* MPU Configuration----------------------------------------------------------*/
   MPU_Config();
 
+
   /* Enable I-Cache-------------------------------------------------------------*/
   SCB_EnableICache();
 
+#ifndef BOOTLOADER_BUILD
   /* Enable D-Cache-------------------------------------------------------------*/
   SCB_EnableDCache();
+#endif
 
   /* MCU Configuration----------------------------------------------------------*/
 

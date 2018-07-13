@@ -101,7 +101,7 @@ basesw/ovi40-h7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_sdmmc.c \
 basesw/ovi40-h7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c \
 basesw/ovi40-h7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_fmc.c \
 basesw/ovi40-h7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_delayblock.c \
-basesw/ovi40-h7/Drivers/CMSIS/Device/ST/STM32H7xx/Source/Templates/system_stm32h7xx.c \
+basesw/ovi40-h7/Src/system_stm32h7xx.c \
 
 DSPLIB_SRC:=\
 basesw/ovi40-h7/Drivers/CMSIS/DSP/Source/TransformFunctions/arm_bitreversal2.S \

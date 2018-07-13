@@ -2,8 +2,8 @@ OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
 /* Internal Memory Map*/
 MEMORY
 {
-	/* rom  (rx)  : ORIGIN = 0x08020000, LENGTH = 2048k - 128k */
-	rom  (rx)  : ORIGIN = 0x08000000, LENGTH = 2048k - 128k
+	rom  (rx)  : ORIGIN = 0x08060000, LENGTH = 2048k - 384k 
+	/* rom  (rx)  : ORIGIN = 0x08000000, LENGTH = 2048k - 128k */
 	ram  (rwx) : ORIGIN = 0x24000000, LENGTH = 512k
 	sram1 (rw)  : ORIGIN = 0x30000000, LENGTH = 128k
 }
@@ -14,6 +14,7 @@ SECTIONS
 {
 	.text :
 	{
+	    PROVIDE(_linker_isr_loc = .);
 		KEEP(*(.isr_vector))
 		*(.text*)
 		

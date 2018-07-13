@@ -3,17 +3,21 @@ OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
 MEMORY
 {
 	/* rom  (rx)  : ORIGIN = 0x08020000, LENGTH = 2048k - 128k */
-	rom  (rx)  : ORIGIN = 0x08000000, LENGTH = 128k // each flash sector is 128k, we use one for bootloader
+	rom  (rx)  : ORIGIN = 0x08000000, LENGTH = 128k /* each flash sector is 128k, we use one for bootloader */
 	ram  (rwx) : ORIGIN = 0x24000000, LENGTH = 512k
 	sram1 (rw)  : ORIGIN = 0x30000000, LENGTH = 128k
 }
 
 _estack = ORIGIN(ram) + LENGTH(ram) -8;  /* -8 keeps older DF8OE bootloaders (before 2.0.2-HAL) happy */
 
+_linker_ram_start = ORIGIN(ram);
+
+
 SECTIONS
 {
 	.text :
 	{
+	    PROVIDE(_linker_isr_loc = .);
 		KEEP(*(.isr_vector))
 		*(.text*)
 		
@@ -54,9 +58,6 @@ SECTIONS
 	
 	/* _sidata is used in coide startup code */
 	_sidata = __etext;
-
-
-
 	
 	.data : AT (__etext)
 	{
