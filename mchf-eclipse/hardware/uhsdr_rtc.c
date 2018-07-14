@@ -19,7 +19,7 @@
 #include "stm32h7xx_hal_rtc.h"
 #include "stm32h7xx_hal_rtc_ex.h"
 #include "stm32h7xx_hal_rcc.h"
-#else
+#elif defined(STM32F7)
 #include "stm32f7xx_hal_rtc.h"
 #include "stm32f7xx_hal_rtc_ex.h"
 #include "stm32f7xx_hal_rcc.h"
