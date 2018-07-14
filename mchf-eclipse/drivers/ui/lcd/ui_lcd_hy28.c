@@ -618,24 +618,22 @@ void UiLcdHy28_BacklightEnable(bool on)
 }
 
 #ifdef STM32F4
-#define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_4)
-#define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_2)
-
-		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_64)
+    #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_4)
+    #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_2)
+	#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_64)
 #endif
 
 #ifdef STM32F7
-#define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
-#define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
-
-		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_128)
+    #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
+    #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
+	#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_128)
 #endif
 
-// TODO: H7 Port
 #ifdef STM32H7
-#define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
-#define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
-#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_8)
+    #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
+    #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
+    #define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_16)
+    // 16 may be a little bit high for some displays but works with the 480x320 display
 #endif
 
 static uint32_t lcd_spi_prescaler = SPI_PRESCALE_LCD_DEFAULT;
@@ -2382,14 +2380,20 @@ uint8_t UiLcdHy28_Init()
 static inline void UiLcdHy28_SetSpiPrescaler(uint32_t baudrate_prescaler)
 {
     /*---------------------------- SPIx CR1 Configuration ------------------------*/
-    /* Get the SPIx CR1 value */
+    // the baud rate register differs across the different processors
+#if defined(STM32H7)
+    #define SPI_BR_REG CFG1
+#elif defined(STM32F4) || defined(STM32F7)
+    #define SPI_BR_REG CR1
+#endif
 
-    uint32_t tmpreg = SPI_DISPLAY->CR1;
+    /* Get the SPIx SPI_BR_REG value */
+    uint32_t tmpreg = SPI_DISPLAY->SPI_BR_REG;
     tmpreg &= ~SPI_BAUDRATEPRESCALER_256;
     tmpreg |= baudrate_prescaler;
 
     /* Write to SPIx CR1 */
-    SPI_DISPLAY->CR1 = tmpreg;
+    SPI_DISPLAY->SPI_BR_REG = tmpreg;
 }
 
 mchf_touchscreen_t mchf_touchscreen;
