@@ -22,8 +22,8 @@ install:
     - export GCC_URL=https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/$GCC_SHORT/$GCC_BASE-linux.tar.bz2
     - if [ ! -e $GCC_DIR/bin/arm-none-eabi-g++ ]; then wget $GCC_URL -O $GCC_ARCHIVE; tar xfj $GCC_ARCHIVE -C $HOME; fi
 script:
-    - mkdir -p mchf-eclipse/build-bl
-    - mkdir -p mchf-eclipse/build-fw
+    - mkdir -p mchf-eclipse/build-bl-f4
+    - mkdir -p mchf-eclipse/build-fw-f4
     - mkdir -p mchf-eclipse/build-bl-f7
     - mkdir -p mchf-eclipse/build-bl-h7
     - mkdir -p mchf-eclipse/build-fw-f7
@@ -32,15 +32,15 @@ script:
     - mkdir -p mchf-eclipse/build-fw-h7
     - cd mchf-eclipse/build-fw-h7
     - cd ../build-bl-h7
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="H7" TRX_ID="ovi40" TRX_NAME="OVI40" bootloader 
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" bootloader 
     - cd ../build-fw-h7
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="H7" TRX_ID="ovi40" TRX_NAME="OVI40" all 
-    - cd ../build-fw 
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" all 
+    - cd ../build-fw-f4 
     - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." all
-    - cd ../build-fw-f7
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" all
-    - cd ../build-bl
+    - cd ../build-bl-f4
     - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." bootloader
+    - cd ../build-fw-f7
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" all	
     - cd ../build-bl-f7
     - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" bootloader
     - cd ../build-fw-f4-ili9486-480
@@ -54,20 +54,24 @@ before_deploy:
 deploy:
   provider: releases
   api_key:
-    secure: "SECURE TOKEN MISSING"
+    secure: "6kEbfOiJSR7FgDmmLNVTEg"
   file: 
-  - build-fw/fw-mchf.bin
+  - build-fw-f4/fw-mchf.bin
   - build-fw-f7/fw-ovi40.bin
-  - build-bl/bl-mchf.bin
+  - build-fw-h7/fw-vi40h7.bin
+  - build-bl-f4/bl-mchf.bin
   - build-bl-f7/bl-ovi40.bin
-  - build-fw/fw-mchf.dfu
+  - build-bl-h7/bl-i40h7.bin  
+  - build-fw-f4/fw-mchf.dfu
   - build-fw-f7/fw-ovi40.dfu
-  - build-bl/bl-mchf.dfu
+  - build-fw-h7/fw-i40h7.dfu  
+  - build-bl-f4/bl-mchf.dfu
   - build-bl-f7/bl-ovi40.dfu
+  - build-bl-h7/bl-i40h7.dfu
   skip_cleanup: true
   on:
-    repo: sp9bsl/UHSDR
+    repo: db4ple/mchf-github
     tags: true
     branches: 
       only:
-      - wip-sp9bsl-4-new-lcds
+      - ovi40h7

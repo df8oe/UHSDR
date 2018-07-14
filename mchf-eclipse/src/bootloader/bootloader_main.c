@@ -355,7 +355,7 @@ void mchfBl_CheckAndGoForDfuBoot()
 
         const uint32_t dfu_boot_start = 0x00000000;
 #elif defined(STM32F7)
-        const uint32_t 0x1FF00000;
+        const uint32_t dfu_boot_start = 0x1FF00000;
         // if in dual boot mode (which is required for proper operation
         // we need to fix the setup
     #if defined (FLASH_OPTCR_nDBANK)

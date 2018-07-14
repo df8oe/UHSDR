@@ -87,6 +87,7 @@ LINKERLOC=$(ROOTLOC)/linker
 LDFLAGS_BASE := -L$(LINKERLOC) -flto --specs=nano.specs -g3
 LDFLAGS_F4 := $(LDFLAGS_BASE) $(MACHFLAGS_F4)
 LDFLAGS_F7 := $(LDFLAGS_BASE) $(MACHFLAGS_F7) 
+LDFLAGS_H7 := $(LDFLAGS_BASE) $(MACHFLAGS_H7) 
 
 LIBS := -lm -lc -lnosys
 
@@ -156,9 +157,9 @@ endif
 ifeq ($(BUILDFOR),H7)
 
 $(BOOTLOADER).elf: CFLAGS = ${BASECFLAGS_H7} -Os -DBOOTLOADER_BUILD
-$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_H7} -O3
-$(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_H7} -T$(ROOTLOC)/arm-gcc-link-bootloader_h7.ld
-$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_H7} -T$(ROOTLOC)/arm-gcc-link_h7.ld
+$(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_H7} -O2
+$(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_H7} -T$(LINKERLOC)/arm-gcc-link-bootloader_h7.ld
+$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_H7} -T$(LINKERLOC)/arm-gcc-link_h7.ld
 
 
 	# Every subdirectory with header files must be mentioned here

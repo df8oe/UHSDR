@@ -116,7 +116,7 @@ uint32_t flashIf_EraseSectors(uint32_t Address, uint32_t Length)
         flashEraseOp.VoltageRange = VOLTAGE_RANGE_3;
         flashEraseOp.TypeErase = FLASH_TYPEERASE_SECTORS;
 #if defined(STM32H7)
-        flashEraseOp.Bank = FLASH_BANK_1; // we can currently only flash 768k into bank 1
+        flashEraseOp.Banks = FLASH_BANK_1; // we can currently only flash 768k into bank 1
         // TODO: add handling for 2 banks
 #endif
         retval = HAL_FLASHEx_Erase(&flashEraseOp, &sectorError);
