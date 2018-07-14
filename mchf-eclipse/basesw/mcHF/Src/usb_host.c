@@ -115,22 +115,26 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
 {
 
   /* USER CODE BEGIN 1 */
-    switch(id)
-    {
-    case HOST_USER_SELECT_CONFIGURATION:
-      break;
+  switch(id)
+  {
+  case HOST_USER_SELECT_CONFIGURATION:
+  break;
 
-    case HOST_USER_DISCONNECTION:
-      Appli_state = APPLICATION_DISCONNECT;
-      break;
+  case HOST_USER_DISCONNECTION:
+  Appli_state = APPLICATION_DISCONNECT;
+  break;
 
-    case HOST_USER_CLASS_ACTIVE:
-      Appli_state = APPLICATION_START;
-      break;
+  case HOST_USER_CLASS_ACTIVE:
+  Appli_state = APPLICATION_READY;
+  break;
 
-    default:
-      break;
-    }
+  case HOST_USER_CONNECTION:
+  Appli_state = APPLICATION_START;
+  break;
+
+  default:
+  break;
+  }
   /* USER CODE END 1 */
 }
 	

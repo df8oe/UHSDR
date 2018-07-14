@@ -323,7 +323,7 @@ void BL_Application()
 {
     switch(Appli_state)
     {
-    case APPLICATION_START:
+    case APPLICATION_READY:
       BL_MSC_Application();
       Appli_state = APPLICATION_IDLE;
       break;
