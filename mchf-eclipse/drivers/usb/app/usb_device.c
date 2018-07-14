@@ -66,10 +66,6 @@ void MX_USB_DEVICE_Init(void)
 
   USBD_Start(&hUsbDeviceFS);
 
-#ifdef STM32H7
-  HAL_PWREx_EnableUSBVoltageDetector();
-#endif
-
 }
 /**
   * @}

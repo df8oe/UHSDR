@@ -162,10 +162,13 @@ int main(void)
   /* USER CODE BEGIN 2 */
 #if defined(USE_USBHOST) || defined(BOOTLOADER_BUILD)
   MX_USB_HOST_Init();
-
     #if defined(USE_USBDRIVE) || defined(BOOTLOADER_BUILD)
       MX_FATFS_Init();
     #endif
+#endif
+
+#ifdef STM32H7
+    HAL_PWREx_EnableUSBVoltageDetector(); // this is an issue in the STM32H7 HAL 1.2.0, so we enable USB power here, otherwise USB won't work
 #endif
 
 #ifndef BOOTLOADER_BUILD
