@@ -342,13 +342,24 @@
 #define LCD_D14_PIO      		GPIOE
 #endif
 
+
 #if defined(STM32F7) || defined(STM32H7)
 
-#ifndef TRX_NAME
-#define TRX_NAME "OVI40"
-#endif
-#ifndef TRX_ID
-#define TRX_ID "ovi40"
+#if defined(STM32F7)
+
+    #ifndef TRX_NAME
+        #define TRX_NAME "OVI40"
+    #endif
+    #ifndef TRX_ID
+        #define TRX_ID "ovi40"
+    #endif
+#elif defined(STM32H7)
+    #ifndef TRX_NAME
+        #define TRX_NAME "OVI40 H7"
+    #endif
+    #ifndef TRX_ID
+        #define TRX_ID "i40h7"
+    #endif
 #endif
 
 #ifndef TRX_HW_LIC
