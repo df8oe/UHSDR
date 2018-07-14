@@ -228,7 +228,7 @@
 		<Unit filename="..\mchf-eclipse\basesw\ovi40\Src\spi.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\..\mchf-eclipse\basesw\ovi40\Drivers\CMSIS\Device\ST\STM32F7xx\Source\Templates\gcc\startup_stm32f767xx.S">
+		<Unit filename="..\mchf-eclipse\..\mchf-eclipse\basesw\ovi40\Src\startup_stm32f767xx.S">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\ovi40\Src\stm32f7xx_hal_msp.c">
@@ -240,7 +240,7 @@
 		<Unit filename="..\mchf-eclipse\basesw\ovi40\Middlewares\Third_Party\FatFs\src\option\syscall.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\ovi40\Drivers\CMSIS\Device\ST\STM32F7xx\Source\Templates\system_stm32f7xx.c">
+		<Unit filename="..\mchf-eclipse\basesw\ovi40\Src\system_stm32f7xx.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\ui\lcd\ui_lcd_hy28.c">

@@ -225,7 +225,7 @@
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\spi.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Device\ST\STM32F4xx\Source\Templates\gcc\startup_stm32f407xx.S">
+		<Unit filename="..\mchf-eclipse\..\mchf-eclipse\basesw\mcHF\Src\startup_stm32f407xx.S">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\stm32f4xx_hal_msp.c">
@@ -237,7 +237,7 @@
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\option\syscall.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Device\ST\STM32F4xx\Source\Templates\system_stm32f4xx.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\system_stm32f4xx.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\ui\lcd\ui_lcd_hy28.c">
