@@ -5714,7 +5714,7 @@ void UiDriver_StartUpScreenFinish()
 
 	if(ts.configstore_in_use == CONFIGSTORE_IN_USE_ERROR)                                   // problem with EEPROM init
 	{
-#ifndef USE_CONFIGSTORAGE_FLASH
+#ifdef USE_CONFIGSTORAGE_FLASH
 	    UiDriver_StartupScreen_LogIfProblem(ts.ee_init_stat != HAL_OK, "Config Flash Error");
 #endif
 	    if (SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size == 0)

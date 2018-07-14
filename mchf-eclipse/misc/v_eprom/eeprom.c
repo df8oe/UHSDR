@@ -31,7 +31,7 @@
 #include "stm32f7xx_hal_flash_ex.h"
 #elif defined(STM32H7)
 #include "stm32h7xx_hal_flash_ex.h"
-#else
+#elif defined(STM32F4)
 #include "stm32f4xx_hal_flash_ex.h"
 #endif
 /* Includes ------------------------------------------------------------------*/
@@ -66,8 +66,12 @@ uint32_t sectorError = 0;
 
 flashEraseOp.Sector = sector;
 flashEraseOp.NbSectors = 1;
-flashEraseOp.VoltageRange = VOLTAGE_RANGE_3;
+flashEraseOp.VoltageRange = VOLTAGE_RANGE;
 flashEraseOp.TypeErase = FLASH_TYPEERASE_SECTORS;
+
+#if defined(STM32H7)
+flashEraseOp.Banks = FLASH_BANK_1;
+#endif
 
 return HAL_FLASHEx_Erase(&flashEraseOp, &sectorError);
 
@@ -82,12 +86,36 @@ uint16_t Flash_GetVirtAddrForId(uint16_t id) {
     return VAR_ADDR_START + id;
 }
 
-static HAL_StatusTypeDef Flash_Program(uint32_t toAddress,uint16_t value)
+static HAL_StatusTypeDef Flash_Program(uint32_t toAddress,uint16_t value, uint16_t virtaddr)
 {
 	HAL_StatusTypeDef retval = HAL_ERROR;
+	uint32_t word = (((uint32_t)virtaddr) << 16)| value;
+	// combine both parameters into a single 32bit word
 #ifndef STM32H7
-	retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,toAddress, value);
+    retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,toAddress, word);
+#else
+    // this code is used to simulate 32bit wide writing on a 256bit flash word
+    // this adds 8 times the amount of writing to a 256 bit location but what can we
+    // do, either this or we waste up to 78.5% of the config flash
+    uint32_t data[8];
+    uint32_t* startaddr = (uint32_t*)(toAddress & ~0xFFFFFFE0);
+    // mask out the lower 5 bits, we have to read 8x4 = 32 bytes aligned to a 32byte address;
+    uint32_t wordidx = (toAddress % 32) / 4; // now figure out where our data goes
+    for (int idx = 0; idx < 8; idx++)
+    {
+        if (idx != wordidx)
+        {
+            data[idx] = startaddr[idx];
+        }
+        else
+        {
+            data[idx] = word;
+        }
+
+    }
+    retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD,toAddress, (uint32_t)&data[0]);
 #endif
+
 	return retval;
 }
 
@@ -146,7 +174,7 @@ static uint16_t Flash_TransferFullPage(uint8_t fromPage, uint8_t toPage, bool sk
         }
     }
     /* Mark toPage as valid */
-    retval = Flash_Program(toPageBaseAddress, VALID_PAGE);
+    retval = Flash_Program(toPageBaseAddress, VALID_PAGE, 0xFFFF);
     /* If program operation was failed, a Flash error code is returned */
     if (retval == HAL_OK)
     {
@@ -218,7 +246,7 @@ uint16_t Flash_InitA(void)
             if (retval == HAL_OK)
             {
                 /* Mark Page1 as valid */
-                retval = Flash_Program(PAGE1_BASE_ADDRESS, VALID_PAGE);
+                retval = Flash_Program(PAGE1_BASE_ADDRESS, VALID_PAGE, 0xFFFF);
                 /* If program operation was failed, a Flash error code is returned */
             }
         }
@@ -238,7 +266,7 @@ uint16_t Flash_InitA(void)
             if (retval == HAL_OK)
             {
                 /* Mark Page0 as valid */
-                retval = Flash_Program(PAGE0_BASE_ADDRESS, VALID_PAGE);
+                retval = Flash_Program(PAGE0_BASE_ADDRESS, VALID_PAGE, 0xFFFF);
             }
             /* If program operation was failed, a Flash error code is returned */
         }
@@ -441,7 +469,7 @@ static HAL_StatusTypeDef Flash_Format(void)
     }
 
     /* Set Page0 as valid page: Write VALID_PAGE at Page0 base address */
-    FlashStatus = Flash_Program(PAGE0_BASE_ADDRESS, VALID_PAGE);
+    FlashStatus = Flash_Program(PAGE0_BASE_ADDRESS, VALID_PAGE, 0xFFFF);
 
     /* If program operation was failed, a Flash error code is returned */
     if (FlashStatus != HAL_OK)
@@ -563,15 +591,7 @@ static uint16_t Flash_WriteVariableToPage(uint16_t VirtAddress, uint16_t Data, u
             if ((*(__IO uint32_t*)Address) == 0xFFFFFFFF)
             {
                 /* Set variable data */
-                retval = Flash_Program(Address, Data);
-
-                /* If program operation was okay, proceed */
-                if (retval == HAL_OK)
-                {
-                    /* Set variable virtual address */
-                    retval = Flash_Program( Address + 2, VirtAddress);
-                }
-
+                retval = Flash_Program(Address, Data, VirtAddress);
                 break;
             }
         }
@@ -621,7 +641,7 @@ static uint16_t Flash_PageTransfer(uint16_t VirtAddress)
     if (retval == HAL_OK )
     {
         /* Set the new Page status to RECEIVE_DATA status */
-        retval = Flash_Program(NewPageAddress, RECEIVE_DATA);
+        retval = Flash_Program(NewPageAddress, RECEIVE_DATA, 0xFFFF);
         /* If program operation was failed, a Flash error code is returned */
         if (retval == HAL_OK)
         {
