@@ -23,44 +23,117 @@
     #error Unknown processor
 #endif
 
-/* Base address of the Flash sectors */
 
-static const uint32_t flash_sector_max = 24;
-static const uint32_t flash_sector_addr[] = {
-0x08000000, /* Base @ of Sector 0, 16 Kbyte */
-0x08004000, /* Base @ of Sector 1, 16 Kbyte */
-0x08008000, /* Base @ of Sector 2, 16 Kbyte */
-0x0800C000, /* Base @ of Sector 3, 16 Kbyte */
-0x08010000, /* Base @ of Sector 4, 64 Kbyte */
-0x08020000, /* Base @ of Sector 5, 128 Kbyte */
-0x08040000, /* Base @ of Sector 6, 128 Kbyte */
-0x08060000, /* Base @ of Sector 7, 128 Kbyte */
-0x08080000, /* Base @ of Sector 8, 128 Kbyte */
-0x080A0000, /* Base @ of Sector 9, 128 Kbyte */
-0x080C0000, /* Base @ of Sector 10, 128 Kbyte */
-0x080E0000, /* Base @ of Sector 11, 128 Kbyte */
-0x08100000, /* Base @ of Sector 12, 128 Kbyte */
-0x08104000, /* Base @ of Sector 13, 16 Kbyte */
-0x08108000, /* Base @ of Sector 14, 16 Kbyte */
-0x0810C000, /* Base @ of Sector 15, 16 Kbyte */
-0x08110000, /* Base @ of Sector 16, 64 Kbyte */
-0x08120000, /* Base @ of Sector 17, 128 Kbyte */
-0x08140000, /* Base @ of Sector 18, 128 Kbyte */
-0x08160000, /* Base @ of Sector 19, 128 Kbyte */
-0x08180000, /* Base @ of Sector 20, 128 Kbyte */
-0x081A0000, /* Base @ of Sector 21, 128 Kbyte */
-0x081C0000, /* Base @ of Sector 22, 128 Kbyte */
-0x081E0000, /* Base @ of Sector 23, 128 Kbyte */
-0x08200000, /* End+1@ of Sector 23, 128 Kbyte */
+#define FLASH_NO_SECTOR (0xFFFFFFFF)
+
+/* Base address of the Flash sectors */
+typedef struct
+{
+    uint32_t addr;
+} flash_sectorinfo_t;
+// this struct can be used to store more information
+// such as bank numbers, sector numbers etc. if flash layout gets more complex
+// right now not yet used
+
+static const flash_sectorinfo_t flash_sector_addr[] = {
+#if defined(STM32F4) || defined(STM32F7)
+{ 0x08000000 }, /* Base @ of Sector 0, 16 Kbyte */
+{ 0x08004000 }, /* Base @ of Sector 1, 16 Kbyte */
+{ 0x08008000 }, /* Base @ of Sector 2, 16 Kbyte */
+{ 0x0800C000 }, /* Base @ of Sector 3, 16 Kbyte */
+{ 0x08010000 }, /* Base @ of Sector 4, 64 Kbyte */
+{ 0x08020000 }, /* Base @ of Sector 5, 128 Kbyte */
+{ 0x08040000 }, /* Base @ of Sector 6, 128 Kbyte */
+{ 0x08060000 }, /* Base @ of Sector 7, 128 Kbyte */
+{ 0x08080000 }, /* Base @ of Sector 8, 128 Kbyte */
+{ 0x080A0000 }, /* Base @ of Sector 9, 128 Kbyte */
+{ 0x080C0000 }, /* Base @ of Sector 10, 128 Kbyte */
+{ 0x080E0000 }, /* Base @ of Sector 11, 128 Kbyte */
+{ 0x08100000 }, /* Base @ of Sector 12, 128 Kbyte */
+{ 0x08104000 }, /* Base @ of Sector 13, 16 Kbyte */
+{ 0x08108000 }, /* Base @ of Sector 14, 16 Kbyte */
+{ 0x0810C000 }, /* Base @ of Sector 15, 16 Kbyte */
+{ 0x08110000 }, /* Base @ of Sector 16, 64 Kbyte */
+{ 0x08120000 }, /* Base @ of Sector 17, 128 Kbyte */
+{ 0x08140000 }, /* Base @ of Sector 18, 128 Kbyte */
+{ 0x08160000 }, /* Base @ of Sector 19, 128 Kbyte */
+{ 0x08180000 }, /* Base @ of Sector 20, 128 Kbyte */
+{ 0x081A0000 }, /* Base @ of Sector 21, 128 Kbyte */
+{ 0x081C0000 }, /* Base @ of Sector 22, 128 Kbyte */
+{ 0x081E0000 }, /* Base @ of Sector 23, 128 Kbyte */
+{ 0x08200000 }, /* End+1@ of Sector 23, 128 Kbyte */
+#elif defined(STM32H7)
+{ 0x08000000 }, /* Base @ of Sector 0, bank 1, 128 Kbyte */
+{ 0x08020000 }, /* Base @ of Sector 1, 128 Kbyte */
+{ 0x08040000 }, /* Base @ of Sector 2, 128 Kbyte */
+{ 0x08060000 }, /* Base @ of Sector 3, 128 Kbyte */
+{ 0x08080000 }, /* Base @ of Sector 4, 128 Kbyte */
+{ 0x080A0000 }, /* Base @ of Sector 5, 128 Kbyte */
+{ 0x080C0000 }, /* Base @ of Sector 6, 128 Kbyte */
+{ 0x080E0000 }, /* Base @ of Sector 7, 128 Kbyte */
+{ 0x08100000 }, /* Base @ of Sector 0, bank 2, 128 Kbyte */
+{ 0x08120000 }, /* Base @ of Sector 1, 128 Kbyte */
+{ 0x08140000 }, /* Base @ of Sector 2, 128 Kbyte */
+{ 0x08160000 }, /* Base @ of Sector 3, 128 Kbyte */
+{ 0x08180000 }, /* Base @ of Sector 4, 128 Kbyte */
+{ 0x081A0000 }, /* Base @ of Sector 5, 128 Kbyte */
+{ 0x081C0000 }, /* Base @ of Sector 6, 128 Kbyte */
+{ 0x081E0000 }, /* Base @ of Sector 7, 128 Kbyte */
+{ 0x08200000 }, /* End+1@ of Sector 7, 128 Kbyte */
+#endif
 };
 
 
+static const uint32_t flash_sector_max = sizeof(flash_sector_addr)/sizeof(flash_sectorinfo_t)-1;
+// we have one extra entry at the end, hence we need to reduce number of sectors by one
 
 #define RESET 0
 #define SET 1
-#define FLASH_NO_SECTOR (0xFFFFFFFF)
 
-static uint32_t FLASH_If_GetSectorNumber(uint32_t Address);
+/**
+  * Return the Flash sector Number of the address
+  * retval The Flash sector Number of the address
+  */
+static uint32_t flashIf_GetSectorInfoIndex(uint32_t Address)
+{
+    uint32_t sector = FLASH_NO_SECTOR; // index of invalid sector, returned if address not in flash
+
+    for (int idx = 0; idx < flash_sector_max; idx++)
+    {
+        if (Address >= flash_sector_addr[idx].addr && Address < flash_sector_addr[idx+1].addr)
+        {
+            sector = idx;
+            break;
+        }
+    }
+    return sector;
+}
+
+static uint32_t flashIf_GetSectorNumber(uint32_t idx)
+{
+    uint32_t retval = FLASH_NO_SECTOR;
+    if (idx < flash_sector_max)
+    {
+#if defined(STM32F4) || defined(STM32F7)
+        retval = idx; // idx == sector number
+#elif defined(STM327)
+        retval = idx % 8; // 2x8 sectors
+#endif
+    }
+    return retval;
+}
+#if defined(STM32H7)
+static uint32_t flashIf_GetSectorBank(uint32_t idx)
+{
+    uint32_t retval = FLASH_NO_SECTOR;
+    if (idx < flash_sector_max)
+    {
+        retval = idx < 8? FLASH_BANK_1:FLASH_BANK_2; // 2x8 sectors
+    }
+    return retval;
+}
+#endif
+
 
 void flashIf_FlashUnlock()
 {
@@ -104,22 +177,26 @@ uint32_t flashIf_EraseSectors(uint32_t Address, uint32_t Length)
     uint32_t retval = HAL_ERROR;
 
     /* Erase Flash sectors */
-    uint32_t startsector = FLASH_If_GetSectorNumber(Address);
-    uint32_t endsector = FLASH_If_GetSectorNumber(Address+Length-1);
+    uint32_t startsector = flashIf_GetSectorInfoIndex(Address);
+    uint32_t endsector = flashIf_GetSectorInfoIndex(Address+Length-1);
 
     if (startsector != FLASH_NO_SECTOR && endsector != FLASH_NO_SECTOR)
 
     {
-        /* Erase FLASH sectors to download image */
-        flashEraseOp.Sector = startsector;
-        flashEraseOp.NbSectors = endsector - startsector + 1;
-        flashEraseOp.VoltageRange = VOLTAGE_RANGE_3;
-        flashEraseOp.TypeErase = FLASH_TYPEERASE_SECTORS;
+        retval = HAL_OK;
+
+        for (int idx = startsector; retval == HAL_OK && idx <= endsector; idx++)
+        {
+            /* Erase FLASH sectors to download image */
+            flashEraseOp.Sector = flashIf_GetSectorNumber(idx);
+            flashEraseOp.NbSectors = 1;
+            flashEraseOp.VoltageRange = VOLTAGE_RANGE_3;
+            flashEraseOp.TypeErase = FLASH_TYPEERASE_SECTORS;
 #if defined(STM32H7)
-        flashEraseOp.Banks = FLASH_BANK_1; // we can currently only flash 768k into bank 1
-        // TODO: add handling for 2 banks
+            flashEraseOp.Banks = flashIf_GetSectorBank(idx);
 #endif
-        retval = HAL_FLASHEx_Erase(&flashEraseOp, &sectorError);
+            retval = HAL_FLASHEx_Erase(&flashEraseOp, &sectorError);
+        }
     }
     return retval;
 }
@@ -145,21 +222,3 @@ HAL_StatusTypeDef flashIf_Program256Bit(uint32_t Address, uint32_t Data[8])
     return retval;
 }
 
-/**
-  * Return the Flash sector Number of the address
-  * retval The Flash sector Number of the address
-  */
-static uint32_t FLASH_If_GetSectorNumber(uint32_t Address)
-{
-    uint32_t sector = FLASH_NO_SECTOR;
-
-    for (int idx = 0; idx < flash_sector_max; idx++)
-    {
-        if (Address >= flash_sector_addr[idx] && Address < flash_sector_addr[idx+1])
-        {
-            sector = idx;
-            break;
-        }
-    }
-    return sector;
-}
