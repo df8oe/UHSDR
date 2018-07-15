@@ -91,9 +91,9 @@ static HAL_StatusTypeDef Flash_Program(uint32_t toAddress,uint16_t value, uint16
 	HAL_StatusTypeDef retval = HAL_ERROR;
 	uint32_t word = (((uint32_t)virtaddr) << 16)| value;
 	// combine both parameters into a single 32bit word
-#ifndef STM32H7
+#if defined(STM32F4) || defined(STM32F7)
     retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,toAddress, word);
-#else
+#elif defined(STM32H7)
     // this code is used to simulate 32bit wide writing on a 256bit flash word
     // this adds 8 times the amount of writing to a 256 bit location but what can we
     // do, either this or we waste up to 78.5% of the config flash
@@ -114,6 +114,8 @@ static HAL_StatusTypeDef Flash_Program(uint32_t toAddress,uint16_t value, uint16
 
     }
     retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD,toAddress, (uint32_t)&data[0]);
+#else
+    #error "No support for unknown processor implemented"
 #endif
 
 	return retval;

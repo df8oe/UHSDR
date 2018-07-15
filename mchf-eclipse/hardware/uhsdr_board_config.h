@@ -345,22 +345,22 @@
 
 #if defined(STM32F7) || defined(STM32H7)
 
-#if defined(STM32F7)
+    #if defined(STM32F7)
 
-    #ifndef TRX_NAME
-        #define TRX_NAME "OVI40"
+        #ifndef TRX_NAME
+            #define TRX_NAME "OVI40"
+        #endif
+        #ifndef TRX_ID
+            #define TRX_ID "ovi40"
+        #endif
+    #elif defined(STM32H7)
+        #ifndef TRX_NAME
+            #define TRX_NAME "OVI40 H7"
+        #endif
+        #ifndef TRX_ID
+            #define TRX_ID "i40h7"
+        #endif
     #endif
-    #ifndef TRX_ID
-        #define TRX_ID "ovi40"
-    #endif
-#elif defined(STM32H7)
-    #ifndef TRX_NAME
-        #define TRX_NAME "OVI40 H7"
-    #endif
-    #ifndef TRX_ID
-        #define TRX_ID "i40h7"
-    #endif
-#endif
 
 #ifndef TRX_HW_LIC
 // #define TRX_HW_LIC "???"
@@ -742,11 +742,9 @@
 #define BUTTON_S19              GPIO_PIN_1
 #define BUTTON_S19_PIO          GPIOH
 
-#ifdef STM32H7
-#define hdac hdac1
-#define FLASHSIZE_BASE 0x1FF1E880
-#define SRAM2_BASE 0x38000000
-#endif
+    #if defined(STM32H7)
+        #define hdac hdac1
+    #endif
 #endif
 
 //
@@ -754,19 +752,6 @@
 #define     DEVICE_STRING           TRX_NAME " Transceiver"
 //
 // -----------------------------------------------------------------------------
-
-
-
-#ifdef STM32H7
-#define GPIO_SetBits(PORT,PINS) { (PORT)->BSRRL = (PINS); }
-#define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRRH = (PINS); }
-#else
-#define GPIO_SetBits(PORT,PINS) { (PORT)->BSRR = (PINS); }
-#define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRR = (PINS) << 16U; }
-#endif
-
-#define GPIO_ToggleBits(PORT,PINS) { (PORT)->ODR ^= (PINS); }
-#define GPIO_ReadInputDataBit(PORT,PINS) { ((PORT)->IDR = (PINS); }
 
 // WE DO SET SOME CHOICES BASED ON THE UI BOARD
 #ifdef UI_BRD_OVI40
