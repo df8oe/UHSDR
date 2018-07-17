@@ -58,6 +58,9 @@ inline mchf_cpu_t MchfHW_Cpu()
     #define STM32_GetFlashSize()    (*(uint16_t *) (FLASHSIZE_BASE))
 #elif defined(STM32H7)
     #define STM32_GetFlashSize()    (FLASH_SIZE/1024)
+    #define FLASHSIZE_BASE 0x1FF1E880
+    #define SRAM2_BASE 0x38000000
+
 #endif
 
 #if defined(STM32H7)

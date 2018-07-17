@@ -214,7 +214,7 @@ HAL_StatusTypeDef flashIf_Program256Bit(uint32_t Address, uint32_t Data[8])
 #ifndef STM32H7
     for (int i=0; retval == HAL_OK && i < 8; i++)
     {
-        retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,Address, Data[i]);
+        retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,Address+(i*4), Data[i]);
     }
 #else
     retval = HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD,Address, (uint32_t)&Data[0]);
