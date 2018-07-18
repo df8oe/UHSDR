@@ -139,7 +139,7 @@ static void UiVk_GetButtonRgn(uint8_t Key, UiArea_t *bp)
 static void UiVk_DrawVKeypad()
 {
 	const VKeypad* VKpad=ts.VirtualKeyPad;
-	int row, col, keycnt=0;
+	int row, col, keycnt=0, Warning=0;
 	UiArea_t b_area;
 	for(row=0;row<VKpad->Rows;row++)
 	{
@@ -151,8 +151,12 @@ static void UiVk_DrawVKeypad()
 			}
 			UiVk_GetButtonRgn(keycnt,&b_area);
 
+
+			if(VKpad->Keys[keycnt].KeyWarning)
+				Warning=VKpad->Keys[keycnt].KeyWarning(keycnt,0);
+
 			UiVk_DrawButton(b_area.x,b_area.y,
-					VKpad->Keys[keycnt].KeyWarning,VKpad->VKeyStateCallBack(keycnt,0),VKpad->Keys[keycnt].KeyText,
+					Warning,VKpad->VKeyStateCallBack(keycnt,0),VKpad->Keys[keycnt].KeyText,
 					VKpad->Keys[keycnt].TextColor,VKpad->Keys[keycnt].PressedTextColor,VKpad->KeyFont);
 
 			keycnt++;
@@ -214,8 +218,6 @@ static void UiVk_DrawBackGround()
 
 
 //DSP box VKeyboard=================================================================
-
-
 uint32_t prev_dsp_functions_active;	//used for virtual DSP keys redraw detections
 //this array is needed because different bit definitions are used for ts.dsp_mode and ts.dsp_active, so we cannot simply pass the CallBackShort parameter
 const uint32_t dsp_functions[]={0, DSP_NR_ENABLE, DSP_NOTCH_ENABLE, DSP_NOTCH_ENABLE|DSP_NR_ENABLE, DSP_MNOTCH_ENABLE, DSP_MPEAK_ENABLE};
@@ -235,6 +237,18 @@ static void UiVk_DSPVKeyCallBackLong(uint8_t KeyNum, uint32_t param)
 	prev_dsp_functions_active=-1;
 	UiDriver_UpdateDSPmode();
 }
+
+static uint8_t UiVk_DSPVKeyCallBackWarning(uint8_t KeyNum, uint32_t param)
+{
+	uint8_t result=0;
+
+	if((KeyNum==3) && mchf_display.use_spi)
+		result=1;
+
+
+	return result;
+}
+
 static uint8_t UiVk_DSPVKeyInitTypeDraw(uint8_t KeyNum, uint32_t param)
 {
 	uint8_t Keystate=Vbtn_State_Normal;
@@ -257,7 +271,7 @@ const VKey Keys_DSP[]={
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_OFF, .KeyText="DSP\nOFF", .TextColor=Black, .PressedTextColor=RGB(0,0xff,0xff)},
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NR, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="NR", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NOTCH, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="AUTO\nNOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
-		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NR_AND_NOTCH,.KeyWarning=1, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="NR\n+NOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
+		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NR_AND_NOTCH,.KeyWarning=UiVk_DSPVKeyCallBackWarning, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="NR\n+NOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_NOTCH_MANUAL, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="MAN\nNOTCH", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr},
 		{.ShortFnc=UiVk_DSPVKeyCallBackShort, .ShortPar=DSP_SWITCH_PEAK_FILTER, .LongFnc=UiVk_DSPVKeyCallBackLong,.KeyText="PEAK", .TextColor=col_Keys_DSP_npr, .PressedTextColor=col_Keys_DSP_pr}
 };

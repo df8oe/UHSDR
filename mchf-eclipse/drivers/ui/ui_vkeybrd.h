@@ -24,7 +24,7 @@ typedef struct
 	char KeyText[16];
 	uint8_t SizeX;	//multiply of normal key size, 0=normal size defined by VKeypad's KeyWidth
 	uint8_t SizeY;	//multiply of normal key size, 0=normal size defined by VKeypad's KeyHeight
-	uint8_t KeyWarning;	//1= this key will be marked with warning
+	VKeyStateFunc KeyWarning;	//if function is present, this key will be marked with warning if result of function is 1
 	uint16_t TextColor;	//Color Of Key Text when key is not pressed
 	uint16_t PressedTextColor;	//Color Of Key Text when key is pressed
 	TouchFunc ShortFnc;		//called function for short press
