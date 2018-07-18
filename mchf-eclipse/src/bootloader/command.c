@@ -36,10 +36,7 @@
 
 /* Private macros ------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-static uint8_t RAM_Buf[BUFFER_SIZE] =
-{
-        0x00
-};
+static uint8_t RAM_Buf[BUFFER_SIZE] __attribute__ ((aligned (4)));
 
 static FIL file;
 static FIL fileR;
