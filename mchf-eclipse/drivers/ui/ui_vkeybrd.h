@@ -47,7 +47,7 @@ typedef struct
 	uint8_t Backgr_Hnlarge;	//background of keyboard width enlarge
 	const VKey* Keys;		//pointer to keyboard data
 	uint8_t VKeyGroupMode;	//type of key press: see Vkey_Group_
-	VKeyStateFunc VKeyStateCallBack;
+	VKeyStateFunc VKeyStateCallBack;	//pointer to callback function which controls the displayed state of the button
 } VKeypad;
 
 
@@ -62,6 +62,8 @@ enum Vkey_Group_ {Vkey_Group_OneAllowed, Vkey_Group_MultipleAllowed};
 
 void UiVk_RedrawDSPVirtualKeys();
 bool UiVk_Process_VirtualKeypad(bool LongPress);
-
 void UiVk_DSPVirtualKeys();
+
+void UiVk_RedrawBndSelVirtualKeys();
+void UiVk_BndSelVirtualKeys();
 #endif /* UI_UI_VKEYBRD_H_ */

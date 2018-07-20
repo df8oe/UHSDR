@@ -141,7 +141,8 @@ static const touchaction_descr_t R480320_touchactions_normal[] =
 		{ {0,110,160,16}, UiAction_ToggleWaterfallScopeDisplay,    UiAction_ChangeSpectrumSize }, // Spectrum Bar Left Part: WaterfallScope Toggle
 		{ {(480/2)-16,110,48,16}, UiAction_ChangeSpectrumZoomLevelDown,    UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Middle Part: Decrease Zoom Level
 		{ {(480/2)+100,110,48,16}, UiAction_ChangeSpectrumZoomLevelUp,      UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Right Part: Increase Zoom Level
-		{ {R480320_TUNE_FREQ_X+16*7,R480320_TUNE_FREQ_Y,16*3,24}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Tune button:Set last 3 digits to zero
+		{ {R480320_TUNE_FREQ_X+16*7,R480320_TUNE_FREQ_Y,16*3,24}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Frequency display, last three digits :Set last 3 digits to zero
+		{ {R480320_TUNE_FREQ_X,R480320_TUNE_FREQ_Y,16*7,24}, UiVk_BndSelVirtualKeys,       NULL }, // Frequency display, last three digits :Set last 3 digits to zero
 		{ {R480320_DEMOD_MODE_X,R480320_DEMOD_MODE_Y,R480320_DEMOD_MODE_MASK_W,R480320_DEMOD_MODE_MASK_H}, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
 		{ {R480320_PW_IND_X,R480320_PW_IND_Y,64,16},								 UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
 		{ {R480320_ENCODER_IND_X+ENC_COL_W*5+Xspacing*2,R480320_ENCODER_IND_Y,ENC_COL_W,ENC_ROW_H}, UiAction_ChangeAudioSource,              NULL }, // Audio In Box: Switch Source

@@ -43,15 +43,14 @@ static void UiVk_DrawButtonBody(UiArea_t* Ka, uint16_t col_Bcgr, uint16_t col_Le
 
 /**
  * @brief Function draws button, with described state and text
- * @param Xpos Button X position
- * @param Ypos Button Y position
+ * @param Btn_area rectangle describing button position and size
  * @param Warning 1=Warning sign
  * @param Vbtn_State see @ref Vbtn_State_
  * @param txt Text to be printed on button
  * @param text_color_NotPressed text colour of not pressed button
  * @param text_color_Pressed text colour of pressed (normal) button
  */
-static void UiVk_DrawButton(uint16_t Xpos, uint16_t Ypos, bool Warning, uint8_t Vbtn_State, const char* txt, uint16_t text_color_NotPressed, uint16_t text_color_Pressed, uint8_t font)
+static void UiVk_DrawButton(UiArea_t* Btn_area, bool Warning, uint8_t Vbtn_State, const char* txt, uint16_t text_color_NotPressed, uint16_t text_color_Pressed, uint8_t font)
 {
 	uint16_t col_LeftUP, col_RightBot, col_Bcgr, col_Text;
 
@@ -90,13 +89,8 @@ static void UiVk_DrawButton(uint16_t Xpos, uint16_t Ypos, bool Warning, uint8_t 
     	txt_++;
     }
 
-	UiArea_t Btn_area;
-	Btn_area.x=Xpos;
-	Btn_area.y=Ypos;
-	Btn_area.w=ts.VirtualKeyPad->KeyWidth;
-	Btn_area.h=ts.VirtualKeyPad->KeyHeight;
-	UiVk_DrawButtonBody(&Btn_area,col_Bcgr,col_LeftUP,col_RightBot);
-	UiLcdHy28_PrintTextCentered(Xpos+2,Ypos+Btn_area.h/2-TextHeight/2,ts.VirtualKeyPad->KeyWidth-4,txt,col_Text,col_Bcgr,font);
+	UiVk_DrawButtonBody(Btn_area,col_Bcgr,col_LeftUP,col_RightBot);
+	UiLcdHy28_PrintTextCentered(Btn_area->x+2,Btn_area->y+Btn_area->h/2-TextHeight/2,Btn_area->w-4,txt,col_Text,col_Bcgr,font);
 }
 
 /**
@@ -115,22 +109,26 @@ static void UiVk_GetKeybArea(UiArea_t* KeybArea)
 }
 
 /**
- * @brief Return dimension and location of selected key
- * @param Key number of key in keypad
- * @param bp pointer to key location and size
+ * @brief Returns dimension and location of selected key
+ * @param Key number of key in keypad to locate
+ * @param bp returned pointer to key area
  */
 static void UiVk_GetButtonRgn(uint8_t Key, UiArea_t *bp)
 {
+	const VKeypad* VKpad=ts.VirtualKeyPad;
+
 	int row, col;
-	row=Key/ts.VirtualKeyPad->Columns;
-	col=Key-row*ts.VirtualKeyPad->Columns;
+	row=Key/VKpad->Columns;
+	col=Key-row*VKpad->Columns;
 	UiArea_t KeybArea;
 	UiVk_GetKeybArea(&KeybArea);
+	uint16_t KeyExpX=VKpad->Keys[Key].SizeX;
+	uint16_t KeyExpY=VKpad->Keys[Key].SizeY;
 
-	bp->x=KeybArea.x+col*(ts.VirtualKeyPad->KeyWidth+ts.VirtualKeyPad->KeySpacing);
-	bp->y=KeybArea.y+row*(ts.VirtualKeyPad->KeyHeight+ts.VirtualKeyPad->KeySpacing);
-	bp->w=ts.VirtualKeyPad->KeyWidth;
-	bp->h=ts.VirtualKeyPad->KeyHeight;
+	bp->x=KeybArea.x+col*(VKpad->KeyWidth+VKpad->KeySpacing);
+	bp->y=KeybArea.y+row*(VKpad->KeyHeight+VKpad->KeySpacing);
+	bp->w=VKpad->KeyWidth*(KeyExpX+1)+(VKpad->KeySpacing*KeyExpX);
+	bp->h=VKpad->KeyHeight*(KeyExpY+1)+(VKpad->KeySpacing*KeyExpY);
 }
 
 /**
@@ -155,8 +153,8 @@ static void UiVk_DrawVKeypad()
 			if(VKpad->Keys[keycnt].KeyWarning)
 				Warning=VKpad->Keys[keycnt].KeyWarning(keycnt,0);
 
-			UiVk_DrawButton(b_area.x,b_area.y,
-					Warning,VKpad->VKeyStateCallBack(keycnt,0),VKpad->Keys[keycnt].KeyText,
+			UiVk_DrawButton(&b_area,
+					Warning,VKpad->VKeyStateCallBack(keycnt,VKpad->Keys[keycnt].ShortPar),VKpad->Keys[keycnt].KeyText,
 					VKpad->Keys[keycnt].TextColor,VKpad->Keys[keycnt].PressedTextColor,VKpad->KeyFont);
 
 			keycnt++;
@@ -217,7 +215,7 @@ static void UiVk_DrawBackGround()
 //The real definitions of virtual keypads starts here
 
 
-//DSP box VKeyboard=================================================================
+//DSP box VKeypad=================================================================
 uint32_t prev_dsp_functions_active;	//used for virtual DSP keys redraw detections
 //this array is needed because different bit definitions are used for ts.dsp_mode and ts.dsp_active, so we cannot simply pass the CallBackShort parameter
 const uint32_t dsp_functions[]={0, DSP_NR_ENABLE, DSP_NOTCH_ENABLE, DSP_NOTCH_ENABLE|DSP_NR_ENABLE, DSP_MNOTCH_ENABLE, DSP_MPEAK_ENABLE};
@@ -244,7 +242,6 @@ static uint8_t UiVk_DSPVKeyCallBackWarning(uint8_t KeyNum, uint32_t param)
 
 	if((KeyNum==3) && mchf_display.use_spi)
 		result=1;
-
 
 	return result;
 }
@@ -321,7 +318,7 @@ void UiVk_RedrawDSPVirtualKeys()
 
 void UiVk_DSPVirtualKeys()
 {
-	if(ts.VirtualKeysShown_flag)
+	if(ts.VirtualKeysShown_flag && ((ts.VirtualKeyPad==&Keypad_DSP320x240) || (ts.VirtualKeyPad==&Keypad_DSP480x320)))
 	{
 		ts.VirtualKeysShown_flag=false;
 		UiSpectrum_Init();
@@ -340,7 +337,102 @@ void UiVk_DSPVirtualKeys()
 		UiVk_RedrawDSPVirtualKeys();
 	}
 }
-//DSP box VKeyboard END=================================================================
+//DSP box VKeypad END=================================================================
 
+//Band selection VKeypad==============================================================
+uint8_t prev_BndSel;
+static void UiVk_BndSelVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
+{
+	uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 
+	UiDriver_UpdateBand(vfo_sel,ts.band,param);
+}
+
+static uint8_t UiVk_BndSelVKeyInitTypeDraw(uint8_t KeyNum, uint32_t param)
+{
+	uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
+	uint8_t Keystate=Vbtn_State_Normal;
+	if((!vfo[vfo_sel].enabled[param]) && (param!=255))
+	{
+		Keystate=Vbtn_State_Disabled;
+	}
+	else if(param==ts.band)
+	{
+		Keystate=Vbtn_State_Pressed;
+	}
+
+	return Keystate;
+}
+#define col_Keys_BndSel_pr RGB(0xff,0xff,0xff)		//text color when pressed
+#define col_Keys_BndSel_npr Black		//text color when in normal state
+
+const VKey Keys_BndSel[]={
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=14, .KeyText="2200m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=15, .KeyText="630m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=16, .KeyText="160m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=0, .KeyText="80m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=1, .KeyText="60m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=2, .KeyText="40m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=3, .KeyText="30m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=4, .KeyText="20m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=5, .KeyText="17m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=6, .KeyText="15m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=7, .KeyText="12m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=8, .KeyText="10m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=9, .KeyText="6m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=10, .KeyText="4m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=11, .KeyText="2m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=255, .KeyText="Frequency Set", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr, .SizeX=2},
+};
+
+const VKeypad Keypad_BndSel480x320={
+	.NumberOfKeys=16,
+	.Rows=3,
+	.Columns=6,
+	.KeyFont=0,
+	.Keys=Keys_BndSel,
+	.KeyWidth=60,
+	.KeyHeight=40,
+	.KeySpacing=8,
+	.Backgr_Wnlarge=4,
+	.Backgr_Hnlarge=4,
+	.VKeyGroupMode=Vkey_Group_OneAllowed,
+	.VKeyStateCallBack=UiVk_BndSelVKeyInitTypeDraw
+};
+
+void UiVk_RedrawBndSelVirtualKeys()
+{
+	if(ts.VirtualKeysShown_flag)
+	{
+		if(prev_BndSel!=ts.band)
+		{
+			prev_BndSel=ts.band;
+			UiVk_DrawVKeypad();
+		}
+	}
+}
+
+void UiVk_BndSelVirtualKeys()
+{
+	if(ts.VirtualKeysShown_flag && (ts.VirtualKeyPad==&Keypad_BndSel480x320))
+	{
+		ts.VirtualKeysShown_flag=false;
+		UiSpectrum_Init();
+	}
+	else
+	{
+		if(disp_resolution==RESOLUTION_480_320)
+			ts.VirtualKeyPad=&Keypad_BndSel480x320;
+//		else
+//			ts.VirtualKeyPad=&Keypad_DSP320x240;
+
+		prev_BndSel=255;
+		UiSpectrum_Clear();
+		ts.VirtualKeysShown_flag=true;	//always after UiSpectrum_Clear, because it is cleared there
+		UiVk_DrawBackGround();
+		UiVk_RedrawBndSelVirtualKeys();
+	}
+}
+
+//Band selection VKeypad END==========================================================
 

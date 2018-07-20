@@ -3092,6 +3092,55 @@ static void UiDriver_ChangeToNextDemodMode(bool select_alternative_mode)
 }
 
 /**
+ * @brief band change
+ * @param vfo_sel	VFO A/B
+ * @param curr_band_index
+ * @param new_band_index
+ */
+void UiDriver_UpdateBand(uint16_t vfo_sel, uint8_t curr_band_index, uint8_t new_band_index)
+{
+
+		// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
+		// Load frequency value - either from memory or default for
+		// the band if this is first band selection
+		if(vfo[vfo_sel].band[new_band_index].dial_value != 0xFFFFFFFF)
+		{
+			df.tune_new = vfo[vfo_sel].band[new_band_index].dial_value;	// Load value from VFO
+		}
+		else
+		{
+			df.tune_new = bandInfo[curr_band_index].tune; 					// Load new frequency from startup
+		}
+
+		bool new_lsb = RadioManagement_CalculateCWSidebandMode();
+
+		uint16_t new_dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
+		uint16_t new_digital_mode = vfo[vfo_sel].band[new_band_index].digital_mode;
+
+		bool isNewDigitalMode = ts.digital_mode != new_digital_mode && new_dmod_mode == DEMOD_DIGI;
+
+
+		// we need to mute here since changing bands may cause audible click/pops
+		RadioManagement_MuteTemporarilyRxAudio();
+
+		ts.digital_mode = new_digital_mode;
+
+		if(ts.dmod_mode != new_dmod_mode || (new_dmod_mode == DEMOD_CW && ts.cw_lsb != new_lsb) || isNewDigitalMode)
+		{
+			// Update mode
+			ts.cw_lsb = new_lsb;
+			RadioManagement_SetDemodMode(new_dmod_mode);
+		}
+
+		// Finally update public flag
+		ts.band = new_band_index;
+
+		UiDriver_UpdateDisplayAfterParamChange();    // because mode/filter may have changed
+		UiVk_RedrawBndSelVirtualKeys();
+
+}
+
+/**
  * @brief initiate band change.
  * @param is_up select the next higher band, otherwise go to the next lower band
  */
@@ -3155,45 +3204,10 @@ static void UiDriver_ChangeBand(uchar is_up)
             }
 		}
 
-
-		// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
-		// Load frequency value - either from memory or default for
-		// the band if this is first band selection
-		if(vfo[vfo_sel].band[new_band_index].dial_value != 0xFFFFFFFF)
-		{
-			df.tune_new = vfo[vfo_sel].band[new_band_index].dial_value;	// Load value from VFO
-		}
-		else
-		{
-			df.tune_new = bandInfo[curr_band_index].tune; 					// Load new frequency from startup
-		}
-
-		bool new_lsb = RadioManagement_CalculateCWSidebandMode();
-
-		uint16_t new_dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
-		uint16_t new_digital_mode = vfo[vfo_sel].band[new_band_index].digital_mode;
-
-		bool isNewDigitalMode = ts.digital_mode != new_digital_mode && new_dmod_mode == DEMOD_DIGI;
-
-
-		// we need to mute here since changing bands may cause audible click/pops
-		RadioManagement_MuteTemporarilyRxAudio();
-
-		ts.digital_mode = new_digital_mode;
-
-		if(ts.dmod_mode != new_dmod_mode || (new_dmod_mode == DEMOD_CW && ts.cw_lsb != new_lsb) || isNewDigitalMode)
-		{
-			// Update mode
-			ts.cw_lsb = new_lsb;
-			RadioManagement_SetDemodMode(new_dmod_mode);
-		}
-
-		// Finally update public flag
-		ts.band = new_band_index;
-
-		UiDriver_UpdateDisplayAfterParamChange();    // because mode/filter may have changed
+		UiDriver_UpdateBand(vfo_sel, curr_band_index, new_band_index);
 	}
 }
+
 
 /**
  * @brief Read out the changes in the frequency encoder and initiate frequency change by setting a global variable.
