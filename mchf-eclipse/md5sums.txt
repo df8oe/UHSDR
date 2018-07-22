@@ -1,0 +1,16 @@
+c157d6baece38c8a1b393a1eaac1a098 *bootloader.mak
+88488a7f07a2c0c8f920164ea6c03032 *f4-bootloader.mak
+8fd4d7d168472806ea1d2c793801a590 *f4-files.mak
+141ce822054f7303ebdd7e1d8f189f1d *f4-include.mak
+afcc1bf966c17be52342e8543cb62ce0 *f7-bootloader.mak
+69f9aec444ffb35abd00e267f80cad1d *f7-files.mak
+bcd10c865f5c67333b113e840f3fb4b9 *f7-include.mak
+4f56e9efba61d9ad8c26edd2ad820b16 *files.mak
+acf5ff277d2cd56a9a3a42a843c1258e *h7-bootloader.mak
+98ef336863ad8c1366aaefbcddddf76c *h7-files.mak
+5eea12e57e70e1d9727dde2d160d91a0 *h7-include.mak
+ed5c5ca8b7bb933eeb3edbf4b3e19d96 *history.txt
+be4a59bdf25490783129636ca05075b1 *include.mak
+cf94cdf9450aff115f11cd3f01177872 *licence.txt
+4a8532fee93107bcc2045bc150d73ba5 *md5sums.txt
+7f76882e91a7239c2ac85637d2b46032 *uhsdr-logo.png
