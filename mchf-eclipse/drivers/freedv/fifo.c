@@ -41,7 +41,7 @@ struct FIFO {
     int    nshort;
 };
 
-struct FIFO *fifo_create(int nshort) {
+struct FIFO *fdv_fifo_create(int nshort) {
     struct FIFO *fifo;
 
     fifo = (struct FIFO *)malloc(sizeof(struct FIFO));
@@ -56,13 +56,13 @@ struct FIFO *fifo_create(int nshort) {
     return fifo;
 }
 
-void fifo_destroy(struct FIFO *fifo) {
+void fdv_fifo_destroy(struct FIFO *fifo) {
     assert(fifo != NULL);
     free(fifo->buf);
     free(fifo);
 }
 
-int fifo_write(struct FIFO *fifo, short data[], int n) {
+int fdv_fifo_write(struct FIFO *fifo, short data[], int n) {
     int            i;
     short         *pdata;
     short         *pin = fifo->pin;
@@ -70,7 +70,7 @@ int fifo_write(struct FIFO *fifo, short data[], int n) {
     assert(fifo != NULL);
     assert(data != NULL);
 
-    if (n > fifo_free(fifo)) {
+    if (n > fdv_fifo_free(fifo)) {
 	return -1;
     }
     else {
@@ -90,7 +90,7 @@ int fifo_write(struct FIFO *fifo, short data[], int n) {
     return 0;
 }
 
-int fifo_read(struct FIFO *fifo, short data[], int n)
+int fdv_fifo_read(struct FIFO *fifo, short data[], int n)
 {
     int            i;
     short         *pdata;
@@ -99,7 +99,7 @@ int fifo_read(struct FIFO *fifo, short data[], int n)
     assert(fifo != NULL);
     assert(data != NULL);
 
-    if (n > fifo_used(fifo)) {
+    if (n > fdv_fifo_used(fifo)) {
 	return -1;
     }
     else {
@@ -119,7 +119,7 @@ int fifo_read(struct FIFO *fifo, short data[], int n)
     return 0;
 }
 
-int fifo_used(const struct FIFO * const fifo)
+int fdv_fifo_used(const struct FIFO * const fifo)
 {
     short         *pin = fifo->pin;
     short         *pout = fifo->pout;
@@ -134,10 +134,10 @@ int fifo_used(const struct FIFO * const fifo)
     return used;
 }
 
-int fifo_free(const struct FIFO * const fifo)
+int fdv_fifo_free(const struct FIFO * const fifo)
 {
     // available storage is one less than nshort as prd == pwr
     // is reserved for empty rather than full
 
-    return fifo->nshort - fifo_used(fifo) - 1;
+    return fifo->nshort - fdv_fifo_used(fifo) - 1;
 }

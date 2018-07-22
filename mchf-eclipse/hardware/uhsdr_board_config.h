@@ -40,6 +40,12 @@
 // place tagged elements in CCM 64k extra RAM (no DMA)
 #define __MCHF_SPECIALMEM __attribute__ ((section (".ccm")))
 
+// NOT USED ON F4 based mcHF boards (defined as "no-op")
+// if used place tagged elements in an memory to peripheral DMA-able memory region
+// with the correct cache strategy set
+#define __UHSDR_DMAMEM
+
+
 #define SI570_I2C               (&hi2c1)
 #define SI5351A_I2C				(&hi2c1)
 
@@ -336,14 +342,25 @@
 #define LCD_D14_PIO      		GPIOE
 #endif
 
+
 #if defined(STM32F7) || defined(STM32H7)
 
-#ifndef TRX_NAME
-#define TRX_NAME "OVI40"
-#endif
-#ifndef TRX_ID
-#define TRX_ID "ovi40"
-#endif
+    #if defined(STM32F7)
+
+        #ifndef TRX_NAME
+            #define TRX_NAME "OVI40"
+        #endif
+        #ifndef TRX_ID
+            #define TRX_ID "ovi40"
+        #endif
+    #elif defined(STM32H7)
+        #ifndef TRX_NAME
+            #define TRX_NAME "OVI40 H7"
+        #endif
+        #ifndef TRX_ID
+            #define TRX_ID "i40h7"
+        #endif
+    #endif
 
 #ifndef TRX_HW_LIC
 // #define TRX_HW_LIC "???"
@@ -354,8 +371,14 @@
 #define UI_BRD_OVI40
 #define RF_BRD_MCHF
 
+// NOT USED on OVI40 F7/H7 boards (defined as no-op)
 // compiler places tagged elements by its default rules
 #define __MCHF_SPECIALMEM
+
+// place tagged elements in a memory to peripheral DMA-able memory region
+// with the correct cache strategy set
+#define __UHSDR_DMAMEM __attribute__ ((section (".dmamem")))
+
 
 
 #define SI570_I2C               (&hi2c1)
@@ -640,8 +663,6 @@
 // pin 0
 #define BUTTON_M1               GPIO_PIN_0
 #define BUTTON_M1_PIO           GPIOF
-#define BUTTON_M1_RTC           GPIO_PIN_0
-#define BUTTON_M1_PIO_RTC       GPIOF
 
 // pin 1
 // pin 2
@@ -721,11 +742,9 @@
 #define BUTTON_S19              GPIO_PIN_1
 #define BUTTON_S19_PIO          GPIOH
 
-#ifdef STM32H7
-#define hdac hdac1
-#define FLASHSIZE_BASE 0x1FF1E880
-#define SRAM2_BASE 0x38000000
-#endif
+    #if defined(STM32H7)
+        #define hdac hdac1
+    #endif
 #endif
 
 //
@@ -733,19 +752,6 @@
 #define     DEVICE_STRING           TRX_NAME " Transceiver"
 //
 // -----------------------------------------------------------------------------
-
-
-
-#ifdef STM32H7
-#define GPIO_SetBits(PORT,PINS) { (PORT)->BSRRL = (PINS); }
-#define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRRH = (PINS); }
-#else
-#define GPIO_SetBits(PORT,PINS) { (PORT)->BSRR = (PINS); }
-#define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRR = (PINS) << 16U; }
-#endif
-
-#define GPIO_ToggleBits(PORT,PINS) { (PORT)->ODR ^= (PINS); }
-#define GPIO_ReadInputDataBit(PORT,PINS) { ((PORT)->IDR = (PINS); }
 
 // WE DO SET SOME CHOICES BASED ON THE UI BOARD
 #ifdef UI_BRD_OVI40

@@ -1,0 +1,9 @@
+.mxproject
+mx.scratch
+STM32H743ZITx_FLASH.ld
+Drivers/CMSIS/DSP/Examples/
+Drivers/CMSIS/Device/ST/STM32H7xx/Source/Templates/iar
+Drivers/CMSIS/Device/ST/STM32H7xx/Source/Templates/arm
+Drivers/CMSIS/Lib/
+Inc/usbd_audio_if.h
+Inc/usbd_desc.h

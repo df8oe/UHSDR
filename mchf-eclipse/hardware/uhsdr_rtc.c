@@ -19,7 +19,7 @@
 #include "stm32h7xx_hal_rtc.h"
 #include "stm32h7xx_hal_rtc_ex.h"
 #include "stm32h7xx_hal_rcc.h"
-#else
+#elif defined(STM32F7)
 #include "stm32f7xx_hal_rtc.h"
 #include "stm32f7xx_hal_rtc_ex.h"
 #include "stm32f7xx_hal_rcc.h"
@@ -125,7 +125,12 @@ bool MchfRtc_enabled()
     bool retval = false;
 #ifdef USE_RTC_LSE
 
+    // FIXME: H7 Port
+#ifndef STM32H7
     __HAL_RCC_PWR_CLK_ENABLE();
+#else
+    __HAL_RCC_RTC_CLK_ENABLE();
+#endif
 
     HAL_PWR_EnableBkUpAccess();
 

@@ -22,15 +22,19 @@
 #include "ui_lcd_hy28_fonts.h"
 #include "ui_lcd_hy28.h"
 
+#define hspiDisplay hspi2
+#define SPI_DISPLAY SPI2
 
-
-#define USE_SPI_DMA
+#ifndef STM32H7
+  // FIXME: H7 Port, re-enable DMA once SPI display is working
+  #define USE_SPI_DMA
+#endif
 
 #if defined(STM32F7) || defined(STM32H7)
     #define USE_SPI_HAL
 #endif
 
-#define USE_DISPLAY_SPI
+#define USE_SPI_DISPLAY
 #define USE_DISPLAY_PAR
 
 #include "spi.h"
@@ -132,20 +136,6 @@ static sFONT *fontList[] =
 
 // we can do this here since fontList is an array variable not just a pointer!
 static const uint8_t fontCount = sizeof(fontList)/sizeof(fontList[0]);
-
-
-typedef struct  {
-    uint16_t reg;
-    uint16_t val;
-} RegisterValue_t;
-
-typedef struct  RegisterValueSetInfo_s {
-    const RegisterValue_t* addr;
-    size_t size;
-} RegisterValueSetInfo_t;
-
-#define REGVAL_DATA (0xffff) // we indicate that the value is to be written using WriteData instead of WriteReg
-#define REGVAL_DELAY (0x0000) // we indicate that the value is to be used as delay in ms instead of WriteReg
 
 
 #ifdef USE_GFX_ILI932x
@@ -288,10 +278,64 @@ static const RegisterValue_t spdfd5408b[] =
     { 0x07, 0x0173},
 };
 
+
 static const RegisterValueSetInfo_t spdfd5408b_regs =
 {
     spdfd5408b, sizeof(spdfd5408b)/sizeof(RegisterValue_t)
 };
+#define USE_GFX_SSD1289
+#ifdef USE_GFX_SSD1289
+static const RegisterValue_t ssd1289[] =
+{
+        {0x00,0x0001},
+        {0x03,0xA8A4},
+        {0x0C,0x0000},
+        {0x0D,0x080C},
+        {0x0E,0x2B00},
+        {0x1E,0x00B7},
+        {0x01,0x2B3F},
+        {0x02,0x0600},
+        {0x10,0x0000},
+        {0x11,0x6070},
+        {0x05,0x0000},
+        {0x06,0x0000},
+        {0x16,0xEF1C},
+        {0x17,0x0003},
+        {0x07,0x0233},
+        {0x0B,0x0000},
+        {0x0F,0x0000},
+        {0x41,0x0000},
+        {0x42,0x0000},
+        {0x48,0x0000},
+        {0x49,0x013F},
+        {0x4A,0x0000},
+        {0x4B,0x0000},
+        {0x44,0xEF00},
+        {0x45,0x0000},
+        {0x46,0x013F},
+        {0x30,0x0707},
+        {0x31,0x0204},
+        {0x32,0x0204},
+        {0x33,0x0502},
+        {0x34,0x0507},
+        {0x35,0x0204},
+        {0x36,0x0204},
+        {0x37,0x0502},
+        {0x3A,0x0302},
+        {0x3B,0x0302},
+        {0x23,0x0000},
+        {0x24,0x0000},
+        {0x25,0x8000},
+        {0x4f,0x0000},
+        {0x4e,0x0000},
+};
+
+static const RegisterValueSetInfo_t ssd1289_regs =
+{
+    ssd1289, sizeof(ssd1289)/sizeof(RegisterValue_t)
+};
+#endif
+
 
 static const RegisterValue_t ili932x[] =
 {
@@ -539,7 +583,7 @@ static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len);
 static inline bool UiLcdHy28_SpiDisplayUsed()
 {
     bool retval = false;
-#ifdef USE_DISPLAY_SPI
+#ifdef USE_SPI_DISPLAY
     retval = mchf_display.use_spi;
 #endif
     return retval;
@@ -574,20 +618,25 @@ void UiLcdHy28_BacklightEnable(bool on)
 }
 
 #ifdef STM32F4
-#define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_4)
-#define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_2)
-
-		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_64)
+    #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_4)
+    #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_2)
+	#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_64)
 #endif
 
 #ifdef STM32F7
-#define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
-#define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
-
-		#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_128)
+    #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
+    #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
+	#define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_128)
 #endif
 
-static uint16_t lcd_spi_prescaler = SPI_PRESCALE_LCD_DEFAULT;
+#ifdef STM32H7
+    #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
+    #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
+    #define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_16)
+    // 16 may be a little bit high for some displays but works with the 480x320 display
+#endif
+
+static uint32_t lcd_spi_prescaler = SPI_PRESCALE_LCD_DEFAULT;
 
 // static SPI_HandleTypeDef SPI_Handle;
 
@@ -598,13 +647,13 @@ void UiLcdHy28_SpiInit(bool hispeed, mchf_display_types_t display_type)
 #ifdef USE_GFX_ILI9486
     if (display_type == DISPLAY_RPI_SPI)
     {
-        hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-        hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-        hspi2.Init.NSS = SPI_NSS_SOFT;
+        hspiDisplay.Init.CLKPolarity = SPI_POLARITY_LOW;
+        hspiDisplay.Init.CLKPhase = SPI_PHASE_1EDGE;
+        hspiDisplay.Init.NSS = SPI_NSS_SOFT;
 
-        hspi2.Init.BaudRatePrescaler = lcd_spi_prescaler;
+        hspiDisplay.Init.BaudRatePrescaler = lcd_spi_prescaler;
 
-        if (HAL_SPI_Init(&hspi2) != HAL_OK)
+        if (HAL_SPI_Init(&hspiDisplay) != HAL_OK)
         {
             Error_Handler();
         }
@@ -613,7 +662,7 @@ void UiLcdHy28_SpiInit(bool hispeed, mchf_display_types_t display_type)
 
     // Enable the SPI periph
     // the main init is already done earlier, we need this if we want to use our own code to access SPI
-    __HAL_SPI_ENABLE(&hspi2);
+    __HAL_SPI_ENABLE(&hspiDisplay);
 }
 
 void UiLcdHy28_GpioInit(mchf_display_types_t display_type)
@@ -678,15 +727,15 @@ void UiLcdHy28_SpiDmaStart(uint8_t* buffer, uint32_t size)
     // and finally we can move that into an interrupt, of course.
     if (size > 0)  {
         UiLcdHy28_SpiDmaStop();
-        HAL_SPI_Transmit_DMA(&hspi2,buffer,size);
+        HAL_SPI_Transmit_DMA(&hspiDisplay,buffer,size);
     }
 }
 
 void UiLcdHy28_SpiDeInit()
 {
 
-    // __HAL_SPI_DISABLE(&hspi2);
-    // HAL_SPI_DeInit(&hspi2);
+    // __HAL_SPI_DISABLE(&hspiDisplay);
+    // HAL_SPI_DeInit(&hspiDisplay);
 
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -712,6 +761,7 @@ static inline void UiLcdHy28_SpiLcdCsEnable()
     GPIO_ResetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
 
+#ifdef USE_DISPLAY_PAR
 static void UiLcdHy28_ParallelInit()
 {
     MEM_Init();
@@ -722,6 +772,7 @@ static void UiLcdHy28_ParallelDeInit()
     HAL_SRAM_DeInit(&hsram1);
 
 }
+#endif
 
 static void UiLcdHy28_Reset()
 {
@@ -743,36 +794,41 @@ static inline void UiLcdHy28_SpiSendByte(uint8_t byte)
     uint8_t dummy;
     HAL_SPI_TransmitReceive(&hspi2, &byte, &dummy,1,SPI_TIMEOUT);
 #else
-    while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
-    SPI2->DR = byte;
-    while ((SPI2->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
-    byte = SPI2->DR;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
+    SPI_DISPLAY->DR = byte;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
+    byte = SPI_DISPLAY->DR;
 #endif
 }
 /*
 static inline void UiLcdHy28_SpiSendByteFast(uint8_t byte)
 {
 
-    while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
-    SPI2->DR = byte;
-    while ((SPI2->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
-    byte = SPI2->DR;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
+    SPI_DISPLAY->DR = byte;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
+    byte = SPI_DISPLAY->DR;
 }*/
 
 
 uint8_t spi_dr_dummy; // used to make sure that DR is being read
 static inline void UiLcdHy28_SpiFinishTransfer()
 {
-    while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
 #ifdef STM32H7
-    while (!(SPI2->SR & SPI_FLAG_RXNE)) {}
-    if (SPI2->SR & SPI_FLAG_RXNE) {
-         spi_dr_dummy = SPI2->RXDR;
-     }
+    #ifndef USE_SPI_HAL
+    // we cannot use this with HAL, the "normal" HAL Transmit does check the flags AND resets them (ARGH)
+    while (__HAL_SPI_GET_FLAG(&hspiDisplay, SPI_SR_EOT) == 0 || __HAL_SPI_GET_FLAG(&hspiDisplay, SPI_SR_EOT) == 0 ) { asm("nop"); }
+    while (__HAL_SPI_GET_FLAG(&hspiDisplay, SPI_FLAG_RXWNE) != 0 || __HAL_SPI_GET_FLAG(&hspiDisplay, SPI_SR_RXPLVL) != 0 )
+    {
+        spi_dr_dummy = SPI_DISPLAY->RXDR;
+    }
+    #endif
 #else
-    while (SPI2->SR & SPI_FLAG_BSY) {}
-    if (SPI2->SR & SPI_FLAG_RXNE) {
-        spi_dr_dummy = SPI2->DR;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
+    while (SPI_DISPLAY->SR & SPI_FLAG_BSY) {}
+    if (SPI_DISPLAY->SR & SPI_FLAG_RXNE)
+    {
+        spi_dr_dummy = SPI_DISPLAY->DR;
     }
 #endif
 }
@@ -804,10 +860,10 @@ uint8_t UiLcdHy28_SpiReadByteFast()
 #else
 
     /* Send a Transmit a dummy byte and Receive Byte through the SPI peripheral */
-    while ((SPI2->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
-    SPI2->DR = 0;
-    while ((SPI2->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
-    retval = SPI2->DR;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
+    SPI_DISPLAY->DR = 0;
+    while ((SPI_DISPLAY->SR & (SPI_FLAG_RXNE)) == (uint16_t)RESET) {}
+    retval = SPI_DISPLAY->DR;
 #endif
     return retval;
 }
@@ -852,9 +908,10 @@ static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
     }
     else
     {
+#ifdef USE_DISPLAY_PAR
         LCD_RAM = data;
         __DMB();
-
+#endif
     }
 }
 
@@ -869,9 +926,10 @@ static inline void UiLcdHy28_WriteData( unsigned short data)
     }
     else
     {
+#ifdef USE_DISPLAY_PAR
         LCD_RAM = data;
         __DMB();
-
+#endif
     }
 }
 
@@ -918,10 +976,12 @@ void UiLcdHy28_WriteReg(unsigned short LCD_Reg, unsigned short LCD_RegValue)
     }
     else
     {
+#ifdef USE_DISPLAY_PAR
         LCD_REG = LCD_Reg;
         __DMB();
         LCD_RAM = LCD_RegValue;
         __DMB();
+#endif
     }
 }
 
@@ -937,12 +997,15 @@ unsigned short UiLcdHy28_ReadReg( unsigned short LCD_Reg)
     }
     else
     {
-
+#ifdef USE_DISPLAY_PAR
         // Write 16-bit Index (then Read Reg)
         LCD_REG = LCD_Reg;
         // Read 16-bit Reg
         __DMB();
         retval = LCD_RAM;
+#else
+        retval = 0;
+#endif
     }
     return retval;
 }
@@ -961,8 +1024,10 @@ static void UiLcdHy28_WriteRAM_Prepare_Index(uint16_t wr_prep_reg)
     }
     else
     {
+#ifdef USE_DISPLAY_PAR
         LCD_REG = wr_prep_reg;
         __DMB();
+#endif
     }
 }
 
@@ -972,7 +1037,7 @@ static void UiLcdHy28_WriteRAM_Prepare()
     mchf_display.WriteRAM_Prepare();
 }
 
-void UiLcdHy28_SetActiveWindow(uint16_t XLeft, uint16_t XRight, uint16_t YTop,
+static void UiLcdHy28_SetActiveWindow(uint16_t XLeft, uint16_t XRight, uint16_t YTop,
         uint16_t YBottom)
 {
     mchf_display.SetActiveWindow(XLeft, XRight, YTop, YBottom);
@@ -1038,7 +1103,8 @@ static void UiLcdHy28_CloseBulkWrite()
 
 #define PIXELBUFFERSIZE 512
 #define PIXELBUFFERCOUNT 2
-static uint16_t   pixelbuffer[PIXELBUFFERCOUNT][PIXELBUFFERSIZE];
+
+static __UHSDR_DMAMEM uint16_t   pixelbuffer[PIXELBUFFERCOUNT][PIXELBUFFERSIZE];
 static uint16_t pixelcount = 0;
 static uint16_t pixelbufidx = 0;
 
@@ -1879,6 +1945,32 @@ static void UiLcdHy28_SetActiveWindow_RA8875(uint16_t XLeft, uint16_t XRight, ui
 #endif
 
 #ifdef USE_GFX_ILI9486
+
+static uint16_t UiLcdHy28_ReadDisplayId_ILI9486()
+{
+    uint16_t retval = 0x9486;
+
+    // we can't read the id from SPI if it is the dumb RPi SPI
+    if (mchf_display.use_spi == false)
+    {
+        retval = UiLcdHy28_ReadReg(0xd3);
+        retval = LCD_RAM;    //first dummy read
+        retval = (LCD_RAM&0xff)<<8;
+        retval |=LCD_RAM&0xff;
+    }
+
+    switch (retval)
+    {
+    case 0x9486:
+    case 0x9488: // ILI9486 - Parallel & Serial interface
+        mchf_display.reg_info  = &ili9486_regs;
+        break;
+    default:
+        retval = 0;
+    }
+    return retval;
+}
+
 static inline void UiLcdHy28_WriteDataSpiStart_Prepare_ILI9486()
 {
     GPIO_SetBits(LCD_RS_PIO, LCD_RS);
@@ -1914,6 +2006,28 @@ static void UiLcdHy28_SetActiveWindow_ILI9486(uint16_t XLeft, uint16_t XRight, u
 
 #ifdef USE_GFX_ILI932x
 
+
+static uint16_t UiLcdHy28_ReadDisplayId_ILI932x()
+{
+    uint16_t retval = UiLcdHy28_ReadReg(0x00);
+    switch (retval)
+    {
+    case 0x9320: // HY28A - SPI interface only (ILI9320 controller)
+        mchf_display.reg_info = &ili9320_regs;
+        break;
+    case 0x5408: // HY28A - Parallel interface only (SPFD5408B controller)
+        mchf_display.reg_info = &spdfd5408b_regs;
+        break;
+    case 0x9325:
+    case 0x9328: // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
+        mchf_display.reg_info = &ili932x_regs;
+        break;
+    default:
+        retval = 0;
+    }
+    return retval;
+}
+
 static inline void UiLcdHy28_WriteDataSpiStart_Prepare_ILI932x()
 {
     UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_DATA);    /* Write : RS = 1, RW = 0       */
@@ -1947,6 +2061,62 @@ static void UiLcdHy28_SetActiveWindow_ILI932x(uint16_t XLeft, uint16_t XRight, u
 #endif
 
 
+
+
+static void UiLcdHy28_SendRegisters(const RegisterValueSetInfo_t* reg_info)
+{
+    for (uint16_t idx = 0; idx < reg_info->size; idx++)
+    {
+        switch(reg_info->addr[idx].reg)
+        {
+        case REGVAL_DELAY:
+            HAL_Delay(reg_info->addr[idx].val);
+            break;
+        case REGVAL_DATA:
+            UiLcdHy28_WriteData(reg_info->addr[idx].val);
+            break;
+        default:
+            // TODO: Decide how we handle 16 vs. 8 bit writes here
+            // I would propose either per register setting or per register set setting
+            UiLcdHy28_WriteReg(reg_info->addr[idx].reg, reg_info->addr[idx].val);
+        }
+    }
+}
+
+
+#ifdef USE_GFX_SSD1289
+
+static uint16_t UiLcdHy28_ReadDisplayId_SSD1289()
+{
+    uint16_t retval = UiLcdHy28_ReadReg(0x00);
+    switch (retval)
+    {
+    case 0x8989: // HY28A - SPI interface only (ILI9320 controller)
+        mchf_display.reg_info = &ssd1289_regs;
+        break;
+    default:
+        retval = 0;
+    }
+    return retval;
+}
+
+static void UiLcdHy28_SetActiveWindow_SSD1289(uint16_t XLeft, uint16_t XRight, uint16_t YTop,
+        uint16_t YBottom)
+{
+     UiLcdHy28_WriteReg(0x44, XRight << 8 | XLeft);    // Horizontal GRAM Start Address
+     UiLcdHy28_WriteReg(0x45, YTop);    // Horizontal GRAM End Address  -1
+
+     UiLcdHy28_WriteReg(0x45, YTop);    // Vertical GRAM Start Address
+     UiLcdHy28_WriteReg(0x46, YBottom);    // Vertical GRAM End Address    -1
+}
+static void UiLcdHy28_SetCursorA_SSD1289( unsigned short Xpos, unsigned short Ypos )
+{
+    UiLcdHy28_WriteReg(0x4e, Ypos );
+    UiLcdHy28_WriteReg(0x4f, Xpos );
+}
+#endif
+
+
 // ATTENTION: THIS LIST NEEDS TO HAVE A SPECIFIC ORDER:
 // FIRST ALL DETECTABLE DISPLAYS THEN AT MOST ONE SINGLE UNDETECTABLE DISPLAY
 //
@@ -1965,9 +2135,11 @@ const uhsdr_display_info_t display_infos[] = {
         {
                 DISPLAY_NONE,  "No Display"
         },
+#ifdef USE_DISPLAY_PAR
 #ifdef USE_GFX_ILI9486
         {
                 DISPLAY_ILI9486_PARALLEL, "ILI9486 Para.",
+                .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI9486,
                 .SetActiveWindow = UiLcdHy28_SetActiveWindow_ILI9486,
                 .SetCursorA = UiLcdHy28_SetCursorA_ILI9486,
                 .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_ILI9486,
@@ -1976,13 +2148,25 @@ const uhsdr_display_info_t display_infos[] = {
 #ifdef USE_GFX_ILI932x
         {
                 DISPLAY_HY28B_PARALLEL, "HY28A/B Para.",
+                .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI932x,
                 .SetActiveWindow = UiLcdHy28_SetActiveWindow_ILI932x,
                 .SetCursorA = UiLcdHy28_SetCursorA_ILI932x,
                 .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_ILI932x,
         },
+#ifdef USE_GFX_SSD1289
+        {
+                DISPLAY_HY32D_PARALLEL_SSD1289, "HY32D Para. SSD1289",
+                .ReadDisplayId = UiLcdHy28_ReadDisplayId_SSD1289,
+                .SetActiveWindow = UiLcdHy28_SetActiveWindow_SSD1289,
+                .SetCursorA = UiLcdHy28_SetCursorA_SSD1289,
+                .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_ILI932x,
+        },
+#endif
+#endif
 #ifdef UI_BRD_MCHF
         {
                 DISPLAY_HY28A_SPI, "HY28A SPI",
+                .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI932x,
                 .SetActiveWindow = UiLcdHy28_SetActiveWindow_ILI932x,
                 .SetCursorA = UiLcdHy28_SetCursorA_ILI932x,
                 .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_ILI932x,
@@ -1991,8 +2175,10 @@ const uhsdr_display_info_t display_infos[] = {
                 LCD_D11_PIO, LCD_D11, true, false
         },
 #endif
+#ifdef USE_SPI_DISPLAY
         {
                 DISPLAY_HY28B_SPI, "HY28B SPI",
+                .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI932x,
                 .SetActiveWindow = UiLcdHy28_SetActiveWindow_ILI932x,
                 .SetCursorA = UiLcdHy28_SetCursorA_ILI932x,
                 .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_ILI932x,
@@ -2003,8 +2189,10 @@ const uhsdr_display_info_t display_infos[] = {
                 true, false
         },
 #endif
-#ifdef USE_GFX_ILI9486
+#endif
+#if defined(USE_GFX_ILI9486) && defined(USE_SPI_DISPLAY)
         {       DISPLAY_RPI_SPI, "RPi 3.5 SPI",
+                .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI9486,
                 .SetActiveWindow = UiLcdHy28_SetActiveWindow_ILI9486,
                 .SetCursorA = UiLcdHy28_SetCursorA_ILI9486,
                 .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_ILI9486,
@@ -2049,27 +2237,6 @@ const uhsdr_display_info_t display_infos[] = {
 /* Controller Specific Functions End *********************************/
 
 
-
-static void UiLcdHy28_SendRegisters(const RegisterValueSetInfo_t* reg_info)
-{
-    for (uint16_t idx = 0; idx < reg_info->size; idx++)
-    {
-    	switch(reg_info->addr[idx].reg)
-    	{
-    	case REGVAL_DELAY:
-            HAL_Delay(reg_info->addr[idx].val);
-            break;
-    	case REGVAL_DATA:
-    		UiLcdHy28_WriteData(reg_info->addr[idx].val);
-    		break;
-    	default:
-            // TODO: Decide how we handle 16 vs. 8 bit writes here
-            // I would propose either per register setting or per register set setting
-            UiLcdHy28_WriteReg(reg_info->addr[idx].reg, reg_info->addr[idx].val);
-        }
-    }
-}
-
 static uint16_t UiLcdHy28_DetectController(const uhsdr_display_info_t* disp_info_ptr)
 {
 
@@ -2085,84 +2252,41 @@ static uint16_t UiLcdHy28_DetectController(const uhsdr_display_info_t* disp_info
         mchf_display.WriteRAM_Prepare = disp_info_ptr->WriteRAM_Prepare;
         mchf_display.WriteDataSpiStart_Prepare = disp_info_ptr->WriteDataSpiStart_Prepare;
         mchf_display.WriteIndexSpi_Prepare = disp_info_ptr->WriteIndexSpi_Prepare;
-
+        mchf_display.reg_info = NULL;
         UiLcdHy28_GpioInit(disp_info_ptr->display_type);
 
         if (mchf_display.use_spi == true)
         {
+#ifdef USE_SPI_DISPLAY
             UiLcdHy28_SpiInit(disp_info_ptr->spi_speed, disp_info_ptr->display_type);
+#endif
         }
         else
         {
+#ifdef USE_DISPLAY_PAR
             UiLcdHy28_ParallelInit();
+#endif
         }
 
         UiLcdHy28_Reset();
 
-
-        switch(disp_info_ptr->display_type)
+        // if we have an identifier function, call it
+        // WITHOUT function the display will never be used!
+        if (disp_info_ptr->ReadDisplayId)
         {
-#ifdef USE_GFX_ILI9486
-        case DISPLAY_ILI9486_PARALLEL:
-            retval = UiLcdHy28_ReadReg(0xd3);
-
-            retval = LCD_RAM;    //first dummy read
-            retval = (LCD_RAM&0xff)<<8;
-            retval |=LCD_RAM&0xff;
-            break;
-        case DISPLAY_RPI_SPI:
-            retval = 0x9486; // we cannot read from the RPI "SPI" display
-            break;
-#endif
-        default:
-#ifdef USE_GFX_ILI932x
-            retval = UiLcdHy28_ReadReg(0x00);
-            break;
-#endif
-
-#ifdef USE_GFX_RA8875
-            retval = 0x8875; // currently no detection routine implemented
-            // FIXME: Implement detection for RA8875
-#endif
-            break;
-
+            retval = disp_info_ptr->ReadDisplayId();
         }
 
-        const RegisterValueSetInfo_t* reg_info = NULL;
-        switch (retval)
+        // if the identification set a register data set for initialization,
+        // we send it to the display controller
+        if (mchf_display.reg_info != NULL)
         {
-#ifdef USE_GFX_ILI932x
-        case 0x9320: // HY28A - SPI interface only (ILI9320 controller)
-            reg_info = &ili9320_regs;
-            break;
-        case 0x5408: // HY28A - Parallel interface only (SPFD5408B controller)
-            reg_info = &spdfd5408b_regs;
-            break;
-        case 0x9325:
-        case 0x9328: // HY28B - Parallel & Serial interface - latest model (ILI9325 & ILI9328 controller)
-            reg_info = &ili932x_regs;
-            break;
-#endif
-#ifdef USE_GFX_ILI9486
-        case 0x9486:
-        case 0x9488: // ILI9486 - Parallel & Serial interface
-            reg_info  = &ili9486_regs;
-            break;
-#endif
-#ifdef USE_GFX_RA8875
-        case 0x8875:
-            reg_info = &ra8875_regs;
-            break;
-#endif
-        default:
-            retval = 0x0000; // any value not detected previously will be overwritten!
+            UiLcdHy28_SendRegisters(mchf_display.reg_info);
         }
 
-        if (reg_info != NULL)
-        {
-            UiLcdHy28_SendRegisters(reg_info);
-        }
-
+        // okay, this display was not detected,
+        // cleanup data structures and prepare
+        // for next try
         if (retval == 0)
         {
             mchf_display.SetActiveWindow = NULL;
@@ -2175,11 +2299,15 @@ static uint16_t UiLcdHy28_DetectController(const uhsdr_display_info_t* disp_info
 
             if (mchf_display.use_spi == true)
             {
+                #ifdef USE_SPI_DISPLAY
                 UiLcdHy28_SpiDeInit();
+                #endif
             }
             else
             {
+                #ifdef USE_DISPLAY_PAR
                 UiLcdHy28_ParallelDeInit();
+                #endif
             }
 
         }
@@ -2252,14 +2380,20 @@ uint8_t UiLcdHy28_Init()
 static inline void UiLcdHy28_SetSpiPrescaler(uint32_t baudrate_prescaler)
 {
     /*---------------------------- SPIx CR1 Configuration ------------------------*/
-    /* Get the SPIx CR1 value */
+    // the baud rate register differs across the different processors
+#if defined(STM32H7)
+    #define SPI_BR_REG CFG1
+#elif defined(STM32F4) || defined(STM32F7)
+    #define SPI_BR_REG CR1
+#endif
 
-    uint32_t tmpreg = SPI2->CR1;
+    /* Get the SPIx SPI_BR_REG value */
+    uint32_t tmpreg = SPI_DISPLAY->SPI_BR_REG;
     tmpreg &= ~SPI_BAUDRATEPRESCALER_256;
     tmpreg |= baudrate_prescaler;
 
     /* Write to SPIx CR1 */
-    SPI2->CR1 = tmpreg;
+    SPI_DISPLAY->SPI_BR_REG = tmpreg;
 }
 
 mchf_touchscreen_t mchf_touchscreen;

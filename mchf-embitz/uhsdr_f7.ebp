@@ -172,10 +172,10 @@
 		</Linker>
 		<Unit filename="..\mchf-eclipse\linker\arm-gcc-link_f4_flash1024k.ld" />
 		<Unit filename="..\mchf-eclipse\linker\arm-gcc-link_f4_flash512k.ld" />
-		<Unit filename="..\mchf-eclipse\basesw\ovi40\Drivers\CMSIS\Device\ST\STM32F7xx\Source\Templates\gcc\startup_stm32f767xx.S">
+		<Unit filename="..\mchf-eclipse\basesw\ovi40\Src\startup_stm32f767xx.S">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\ovi40\Drivers\CMSIS\Device\ST\STM32F7xx\Source\Templates\system_stm32f7xx.c">
+		<Unit filename="..\mchf-eclipse\basesw\ovi40\Src\system_stm32f7xx.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\ovi40\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_core.c">

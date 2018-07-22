@@ -81,15 +81,30 @@ typedef enum
     DISPLAY_RA8875_PARALLEL,
     DISPLAY_ILI9486_PARALLEL,
     DISPLAY_RPI_SPI,
+    DISPLAY_HY32D_PARALLEL_SSD1289,
 
 	// keep this always at the end of the enum
 	DISPLAY_NUM
 } mchf_display_types_t;
 
+typedef struct  {
+    uint16_t reg;
+    uint16_t val;
+} RegisterValue_t;
+
+typedef struct  RegisterValueSetInfo_s {
+    const RegisterValue_t* addr;
+    size_t size;
+} RegisterValueSetInfo_t;
+
+#define REGVAL_DATA (0xffff) // we indicate that the value is to be written using WriteData instead of WriteReg
+#define REGVAL_DELAY (0x0000) // we indicate that the value is to be used as delay in ms instead of WriteReg
+
 typedef struct
 {
     mchf_display_types_t display_type;
     const char* name;
+    uint16_t (*ReadDisplayId)();
     void (*SetActiveWindow) (uint16_t XLeft, uint16_t XRight, uint16_t YTop, uint16_t YBottom);
     void (*SetCursorA)( unsigned short Xpos, unsigned short Ypos );
     void (*WriteRAM_Prepare) ();
@@ -112,6 +127,7 @@ typedef struct
     uint16_t MAX_X;
     uint16_t MAX_Y;
     GPIO_TypeDef* lcd_cs_pio;
+    const RegisterValueSetInfo_t* reg_info;
     void (*SetActiveWindow) (uint16_t XLeft, uint16_t XRight, uint16_t YTop, uint16_t YBottom);
     void (*SetCursorA)( unsigned short Xpos, unsigned short Ypos );
     void (*WriteRAM_Prepare) ();

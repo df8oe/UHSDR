@@ -25,14 +25,6 @@
 #include "spi.h"
 #include "gpio.h"
 
-#ifdef STM32F7
-#include "stm32f7xx_hal_flash_ex.h"
-#else
-#include "stm32f4xx_hal_flash_ex.h"
-#endif
-
-
-
 #include <unistd.h>
 
 
@@ -239,12 +231,15 @@ void BSP_Init(void)
  */
 
 // __attribute__ ( ( naked ) )
+extern const uint32_t* _linker_ram_start; // we get this from the linker script
+static const uint32_t linker_ram_start_addr = (uint32_t)&_linker_ram_start;
+
 void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
 {
     uint32_t* const APPLICATION_PTR = (uint32_t*)ApplicationAddress;
 
     // check if the stackpointer points into a likely ram area (normal RAM start + 1MB)
-    if (APPLICATION_PTR[0] <= 0x20000000 + (1024 * 1024) && ( APPLICATION_PTR[0] > 0x20000000))
+    if (APPLICATION_PTR[0] <= (linker_ram_start_addr + (1024 * 1024)) && ( APPLICATION_PTR[0] >= linker_ram_start_addr))
     {
         __set_MSP(APPLICATION_PTR[0]);
         /* Jump to user application */
@@ -328,7 +323,7 @@ void BL_Application()
 {
     switch(Appli_state)
     {
-    case APPLICATION_START:
+    case APPLICATION_READY:
       BL_MSC_Application();
       Appli_state = APPLICATION_IDLE;
       break;
@@ -355,27 +350,28 @@ void mchfBl_CheckAndGoForDfuBoot()
     if(*(uint32_t*)(SRAM2_BASE) == 0x99)
     {
         *(uint32_t*)(SRAM2_BASE) = 0;
-#ifndef STM32F7
+#if defined(STM32F4)
         __HAL_REMAPMEMORY_SYSTEMFLASH();
 
         const uint32_t dfu_boot_start = 0x00000000;
-#else
+#elif defined(STM32F7)
         const uint32_t dfu_boot_start = 0x1FF00000;
         // if in dual boot mode (which is required for proper operation
-        // we need to
-        #if defined (FLASH_OPTCR_nDBANK)
-            if ((FLASH->OPTCR & (FLASH_OPTCR_nDBANK_Msk|FLASH_OPTCR_nDBOOT_Msk)) != FLASH_OPTCR_nDBOOT)
+        // we need to fix the setup
+    #if defined (FLASH_OPTCR_nDBANK)
+        if ((FLASH->OPTCR & (FLASH_OPTCR_nDBANK_Msk|FLASH_OPTCR_nDBOOT_Msk)) != FLASH_OPTCR_nDBOOT)
+        {
+            if (HAL_FLASH_OB_Unlock() == HAL_OK)
             {
-            	if (HAL_FLASH_OB_Unlock() == HAL_OK)
-            	{
-            		FLASH->OPTCR |= FLASH_OPTCR_nDBOOT; // set == disable dual boot
-            		FLASH->OPTCR &= ~FLASH_OPTCR_nDBANK; // unset == enabled dual bank mode
-            		HAL_FLASH_OB_Launch();
-            		HAL_FLASH_OB_Lock();
-            	}
+                FLASH->OPTCR |= FLASH_OPTCR_nDBOOT; // set == disable dual boot
+                FLASH->OPTCR &= ~FLASH_OPTCR_nDBANK; // unset == enabled dual bank mode
+                HAL_FLASH_OB_Launch();
+                HAL_FLASH_OB_Lock();
             }
-        #endif
-
+        }
+    #endif
+#elif defined(STM32H7)
+        const uint32_t dfu_boot_start = 0x1FF09800;
 #endif
         mchfBl_JumpToApplication(dfu_boot_start);
         // start the STM32Fxxx bootloader at address dfu_boot_start;

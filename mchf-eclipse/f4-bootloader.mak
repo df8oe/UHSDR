@@ -1,6 +1,6 @@
 # IMPORTANT: Keep startup_stm32f407xx.S the first entry, otherwise build will not work with gcc 7, see github issue #1416
 BL_HAL_SRC := \
-basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/gcc/startup_stm32f407xx.S \
+basesw/mcHF/Src/startup_stm32f407xx.S \
 basesw/mcHF/Src/adc.c \
 basesw/mcHF/Src/dac.c \
 basesw/mcHF/Src/dma.c \
@@ -109,5 +109,5 @@ basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fmc.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fsmc.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_sdmmc.c \
 basesw/mcHF/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c \
-basesw/mcHF/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c \
+basesw/mcHF/Src/system_stm32f4xx.c \
 \

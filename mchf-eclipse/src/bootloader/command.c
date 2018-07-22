@@ -155,11 +155,11 @@ mchf_bootloader_error_t COMMAND_ProgramFlashMemory()
             /* Program flash memory */
             for (   uint32_t programcounter = 0;
                     programcounter < BytesRead;
-                    programcounter+=4,LastPGAddress += 4)
+                    programcounter+=32,LastPGAddress += 32)
             {
                 uint32_t* RAM_Address = (uint32_t*)&RAM_Buf[programcounter];
 
-                if (flashIf_ProgramWord(LastPGAddress, *RAM_Address) != HAL_OK)
+                if (flashIf_Program256Bit(LastPGAddress,    RAM_Address) != HAL_OK)
                 {
                     /* Flash programming error */
                     retval = BL_ERR_FLASHPROG;
@@ -242,10 +242,10 @@ void COMMAND_DOWNLOAD(void)
     if (f_open(&fileR, DOWNLOAD_FILENAME, FA_READ) == FR_OK)
     {
         /* Erase FLASH sectors to download image */
-        if (fileR.fsize > flashIf_userFlashSize())
+        if (f_size(&fileR) > flashIf_userFlashSize())
         {
             retval = BL_ERR_FLASHTOOSMALL;
-        } else if ( flashIf_EraseSectors(APPLICATION_ADDRESS,fileR.fsize) != HAL_OK)
+        } else if ( flashIf_EraseSectors(APPLICATION_ADDRESS,f_size(&fileR)) != HAL_OK)
         {
             /* Flash erase error */
             retval = BL_ERR_FLASHERASE;

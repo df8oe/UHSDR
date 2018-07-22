@@ -1,0 +1,105 @@
+* Created new repo cloned from my local repo
+* created new branch h7 from active-devel
+* created dir basesw/ovi40-h7
+* Generated from ovi40-h7.ioc CubeMX sources
+* Added most to commit, some to .gitignore (license or not used)
+
+CHECK USB DEVICE FIFO BUFFERS SIZE CONFIGURATION!
+
+
+
+
+
+New Graphics Driver
+Example SSD1289
+
+Add an enum value to mchf_display_types_t to uniquely identify the display type
+If a controller & display uses an already existing combination of control functions 
+but with a different detectable controller type, you may reuse the already existing 
+display type and just identify and initialize differently.
+Examples are the HY28B_PARALLEL code, which supports multiple controllers, which differ only
+in the initialization sequence.
+However, same controller but with different communication interface (parallel instead of SPI)
+requires a new mchf_display_types_t value. 
+ 
+typedef enum
+{
+    DISPLAY_NONE = 0,
+    DISPLAY_HY28A_SPI,
+    DISPLAY_HY28B_SPI,
+    DISPLAY_HY28B_PARALLEL,
+    DISPLAY_RA8875_SPI,
+    DISPLAY_RA8875_PARALLEL,
+    DISPLAY_ILI9486_PARALLEL,
+    DISPLAY_RPI_SPI,
+    DISPLAY_HY32D_PARALLEL_SSD1289,
+
+    // keep this always at the end of the enum
+    DISPLAY_NUM
+} mchf_display_types_t;
+
+
+Define Register Data for Screen Init. It is important
+to provide the second data structure with correct data, since otherwise
+init will not do the right job. Be careful here.
+Surrond with #ifdef 
+```
+#ifdef USE_GFX_SSD1289
+static const RegisterValue_t ssd1289[] =
+{
+        {0x00,0x0001},
+        ...
+        {0x4e,0x0000},
+};
+
+static const RegisterValueSetInfo_t ssd1289_regs =
+{
+    ssd1289, sizeof(ssd1289)/sizeof(RegisterValue_t)
+};
+#endif
+
+```
+
+Add appropriate display infos (below we only filled information for parallel, spi requires
+a few more functions to be provided) if necessary (i.e. if you defined a new mchf_display_types_t value).
+
+The minimum you have to implement a display detection (either by extending an existing one or w.
+
+```
+static uint16_t UiLcdHy28_ReadDisplayId_SSD1289()
+{
+    uint16_t retval = UiLcdHy28_ReadReg(0x00);
+    switch (retval)
+    {
+    case 0x8989: // HY28A - SPI interface only (ILI9320 controller)
+        mchf_display.reg_info = &ssd1289_regs;
+        break;
+    default:
+        retval = 0;
+    }
+    return retval;
+}
+```
+
+
+If you reuse functions from another controller, you may need to make sure the #ifdef
+still enable the required functions if only the new controller is selected.
+If new control functions are required, write them as static functions, 
+you have plenty of examples in the existing code.
+Remember to use
+
+```
+const uhsdr_display_info_t display_infos[] = {
+....
+#ifdef USE_GFX_SSD1289
+        {
+                DISPLAY_HY32D_PARALLEL_SSD1289, "HY32D Para. SSD1289",
+                .SetActiveWindow = UiLcdHy28_SetActiveWindow_SSD1289,
+                .SetCursorA = UiLcdHy28_SetCursorA_ILI932x,
+                .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_ILI932x,
+        },
+#endif
+...
+};
+```
+

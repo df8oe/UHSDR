@@ -52,7 +52,26 @@ inline mchf_cpu_t MchfHW_Cpu()
 
 #define STM32_GetRevision()     (*(uint16_t *) (UID_BASE + 2))
 #define STM32_GetSignature()    ((*(uint16_t *) (DBGMCU_BASE)) & 0x0FFF)
-#define STM32_GetFlashSize()    (*(uint16_t *) (FLASHSIZE_BASE))
 #define STM32_UUID ((uint32_t *)UID_BASE)
+
+#if defined(STM32F4) || defined(STM32F7)
+    #define STM32_GetFlashSize()    (*(uint16_t *) (FLASHSIZE_BASE))
+#elif defined(STM32H7)
+    #define STM32_GetFlashSize()    (FLASH_SIZE/1024)
+    #define FLASHSIZE_BASE 0x1FF1E880
+    #define SRAM2_BASE 0x38000000
+
+#endif
+
+#if defined(STM32H7)
+    #define GPIO_SetBits(PORT,PINS) { (PORT)->BSRRL = (PINS); }
+    #define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRRH = (PINS); }
+#elif defined(STM32F7) || defined(STM32F4)
+    #define GPIO_SetBits(PORT,PINS) { (PORT)->BSRR = (PINS); }
+    #define GPIO_ResetBits(PORT,PINS) { (PORT)->BSRR = (PINS) << 16U; }
+#endif
+
+#define GPIO_ToggleBits(PORT,PINS) { (PORT)->ODR ^= (PINS); }
+#define GPIO_ReadInputDataBit(PORT,PINS) { ((PORT)->IDR = (PINS); }
 
 #endif

@@ -13,6 +13,7 @@ SECTIONS
 {
 	.text :
 	{
+	    PROVIDE(_linker_isr_loc = .);
 		KEEP(*(.isr_vector))
 		*(.text*)
 		
