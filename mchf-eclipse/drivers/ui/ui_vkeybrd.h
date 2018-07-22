@@ -48,6 +48,7 @@ typedef struct
 	const VKey* Keys;		//pointer to keyboard data
 	uint8_t VKeyGroupMode;	//type of key press: see Vkey_Group_
 	VKeyStateFunc VKeyStateCallBack;	//pointer to callback function which controls the displayed state of the button
+	uint16_t YtopMargin;	//size of additional top margin between top edge and first key
 } VKeypad;
 
 
@@ -66,4 +67,7 @@ void UiVk_DSPVirtualKeys();
 
 void UiVk_RedrawBndSelVirtualKeys();
 void UiVk_BndSelVirtualKeys();
+
+void UiVk_RedrawBndFreqSetVirtualKeys();
+void UiVk_BndFreqSetVirtualKeys();
 #endif /* UI_UI_VKEYBRD_H_ */
