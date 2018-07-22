@@ -18,12 +18,12 @@
 #include "stdlib.h"
 #include "radio_management.h"
 
-#define Col_BtnForeCol RGB(0xA0,0xA0,0xA0)
-#define Col_BtnForePressed RGB(0x80,0x80,0x80)
-#define Col_BtnLightLeftTop RGB(0xE0,0xE0,0xE0)
-#define Col_BtnLightRightBot RGB(0x60,0x60,0x60)
-#define Col_BtnDisabled RGB(0x70,0x70,0x70)
-#define Col_Warning RGB(0xC0,0xC0,0x60)
+#define Col_BtnForeCol RGB(0x90,0x90,0x90)
+#define Col_BtnForePressed RGB(0x70,0x70,0x70)
+#define Col_BtnLightLeftTop RGB(0xd0,0xd0,0xd0)
+#define Col_BtnLightRightBot RGB(0x50,0x50,0x50)
+#define Col_BtnDisabled RGB(0x60,0x60,0x60)
+#define Col_Warning RGB(0xC0,0xC0,0x50)
 
 
 /**
@@ -159,7 +159,7 @@ static void UiVk_DrawVKeypad()
 
 			UiVk_DrawButton(&b_area,
 					Warning,VKpad->VKeyStateCallBack(keycnt,VKpad->Keys[keycnt].ShortPar),VKpad->Keys[keycnt].KeyText,
-					VKpad->Keys[keycnt].TextColor,VKpad->Keys[keycnt].PressedTextColor,VKpad->KeyFont);
+					VKpad->Keys[keycnt].TextColor,VKpad->Keys[keycnt].PressedTextColor,VKpad->Keys[keycnt].KeyFont);
 
 			keycnt++;
 		}
@@ -281,7 +281,6 @@ const VKeypad Keypad_DSP480x320={
 	.NumberOfKeys=6,
 	.Rows=2,
 	.Columns=3,
-	.KeyFont=0,
 	.Keys=Keys_DSP,
 	.KeyWidth=60,
 	.KeyHeight=40,
@@ -296,7 +295,6 @@ const VKeypad Keypad_DSP320x240={
 	.NumberOfKeys=6,
 	.Rows=2,
 	.Columns=3,
-	.KeyFont=0,
 	.Keys=Keys_DSP,
 	.KeyWidth=52,
 	.KeyHeight=32,
@@ -399,7 +397,6 @@ const VKeypad Keypad_BndSel480x320={
 	.NumberOfKeys=16,
 	.Rows=3,
 	.Columns=6,
-	.KeyFont=0,
 	.Keys=Keys_BndSel480x320,
 	.KeyWidth=60,
 	.KeyHeight=40,
@@ -427,7 +424,6 @@ const VKeypad Keypad_BndSel320x240={
 	.NumberOfKeys=10,
 	.Rows=2,
 	.Columns=5,
-	.KeyFont=0,
 	.Keys=Keys_BndSel320x240,
 	.KeyWidth=45,
 	.KeyHeight=32,
@@ -651,29 +647,35 @@ static uint8_t UiVk_BndFreqSetVKeyInitTypeDraw(uint8_t KeyNum, uint32_t param)
 	}
 	return Keystate;
 }
+#ifdef USE_8bit_FONT
+#define UiVk_FSetNumFont 5
+#else
+#define UiVk_FSetNumFont 1
+#endif
+#define UiVk_FSetNumCol (RGB(0xff,0xff,0xff))
+
 const VKey Keys_BndFreqSet[]={
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x31, .KeyText="1", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x32, .KeyText="2", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x33, .KeyText="3", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar='B', .KeyText="BAND\nchange", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=BackSpaceChar, .LongFnc=UiVk_FSetNumKeyVKeyCallBackLong,.LongPar=BackSpaceChar,.KeyText=">", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x34, .KeyText="4", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x35, .KeyText="5", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x36, .KeyText="6", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=1000, .KeyText="000", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=EscChar, .KeyText="X", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x37, .KeyText="7", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x38, .KeyText="8", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x39, .KeyText="9", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x30, .KeyText="0", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x0d, .KeyText="OK", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x31, .KeyText="1", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x32, .KeyText="2", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x33, .KeyText="3", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar='B', .KeyText="BAND\nchange", .TextColor=0, .PressedTextColor=RGB(0xff,0xff,0x00)},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=BackSpaceChar, .LongFnc=UiVk_FSetNumKeyVKeyCallBackLong,.LongPar=BackSpaceChar,.KeyText=">>", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x34, .KeyText="4", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x35, .KeyText="5", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x36, .KeyText="6", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=1000, .KeyText="000", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=EscChar, .KeyText="CLOSE", .TextColor=RGB(0xff,0xc0,0xc0), .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x37, .KeyText="7", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x38, .KeyText="8", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x39, .KeyText="9", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x30, .KeyText="0", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x0d, .KeyText="OK", .TextColor=RGB(0xc0,0xff,0xc0), .PressedTextColor=col_Keys_BndSel_pr},
 };
 
 const VKeypad Keypad_BndFreqSet480x320={
 	.NumberOfKeys=15,
 	.Rows=3,
 	.Columns=5,
-	.KeyFont=0,
 	.Keys=Keys_BndFreqSet,
 	.KeyWidth=60,
 	.KeyHeight=36,

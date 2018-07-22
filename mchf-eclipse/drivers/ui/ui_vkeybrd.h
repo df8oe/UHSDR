@@ -31,6 +31,7 @@ typedef struct
 	uint32_t ShortPar;		//short press function calling parameter
 	TouchFunc LongFnc;		//called function for short press
 	uint32_t LongPar;		//long press function calling parameter
+	uint8_t KeyFont;		//font number
 } VKey;
 
 
@@ -39,7 +40,6 @@ typedef struct
 	uint8_t NumberOfKeys;	//Number of keys in keyborad
 	uint8_t Rows;			//Numer of rows
 	uint8_t Columns;		//Numer of columns
-	uint8_t KeyFont;		//font number
 	uint16_t KeyWidth;		//Width of single key
 	uint16_t KeyHeight;		//Height of single key
 	uint8_t KeySpacing;		//gap between keys
