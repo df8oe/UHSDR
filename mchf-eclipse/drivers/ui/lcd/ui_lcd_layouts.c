@@ -142,7 +142,7 @@ static const touchaction_descr_t R480320_touchactions_normal[] =
 		{ {(480/2)-16,110,48,16}, UiAction_ChangeSpectrumZoomLevelDown,    UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Middle Part: Decrease Zoom Level
 		{ {(480/2)+100,110,48,16}, UiAction_ChangeSpectrumZoomLevelUp,      UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Right Part: Increase Zoom Level
 		{ {R480320_TUNE_FREQ_X+16*7,R480320_TUNE_FREQ_Y,16*3,24}, UiAction_ChangeFrequencyToNextKhz,       NULL }, // Frequency display, last three digits :Set last 3 digits to zero
-		{ {R480320_TUNE_FREQ_X,R480320_TUNE_FREQ_Y,16*7,24}, UiVk_BndSelVirtualKeys,       NULL }, // Frequency display, last three digits :Set last 3 digits to zero
+		{ {R480320_TUNE_FREQ_X,R480320_TUNE_FREQ_Y,16*7,24}, UiVk_BndSelVirtualKeys,       NULL }, // Frequency display, first digits :Select the band
 		{ {R480320_DEMOD_MODE_X,R480320_DEMOD_MODE_Y,R480320_DEMOD_MODE_MASK_W,R480320_DEMOD_MODE_MASK_H}, UiAction_ChangeDemodMode,                NULL }, // Demod Mode Box: mode switch
 		{ {R480320_PW_IND_X,R480320_PW_IND_Y,64,16},								 UiAction_ChangePowerLevel,               NULL }, // Power Box: TX Power Increase
 		{ {R480320_ENCODER_IND_X+ENC_COL_W*5+Xspacing*2,R480320_ENCODER_IND_Y,ENC_COL_W,ENC_ROW_H}, UiAction_ChangeAudioSource,              NULL }, // Audio In Box: Switch Source
@@ -177,6 +177,7 @@ static const touchaction_descr_t R320240_touchactions_normal[] =
 		{ {180,128,40,16}, UiAction_ChangeSpectrumZoomLevelDown,UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Middle Part: Decrease Zoom Level
 		{ {280,128,40,16}, UiAction_ChangeSpectrumZoomLevelUp,UiAction_CheckSpectrumTouchActions }, // Spectrum Bar Right Part: Increase Zoom Level
 		{ {R320240_TUNE_FREQ_X+16*7,R320240_TUNE_FREQ_Y,16*3,24},UiAction_ChangeFrequencyToNextKhz,NULL }, // Tune button:Set last 3 digits to zero
+		{ {R320240_TUNE_FREQ_X,R320240_TUNE_FREQ_Y,16*7,24}, UiVk_BndSelVirtualKeys,       NULL }, // Frequency display, first digits :Select the band
 		{ {R320240_DEMOD_MODE_X,R320240_DEMOD_MODE_Y,R320240_DEMOD_MODE_MASK_W,R320240_DEMOD_MODE_MASK_H}, UiAction_ChangeDemodMode,NULL }, // Demod Mode Box: mode switch
 		{ {R320240_PW_IND_X,R320240_PW_IND_Y,64,16},UiAction_ChangePowerLevel,NULL }, // Power Box: TX Power Increase
 		{ {R320240_ENCODER_IND_X+ENC_COL_W*2,R320240_ENCODER_IND_Y+ENC_ROW_H,ENC_COL_W,ENC_ROW_H}, UiAction_ChangeAudioSource,NULL }, // Audio In Box: Switch Source

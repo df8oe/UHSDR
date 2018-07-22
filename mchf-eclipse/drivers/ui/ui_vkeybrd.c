@@ -376,7 +376,7 @@ static uint8_t UiVk_BndSelVKeyInitTypeDraw(uint8_t KeyNum, uint32_t param)
 #define col_Keys_BndSel_pr RGB(0xff,0xff,0xff)		//text color when pressed
 #define col_Keys_BndSel_npr Black		//text color when in normal state
 
-const VKey Keys_BndSel[]={
+const VKey Keys_BndSel480x320[]={
 		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=14, .KeyText="2200m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
 		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=15, .KeyText="630m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
 		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=16, .KeyText="160m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
@@ -400,7 +400,7 @@ const VKeypad Keypad_BndSel480x320={
 	.Rows=3,
 	.Columns=6,
 	.KeyFont=0,
-	.Keys=Keys_BndSel,
+	.Keys=Keys_BndSel480x320,
 	.KeyWidth=60,
 	.KeyHeight=40,
 	.KeySpacing=8,
@@ -409,6 +409,35 @@ const VKeypad Keypad_BndSel480x320={
 	.VKeyGroupMode=Vkey_Group_OneAllowed,
 	.VKeyStateCallBack=UiVk_BndSelVKeyInitTypeDraw
 };
+
+const VKey Keys_BndSel320x240[]={
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=16, .KeyText="160m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=0, .KeyText="80m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=1, .KeyText="60m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=2, .KeyText="40m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=3, .KeyText="30m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=4, .KeyText="20m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=5, .KeyText="17m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=6, .KeyText="15m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=7, .KeyText="12m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_BndSelVKeyCallBackShort, .ShortPar=8, .KeyText="10m", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr}
+};
+
+const VKeypad Keypad_BndSel320x240={
+	.NumberOfKeys=10,
+	.Rows=2,
+	.Columns=5,
+	.KeyFont=0,
+	.Keys=Keys_BndSel320x240,
+	.KeyWidth=45,
+	.KeyHeight=32,
+	.KeySpacing=4,
+	.Backgr_Wnlarge=4,
+	.Backgr_Hnlarge=4,
+	.VKeyGroupMode=Vkey_Group_OneAllowed,
+	.VKeyStateCallBack=UiVk_BndSelVKeyInitTypeDraw
+};
+
 
 void UiVk_RedrawBndSelVirtualKeys()
 {
@@ -425,7 +454,7 @@ void UiVk_RedrawBndSelVirtualKeys()
 void UiVk_BndSelVirtualKeys()
 {
 	if(ts.VirtualKeysShown_flag &&
-			(ts.VirtualKeyPad==&Keypad_BndSel480x320))
+			((ts.VirtualKeyPad==&Keypad_BndSel480x320) || (ts.VirtualKeyPad==&Keypad_BndSel320x240)) )
 	{
 		ts.VirtualKeysShown_flag=false;
 		UiSpectrum_Init();
@@ -434,8 +463,8 @@ void UiVk_BndSelVirtualKeys()
 	{
 		if(disp_resolution==RESOLUTION_480_320)
 			ts.VirtualKeyPad=&Keypad_BndSel480x320;
-//		else
-//			ts.VirtualKeyPad=&Keypad_DSP320x240;
+		else
+			ts.VirtualKeyPad=&Keypad_BndSel320x240;
 
 		prev_BndSel=255;
 		UiSpectrum_Clear();
