@@ -24,9 +24,9 @@
 #define SPECTRUM_SCOPE_GRID_HORIZ 16
 
 
-#define LEFTBOX_WIDTH 58 // used for the lower left side controls
-#define LEFTBOX_ROW_H  (28)
-#define LEFTBOX_ROW_2ND_OFF  (13)
+//#define LEFTBOX_WIDTH 58 // used for the lower left side controls
+//#define LEFTBOX_ROW_H  (28)
+//#define LEFTBOX_ROW_2ND_OFF  (13)
 
 #define ENC_COL_W (37)
 #define ENC_ROW_H (30)
@@ -94,9 +94,7 @@ typedef struct {
 	UiCoord_t ENCODER_IND;			// Encoder controls indicator
 	uint8_t ENCODER_MODE;			//horizontal/vertical draw order
 
-	UiCoord_t LEFTBOXES_IND;		// Lower DSP box
-	uint16_t LEFTBOXES_WIDTH;		// used for the lower left side controls
-	uint16_t LEFTBOXES_ROW_H;
+	UiArea_t LEFTBOXES_IND;			// Lower DSP box
 	uint16_t LEFTBOXES_ROW_2ND_OFF;
 	uint8_t LEFTBOXES_MODE;
 

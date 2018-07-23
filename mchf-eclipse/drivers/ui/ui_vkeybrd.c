@@ -352,7 +352,10 @@ static void UiVk_BndSelVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 	else
 	{
 		uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
-		UiDriver_UpdateBand(vfo_sel,ts.band,param);
+		if(vfo[vfo_sel].enabled[param])
+		{
+			UiDriver_UpdateBand(vfo_sel,ts.band,param);
+		}
 	}
 }
 
@@ -664,7 +667,7 @@ const VKey Keys_BndFreqSet[]={
 		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x35, .KeyText="5", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
 		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x36, .KeyText="6", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
 		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=1000, .KeyText="000", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=EscChar, .KeyText="CLOSE", .TextColor=RGB(0xff,0xc0,0xc0), .PressedTextColor=col_Keys_BndSel_pr},
+		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=EscChar, .KeyText="CLOSE", .TextColor=RGB(0xff,0xe0,0x00), .PressedTextColor=col_Keys_BndSel_pr},
 		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x37, .KeyText="7", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
 		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x38, .KeyText="8", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
 		{.ShortFnc=UiVk_FSetNumKeyVKeyCallBackShort, .ShortPar=0x39, .KeyText="9", .TextColor=UiVk_FSetNumCol, .PressedTextColor=col_Keys_BndSel_pr, .KeyFont=UiVk_FSetNumFont},
