@@ -17,10 +17,15 @@
 # for example to build the bootloader in the build-bl folder inside this directory
 # make -f ../Makefile ROOTLOC=".." bootloader 
 
-# you can set the MCU you want to build for here or via environment variable (F4 or F7 or H7)
-
+# you can set the MCU you want to build for here or via environment variable (F4 or F4-512KB or F7 or H7)
 ifndef BUILDFOR
   BUILDFOR=F4
+endif
+
+# F4-512KB results in "small build for F4"
+ifeq ($(BUILDFOR),F4-512KB)
+  BUILDFOR=F4
+  CONFIGFLAGS="-DIS_SMALL_BUILD"
 endif
 
  ROOTLOC=.
