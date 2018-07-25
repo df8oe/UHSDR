@@ -31,6 +31,9 @@ VPATH=$(ROOTLOC)
 ifndef TRX_ID
   TRX_ID=mchf
 endif
+ifeq ($(TRX_NAME),mcHF)
+  TRX_NAME='mcHF QRP'
+endif
 ifndef TRX_NAME
   TRX_NAME='mcHF QRP'
 endif
