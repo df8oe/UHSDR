@@ -1330,6 +1330,8 @@ void UiDriver_UpdateDisplayAfterParamChange()
 	{
 		UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
 	}
+
+	UiVk_Redraw();			//virtual keypads call (refresh purpose)
 }
 //
 //
@@ -3136,8 +3138,7 @@ void UiDriver_UpdateBand(uint16_t vfo_sel, uint8_t curr_band_index, uint8_t new_
 		ts.band = new_band_index;
 
 		UiDriver_UpdateDisplayAfterParamChange();    // because mode/filter may have changed
-		UiVk_RedrawBndSelVirtualKeys();
-
+		UiVk_Redraw();		//virtual keypads call (refresh purpose)
 }
 
 /**
@@ -3982,7 +3983,7 @@ static void UiDriver_DisplayDSPMode(bool encoder_active)
 	//uint32_t dsp_functions_active = ts.dsp_active & (DSP_NOTCH_ENABLE|DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE);
 	uint32_t dsp_functions_active =UiDriver_GetActiveDSPFunctions();
 
-	UiVk_RedrawDSPVirtualKeys();
+	UiVk_Redraw();			//virtual keypads call (refresh purpose)
 
 	switch (dsp_functions_active)
 	{
