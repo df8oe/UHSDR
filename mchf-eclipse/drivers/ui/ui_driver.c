@@ -105,7 +105,7 @@ static void     UiDriver_DisplayLineInModeAndGain(bool encoder_active);
 static void     UiDriver_DisplayMemoryLabel();
 
 
-static void 	UiDriver_DisplayDigitalMode();
+static void 	UiDriver_DisplayModulationType();
 static void 	UiDriver_DisplayPowerLevel();
 static void     UiDriver_DisplayTemperature(int temp);
 static void     UiDriver_DisplayVoltage();
@@ -1486,7 +1486,7 @@ void UiDriver_DisplayDemodMode()
 	}
 	UiLcdHy28_PrintTextCentered(ts.Layout->DEMOD_MODE_MASK.x,ts.Layout->DEMOD_MODE_MASK.y,ts.Layout->DEMOD_MODE_MASK.w,txt,clr_fg,clr_bg,0);
 
-	UiDriver_DisplayDigitalMode();
+	UiDriver_DisplayModulationType();
 }
 
 
@@ -4299,18 +4299,40 @@ static void UiDriver_DisplayRit(bool encoder_active)
 	UiDriver_EncoderDisplay(0,2,"RIT", encoder_active, temp, color);
 }
 
-static void UiDriver_DisplayDigitalMode()
+static void UiDriver_DisplayModulationType()
 {
 
 	ushort bgclr = ts.dvmode?Orange:Blue;
 	ushort color = digimodes[ts.digital_mode].enabled?(ts.dvmode?Black:White):Grey2;
+	char txt_empty[]="       ";
+	char txt_SSB[]="SSB";
+	char txt_CW[]="CW";
 
-	const char* txt = digimodes[ts.digital_mode].label;
+	//const char* txt = digimodes[ts.digital_mode].label;
+	const char* txt;
+	switch(ts.dmod_mode)
+	{
+	case DEMOD_DIGI:
+		txt = digimodes[ts.digital_mode].label;
+		break;
+	case DEMOD_LSB:
+	case DEMOD_USB:
+		txt = txt_SSB;
+		break;
+	case DEMOD_CW:
+		txt = txt_CW;
+		break;
+	default:
+		txt = txt_empty;
+	}
 
 	// Draw line for box
-	UiLcdHy28_DrawStraightLine(ts.Layout->DIGMODE.x,(ts.Layout->DIGMODE.y - 1),ts.Layout->DIGMODE.h,LCD_DIR_HORIZONTAL,bgclr);
-	UiLcdHy28_PrintTextCentered(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y,ts.Layout->DIGMODE.h,txt,color,bgclr,0);
-
+	UiLcdHy28_DrawStraightLine(ts.Layout->DIGMODE.x,(ts.Layout->DIGMODE.y - 1),ts.Layout->DIGMODE.w,LCD_DIR_HORIZONTAL,bgclr);
+	UiLcdHy28_PrintTextCentered(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y,ts.Layout->DIGMODE.w,txt,color,bgclr,0);
+	if(disp_resolution==RESOLUTION_480_320)
+	{
+		UiLcdHy28_DrawStraightLineTriple(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y+12,ts.Layout->DIGMODE.w,LCD_DIR_HORIZONTAL,bgclr);
+	}
 	//fdv_clear_display();
 }
 
@@ -4338,7 +4360,7 @@ static void UiDriver_DisplayPowerLevel()
 		break;
 	}
 	// Draw top line
-	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->DEMOD_MODE_MASK.w,txt,color,Blue,0);
+	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->PW_IND.w,txt,color,Blue,0);
 }
 
 static void UiDriver_HandleSMeter()
@@ -6963,22 +6985,23 @@ void UiDriver_TaskHandler_MainTasks()
 				uint16_t AGC_bg_clr = Black;
 				uint16_t AGC_fg_clr = Black;
 
-					if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
-					{
-						AGC_bg_clr = White;
-						AGC_fg_clr = Black;
-					}
-					else
-					{
-						AGC_bg_clr = Blue;
-						AGC_fg_clr = White;
-					}
-					if(ts.agc_wdsp_action == 1)
-					{
-						txt = "AGC";
-					}
+				if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
+				{
+					AGC_bg_clr = White;
+					AGC_fg_clr = Black;
+				}
+				else
+				{
+					AGC_bg_clr = Blue;
+					AGC_fg_clr = White;
+				}
+				if(ts.agc_wdsp_action == 1)
+				{
+					txt = "AGC";
+				}
 
-				UiLcdHy28_PrintTextCentered(ts.Layout->DEMOD_MODE_MASK.x - 41,ts.Layout->DEMOD_MODE_MASK.y,ts.Layout->DEMOD_MODE_MASK.w-6,txt,AGC_fg_clr,AGC_bg_clr,0);
+//				UiLcdHy28_PrintTextCentered(ts.Layout->DEMOD_MODE_MASK.x - 41,ts.Layout->DEMOD_MODE_MASK.y,ts.Layout->DEMOD_MODE_MASK.w-6,txt,AGC_fg_clr,AGC_bg_clr,0);
+				UiLcdHy28_PrintTextCentered(ts.Layout->AGC_MASK.x,ts.Layout->AGC_MASK.y,ts.Layout->AGC_MASK.w,txt,AGC_fg_clr,AGC_bg_clr,0);
 				// display CW decoder WPM speed
 				if(ts.cw_decoder_enable && ts.dmod_mode == DEMOD_CW)
 				{
