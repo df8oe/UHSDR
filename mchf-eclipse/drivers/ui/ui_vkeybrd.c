@@ -505,12 +505,6 @@ uint8_t UiVk_EnableFrequencySet=0;
 #define UiVk_InfoWindowWidth 120
 #define BackSpaceChar 8
 #define EscChar 0x1b
-#ifdef USE_8bit_FONT
-#define FSet_font 5
-#else
-#define FSet_font 1
-#endif
-
 
 static void UiVk_FSetNumKeyUpdate()
 {
@@ -553,6 +547,11 @@ static void UiVk_FSetNumKeyUpdate()
 			sprintf(txtInfo,"Out of range");
 		}
 	}
+#ifdef USE_8bit_FONT
+	uint8_t FSet_font=ts.FreqDisplayFont==0?1:5;
+#else
+	uint8_t FSet_font=1;
+#endif
 
 	UiLcdHy28_PrintTextRight(KeybArea.x+KeybArea.w-4,KeybArea.y+4,txt,textColor,Col_BtnForeCol,FSet_font);
 	UiLcdHy28_PrintText(KeybArea.x+4,KeybArea.y+4,txtInfo,RGB(0xff,0xff,0x00),Col_BtnForeCol,4);
