@@ -105,7 +105,7 @@ static void     UiDriver_DisplayLineInModeAndGain(bool encoder_active);
 static void     UiDriver_DisplayMemoryLabel();
 
 
-static void 	UiDriver_DisplayDigitalMode();
+static void 	UiDriver_DisplayModulationType();
 static void 	UiDriver_DisplayPowerLevel();
 static void     UiDriver_DisplayTemperature(int temp);
 static void     UiDriver_DisplayVoltage();
@@ -569,30 +569,30 @@ static void UiDriver_LeftBoxDisplay(const uint8_t row, const char *label, bool e
 	uint16_t posX, posY;
 	if(ts.Layout->LEFTBOXES_MODE==MODE_HORIZONTAL)
 	{
-		posX=ts.Layout->LEFTBOXES_IND.x+ (row * LEFTBOX_WIDTH);
+		posX=ts.Layout->LEFTBOXES_IND.x+ (row * ts.Layout->LEFTBOXES_IND.w);
 		posY=ts.Layout->LEFTBOXES_IND.y;
 	}
 	else
 	{
 		posX=ts.Layout->LEFTBOXES_IND.x;
-		posY=ts.Layout->LEFTBOXES_IND.y + (row * LEFTBOX_ROW_H);
+		posY=ts.Layout->LEFTBOXES_IND.y + (row * ts.Layout->LEFTBOXES_IND.h);
 	}
 
 
-	UiLcdHy28_DrawEmptyRect(posX, posY, LEFTBOX_ROW_H - 2, LEFTBOX_WIDTH - 2, brdr_color);
-	UiLcdHy28_PrintTextCentered(posX + 1, posY + 1,LEFTBOX_WIDTH - 3, label,
+	UiLcdHy28_DrawEmptyRect(posX, posY, ts.Layout->LEFTBOXES_IND.h - 2, ts.Layout->LEFTBOXES_IND.w - 2, brdr_color);
+	UiLcdHy28_PrintTextCentered(posX + 1, posY + 1,ts.Layout->LEFTBOXES_IND.w - 3, label,
 			label_color, bg_color, 0);
 
 	// this causes flicker, but I am too lazy to fix that now
-	UiLcdHy28_DrawFullRect(posX + 1, posY + 1 + 12, LEFTBOX_ROW_H - 4 - 11, LEFTBOX_WIDTH - 3, text_is_value?Black:bg_color);
+	UiLcdHy28_DrawFullRect(posX + 1, posY + 1 + 12, ts.Layout->LEFTBOXES_IND.h - 4 - 11, ts.Layout->LEFTBOXES_IND.w - 3, text_is_value?Black:bg_color);
 	if (text_is_value)
 	{
-		UiLcdHy28_PrintTextRight((posX + LEFTBOX_WIDTH - 4), (posY + 1 + LEFTBOX_ROW_2ND_OFF), text,
+		UiLcdHy28_PrintTextRight((posX + ts.Layout->LEFTBOXES_IND.w - 4), (posY + 1 + ts.Layout->LEFTBOXES_ROW_2ND_OFF), text,
 				clr_val, text_is_value?Black:bg_color, 0);
 	}
 	else
 	{
-		UiLcdHy28_PrintTextCentered((posX + 1), (posY + 1 + LEFTBOX_ROW_2ND_OFF),LEFTBOX_WIDTH - 3, text,
+		UiLcdHy28_PrintTextCentered((posX + 1), (posY + 1 + ts.Layout->LEFTBOXES_ROW_2ND_OFF),ts.Layout->LEFTBOXES_IND.w - 3, text,
 				color, bg_color, 0);
 	}
 
@@ -1330,6 +1330,8 @@ void UiDriver_UpdateDisplayAfterParamChange()
 	{
 		UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
 	}
+
+	UiVk_Redraw();			//virtual keypads call (refresh purpose)
 }
 //
 //
@@ -1484,7 +1486,7 @@ void UiDriver_DisplayDemodMode()
 	}
 	UiLcdHy28_PrintTextCentered(ts.Layout->DEMOD_MODE_MASK.x,ts.Layout->DEMOD_MODE_MASK.y,ts.Layout->DEMOD_MODE_MASK.w,txt,clr_fg,clr_bg,0);
 
-	UiDriver_DisplayDigitalMode();
+	UiDriver_DisplayModulationType();
 }
 
 
@@ -3092,6 +3094,54 @@ static void UiDriver_ChangeToNextDemodMode(bool select_alternative_mode)
 }
 
 /**
+ * @brief band change
+ * @param vfo_sel	VFO A/B
+ * @param curr_band_index
+ * @param new_band_index
+ */
+void UiDriver_UpdateBand(uint16_t vfo_sel, uint8_t curr_band_index, uint8_t new_band_index)
+{
+
+		// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
+		// Load frequency value - either from memory or default for
+		// the band if this is first band selection
+		if(vfo[vfo_sel].band[new_band_index].dial_value != 0xFFFFFFFF)
+		{
+			df.tune_new = vfo[vfo_sel].band[new_band_index].dial_value;	// Load value from VFO
+		}
+		else
+		{
+			df.tune_new = bandInfo[curr_band_index].tune; 					// Load new frequency from startup
+		}
+
+		bool new_lsb = RadioManagement_CalculateCWSidebandMode();
+
+		uint16_t new_dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
+		uint16_t new_digital_mode = vfo[vfo_sel].band[new_band_index].digital_mode;
+
+		bool isNewDigitalMode = ts.digital_mode != new_digital_mode && new_dmod_mode == DEMOD_DIGI;
+
+
+		// we need to mute here since changing bands may cause audible click/pops
+		RadioManagement_MuteTemporarilyRxAudio();
+
+		ts.digital_mode = new_digital_mode;
+
+		if(ts.dmod_mode != new_dmod_mode || (new_dmod_mode == DEMOD_CW && ts.cw_lsb != new_lsb) || isNewDigitalMode)
+		{
+			// Update mode
+			ts.cw_lsb = new_lsb;
+			RadioManagement_SetDemodMode(new_dmod_mode);
+		}
+
+		// Finally update public flag
+		ts.band = new_band_index;
+
+		UiDriver_UpdateDisplayAfterParamChange();    // because mode/filter may have changed
+		UiVk_Redraw();		//virtual keypads call (refresh purpose)
+}
+
+/**
  * @brief initiate band change.
  * @param is_up select the next higher band, otherwise go to the next lower band
  */
@@ -3155,45 +3205,10 @@ static void UiDriver_ChangeBand(uchar is_up)
             }
 		}
 
-
-		// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
-		// Load frequency value - either from memory or default for
-		// the band if this is first band selection
-		if(vfo[vfo_sel].band[new_band_index].dial_value != 0xFFFFFFFF)
-		{
-			df.tune_new = vfo[vfo_sel].band[new_band_index].dial_value;	// Load value from VFO
-		}
-		else
-		{
-			df.tune_new = bandInfo[curr_band_index].tune; 					// Load new frequency from startup
-		}
-
-		bool new_lsb = RadioManagement_CalculateCWSidebandMode();
-
-		uint16_t new_dmod_mode = vfo[vfo_sel].band[new_band_index].decod_mode;
-		uint16_t new_digital_mode = vfo[vfo_sel].band[new_band_index].digital_mode;
-
-		bool isNewDigitalMode = ts.digital_mode != new_digital_mode && new_dmod_mode == DEMOD_DIGI;
-
-
-		// we need to mute here since changing bands may cause audible click/pops
-		RadioManagement_MuteTemporarilyRxAudio();
-
-		ts.digital_mode = new_digital_mode;
-
-		if(ts.dmod_mode != new_dmod_mode || (new_dmod_mode == DEMOD_CW && ts.cw_lsb != new_lsb) || isNewDigitalMode)
-		{
-			// Update mode
-			ts.cw_lsb = new_lsb;
-			RadioManagement_SetDemodMode(new_dmod_mode);
-		}
-
-		// Finally update public flag
-		ts.band = new_band_index;
-
-		UiDriver_UpdateDisplayAfterParamChange();    // because mode/filter may have changed
+		UiDriver_UpdateBand(vfo_sel, curr_band_index, new_band_index);
 	}
 }
+
 
 /**
  * @brief Read out the changes in the frequency encoder and initiate frequency change by setting a global variable.
@@ -3968,7 +3983,7 @@ static void UiDriver_DisplayDSPMode(bool encoder_active)
 	//uint32_t dsp_functions_active = ts.dsp_active & (DSP_NOTCH_ENABLE|DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE);
 	uint32_t dsp_functions_active =UiDriver_GetActiveDSPFunctions();
 
-	UiVk_RedrawDSPVirtualKeys();
+	UiVk_Redraw();			//virtual keypads call (refresh purpose)
 
 	switch (dsp_functions_active)
 	{
@@ -4284,18 +4299,41 @@ static void UiDriver_DisplayRit(bool encoder_active)
 	UiDriver_EncoderDisplay(0,2,"RIT", encoder_active, temp, color);
 }
 
-static void UiDriver_DisplayDigitalMode()
+static void UiDriver_DisplayModulationType()
 {
 
 	ushort bgclr = ts.dvmode?Orange:Blue;
 	ushort color = digimodes[ts.digital_mode].enabled?(ts.dvmode?Black:White):Grey2;
+	char txt_empty[]="       ";
+	char txt_SSB[]="SSB";
+	char txt_CW[]="CW";
 
-	const char* txt = digimodes[ts.digital_mode].label;
+	//const char* txt = digimodes[ts.digital_mode].label;
+	const char* txt;
+	switch(ts.dmod_mode)
+	{
+	case DEMOD_DIGI:
+		txt = digimodes[ts.digital_mode].label;
+		break;
+	case DEMOD_LSB:
+	case DEMOD_USB:
+		txt = txt_SSB;
+		break;
+	case DEMOD_CW:
+		txt = txt_CW;
+		break;
+	default:
+		txt = txt_empty;
+	}
 
 	// Draw line for box
-	UiLcdHy28_DrawStraightLine(ts.Layout->DIGMODE.x,(ts.Layout->DIGMODE.y - 1),ts.Layout->DIGMODE.h,LCD_DIR_HORIZONTAL,bgclr);
-	UiLcdHy28_PrintTextCentered(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y,ts.Layout->DIGMODE.h,txt,color,bgclr,0);
-
+	UiLcdHy28_DrawStraightLine(ts.Layout->DIGMODE.x,(ts.Layout->DIGMODE.y - 1),ts.Layout->DIGMODE.w,LCD_DIR_HORIZONTAL,bgclr);
+	UiLcdHy28_PrintTextCentered(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y,ts.Layout->DIGMODE.w,txt,color,bgclr,0);
+	if(disp_resolution==RESOLUTION_480_320)
+	{
+		UiLcdHy28_DrawStraightLineDouble(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y+12,ts.Layout->DIGMODE.w,LCD_DIR_HORIZONTAL,bgclr);
+		UiLcdHy28_DrawStraightLine(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y+14,ts.Layout->DIGMODE.w,LCD_DIR_HORIZONTAL,Blue);
+	}
 	//fdv_clear_display();
 }
 
@@ -4323,7 +4361,7 @@ static void UiDriver_DisplayPowerLevel()
 		break;
 	}
 	// Draw top line
-	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->DEMOD_MODE_MASK.w,txt,color,Blue,0);
+	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->PW_IND.w,txt,color,Blue,0);
 }
 
 static void UiDriver_HandleSMeter()
@@ -4510,7 +4548,7 @@ static void UiDriver_HandleTXMeters()
 
 static void UiDriver_CreateVoltageDisplay() {
 	// Create voltage
-	UiLcdHy28_PrintTextCentered (ts.Layout->PWR_IND.x,ts.Layout->PWR_IND.y,LEFTBOX_WIDTH,   "--.- V",  COL_PWR_IND,Black,0);
+	UiLcdHy28_PrintTextCentered (ts.Layout->PWR_IND.x,ts.Layout->PWR_IND.y,ts.Layout->LEFTBOXES_IND.w,   "--.- V",  COL_PWR_IND,Black,0);
 }
 
 static bool UiDriver_SaveConfiguration()
@@ -6948,22 +6986,23 @@ void UiDriver_TaskHandler_MainTasks()
 				uint16_t AGC_bg_clr = Black;
 				uint16_t AGC_fg_clr = Black;
 
-					if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
-					{
-						AGC_bg_clr = White;
-						AGC_fg_clr = Black;
-					}
-					else
-					{
-						AGC_bg_clr = Blue;
-						AGC_fg_clr = White;
-					}
-					if(ts.agc_wdsp_action == 1)
-					{
-						txt = "AGC";
-					}
+				if(ts.agc_wdsp_hang_action == 1 && ts.agc_wdsp_hang_enable == 1)
+				{
+					AGC_bg_clr = White;
+					AGC_fg_clr = Black;
+				}
+				else
+				{
+					AGC_bg_clr = Blue;
+					AGC_fg_clr = White;
+				}
+				if(ts.agc_wdsp_action == 1)
+				{
+					txt = "AGC";
+				}
 
-				UiLcdHy28_PrintTextCentered(ts.Layout->DEMOD_MODE_MASK.x - 41,ts.Layout->DEMOD_MODE_MASK.y,ts.Layout->DEMOD_MODE_MASK.w-6,txt,AGC_fg_clr,AGC_bg_clr,0);
+//				UiLcdHy28_PrintTextCentered(ts.Layout->DEMOD_MODE_MASK.x - 41,ts.Layout->DEMOD_MODE_MASK.y,ts.Layout->DEMOD_MODE_MASK.w-6,txt,AGC_fg_clr,AGC_bg_clr,0);
+				UiLcdHy28_PrintTextCentered(ts.Layout->AGC_MASK.x,ts.Layout->AGC_MASK.y,ts.Layout->AGC_MASK.w,txt,AGC_fg_clr,AGC_bg_clr,0);
 				// display CW decoder WPM speed
 				if(ts.cw_decoder_enable && ts.dmod_mode == DEMOD_CW)
 				{
