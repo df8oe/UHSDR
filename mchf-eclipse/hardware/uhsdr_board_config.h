@@ -348,17 +348,17 @@
     #if defined(STM32F7)
 
         #ifndef TRX_NAME
-            #define TRX_NAME "OVI40"
+            #define TRX_NAME "OVI40 F7"
         #endif
         #ifndef TRX_ID
-            #define TRX_ID "ovi40"
+            #define TRX_ID "40sdr"
         #endif
     #elif defined(STM32H7)
         #ifndef TRX_NAME
             #define TRX_NAME "OVI40 H7"
         #endif
         #ifndef TRX_ID
-            #define TRX_ID "i40h7"
+            #define TRX_ID "ovi40"
         #endif
     #endif
 
