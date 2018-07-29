@@ -27,6 +27,12 @@ ifeq ($(BUILDFOR),F4-512KB)
   BUILDFOR=F4
   CONFIGFLAGS="-DIS_SMALL_BUILD"
 endif
+ifeq ($(BUILDFOR),F7)
+  TRX_NAME="OVI40 F7"
+endif
+ifeq ($(BUILDFOR),H7)
+  TRX_NAME="OVI40 H7"
+endif
 
  ROOTLOC=.
 VPATH=$(ROOTLOC)
@@ -83,8 +89,8 @@ endif
 
 # compilation options
 MACHFLAGS_F4 := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -DARM_MATH_CM4 -DCORTEX_M4 -DSTM32F407xx -D__FPU_PRESENT=1U
-MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32F767xx -D__FPU_PRESENT=1 
-MACHFLAGS_H7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32H743xx -D__FPU_PRESENT=1 
+MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32F767xx -D__FPU_PRESENT=1
+MACHFLAGS_H7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32H743xx -D__FPU_PRESENT=1
 
 BASECFLAGS_F4  = $(MACHFLAGS_F4)  $(COMPILEFLAGS)  $(EXTRACFLAGS)
 BASECFLAGS_F7  = $(MACHFLAGS_F7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
