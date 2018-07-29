@@ -1,4 +1,7 @@
 BL_HAL_SRC := \
+basesw/ovi40-h7/Src/startup_stm32h743xx.S \
+basesw/ovi40-h7/Src/system_stm32h7xx.c \
+basesw/ovi40-h7/Src/stm32h7xx_it.c \
 basesw/ovi40-h7/Src/adc.c \
 basesw/ovi40-h7/Src/dac.c \
 basesw/ovi40-h7/Src/dma.c \
@@ -11,7 +14,6 @@ basesw/ovi40-h7/Src/rtc.c \
 basesw/ovi40-h7/Src/sai.c \
 basesw/ovi40-h7/Src/spi.c \
 basesw/ovi40-h7/Src/stm32h7xx_hal_msp.c \
-basesw/ovi40-h7/Src/stm32h7xx_it.c \
 basesw/ovi40-h7/Src/tim.c \
 basesw/ovi40-h7/Src/usb_host.c \
 basesw/ovi40-h7/Src/usbd_conf.c \
@@ -93,6 +95,4 @@ basesw/ovi40-h7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_wwdg.c \
 basesw/ovi40-h7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_fmc.c \
 basesw/ovi40-h7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_sdmmc.c \
 basesw/ovi40-h7/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c \
-basesw/ovi40-h7/Src/startup_stm32h743xx.S \
-basesw/ovi40-h7/Src/system_stm32h7xx.c \
 
