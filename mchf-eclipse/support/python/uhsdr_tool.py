@@ -63,7 +63,7 @@ def backupRestoreApp():
     parser = argparse.ArgumentParser()
     parser.add_argument("-b","--backup", help="backup the UHSDR TRX configuration to file", action="store_true")
     parser.add_argument("-r","--restore", help="restore the UHSDR TRX configuration from file", action="store_true")
-    parser.add_argument("-p","--port", help="UHSDR serial port (COM<num> in Windows, Linux /dev/ttyACM<num>)", type=int, default=-1)
+    parser.add_argument("-p","--port", help="UHSDR serial port either by number (COM<num> in Windows, Linux /dev/ttyACM<num>) or full device name ( e.g. '/dev/cu.modemABCD', all operating systems )", type=str, default="undefined serial port name")
     parser.add_argument("-f","--file", help="filename to backup to/restore from, if not defined 'uhsdr_config.json' is used", type=str, default="uhsdr_config.json")
 
     args = parser.parse_args()
@@ -84,8 +84,12 @@ def backupRestoreApp():
             uhsdr.eprint(uhsdrDeviceList)
             uhsdr.eprint("Please specify valid UHSDR TRX serial port number(!) with -p / --port")
     else:
-            
-        comPort= ("COM" if os.name == "nt" else "/dev/ttyACM") + str(args.port) 
+
+        try:
+            int(args.port);
+            comPort= ("COM" if os.name == "nt" else "/dev/ttyACM") + str(args.port) 
+        except:
+            comPort = args.port
 
         uhsdr.eprint("Opening serial port ",comPort,":")
         try:
