@@ -116,7 +116,7 @@ static uint32_t flashIf_GetSectorNumber(uint32_t idx)
     {
 #if defined(STM32F4) || defined(STM32F7)
         retval = idx; // idx == sector number
-#elif defined(STM327)
+#elif defined(STM32H7)
         retval = idx % 8; // 2x8 sectors
 #endif
     }
