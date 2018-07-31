@@ -632,7 +632,7 @@ void UiLcdHy28_BacklightEnable(bool on)
 #ifdef STM32H7
     #define SPI_PRESCALE_LCD_DEFAULT (SPI_BAUDRATEPRESCALER_8)
     #define SPI_PRESCALE_LCD_HIGH    (SPI_BAUDRATEPRESCALER_4)
-    #define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_16)
+    #define SPI_PRESCALE_TS_DEFAULT  (SPI_BAUDRATEPRESCALER_32)
     // 16 may be a little bit high for some displays but works with the 480x320 display
 #endif
 
