@@ -339,8 +339,10 @@ const LcdLayout LcdLayouts[LcdLayoutsCount]=
 				.TextMsg_buffer_max=50,
 				.TextMsg_font=0,
 
-				.FREEDV_SNR = { 280, 28},
-				.FREEDV_BER = {380, 28},
+				//.FREEDV_SNR = { 280, 28},
+				//.FREEDV_BER = {380, 28},
+				.FREEDV_SNR = {410,288},
+				.FREEDV_BER = {410,297},
 				.FREEDV_FONT=4,
 
 				.SM_IND={.x = R480320_SM_IND_X, .y = R480320_SM_IND_Y, .h = R480320_SM_IND_H, .w = R480320_SM_IND_W},
