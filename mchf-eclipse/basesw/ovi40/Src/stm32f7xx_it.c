@@ -140,20 +140,20 @@ void DebugMon_Handler(void)
   /* USER CODE END DebugMonitor_IRQn 1 */
 }
 
+#ifndef BOOTLOADER_BUILD
 /**
 * @brief This function handles Pendable request for system service.
 */
 void PendSV_Handler(void)
 {
   /* USER CODE BEGIN PendSV_IRQn 0 */
-#ifndef BOOTLOADER_BUILD
     UiDriver_TaskHandler_HighPrioTasks();
-#endif
   /* USER CODE END PendSV_IRQn 0 */
   /* USER CODE BEGIN PendSV_IRQn 1 */
 
   /* USER CODE END PendSV_IRQn 1 */
 }
+#endif
 
 /**
 * @brief This function handles System tick timer.
@@ -176,7 +176,7 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f7xx.s).                    */
 /******************************************************************************/
-
+#ifndef BOOTLOADER_BUILD
 /**
 * @brief This function handles EXTI line0 interrupt.
 */
@@ -204,6 +204,7 @@ void EXTI1_IRQHandler(void)
 
   /* USER CODE END EXTI1_IRQn 1 */
 }
+#endif
 
 /**
 * @brief This function handles DMA1 stream4 global interrupt.
@@ -273,7 +274,6 @@ void OTG_FS_IRQHandler(void)
   /* USER CODE BEGIN OTG_FS_IRQn 1 */
   /* USER CODE END OTG_FS_IRQn 1 */
 }
-#endif
 
 /**
 * @brief This function handles DMA2 stream6 global interrupt.
@@ -288,6 +288,7 @@ void DMA2_Stream6_IRQHandler(void)
 
   /* USER CODE END DMA2_Stream6_IRQn 1 */
 }
+#endif
 
 #if defined(USE_USBHOST) || defined(BOOTLOADER_BUILD)
 /**

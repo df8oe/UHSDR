@@ -57,7 +57,7 @@ SECTIONS
 	/* _sidata is used in coide startup code */
 	_sidata = __etext;
 	
-	.data : AT (__etext)
+	.data :
 	{
 		__data_start__ = .;
 		
@@ -94,7 +94,7 @@ SECTIONS
 		
 		/* _edata is used in coide startup code */
 		_edata = __data_end__;
-	} > ram 
+	} > ram AT > rom 
 	
 	.bss :
 	{

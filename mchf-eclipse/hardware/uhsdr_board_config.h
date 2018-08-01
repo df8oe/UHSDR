@@ -377,8 +377,11 @@
 
 // place tagged elements in a memory to peripheral DMA-able memory region
 // with the correct cache strategy set
-#define __UHSDR_DMAMEM __attribute__ ((section (".dmamem")))
-
+#ifdef STM32H7
+    #define __UHSDR_DMAMEM __attribute__ ((section (".dmamem")))
+#else
+    #define __UHSDR_DMAMEM
+#endif
 
 
 #define SI570_I2C               (&hi2c1)
