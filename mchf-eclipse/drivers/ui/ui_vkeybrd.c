@@ -779,30 +779,40 @@ static void UiVk_ModSelVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 static void UiVk_ModSelVKeyToggleCW(uint8_t KeyNum, uint32_t param)
 {
 	ts.demod_mode_disable^=DEMOD_CW_DISABLE;
+	ts.menu_var_changed = true;
+	UiDriver_DisplayFButton_F1MenuExit();
 	UiVk_DrawVKeypad();
 }
 
 static void UiVk_ModSelVKeyToggleAM(uint8_t KeyNum, uint32_t param)
 {
 	ts.demod_mode_disable^=DEMOD_AM_DISABLE;
+	ts.menu_var_changed = true;
+	UiDriver_DisplayFButton_F1MenuExit();
 	UiVk_DrawVKeypad();
 }
 
 static void UiVk_ModSelVKeyToggleDIGI(uint8_t KeyNum, uint32_t param)
 {
 	ts.demod_mode_disable^=DEMOD_DIGI_DISABLE;
+	ts.menu_var_changed = true;
+	UiDriver_DisplayFButton_F1MenuExit();
 	UiVk_DrawVKeypad();
 }
 
 static void UiVk_ModSelVKeyToggleSAM(uint8_t KeyNum, uint32_t param)
 {
 	ts.flags1^=FLAGS1_SAM_ENABLE;
+	ts.menu_var_changed = true;
+	UiDriver_DisplayFButton_F1MenuExit();
 	UiVk_DrawVKeypad();
 }
 
 static void UiVk_ModSelVKeyToggleFM(uint8_t KeyNum, uint32_t param)
 {
 	ts.flags2^=FLAGS2_FM_MODE_ENABLE;
+	ts.menu_var_changed = true;
+	UiDriver_DisplayFButton_F1MenuExit();
 	UiVk_DrawVKeypad();
 }
 

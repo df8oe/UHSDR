@@ -169,6 +169,11 @@ typedef enum
     SPECTRUM_DUAL = 3
 } SpectrumMode_t;
 
+typedef struct
+{
+	uint8_t dmod_mode;
+	uint8_t digital_mode;
+} ui_driver_mode_t;
 //
 // --------------------------------------------------------------------------
 // Exports
@@ -208,7 +213,7 @@ void UiDriver_TextMsgPutChar(char ch);
 void UiDriver_TextMsgPutSign(const char *s);
 void UiDriver_TextMsgDisplay();
 void UiDriver_TextMsgClear();
-
+void UiDriver_DisplayFButton_F1MenuExit();
 
 void UiDriver_SetSpectrumMode(SpectrumMode_t mode);
 SpectrumMode_t UiDriver_GetSpectrumMode();
