@@ -249,7 +249,7 @@ PowerMeter					pwmt;
 // ------------------------------------------------
 
 uchar drv_state = 0;
-
+ui_driver_mode_t ui_driver_state;
 bool filter_path_change = false;
 
 // check if touched point is within rectangle of valid action
@@ -922,7 +922,7 @@ void UiDriver_EncoderDisplay(const uint8_t row, const uint8_t column, const char
 }
 
 
-static void UiDriver_DisplayFButton_F1MenuExit()
+void UiDriver_DisplayFButton_F1MenuExit()
 {
 	char* cap;
 	uint32_t color;
@@ -1185,14 +1185,6 @@ void UiDriver_RefreshEncoderDisplay()
  * @brief This is THE function to call after changing operational parameters such as frequency or demod mode
  * It will make sure to update the display AND also tunes to a newly selected frequency if not already tuned to it.
  */
-typedef struct
-{
-	uint8_t dmod_mode;
-	uint8_t digital_mode;
-} ui_driver_mode_t;
-
-ui_driver_mode_t ui_driver_state;
-
 bool UiDriver_IsDemodModeChange()
 {
 	bool retval = (ts.dmod_mode != ui_driver_state.dmod_mode);

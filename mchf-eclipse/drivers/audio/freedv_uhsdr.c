@@ -215,17 +215,19 @@ static void FreeDv_DisplaySnr()
 
 void FreeDv_DisplayClear()
 {
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x, ts.Layout->FREEDV_SNR.y,"            ",Yellow,Black,ts.Layout->FREEDV_FONT);
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_BER.x, ts.Layout->FREEDV_BER.y,"            ",Yellow,Black,ts.Layout->FREEDV_FONT);
+//    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x, ts.Layout->FREEDV_SNR.y,"            ",Yellow,Black,ts.Layout->FREEDV_FONT);
+//   UiLcdHy28_PrintText(ts.Layout->FREEDV_BER.x, ts.Layout->FREEDV_BER.y,"            ",Yellow,Black,ts.Layout->FREEDV_FONT);
+    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x, ts.Layout->FREEDV_SNR.y,"         ",Yellow,Black,ts.Layout->FREEDV_FONT);		//SNR=00
+    UiLcdHy28_PrintText(ts.Layout->FREEDV_BER.x, ts.Layout->FREEDV_BER.y,"         ",Yellow,Black,ts.Layout->FREEDV_FONT);		//BER=0.000	(max 9 chars)
     UiDriver_TextMsgClear();
 }
 
 void FreeDv_DisplayPrepare()
 {
+	UiDriver_TextMsgClear();
 	freedv_display_x_offset = UiLcdHy28_TextWidth("SNR=", ts.Layout->FREEDV_FONT);
     UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x, ts.Layout->FREEDV_SNR.y,"SNR=",Yellow,Black, ts.Layout->FREEDV_FONT);
     UiLcdHy28_PrintText(ts.Layout->FREEDV_BER.x, ts.Layout->FREEDV_BER.y,"BER=",Yellow,Black, ts.Layout->FREEDV_FONT);
-    UiDriver_TextMsgClear();
 }
 
 void FreeDv_DisplayUpdate()
