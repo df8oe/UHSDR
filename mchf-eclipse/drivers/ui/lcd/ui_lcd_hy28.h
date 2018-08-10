@@ -110,7 +110,11 @@ typedef struct
     void (*WriteRAM_Prepare) ();
     void (*WriteDataSpiStart_Prepare)();
     void (*WriteIndexSpi_Prepare)();
-
+    void (*WriteReg)(unsigned short LCD_Reg, unsigned short LCD_RegValue);
+    uint16_t (*ReadReg)( uint16_t LCD_Reg);
+    void (*DrawStraightLine)(uint16_t x, uint16_t y, uint16_t Length, uint8_t Direction,uint16_t color);
+    void (*DrawFullRect)(uint16_t Xpos, uint16_t Ypos, uint16_t Height, uint16_t Width ,uint16_t color);
+    void (*DrawColorPoint)(uint16_t Xpos, uint16_t Ypos, uint16_t point);
     GPIO_TypeDef* spi_cs_port;
     uint16_t      spi_cs_pin;
     uint16_t      is_spi:1;
@@ -121,7 +125,7 @@ typedef struct
 typedef struct
 {
     uint8_t display_type;           // existence/identification of display type
-    uint16_t DeviceCode;      // LCD ident code
+    uint16_t DeviceCode;      		// LCD ident code
     bool use_spi;
     int16_t lcd_cs;
     uint16_t MAX_X;
@@ -133,6 +137,11 @@ typedef struct
     void (*WriteRAM_Prepare) ();
     void (*WriteDataSpiStart_Prepare)();
     void (*WriteIndexSpi_Prepare)();
+    void (*WriteReg)(unsigned short LCD_Reg, unsigned short LCD_RegValue);
+    uint16_t (*ReadReg)( uint16_t LCD_Reg);
+    void (*DrawStraightLine)(uint16_t x, uint16_t y, uint16_t Length, uint8_t Direction,uint16_t color);
+    void (*DrawFullRect)(uint16_t Xpos, uint16_t Ypos, uint16_t Height, uint16_t Width ,uint16_t color);
+    void (*DrawColorPoint)(uint16_t Xpos, uint16_t Ypos, uint16_t point);
 } mchf_display_t;
 
 extern mchf_display_t mchf_display;

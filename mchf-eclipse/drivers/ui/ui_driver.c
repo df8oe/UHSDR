@@ -4327,7 +4327,7 @@ static void UiDriver_DisplayModulationType()
 	// Draw line for box
 	UiLcdHy28_DrawStraightLine(ts.Layout->DIGMODE.x,(ts.Layout->DIGMODE.y - 1),ts.Layout->DIGMODE.w,LCD_DIR_HORIZONTAL,bgclr);
 	UiLcdHy28_PrintTextCentered(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y,ts.Layout->DIGMODE.w,txt,color,bgclr,0);
-	if(disp_resolution==RESOLUTION_480_320)
+	if(disp_resolution!=RESOLUTION_320_240)
 	{
 		UiLcdHy28_DrawStraightLineDouble(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y+12,ts.Layout->DIGMODE.w,LCD_DIR_HORIZONTAL,bgclr);
 		UiLcdHy28_DrawStraightLine(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y+14,ts.Layout->DIGMODE.w,LCD_DIR_HORIZONTAL,Blue);

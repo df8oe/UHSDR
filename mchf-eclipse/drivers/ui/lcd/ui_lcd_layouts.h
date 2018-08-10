@@ -37,7 +37,8 @@
 typedef enum
 {
     RESOLUTION_320_240,
-    RESOLUTION_480_320
+    RESOLUTION_480_320,
+	RESOLUTION_800_480
 } disp_resolution_t;
 
 typedef struct {
@@ -148,6 +149,7 @@ enum MODE_{
 enum LcdLayout_{
 	LcdLayout_320x240=0,
 	LcdLayout_480x320,
+	LcdLayout_800x480,
 	LcdLayoutsCount		//this is last position enumerated used for layout array definition. Insert new layout name before this one
 };
 

@@ -977,6 +977,11 @@ static void UiSpectrum_InitSpectrumDisplayData()
     	sd.fft_iq_len = 1024;
     	sd.cfft_instance = &arm_cfft_sR_f32_len512;
     	break;
+    case RESOLUTION_800_480:	//FIXME: fill with correct values (move to layouts.c ??)
+    	sd.spec_len = 512;
+    	sd.fft_iq_len = 1024;
+    	sd.cfft_instance = &arm_cfft_sR_f32_len512;
+    	break;
     }
 
 
