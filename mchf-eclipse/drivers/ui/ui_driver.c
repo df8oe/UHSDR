@@ -5838,7 +5838,7 @@ void UiDriver_StartUpScreenFinish()
 	}
 	if (UiDriver_FirmwareVersionCheck())
 	{
-		hold_time = 10000; // 15s
+		hold_time = 10000; // 10s
 		txp = "Firmware change detected!\nPlease review settings!";
 		startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x,startUpScreen_nextLineY + 10,320,txp,White,Black,0);
 
@@ -5848,6 +5848,7 @@ void UiDriver_StartUpScreenFinish()
 	if(startUpError == true)
 	{
 		hold_time = 15000; // 15s
+		//hold_time = 3000; // 3s
 		txp = "Boot Delay because of Errors or Warnings";
 		clr = Red3;
 		fg_clr = Black;

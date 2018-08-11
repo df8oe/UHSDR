@@ -911,12 +911,7 @@ void UiLcdHy28_WriteDataSpi( unsigned short data)
 
 static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
 {
-	if(mchf_display.DeviceCode==0x8875)
-	{
-        LCD_RAM_RA8875 = data;
-        __DMB();
-	}
-	else if(UiLcdHy28_SpiDisplayUsed())
+	if(UiLcdHy28_SpiDisplayUsed())
     {
         UiLcdHy28_SpiSendByte((data >>   8));      /* Write D8..D15                */
         UiLcdHy28_SpiSendByte((data & 0xFF));      /* Write D0..D7                 */
@@ -929,6 +924,13 @@ static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
 #endif
     }
 }
+#ifdef USE_GFX_RA8875
+static inline void UiLcdHy28_WriteDataOnlyRA8875( unsigned short data)
+{
+	LCD_RAM_RA8875 = data;
+	__DMB();
+}
+#endif
 
 static inline void UiLcdHy28_WriteData( unsigned short data)
 {
@@ -1104,10 +1106,22 @@ static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
     if(UiLcdHy28_SpiDisplayUsed() == false)
 #endif
     {
-        for (uint32_t i = len; i; i--)
-        {
-            UiLcdHy28_WriteDataOnly(*(pixel++));
-        }
+#ifdef USE_GFX_RA8875
+    	if(mchf_display.DeviceCode==0x8875)
+    	{
+    		for (uint32_t i = len; i; i--)
+    		{
+    			UiLcdHy28_WriteDataOnlyRA8875(*(pixel++));
+    		}
+    	}
+    	else
+#endif
+    	{
+    		for (uint32_t i = len; i; i--)
+    		{
+    			UiLcdHy28_WriteDataOnly(*(pixel++));
+    		}
+    	}
     }
 #ifdef USE_SPI_DMA
     else
@@ -1144,9 +1158,12 @@ static void UiLcdHy28_OpenBulkWrite(ushort x, ushort width, ushort y, ushort hei
 static void UiLcdHy28_CloseBulkWrite()
 {
 #ifdef USE_GFX_RA8875
-	uint16_t MAX_X=mchf_display.MAX_X; uint16_t MAX_Y=mchf_display.MAX_Y;
-    UiLcdHy28_SetActiveWindow(0, MAX_X - 1, 0, MAX_Y - 1);
-    UiLcdHy28_WriteReg(0x40, 0);
+	if(mchf_display.DeviceCode==0x8875)
+	{
+		uint16_t MAX_X=mchf_display.MAX_X; uint16_t MAX_Y=mchf_display.MAX_Y;
+		UiLcdHy28_SetActiveWindow(0, MAX_X - 1, 0, MAX_Y - 1);
+		UiLcdHy28_WriteReg(0x40, 0);
+	}
 #endif
 }
 
@@ -1280,7 +1297,7 @@ void UiLcdHy28_DrawFullRect_RA8875(uint16_t Xpos, uint16_t Ypos, uint16_t Height
     UiLcdRa8875_WriteReg_16bit(0x95, Xpos + Width-1);	//Horizontal end
     UiLcdRa8875_WriteReg_16bit(0x93, Ypos);				//Vertical start
     UiLcdRa8875_WriteReg_16bit(0x97, Ypos + Height-1);	//Vertical end
-    UiLcdRa8875_WriteReg_8bit(0x90, 0xB0);				// Fill rectangle
+    UiLcdHy28_WriteRegRA8875(0x90, 0xB0);				// Fill rectangle
 }
 
 void UiLcdHy28_DrawColorPoint_RA8875(uint16_t Xpos,uint16_t Ypos,uint16_t point)
@@ -1289,7 +1306,7 @@ void UiLcdHy28_DrawColorPoint_RA8875(uint16_t Xpos,uint16_t Ypos,uint16_t point)
     if( Xpos < MAX_X && Ypos < MAX_Y )
     {
         UiLcdHy28_SetCursorA(Xpos, Ypos);
-        UiLcdHy28_WriteReg(0x02, point);
+        UiLcdHy28_WriteRegRA8875(0x02, point);
     }
 }
 
@@ -1303,12 +1320,12 @@ void UiLcdHy28_RA8875_WaitReady()
 
 void UiLcdRa8875_WriteReg_8bit(uint16_t LCD_Reg, uint8_t LCD_RegValue)
 {
-    UiLcdHy28_WriteReg(LCD_Reg, LCD_RegValue);
+	UiLcdHy28_WriteRegRA8875(LCD_Reg, LCD_RegValue);
 }
 void UiLcdRa8875_WriteReg_16bit(uint16_t LCD_Reg, uint16_t LCD_RegValue)
 {
-    UiLcdRa8875_WriteReg_8bit(LCD_Reg,LCD_RegValue & 0xff);
-    UiLcdRa8875_WriteReg_8bit(LCD_Reg+1,(LCD_RegValue >> 8) & 0xff);
+	UiLcdHy28_WriteRegRA8875(LCD_Reg,LCD_RegValue & 0xff);
+	UiLcdHy28_WriteRegRA8875(LCD_Reg+1,(LCD_RegValue >> 8) & 0xff);
 }
 
 
@@ -1412,6 +1429,8 @@ void UiLcdHy28_DrawStraightLine_RA8875(uint16_t x, uint16_t y, uint16_t Length, 
     #define LCD_DLVER0  (0x97)      /* Draw Line/Square Vertical End Address Register0 */
     #define LCD_DLVER1  (0x98)      /* Draw Line/Square Vertical End Address Register1 */
 
+	if(Length>0)
+	{
 		UiLcdRA8875_SetForegroundColor(color);
 
 		uint16_t x_end, y_end;
@@ -1419,21 +1438,27 @@ void UiLcdHy28_DrawStraightLine_RA8875(uint16_t x, uint16_t y, uint16_t Length, 
 		if (Direction == LCD_DIR_VERTICAL)
 		{
 			x_end = x;
-			y_end = y + Length;
+			y_end = y + Length-1;
 		}
 		else
 		{
-			x_end = x + Length;
+			x_end = x + Length-1;
 			y_end = y;
 		}
 
-		/* Horizontal + vertical start */
-		UiLcdRa8875_WriteReg_16bit(LCD_DLHSR0, x);
-		UiLcdRa8875_WriteReg_16bit(LCD_DLVSR0, y);
-		UiLcdRa8875_WriteReg_16bit(LCD_DLHER0, x_end);
-		UiLcdRa8875_WriteReg_16bit(LCD_DLVER0, y_end);
+		if(x_end==x && y_end==y)
+			UiLcdHy28_DrawColorPoint_RA8875(x,y,color);
+		else
+		{
+			/* Horizontal + vertical start */
+			UiLcdRa8875_WriteReg_16bit(LCD_DLHSR0, x);
+			UiLcdRa8875_WriteReg_16bit(LCD_DLVSR0, y);
+			UiLcdRa8875_WriteReg_16bit(LCD_DLHER0, x_end);
+			UiLcdRa8875_WriteReg_16bit(LCD_DLVER0, y_end);
 
-		UiLcdRa8875_WriteReg_8bit(LCD_DCR, 0x80);
+			UiLcdHy28_WriteRegRA8875(LCD_DCR, 0x80);
+		}
+	}
 }
 
 #endif
@@ -1531,11 +1556,23 @@ static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
     else
 #endif
     {
-        uint32_t i = len;
-        for (; i; i--)
-        {
-            UiLcdHy28_WriteDataOnly(Color);
-        }
+    	uint32_t i = len;
+#ifdef USE_GFX_RA8875
+    	if(mchf_display.DeviceCode==0x8875)
+    	{
+    		for (uint32_t i = len; i; i--)
+    		{
+    			UiLcdHy28_WriteDataOnlyRA8875(Color);
+    		}
+    	}
+    	else
+#endif
+    	{
+    		for (; i; i--)
+    		{
+    			UiLcdHy28_WriteDataOnly(Color);
+    		}
+    	}
     }
 }
 
