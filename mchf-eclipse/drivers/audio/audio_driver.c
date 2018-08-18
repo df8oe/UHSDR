@@ -3638,6 +3638,127 @@ void AudioDriver_RxProcessorNoiseReduction(uint16_t blockSizeDecim, float32_t* i
 #endif
 }
 
+#ifdef USE_CONVOLUTION
+void AudioDriver_SetConvolutionFilter (int nc, float32_t f_low, float32_t f_high, float32_t samplerate, int wintype, float32_t gain)
+{
+	/****************************************************************
+	 *  Partitioned Convolution code adapted from wdsp library
+	 *  (c) by Warren Pratt under GNU GPLv3
+	 ****************************************************************/
+  // call for change in frequency, rate, wintype, gain
+  // must also call after a call to plan_firopt()
+  int i;
+  // this calculates the impulse response (=coefficients) of a complex bandpass filter
+  // it needs to be complex in order to allow for SSB demodulation
+  float32_t* impulse = AudioDriver_CalcConvolutionFilterCoeffs (nc, f_low, f_high, samplerate, wintype, 1, gain);
+  adb.buffidx = 0;
+  for (i = 0; i < adb.nfor; i++)
+  {
+    // I right-justified the impulse response => take output from left side of output buff, discard right side
+    // Be careful about flipping an asymmetrical impulse response.
+    // DD4WH: unsure how to interpret that, maybe like this:
+    // maskgen is of size: 2 * FFT_size * sizeof(complex)
+    // maskgen: left half is filled with zeros!? (starts to be filled from maskgen[2 * FFT_size], which is the centre of the array)
+    // right half of maskgen: is filled with the relevant part of the impulse response
+    // next round takes the next part of the impulse response
+    // the right half of impulse is not being used (discarded), because 2 * FFT_size * (nfor-1) is maximum of pointer
+    for(int idx = 0; idx < adb.size * 2; idx++)
+    {
+    	adb.maskgen[idx] = 0;
+    	adb.maskgen[idx + adb.size * 2] = impulse[idx];
+    }
+    //memcpy (&(a->maskgen[2 * a->size]), &(impulse[2 * a->size * i]), a->size * sizeof(complex));
+
+    // do FFT
+    arm_cfft_f32(&arm_cfft_sR_f32_len256, adb.maskgen, 0, 1);
+    // take input from maskgen and put output into fmask
+    for(int idx = 0; idx < adb.size * 4; idx++)
+    {
+    	adb.fmask[i][idx] = adb.maskgen[idx];
+    }
+
+    //fftw_execute (a->maskplan[i]);
+  }
+  // after the loop is finished,  fmask[nfor][FFT_size * 2] is filled with the FFT outputs of the partitioned filter response
+
+}
+#endif
+
+#ifdef USE_CONVOLUTION
+float32_t* AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float32_t f_high, float32_t samplerate, int wintype, int rtype, float32_t scale)
+{
+	/****************************************************************
+	 *  Partitioned Convolution code adapted from wdsp library
+	 *  (c) by Warren Pratt under GNU GPLv3
+	 ****************************************************************/
+	//float32_t *c_impulse = (float32_t *) malloc0 (N * sizeof (complex));
+	float32_t c_impulse[CONVOLUTION_MAX_NO_OF_COEFFS];
+	float32_t ft = (f_high - f_low) / (2.0 * samplerate);
+	float32_t ft_rad = 2.0 * PI * ft;
+	float32_t w_osc = PI * (f_high + f_low) / samplerate;
+  int i, j;
+  float32_t m = 0.5 * (float32_t)(N - 1);
+  float32_t delta = PI / m;
+  float32_t cosphi;
+  float32_t posi, posj;
+  float32_t sinc, window, coef;
+
+  if (N & 1)
+  {
+    switch (rtype)
+    {
+    case 0:
+      c_impulse[N >> 1] = scale * 2.0 * ft;
+      break;
+    case 1:
+      c_impulse[N - 1] = scale * 2.0 * ft;
+      c_impulse[  N  ] = 0.0;
+      break;
+    }
+  }
+  for (i = (N + 1) / 2, j = N / 2 - 1; i < N; i++, j--)
+  {
+    posi = (float32_t)i - m;
+    posj = (float32_t)j - m;
+    sinc = sinf (ft_rad * posi) / (PI * posi);
+    switch (wintype)
+    {
+    case 0: // Blackman-Harris 4-term
+      cosphi = cosf (delta * i);
+      window  =             + 0.21747
+          + cosphi *  ( - 0.45325
+          + cosphi *  ( + 0.28256
+          + cosphi *  ( - 0.04672 )));
+      break;
+    case 1: // Blackman-Harris 7-term
+      cosphi = cosf (delta * i);
+      window  =       + 6.3964424114390378e-02
+          + cosphi *  ( - 2.3993864599352804e-01
+          + cosphi *  ( + 3.5015956323820469e-01
+          + cosphi *  ( - 2.4774111897080783e-01
+          + cosphi *  ( + 8.5438256055858031e-02
+          + cosphi *  ( - 1.2320203369293225e-02
+          + cosphi *  ( + 4.3778825791773474e-04 ))))));
+      break;
+    }
+    coef = scale * sinc * window;
+    switch (rtype)
+    {
+    case 0:
+      c_impulse[i] = + coef * cosf (posi * w_osc);
+      c_impulse[j] = + coef * cosf (posj * w_osc);
+      break;
+    case 1:
+      c_impulse[2 * i + 0] = + coef * cosf (posi * w_osc);
+      c_impulse[2 * i + 1] = - coef * sinf (posi * w_osc);
+      c_impulse[2 * j + 0] = + coef * cosf (posj * w_osc);
+      c_impulse[2 * j + 1] = - coef * sinf (posj * w_osc);
+      break;
+    }
+  }
+  return c_impulse;
+}
+#endif
 
 #ifdef USE_CONVOLUTION
 //
@@ -3758,7 +3879,7 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
             arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.q_buffer, adb.q_buffer, blockSize);
 
 /********************************************************************************************************************
- *  DANILO ! :-)
+ *  DANILO :-)
  ********************************************************************************************************************/
         	//		2. collect samples until we have 128 samples to deal within the convolution
             // put those samples into a new buffer adb.i_buffer_convolution and adb.q_buffer_convolution
