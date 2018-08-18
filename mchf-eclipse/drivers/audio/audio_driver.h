@@ -73,15 +73,40 @@
     #define NUM_AUDIO_CHANNELS 1
 #endif
 
+#ifdef USE_CONVOLUTION
+#define FFT_CONVOLUTION_SIZE 256
+#define CONVOLUTION_MAX_NO_OF_BLOCKS 8
+#define CONVOLUTION_MAX_NO_OF_COEFFS 2048
+#endif
+
 typedef struct
 {
     // Stereo buffers
     float32_t               i_buffer[IQ_BLOCK_SIZE];
     float32_t               q_buffer[IQ_BLOCK_SIZE];
 
-    float32_t               a_buffer[2][IQ_BLOCK_SIZE];
     float32_t               agc_valbuf[IQ_BLOCK_SIZE];   // holder for "running" AGC value
     float32_t               DF;
+
+#ifdef USE_CONVOLUTION
+    // for convolution filtering
+    int						nc; // no. of coefficients
+    int 					size; // no. of input samples
+    int						nfor; // no. of blocks in the convolution
+    float32_t				impulse[CONVOLUTION_MAX_NO_OF_COEFFS * 2]; // impulse response has real and imaginary components
+    float32_t				i_buffer_convolution[FFT_CONVOLUTION_SIZE / 2];
+    float32_t				q_buffer_convolution[FFT_CONVOLUTION_SIZE / 2];
+    float32_t				maskgen[FFT_CONVOLUTION_SIZE * 2];
+    float32_t				fmask[CONVOLUTION_MAX_NO_OF_BLOCKS][FFT_CONVOLUTION_SIZE * 2];
+    float32_t				fftin[FFT_CONVOLUTION_SIZE * 2];
+    float32_t				fftout[CONVOLUTION_MAX_NO_OF_BLOCKS][FFT_CONVOLUTION_SIZE * 2];
+    float32_t				accum[FFT_CONVOLUTION_SIZE * 2];
+    float32_t               a_buffer[2][FFT_CONVOLUTION_SIZE / 2]; // for convolution, we need an output buffer of 128 samples
+#else
+    float32_t               a_buffer[2][IQ_BLOCK_SIZE];
+#endif
+
+    // for SAM demodulation
     float32_t               pll_fmax;
     // DX adjustments: zeta = 0.15, omegaN = 100.0
     // very stable, but does not lock very fast
