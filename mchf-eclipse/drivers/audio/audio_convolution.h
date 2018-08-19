@@ -25,7 +25,7 @@
 
 extern arm_fir_decimate_instance_f32   DECIMATE_RX_I;
 extern arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
-extern AudioDriverBuffer adb;
+//extern AudioDriverBuffer adb;
 
 #ifdef USE_CONVOLUTION
 #define FFT_CONVOLUTION_SIZE 256
@@ -40,7 +40,7 @@ typedef struct
     // for convolution filtering
     float32_t				i_buffer_convolution[FFT_CONVOLUTION_SIZE / 2];
     float32_t				q_buffer_convolution[FFT_CONVOLUTION_SIZE / 2];
-    float32_t				maskgen[FFT_CONVOLUTION_SIZE * 2];
+
     float32_t				fmask[CONVOLUTION_MAX_NO_OF_BLOCKS][FFT_CONVOLUTION_SIZE * 2];
     float32_t				fftin[FFT_CONVOLUTION_SIZE * 2];
     float32_t				fftout[CONVOLUTION_MAX_NO_OF_BLOCKS][FFT_CONVOLUTION_SIZE * 2];
@@ -60,12 +60,12 @@ typedef struct
     int						nfor; // no. of blocks in the convolution
     int						buffidx; // buffer pointer
     float32_t				impulse[CONVOLUTION_MAX_NO_OF_COEFFS * 2]; // impulse response has real and imaginary components
-
+    float32_t				maskgen[FFT_CONVOLUTION_SIZE * 2];
 } ConvolutionBuffersshared;
 
-ConvolutionBuffersshared cbs;
+extern ConvolutionBuffersshared cbs;
 
-
+void AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float32_t f_high, float32_t samplerate, int wintype, int rtype, float32_t scale);
 
 #endif
 

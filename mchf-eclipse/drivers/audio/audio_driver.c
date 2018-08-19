@@ -43,7 +43,7 @@
 #include "freedv_uhsdr.h"
 
 #ifdef USE_CONVOLUTION
-//#include <audio_convolution.h>
+#include "audio_convolution.h"
 #endif
 
 typedef struct
@@ -1373,6 +1373,10 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
             FIR_RXAUDIO_BLOCK_SIZE);
 
     // Set up RX decimation/filter
+    // this filter instance is also used for Convolution !
+#ifdef USE_CONVOLUTION
+// TODO: insert decimation filter settings for convolution filter HERE
+#else
     if (FilterPathInfo[ts.filter_path].dec != NULL)
     {
         const arm_fir_decimate_instance_f32* dec = FilterPathInfo[ts.filter_path].dec;
@@ -1412,7 +1416,12 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
         DECIMATE_RX_Q.numTaps = 0;
         DECIMATE_RX_Q.pCoeffs = NULL;
     }
+#endif
 
+    // this filter instance is also used for Convolution !
+#ifdef USE_CONVOLUTION
+// TODO: insert interpolation filter settings for convolution filter HERE
+#else
     // Set up RX interpolation/filter
     // NOTE:  Phase Length MUST be an INTEGER and is the number of taps divided by the decimation rate, and it must be greater than 1.
     for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
@@ -1431,6 +1440,15 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
             INTERPOLATE_RX[chan].pCoeffs = NULL;
         }
     }
+#endif
+
+#ifdef USE_CONVOLUTION
+    // Convolution Filter
+    // calculate coeffs
+    // for first trial, use hard-coded USB filter from 250Hz to 2700Hz
+    // hardcoded sample rate and Blackman-Harris 4th term
+//    AudioDriver_CalcConvolutionFilterCoeffs (cbs.nc, 250.0, 2700.0, 48000, 0, 1, 1.0);
+#endif
 
     arm_fir_decimate_init_f32(&DECIMATE_NR, 4, 2, NR_decimate_coeffs, decimNRState, FIR_RXAUDIO_BLOCK_SIZE);
     // should be a very light lowpass @2k7

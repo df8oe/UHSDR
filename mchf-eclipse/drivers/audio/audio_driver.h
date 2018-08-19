@@ -20,10 +20,12 @@
 #include "softdds.h"
 #include "uhsdr_hw_i2s.h"
 #include "uhsdr_board.h"
+#include "audio_convolution.h"
 
 // 16 or 24 bits from Codec
 // 24 bits are not supported anywhere in the recent code!
 //#define USE_24_BITS
+
 
 #define IQ_SAMPLE_RATE (48000)
 #define IQ_SAMPLE_RATE_F ((float32_t)IQ_SAMPLE_RATE)
@@ -34,8 +36,6 @@ typedef struct {
     __packed int16_t l;
     __packed int16_t r;
 } AudioSample_t;
-
-
 
 
 // -----------------------------
@@ -131,8 +131,6 @@ typedef struct
     float32_t               M_c1;
     float32_t               M_c2;
 } AudioDriverBuffer;
-
-
 
 // Audio driver publics
 typedef struct AudioDriverState
@@ -628,6 +626,9 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t *audioDst, int1
 // Public Audio
 extern AudioDriverState	ads;
 extern __IO SMeter       sm;
+
+//extern ConvolutionBuffersshared cbs;
+extern AudioDriverBuffer adb;
 
 typedef struct SnapCarrier
 {

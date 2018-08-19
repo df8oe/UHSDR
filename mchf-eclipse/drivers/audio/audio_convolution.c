@@ -43,11 +43,11 @@ void AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float32_t 
     switch (rtype)
     {
     case 0:
-      cob.impulse[N >> 1] = scale * 2.0 * ft;
+      cbs.impulse[N >> 1] = scale * 2.0 * ft;
       break;
     case 1:
-      cob.impulse[N - 1] = scale * 2.0 * ft;
-      cob.impulse[  N  ] = 0.0;
+      cbs.impulse[N - 1] = scale * 2.0 * ft;
+      cbs.impulse[  N  ] = 0.0;
       break;
     }
   }
@@ -80,14 +80,14 @@ void AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float32_t 
     switch (rtype)
     {
     case 0:
-      cob.impulse[i] = + coef * cosf (posi * w_osc);
-      cob.impulse[j] = + coef * cosf (posj * w_osc);
+      cbs.impulse[i] = + coef * cosf (posi * w_osc);
+      cbs.impulse[j] = + coef * cosf (posj * w_osc);
       break;
     case 1:
-      cob.impulse[2 * i + 0] = + coef * cosf (posi * w_osc);
-      cob.impulse[2 * i + 1] = - coef * sinf (posi * w_osc);
-      cob.impulse[2 * j + 0] = + coef * cosf (posj * w_osc);
-      cob.impulse[2 * j + 1] = - coef * sinf (posj * w_osc);
+      cbs.impulse[2 * i + 0] = + coef * cosf (posi * w_osc);
+      cbs.impulse[2 * i + 1] = - coef * sinf (posi * w_osc);
+      cbs.impulse[2 * j + 0] = + coef * cosf (posj * w_osc);
+      cbs.impulse[2 * j + 1] = - coef * sinf (posj * w_osc);
       break;
     }
   }
@@ -110,8 +110,8 @@ void AudioDriver_SetConvolutionFilter (int nc, float32_t f_low, float32_t f_high
   // it needs to be complex in order to allow for SSB demodulation
   // this writes the calculated coeffs into the adb.impulse array
   AudioDriver_CalcConvolutionFilterCoeffs (nc, f_low, f_high, samplerate, wintype, 1, gain);
-  cob.buffidx = 0;
-  for (i = 0; i < cob.nfor; i++)
+  cbs.buffidx = 0;
+  for (i = 0; i < cbs.nfor; i++)
   {
     // I right-justified the impulse response => take output from left side of output buff, discard right side
     // Be careful about flipping an asymmetrical impulse response.
@@ -121,19 +121,19 @@ void AudioDriver_SetConvolutionFilter (int nc, float32_t f_low, float32_t f_high
     // right half of maskgen: is filled with the relevant part of the impulse response
     // next round takes the next part of the impulse response
     // the right half of impulse is not being used (discarded), because 2 * FFT_size * (nfor-1) is maximum of pointer
-    for(int idx = 0; idx < cob.size * 2; idx++)
+    for(int idx = 0; idx < cbs.size * 2; idx++)
     {
-    	cob.maskgen[idx] = 0;
-    	cob.maskgen[idx + cob.size * 2] = cob.impulse[idx];
+    	cbs.maskgen[idx] = 0;
+    	cbs.maskgen[idx + cbs.size * 2] = cbs.impulse[idx];
     }
     //memcpy (&(a->maskgen[2 * a->size]), &(impulse[2 * a->size * i]), a->size * sizeof(complex));
 
     // do FFT
-    arm_cfft_f32(&arm_cfft_sR_f32_len256, cob.maskgen, 0, 1);
+    arm_cfft_f32(&arm_cfft_sR_f32_len256, cbs.maskgen, 0, 1);
     // take input from maskgen and put output into fmask
-    for(int idx = 0; idx < cob.size * 4; idx++)
+    for(int idx = 0; idx < cbs.size * 4; idx++)
     {
-    	cob.fmask[i][idx] = cob.maskgen[idx];
+    	cob.fmask[i][idx] = cbs.maskgen[idx];
     }
 
     //fftw_execute (a->maskplan[i]);
@@ -334,11 +334,11 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
  /*
   * partitioned block overlap-and-save algorithm
   */
-            	int fft_conv_size = cob.size * 2;
+            	int fft_conv_size = cbs.size * 2;
                 int i, j, k;
                 // copy input buffer to right half of FFT input buffer
                 // left half already contains data from last round
-                for(int idx=0; idx < cob.size; idx++)
+                for(int idx=0; idx < cbs.size; idx++)
                 {
                 	cob.fftin[fft_conv_size + 2 * idx + 0] = cob.i_buffer_convolution[idx];
                   	cob.fftin[fft_conv_size + 2 * idx + 1] = cob.q_buffer_convolution[idx];
@@ -351,11 +351,11 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
                 // copy output from fftin into current fftout buffer
                 for (int idx = 0; idx < fft_conv_size * 2; idx++)
                 {
-                	cob.fftout[cob.buffidx][idx] = cob.fftin[idx];
+                	cob.fftout[cbs.buffidx][idx] = cob.fftin[idx];
                 }
                 //fftw_execute (a->pcfor[a->buffidx]);
 
-                k = cob.buffidx;
+                k = cbs.buffidx;
                 // fill the array accum with zeros
                 for (int idx = 0; idx < fft_conv_size * 2; idx++)
                 {
@@ -364,7 +364,7 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
                 //memset (a->accum, 0, 2 * a->size * sizeof (complex));
 
 
-                for (j = 0; j < cob.nfor; j++)
+                for (j = 0; j < cbs.nfor; j++)
                 {
                   for (i = 0; i < fft_conv_size; i++)
                   {
@@ -380,14 +380,14 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
                   k = k -1;
                   if(k < 0)
                   {
-                	  k = cob.nfor - 1;
+                	  k = cbs.nfor - 1;
                   }
                   //k = (k + a->idxmask) & a->idxmask;
                 }
-                cob.buffidx +=1;
-                if(cob.buffidx >= cob.nfor)
+                cbs.buffidx +=1;
+                if(cbs.buffidx >= cbs.nfor)
                 {
-                	cob.buffidx = 0;
+                	cbs.buffidx = 0;
                 }
                 // a->buffidx = (a->buffidx + 1) & a->idxmask;
                 // inverse FFT
@@ -397,14 +397,14 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
                 // fftw_execute (a->crev);
                 // copy FFT input buffer to left half of FFT input buffer for next round
                 // --> overlap 50%
-                for(int idx=0; idx < cob.size; idx++)
+                for(int idx=0; idx < cbs.size; idx++)
                 {
                 	cob.fftin[2 * idx + 0] = cob.fftin[fft_conv_size + 2 * idx + 0];
                 	cob.fftin[2 * idx + 1] = cob.fftin[fft_conv_size + 2 * idx + 1];
                 }
                 //memcpy (a->fftin, &(a->fftin[2 * a->size]), a->size * sizeof(complex));
                 // copy I & Q inverse FFT results (from second half of accum) to adb.i_buffer_convolution and adb.q_buffer_convolution
-                for(int idx = 0; idx < cob.size; idx++)
+                for(int idx = 0; idx < cbs.size; idx++)
                 {
                 	cob.i_buffer_convolution[idx] = cob.accum[fft_conv_size + 2 * idx + 0];
                 	cob.q_buffer_convolution[idx] = cob.accum[fft_conv_size + 2 * idx + 1];
@@ -421,7 +421,7 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
  *  AGC
  * ************************************************/
             // perform AGC on I and Q
-            AudioDriver_RxAgcWdsp(cob.size, cob.i_buffer_convolution, cob.q_buffer_convolution);
+            AudioDriver_RxAgcWdsp(cbs.size, cob.i_buffer_convolution, cob.q_buffer_convolution);
 
             /*
              *  TODO: deal with Digimodes and FM
