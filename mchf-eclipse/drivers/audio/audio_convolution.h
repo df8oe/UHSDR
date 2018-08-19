@@ -49,8 +49,6 @@ typedef struct
     float32_t               a_buffer[2][FFT_CONVOLUTION_SIZE / 2]; // for convolution, we need an output buffer of 128 samples
 } ConvolutionBuffers;
 
-//extern ConvolutionBuffers cob;
-static ConvolutionBuffers cob;
 
 typedef struct
 {

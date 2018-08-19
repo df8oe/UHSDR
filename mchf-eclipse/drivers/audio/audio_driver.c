@@ -1447,7 +1447,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // calculate coeffs
     // for first trial, use hard-coded USB filter from 250Hz to 2700Hz
     // hardcoded sample rate and Blackman-Harris 4th term
-//    AudioDriver_CalcConvolutionFilterCoeffs (cbs.nc, 250.0, 2700.0, 48000, 0, 1, 1.0);
+    AudioDriver_CalcConvolutionFilterCoeffs (cbs.nc, 250.0, 2700.0, 48000, 0, 1, 1.0);
 #endif
 
     arm_fir_decimate_init_f32(&DECIMATE_NR, 4, 2, NR_decimate_coeffs, decimNRState, FIR_RXAUDIO_BLOCK_SIZE);

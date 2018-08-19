@@ -17,7 +17,12 @@
 
 
 
+
 #ifdef USE_CONVOLUTION
+
+static ConvolutionBuffers cob;
+ConvolutionBuffersshared cbs;
+
 void AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float32_t f_high, float32_t samplerate, int wintype, int rtype, float32_t scale)
 {
 	/****************************************************************
