@@ -30,6 +30,11 @@
 //const float32_t IQ_SAMPLE_RATE_F = ((float32_t)IQ_SAMPLE_RATE);
 
 
+typedef struct {
+    __packed int16_t l;
+    __packed int16_t r;
+} AudioSample_t;
+
 
 
 
@@ -73,11 +78,7 @@
     #define NUM_AUDIO_CHANNELS 1
 #endif
 
-#ifdef USE_CONVOLUTION
-#define FFT_CONVOLUTION_SIZE 256
-#define CONVOLUTION_MAX_NO_OF_BLOCKS 8
-#define CONVOLUTION_MAX_NO_OF_COEFFS 2048
-#endif
+
 
 typedef struct
 {
@@ -88,25 +89,8 @@ typedef struct
     float32_t               agc_valbuf[IQ_BLOCK_SIZE];   // holder for "running" AGC value
     float32_t               DF;
 
-#ifdef USE_CONVOLUTION
-    // for convolution filtering
-    int						nc; // no. of coefficients
-    int 					size; // no. of input samples
-    int						nfor; // no. of blocks in the convolution
-    int						buffidx; // buffer pointer
-    float32_t				impulse[CONVOLUTION_MAX_NO_OF_COEFFS * 2]; // impulse response has real and imaginary components
-    float32_t				i_buffer_convolution[FFT_CONVOLUTION_SIZE / 2];
-    float32_t				q_buffer_convolution[FFT_CONVOLUTION_SIZE / 2];
-    float32_t				maskgen[FFT_CONVOLUTION_SIZE * 2];
-    float32_t				fmask[CONVOLUTION_MAX_NO_OF_BLOCKS][FFT_CONVOLUTION_SIZE * 2];
-    float32_t				fftin[FFT_CONVOLUTION_SIZE * 2];
-    float32_t				fftout[CONVOLUTION_MAX_NO_OF_BLOCKS][FFT_CONVOLUTION_SIZE * 2];
-    float32_t				ifftout[FFT_CONVOLUTION_SIZE * 2];
-    float32_t				accum[FFT_CONVOLUTION_SIZE * 2];
-    float32_t               a_buffer[2][FFT_CONVOLUTION_SIZE / 2]; // for convolution, we need an output buffer of 128 samples
-#else
     float32_t               a_buffer[2][IQ_BLOCK_SIZE];
-#endif
+
 
     // for SAM demodulation
     float32_t               pll_fmax;
@@ -147,8 +131,6 @@ typedef struct
     float32_t               M_c1;
     float32_t               M_c2;
 } AudioDriverBuffer;
-
-extern AudioDriverBuffer adb;
 
 // Audio driver publics
 typedef struct AudioDriverState
@@ -637,7 +619,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t *audioDst, int1
 
 // Public Audio
 extern AudioDriverState	ads;
-extern __IO SMeter              sm;
+extern __IO SMeter       sm;
 
 typedef struct SnapCarrier
 {
@@ -645,6 +627,9 @@ typedef struct SnapCarrier
 } SnapCarrier;
 
 extern SnapCarrier sc;
+
+extern AudioDriverBuffer  __MCHF_SPECIALMEM adb;
+
 
 #ifdef USE_LEAKY_LMS
 #define LEAKYLMSDLINE_SIZE 256 //512 // was 256 //2048   // dline_size

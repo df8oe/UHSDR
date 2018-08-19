@@ -42,6 +42,9 @@
 #include "cw_decoder.h"
 #include "freedv_uhsdr.h"
 
+#ifdef USE_CONVOLUTION
+//#include <audio_convolution.h>
+#endif
 
 typedef struct
 {
@@ -106,11 +109,6 @@ typedef struct
 
 agc_variables_t agc_wdsp;
 
-
-typedef struct {
-    __packed int16_t l;
-    __packed int16_t r;
-} AudioSample_t;
 
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
 
@@ -179,10 +177,12 @@ float log10f_fast(float X) {
 
 //
 // Audio RX - Decimator
-static  arm_fir_decimate_instance_f32   DECIMATE_RX_I;
+//static  arm_fir_decimate_instance_f32   DECIMATE_RX_I;
+arm_fir_decimate_instance_f32   DECIMATE_RX_I;
 float32_t           __MCHF_SPECIALMEM decimState_I[FIR_RXAUDIO_BLOCK_SIZE + 43];
 // Audio RX - Decimator in Q-path
-static  arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
+//static  arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
+arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
 float32_t           __MCHF_SPECIALMEM decimState_Q[FIR_RXAUDIO_BLOCK_SIZE + 43];
 
 // Decimator for Zoom FFT
@@ -568,11 +568,8 @@ __IO SMeter					sm;
 // IF THE SIZE OF  THE DATA STRUCTURE GROWS IT WILL QUICKLY BE OUT OF SPACE IN CCM
 // Be careful! Check mchf-eclipse.map for current allocation
 AudioDriverState   __MCHF_SPECIALMEM ads;
-#ifdef USE_CONVOLUTION
-AudioDriverBuffer adb;
-#else
-AudioDriverBuffer  __MCHF_SPECIALMEM adb;
-#endif
+
+
 
 #ifdef OBSOLETE_NR
 LMSData            __MCHF_SPECIALMEM lmsData;
