@@ -6,23 +6,24 @@
  **                                                                                **
  **--------------------------------------------------------------------------------**
  **                                                                                **
- **  Description:   Code for fast convolution filtering                            **
+ **  Description:   Code for fast convolution filtering, DD4WH 2018_08_19          **
  **  Licence:		GNU GPLv3                                                      **
  ************************************************************************************/
 
 #include "audio_convolution.h"
 #include "audio_driver.h"
-//#include "audio_driver.c"
 
 #ifdef USE_CONVOLUTION
-float32_t AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float32_t f_high, float32_t samplerate, int wintype, int rtype, float32_t scale)
+void AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float32_t f_high, float32_t samplerate, int wintype, int rtype, float32_t scale)
 {
 	/****************************************************************
 	 *  Partitioned Convolution code adapted from wdsp library
 	 *  (c) by Warren Pratt under GNU GPLv3
 	 ****************************************************************/
+
+	// TODO: how can I define an array with a function ???
 	//float32_t *c_impulse = (float32_t *) malloc0 (N * sizeof (complex));
-	float32_t c_impulse[CONVOLUTION_MAX_NO_OF_COEFFS * 2];
+	//float32_t c_impulse[CONVOLUTION_MAX_NO_OF_COEFFS * 2];
 	float32_t ft = (f_high - f_low) / (2.0 * samplerate);
 	float32_t ft_rad = 2.0 * PI * ft;
 	float32_t w_osc = PI * (f_high + f_low) / samplerate;
@@ -38,11 +39,11 @@ float32_t AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float
     switch (rtype)
     {
     case 0:
-      c_impulse[N >> 1] = scale * 2.0 * ft;
+      adb.impulse[N >> 1] = scale * 2.0 * ft;
       break;
     case 1:
-      c_impulse[N - 1] = scale * 2.0 * ft;
-      c_impulse[  N  ] = 0.0;
+      adb.impulse[N - 1] = scale * 2.0 * ft;
+      adb.impulse[  N  ] = 0.0;
       break;
     }
   }
@@ -75,18 +76,18 @@ float32_t AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float
     switch (rtype)
     {
     case 0:
-      c_impulse[i] = + coef * cosf (posi * w_osc);
-      c_impulse[j] = + coef * cosf (posj * w_osc);
+      adb.impulse[i] = + coef * cosf (posi * w_osc);
+      adb.impulse[j] = + coef * cosf (posj * w_osc);
       break;
     case 1:
-      c_impulse[2 * i + 0] = + coef * cosf (posi * w_osc);
-      c_impulse[2 * i + 1] = - coef * sinf (posi * w_osc);
-      c_impulse[2 * j + 0] = + coef * cosf (posj * w_osc);
-      c_impulse[2 * j + 1] = - coef * sinf (posj * w_osc);
+      adb.impulse[2 * i + 0] = + coef * cosf (posi * w_osc);
+      adb.impulse[2 * i + 1] = - coef * sinf (posi * w_osc);
+      adb.impulse[2 * j + 0] = + coef * cosf (posj * w_osc);
+      adb.impulse[2 * j + 1] = - coef * sinf (posj * w_osc);
       break;
     }
   }
-  return c_impulse;
+  //return c_impulse;
 }
 #endif
 
@@ -103,7 +104,8 @@ void AudioDriver_SetConvolutionFilter (int nc, float32_t f_low, float32_t f_high
   int i;
   // this calculates the impulse response (=coefficients) of a complex bandpass filter
   // it needs to be complex in order to allow for SSB demodulation
-  adb.impulse = AudioDriver_CalcConvolutionFilterCoeffs (nc, f_low, f_high, samplerate, wintype, 1, gain);
+  // this writes the calculated coeffs into the adb.impulse array
+  AudioDriver_CalcConvolutionFilterCoeffs (nc, f_low, f_high, samplerate, wintype, 1, gain);
   adb.buffidx = 0;
   for (i = 0; i < adb.nfor; i++)
   {
