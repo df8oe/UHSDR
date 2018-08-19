@@ -12,6 +12,7 @@
 
 #include "audio_convolution.h"
 #include "audio_driver.h"
+#include "arm_math.h"
 
 #ifdef USE_CONVOLUTION
 void AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float32_t f_high, float32_t samplerate, int wintype, int rtype, float32_t scale)

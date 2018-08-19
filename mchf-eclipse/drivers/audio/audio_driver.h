@@ -148,6 +148,8 @@ typedef struct
     float32_t               M_c2;
 } AudioDriverBuffer;
 
+extern AudioDriverBuffer adb;
+
 // Audio driver publics
 typedef struct AudioDriverState
 {
