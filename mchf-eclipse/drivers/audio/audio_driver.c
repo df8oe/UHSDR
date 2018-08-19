@@ -109,7 +109,6 @@ typedef struct
 
 agc_variables_t agc_wdsp;
 
-
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
 
 
@@ -568,7 +567,7 @@ __IO SMeter					sm;
 // IF THE SIZE OF  THE DATA STRUCTURE GROWS IT WILL QUICKLY BE OUT OF SPACE IN CCM
 // Be careful! Check mchf-eclipse.map for current allocation
 AudioDriverState   __MCHF_SPECIALMEM ads;
-
+AudioDriverBuffer  __MCHF_SPECIALMEM adb;
 
 
 #ifdef OBSOLETE_NR
@@ -1592,7 +1591,7 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 //* Output Parameters   : uses variables in ads structure
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_t blockSize, int16_t dir)
+void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_t blockSize, int16_t dir)
 {
     static bool recalculate_Osc = false;
     // keeps the generated data for frequency conversion
@@ -3009,7 +3008,7 @@ static void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, f
 }
 
 
-static void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
+void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
 {
 
     if(sd.reading_ringbuffer == false && sd.fft_iq_len > 0)
@@ -3034,7 +3033,7 @@ static void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
         }
     }
 }
-static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
+void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
 {
     if(sd.reading_ringbuffer == false && sd.fft_iq_len > 0)
     {
@@ -3114,7 +3113,7 @@ static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
  * @returns: true if digital signal should be used (no analog processing should be done), false -> analog processing maybe used
  * since no digital signal was detected.
  */
-static bool AudioDriver_RxProcessorDigital(AudioSample_t * const src, float32_t * const dst, const uint16_t blockSize)
+bool AudioDriver_RxProcessorDigital(AudioSample_t * const src, float32_t * const dst, const uint16_t blockSize)
 {
     bool retval = false;
     switch(ts.dmod_mode)
@@ -3352,7 +3351,7 @@ float32_t sign_new (float32_t x) {
 
 
 
-static void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
+void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
 {
 
     static uint8_t  IQ_auto_counter = 0;
@@ -3634,9 +3633,6 @@ void AudioDriver_RxProcessorNoiseReduction(uint16_t blockSizeDecim, float32_t* i
     }
 #endif
 }
-
-
-
 
 
 //

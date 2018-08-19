@@ -132,6 +132,8 @@ typedef struct
     float32_t               M_c2;
 } AudioDriverBuffer;
 
+
+
 // Audio driver publics
 typedef struct AudioDriverState
 {
@@ -605,6 +607,12 @@ int32_t AudioDriver_GetTranslateFreq();
 void AudioDriver_SetSamPllParameters (void);
 void AudioDriver_SetupAgcWdsp(void);
 float log10f_fast(float X);
+void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_t blockSize, int16_t dir);
+void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1, float32_t *agcbuffer2);
+void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize);
+bool AudioDriver_RxProcessorDigital(AudioSample_t * const src, float32_t * const dst, const uint16_t blockSize);
+void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize);
+void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize);
 
 void RttyDecoder_Init();
 
@@ -628,7 +636,7 @@ typedef struct SnapCarrier
 
 extern SnapCarrier sc;
 
-extern AudioDriverBuffer  __MCHF_SPECIALMEM adb;
+
 
 
 #ifdef USE_LEAKY_LMS

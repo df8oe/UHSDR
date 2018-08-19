@@ -21,9 +21,11 @@
 #include "codec.h"
 #include "audio_driver.h"
 #include "radio_management.h"
+#include "usbd_audio_if.h"
 
 extern arm_fir_decimate_instance_f32   DECIMATE_RX_I;
 extern arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
+extern AudioDriverBuffer adb;
 
 #ifdef USE_CONVOLUTION
 #define FFT_CONVOLUTION_SIZE 256
@@ -36,11 +38,6 @@ extern arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
 typedef struct
 {
     // for convolution filtering
-    int						nc; // no. of coefficients
-    int 					size; // no. of input samples
-    int						nfor; // no. of blocks in the convolution
-    int						buffidx; // buffer pointer
-    float32_t				impulse[CONVOLUTION_MAX_NO_OF_COEFFS * 2]; // impulse response has real and imaginary components
     float32_t				i_buffer_convolution[FFT_CONVOLUTION_SIZE / 2];
     float32_t				q_buffer_convolution[FFT_CONVOLUTION_SIZE / 2];
     float32_t				maskgen[FFT_CONVOLUTION_SIZE * 2];
@@ -54,6 +51,21 @@ typedef struct
 
 //extern ConvolutionBuffers cob;
 static ConvolutionBuffers cob;
+
+typedef struct
+{
+    // for convolution filtering
+    int						nc; // no. of coefficients
+    int 					size; // no. of input samples
+    int						nfor; // no. of blocks in the convolution
+    int						buffidx; // buffer pointer
+    float32_t				impulse[CONVOLUTION_MAX_NO_OF_COEFFS * 2]; // impulse response has real and imaginary components
+
+} ConvolutionBuffersshared;
+
+ConvolutionBuffersshared cbs;
+
+
 
 #endif
 
