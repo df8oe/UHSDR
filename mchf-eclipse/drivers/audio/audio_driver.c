@@ -42,6 +42,9 @@
 #include "cw_decoder.h"
 #include "freedv_uhsdr.h"
 
+#ifdef USE_CONVOLUTION
+#include "audio_convolution.h"
+#endif
 
 typedef struct
 {
@@ -105,12 +108,6 @@ typedef struct
 } agc_variables_t;
 
 agc_variables_t agc_wdsp;
-
-
-typedef struct {
-    __packed int16_t l;
-    __packed int16_t r;
-} AudioSample_t;
 
 // SSB filters - now handled in ui_driver to allow I/Q phase adjustment
 
@@ -179,10 +176,12 @@ float log10f_fast(float X) {
 
 //
 // Audio RX - Decimator
-static  arm_fir_decimate_instance_f32   DECIMATE_RX_I;
+//static  arm_fir_decimate_instance_f32   DECIMATE_RX_I;
+arm_fir_decimate_instance_f32   DECIMATE_RX_I;
 float32_t           __MCHF_SPECIALMEM decimState_I[FIR_RXAUDIO_BLOCK_SIZE + 43];
 // Audio RX - Decimator in Q-path
-static  arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
+//static  arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
+arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
 float32_t           __MCHF_SPECIALMEM decimState_Q[FIR_RXAUDIO_BLOCK_SIZE + 43];
 
 // Decimator for Zoom FFT
@@ -569,6 +568,8 @@ __IO SMeter					sm;
 // Be careful! Check mchf-eclipse.map for current allocation
 AudioDriverState   __MCHF_SPECIALMEM ads;
 AudioDriverBuffer  __MCHF_SPECIALMEM adb;
+
+
 #ifdef OBSOLETE_NR
 LMSData            __MCHF_SPECIALMEM lmsData;
 #endif
@@ -1372,6 +1373,10 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
             FIR_RXAUDIO_BLOCK_SIZE);
 
     // Set up RX decimation/filter
+    // this filter instance is also used for Convolution !
+#ifdef USE_CONVOLUTION
+// TODO: insert decimation filter settings for convolution filter HERE
+#else
     if (FilterPathInfo[ts.filter_path].dec != NULL)
     {
         const arm_fir_decimate_instance_f32* dec = FilterPathInfo[ts.filter_path].dec;
@@ -1411,7 +1416,12 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
         DECIMATE_RX_Q.numTaps = 0;
         DECIMATE_RX_Q.pCoeffs = NULL;
     }
+#endif
 
+    // this filter instance is also used for Convolution !
+#ifdef USE_CONVOLUTION
+// TODO: insert interpolation filter settings for convolution filter HERE
+#else
     // Set up RX interpolation/filter
     // NOTE:  Phase Length MUST be an INTEGER and is the number of taps divided by the decimation rate, and it must be greater than 1.
     for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
@@ -1430,6 +1440,15 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
             INTERPOLATE_RX[chan].pCoeffs = NULL;
         }
     }
+#endif
+
+#ifdef USE_CONVOLUTION
+    // Convolution Filter
+    // calculate coeffs
+    // for first trial, use hard-coded USB filter from 250Hz to 2700Hz
+    // hardcoded sample rate and Blackman-Harris 4th term
+    AudioDriver_CalcConvolutionFilterCoeffs (cbs.nc, 250.0, 2700.0, 48000, 0, 1, 1.0);
+#endif
 
     arm_fir_decimate_init_f32(&DECIMATE_NR, 4, 2, NR_decimate_coeffs, decimNRState, FIR_RXAUDIO_BLOCK_SIZE);
     // should be a very light lowpass @2k7
@@ -1590,7 +1609,7 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 //* Output Parameters   : uses variables in ads structure
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_t blockSize, int16_t dir)
+void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_t blockSize, int16_t dir)
 {
     static bool recalculate_Osc = false;
     // keeps the generated data for frequency conversion
@@ -3007,7 +3026,7 @@ static void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, f
 }
 
 
-static void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
+void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
 {
 
     if(sd.reading_ringbuffer == false && sd.fft_iq_len > 0)
@@ -3032,7 +3051,7 @@ static void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize)
         }
     }
 }
-static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
+void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
 {
     if(sd.reading_ringbuffer == false && sd.fft_iq_len > 0)
     {
@@ -3112,7 +3131,7 @@ static void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
  * @returns: true if digital signal should be used (no analog processing should be done), false -> analog processing maybe used
  * since no digital signal was detected.
  */
-static bool AudioDriver_RxProcessorDigital(AudioSample_t * const src, float32_t * const dst, const uint16_t blockSize)
+bool AudioDriver_RxProcessorDigital(AudioSample_t * const src, float32_t * const dst, const uint16_t blockSize)
 {
     bool retval = false;
     switch(ts.dmod_mode)
@@ -3350,7 +3369,7 @@ float32_t sign_new (float32_t x) {
 
 
 
-static void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
+void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
 {
 
     static uint8_t  IQ_auto_counter = 0;
