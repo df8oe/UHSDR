@@ -606,7 +606,11 @@ void AudioDriver_SetSamPllParameters (void);
 void AudioDriver_SetupAgcWdsp(void);
 float log10f_fast(float X);
 void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_t blockSize, int16_t dir);
+#ifdef USE_TWO_CHANNEL_AUDIO
 void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1, float32_t *agcbuffer2);
+#else
+void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1);
+#endif
 void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize);
 bool AudioDriver_RxProcessorDigital(AudioSample_t * const src, float32_t * const dst, const uint16_t blockSize);
 void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize);

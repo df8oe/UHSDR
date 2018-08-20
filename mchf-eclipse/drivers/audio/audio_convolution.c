@@ -426,7 +426,7 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
  *  AGC
  * ************************************************/
             // perform AGC on I and Q
-            AudioDriver_RxAgcWdsp(cbs.size, cob.i_buffer_convolution, cob.q_buffer_convolution);
+// function is completely different declared as in audio_driver.h            AudioDriver_RxAgcWdsp(cbs.size, cob.i_buffer_convolution, cob.q_buffer_convolution);
 
             /*
              *  TODO: deal with Digimodes and FM
