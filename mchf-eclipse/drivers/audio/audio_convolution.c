@@ -272,11 +272,11 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
  *  DANILO :-)
  ********************************************************************************************************************/
         	//		2. collect samples until we have 128 samples to deal within the convolution
-            // put those samples into a new buffer adb.i_buffer_convolution and adb.q_buffer_convolution
+            // put those samples into a new buffer cob.i_buffer_convolution and cob.q_buffer_convolution
 
             // when 128 samples are ready, continue HERE:
-            // BTW, please use adb.size instead of hard coded 128, because that could change.
-            // TODO: I will set adb.size in the function AudioDriver_SetRxAudioProcessing
+            // BTW, please use cbs.size instead of hard coded 128, because that could change.
+            // TODO: I will set cbs.size in the function AudioDriver_SetRxAudioProcessing
 
 /****************************************************************
  *
@@ -289,11 +289,11 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
  ****************************************************************/
 
 
-            // input file: adb.i_buffer_convolution
+            // input file: cob.i_buffer_convolution
             // IIIIIIIIIIIIIIII
             // <- cbs.size   ->
             //
-            // input file: adb.q_buffer_convolution
+            // input file: cob.q_buffer_convolution
             // QQQQQQQQQQQQQQQQ
             // <- cbs.size   ->
             //
@@ -702,7 +702,7 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
 
     // interpolation
 
-// TODO: at this point we have 128 real audio samples filtered and AGC´ed in the variable cob.i_buffer_convolution (for mono modes)
+// TODO: at this point we have 128 real audio samples filtered and AGC´ed in the variable 	 (for mono modes)
     // for stereo modes (not yet implemented), the other channel is in cob.q_buffer_convolution
 
     // now we have to make blocks of 32 samples out of that for further processing
