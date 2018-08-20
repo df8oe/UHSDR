@@ -11,7 +11,7 @@
  ************************************************************************************/
 
 #include "audio_convolution.h"
-//#include "audio_driver.h"
+#include "audio_driver.h"
 #include "arm_const_structs.h"
 #include "filters.h"
 
@@ -21,7 +21,7 @@
 #ifdef USE_CONVOLUTION
 
 static ConvolutionBuffers cob;
-ConvolutionBuffersshared cbs;
+ConvolutionBuffersShared cbs;
 
 void AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float32_t f_high, float32_t samplerate, int wintype, int rtype, float32_t scale)
 {
@@ -160,7 +160,7 @@ void AudioDriver_SetConvolutionFilter (int nc, float32_t f_low, float32_t f_high
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
+void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
 {
     // this is the main RX audio function
 	// it is driven with 32 samples in the complex buffer scr, meaning 32 * I AND 32 * Q
@@ -291,49 +291,49 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
 
             // input file: adb.i_buffer_convolution
             // IIIIIIIIIIIIIIII
-            // <- adb.size   ->
+            // <- cbs.size   ->
             //
             // input file: adb.q_buffer_convolution
             // QQQQQQQQQQQQQQQQ
-            // <- adb.size   ->
+            // <- cbs.size   ->
             //
 
             // NEW AUDIO SAMPLES: the two files interleaved
             // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
-            // <-      2 * adb.size          ->
+            // <-      2 * cbs.size          ->
             //
 
             // fill new samples into SECOND HALF of fftin
             // first half is filled with the old audio samples
             //				| OLD  |					| NEW |
             // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
-            // <-      2 * adb.size          -><-      2 * adb.size          ->
+            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
 
             // FFT of fftin
             // output of FFT is copied into fftout[buffidx]
             // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
-            // <-      2 * adb.size          -><-      2 * adb.size          ->
+            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
             // there are as many FFT output buffers as there are convolution blocks
 
             // Complex multiply / accumulate with all FFT outputs of nfor last rounds, see below :-) !
 
             // inverse FFT of the accumulated complex multiply outputs
             // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
-            // <-      2 * adb.size          -><-      2 * adb.size          ->
+            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
             // inverse FFT result is in accum
 
             // discard first half of inverse FFT output and separate I & Q into separate buffers
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
-            // <-      2 * adb.size          -><-      2 * adb.size          ->
+            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
             //
             // i_buffer_convolution
             // IIIIIIIIIIIIIIII
-            // <- adb.size   ->
+            // <- cbs.size   ->
             // --> this is the filtered audio of I
 
             // q_buffer_convolution
             // QQQQQQQQQQQQQQQQ
-            // <- adb.size   ->
+            // <- cbs.size   ->
             // this is the filtered audio of Q
 
  /*
@@ -426,7 +426,8 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
  *  AGC
  * ************************************************/
             // perform AGC on I and Q
-// function is completely different declared as in audio_driver.h            AudioDriver_RxAgcWdsp(cbs.size, cob.i_buffer_convolution, cob.q_buffer_convolution);
+                // we need the stereo version of the AGC
+    AudioDriver_RxAgcWdsp(cbs.size, cob.i_buffer_convolution, cob.q_buffer_convolution);
 
             /*
              *  TODO: deal with Digimodes and FM
@@ -436,6 +437,20 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
 /* ************************************************
  *  DEMODULATION
  * ************************************************/
+
+
+    // for first test, we assume USB demodulation (hard coded filter passband +250Hz to +2700Hz in AudioDriver_SetRxAudioProcessing)
+    // for LSB, you would use -2700Hz to -250Hz
+
+    // very easy: in SSB, the real part of the (second half of the) iFFT output is the demodulated audio!
+    // switching between sidebands is only done by selecting the passband cutoff frequencies (coefficients) of the bandpass filter
+
+    // that means, that the cob.i_buffer_convolution already contains the demodulated audio for SSB and CW mode!
+
+    // i_buffer_convolution
+    // IIIIIIIIIIIIIIII
+    // <- cbs.size   ->
+    // --> this is the demodulated audio of size -> cob.size)
 
 /*
  *
@@ -685,6 +700,15 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
 
     } // end of     if (ads.af_disabled == 0 )
 
+    // interpolation
+
+// TODO: at this point we have 128 real audio samples filtered and AGC´ed in the variable cob.i_buffer_convolution (for mono modes)
+    // for stereo modes (not yet implemented), the other channel is in cob.q_buffer_convolution
+
+    // now we have to make blocks of 32 samples out of that for further processing
+    // and put these into adb.a_buffer[0] and adb.a_buffer[1]
+    // (the latter is only different from adb.a_buffer[0] for stereo modes, not yet implemented)
+
 
 
     bool do_mute_output =
@@ -787,5 +811,8 @@ static void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioS
     }
 
 }
+
+
+
 #endif
 

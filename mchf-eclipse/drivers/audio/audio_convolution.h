@@ -59,11 +59,12 @@ typedef struct
     int						buffidx; // buffer pointer
     float32_t				impulse[CONVOLUTION_MAX_NO_OF_COEFFS * 2]; // impulse response has real and imaginary components
     float32_t				maskgen[FFT_CONVOLUTION_SIZE * 2];
-} ConvolutionBuffersshared;
+} ConvolutionBuffersShared;
 
-extern ConvolutionBuffersshared cbs;
+extern ConvolutionBuffersShared cbs;
 
 void AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float32_t f_high, float32_t samplerate, int wintype, int rtype, float32_t scale);
+void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize);
 
 #endif
 

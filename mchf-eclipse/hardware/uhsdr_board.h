@@ -35,7 +35,7 @@
 
 // Fast convolution filtering
 // experimental at the moment DD4WH, 2018_08_18
-#define USE_CONVOLUTION
+//#define USE_CONVOLUTION
 
 // old LMS noise reduction
 // will probably never used any more

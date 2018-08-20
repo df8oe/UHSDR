@@ -1342,6 +1342,7 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     ts.nr_alpha = 0.799 + ((float32_t)ts.dsp_nr_strength / 1000.0);
 
 // NEW AUTONOTCH
+    // not yet working !
     // set to passthrough
     //AudioNr_ActivateAutoNotch(0, 0);
 
@@ -1447,7 +1448,12 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // calculate coeffs
     // for first trial, use hard-coded USB filter from 250Hz to 2700Hz
     // hardcoded sample rate and Blackman-Harris 4th term
-    AudioDriver_CalcConvolutionFilterCoeffs (cbs.nc, 250.0, 2700.0, 48000, 0, 1, 1.0);
+    cbs.size = 128; // 128 samples processed at one time, this defines the latency:
+    // latency = cbs.size / sample rate = 128/48000 = 2.7ms
+    cbs.nc = 1024; // use 1024 coefficients
+    cbs.nfor = cbs.nc / cbs.size; // number of blocks used for the uniformly partitioned convolution
+    cbs.buffidx = 0; // needs to be reset to zero each time new coeffs are being calculated
+    AudioDriver_CalcConvolutionFilterCoeffs (cbs.nc, 250.0, 2700.0, IQ_SAMPLE_RATE_F, 0, 1, 1.0);
 #endif
 
     arm_fir_decimate_init_f32(&DECIMATE_NR, 4, 2, NR_decimate_coeffs, decimNRState, FIR_RXAUDIO_BLOCK_SIZE);
@@ -5015,13 +5021,21 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
             // muted input should not modify the ALC so we simply restore it after processing
 //            float agc_holder = ads.agc_val;
             bool dsp_inhibit_holder = ts.dsp_inhibit;
+#ifdef USE_CONVOLUTION
+            AudioDriver_RxProcessorConvolution((AudioSample_t*) src, (AudioSample_t*)dst,blockSize);
+#else
             AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,blockSize);
-//            ads.agc_val = agc_holder;
+#endif
+            //            ads.agc_val = agc_holder;
             ts.dsp_inhibit = dsp_inhibit_holder;
         }
         else
         {
+#ifdef USE_CONVOLUTION
+            AudioDriver_RxProcessorConvolution((AudioSample_t*) src, (AudioSample_t*)dst,blockSize);
+#else
             AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,blockSize);
+#endif
             if (ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT && (ts.cw_text_entry || ts.dmod_mode == DEMOD_CW)) // FIXME to call always when straight mode reworked
             {
             	CwGen_Process(adb.i_buffer, adb.q_buffer, blockSize);
