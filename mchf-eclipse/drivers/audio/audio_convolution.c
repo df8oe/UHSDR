@@ -15,8 +15,147 @@
 #include "arm_const_structs.h"
 #include "filters.h"
 
+// we cannot use a shared buffer structure with FreeDV,
+// because we need to filter with convolution and simultaneously
+// use FreeDV buffers, if we switch on digital voice mode FreeDV
+// user code
+
+#ifdef USE_CONVOLUTION
+__IO int32_t Sample_in_head = 0;
+__IO int32_t Sample_in_tail = 0;
+__IO int32_t Sample_out_head = 0;
+__IO int32_t Sample_out_tail = 0;
+
+Sample_Buffer* Sample_in_buffers[SAMPLE_BUFFER_FIFO_SIZE];
+Sample_Buffer* Sample_out_buffers[SAMPLE_BUFFER_FIFO_SIZE];
+
+int Sample_in_buffer_peek(Sample_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (Sample_in_head != Sample_in_tail)
+    {
+        Sample_Buffer* c = Sample_in_buffers[Sample_in_tail];
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
 
 
+int Sample_in_buffer_remove(Sample_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (Sample_in_head != Sample_in_tail)
+    {
+        Sample_Buffer* c = Sample_in_buffers[Sample_in_tail];
+        Sample_in_tail = (Sample_in_tail + 1) % SAMPLE_BUFFER_FIFO_SIZE;
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
+
+/* no room left in the buffer returns 0 */
+int Sample_in_buffer_add(NR_Buffer* c)
+{
+    int ret = 0;
+    int32_t next_head = (Sample_in_head + 1) % SAMPLE_BUFFER_FIFO_SIZE;
+
+    if (next_head != Sample_in_tail)
+    {
+        /* there is room */
+        Sample_in_buffers[Sample_in_head] = c;
+        Sample_in_head = next_head;
+        ret ++;
+    }
+    return ret;
+}
+
+void Sample_in_buffer_reset()
+{
+    Sample_in_tail = Sample_in_head;
+}
+
+int8_t Sample_in_has_data()
+{
+    int32_t len = Sample_in_head - Sample_in_tail;
+    return len < 0?len+SAMPLE_BUFFER_FIFO_SIZE:len;
+}
+
+int32_t Sample_in_has_room()
+{
+    // FIXME: Since we cannot completely fill the buffer
+    // we need to say full 1 element earlier
+    return SAMPLE_BUFFER_FIFO_SIZE - 1 - Sample_in_has_data();
+}
+
+
+//*********Out Buffer handling
+
+int Sample_out_buffer_peek(Sample_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (Sample_out_head != Sample_out_tail)
+    {
+        Sample_Buffer* c = Sample_out_buffers[Sample_out_tail];
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
+
+
+int Sample_out_buffer_remove(NR_Buffer** c_ptr)
+{
+    int ret = 0;
+
+    if (Sample_out_head != Sample_out_tail)
+    {
+        Sample_Buffer* c = Sample_out_buffers[Sample_out_tail];
+        Sample_out_tail = (Sample_out_tail + 1) % SAMPLE_BUFFER_FIFO_SIZE;
+        *c_ptr = c;
+        ret++;
+    }
+    return ret;
+}
+
+/* no room left in the buffer returns 0 */
+int Sample_out_buffer_add(Sample_Buffer* c)
+{
+    int ret = 0;
+    int32_t next_head = (Sample_out_head + 1) % SAMPLE_BUFFER_FIFO_SIZE;
+
+    if (next_head != Sample_out_tail)
+    {
+        /* there is room */
+        Sample_out_buffers[Sample_out_head] = c;
+        Sample_out_head = next_head;
+        ret ++;
+    }
+    return ret;
+}
+
+void Sample_out_buffer_reset()
+{
+    Sample_out_tail = Sample_out_head;
+}
+
+int8_t Sample_out_has_data()
+{
+    int32_t len = Sample_out_head - Sample_out_tail;
+    return len < 0?len+SAMPLE_BUFFER_FIFO_SIZE:len;
+}
+
+int32_t Sample_out_has_room()
+{
+    // FIXME: Since we cannot completely fill the buffer
+    // we need to say full 1 element earlier
+    return SAMPLE_BUFFER_FIFO_SIZE - 1 - Sample_out_has_data();
+}
+#endif
 
 #ifdef USE_CONVOLUTION
 
@@ -108,8 +247,7 @@ void AudioDriver_SetConvolutionFilter (int nc, float32_t f_low, float32_t f_high
 	 *  Partitioned Convolution code adapted from wdsp library
 	 *  (c) by Warren Pratt under GNU GPLv3
 	 ****************************************************************/
-  // call for change in frequency, rate, wintype, gain
-  // must also call after a call to plan_firopt()
+
   int i;
   // this calculates the impulse response (=coefficients) of a complex bandpass filter
   // it needs to be complex in order to allow for SSB demodulation
@@ -125,11 +263,11 @@ void AudioDriver_SetConvolutionFilter (int nc, float32_t f_low, float32_t f_high
     // maskgen: left half is filled with zeros!? (starts to be filled from maskgen[2 * FFT_size], which is the centre of the array)
     // right half of maskgen: is filled with the relevant part of the impulse response
     // next round takes the next part of the impulse response
-    // the right half of impulse is not being used (discarded), because 2 * FFT_size * (nfor-1) is maximum of pointer
+    // ???the right half of impulse is not being used (discarded), because 2 * FFT_size * (nfor-1) is maximum of pointer
     for(int idx = 0; idx < cbs.size * 2; idx++)
     {
     	cbs.maskgen[idx] = 0;
-    	cbs.maskgen[idx + cbs.size * 2] = cbs.impulse[idx];
+    	cbs.maskgen[idx + cbs.size * 2] = cbs.impulse[idx + i * cbs.size * 2];
     }
     //memcpy (&(a->maskgen[2 * a->size]), &(impulse[2 * a->size * i]), a->size * sizeof(complex));
 
@@ -148,7 +286,186 @@ void AudioDriver_SetConvolutionFilter (int nc, float32_t f_low, float32_t f_high
 }
 #endif
 
+#ifdef USE_CONVOLUTION
+void convolution_handle()
+{
+	// put everything that should happen, when 128 samples are ready, into this function
+	/****************************************************************
+	 *
+	 *  Partitioned Convolution code adapted from wdsp library
+	 *
+	 *  (c) by Warren Pratt under GNU GPLv3
+	 *
+	 *  thanks, Warren!
+	 *
+	 ****************************************************************/
 
+
+	            // input file: cob.i_buffer_convolution
+	            // IIIIIIIIIIIIIIII
+	            // <- cbs.size   ->
+	            //
+	            // input file: cob.q_buffer_convolution
+	            // QQQQQQQQQQQQQQQQ
+	            // <- cbs.size   ->
+	            //
+
+	            // NEW AUDIO SAMPLES: the two files interleaved
+	            // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
+	            // <-      2 * cbs.size          ->
+	            //
+
+	            // fill new samples into SECOND HALF of fftin
+	            // first half is filled with the old audio samples
+	            //				| OLD  |					| NEW |
+	            // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
+	            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
+
+	            // FFT of fftin
+	            // output of FFT is copied into fftout[buffidx]
+	            // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
+	            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
+	            // there are as many FFT output buffers as there are convolution blocks
+
+	            // Complex multiply / accumulate with all FFT outputs of nfor last rounds, see below :-) !
+
+	            // inverse FFT of the accumulated complex multiply outputs
+	            // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
+	            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
+	            // inverse FFT result is in accum
+
+	            // discard first half of inverse FFT output and separate I & Q into separate buffers
+	            // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
+	            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
+	            //
+	            // i_buffer_convolution
+	            // IIIIIIIIIIIIIIII
+	            // <- cbs.size   ->
+	            // --> this is the filtered audio of I
+
+	            // q_buffer_convolution
+	            // QQQQQQQQQQQQQQQQ
+	            // <- cbs.size   ->
+	            // this is the filtered audio of Q
+
+	 /*
+	  * partitioned block overlap-and-save algorithm
+	  */
+	            	int fft_conv_size = cbs.size * 2;
+	                int i, j, k;
+	                // copy input buffer to right half of FFT input buffer
+	                // left half already contains data from last round
+	                for(int idx=0; idx < cbs.size; idx++)
+	                {
+	                	cob.fftin[fft_conv_size + 2 * idx + 0] = cob.i_buffer_convolution[idx];
+	                  	cob.fftin[fft_conv_size + 2 * idx + 1] = cob.q_buffer_convolution[idx];
+	                }
+
+	                // fftin --> one input buffer
+	                // fftout[nfor] --> changing output buffers !
+	                // FFT performed on fftin inplace
+	                arm_cfft_f32(&arm_cfft_sR_f32_len256, cob.fftin, 0, 1);
+	                // copy output from fftin into current fftout buffer
+	                for (int idx = 0; idx < fft_conv_size * 2; idx++)
+	                {
+	                	cob.fftout[cbs.buffidx][idx] = cob.fftin[idx];
+	                }
+	                //fftw_execute (a->pcfor[a->buffidx]);
+
+	                k = cbs.buffidx;
+	                // fill the array accum with zeros
+	                for (int idx = 0; idx < fft_conv_size * 2; idx++)
+	                {
+	                	cob.accum[idx] = 0;
+	                }
+	                //memset (a->accum, 0, 2 * a->size * sizeof (complex));
+
+
+	                for (j = 0; j < cbs.nfor; j++)
+	                {
+	                  for (i = 0; i < fft_conv_size; i++)
+	                  {
+	                    // this sums up the complex multiply results for real and imaginary components
+	                    // stored in accum
+	                    cob.accum[2 * i + 0] += cob.fftout[k][2 * i + 0] * cob.fmask[j][2 * i + 0]
+				                              - cob.fftout[k][2 * i + 1] * cob.fmask[j][2 * i + 1];
+	                    cob.accum[2 * i + 1] += cob.fftout[k][2 * i + 0] * cob.fmask[j][2 * i + 1]
+											  + cob.fftout[k][2 * i + 1] * cob.fmask[j][2 * i + 0];
+	                  }
+	                  // k points to the next relevant fftout result
+	                  // it must flip over when 0 is reached
+	                  k = k -1;
+	                  if(k < 0)
+	                  {
+	                	  k = cbs.nfor - 1;
+	                  }
+	                  //k = (k + a->idxmask) & a->idxmask;
+	                }
+	                cbs.buffidx +=1;
+	                if(cbs.buffidx >= cbs.nfor)
+	                {
+	                	cbs.buffidx = 0;
+	                }
+	                // a->buffidx = (a->buffidx + 1) & a->idxmask;
+	                // inverse FFT
+	                // input: accum
+	                // audio is in right half of the output buffer accum
+	                arm_cfft_f32(&arm_cfft_sR_f32_len256, cob.accum, 1, 1);
+	                // fftw_execute (a->crev);
+	                // copy FFT input buffer to left half of FFT input buffer for next round
+	                // --> overlap 50%
+	                for(int idx=0; idx < cbs.size; idx++)
+	                {
+	                	cob.fftin[2 * idx + 0] = cob.fftin[fft_conv_size + 2 * idx + 0];
+	                	cob.fftin[2 * idx + 1] = cob.fftin[fft_conv_size + 2 * idx + 1];
+	                }
+	                //memcpy (a->fftin, &(a->fftin[2 * a->size]), a->size * sizeof(complex));
+	                // copy I & Q inverse FFT results (from second half of accum) to adb.i_buffer_convolution and adb.q_buffer_convolution
+	                for(int idx = 0; idx < cbs.size; idx++)
+	                {
+	                	cob.i_buffer_convolution[idx] = cob.accum[fft_conv_size + 2 * idx + 0];
+	                	cob.q_buffer_convolution[idx] = cob.accum[fft_conv_size + 2 * idx + 1];
+	                }
+	                // these buffers now contain the bandpass filtered audio
+	                // which already has suppressed opposite sideband (if cutoff-frequencies have been set correctly for the BP filter)
+	                // so no further "demodulation" is necessary for SSB / CW
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+	/* ************************************************
+	 *  AGC
+	 * ************************************************/
+	            // perform AGC on I and Q
+	                // we need the stereo version of the AGC
+	    AudioDriver_RxAgcWdsp(cbs.size, cob.i_buffer_convolution, cob.q_buffer_convolution);
+
+	            /*
+	             *  TODO: deal with Digimodes and FM
+	             *
+	             */
+
+	/* ************************************************
+	 *  DEMODULATION
+	 * ************************************************/
+
+
+	    // for first test, we assume USB demodulation (hard coded filter passband +250Hz to +2700Hz in AudioDriver_SetRxAudioProcessing)
+	    // for LSB, you would use -2700Hz to -250Hz
+
+	    // very easy: in SSB, the real part of the (second half of the) iFFT output is the demodulated audio!
+	    // switching between sidebands is only done by selecting the passband cutoff frequencies (coefficients) of the bandpass filter
+
+	    // that means, that the cob.i_buffer_convolution already contains the demodulated audio for SSB and CW mode!
+
+	    // i_buffer_convolution
+	    // IIIIIIIIIIIIIIII
+	    // <- cbs.size   ->
+	    // --> this is the demodulated audio of size -> cob.size)
+}
+
+#endif
 
 #ifdef USE_CONVOLUTION
 //
@@ -166,7 +483,8 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
 	// it is driven with 32 samples in the complex buffer scr, meaning 32 * I AND 32 * Q
 	// blockSize is thus 32, DD4WH 2018_02_06
 
-	const int16_t blockSizeDecim = blockSize/(int16_t)ads.decimation_rate;
+	//	const int16_t blockSizeDecim = blockSize/(int16_t)ads.decimation_rate;
+	const int16_t blockSizeDecim = blockSize/(int16_t)cbs.DF;
     // we copy volatile variables which are used multiple times to local consts to let the compiler to its optimization magic
     // since we are in an interrupt, no one will change these anyway
     // shaved off a few bytes of code
@@ -263,14 +581,14 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
         if (dvmode_signal == false)
         {
         	//
+        	if(cbs.DF != 1)
+        	{
         	//      1. decimation
         	// I & Q are decimated in place the same buffer
-            arm_fir_decimate_f32(&DECIMATE_RX_I, adb.i_buffer, adb.i_buffer, blockSize);
-            arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.q_buffer, adb.q_buffer, blockSize);
-
-/********************************************************************************************************************
- *  DANILO :-)
- ********************************************************************************************************************/
+        		arm_fir_decimate_f32(&DECIMATE_RX_I, adb.i_buffer, adb.i_buffer, blockSize);
+        		arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.q_buffer, adb.q_buffer, blockSize);
+        	}
+/********************************************************************************************************************/
         	//		2. collect samples until we have 128 samples to deal within the convolution
             // put those samples into a new buffer cob.i_buffer_convolution and cob.q_buffer_convolution
 
@@ -278,179 +596,80 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
             // BTW, please use cbs.size instead of hard coded 128, because that could change.
             // TODO: I will set cbs.size in the function AudioDriver_SetRxAudioProcessing
 
-/****************************************************************
- *
- *  Partitioned Convolution code adapted from wdsp library
- *
- *  (c) by Warren Pratt under GNU GPLv3
- *
- *  thanks, Warren!
- *
- ****************************************************************/
+                const uint8_t  dsp_active = ts.dsp_active;
+                static int trans_count_in=0;
+                static int outbuff_count=0;
+                static int Sample_fill_in_pt=0;
+                static Sample_Buffer* out_buffer = NULL;
+                //
+                // attention -> change no of samples according to decimation factor!
 
-
-            // input file: cob.i_buffer_convolution
-            // IIIIIIIIIIIIIIII
-            // <- cbs.size   ->
-            //
-            // input file: cob.q_buffer_convolution
-            // QQQQQQQQQQQQQQQQ
-            // <- cbs.size   ->
-            //
-
-            // NEW AUDIO SAMPLES: the two files interleaved
-            // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
-            // <-      2 * cbs.size          ->
-            //
-
-            // fill new samples into SECOND HALF of fftin
-            // first half is filled with the old audio samples
-            //				| OLD  |					| NEW |
-            // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
-            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
-
-            // FFT of fftin
-            // output of FFT is copied into fftout[buffidx]
-            // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
-            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
-            // there are as many FFT output buffers as there are convolution blocks
-
-            // Complex multiply / accumulate with all FFT outputs of nfor last rounds, see below :-) !
-
-            // inverse FFT of the accumulated complex multiply outputs
-            // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
-            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
-            // inverse FFT result is in accum
-
-            // discard first half of inverse FFT output and separate I & Q into separate buffers
-            // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
-            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
-            //
-            // i_buffer_convolution
-            // IIIIIIIIIIIIIIII
-            // <- cbs.size   ->
-            // --> this is the filtered audio of I
-
-            // q_buffer_convolution
-            // QQQQQQQQQQQQQQQQ
-            // <- cbs.size   ->
-            // this is the filtered audio of Q
-
- /*
-  * partitioned block overlap-and-save algorithm
-  */
-            	int fft_conv_size = cbs.size * 2;
-                int i, j, k;
-                // copy input buffer to right half of FFT input buffer
-                // left half already contains data from last round
-                for(int idx=0; idx < cbs.size; idx++)
+                for (int k = 0; k < blockSizeDecim; k++) //transfer our noisy audio to our NR-input buffer
                 {
-                	cob.fftin[fft_conv_size + 2 * idx + 0] = cob.i_buffer_convolution[idx];
-                  	cob.fftin[fft_conv_size + 2 * idx + 1] = cob.q_buffer_convolution[idx];
+                	// use new buffers for I & Q, because we cannot use FreeDV buffers
+                	cob.i_buffer_convolution[Sample_fill_in_pt][trans_count_in] = adb.i_buffer[k];
+                	cob.q_buffer_convolution[Sample_fill_in_pt][trans_count_in] = adb.q_buffer[k];
+
+                    //mmb.nr_audio_buff[Sample_fill_in_pt].samples[trans_count_in].real=inout_buffer[k];
+                    //mmb.nr_audio_buff[Sample_fill_in_pt].samples[trans_count_in].imag=inout_buffer[k+1];
+                    //trans_count_in++;
+                    trans_count_in++; // count the samples towards FFT-size
                 }
 
-                // fftin --> one input buffer
-                // fftout[nfor] --> changing output buffers !
-                // FFT performed on fftin inplace
-                arm_cfft_f32(&arm_cfft_sR_f32_len256, cob.fftin, 0, 1);
-                // copy output from fftin into current fftout buffer
-                for (int idx = 0; idx < fft_conv_size * 2; idx++)
+                if (trans_count_in >= (cbs.size * 2)) // FFT size is always (input block size * 2)
+                    //FFT_SIZE has to be an integer mult. of blockSizeDecim!!!
                 {
-                	cob.fftout[cbs.buffidx][idx] = cob.fftin[idx];
-                }
-                //fftw_execute (a->pcfor[a->buffidx]);
+                	// I do not understand the next line? Where is that saved?
+                	// makes no sense to me to call a function with a return value, where the return value is not used
+                    //Sample_in_buffer_add(&mmb.nr_audio_buff[Sample_fill_in_pt]); // save pointer to full buffer
+                    Sample_in_buffer_add(&mmb.nr_audio_buff[Sample_fill_in_pt]); // save pointer to full buffer
+                    trans_count_in=0;                              // set counter to 0
+                    Sample_fill_in_pt++;                               // increase pointer index
+                    Sample_fill_in_pt %= SAMPLE_BUFFER_NUM;            // make sure, that index stays in range
 
-                k = cbs.buffidx;
-                // fill the array accum with zeros
-                for (int idx = 0; idx < fft_conv_size * 2; idx++)
+                    //at this point we have transfered one complete block of 128 (?) samples to one buffer
+                }
+
+                //**********************************************************************************
+                //don't worry!  in the mean time the noise reduction routine is (hopefully) doing it's job within ui
+                //as soon as "fdv_audio_has_data" we can start harvesting the output
+                //**********************************************************************************
+
+                if (out_buffer == NULL && SAMPLE_out_has_data() > 1)
                 {
-                	cob.accum[idx] = 0;
+                    Sample_out_buffer_peek(&out_buffer);
                 }
-                //memset (a->accum, 0, 2 * a->size * sizeof (complex));
 
+                float32_t Sample_dec_buffer[blockSizeDecim];
 
-                for (j = 0; j < cbs.nfor; j++)
+                if (out_buffer != NULL)  // Convolution-routine has finished it's job
                 {
-                  for (i = 0; i < fft_conv_size; i++)
-                  {
-                    // this sums up the complex multiply results for real and imaginary components
-                    // stored in accum
-                    cob.accum[2 * i + 0] += cob.fftout[k][2 * i + 0] * cob.fmask[j][2 * i + 0]
-			                              - cob.fftout[k][2 * i + 1] * cob.fmask[j][2 * i + 1];
-                    cob.accum[2 * i + 1] += cob.fftout[k][2 * i + 0] * cob.fmask[j][2 * i + 1]
-										  + cob.fftout[k][2 * i + 1] * cob.fmask[j][2 * i + 0];
-                  }
-                  // k points to the next relevant fftout result
-                  // it must flip over when 0 is reached
-                  k = k -1;
-                  if(k < 0)
-                  {
-                	  k = cbs.nfor - 1;
-                  }
-                  //k = (k + a->idxmask) & a->idxmask;
+                    for (int j=0; j < blockSizeDecim; j=j+2) // transfer filtered data back to our buffer
+                    {
+                    	//                        NR_dec_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
+                    	//                        NR_dec_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
+                    	// totally unclear to me, what ->samples means . . .
+                    	// why offset?
+                    	Sample_dec_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
+                    	Sample_dec_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
+                        outbuff_count++;
+                    }
+
+                    if (outbuff_count >= (cbs.size * 2)) // we reached the end of the buffer coming from NR
+                    {
+                        outbuff_count = 0;
+                        Sample_out_buffer_remove(&out_buffer);
+                        out_buffer = NULL;
+                        Sample_out_buffer_peek(&out_buffer);
+                    }
                 }
-                cbs.buffidx +=1;
-                if(cbs.buffidx >= cbs.nfor)
+
                 {
-                	cbs.buffidx = 0;
+                    arm_copy_f32(NR_dec_buffer, inout_buffer, blockSizeDecim);
                 }
-                // a->buffidx = (a->buffidx + 1) & a->idxmask;
-                // inverse FFT
-                // input: accum
-                // audio is in right half of the output buffer accum
-                arm_cfft_f32(&arm_cfft_sR_f32_len256, cob.accum, 1, 1);
-                // fftw_execute (a->crev);
-                // copy FFT input buffer to left half of FFT input buffer for next round
-                // --> overlap 50%
-                for(int idx=0; idx < cbs.size; idx++)
-                {
-                	cob.fftin[2 * idx + 0] = cob.fftin[fft_conv_size + 2 * idx + 0];
-                	cob.fftin[2 * idx + 1] = cob.fftin[fft_conv_size + 2 * idx + 1];
-                }
-                //memcpy (a->fftin, &(a->fftin[2 * a->size]), a->size * sizeof(complex));
-                // copy I & Q inverse FFT results (from second half of accum) to adb.i_buffer_convolution and adb.q_buffer_convolution
-                for(int idx = 0; idx < cbs.size; idx++)
-                {
-                	cob.i_buffer_convolution[idx] = cob.accum[fft_conv_size + 2 * idx + 0];
-                	cob.q_buffer_convolution[idx] = cob.accum[fft_conv_size + 2 * idx + 1];
-                }
-                // these buffers now contain the bandpass filtered audio
-                // which already has suppressed opposite sideband (if cutoff-frequencies have been set correctly for the BP filter)
-                // so no further "demodulation" is necessary for SSB / CW
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-/* ************************************************
- *  AGC
- * ************************************************/
-            // perform AGC on I and Q
-                // we need the stereo version of the AGC
-    AudioDriver_RxAgcWdsp(cbs.size, cob.i_buffer_convolution, cob.q_buffer_convolution);
-
-            /*
-             *  TODO: deal with Digimodes and FM
-             *
-             */
-
-/* ************************************************
- *  DEMODULATION
- * ************************************************/
-
-
-    // for first test, we assume USB demodulation (hard coded filter passband +250Hz to +2700Hz in AudioDriver_SetRxAudioProcessing)
-    // for LSB, you would use -2700Hz to -250Hz
-
-    // very easy: in SSB, the real part of the (second half of the) iFFT output is the demodulated audio!
-    // switching between sidebands is only done by selecting the passband cutoff frequencies (coefficients) of the bandpass filter
-
-    // that means, that the cob.i_buffer_convolution already contains the demodulated audio for SSB and CW mode!
-
-    // i_buffer_convolution
-    // IIIIIIIIIIIIIIII
-    // <- cbs.size   ->
-    // --> this is the demodulated audio of size -> cob.size)
+/********************************************************************************************************************/
 
 /*
  *
