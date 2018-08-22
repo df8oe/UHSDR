@@ -26,7 +26,6 @@
 // 24 bits are not supported anywhere in the recent code!
 //#define USE_24_BITS
 
-
 #define IQ_SAMPLE_RATE (48000)
 #define IQ_SAMPLE_RATE_F ((float32_t)IQ_SAMPLE_RATE)
 //const float32_t IQ_SAMPLE_RATE_F = ((float32_t)IQ_SAMPLE_RATE);
@@ -37,6 +36,11 @@ typedef struct {
     __packed int16_t r;
 } AudioSample_t;
 
+#ifdef USE_CONVOLUTION
+typedef struct {
+   COMP samples[SAMPLE_BUFFER_SIZE];
+}  Sample_Buffer;
+#endif
 
 // -----------------------------
 // FFT buffer, this is double the size of the length of the FFT used for spectrum display and waterfall spectrum

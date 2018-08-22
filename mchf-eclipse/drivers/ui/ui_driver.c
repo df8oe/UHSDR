@@ -59,6 +59,8 @@
 #include "cw_decoder.h"
 #include "psk.h"
 
+#include "audio_convolution.h"
+
 #define SPLIT_ACTIVE_COLOUR         		Yellow      // colour of "SPLIT" indicator when active
 #define SPLIT_INACTIVE_COLOUR           	Grey        // colour of "SPLIT" indicator when NOT active
 #define COL_PWR_IND                 		White
@@ -6777,6 +6779,11 @@ void UiDriver_TaskHandler_HighPrioTasks()
         alternateNR_handle();
     }
 #endif
+
+#ifdef USE_CONVOLUTION
+    	convolution_handle();
+#endif
+
 }
 
 void UiDriver_TaskHandler_MainTasks()

@@ -23,6 +23,11 @@
 #include "radio_management.h"
 #include "usbd_audio_if.h"
 
+
+#define SAMPLE_BUFFER_SIZE 				256
+#define SAMPLE_BUFFER_NUM 				4
+#define SAMPLE_BUFFER_FIFO_SIZE 		(SAMPLE_BUFFER_NUM + 1)
+
 extern arm_fir_decimate_instance_f32   DECIMATE_RX_I;
 extern arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
 //extern AudioDriverBuffer adb;
@@ -57,6 +62,7 @@ typedef struct
     int 					size; // no. of input samples
     int						nfor; // no. of blocks in the convolution
     int						buffidx; // buffer pointer
+    int						DF; // decimation factor
     float32_t				impulse[CONVOLUTION_MAX_NO_OF_COEFFS * 2]; // impulse response has real and imaginary components
     float32_t				maskgen[FFT_CONVOLUTION_SIZE * 2];
 } ConvolutionBuffersShared;
@@ -65,6 +71,7 @@ extern ConvolutionBuffersShared cbs;
 
 void AudioDriver_CalcConvolutionFilterCoeffs (int N, float32_t f_low, float32_t f_high, float32_t samplerate, int wintype, int rtype, float32_t scale);
 void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize);
+void convolution_handle(void);
 
 #endif
 
