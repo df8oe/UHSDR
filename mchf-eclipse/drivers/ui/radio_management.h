@@ -105,7 +105,6 @@ typedef enum
 
 typedef struct BandInfo
 {
-    uint8_t default_pf;
     uint32_t tune;
     uint32_t size;
     const char* name;
