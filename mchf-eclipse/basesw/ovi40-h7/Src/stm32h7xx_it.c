@@ -145,7 +145,7 @@ void DebugMon_Handler(void)
 
   /* USER CODE END DebugMonitor_IRQn 1 */
 }
-
+#ifndef BOOTLOADER_BUILD
 /**
 * @brief This function handles Pendable request for system service.
 */
@@ -158,6 +158,7 @@ void PendSV_Handler(void)
 
   /* USER CODE END PendSV_IRQn 1 */
 }
+#endif
 
 /**
 * @brief This function handles System tick timer.
