@@ -521,6 +521,7 @@ unsigned int Board_RamSizeGet() {
     // instead of hard faults
     // this will run our very special bus fault handler in case no memory
     // is at the defined location
+#if defined(STM32F4) || defined(STM32F7)
     SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
     if (is_ram_at((volatile uint32_t*)TEST_ADDR_512)){
         retval=512;
@@ -532,7 +533,13 @@ unsigned int Board_RamSizeGet() {
     // now we disable it
     // we'll get hard faults as usual if we access wrong addresses
     SCB->SHCSR &= ~SCB_SHCSR_BUSFAULTENA_Msk;
-
+#elif defined(STM32H7)
+    //  TODO make it detect the really available RAM
+    retval = 512;
+#else
+    #warning Unkown processor, cannot determine ramsize
+    retval = 0;
+#endif
     return retval;
 }
 

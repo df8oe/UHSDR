@@ -608,33 +608,34 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_BL_VERSION:
     {
-        const uint8_t* begin = (uint8_t*)0x8000000;
         outs = "Unknown BL";
 
         // We search for string "Version: " in bootloader memory
-        for(int i=0; i < 32768-8; i++)
+        // this assume the bootloader starting at 0x8000000 and being followed by the virtual eeprom
+        // which starts at EEPROM_START_ADDRESS
+        for(uint8_t* begin = (uint8_t*)0x8000000; begin < (uint8_t*)EEPROM_START_ADDRESS-8; begin++)
         {
-            if( begin[i] == 'V' && begin[i+1] == 'e' && begin[i+2] == 'r'
-                    && begin[i+3] == 's' && begin[i+4] == 'i' && begin[i+5] == 'o'
-                    && begin[i+6] == 'n' && begin[i+7] == ':' && begin[i+8] == ' ')
+            if (memcmp("Version: ",begin,9) == 0)
             {
-                snprintf(out,32, "%s", &begin[i+9]);
+                snprintf(out,32, "%s", &begin[9]);
                 outs = out;
                 break;
             }
-            else if (begin[i] == 'M' && begin[i+1] == '0' && begin[i+2] == 'N'
-                    && begin[i+3] == 'K' && begin[i+4] == 'A' && begin[i+5] == ' '
-                    && begin[i+6] == '2' && begin[i+11] == 0xb5)
+            else
             {
-                outs = "M0NKA 0.0.0.9";
-                break;
-            }
-            else if (begin[i] == 'M' && begin[i+1] == '0' && begin[i+2] == 'N'
-                    && begin[i+3] == 'K' && begin[i+4] == 'A' && begin[i+5] == ' '
-                    && begin[i+6] == '2' && begin[i+11] == 0xd1)
-            {
-                outs = "M0NKA 0.0.0.14";
-                break;
+                if (memcmp("M0NKA 2",begin,7) == 0)
+                {
+                    if (begin[11] == 0xb5)
+                    {
+                        outs = "M0NKA 0.0.0.9";
+                        break;
+                    }
+                    else if (begin[11] == 0xd1)
+                    {
+                        outs = "M0NKA 0.0.0.14";
+                        break;
+                    }
+                }
             }
         }
     }
