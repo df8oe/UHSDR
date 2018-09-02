@@ -78,66 +78,68 @@ void MX_RTC_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
   /* USER CODE BEGIN RTC_Init 2 */
-
-  /* USER CODE END RTC_Init 2 */
-
-    /**Initialize RTC and set the Time and Date 
-    */
-  sTime.Hours = 0x0;
-  sTime.Minutes = 0x0;
-  sTime.Seconds = 0x0;
-  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+  if(HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR0) != 0x32F2)
   {
-    _Error_Handler(__FILE__, __LINE__);
+      /* USER CODE END RTC_Init 2 */
+
+      /**Initialize RTC and set the Time and Date
+       */
+      sTime.Hours = 0x0;
+      sTime.Minutes = 0x0;
+      sTime.Seconds = 0x0;
+      sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+      sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+      if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+      {
+          _Error_Handler(__FILE__, __LINE__);
+      }
+      /* USER CODE BEGIN RTC_Init 3 */
+
+      /* USER CODE END RTC_Init 3 */
+
+      sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+      sDate.Month = RTC_MONTH_JANUARY;
+      sDate.Date = 0x1;
+      sDate.Year = 0x0;
+
+      if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
+      {
+          _Error_Handler(__FILE__, __LINE__);
+      }
+      /* USER CODE BEGIN RTC_Init 4 */
+
+      /* USER CODE END RTC_Init 4 */
+
+      /**Enable the Alarm A
+       */
+      sAlarm.AlarmTime.Hours = 0x0;
+      sAlarm.AlarmTime.Minutes = 0x0;
+      sAlarm.AlarmTime.Seconds = 0x0;
+      sAlarm.AlarmTime.SubSeconds = 0x0;
+      sAlarm.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+      sAlarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
+      sAlarm.AlarmMask = RTC_ALARMMASK_NONE;
+      sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
+      sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
+      sAlarm.AlarmDateWeekDay = 0x1;
+      sAlarm.Alarm = RTC_ALARM_A;
+      if (HAL_RTC_SetAlarm(&hrtc, &sAlarm, RTC_FORMAT_BCD) != HAL_OK)
+      {
+          _Error_Handler(__FILE__, __LINE__);
+      }
+      /* USER CODE BEGIN RTC_Init 5 */
+
+      /* USER CODE END RTC_Init 5 */
+
+      /**Enable the WakeUp
+       */
+      if (HAL_RTCEx_SetWakeUpTimer(&hrtc, 0, RTC_WAKEUPCLOCK_RTCCLK_DIV16) != HAL_OK)
+      {
+          _Error_Handler(__FILE__, __LINE__);
+      }
+      /* USER CODE BEGIN RTC_Init 6 */
+      HAL_RTCEx_BKUPWrite(&hrtc,RTC_BKP_DR0,0x32F2);
   }
-  /* USER CODE BEGIN RTC_Init 3 */
-
-  /* USER CODE END RTC_Init 3 */
-
-  sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-  sDate.Month = RTC_MONTH_JANUARY;
-  sDate.Date = 0x1;
-  sDate.Year = 0x0;
-
-  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-  /* USER CODE BEGIN RTC_Init 4 */
-
-  /* USER CODE END RTC_Init 4 */
-
-    /**Enable the Alarm A 
-    */
-  sAlarm.AlarmTime.Hours = 0x0;
-  sAlarm.AlarmTime.Minutes = 0x0;
-  sAlarm.AlarmTime.Seconds = 0x0;
-  sAlarm.AlarmTime.SubSeconds = 0x0;
-  sAlarm.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-  sAlarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
-  sAlarm.AlarmMask = RTC_ALARMMASK_NONE;
-  sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
-  sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
-  sAlarm.AlarmDateWeekDay = 0x1;
-  sAlarm.Alarm = RTC_ALARM_A;
-  if (HAL_RTC_SetAlarm(&hrtc, &sAlarm, RTC_FORMAT_BCD) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-  /* USER CODE BEGIN RTC_Init 5 */
-
-  /* USER CODE END RTC_Init 5 */
-
-    /**Enable the WakeUp 
-    */
-  if (HAL_RTCEx_SetWakeUpTimer(&hrtc, 0, RTC_WAKEUPCLOCK_RTCCLK_DIV16) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-  /* USER CODE BEGIN RTC_Init 6 */
-
   /* USER CODE END RTC_Init 6 */
 
 }
