@@ -178,11 +178,11 @@ float log10f_fast(float X) {
 // Audio RX - Decimator
 //static  arm_fir_decimate_instance_f32   DECIMATE_RX_I;
 arm_fir_decimate_instance_f32   DECIMATE_RX_I;
-float32_t           __MCHF_SPECIALMEM decimState_I[FIR_RXAUDIO_BLOCK_SIZE + 43];
+float32_t           __MCHF_SPECIALMEM decimState_I[FIR_RXAUDIO_BLOCK_SIZE + 83];
 // Audio RX - Decimator in Q-path
 //static  arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
 arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
-float32_t           __MCHF_SPECIALMEM decimState_Q[FIR_RXAUDIO_BLOCK_SIZE + 43];
+float32_t           __MCHF_SPECIALMEM decimState_Q[FIR_RXAUDIO_BLOCK_SIZE + 83];
 
 // Decimator for Zoom FFT
 static	arm_fir_decimate_instance_f32	DECIMATE_ZOOM_FFT_I;
@@ -1394,13 +1394,9 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
         	// TODO: this is wrong! For higher bandwidth filters this has to be
         	// changed, see filter list in audio_filter.c
             dec = &FirRxDecimate;
+            //dec = &FirRxDecimate_sideband_supp;
         }
 #endif
-        // TODO: delete this HACK and do it properly
-        // this always uses the small filter for the lowpass before downsampling
-        // with the new audio path, the lowpass filtering has already been done in the Hilbert filter
-        // change this, because it does not work for higher bandwidth filters!
-        dec = &FirRxDecimate;
 
         arm_fir_decimate_init_f32(&DECIMATE_RX_I,
 
@@ -3776,16 +3772,27 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
             // we need this "if" although Danilo introduced "use_decimated_IQ"
             if(dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM) // for SAM & AM leave out this processor-intense filter
             {
-            	// FIRST: Hilbert transform (for SSB/CW)
-                arm_fir_f32(&Fir_Rx_Hilbert_I,adb.i_buffer, adb.i_buffer, blockSize);   // Hilbert lowpass +45 degrees
-                arm_fir_f32(&Fir_Rx_Hilbert_Q,adb.q_buffer, adb.q_buffer, blockSize);   // Hilbert lowpass -45 degrees
+//            	// FIRST: Hilbert transform (for SSB/CW)
+//                arm_fir_f32(&Fir_Rx_Hilbert_I,adb.i_buffer, adb.i_buffer, blockSize);   // Hilbert lowpass +45 degrees
+//                arm_fir_f32(&Fir_Rx_Hilbert_Q,adb.q_buffer, adb.q_buffer, blockSize);   // Hilbert lowpass -45 degrees
+//
+//            	if(use_decimatedIQ)
+//                {
+//            		// after lowpass filtering, do decimation with minimal builtin lowpass
+//                    arm_fir_decimate_f32(&DECIMATE_RX_I, adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+//                    arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+//                }
+//
 
             	if(use_decimatedIQ)
                 {
-            		// after lowpass filtering, do decimation with minimal builtin lowpass
+            		// use an adequate lowpass filter before the decimation
                     arm_fir_decimate_f32(&DECIMATE_RX_I, adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                     arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                 }
+            	// SECOND: Hilbert transform (for SSB/CW)
+                arm_fir_f32(&Fir_Rx_Hilbert_I,adb.i_buffer, adb.i_buffer, blockSizeIQ);   // Hilbert lowpass +45 degrees
+                arm_fir_f32(&Fir_Rx_Hilbert_Q,adb.q_buffer, adb.q_buffer, blockSizeIQ);   // Hilbert lowpass -45 degrees
 
 
             }
