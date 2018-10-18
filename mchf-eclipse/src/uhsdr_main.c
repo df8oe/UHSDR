@@ -25,6 +25,8 @@
 // serial EEPROM driver
 #include "uhsdr_hw_i2c.h"
 
+#include "uhsdr_hmc1023.h"
+
 // Audio Driver
 #include "drivers/audio/audio_driver.h"
 #include "drivers/audio/audio_management.h"
@@ -529,6 +531,9 @@ int mchfMain(void)
 	}
     profileTimedEventInit();
 
+#ifdef USE_FEAT_HMC1023
+    hmc1023_init();
+#endif
 
     // Audio HW init
     AudioDriver_Init();
