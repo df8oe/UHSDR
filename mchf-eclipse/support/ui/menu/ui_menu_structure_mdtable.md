@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-09-04T08:27:56  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-10-19T06:05:28  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-09-04T08:27:56  by "./ui_menu_structure_mdtable.py"
+generated at  2018-10-19T06:05:28  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -293,6 +293,8 @@ generated at  2018-09-04T08:27:56  by "./ui_menu_structure_mdtable.py"
 | **NR gain**                   (                        MENU_DEBUG_ANR_GAIN) | Gain of leaky LMS noise reduction              | 
 | **NR leak**                   (                        MENU_DEBUG_ANR_LEAK) | Leak of leaky LMS noise reduction              | 
 | **Si5351a PLL Reset**         (             MENU_DEBUG_OSC_SI5351_PLLRESET) | Debug Setting: Select when the Si5351a does a PLL RESET | 
+| **HMC1023 Coarse**            (                  MENU_DEBUG_HMC1023_COARSE) | Debug Setting: Change LPF HMC1023LP5E coarse bandwidth | 
+| **HMC1023 Fine**              (                  MENU_DEBUG_HMC1023_COARSE) | Debug Setting: Change LPF HMC1023LP5E fine bandwidth | 
 
 
 [//]: # ( EOFILE                                                                       )

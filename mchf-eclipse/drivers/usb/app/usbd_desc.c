@@ -70,7 +70,7 @@
   */ 
 #define USBD_VID                        0x0483
 #define USBD_LANGID_STRING              1033
-#define USBD_MANUFACTURER_STRING        (uint8_t*)"UHSDR Open Source Community (based on STMicroelectronics Drivers)"
+#define USBD_MANUFACTURER_STRING        (uint8_t*)"UHSDR Community (based on STMicroelectronics Drivers)"
 #define USBD_PID_FS                     0x5732
 #define USBD_PRODUCT_STRING_FS          (uint8_t*)"USB Interface "TRX_ID
 #define USBD_SERIALNUMBER_STRING_FS     (uint8_t*)"00000000002A"
