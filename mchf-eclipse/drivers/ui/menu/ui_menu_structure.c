@@ -1,5 +1,6 @@
 #include "ui_menu.h"
 #include "ui_menu_internal.h"
+#include "uhsdr_hmc1023.h"
 
 /*
  * How to create a new menu entry in an existing menu:
@@ -437,6 +438,8 @@ const MenuDescriptor debugGroup[] =
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ANR_LEAK, NULL,"NR leak", UiMenuDesc("Leak of leaky LMS noise reduction") },
 #endif
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_OSC_SI5351_PLLRESET, NULL,"Si5351a PLL Reset", UiMenuDesc("Debug Setting: Select when the Si5351a does a PLL RESET") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_COARSE, &hmc1023.present,"HMC1023 Coarse", UiMenuDesc("Debug Setting: Change LPF HMC1023LP5E coarse bandwidth") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_COARSE, &hmc1023.present,"HMC1023 Fine", UiMenuDesc("Debug Setting: Change LPF HMC1023LP5E fine bandwidth") },
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 

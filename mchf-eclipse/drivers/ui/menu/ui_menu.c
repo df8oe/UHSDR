@@ -23,6 +23,7 @@
 #include "serial_eeprom.h"
 #include "ui_spectrum.h"
 #include "rtc.h"
+#include "uhsdr_hmc1023.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -4193,7 +4194,28 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             break;
         }
         break;
-
+#ifdef USE_FEAT_HMC1023
+        case MENU_DEBUG_HMC1023_COARSE:
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &hmc1023.coarse,0,8,0,1);
+            if (var_change)
+            {
+                // TODO: Factor this out into a Ui function for (de-)activating Rtty mode
+                hmc1023_set_coarse(hmc1023.coarse);
+                hmc1023_activate_settings();
+            }
+            snprintf(options,32,"     %2d",hmc1023.coarse);
+            break;
+        case MENU_DEBUG_HMC1023_FINE:
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &hmc1023.fine,0,11,0,1);
+            if (var_change)
+            {
+                // TODO: Factor this out into a Ui function for (de-)activating Rtty mode
+                hmc1023_set_coarse(hmc1023.fine);
+                hmc1023_activate_settings();
+            }
+            snprintf(options,32,"     %2d",hmc1023.fine);
+            break;
+#endif
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

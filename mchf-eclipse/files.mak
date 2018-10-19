@@ -7,6 +7,7 @@ misc/profiling.c \
 misc/serial_eeprom.c \
 hardware/uhsdr_board.c \
 hardware/uhsdr_hw_i2c.c \
+hardware/uhsdr_hmc1023.c \
 hardware/uhsdr_keypad.c \
 hardware/uhsdr_rtc.c \
 drivers/usb/device/class/composite/usbd_composite.c \
