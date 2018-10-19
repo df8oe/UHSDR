@@ -531,7 +531,7 @@ int mchfMain(void)
 	}
     profileTimedEventInit();
 
-#ifdef USE_FEAT_HMC1023
+#ifdef USE_HMC1023
     hmc1023_init();
 #endif
 

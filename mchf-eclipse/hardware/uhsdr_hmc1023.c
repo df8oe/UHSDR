@@ -85,7 +85,7 @@ static uint32_t hmc1023_ll_read(uint32_t regaddr)
         {
             if (( rx_data[3] & 0x07) == 5)  // we found the correct "chip id"
             {
-                retval = rx_data[0] << 16 | rx_data[1] << 8 | rx_data[0];
+                retval = rx_data[0] << 16 | rx_data[1] << 8 | rx_data[2];
             }
         }
 
