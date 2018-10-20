@@ -267,13 +267,6 @@ int bootloader_main()
     /* initialization */
     BSP_Init();
 
-	#ifdef SBLA
-	  *(uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE development features
-	#endif
-	#ifdef SBLS
-	  *(uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for special beta-testing features
-	#endif
-
 #if 0
     mcHF_PowerHoldOff();
 

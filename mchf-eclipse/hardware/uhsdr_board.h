@@ -1078,6 +1078,7 @@ typedef struct TransceiverState
 
 	RfBoard_t rf_board; // the detected rf board connected to the control logic
 	bool si570_is_present;
+	uint8_t special_functions_enabled;
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

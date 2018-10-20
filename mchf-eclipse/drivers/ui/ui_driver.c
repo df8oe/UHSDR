@@ -828,10 +828,12 @@ void UiDriver_Init()
 		UiDriver_StartupScreen_LogIfProblem(IS_TSCalibrated == 0,
 				"WARNING:  TOUCHSCREEN NOT CALIBRATED!!!\nRun calibration first!");
 	}
-
-	UiDriver_StartupScreen_LogIfProblem(AudioDriver_GetTranslateFreq() == 0,
+	if (ts.special_functions_enabled != 1)
+	{
+	  UiDriver_StartupScreen_LogIfProblem(AudioDriver_GetTranslateFreq() == 0,
 			"WARNING:  Freq. Translation is OFF!!!\nTranslation is STRONGLY recommended!!");
-
+	}
+	
 	// now run all inits which need to be done BEFORE going into test screen mode
 	uint8_t mirtemp;
 	if(ts.flags1 & FLAGS1_REVERSE_X_TOUCHSCREEN)

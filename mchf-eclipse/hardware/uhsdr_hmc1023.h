@@ -33,6 +33,7 @@ extern HMC1023_t hmc1023;
 #ifdef USE_HMC1023
 
 void hmc1023_init();
+void hmc1023_activate_settings();
 void hmc1023_set_coarse(uint8_t coarse);
 void hmc1023_set_fine(uint8_t fine);
 
