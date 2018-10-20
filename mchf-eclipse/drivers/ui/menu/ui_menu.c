@@ -4210,7 +4210,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             if (var_change)
             {
                 // TODO: Factor this out into a Ui function for (de-)activating Rtty mode
-                hmc1023_set_coarse(hmc1023.fine);
+                hmc1023_set_fine(hmc1023.fine);
                 hmc1023_activate_settings();
             }
             snprintf(options,32,"     %2d",hmc1023.fine);
