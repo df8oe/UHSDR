@@ -439,7 +439,10 @@ const MenuDescriptor debugGroup[] =
 #endif
 	{ MENU_DEBUG, MENU_ITEM, MENU_DEBUG_OSC_SI5351_PLLRESET, NULL,"Si5351a PLL Reset", UiMenuDesc("Debug Setting: Select when the Si5351a does a PLL RESET") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_COARSE, &hmc1023.present,"HMC1023 Coarse", UiMenuDesc("Debug Setting: Change LPF HMC1023LP5E coarse bandwidth") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_COARSE, &hmc1023.present,"HMC1023 Fine", UiMenuDesc("Debug Setting: Change LPF HMC1023LP5E fine bandwidth") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_FINE, &hmc1023.present,"HMC1023 Fine", UiMenuDesc("Debug Setting: Change LPF HMC1023LP5E fine bandwidth") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_GAIN, &hmc1023.present,"HMC1023 Gain 10db", UiMenuDesc("Debug Setting: Switch LPF HMC1023LP5E +10db Amp on/off") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_BYPASS, &hmc1023.present,"HMC1023 Bypass", UiMenuDesc("Debug Setting: Set HMC1023 to bypass mode") },
+
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 

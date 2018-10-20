@@ -18,9 +18,11 @@ HMC1023_t hmc1023;
 #include <spi.h>
 
 
-#define HMC1023_REG_COARSE_SHIFT (6)
-#define HMC1023_REG_COARSE_MASK ((0x0f) << HMC1023_REG_COARSE_SHIFT)
-#define HMC1023_REG_USE_SPI_SETTINGS (0x000010)
+#define HMC1023_REG2_GAIN_MASK (1 << 4)
+#define HMC1023_REG2_BYPASS_MASK (1 << 5)
+#define HMC1023_REG2_COARSE_SHIFT (6)
+#define HMC1023_REG2_COARSE_MASK ((0x0f) << HMC1023_REG2_COARSE_SHIFT)
+#define HMC1023_REG1_USE_SPI_SETTINGS (0x000010)
 
 static void hmc1023_ll_spi_tx(bool is_tx)
 {
@@ -112,12 +114,39 @@ void hmc1023_set_coarse(uint8_t coarse)
 {
     if (coarse < 9)
     {
-        if ( (hmc1023.reg2 & HMC1023_REG_COARSE_MASK)  != coarse << HMC1023_REG_COARSE_SHIFT)
+        if ( (hmc1023.reg2 & HMC1023_REG2_COARSE_MASK)  != coarse << HMC1023_REG2_COARSE_SHIFT)
         {
-            hmc1023.reg2 &= ~HMC1023_REG_COARSE_MASK;
-            hmc1023.reg2 |= (coarse << HMC1023_REG_COARSE_SHIFT);
+            hmc1023.reg2 &= ~HMC1023_REG2_COARSE_MASK;
+            hmc1023.reg2 |= (coarse << HMC1023_REG2_COARSE_SHIFT);
             hmc1023_ll_write(2,hmc1023.reg2);
         }
+    }
+}
+
+/**
+ * Sets the 10db amplifier on or off
+ * @param on true on / false off
+ */
+void hmc1023_set_gain(bool on)
+{
+    if ( ((hmc1023.reg2 & HMC1023_REG2_GAIN_MASK) == HMC1023_REG2_GAIN_MASK) != on )
+    {
+        hmc1023.reg2 &= ~HMC1023_REG2_GAIN_MASK;
+        hmc1023.reg2 |= on ? HMC1023_REG2_GAIN_MASK : 0;
+        hmc1023_ll_write(2,hmc1023.reg2);
+    }
+}
+/**
+ * Sets the LPF bypass on or off
+ * @param on true on / false off
+ */
+void hmc1023_set_bypass(bool on)
+{
+    if ( ((hmc1023.reg2 & HMC1023_REG2_BYPASS_MASK) == HMC1023_REG2_BYPASS_MASK) != on )
+    {
+        hmc1023.reg2 &= ~HMC1023_REG2_BYPASS_MASK;
+        hmc1023.reg2 |= on ? HMC1023_REG2_BYPASS_MASK : 0;
+        hmc1023_ll_write(2,hmc1023.reg2);
     }
 }
 
@@ -141,7 +170,7 @@ void hmc1023_set_fine(uint8_t fine)
 // call after hmc1023_set_fine / hmc1023_set_coarse
 void hmc1023_activate_settings()
 {
-    hmc1023_ll_write(2,hmc1023.reg2 | HMC1023_REG_USE_SPI_SETTINGS);
+    hmc1023_ll_write(1,hmc1023.reg1 | HMC1023_REG1_USE_SPI_SETTINGS);
 }
 
 void hmc1023_init()
@@ -178,6 +207,7 @@ void hmc1023_init()
 
     if (hmc1023.present)
     {
+        hmc1023.reg1 = hmc1023_ll_read(1);
         hmc1023.reg2 = hmc1023_ll_read(2);
         hmc1023.reg2 = hmc1023_ll_read(3);
     }

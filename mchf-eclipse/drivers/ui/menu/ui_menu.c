@@ -4215,6 +4215,23 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             }
             snprintf(options,32,"     %2d",hmc1023.fine);
             break;
+        case MENU_DEBUG_HMC1023_GAIN:
+            var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &hmc1023.gain,0,options,&clr);
+            if (var_change)
+            {
+                hmc1023_set_gain(hmc1023.gain);
+            }
+            break;
+
+        case MENU_DEBUG_HMC1023_BYPASS:
+            var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &hmc1023.bypass,0,options,&clr);
+            if (var_change)
+            {
+                hmc1023_set_bypass(hmc1023.bypass);
+            }
+
+            break;
+
 #endif
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
