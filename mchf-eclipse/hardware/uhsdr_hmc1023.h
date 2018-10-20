@@ -19,12 +19,15 @@ typedef struct
 {
     bool present;
 #ifdef USE_HMC1023
+    uint32_t reg1;
     uint32_t reg2;
     uint32_t reg3;
 
     // we use these to track the configration settings
     uint8_t coarse;
     uint8_t fine;
+    bool gain;
+    bool bypass;
 #endif
 } HMC1023_t;
 
@@ -36,6 +39,8 @@ void hmc1023_init();
 void hmc1023_activate_settings();
 void hmc1023_set_coarse(uint8_t coarse);
 void hmc1023_set_fine(uint8_t fine);
+void hmc1023_set_gain(bool on);
+void hmc1023_set_bypass(bool on);
 
 #endif
 
