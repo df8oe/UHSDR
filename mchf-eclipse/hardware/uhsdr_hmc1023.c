@@ -135,10 +135,13 @@ static void hmc1023_set_reg2_bits(uint8_t bits,uint8_t limit, uint32_t mask, uin
 {
     if (bits <= limit)
     {
-        if ( (hmc1023.reg2 & (mask <<shift))  != bits << shift)
+        const uint32_t shifted_mask = (mask << shift);
+        const uint32_t shifted_bits = (bits << shift);
+
+        if ( (hmc1023.reg2 & shifted_mask)  != shifted_bits)
         {
-            hmc1023.reg2 &= ~mask;
-            hmc1023.reg2 |= (bits << shift);
+            hmc1023.reg2 &= ~shifted_mask;
+            hmc1023.reg2 |= shifted_bits;
             hmc1023_ll_write(2,hmc1023.reg2);
         }
     }
