@@ -56,7 +56,7 @@ static uint32_t hmc1023_ll_write(uint32_t regaddr, uint32_t value)
     tx_data[0] = value >> 16;
     tx_data[1] = value >> 8;
     tx_data[2] = value;
-    tx_data[3] = 0x5; // chip id;
+    tx_data[3] = 0x5 | (regaddr << 3); // chip id & register to write;
 
     hmc1023_ll_cs(true);
     if (HAL_SPI_Transmit(&hspi6,tx_data,4,100) == HAL_OK)
