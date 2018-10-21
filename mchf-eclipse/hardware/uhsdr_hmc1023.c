@@ -167,8 +167,7 @@ static void hmc1023_set_reg2_bits(uint8_t bits,uint8_t limit, uint32_t mask, uin
 
         if ( (hmc1023.reg2 & shifted_mask)  != shifted_bits)
         {
-            hmc1023.reg2 &= ~shifted_mask;
-            hmc1023.reg2 |= shifted_bits;
+            MODIFY_REG(hmc1023.reg2,shifted_mask,shifted_bits);
             hmc1023_ll_write(2,hmc1023.reg2);
         }
     }
@@ -249,8 +248,7 @@ void hmc1023_use_spi_settings(bool on)
     const uint32_t target_mask = (HMC1023_REG1_USE_SPI_SETTINGS | HMC1023_REG1_FORCE_CAL_CODE);
     if ((hmc1023.reg1 & target_mask) != target_bits)
     {
-        hmc1023.reg1 &= ~target_mask;
-        hmc1023.reg1 |= target_bits;
+        MODIFY_REG(hmc1023.reg1, target_mask, target_bits);
         hmc1023_ll_write(1,hmc1023.reg1);
     }
 }
