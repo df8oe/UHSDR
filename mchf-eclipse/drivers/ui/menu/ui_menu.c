@@ -4223,7 +4223,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
              var_change = UiDriverMenuItemChangeUInt8(var, mode, &hmc1023.drvr,0,3,0,1);
              if (var_change)
              {
-                 hmc1023_set_bias_opamp(hmc1023.drvr);
+                 hmc1023_set_bias_drvr(hmc1023.drvr);
              }
              snprintf(options,32," %2d",hmc1023.drvr);
              break;
