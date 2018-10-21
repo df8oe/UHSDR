@@ -23,6 +23,7 @@ HMC1023_t hmc1023;
 #define HMC1023_REG2_COARSE_SHIFT (6)
 #define HMC1023_REG2_COARSE_MASK ((0x0f) << HMC1023_REG2_COARSE_SHIFT)
 #define HMC1023_REG1_USE_SPI_SETTINGS (1 << 1)
+#define HMC1023_REG1_FORCE_CAL_CODE (1 << 4)
 
 static void hmc1023_ll_spi_tx(bool is_tx)
 {
@@ -170,7 +171,7 @@ void hmc1023_set_fine(uint8_t fine)
 // call after hmc1023_set_fine / hmc1023_set_coarse
 void hmc1023_activate_settings()
 {
-    hmc1023_ll_write(1,hmc1023.reg1 | HMC1023_REG1_USE_SPI_SETTINGS);
+    hmc1023_ll_write(1,hmc1023.reg1 | HMC1023_REG1_USE_SPI_SETTINGS | HMC1023_REG1_FORCE_CAL_CODE);
 }
 
 void hmc1023_init()
