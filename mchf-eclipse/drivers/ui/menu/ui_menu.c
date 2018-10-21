@@ -4199,22 +4199,35 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &hmc1023.coarse,0,8,0,1);
             if (var_change)
             {
-                // TODO: Factor this out into a Ui function for (de-)activating Rtty mode
                 hmc1023_set_coarse(hmc1023.coarse);
-                hmc1023_activate_settings();
             }
-            snprintf(options,32,"     %2d",hmc1023.coarse);
+            snprintf(options,32," %2d",hmc1023.coarse);
             break;
         case MENU_DEBUG_HMC1023_FINE:
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &hmc1023.fine,0,11,0,1);
             if (var_change)
             {
-                // TODO: Factor this out into a Ui function for (de-)activating Rtty mode
                 hmc1023_set_fine(hmc1023.fine);
-                hmc1023_activate_settings();
             }
-            snprintf(options,32,"     %2d",hmc1023.fine);
+            snprintf(options,32," %2d",hmc1023.fine);
             break;
+        case MENU_DEBUG_HMC1023_OPAMP:
+             var_change = UiDriverMenuItemChangeUInt8(var, mode, &hmc1023.opamp,0,3,0,1);
+             if (var_change)
+             {
+                 hmc1023_set_bias_opamp(hmc1023.opamp);
+             }
+             snprintf(options,32," %2d",hmc1023.opamp);
+             break;
+        case MENU_DEBUG_HMC1023_DRVR:
+             var_change = UiDriverMenuItemChangeUInt8(var, mode, &hmc1023.drvr,0,3,0,1);
+             if (var_change)
+             {
+                 hmc1023_set_bias_opamp(hmc1023.drvr);
+             }
+             snprintf(options,32," %2d",hmc1023.drvr);
+             break;
+
         case MENU_DEBUG_HMC1023_GAIN:
             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &hmc1023.gain,0,options,&clr);
             if (var_change)
