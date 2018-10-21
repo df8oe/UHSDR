@@ -15,6 +15,10 @@ HMC1023_t hmc1023;
 
 #ifdef USE_HMC1023
 
+#define HMC1023_CS_PIN GPIO_PIN_9
+#define HMC1023_CS_PORT GPIOG
+#define hspiHmc1023 (hspi6)
+
 #include <spi.h>
 
 #define HMC1023_REG3_FINE_LIMIT  (11)
@@ -42,10 +46,16 @@ HMC1023_t hmc1023;
 #define HMC1023_REG1_USE_SPI_SETTINGS (1 << 1)
 #define HMC1023_REG1_FORCE_CAL_CODE (1 << 4)
 
+/**
+ * Switch hardware SPI settings from tx to rx mode and vice versa. Also provides necessary delay between
+ * tx and rx.
+ * HMC1023LP5E needs phase == 1EDGE for transmit by STM and 2EDGE for RX sampling by STM. Who designs such an SPI protocol?
+ * @param is_tx true -> configure for  tx mode, false -> for rx mode
+ */
 static void hmc1023_ll_spi_tx(bool is_tx)
 {
 
-  hspi6.Init.CLKPhase = is_tx == true? SPI_PHASE_1EDGE : SPI_PHASE_2EDGE;
+  hspiHmc1023.Init.CLKPhase = is_tx == true? SPI_PHASE_1EDGE : SPI_PHASE_2EDGE;
   if (HAL_SPI_Init(&hspi6) != HAL_OK)
   {
     Error_Handler();
@@ -53,19 +63,28 @@ static void hmc1023_ll_spi_tx(bool is_tx)
   __HAL_SPI_ENABLE(&hspi6);
 }
 
-
+/**
+ * Control selection of HMC1023LP5E. Please note, output of SDO does not go tristate if deselected!
+ * @param on true -> chip is selected (HMC1023LP5E input EN == LOW), false -> not selected
+ */
 static void hmc1023_ll_cs(bool on)
 {
     if (on)
     {
-        GPIO_ResetBits(GPIOG,GPIO_PIN_9);
+        GPIO_ResetBits(HMC1023_CS_PORT,HMC1023_CS_PIN);
     }
     else
     {
-        GPIO_SetBits(GPIOG,GPIO_PIN_9);
+        GPIO_SetBits(HMC1023_CS_PORT,HMC1023_CS_PIN);
     }
 }
 
+/**
+ * Write  register value into the HMC1023LP5E. It is not checked if the value was received correctly!
+ * @param regaddr which register to write to, not range checked!
+ * @param value 24 bit value
+ * @return HMC1023_ERROR if failed, HMC1023_OK otherwise.
+ */
 static uint32_t hmc1023_ll_write(uint32_t regaddr, uint32_t value)
 {
     uint8_t tx_data[4];
@@ -84,7 +103,11 @@ static uint32_t hmc1023_ll_write(uint32_t regaddr, uint32_t value)
     hmc1023_ll_cs(false);
     return retval;
 }
-
+/**
+ *
+ * @param regaddr which register to read, not range checked!
+ * @return 24 bit value in case of success, HMC1023_ERROR otherwise
+ */
 static uint32_t hmc1023_ll_read(uint32_t regaddr)
 {
 
@@ -117,6 +140,10 @@ static uint32_t hmc1023_ll_read(uint32_t regaddr)
     return retval;
 }
 
+/**
+ *
+ * @return true if HMC1023LP5E was detected by reading the correct id
+ */
 static bool hmc1023_ll_presence()
 {
     uint32_t value = hmc1023_ll_read(0);
@@ -152,17 +179,24 @@ static void hmc1023_set_reg2_bits(uint8_t bits,uint8_t limit, uint32_t mask, uin
  * Note +/-20% variation if not calibrated!
  * @param coarse 0 - 8
  */
-
 void hmc1023_set_coarse(uint8_t value)
 {
     hmc1023_set_reg2_bits(value,HMC1023_REG2_COARSE_LIMIT,HMC1023_REG2_COARSE_MASK, HMC1023_REG2_COARSE_SHIFT);
 }
 
+/**
+ * Control HMC1023LP5E opamp bias
+ * @param value: 0 - 3 (higher value, higher bias)
+ */
 void hmc1023_set_bias_opamp(uint8_t value)
 {
     hmc1023_set_reg2_bits(value,HMC1023_REG2_OPAMP_LIMIT,HMC1023_REG2_OPAMP_MASK, HMC1023_REG2_OPAMP_SHIFT);
 }
 
+/**
+ * Control HMC1023LP5E driver bias
+ * @param value: 0 - 3 (higher value, higher bias)
+ */
 void hmc1023_set_bias_drvr(uint8_t value)
 {
     hmc1023_set_reg2_bits(value,HMC1023_REG2_DRVR_LIMIT,HMC1023_REG2_DRVR_MASK, HMC1023_REG2_DRVR_SHIFT);
@@ -203,41 +237,53 @@ void hmc1023_set_fine(uint8_t fine)
     }
 }
 
-// call after hmc1023_set_fine / hmc1023_set_coarse
-void hmc1023_activate_settings()
+/**
+ * use HMC1023LP5E register settings for coarse and fine LPF bandwidth control
+ * please note that this enables both coarse and fine bandwidth from SPI, this is incompatible with
+ * automatic calibration as discussed in data sheet.
+ * @param on true -> use bandwidth settings in reg2/reg3, false -> use internal defaults
+ */
+void hmc1023_use_spi_settings(bool on)
 {
-    if ((hmc1023.reg1 & (HMC1023_REG1_USE_SPI_SETTINGS | HMC1023_REG1_FORCE_CAL_CODE))
-            != (HMC1023_REG1_USE_SPI_SETTINGS | HMC1023_REG1_FORCE_CAL_CODE))
+    const uint32_t target_bits = on == true ? (HMC1023_REG1_USE_SPI_SETTINGS | HMC1023_REG1_FORCE_CAL_CODE) : 0;
+    const uint32_t target_mask = (HMC1023_REG1_USE_SPI_SETTINGS | HMC1023_REG1_FORCE_CAL_CODE);
+    if ((hmc1023.reg1 & target_mask) != target_bits)
     {
-        hmc1023.reg1 |= HMC1023_REG1_USE_SPI_SETTINGS | HMC1023_REG1_FORCE_CAL_CODE;
+        hmc1023.reg1 &= target_mask;
+        hmc1023.reg1 |= target_bits;
         hmc1023_ll_write(1,hmc1023.reg1);
     }
 }
 
+/**
+ * Configures SPI bus 6 AND CS GPIO PG9 to detect and control an HMC1023LP5E LPF
+ * presence of an LPF is return via hmc1023.present
+ * Does not return hardware configuration to original state, even if LPF is not detected!
+ */
 void hmc1023_init()
 {
 
     // TODO: Move to HAL Config
     /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(GPIOG, GPIO_PIN_9, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(HMC1023_CS_PORT, HMC1023_CS_PIN, GPIO_PIN_SET);
 
     GPIO_InitTypeDef GPIO_InitStruct;
     /*Configure GPIO pins : PFPin PFPin PFPin */
-    GPIO_InitStruct.Pin = GPIO_PIN_9;
+    GPIO_InitStruct.Pin = HMC1023_CS_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+    HAL_GPIO_Init(HMC1023_CS_PORT, &GPIO_InitStruct);
 
     // setup SPI with correct data
-    hspi6.Init.Mode = SPI_MODE_MASTER;
-    hspi6.Init.Direction = SPI_DIRECTION_2LINES;
-    hspi6.Init.DataSize = SPI_DATASIZE_8BIT;
-    hspi6.Init.CLKPolarity = SPI_POLARITY_LOW;
-    hspi6.Init.CLKPhase = SPI_PHASE_1EDGE;
-    hspi6.Init.NSS = SPI_NSS_SOFT;
-    hspi6.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
-    hspi6.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    hspiHmc1023.Init.Mode = SPI_MODE_MASTER;
+    hspiHmc1023.Init.Direction = SPI_DIRECTION_2LINES;
+    hspiHmc1023.Init.DataSize = SPI_DATASIZE_8BIT;
+    hspiHmc1023.Init.CLKPolarity = SPI_POLARITY_LOW;
+    hspiHmc1023.Init.CLKPhase = SPI_PHASE_1EDGE;
+    hspiHmc1023.Init.NSS = SPI_NSS_SOFT;
+    hspiHmc1023.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+    hspiHmc1023.Init.FirstBit = SPI_FIRSTBIT_MSB;
 
     hmc1023_ll_spi_tx(true);
     // make sure we are in right config for TX,
@@ -251,7 +297,7 @@ void hmc1023_init()
         hmc1023.reg1 = hmc1023_ll_read(1);
         hmc1023.reg2 = hmc1023_ll_read(2);
         hmc1023.reg2 = hmc1023_ll_read(3);
-        hmc1023_activate_settings();
+        hmc1023_use_spi_settings(true);
     }
 }
 #endif // UI_BRD_OVI40
