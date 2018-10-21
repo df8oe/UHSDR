@@ -442,6 +442,8 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_FINE, &hmc1023.present,"HMC1023 Fine", UiMenuDesc("Debug Setting: Change LPF HMC1023LP5E fine bandwidth") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_GAIN, &hmc1023.present,"HMC1023 Gain 10db", UiMenuDesc("Debug Setting: Switch LPF HMC1023LP5E +10db Amp on/off") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_BYPASS, &hmc1023.present,"HMC1023 Bypass", UiMenuDesc("Debug Setting: Set HMC1023 to bypass mode") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_OPAMP, &hmc1023.present,"HMC1023 Opamp Bias", UiMenuDesc("Debug Setting: Switch LPF HMC1023LP5E Opamp Bias") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_DRVR, &hmc1023.present,"HMC1023 Driver Bias", UiMenuDesc("Debug Setting: Set HMC1023 Driver Bias") },
 
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };

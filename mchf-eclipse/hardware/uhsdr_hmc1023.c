@@ -17,11 +17,28 @@ HMC1023_t hmc1023;
 
 #include <spi.h>
 
+#define HMC1023_REG3_FINE_LIMIT  (11)
 
-#define HMC1023_REG2_GAIN_MASK (1 << 4)
-#define HMC1023_REG2_BYPASS_MASK (1 << 5)
+#define HMC1023_REG2_OPAMP_LIMIT (3)
+#define HMC1023_REG2_OPAMP_SHIFT (0)
+#define HMC1023_REG2_OPAMP_MASK  (0x03)
+
+#define HMC1023_REG2_DRVR_LIMIT (3)
+#define HMC1023_REG2_DRVR_SHIFT (2)
+#define HMC1023_REG2_DRVR_MASK (0x03)
+
+#define HMC1023_REG2_GAIN_LIMIT (1)
+#define HMC1023_REG2_GAIN_SHIFT (4)
+#define HMC1023_REG2_GAIN_MASK (0x01)
+
+#define HMC1023_REG2_BYPASS_LIMIT (1)
+#define HMC1023_REG2_BYPASS_SHIFT (5)
+#define HMC1023_REG2_BYPASS_MASK (0x01)
+
+#define HMC1023_REG2_COARSE_LIMIT (8)
 #define HMC1023_REG2_COARSE_SHIFT (6)
-#define HMC1023_REG2_COARSE_MASK ((0x0f) << HMC1023_REG2_COARSE_SHIFT)
+#define HMC1023_REG2_COARSE_MASK (0x0f)
+
 #define HMC1023_REG1_USE_SPI_SETTINGS (1 << 1)
 #define HMC1023_REG1_FORCE_CAL_CODE (1 << 4)
 
@@ -107,21 +124,45 @@ static bool hmc1023_ll_presence()
 }
 
 /**
+ * Set bits in register 2
+ * @param bits actual bits to set (zero based, bits will be later shifted)
+ * @param limit maximum permitted value for bits (0...limit) is permitted range
+ * @param mask bit mask for bits (zero based, bits will be later shifted)
+ * @param shift position of mask (how many bits to shift left for final position)
+ */
+
+static void hmc1023_set_reg2_bits(uint8_t bits,uint8_t limit, uint32_t mask, uint8_t shift)
+{
+    if (bits <= limit)
+    {
+        if ( (hmc1023.reg2 & (mask <<shift))  != bits << shift)
+        {
+            hmc1023.reg2 &= ~mask;
+            hmc1023.reg2 |= (bits << shift);
+            hmc1023_ll_write(2,hmc1023.reg2);
+        }
+    }
+}
+
+/**
  * Sets the coarse bandwidth from about 5 / 7 / 10 / 14 / 20 / 28 / 40 / 50 / 72
  * Note +/-20% variation if not calibrated!
  * @param coarse 0 - 8
  */
-void hmc1023_set_coarse(uint8_t coarse)
+
+void hmc1023_set_coarse(uint8_t value)
 {
-    if (coarse < 9)
-    {
-        if ( (hmc1023.reg2 & HMC1023_REG2_COARSE_MASK)  != coarse << HMC1023_REG2_COARSE_SHIFT)
-        {
-            hmc1023.reg2 &= ~HMC1023_REG2_COARSE_MASK;
-            hmc1023.reg2 |= (coarse << HMC1023_REG2_COARSE_SHIFT);
-            hmc1023_ll_write(2,hmc1023.reg2);
-        }
-    }
+    hmc1023_set_reg2_bits(value,HMC1023_REG2_COARSE_LIMIT,HMC1023_REG2_COARSE_MASK, HMC1023_REG2_COARSE_SHIFT);
+}
+
+void hmc1023_set_bias_opamp(uint8_t value)
+{
+    hmc1023_set_reg2_bits(value,HMC1023_REG2_OPAMP_LIMIT,HMC1023_REG2_OPAMP_MASK, HMC1023_REG2_OPAMP_SHIFT);
+}
+
+void hmc1023_set_bias_drvr(uint8_t value)
+{
+    hmc1023_set_reg2_bits(value,HMC1023_REG2_DRVR_LIMIT,HMC1023_REG2_DRVR_MASK, HMC1023_REG2_DRVR_SHIFT);
 }
 
 /**
@@ -130,25 +171,16 @@ void hmc1023_set_coarse(uint8_t coarse)
  */
 void hmc1023_set_gain(bool on)
 {
-    if ( ((hmc1023.reg2 & HMC1023_REG2_GAIN_MASK) == HMC1023_REG2_GAIN_MASK) != on )
-    {
-        hmc1023.reg2 &= ~HMC1023_REG2_GAIN_MASK;
-        hmc1023.reg2 |= on ? HMC1023_REG2_GAIN_MASK : 0;
-        hmc1023_ll_write(2,hmc1023.reg2);
-    }
+    hmc1023_set_reg2_bits(on?1:0,HMC1023_REG2_GAIN_LIMIT,HMC1023_REG2_GAIN_MASK, HMC1023_REG2_GAIN_SHIFT);
 }
+
 /**
  * Sets the LPF bypass on or off
  * @param on true on / false off
  */
 void hmc1023_set_bypass(bool on)
 {
-    if ( ((hmc1023.reg2 & HMC1023_REG2_BYPASS_MASK) == HMC1023_REG2_BYPASS_MASK) != on )
-    {
-        hmc1023.reg2 &= ~HMC1023_REG2_BYPASS_MASK;
-        hmc1023.reg2 |= on ? HMC1023_REG2_BYPASS_MASK : 0;
-        hmc1023_ll_write(2,hmc1023.reg2);
-    }
+    hmc1023_set_reg2_bits(on?1:0,HMC1023_REG2_BYPASS_LIMIT,HMC1023_REG2_BYPASS_MASK, HMC1023_REG2_BYPASS_SHIFT);
 }
 
 /**
@@ -158,7 +190,7 @@ void hmc1023_set_bypass(bool on)
  */
 void hmc1023_set_fine(uint8_t fine)
 {
-    if (fine < 12)
+    if (fine < HMC1023_REG3_FINE_LIMIT)
     {
         if ( (hmc1023.reg3)  != fine )
         {
@@ -171,7 +203,12 @@ void hmc1023_set_fine(uint8_t fine)
 // call after hmc1023_set_fine / hmc1023_set_coarse
 void hmc1023_activate_settings()
 {
-    hmc1023_ll_write(1,hmc1023.reg1 | HMC1023_REG1_USE_SPI_SETTINGS | HMC1023_REG1_FORCE_CAL_CODE);
+    if ((hmc1023.reg1 & (HMC1023_REG1_USE_SPI_SETTINGS | HMC1023_REG1_FORCE_CAL_CODE))
+            != (HMC1023_REG1_USE_SPI_SETTINGS | HMC1023_REG1_FORCE_CAL_CODE))
+    {
+        hmc1023.reg1 |= HMC1023_REG1_USE_SPI_SETTINGS | HMC1023_REG1_FORCE_CAL_CODE;
+        hmc1023_ll_write(1,hmc1023.reg1);
+    }
 }
 
 void hmc1023_init()
@@ -211,6 +248,7 @@ void hmc1023_init()
         hmc1023.reg1 = hmc1023_ll_read(1);
         hmc1023.reg2 = hmc1023_ll_read(2);
         hmc1023.reg2 = hmc1023_ll_read(3);
+        hmc1023_activate_settings();
     }
 }
 #endif // UI_BRD_OVI40

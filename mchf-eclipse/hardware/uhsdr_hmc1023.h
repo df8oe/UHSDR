@@ -26,6 +26,9 @@ typedef struct
     // we use these to track the configration settings
     uint8_t coarse;
     uint8_t fine;
+    uint8_t opamp;
+    uint8_t drvr;
+
     bool gain;
     bool bypass;
 #endif
@@ -41,6 +44,8 @@ void hmc1023_set_coarse(uint8_t coarse);
 void hmc1023_set_fine(uint8_t fine);
 void hmc1023_set_gain(bool on);
 void hmc1023_set_bypass(bool on);
+void hmc1023_set_bias_opamp(uint8_t value);
+void hmc1023_set_bias_drvr(uint8_t value);
 
 #endif
 
