@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-10-19T06:05:25  by "./ui_menu_structure_graph.py"
+#  generated at  2018-10-24T09:58:24  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-10-19T06:05:25  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-10-24T09:58:24  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1272,8 +1272,28 @@
              shape = record
              ];
         
-        "MENU_DEBUG_HMC1023_COARSE" [
-             label = "MENU_DEBUG_HMC1023_COARSE | HMC1023 Fine"
+        "MENU_DEBUG_HMC1023_FINE" [
+             label = "MENU_DEBUG_HMC1023_FINE | HMC1023 Fine"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_HMC1023_GAIN" [
+             label = "MENU_DEBUG_HMC1023_GAIN | HMC1023 Gain 10db"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_HMC1023_BYPASS" [
+             label = "MENU_DEBUG_HMC1023_BYPASS | HMC1023 Bypass"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_HMC1023_OPAMP" [
+             label = "MENU_DEBUG_HMC1023_OPAMP | HMC1023 Opamp Bias"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_HMC1023_DRVR" [
+             label = "MENU_DEBUG_HMC1023_DRVR | HMC1023 Driver Bias"
              shape = record
              ];
         
@@ -1870,7 +1890,15 @@
             
             MENU_DEBUG -> MENU_DEBUG_HMC1023_COARSE
             
-            MENU_DEBUG -> MENU_DEBUG_HMC1023_COARSE
+            MENU_DEBUG -> MENU_DEBUG_HMC1023_FINE
+            
+            MENU_DEBUG -> MENU_DEBUG_HMC1023_GAIN
+            
+            MENU_DEBUG -> MENU_DEBUG_HMC1023_BYPASS
+            
+            MENU_DEBUG -> MENU_DEBUG_HMC1023_OPAMP
+            
+            MENU_DEBUG -> MENU_DEBUG_HMC1023_DRVR
             
         }  ## END subgraph MENU_HALL_OF_FAME
     

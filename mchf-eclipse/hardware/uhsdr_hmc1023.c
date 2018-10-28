@@ -296,6 +296,8 @@ void hmc1023_init()
         hmc1023.reg2 = hmc1023_ll_read(2);
         hmc1023.reg2 = hmc1023_ll_read(3);
         hmc1023_use_spi_settings(true);
+        hmc1023_set_bias_opamp(1);
+        hmc1023_set_bias_opamp(0);
     }
 }
 #endif // UI_BRD_OVI40
