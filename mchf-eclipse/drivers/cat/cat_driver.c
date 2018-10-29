@@ -588,6 +588,18 @@ bool CatDriver_Ft817_EEPROM_RW_Func(bool readEEPROM, uint16_t addr, uint8_t* dat
             // TODO: If memmode gets implmented, we need more complex handling here
             retval = true;
             break;
+        case 0x65:
+            // lower bits not relevant bits 5-7
+            // 000 -> RTTY
+            // 001 -> PSK31-L
+            // 010 -> PSK31-U
+            // 011 -> USER-L
+            // 100 -> USER-U
+            // we always report USER-U/USER-L independent from currently selected digital mode
+            // on the UHSDR TRX
+            *data_p = RadioManagement_LSBActive(DEMOD_DIGI) ? 0b01100000 : 0b10000000;
+            retval = true;
+            break;
         case 0x79:
         {
             // Used by: HRD
@@ -643,6 +655,7 @@ static const ft817_eeprom_emul_t ft817_eeprom[] =
         { .type = FT817EE_DATA,     .start = 5,     .end = 5,       .content.value = 0xBF   }, // radio config
         { .type = FT817EE_FUNC,     .start = 0x55,  .end = 0x55,    .content.funcPtr = CatDriver_Ft817_EEPROM_RW_Func }, // VOX Delay and other stuff, fixed value, required by WSJT-X
         { .type = FT817EE_DATA,     .start = 0x64,  .end = 0x64,    .content.value = 0x00 }, // VOX Delay and other stuff, fixed value, required by WSJT-X
+        { .type = FT817EE_FUNC,     .start = 0x65,  .end = 0x65,    .content.funcPtr = CatDriver_Ft817_EEPROM_RW_Func }, // APO and Dig Mode setting, fixed value, required by WSJT-X
         { .type = FT817EE_FUNC,     .start = 0x79,  .end = 0x79,    .content.funcPtr = CatDriver_Ft817_EEPROM_RW_Func }, // VOX Delay and other stuff, fixed value, required by WSJT-X
         { .type = FT817EE_FUNC,     .start = 0x7A,  .end = 0x7A,    .content.funcPtr = CatDriver_Ft817_EEPROM_RW_Func }, // VOX Delay and other stuff, fixed value, required by WSJT-X
         { .type = FT817EE_DATA,     .start = 0x7B,  .end = 0x7B,    .content.value = 0x00 }, // Chg related, not supported
@@ -1270,16 +1283,20 @@ static void CatDriver_HandleCommands()
             bc = 1;
             break;
         case FT817_PTT_STATE:
-            // FT-817 responds 0xFF if not TX and 0x00 if TX
-            // This differs from KA7OEI description but has been verified
-            // with the real thing.
-            resp[0]=ts.txrx_mode == TRX_MODE_TX?0x00:0xFF;
+        {
+            uint8_t tx_state = limit_4bits(roundf(swrm.fwd_pwr));
+            tx_state |= is_splitmode() ? 0x20 : 0x00;
+            tx_state |= ts.txrx_mode == TRX_MODE_TX ? 0x00 : 0x80;
+            tx_state |= swrm.vswr_dampened > 3.0 ? 0x40 : 0x00;
+
+            resp[0]= ts.txrx_mode == TRX_MODE_TX ? tx_state : 0x80;
             if(RadioManagement_IsTxDisabled())
             {
-                resp[0] =0xFF;
+                resp[0] = 0xFF;
             }
             bc = 1;
             break;
+        }
         case FT817_NOOP: /* FF sent out by HRD */
             break;
             // default:
