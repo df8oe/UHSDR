@@ -1470,7 +1470,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 		{
 		  firstmode = FREQ_IQ_CONV_P6KHZ;
 		}
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.iq_freq_mode,
+        var_change = UiDriverMenuItemChangeInt32(var, mode, &ts.iq_freq_mode,
                                               firstmode,
                                               FREQ_IQ_CONV_MODE_MAX,
                                               FREQ_IQ_CONV_MODE_DEFAULT,
