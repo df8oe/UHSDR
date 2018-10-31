@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-10-24T09:58:24  by "./ui_menu_structure_graph.py"
+#  generated at  2018-10-31T19:25:30  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-10-24T09:58:24  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-10-31T19:25:30  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1372,6 +1372,11 @@
              shape = record
              ];
         
+        "0" [
+             label = "0 | MM0MZW (Mike)"
+             shape = record
+             ];
+        
         #  -  -  -  -
 
         subgraph "MENU_CONF" {
@@ -1908,6 +1913,8 @@
             label = "MENU_HALL_OF_FAME beef.0f.dead.e5e1"
 
     
+            MENU_HALL_OF_FAME -> 0
+            
             MENU_HALL_OF_FAME -> 0
             
             MENU_HALL_OF_FAME -> 0
