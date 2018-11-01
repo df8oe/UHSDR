@@ -1620,10 +1620,10 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 //*----------------------------------------------------------------------------
 void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_t blockSize, int16_t dir)
 {
-    static bool recalculate_Osc = false;
     // keeps the generated data for frequency conversion
     static float32_t                   Osc_I_buffer[IQ_BLOCK_SIZE];
     static float32_t                   Osc_Q_buffer[IQ_BLOCK_SIZE];
+    static int32_t conversion_freq = 0;
 
     assert(blockSize <= IQ_BLOCK_SIZE);
 
@@ -1662,40 +1662,19 @@ void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_
     // This also makes extensive use of the optimized ARM vector instructions for the calculation of the final I/Q vectors
     //
     // Pre-calculate quadrature sine wave(s) ONCE for the conversion
-    //
-    switch(ts.iq_freq_mode)
+    if (conversion_freq != AudioDriver_GetTranslateFreq())
     {
-    case FREQ_IQ_CONV_P6KHZ:
-    case FREQ_IQ_CONV_M6KHZ:
-        if (ts.multi != 4)
-        {
-            ts.multi = 4; 		//(4 = 6 kHz offset)
-            recalculate_Osc = true;
-        }
-        break;
-    case FREQ_IQ_CONV_P12KHZ:
-    case FREQ_IQ_CONV_M12KHZ:
-        if (ts.multi != 8)
-        {
-            ts.multi = 8; 		// (8 = 12 kHz offset)
-            recalculate_Osc = true;
-        }
-    }
-
-    if(recalculate_Osc == true)	 		// have we already calculated the sine wave?
-    {
-        float32_t multiplier = (ts.multi * PI * 2) / ((float32_t)blockSize);
+        float32_t multiplier = ((abs(AudioDriver_GetTranslateFreq()) / 1500.0) * PI * 2) / ((float32_t)blockSize);
 
         for(int i = 0; i < blockSize; i++)	 		// No, let's do it!
         {
             float32_t rad_calc = (float32_t)i * multiplier;
             sincosf(rad_calc, &Osc_I_buffer[i], &Osc_Q_buffer[i]);
         }
-        recalculate_Osc = false;	// signal that once we have generated the quadrature sine waves, we shall not do it again
     }
 
 
-    if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)
+    if(abs(AudioDriver_GetTranslateFreq()) == (IQ_SAMPLE_RATE/4))
     {
         /**********************************************************************************
          *  Frequency translation by Fs/4 without multiplication
@@ -3683,7 +3662,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     // shaved off a few bytes of code
     const uint8_t dmod_mode = ts.dmod_mode;
     const uint8_t tx_audio_source = ts.tx_audio_source;
-    const uint8_t iq_freq_mode = ts.iq_freq_mode;
+    const int32_t iq_freq_mode = ts.iq_freq_mode;
     const uint8_t  dsp_active = ts.dsp_active;
 #ifdef USE_TWO_CHANNEL_AUDIO
     const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
@@ -3737,7 +3716,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
         if(iq_freq_mode)            // is receive frequency conversion to be done?
         {
-            AudioDriver_FreqConversion(adb.i_buffer, adb.q_buffer, blockSize, iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
+            AudioDriver_FreqConversion(adb.i_buffer, adb.q_buffer, blockSize, AudioDriver_GetTranslateFreq() > 0);
         }
 
         // Spectrum display sample collect for magnify != 0
@@ -4417,8 +4396,8 @@ static void AudioDriver_TxProcessorModulatorSSB(AudioSample_t * const dst, const
         // is transmit frequency conversion to be done?
         // LSB && (-6kHz || -12kHz) --> true, else false
         // USB && (+6kHz || +12kHz) --> true, else false
-        bool swap = is_lsb == true && (iq_freq_mode == FREQ_IQ_CONV_M6KHZ || iq_freq_mode == FREQ_IQ_CONV_M12KHZ);
-        swap = swap || ((is_lsb == false) && (iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
+        bool swap = is_lsb == true && (AudioDriver_GetTranslateFreq() < 0);
+        swap = swap || ((is_lsb == false) && (AudioDriver_GetTranslateFreq() > 0));
 
         AudioDriver_FreqConversion(adb.i_buffer, adb.q_buffer, blockSize, swap);
     }
@@ -4439,7 +4418,7 @@ static void AudioDriver_TxProcessorAMSideband(float32_t* i_buffer, float32_t* q_
     arm_offset_f32(q_buffer, (-1 * AM_CARRIER_LEVEL), q_buffer, blockSize);
 
     // check and apply correct translate mode
-    AudioDriver_FreqConversion(i_buffer, q_buffer, blockSize, (ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ || ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ));
+    AudioDriver_FreqConversion(i_buffer, q_buffer, blockSize, (AudioDriver_GetTranslateFreq() > 0));
 }
 
 static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize)
@@ -4459,7 +4438,6 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t *
 {
     static float32_t    hpf_prev_a, hpf_prev_b;
     float32_t           a, b;
-    const uint32_t iq_freq_mode = ts.iq_freq_mode;
 
     static uint32_t fm_mod_idx = 0, fm_mod_accum = 0, fm_tone_idx = 0, fm_tone_accum = 0, fm_tone_burst_idx = 0, fm_tone_burst_accum = 0;
 
@@ -4525,8 +4503,7 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t *
     //
     // do audio frequency modulation using the NCO (a.k.a. DDS) method, carrier at 6 kHz.  Audio is in "a", the result being quadrature FM in "i" and "q".
     //
-    uint32_t fm_freq_mod_word = FM_FREQ_MOD_WORD *  ((iq_freq_mode == FREQ_IQ_CONV_P12KHZ || iq_freq_mode == FREQ_IQ_CONV_M12KHZ)?2:1);
-    // in case of 12Khz offset from base we need to adjust the fm_freq_mod_word
+    uint32_t fm_freq_mod_word = (FM_FREQ_MOD_WORD *  abs(AudioDriver_GetTranslateFreq()))/6000;
 
     for(int i = 0; i < blockSize; i++)
     {
@@ -4541,7 +4518,7 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t *
         adb.q_buffer[i] = (float32_t)(DDS_TABLE[fm_mod_idx]);   // Load Q value
     }
 
-    bool swap = (iq_freq_mode == FREQ_IQ_CONV_P6KHZ || iq_freq_mode == FREQ_IQ_CONV_P12KHZ);
+    bool swap = AudioDriver_GetTranslateFreq() > 0;
 
     AudioDriver_TxIqProcessingFinal(FM_MOD_AMPLITUDE_SCALING, swap, dst, blockSize);
 }
@@ -4747,7 +4724,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
     const uint8_t dmod_mode = ts.dmod_mode;
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t tune = ts.tune;
-    const uint8_t iq_freq_mode = ts.iq_freq_mode;
+    const int32_t iq_freq_mode = ts.iq_freq_mode;
     AudioSample_t srcUSB[blockSize];
     AudioSample_t * const src = (tx_audio_source == TX_AUDIO_DIG || tx_audio_source == TX_AUDIO_DIGIQ) ? srcUSB : srcCodec;
 

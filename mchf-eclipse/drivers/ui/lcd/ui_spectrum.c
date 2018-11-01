@@ -2110,22 +2110,7 @@ static void UiSpectrum_CalculateDBm()
 
             if(sd.magnify == 0)
             {
-                if(ts.iq_freq_mode == FREQ_IQ_CONV_P6KHZ)       // we are in RF LO HIGH mode (tuning is below center of screen)
-                {
-                    bin_offset = - (buff_len_int / 16);
-                }
-                else if(ts.iq_freq_mode == FREQ_IQ_CONV_M6KHZ)      // we are in RF LO LOW mode (tuning is above center of screen)
-                {
-                    bin_offset = (buff_len_int / 16);
-                }
-                else if(ts.iq_freq_mode == FREQ_IQ_CONV_P12KHZ)     // we are in RF LO HIGH mode (tuning is below center of screen)
-                {
-                    bin_offset =  - (buff_len_int / 8);
-                }
-                else if(ts.iq_freq_mode == FREQ_IQ_CONV_M12KHZ)     // we are in RF LO LOW mode (tuning is above center of screen)
-                {
-                    bin_offset =  (buff_len_int / 8);
-                }
+                bin_offset = - (buff_len_int * AudioDriver_GetTranslateFreq( )) / (2 * IQ_SAMPLE_RATE);
             }
 
             int posbin = buff_len_int / 4 + bin_offset;  // right in the middle!
