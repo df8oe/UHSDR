@@ -572,25 +572,7 @@ enum	{
 
 #define CLOCKS_PER_DMA_CYCLE	10656			// Number of 16 MHz clock cycles per DMA cycle
 #define	CLOCKS_PER_CENTISECOND	160000			// Number of 16 MHz clock cycles per 0.01 second timing cycle
-//
-//
-// The following refer to the software frequency conversion/translation done in receive and transmit to shift the signals away from the
-// "DC" IF
-//
-// The following are terms used to set the NCO frequency of the conversion in the receiver - *IF* we were to use the on-the-fly sine generation
-// Which we DON'T, since it is too processor-intensive!  Instead, we use a "fixed" geometrical scheme based on a pre-generated sine wave.
-//
-// rate = 2 * Pi * (NCO Freq) / (Sample Rate)
-// CONV_NCO_SIN = sin(rate)
-// CONV_NCO_COS = cos(rate)
-//
-#define	CONV_NCO_SIN	0.70710678118654752440084436210485	// value for 6 kHz
-#define	CONV_NCO_COS	CONV_NCO_SIN				// value for 6 kHz - funny that they are the same, huh!
-//
-//
-//
-#define	FREQ_SHIFT_MAG	6000		// Amount of frequency shift, in Hz, when software frequency shift is enabled (exactly 1/8th of the sample rate prior to decimation!)
-//
+
 #define	FREQ_IQ_CONV_MODE_OFF		0	// No frequency conversion
 #define FREQ_IQ_CONV_P6KHZ		1	// LO is 6KHz above receive frequency in RX mode
 #define	FREQ_IQ_CONV_M6KHZ		2	// LO is 6KHz below receive frequency in RX mode
