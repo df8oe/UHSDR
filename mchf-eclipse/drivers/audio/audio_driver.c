@@ -1621,9 +1621,11 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_t blockSize, int16_t dir)
 {
     // keeps the generated data for frequency conversion
-    static float32_t                   Osc_I_buffer[IQ_BLOCK_SIZE];
-    static float32_t                   Osc_Q_buffer[IQ_BLOCK_SIZE];
+    static float32_t                   Osc_Sin_buffer[IQ_BLOCK_SIZE];
+    static float32_t                   Osc_Cos_buffer[IQ_BLOCK_SIZE];
     static int32_t conversion_freq = 0;
+    static bool single_osc_calc = false;
+    static bool is_quarter_of_fs = false;
 
     assert(blockSize <= IQ_BLOCK_SIZE);
 
@@ -1662,19 +1664,49 @@ void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_
     // This also makes extensive use of the optimized ARM vector instructions for the calculation of the final I/Q vectors
     //
     // Pre-calculate quadrature sine wave(s) ONCE for the conversion
-    if (conversion_freq != AudioDriver_GetTranslateFreq())
+    int32_t new_conversion_freq = abs(AudioDriver_GetTranslateFreq());
+    if (conversion_freq != new_conversion_freq || single_osc_calc == false)
     {
-        float32_t multiplier = ((abs(AudioDriver_GetTranslateFreq()) / 1500.0) * PI * 2) / ((float32_t)blockSize);
+        static float32_t rad_increment;
+        static float32_t rad_calc = 0;
 
-        for(int i = 0; i < blockSize; i++)	 		// No, let's do it!
+        if (conversion_freq != new_conversion_freq)
         {
-            float32_t rad_calc = (float32_t)i * multiplier;
-            sincosf(rad_calc, &Osc_I_buffer[i], &Osc_Q_buffer[i]);
+            float32_t multiplier = new_conversion_freq / IQ_SAMPLE_RATE_F;
+
+            single_osc_calc = (multiplier == 0.25 || multiplier == 0.125 || multiplier == 0.0625 || multiplier == 0.03125);
+            // if the sample frequency divider to get shift frequency is a power of two no larger
+            // than the number of samples in the osc buffer
+            // we can avoid continuous recalculation of sin/cos table because it repeats after blockSize entries
+
+            if (single_osc_calc)
+            {
+                rad_calc = 0;
+            }
+
+
+            is_quarter_of_fs = multiplier == 0.25;
+            // if we have shift equals a quarter of sample frequency, we can use a highly optimized formula, see below
+
+            rad_increment = (2.0 * PI) * multiplier;
+
+            conversion_freq = new_conversion_freq;
         }
+
+        for(int i = 0; i < blockSize; i++)	 		// Now, let's do it!
+        {
+            rad_calc += rad_increment;
+            if (rad_calc > 2*PI)
+            {
+                rad_calc -= 2*PI;
+            }
+            sincosf(rad_calc, &Osc_Sin_buffer[i], &Osc_Cos_buffer[i]);
+        }
+
     }
 
 
-    if(abs(AudioDriver_GetTranslateFreq()) == (IQ_SAMPLE_RATE/4))
+    if(is_quarter_of_fs == true)
     {
         /**********************************************************************************
          *  Frequency translation by Fs/4 without multiplication
@@ -1731,28 +1763,28 @@ void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_
             }
         }
     }
-    else  // frequency translation +6kHz or -6kHz
+    else  // 'not optimized' frequency translation using sin/cos (+6kHz or -6kHz)
     {
-        float32_t c_buffer[blockSize];
-        float32_t d_buffer[blockSize];
-        float32_t e_buffer[blockSize];
-        float32_t f_buffer[blockSize];
+        float32_t q_cos_buffer[blockSize];
+        float32_t i_sin_buffer[blockSize];
+        float32_t q_sin_buffer[blockSize];
+        float32_t i_cos_buffer[blockSize];
 
         // Do frequency conversion using optimized ARM math functions [KA7OEI]
-        arm_mult_f32(q_buffer, Osc_Q_buffer, c_buffer, blockSize); // multiply products for converted I channel
-        arm_mult_f32(i_buffer, Osc_I_buffer, d_buffer, blockSize);
-        arm_mult_f32(q_buffer, Osc_I_buffer, e_buffer, blockSize);
-        arm_mult_f32(i_buffer, Osc_Q_buffer, f_buffer, blockSize);    // multiply products for converted Q channel
+        arm_mult_f32(q_buffer, Osc_Cos_buffer, q_cos_buffer, blockSize); // multiply products for converted I channel
+        arm_mult_f32(i_buffer, Osc_Sin_buffer, i_sin_buffer, blockSize);
+        arm_mult_f32(q_buffer, Osc_Sin_buffer, q_sin_buffer, blockSize);
+        arm_mult_f32(i_buffer, Osc_Cos_buffer, i_cos_buffer, blockSize);    // multiply products for converted Q channel
 
         if(!dir)	 	// Conversion is "above" on RX (LO needs to be set lower)
         {
-            arm_add_f32(f_buffer, e_buffer, i_buffer, blockSize);	// summation for I channel
-            arm_sub_f32(c_buffer, d_buffer, q_buffer, blockSize);	// difference for Q channel
+            arm_add_f32(i_cos_buffer, q_sin_buffer, i_buffer, blockSize);	// summation for I channel
+            arm_sub_f32(q_cos_buffer, i_sin_buffer, q_buffer, blockSize);	// difference for Q channel
         }
         else	 	// Conversion is "below" on RX (LO needs to be set higher)
         {
-            arm_add_f32(c_buffer, d_buffer, q_buffer, blockSize);	// summation for I channel
-            arm_sub_f32(f_buffer, e_buffer, i_buffer, blockSize);	// difference for Q channel
+            arm_add_f32(q_cos_buffer, i_sin_buffer, q_buffer, blockSize);	// summation for I channel
+            arm_sub_f32(i_cos_buffer, q_sin_buffer, i_buffer, blockSize);	// difference for Q channel
         }
     }
 }
