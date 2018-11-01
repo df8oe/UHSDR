@@ -305,7 +305,6 @@ void TransceiverStateInit(void)
     ts.display = &mchf_display;
 
     ts.show_debug_info = false;					// dont show coordinates on LCD
-    ts.multi = 0;							// non-translate
     ts.tune_power_level = 0;					// Tune with FULL POWER
     ts.xlat = 0;							// 0 = report base frequency, 1 = report xlat-frequency;
     ts.audio_int_counter = 0;					// test DL2FW

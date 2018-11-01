@@ -893,7 +893,7 @@ typedef struct TransceiverState
     uint8_t	nb_agc_time_const;			// used to calculate the AGC time constant
     uint8_t	cw_offset_mode;				// CW offset mode (USB, LSB, etc.)
     bool	cw_lsb;					// flag used to indicate that CW is to operate in LSB when TRUE
-    uint8_t	iq_freq_mode;				// used to set/configure the I/Q frequency/conversion mode
+    int32_t	iq_freq_mode;				// used to set/configure the I/Q frequency/conversion mode
     uint8_t	lsb_usb_auto_select;			// holds setting of LSB/USB auto-select above/below 10 MHz
     bool	conv_sine_flag;				// FALSE until the sine tables for the frequency conversion have been built (normally zero, force 0 to rebuild)
     ulong	last_tuning;				// this is a timer used to prevent too fast tuning per second
@@ -948,7 +948,6 @@ typedef struct TransceiverState
     mchf_touchscreen_t *tp;
 
     bool	show_debug_info;	// show coordinates on LCD
-    uint8_t	multi;					// actual translate factor
     uint8_t	tune_power_level;		// TX power in antenna tuning function
     uint8_t	power_temp;				// temporary tx power if tune is different from actual tx power
     uint8_t	cat_band_index;			// buffered bandindex before first CAT command arrived

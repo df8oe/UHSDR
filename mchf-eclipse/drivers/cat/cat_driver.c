@@ -1035,7 +1035,7 @@ static void CatDriver_HandleCommands()
 
             if(ts.xlat == 0)
             {
-                fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?AudioDriver_GetTranslateFreq()*4:0;
+                fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?AudioDriver_GetTranslateFreq()*TUNE_MULT:0;
                 // If we are in DIGITAL IQ Output mode, use real tune frequency frequency instead
                 // translated RX frequency
             }
