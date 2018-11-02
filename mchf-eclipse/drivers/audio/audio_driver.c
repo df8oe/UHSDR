@@ -611,31 +611,10 @@ int32_t AudioDriver_GetTranslateFreq()
 
 static void AudioDriver_InitFilters(void);
 void AudioDriver_SetupAgcWdsp(void);
-//
-// THE FOLLOWING FUNCTION HAS BEEN TESTED, BUT NOT USED - see the function "audio_rx_freq_conv"
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_driver_config_nco
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-/*
-void audio_driver_config_nco(void)
-{
-	// Configure NCO for the frequency translate function - NOT USED for the "Static" local oscillator!
-	// see "audio_driver.h" for values
-	ads.Osc_Cos = CONV_NCO_COS;
-	ads.Osc_Sin = CONV_NCO_SIN;
-	ads.Osc_Vect_Q = 1;
-	ads.Osc_Vect_I = 0;
-	ads.Osc_Gain = 0;
-	ads.Osc_Q = 0;
-	ads.Osc_I = 0;
-}
-//
- */
+
+
+
+
 
 void AudioDriver_Init(void)
 {
@@ -1609,60 +1588,92 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 }
 #endif
 
+
+#if 0
+// THE FOLLOWING FUNCTION HAS BEEN TESTED, BUT NOT USED - see the function "audio_rx_freq_conv"
+// The following refer to the software frequency conversion/translation done in receive and transmit to shift the signals away from the
+// "DC" IF
+//
+// The following are terms used to set the NCO frequency of the conversion in the receiver - *IF* we were to use the on-the-fly sine generation
+// Which we DON'T, since it is too processor-intensive!  Instead, we use a "fixed" geometrical scheme based on a pre-generated sine wave.
+typedef struct {
+    float32_t Osc_Cos;
+    float32_t Osc_Sin;
+    float32_t Osc_Vect_Q;
+    float32_t Osc_Vect_I;
+    float32_t Osc_Gain;
+    float32_t Osc_Q;
+    float32_t Osc_I;
+} nco_t;
+
+nco_t nco;
+
+void AudioDriver_NcoConfig(float32_t nco_freq, float32_t sample_rate)
+{
+    // Configure NCO for the frequency translate function - NOT USED for the "Static" local oscillator!
+    // see "audio_driver.h" for values
+    float32_t rate = (2 * PI * nco_freq) / sample_rate;
+    nco.Osc_Cos = sinf(rate);
+    nco.Osc_Sin = cosf(rate);
+    nco.Osc_Vect_Q = 1;
+    nco.Osc_Vect_I = 0;
+    nco.Osc_Gain = 0;
+    nco.Osc_Q = 0;
+    nco.Osc_I = 0;
+}
+
+void AudioDriver_NcoRun(float32_t* i_buffer, float32_t* q_buffer, const int16_t blockSize)
+{
+    // Below is the "on-the-fly" version of the frequency translator, generating a "live" version of the oscillator (NCO), which can be any
+    // frequency, based on the values of "ads.Osc_Cos" and "ads.Osc_Sin".  While this does function, the generation of the SINE takes a LOT
+    // of processor time!
+
+    // The values for the NCO are configured in the function "AudioDriver_NcoConfig()".
+
+    // This commented-out version also lacks the "dir" (direction) control which selects either high or low side translation.
+    // This code is left here so that everyone can see how it is actually done in plain, "un-ARM" code.
+
+    for(int i = 0; i < blockSize; i++)  {
+        // generate local oscillator on-the-fly:  This takes a lot of processor time!
+        nco.Osc_Q = (nco.Osc_Vect_Q * nco.Osc_Cos) - (nco.Osc_Vect_I * nco.Osc_Sin);    // Q channel of oscillator
+        nco.Osc_I = (nco.Osc_Vect_I * nco.Osc_Cos) + (nco.Osc_Vect_Q * nco.Osc_Sin);    // I channel of oscillator
+        nco.Osc_Gain = 1.95 - ((nco.Osc_Vect_Q * nco.Osc_Vect_Q) + (nco.Osc_Vect_I * nco.Osc_Vect_I));  // Amplitude control of oscillator
+        // rotate vectors while maintaining constant oscillator amplitude
+        nco.Osc_Vect_Q = nco.Osc_Gain * nco.Osc_Q;
+        nco.Osc_Vect_I = nco.Osc_Gain * nco.Osc_I;
+
+        // do actual frequency conversion
+        float32_t i_temp = i_buffer[i];   // save temporary copies of data
+        float32_t q_temp = q_buffer[i];
+        i_buffer[i] = (i_temp * nco.Osc_Q) + (q_temp * nco.Osc_I);  // multiply I/Q data by sine/cosine data to do translation
+        q_buffer[i] = (q_temp * nco.Osc_Q) - (i_temp * nco.Osc_I);
+    }
+    // [KA7OEI]
+}
+#endif
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_freq_conv [KA7OEI]
 //* Object              : Does I/Q frequency conversion
 //* Object              :
 //* Input Parameters    : size of array on which to work; dir: determines direction of shift - see below;  Also uses variables in ads structure
-//* Output Parameters   : uses variables in ads structure
 //* Functions called    :
 //*----------------------------------------------------------------------------
 void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_t blockSize, int16_t dir)
 {
     // keeps the generated data for frequency conversion
-    static float32_t                   Osc_Sin_buffer[IQ_BLOCK_SIZE];
-    static float32_t                   Osc_Cos_buffer[IQ_BLOCK_SIZE];
+    static float32_t Osc_Sin_buffer[IQ_BLOCK_SIZE];
+    static float32_t Osc_Cos_buffer[IQ_BLOCK_SIZE];
     static int32_t conversion_freq = 0;
     static bool single_osc_calc = false;
     static bool is_quarter_of_fs = false;
 
     assert(blockSize <= IQ_BLOCK_SIZE);
-
-
-    //
-    // Below is the "on-the-fly" version of the frequency translator, generating a "live" version of the oscillator (NCO), which can be any
-    // frequency, based on the values of "ads.Osc_Cos" and "ads.Osc_Sin".  While this does function, the generation of the SINE takes a LOT
-    // of processor time!
-    //
-    // The values for the NCO are configured in the function "audio_driver_config_nco()".
-    //
-    // This commented-out version also lacks the "dir" (direction) control which selects either high or low side translation.
-    // This code is left here so that everyone can see how it is actually done in plain, "un-ARM" code.
-    //
-    /*
-    	for(i = 0; i < blockSize; i++)	{
-    		// generate local oscillator on-the-fly:  This takes a lot of processor time!
-    		ads.Osc_Q = (ads.Osc_Vect_Q * ads.Osc_Cos) - (ads.Osc_Vect_I * ads.Osc_Sin);	// Q channel of oscillator
-    		ads.Osc_I = (ads.Osc_Vect_I * ads.Osc_Cos) + (ads.Osc_Vect_Q * ads.Osc_Sin);	// I channel of oscillator
-    		ads.Osc_Gain = 1.95 - ((ads.Osc_Vect_Q * ads.Osc_Vect_Q) + (ads.Osc_Vect_I * ads.Osc_Vect_I));	// Amplitude control of oscillator
-    		// rotate vectors while maintaining constant oscillator amplitude
-    		ads.Osc_Vect_Q = ads.Osc_Gain * ads.Osc_Q;
-    		ads.Osc_Vect_I = ads.Osc_Gain * ads.Osc_I;
-    		//
-    		// do actual frequency conversion
-    		i_temp = i_buffer[i];	// save temporary copies of data
-    		q_temp = q_buffer[i];
-    		i_buffer[i] = (i_temp * ads.Osc_Q) + (q_temp * ads.Osc_I);	// multiply I/Q data by sine/cosine data to do translation
-    		q_buffer[i] = (q_temp * ads.Osc_Q) - (i_temp * ads.Osc_I);
-    		//
-    	}
-     */
-    // [KA7OEI]
     // Below is the frequency translation code that uses a "pre-calculated" sine wave - which means that the translation must be done at a sub-
     // multiple of the sample frequency.  This pre-calculation eliminates the processor overhead required to generate a sine wave on the fly.
     // This also makes extensive use of the optimized ARM vector instructions for the calculation of the final I/Q vectors
-    //
+
     // Pre-calculate quadrature sine wave(s) ONCE for the conversion
     int32_t new_conversion_freq = abs(AudioDriver_GetTranslateFreq());
     if (conversion_freq != new_conversion_freq || single_osc_calc == false)
