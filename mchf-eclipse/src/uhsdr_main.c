@@ -474,7 +474,7 @@ int mchfMain(void)
         // TODO: Better indication of non-detected display
         Board_GreenLed(LED_STATE_ON);
     }
-
+#if 0
 	// detection routine for special bootloader version strings which do enable debug or development functions
 	char out[14];
     for(uint8_t* begin = (uint8_t*)0x8000000; begin < (uint8_t*)EEPROM_START_ADDRESS-8; begin++)
@@ -500,7 +500,7 @@ int mchfMain(void)
             break;
         }
 	}
-
+#endif
 	if(Si570_IsPresent())
 	{
 	  ts.si570_is_present = true;
