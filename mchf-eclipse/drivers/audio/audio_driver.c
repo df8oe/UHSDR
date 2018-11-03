@@ -3692,6 +3692,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         }
                     }
 
+#if defined(USE_LEAKY_LMS) || defined(OBSOLETE_NR)
                     // DSP noise reduction using LMS (Least Mean Squared) algorithm
                     // This is the pre-filter/AGC instance
                     if((dsp_active & DSP_NR_ENABLE) && (!(dsp_active & DSP_NR_POSTAGC_ENABLE)) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))      // Do this if enabled and "Pre-AGC" DSP NR enabled
@@ -3709,6 +3710,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 #endif
                         }
                     }
+#endif
 
                 }
 
@@ -3730,7 +3732,8 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
                 // DSP noise reduction using LMS (Least Mean Squared) algorithm
                 // This is the post-filter, post-AGC instance
-                //
+#if defined(USE_LEAKY_LMS) || defined(OBSOLETE_NR)
+
                 if((dsp_active & DSP_NR_ENABLE) && (dsp_active & DSP_NR_POSTAGC_ENABLE) && (!ts.dsp_inhibit) && !(dmod_mode == DEMOD_SAM && (FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_24KHZ))     // Do DSP NR if enabled and if post-DSP NR enabled
                 {
 #ifdef USE_LEAKY_LMS
@@ -3746,6 +3749,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 #endif
                     }
                 }
+#endif
                 //
                 //                if (ts.new_nb==true || ts.nr_enable == true) //start of new nb
                 if (ts.nb_setting > 0 || (dsp_active & DSP_NR_ENABLE)) //start of new nb or new noise reduction

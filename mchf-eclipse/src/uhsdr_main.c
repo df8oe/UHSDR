@@ -288,7 +288,6 @@ void TransceiverStateInit(void)
     ts.filter_disp_colour = FILTER_DISP_COLOUR_DEFAULT;
     ts.vfo_mem_flag = 0;						// when TRUE, memory mode is enabled
     ts.mem_disp = 0;						// when TRUE, memory display is enabled
-    ts.load_eeprom_defaults = 0;					// when TRUE, defaults are loaded when "UiDriverLoadEepromValues()" is called - must be saved by user w/power-down to be permanent!
     ts.fm_subaudible_tone_gen_select = 0;				// lookup ("tone number") used to index the table generation (0 corresponds to "tone disabled")
     ts.fm_tone_burst_mode = 0;					// this is the setting for the tone burst generator
     ts.fm_tone_burst_timing = 0;					// used to time the duration of the tone burst
@@ -297,7 +296,7 @@ void TransceiverStateInit(void)
     ts.beep_active = 1;						// TRUE if beep is active
     ts.beep_frequency = DEFAULT_BEEP_FREQUENCY;			// beep frequency, in Hz
     ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;			// loudness of keyboard/CW sidetone test beep
-    ts.load_freq_mode_defaults = 0;					// when TRUE, load frequency defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
+
     ts.ser_eeprom_type = 0;						// serial eeprom not present
     ts.configstore_in_use = CONFIGSTORE_IN_USE_FLASH;					// serial eeprom not in use
 
@@ -534,7 +533,7 @@ int mchfMain(void)
     if(mchf_touchscreen.present)
     {
     	//preventing DSP functions mask to have not proper value
-        if (ts.dsp_mode_mask == 0)
+        if (ts.dsp_mode_mask == 0 || ts.dsp_mode_mask == 1)
         {
             // empty mask is invalid, set it to all entries enabled
             ts.dsp_mode_mask = DSP_SWITCH_MODEMASK_ENABLE_DEFAULT;

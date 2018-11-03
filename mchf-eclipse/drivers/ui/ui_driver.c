@@ -5098,21 +5098,22 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 		HAL_Delay(5000);
 	}
 
+	bool load_freq_mode_defaults = false;
+	bool load_eeprom_defaults = false;
 	switch (load_mode)
 	{
 	case CONFIG_DEFAULTS_LOAD_ALL:
-		ts.load_eeprom_defaults = true;                           // yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
+		load_eeprom_defaults = true;                           // yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
 		break;
 	case CONFIG_DEFAULTS_LOAD_FREQ:
-		ts.load_freq_mode_defaults = true;
+		load_freq_mode_defaults = true;
 		break;
 	default:
 		break;
 	}
 
-	UiConfiguration_LoadEepromValues();
-	ts.load_eeprom_defaults = false;
-	ts.load_freq_mode_defaults = false;
+	UiConfiguration_LoadEepromValues(load_freq_mode_defaults, load_eeprom_defaults);
+
 
 	return retval;
 }
