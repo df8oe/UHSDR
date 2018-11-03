@@ -149,6 +149,8 @@ void DebugMon_Handler(void)
 /**
 * @brief This function handles Pendable request for system service.
 */
+extern void UiDriver_TaskHandler_HighPrioTasks();
+
 void PendSV_Handler(void)
 {
   /* USER CODE BEGIN PendSV_IRQn 0 */
