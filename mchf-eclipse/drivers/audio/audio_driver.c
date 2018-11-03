@@ -571,13 +571,8 @@ AudioDriverState   __MCHF_SPECIALMEM ads;
 AudioDriverBuffer  __MCHF_SPECIALMEM adb;
 
 
-#ifdef OBSOLETE_NR
+#if defined(OBSOLETE_NR) || defined(USE_LMS_AUTONOTCH)
 LMSData            __MCHF_SPECIALMEM lmsData;
-#endif
-
-#ifdef USE_LMS_AUTONOTCH
-LMSData            __MCHF_SPECIALMEM lmsData;
-//LMSData            lmsData;
 #endif
 
 #ifdef USE_LEAKY_LMS
@@ -2080,11 +2075,13 @@ loadWcpAGC(a);
     agc_wdsp.hang_decay_mult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_hang_decay));
 }
 
-#ifdef USE_TWO_CHANNEL_AUDIO
-void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1, float32_t *agcbuffer2)
-#else
-void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
-#endif
+/**
+ *
+ * @param blockSize
+ * @param agcbuffer a pointer to the list of buffers of size blockSize containing the audio data
+ * @param num_channels
+ */
+void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t (*agcbuffer)[IQ_BLOCK_SIZE] )
 {
 #ifdef USE_TWO_CHANNEL_AUDIO
     const uint8_t dmod_mode = ts.dmod_mode;
@@ -2097,12 +2094,9 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
     {
         for (uint16_t i = 0; i < blockSize; i++)
         {
-        	//            adb.a_buffer[i] = adb.a_buffer[i] * agc_wdsp.fixed_gain;
-            agcbuffer1[i] = agcbuffer1[i] * agc_wdsp.fixed_gain;
+            agcbuffer[0][i] = agcbuffer[0][i] * agc_wdsp.fixed_gain;
 #ifdef USE_TWO_CHANNEL_AUDIO
-            {
-                agcbuffer2[i] = agcbuffer2[i] * agc_wdsp.fixed_gain;
-            }
+            agcbuffer[1][i] = agcbuffer[1][i] * agc_wdsp.fixed_gain;
 #endif
         }
         return;
@@ -2119,33 +2113,28 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
             agc_wdsp.in_index -= agc_wdsp.ring_buffsize;
         }
 
-//        agc_wdsp.out_sample[0] = agc_wdsp.ring[agc_wdsp.out_index];
         agc_wdsp.out_sample[0] = agc_wdsp.ring[2 * agc_wdsp.out_index];
 #ifdef USE_TWO_CHANNEL_AUDIO
         if(use_stereo)
-        	{
-        		agc_wdsp.out_sample[1] = agc_wdsp.ring[2 * agc_wdsp.out_index + 1];
-        	}
+        {
+            agc_wdsp.out_sample[1] = agc_wdsp.ring[2 * agc_wdsp.out_index + 1];
+        }
 #endif
         agc_wdsp.abs_out_sample = agc_wdsp.abs_ring[agc_wdsp.out_index];
-        //        agc_wdsp.ring[agc_wdsp.in_index] = adb.a_buffer[i];
-        //        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(adb.a_buffer[i]);
-//        agc_wdsp.ring[agc_wdsp.in_index] = agcbuffer[i];
-        agc_wdsp.ring[2 * agc_wdsp.in_index] = agcbuffer1[i];
-#ifdef USE_TWO_CHANNEL_AUDIO
-        if(use_stereo)
-        	{
-        		agc_wdsp.ring[2 * agc_wdsp.in_index + 1] = agcbuffer2[i];
-        	}
-#endif
-        //        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer[i]);
-        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer1[i]);
+        agc_wdsp.ring[2 * agc_wdsp.in_index] = agcbuffer[0][i];
 #ifdef USE_TWO_CHANNEL_AUDIO
         if(use_stereo)
         {
-			if(agc_wdsp.abs_ring[agc_wdsp.in_index] < fabsf(agcbuffer2[i]))
+            agc_wdsp.ring[2 * agc_wdsp.in_index + 1] = agcbuffer[1][i];
+        }
+#endif
+        agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer[0][i]);
+#ifdef USE_TWO_CHANNEL_AUDIO
+        if(use_stereo)
+        {
+			if(agc_wdsp.abs_ring[agc_wdsp.in_index] < fabsf(agcbuffer[1][i]))
 			{
-				agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer2[i]);
+				agc_wdsp.abs_ring[agc_wdsp.in_index] = fabsf(agcbuffer[1][i]);
 			}
         }
 #endif
@@ -2322,33 +2311,31 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1)
         }
 
         float32_t mult = (agc_wdsp.out_target - agc_wdsp.slope_constant * vo) / agc_wdsp.volts;
-        agcbuffer1[i] = agc_wdsp.out_sample[0] * mult;
+        agcbuffer[0][i] = agc_wdsp.out_sample[0] * mult;
 #ifdef USE_TWO_CHANNEL_AUDIO
         if(use_stereo)
         {
-        	agcbuffer2[i] = agc_wdsp.out_sample[1] * mult;
+        	agcbuffer[1][i] = agc_wdsp.out_sample[1] * mult;
         }
 #endif
     }
 
     if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
     {
-        static float32_t    wold = 0.0;
-#ifdef USE_TWO_CHANNEL_AUDIO
-        static float32_t    wold2 = 0.0;
-#endif
+        static float32_t    wold[2] = { 0.0, 0.0 };
+
         // eliminate DC in the audio after the AGC
         for(uint16_t i = 0; i < blockSize; i++)
         {
-            float32_t w = agcbuffer1[i] + wold * 0.9999; // yes, I want a superb bass response ;-)
-            agcbuffer1[i] = w - wold;
-            wold = w;
+            float32_t w = agcbuffer[0][i] + wold[0] * 0.9999; // yes, I want a superb bass response ;-)
+            agcbuffer[0][i] = w - wold[0];
+            wold[0] = w;
 #ifdef USE_TWO_CHANNEL_AUDIO
             if(use_stereo)
             {
-				float32_t w2 = agcbuffer2[i] + wold2 * 0.9999; // yes, I want a superb bass response ;-)
-				agcbuffer2[i] = w2 - wold2;
-				wold2 = w2;
+				float32_t w2 = agcbuffer[1][i] + wold[1] * 0.9999; // yes, I want a superb bass response ;-)
+				agcbuffer[1][i] = w2 - wold[1];
+				wold[1] = w2;
             }
 #endif
         }
@@ -3738,11 +3725,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 }
 
                 // now process the samples and perform the receiver AGC function
-#ifdef USE_TWO_CHANNEL_AUDIO
-                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer[0], adb.a_buffer[1]);
-#else
-                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer[0]);
-#endif
+                AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
 
 
                 // DSP noise reduction using LMS (Least Mean Squared) algorithm
@@ -3875,11 +3858,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         RadioManagement_FmDevIs5khz() ? FM_RX_SCALING_5K : FM_RX_SCALING_2K5,
                                 adb.a_buffer[1],
                                 blockSizeDecim);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
-#ifdef USE_TWO_CHANNEL_AUDIO
-                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer[0], adb.a_buffer[1]);
-#else
-                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer[0]);
-#endif
+                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
             }
 
             // this is the biquad filter, a highshelf filter
