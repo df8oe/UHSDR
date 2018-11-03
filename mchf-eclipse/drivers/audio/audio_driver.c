@@ -41,6 +41,7 @@
 #include "psk.h"
 #include "cw_decoder.h"
 #include "freedv_uhsdr.h"
+#include "freq_shift.h"
 
 #ifdef USE_CONVOLUTION
 #include "audio_convolution.h"
@@ -1589,216 +1590,6 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 #endif
 
 
-#if 0
-// THE FOLLOWING FUNCTION HAS BEEN TESTED, BUT NOT USED - see the function "audio_rx_freq_conv"
-// The following refer to the software frequency conversion/translation done in receive and transmit to shift the signals away from the
-// "DC" IF
-//
-// The following are terms used to set the NCO frequency of the conversion in the receiver - *IF* we were to use the on-the-fly sine generation
-// Which we DON'T, since it is too processor-intensive!  Instead, we use a "fixed" geometrical scheme based on a pre-generated sine wave.
-typedef struct {
-    float32_t Osc_Cos;
-    float32_t Osc_Sin;
-    float32_t Osc_Vect_Q;
-    float32_t Osc_Vect_I;
-    float32_t Osc_Gain;
-    float32_t Osc_Q;
-    float32_t Osc_I;
-} nco_t;
-
-nco_t nco;
-
-void AudioDriver_NcoConfig(float32_t nco_freq, float32_t sample_rate)
-{
-    // Configure NCO for the frequency translate function - NOT USED for the "Static" local oscillator!
-    // see "audio_driver.h" for values
-    float32_t rate = (2 * PI * nco_freq) / sample_rate;
-    nco.Osc_Cos = sinf(rate);
-    nco.Osc_Sin = cosf(rate);
-    nco.Osc_Vect_Q = 1;
-    nco.Osc_Vect_I = 0;
-    nco.Osc_Gain = 0;
-    nco.Osc_Q = 0;
-    nco.Osc_I = 0;
-}
-
-void AudioDriver_NcoRun(float32_t* i_buffer, float32_t* q_buffer, const int16_t blockSize)
-{
-    // Below is the "on-the-fly" version of the frequency translator, generating a "live" version of the oscillator (NCO), which can be any
-    // frequency, based on the values of "ads.Osc_Cos" and "ads.Osc_Sin".  While this does function, the generation of the SINE takes a LOT
-    // of processor time!
-
-    // The values for the NCO are configured in the function "AudioDriver_NcoConfig()".
-
-    // This commented-out version also lacks the "dir" (direction) control which selects either high or low side translation.
-    // This code is left here so that everyone can see how it is actually done in plain, "un-ARM" code.
-
-    for(int i = 0; i < blockSize; i++)  {
-        // generate local oscillator on-the-fly:  This takes a lot of processor time!
-        nco.Osc_Q = (nco.Osc_Vect_Q * nco.Osc_Cos) - (nco.Osc_Vect_I * nco.Osc_Sin);    // Q channel of oscillator
-        nco.Osc_I = (nco.Osc_Vect_I * nco.Osc_Cos) + (nco.Osc_Vect_Q * nco.Osc_Sin);    // I channel of oscillator
-        nco.Osc_Gain = 1.95 - ((nco.Osc_Vect_Q * nco.Osc_Vect_Q) + (nco.Osc_Vect_I * nco.Osc_Vect_I));  // Amplitude control of oscillator
-        // rotate vectors while maintaining constant oscillator amplitude
-        nco.Osc_Vect_Q = nco.Osc_Gain * nco.Osc_Q;
-        nco.Osc_Vect_I = nco.Osc_Gain * nco.Osc_I;
-
-        // do actual frequency conversion
-        float32_t i_temp = i_buffer[i];   // save temporary copies of data
-        float32_t q_temp = q_buffer[i];
-        i_buffer[i] = (i_temp * nco.Osc_Q) + (q_temp * nco.Osc_I);  // multiply I/Q data by sine/cosine data to do translation
-        q_buffer[i] = (q_temp * nco.Osc_Q) - (i_temp * nco.Osc_I);
-    }
-    // [KA7OEI]
-}
-#endif
-
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_rx_freq_conv [KA7OEI]
-//* Object              : Does I/Q frequency conversion
-//* Object              :
-//* Input Parameters    : size of array on which to work; dir: determines direction of shift - see below;  Also uses variables in ads structure
-//* Functions called    :
-//*----------------------------------------------------------------------------
-void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_t blockSize, int16_t dir)
-{
-    // keeps the generated data for frequency conversion
-    static float32_t Osc_Sin_buffer[IQ_BLOCK_SIZE];
-    static float32_t Osc_Cos_buffer[IQ_BLOCK_SIZE];
-    static int32_t conversion_freq = 0;
-    static bool single_osc_calc = false;
-    static bool is_quarter_of_fs = false;
-
-    assert(blockSize <= IQ_BLOCK_SIZE);
-    // Below is the frequency translation code that uses a "pre-calculated" sine wave - which means that the translation must be done at a sub-
-    // multiple of the sample frequency.  This pre-calculation eliminates the processor overhead required to generate a sine wave on the fly.
-    // This also makes extensive use of the optimized ARM vector instructions for the calculation of the final I/Q vectors
-
-    // Pre-calculate quadrature sine wave(s) ONCE for the conversion
-    int32_t new_conversion_freq = abs(AudioDriver_GetTranslateFreq());
-    if (conversion_freq != new_conversion_freq || single_osc_calc == false)
-    {
-        static float32_t rad_increment;
-        static float32_t rad_calc = 0;
-
-        if (conversion_freq != new_conversion_freq)
-        {
-            float32_t multiplier = new_conversion_freq / IQ_SAMPLE_RATE_F;
-
-            single_osc_calc = (multiplier == 0.25 || multiplier == 0.125 || multiplier == 0.0625 || multiplier == 0.03125);
-            // if the sample frequency divider to get shift frequency is a power of two no larger
-            // than the number of samples in the osc buffer
-            // we can avoid continuous recalculation of sin/cos table because it repeats after blockSize entries
-
-            if (single_osc_calc)
-            {
-                rad_calc = 0;
-            }
-
-
-            is_quarter_of_fs = multiplier == 0.25;
-            // if we have shift equals a quarter of sample frequency, we can use a highly optimized formula, see below
-
-            rad_increment = (2.0 * PI) * multiplier;
-
-            conversion_freq = new_conversion_freq;
-        }
-
-        for(int i = 0; i < blockSize; i++)	 		// Now, let's do it!
-        {
-            rad_calc += rad_increment;
-            if (rad_calc > 2*PI)
-            {
-                rad_calc -= 2*PI;
-            }
-            sincosf(rad_calc, &Osc_Sin_buffer[i], &Osc_Cos_buffer[i]);
-        }
-
-    }
-
-
-    if(is_quarter_of_fs == true)
-    {
-        /**********************************************************************************
-         *  Frequency translation by Fs/4 without multiplication
-         *  Lyons (2011): chapter 13.1.2 page 646
-         *  this is supposed to be much more efficient than a standard quadrature oscillator
-         *  with precalculated sin waves
-         *  Thanks, Clint, for pointing my interest to this method!, DD4WH 2016_12_28
-         **********************************************************************************/
-        if(dir)
-        {
-            // this is for +Fs/4 [moves receive frequency to the left in the spectrum display]
-            for(int i = 0; i < blockSize; i += 4)
-            {   // xnew(0) =  xreal(0) + jximag(0)
-                // leave as it is!
-                // xnew(1) =  - ximag(1) + jxreal(1)
-                float32_t hh1 = - q_buffer[i + 1];
-                float32_t hh2 =   i_buffer[i + 1];
-                i_buffer[i + 1] = hh1;
-                q_buffer[i + 1] = hh2;
-                // xnew(2) = -xreal(2) - jximag(2)
-                hh1 = - i_buffer[i + 2];
-                hh2 = - q_buffer[i + 2];
-                i_buffer[i + 2] = hh1;
-                q_buffer[i + 2] = hh2;
-                // xnew(3) = + ximag(3) - jxreal(3)
-                hh1 =   q_buffer[i + 3];
-                hh2 = - i_buffer[i + 3];
-                i_buffer[i + 3] = hh1;
-                q_buffer[i + 3] = hh2;
-            }
-        }
-
-        else // dir == 0
-        {
-            // this is for -Fs/4 [moves receive frequency to the right in the spectrum display]
-            for(int i = 0; i < blockSize; i += 4)
-            {   // xnew(0) =  xreal(0) + jximag(0)
-                // leave as it is!
-                // xnew(1) =  ximag(1) - jxreal(1)
-                float32_t hh1 = q_buffer[i + 1];
-                float32_t hh2 = - i_buffer[i + 1];
-                i_buffer[i + 1] = hh1;
-                q_buffer[i + 1] = hh2;
-                // xnew(2) = -xreal(2) - jximag(2)
-                hh1 = - i_buffer[i + 2];
-                hh2 = - q_buffer[i + 2];
-                i_buffer[i + 2] = hh1;
-                q_buffer[i + 2] = hh2;
-                // xnew(3) = -ximag(3) + jxreal(3)
-                hh1 = - q_buffer[i + 3];
-                hh2 = i_buffer[i + 3];
-                i_buffer[i + 3] = hh1;
-                q_buffer[i + 3] = hh2;
-            }
-        }
-    }
-    else  // 'not optimized' frequency translation using sin/cos (+6kHz or -6kHz)
-    {
-        float32_t q_cos_buffer[blockSize];
-        float32_t i_sin_buffer[blockSize];
-        float32_t q_sin_buffer[blockSize];
-        float32_t i_cos_buffer[blockSize];
-
-        // Do frequency conversion using optimized ARM math functions [KA7OEI]
-        arm_mult_f32(q_buffer, Osc_Cos_buffer, q_cos_buffer, blockSize); // multiply products for converted I channel
-        arm_mult_f32(i_buffer, Osc_Sin_buffer, i_sin_buffer, blockSize);
-        arm_mult_f32(q_buffer, Osc_Sin_buffer, q_sin_buffer, blockSize);
-        arm_mult_f32(i_buffer, Osc_Cos_buffer, i_cos_buffer, blockSize);    // multiply products for converted Q channel
-
-        if(!dir)	 	// Conversion is "above" on RX (LO needs to be set lower)
-        {
-            arm_add_f32(i_cos_buffer, q_sin_buffer, i_buffer, blockSize);	// summation for I channel
-            arm_sub_f32(q_cos_buffer, i_sin_buffer, q_buffer, blockSize);	// difference for Q channel
-        }
-        else	 	// Conversion is "below" on RX (LO needs to be set higher)
-        {
-            arm_add_f32(q_cos_buffer, i_sin_buffer, q_buffer, blockSize);	// summation for I channel
-            arm_sub_f32(i_cos_buffer, q_sin_buffer, i_buffer, blockSize);	// difference for Q channel
-        }
-    }
-}
 
 #ifdef USE_FREEDV
 static bool AudioDriver_RxProcessorFreeDV (AudioSample_t * const src, float32_t * const dst, int16_t blockSize)
@@ -3759,7 +3550,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
         if(iq_freq_mode)            // is receive frequency conversion to be done?
         {
-            AudioDriver_FreqConversion(adb.i_buffer, adb.q_buffer, blockSize, AudioDriver_GetTranslateFreq() > 0);
+            FreqShift(adb.i_buffer, adb.q_buffer, blockSize, AudioDriver_GetTranslateFreq() > 0);
         }
 
         // Spectrum display sample collect for magnify != 0
@@ -4442,7 +4233,7 @@ static void AudioDriver_TxProcessorModulatorSSB(AudioSample_t * const dst, const
         bool swap = is_lsb == true && (AudioDriver_GetTranslateFreq() < 0);
         swap = swap || ((is_lsb == false) && (AudioDriver_GetTranslateFreq() > 0));
 
-        AudioDriver_FreqConversion(adb.i_buffer, adb.q_buffer, blockSize, swap);
+        FreqShift(adb.i_buffer, adb.q_buffer, blockSize, swap);
     }
 
     // apply I/Q amplitude & phase adjustments
@@ -4461,7 +4252,7 @@ static void AudioDriver_TxProcessorAMSideband(float32_t* i_buffer, float32_t* q_
     arm_offset_f32(q_buffer, (-1 * AM_CARRIER_LEVEL), q_buffer, blockSize);
 
     // check and apply correct translate mode
-    AudioDriver_FreqConversion(i_buffer, q_buffer, blockSize, (AudioDriver_GetTranslateFreq() > 0));
+    FreqShift(i_buffer, q_buffer, blockSize, (AudioDriver_GetTranslateFreq() > 0));
 }
 
 static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize)

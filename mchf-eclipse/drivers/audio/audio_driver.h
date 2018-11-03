@@ -16,6 +16,7 @@
 #ifndef __AUDIO_DRIVER_H
 #define __AUDIO_DRIVER_H
 
+#include "uhsdr_types.h"
 #include "arm_math.h"
 #include "softdds.h"
 #include "uhsdr_hw_i2s.h"
