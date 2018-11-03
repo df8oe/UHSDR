@@ -534,12 +534,22 @@ int mchfMain(void)
     if(mchf_touchscreen.present)
     {
     	//preventing DSP functions mask to have not proper value
-    	ts.dsp_mode_mask|=1;
-    	ts.dsp_mode_mask&=(1<<DSP_SWITCH_MAX)-1;
+        if (ts.dsp_mode_mask == 0)
+        {
+            // empty mask is invalid, set it to all entries enabled
+            ts.dsp_mode_mask = DSP_SWITCH_MODEMASK_ENABLE_DEFAULT;
+        }
+        else
+        {
+            // just make sure DSP OFF is always on the list
+            ts.dsp_mode_mask|=DSP_SWITCH_MODEMASK_ENABLE_DSPOFF;
+        }
+
+    	ts.dsp_mode_mask&=DSP_SWITCH_MODEMASK_ENABLE_MASK;
     }
     else
     {
-    	ts.dsp_mode_mask=(1<<DSP_SWITCH_MAX)-1;		//disable masking when no touchscreen controller detected
+    	ts.dsp_mode_mask=DSP_SWITCH_MODEMASK_ENABLE_DEFAULT;		//disable masking when no touchscreen controller detected
     }
 
     // we now reinit the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!

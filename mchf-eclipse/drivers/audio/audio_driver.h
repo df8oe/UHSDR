@@ -567,6 +567,10 @@ enum	{
 #define DSP_SWITCH_BASS				98
 #define DSP_SWITCH_TREBLE			99
 #define DSP_SWITCH_MAX				6 // bass & treble not used here
+#define DSP_SWITCH_MODEMASK_ENABLE_MASK             ((1<<DSP_SWITCH_MAX)-1)
+#define DSP_SWITCH_MODEMASK_ENABLE_DEFAULT              ((1<<DSP_SWITCH_MAX)-1)
+#define DSP_SWITCH_MODEMASK_ENABLE_DSPOFF           (1<<DSP_SWITCH_OFF)
+
 //
 #define	AUDIO_DELAY_BUFSIZE		(BUFF_LEN/2)*5	// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
 // This is divided by the decimation rate so that the time delay is constant.
