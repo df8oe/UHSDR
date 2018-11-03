@@ -474,33 +474,7 @@ int mchfMain(void)
         // TODO: Better indication of non-detected display
         Board_GreenLed(LED_STATE_ON);
     }
-#if 0
-	// detection routine for special bootloader version strings which do enable debug or development functions
-	char out[14];
-    for(uint8_t* begin = (uint8_t*)0x8000000; begin < (uint8_t*)EEPROM_START_ADDRESS-8; begin++)
-    {
-    	if (memcmp("Version: ",begin,9) == 0)
-        {
-        	snprintf(out,13, "%s", &begin[9]);
-        	for (uint8_t i=1; i<13; i++)
-        	{
-        	  if (out[i] == '\0')
-        	  {
-        		if (out[i-1] == 'a')
-        		{
-				  ts.special_functions_enabled = 1;
-				}
-        		if (out[i-1] == 's')
-        		{
-				  ts.special_functions_enabled = 2;
-				}
-			  	break;
-			  }
-			}
-            break;
-        }
-	}
-#endif
+
 	if(Si570_IsPresent())
 	{
 	  ts.si570_is_present = true;
@@ -526,6 +500,34 @@ int mchfMain(void)
 
     // Usb Host driver init
     //keyb_driver_init();
+
+#if 1
+	// detection routine for special bootloader version strings which do enable debug or development functions
+	char out[14];
+    for(uint8_t* begin = (uint8_t*)0x8000000; begin < (uint8_t*)EEPROM_START_ADDRESS-8; begin++)
+    {
+    	if (memcmp("Version: ",begin,9) == 0)
+        {
+        	snprintf(out,13, "%s", &begin[9]);
+        	for (uint8_t i=1; i<13; i++)
+        	{
+        	  if (out[i] == '\0')
+        	  {
+        		if (out[i-1] == 'a')
+        		{
+				  ts.special_functions_enabled = 1;
+				}
+        		if (out[i-1] == 's')
+        		{
+				  ts.special_functions_enabled = 2;
+				}
+			  break;
+			  }
+			}
+        break;
+        }
+	}
+#endif
 
     // UI HW init
     UiDriver_Init();
