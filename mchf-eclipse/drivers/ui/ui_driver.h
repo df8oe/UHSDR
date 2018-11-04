@@ -239,7 +239,7 @@ void UiAction_ChangeVhfUhfModPresence();
 void UiAction_ChangeFrequencyByTouch();
 void Codec_RestartI2S();
 uint32_t UiDriver_GetActiveDSPFunctions();
-void UiDriver_UpdateDSPmode();
+void UiDriver_UpdateDSPmode(uint8_t new_dsp_mode);
 bool UiDriver_CheckTouchRegion(const UiArea_t* tr_p);
 
 void UiDriver_InitBandSet();
