@@ -246,18 +246,25 @@ const uint32_t dsp_functions[]={0, DSP_NR_ENABLE, DSP_NOTCH_ENABLE, DSP_NOTCH_EN
 
 static void UiVk_DSPVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 {
+    uint8_t new_dsp_mode = ts.dsp_mode;
 	if(((ts.dsp_mode_mask&(1<<KeyNum))!=0) || (KeyNum==0))
 	{
-		ts.dsp_mode=param;
+		new_dsp_mode=param;
 	}
-	UiDriver_UpdateDSPmode();
+
+	// try to enable the selected dsp mode
+	UiDriver_UpdateDSPmode(new_dsp_mode);
 }
 
 static void UiVk_DSPVKeyCallBackLong(uint8_t KeyNum, uint32_t param)
 {
 	ts.dsp_mode_mask^=1<<KeyNum;
+	// mask out this dsp function, to make it no longer available
 	prev_dsp_functions_active=-1;
-	UiDriver_UpdateDSPmode();
+	// now find a new valid mode starting from the current one
+	// this switches mode only if the current active mode is the
+	// one we just disabled
+	UiDriver_UpdateDSPmode(ts.dsp_mode);
 }
 
 static uint8_t UiVk_DSPVKeyCallBackWarning(uint8_t KeyNum, uint32_t param)

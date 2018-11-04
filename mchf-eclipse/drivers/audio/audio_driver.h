@@ -567,6 +567,10 @@ enum	{
 #define DSP_SWITCH_BASS				98
 #define DSP_SWITCH_TREBLE			99
 #define DSP_SWITCH_MAX				6 // bass & treble not used here
+#define DSP_SWITCH_MODEMASK_ENABLE_MASK             ((1<<DSP_SWITCH_MAX)-1)
+#define DSP_SWITCH_MODEMASK_ENABLE_DEFAULT              ((1<<DSP_SWITCH_MAX)-1)
+#define DSP_SWITCH_MODEMASK_ENABLE_DSPOFF           (1<<DSP_SWITCH_OFF)
+
 //
 #define	AUDIO_DELAY_BUFSIZE		(BUFF_LEN/2)*5	// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
 // This is divided by the decimation rate so that the time delay is constant.
@@ -582,8 +586,7 @@ enum	{
 //
 #define	FREQ_IQ_CONV_MODE_DEFAULT	FREQ_IQ_CONV_M12KHZ		//FREQ_IQ_CONV_MODE_OFF
 #define	FREQ_IQ_CONV_MODE_MAX		4
-//
-//
+
 // Exports
 void AudioDriver_Init(void);
 void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr);
@@ -592,21 +595,8 @@ int32_t AudioDriver_GetTranslateFreq();
 void AudioDriver_SetSamPllParameters (void);
 void AudioDriver_SetupAgcWdsp(void);
 float log10f_fast(float X);
-void AudioDriver_FreqConversion(float32_t* i_buffer, float32_t* q_buffer, int16_t blockSize, int16_t dir);
-#ifdef USE_TWO_CHANNEL_AUDIO
-void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1, float32_t *agcbuffer2);
-#else
-void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t *agcbuffer1);
-#endif
-void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize);
-bool AudioDriver_RxProcessorDigital(AudioSample_t * const src, float32_t * const dst, const uint16_t blockSize);
-void AudioDriver_SpectrumNoZoomProcessSamples(const uint16_t blockSize);
-void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize);
 
 void RttyDecoder_Init();
-
-//float log10f_fast
-//uchar audio_check_nr_dsp_state(void);
 
 #ifdef USE_24_BITS
 void AudioDriver_I2SCallback(int32_t *src, int32_t *dst, int16_t size, uint16_t ht);

@@ -920,7 +920,6 @@ typedef struct TransceiverState
     bool	audio_dac_muting_flag;			// when TRUE, audio is to be muted after PTT/keyup
     bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
     bool	mem_disp;				// when TRUE, memory display is enabled
-    bool	load_eeprom_defaults;			// when TRUE, load EEPROM defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
     ulong	fm_subaudible_tone_gen_select;		// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
     uint8_t	fm_tone_burst_mode;			// this is the setting for the tone burst generator
     ulong	fm_tone_burst_timing;			// this is used to time/schedule the duration of a tone burst
@@ -931,7 +930,6 @@ typedef struct TransceiverState
     ulong	beep_frequency;				// beep frequency, in Hz
     ulong	beep_timing;				// used to time/schedule the duration of a keyboard beep
     uint8_t	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
-    bool	load_freq_mode_defaults;		// when TRUE, load frequency/mode defaults into RAM when "UiDriverLoadEepromValues()" is called - MUST be saved by user IF these are to take effect!
 
 #define EEPROM_SER_NONE 0
 #define EEPROM_SER_WRONG_SIG 1

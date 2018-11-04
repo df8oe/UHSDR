@@ -5098,21 +5098,22 @@ static bool UiDriver_LoadSavedConfigurationAtStartup()
 		HAL_Delay(5000);
 	}
 
+	bool load_freq_mode_defaults = false;
+	bool load_eeprom_defaults = false;
 	switch (load_mode)
 	{
 	case CONFIG_DEFAULTS_LOAD_ALL:
-		ts.load_eeprom_defaults = true;                           // yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
+		load_eeprom_defaults = true;                           // yes, set flag to indicate that defaults will be loaded instead of those from EEPROM
 		break;
 	case CONFIG_DEFAULTS_LOAD_FREQ:
-		ts.load_freq_mode_defaults = true;
+		load_freq_mode_defaults = true;
 		break;
 	default:
 		break;
 	}
 
-	UiConfiguration_LoadEepromValues();
-	ts.load_eeprom_defaults = false;
-	ts.load_freq_mode_defaults = false;
+	UiConfiguration_LoadEepromValues(load_freq_mode_defaults, load_eeprom_defaults);
+
 
 	return retval;
 }
@@ -5820,30 +5821,56 @@ void UiAction_ChangeLowerMeterUp()
 	UiDriver_DeleteMeters();
 	UiDriver_CreateMeters();	// redraw meter
 }
-void UiDriver_UpdateDSPmode()
+
+/**
+ *
+ * @param dsp_mode a valid dsp mode id
+ * @return true if dsp_mode is currently available, false otherwise
+ */
+static bool UiDriver_IsDspModePermitted(uint16_t dsp_mode)
+{
+    bool neg_retval = dsp_mode >= DSP_SWITCH_MAX;
+
+    // prevent NR AND NOTCH or NOTCH, when in CW
+    neg_retval |= ts.dmod_mode == DEMOD_CW && ( dsp_mode == DSP_SWITCH_NR_AND_NOTCH || dsp_mode == DSP_SWITCH_NOTCH);
+
+    // prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
+    neg_retval |= (dsp_mode == DSP_SWITCH_NR_AND_NOTCH) && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ);
+
+    // prevent using a mode not enabled in the dsp mode selection (i.e. user configured it to be not used, although available)
+    neg_retval |= (ts.dsp_mode_mask&(1<<ts.dsp_mode)) == 0;
+
+    // not forbidden, so return true;
+    return neg_retval == false;
+}
+
+/**
+ * Request a dsp mode to be activated. If the request mode is not valid, try to find the "next" valid one. In worst case this
+ * is "DSP OFF" which is always permitted.
+ * @param new_dsp_mode request new dsp mode, can be any value, too large values cause starting at lowest mode
+ */
+void UiDriver_UpdateDSPmode(uint8_t new_dsp_mode)
 {
 
 	//loop for detection of first possible DSP function to switch it on if others are disabled/not allowed
-	for(int i=0;i<DSP_SWITCH_MAX;i++)
+	for(int i=0; i < DSP_SWITCH_MAX; i++)
 	{
-		//
-		// prevent certain modes to prevent CPU crash
-		//
-		// prevent NR AND NOTCH, when in CW
-		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
-		// prevent NOTCH, when in CW
-		if (ts.dsp_mode == DSP_SWITCH_NOTCH && ts.dmod_mode == DEMOD_CW) ts.dsp_mode ++;
-		// prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
-		if (ts.dsp_mode == DSP_SWITCH_NR_AND_NOTCH && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ )) ts.dsp_mode++;
 
-		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
+		if (new_dsp_mode >= DSP_SWITCH_MAX)
+		{
+		    new_dsp_mode = DSP_SWITCH_OFF; // flip round
+		}
 
-		if(((ts.dsp_mode_mask&(1<<ts.dsp_mode))==0)) ts.dsp_mode++;
-		else break;
-
-		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
-
-		if(ts.dsp_mode==0)	break;	//safe exit because there is always DSP OFF option at which we can stop
+		if (UiDriver_IsDspModePermitted(new_dsp_mode))
+		{
+		    ts.dsp_mode = new_dsp_mode;
+		    break;
+		}
+		else
+		{
+		    // try next mode
+		    new_dsp_mode++;
+		}
 	}
 
 
@@ -5897,11 +5924,7 @@ static void UiAction_ChangeToNextDspMode()
 		// BASS				ts.bass // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
 		// TREBLE			ts.treble // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
 
-		ts.dsp_mode ++; // switch mode
-		// 0 = everything OFF, 1 = NR, 2 = automatic NOTCH, 3 = NR + NOTCH, 4 = manual NOTCH, 5 = BASS adjustment, 6 = TREBLE adjustment
-		if (ts.dsp_mode >= DSP_SWITCH_MAX) ts.dsp_mode = DSP_SWITCH_OFF; // flip round
-
-		UiDriver_UpdateDSPmode();
+		UiDriver_UpdateDSPmode(ts.dsp_mode + 1);
 	}
 }
 
