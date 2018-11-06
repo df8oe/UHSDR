@@ -53,8 +53,8 @@ static void CatDriver_CatEnableTX(bool enable)
     }
     else
     {
-        ts.ptt_req = false;
         cat_driver.cat_ptt_active = false;
+        ts.tx_stop_req = true;
     }
 }
 
