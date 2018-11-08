@@ -47,14 +47,14 @@ static void CatDriver_CatEnableTX(bool enable)
     {
         if(RadioManagement_IsTxDisabled() == false)
         {
-            ts.ptt_req = true;
+            RadioManagement_Request_TxOn();
             cat_driver.cat_ptt_active = true;
         }
     }
     else
     {
         cat_driver.cat_ptt_active = false;
-        ts.tx_stop_req = true;
+        RadioManagement_Request_TxOff();
     }
 }
 

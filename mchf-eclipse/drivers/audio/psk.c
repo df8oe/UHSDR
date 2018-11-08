@@ -10,6 +10,7 @@
 // Common
 #include "psk.h"
 #include "ui_driver.h"
+#include "radio_management.h"
 #include "rtty.h"
 #include <stdlib.h>
 
@@ -481,7 +482,7 @@ int16_t Psk_Modulator_GenSample()
 		Bpsk_ResetWin();
 		if (psk_state.tx_ending)
 		{
-			ts.tx_stop_req = true;
+		    RadioManagement_Request_TxOff();
 		}
 	}
 

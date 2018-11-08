@@ -6285,7 +6285,7 @@ static void UiAction_PlayKeyerBtnN(int8_t n)
 
 			if ((ts.dmod_mode == DEMOD_CW && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT) || is_demod_psk())
 			{
-				ts.ptt_req = true;
+				RadioManagement_Request_TxOn();
 			}
 		}
 
@@ -6364,11 +6364,11 @@ static void UiAction_ToggleTxRx()
 {
 	if(ts.txrx_mode == TRX_MODE_RX)
 	{
-		ts.ptt_req = true;
+	    RadioManagement_Request_TxOn();
 	}
 	else
 	{
-		ts.tx_stop_req = true;
+	    RadioManagement_Request_TxOff();
 	}
 	UiDriver_FButton_F5Tune();
 }
@@ -6840,10 +6840,10 @@ void UiDriver_TaskHandler_MainTasks()
 			switch(k_pinfo->keys[0])
 			{
 			case KEY_F1:
-				ts.ptt_req = true;
+			    RadioManagement_Request_TxOn();
 				break;
 			case KEY_F2:
-				ts.tx_stop_req = true;
+			    RadioManagement_Request_TxOff();
 				break;
 			}
 			if (kbdChar != '\0')

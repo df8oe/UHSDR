@@ -654,10 +654,10 @@ typedef struct TransceiverState
     // Receive/Transmit public flag
     uint8_t 	txrx_mode;
 
-    // TX/RX IRQ lock, to prevent reentrance
-    //uchar	txrx_lock;
-    bool	ptt_req;
-    bool tx_stop_req;
+    bool	ptt_req;    // setting this to true will inform the PTT handling to switch to TX. Setting this to false has no effect if TX has been started.
+                         // to stop TX, use tx_stop_req, see below.
+    bool tx_stop_req;   //  setting this to true will inform the PTT handling to switch to RX.
+                        // Please note: ptt_req takes precedence over tx_stop_req if both are true.
 
 
     // Demodulator mode public flag

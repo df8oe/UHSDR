@@ -249,6 +249,8 @@ uint32_t RadioManagement_GetTXDialFrequency();
 uint32_t RadioManagement_GetRXDialFrequency();
 int32_t  RadioManagement_GetCWDialOffset();
 
+void RadioManagement_Request_TxOn();
+void RadioManagement_Request_TxOff();
 
 inline void RadioManagement_ToggleVfoMem()
 {
