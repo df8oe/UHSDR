@@ -37,6 +37,7 @@
 
 // Common
 #include "uhsdr_board.h"
+#include "radio_management.h"
 #include "softdds.h"
 #include "cw_gen.h"
 #include "cat_driver.h"
