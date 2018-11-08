@@ -19,7 +19,7 @@
 
 enum
 {
-    ConfigEntry_Stop,
+    ConfigEntry_Stop = 0,
     ConfigEntry_UInt8,
     ConfigEntry_UInt16,
     ConfigEntry_UInt32_16,
@@ -27,6 +27,8 @@ enum
     ConfigEntry_Int16,
 	ConfigEntry_Int32,			//this type saves and reads two subsequent 16bit words
 //  ConfigEntry_Bool,
+	Calib_Val = 0x10000000,     // if this is "or"ed with a normal ConfigEntry_... value, it indicates this parameter is a hardware calibration parameter.
+	ConfigEntry_TypeMask = 0x0000ffff, // we support 2^16 different types, this is plenty.
 };
 
 typedef struct
