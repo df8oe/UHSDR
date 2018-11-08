@@ -581,7 +581,7 @@ int mchfMain(void)
     AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
     AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
     AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency
-    AudioManagement_LoadBeepFreq();		// load/set beep frequency
+    AudioManagement_KeyBeepPrepare();		// load/set beep frequency
 
     AudioFilter_SetDefaultMemories();
 

@@ -327,10 +327,30 @@ void AudioManagement_KeyBeep()
     // FIXME: Do we really need to call this here, or shall we rely on the calls
     // made when changing the freq/settings?
     // right now every beep runs the generator code
-    AudioManagement_LoadBeepFreq();       // load and calculate beep frequency
-    ts.beep_timing = ts.sysclock + BEEP_DURATION;       // set duration of beep
-    ts.beep_active = 1;                                 // activate tone
+    if(ts.flags2 & FLAGS2_KEY_BEEP_ENABLE)      // is beep enabled?
+    {
+        AudioManagement_KeyBeepPrepare();       // load and calculate beep frequency
+        ads.beep.acc = 0; // force reset of accumulator to start at zero to minimize "click" caused by an abrupt voltage transition at startup
+        ts.beep_timing = ts.sysclock + BEEP_DURATION;       // set duration of beep
+        ts.beep_active = 1;                                 // activate tone
+    }
 }
+
+/**
+ * Overlays an audio stream with a beep signal
+ * @param buffer audio buffer of blockSize (mono/single channel) samples
+ * @param blockSize
+ */
+void AudioManagement_KeyBeepGenerate(float32_t* buffer, const size_t blockSize)
+{
+    for(int i=0; i < blockSize; i++)                            // transfer to DMA buffer and do conversion to INT
+    {
+        buffer[i] += (float32_t)softdds_nextSample(&ads.beep) * ads.beep_loudness_factor; // load indexed sine wave value, adding it to audio, scaling the amplitude and putting it on "b" - speaker (ONLY)
+    }
+}
+
+// Transfer processed audio to DMA buffer
+
 
 void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
 {

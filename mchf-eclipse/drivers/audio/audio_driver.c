@@ -3943,20 +3943,15 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
     float32_t usb_audio_gain = ts.rx_gain[RX_AUDIO_DIG].value/31.0;
 
+    // we may have to play a key beep. We apply it to the left channel only (on mcHF etc this is the speakers channel, not line out)
+    if((ts.beep_active) && (ads.beep.step))         // is beep active?
+    {
+        AudioManagement_KeyBeepGenerate(adb.a_buffer[1],blockSize);
+    }
+
     // Transfer processed audio to DMA buffer
     for(int i=0; i < blockSize; i++)                            // transfer to DMA buffer and do conversion to INT
     {
-        // TODO: move to softdds ...
-        if((ts.beep_active) && (ads.beep.step))         // is beep active?
-        {
-            // Yes - Calculate next sample
-            // shift accumulator to index sine table
-            adb.a_buffer[1][i] += (float32_t)softdds_nextSample(&ads.beep) * ads.beep_loudness_factor; // load indexed sine wave value, adding it to audio, scaling the amplitude and putting it on "b" - speaker (ONLY)
-        }
-        else                    // beep not active - force reset of accumulator to start at zero to minimize "click" caused by an abrupt voltage transition at startup
-        {
-            ads.beep.acc = 0;
-        }
 
         if (do_mute_output)
         {
@@ -3968,6 +3963,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
         	dst[i].l = adb.a_buffer[1][i];
         	dst[i].r = adb.a_buffer[0][i];
         }
+
         // Unless this is DIGITAL I/Q Mode, we sent processed audio
         if (tx_audio_source != TX_AUDIO_DIGIQ)
         {

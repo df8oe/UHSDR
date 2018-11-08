@@ -2677,7 +2677,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                                    25);
             if(var_change)
             {
-                AudioManagement_LoadBeepFreq();
                 AudioManagement_KeyBeep();      // make beep to demonstrate frequency
             }
         }
@@ -2697,7 +2696,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
       		if(ts.beep_loudness)
       		{
       		  ts.flags2 |= FLAGS2_KEY_BEEP_ENABLE;
-          	  AudioManagement_LoadBeepFreq(); // calculate new beep loudness values
           	  AudioManagement_KeyBeep();      // make beep to demonstrate loudness
           	}
           	else
