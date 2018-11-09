@@ -35,8 +35,8 @@
 
 static uint16_t dummy_val16; // we need this to be able to read config values without modifying anything
 
-#define UI_C_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) { ConfigEntry_UInt8, EEPROM_BAND##bandNo##_5W,&ts.pwr_adj[ADJ_5W][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX },
-#define UI_C_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) { ConfigEntry_UInt8, EEPROM_BAND##bandNo##_FULL,&ts.pwr_adj[ADJ_FULL_POWER][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX },
+#define UI_C_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) { ConfigEntry_UInt8 | Calib_Val, EEPROM_BAND##bandNo##_5W,&ts.pwr_adj[ADJ_5W][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX },
+#define UI_C_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) { ConfigEntry_UInt8 | Calib_Val, EEPROM_BAND##bandNo##_FULL,&ts.pwr_adj[ADJ_FULL_POWER][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX },
 
 // here all simple configuration values are defined
 // in order to have a new configuration value being stored in nonvolatile memory
@@ -65,7 +65,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_CW_KEYER_MODE,&ts.cw_keyer_mode,CW_KEYER_MODE_IAM_B, 0, CW_KEYER_MAX_MODE},
     { ConfigEntry_UInt8, EEPROM_CW_KEYER_WEIGHT,&ts.cw_keyer_weight,CW_KEYER_WEIGHT_DEFAULT, CW_KEYER_WEIGHT_MIN, CW_KEYER_WEIGHT_MAX},
     { ConfigEntry_UInt8, EEPROM_CW_SIDETONE_GAIN,&ts.cw_sidetone_gain,DEFAULT_SIDETONE_GAIN,0, SIDETONE_MAX_GAIN},
-    { ConfigEntry_Int32_16, EEPROM_FREQ_CAL,&ts.freq_cal,0,MIN_FREQ_CAL,MAX_FREQ_CAL},
+    { ConfigEntry_Int32_16 | Calib_Val, EEPROM_FREQ_CAL,&ts.freq_cal,0,MIN_FREQ_CAL,MAX_FREQ_CAL},
     { ConfigEntry_UInt8, EEPROM_AGC_WDSP_MODE,&ts.agc_wdsp_mode, 2,0,5},
     { ConfigEntry_UInt8, EEPROM_AGC_WDSP_HANG,&ts.agc_wdsp_hang_enable, 0,0,1},
     { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_THRESH,&ts.agc_wdsp_thresh, 20,-20,120},
@@ -90,8 +90,8 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_PADDLE_REVERSE,&ts.cw_paddle_reverse,0,0,1},
     { ConfigEntry_UInt8, EEPROM_CW_RX_DELAY,&ts.cw_rx_delay,CW_TX2RX_DELAY_DEFAULT,0,CW_RX_DELAY_MAX},
     { ConfigEntry_UInt8, EEPROM_MAX_VOLUME,&ts.rx_gain[RX_AUDIO_SPKR].max,MAX_VOLUME_DEFAULT,MAX_VOLUME_MIN,MAX_VOLUME_MAX},
-    { ConfigEntry_UInt8, EEPROM_PA_BIAS,&ts.pa_bias,PA_BIAS_DEFAULT,0,PA_BIAS_MAX},
-    { ConfigEntry_UInt8, EEPROM_PA_CW_BIAS,&ts.pa_cw_bias,PA_BIAS_DEFAULT,0,PA_BIAS_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_PA_BIAS,&ts.pa_bias,PA_BIAS_DEFAULT,0,PA_BIAS_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_PA_CW_BIAS,&ts.pa_cw_bias,PA_BIAS_DEFAULT,0,PA_BIAS_MAX},
 
     { ConfigEntry_UInt8, EEPROM_IQ_AUTO_CORRECTION,&ts.iq_auto_correction,0,0, 1},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_80M_GAIN_BALANCE,&ts.tx_iq_gain_balance[IQ_80M].value[IQ_TRANS_ON],IQ_BALANCE_OFF, MIN_IQ_GAIN_BALANCE, MAX_IQ_GAIN_BALANCE},
@@ -108,7 +108,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_Int32_16, EEPROM_RX_IQ_FM_GAIN_BALANCE,&ts.rx_iq_gain_balance[3],IQ_BALANCE_OFF,  MIN_IQ_GAIN_BALANCE, MAX_IQ_GAIN_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_10M_GAIN_BALANCE_TRANS_OFF,&ts.tx_iq_gain_balance[IQ_10M].value[IQ_TRANS_OFF],IQ_BALANCE_OFF, MIN_IQ_GAIN_BALANCE, MAX_IQ_GAIN_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_10_PHASE_BALANCE_TRANS_OFF,&ts.tx_iq_phase_balance[IQ_10M].value[IQ_TRANS_OFF],IQ_BALANCE_OFF, MIN_IQ_PHASE_BALANCE, MAX_IQ_PHASE_BALANCE},
-    { ConfigEntry_UInt8, EEPROM_SENSOR_NULL,&swrm.sensor_null,SENSOR_NULL_DEFAULT,SENSOR_NULL_MIN,SENSOR_NULL_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_SENSOR_NULL,&swrm.sensor_null,SENSOR_NULL_DEFAULT,SENSOR_NULL_MIN,SENSOR_NULL_MAX},
     { ConfigEntry_UInt8, EEPROM_XVERTER_DISP,&ts.xverter_mode,0,0,XVERTER_MULT_MAX},
     { ConfigEntry_UInt8, EEPROM_SPECTRUM_MAGNIFY,&sd.magnify,MAGNIFY_DEFAULT,MAGNIFY_MIN,MAGNIFY_MAX},
     { ConfigEntry_UInt8, EEPROM_WIDE_FILT_CW_DISABLE,&ts.filter_cw_wide_disable,1,0,1},
@@ -151,16 +151,16 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_LSB_USB_AUTO_SELECT,&ts.lsb_usb_auto_select,AUTO_LSB_USB_DEFAULT,0,AUTO_LSB_USB_MAX},
     { ConfigEntry_UInt8, EEPROM_LCD_BLANKING_CONFIG,&ts.lcd_backlight_blanking,0,0,255},
     { ConfigEntry_UInt32_16, EEPROM_VFO_MEM_MODE,&ts.vfo_mem_mode,0,0,255},
-    { ConfigEntry_UInt8, EEPROM_DETECTOR_COUPLING_COEFF_2200M,&swrm.coupling_calc[COUPLING_2200M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
-    { ConfigEntry_UInt8, EEPROM_DETECTOR_COUPLING_COEFF_630M,&swrm.coupling_calc[COUPLING_630M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
-    { ConfigEntry_UInt8, EEPROM_DETECTOR_COUPLING_COEFF_160M,&swrm.coupling_calc[COUPLING_160M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
-    { ConfigEntry_UInt8, EEPROM_DETECTOR_COUPLING_COEFF_80M,&swrm.coupling_calc[COUPLING_80M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
-    { ConfigEntry_UInt8, EEPROM_DETECTOR_COUPLING_COEFF_40M,&swrm.coupling_calc[COUPLING_40M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
-    { ConfigEntry_UInt8, EEPROM_DETECTOR_COUPLING_COEFF_20M,&swrm.coupling_calc[COUPLING_20M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
-    { ConfigEntry_UInt8, EEPROM_DETECTOR_COUPLING_COEFF_15M,&swrm.coupling_calc[COUPLING_15M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
-    { ConfigEntry_UInt8, EEPROM_DETECTOR_COUPLING_COEFF_6M,&swrm.coupling_calc[COUPLING_6M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
-    { ConfigEntry_UInt32_16, EEPROM_VOLTMETER_CALIBRATE,&ts.voltmeter_calibrate,POWER_VOLTMETER_CALIBRATE_DEFAULT,POWER_VOLTMETER_CALIBRATE_MIN,POWER_VOLTMETER_CALIBRATE_MAX},
-    { ConfigEntry_UInt8, EEPROM_LOW_POWER_CONFIG,&ts.low_power_config,LOW_POWER_CONFIG_DEFAULT,LOW_POWER_CONFIG_MIN,LOW_POWER_CONFIG_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_DETECTOR_COUPLING_COEFF_2200M,&swrm.coupling_calc[COUPLING_2200M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_DETECTOR_COUPLING_COEFF_630M,&swrm.coupling_calc[COUPLING_630M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_DETECTOR_COUPLING_COEFF_160M,&swrm.coupling_calc[COUPLING_160M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_DETECTOR_COUPLING_COEFF_80M,&swrm.coupling_calc[COUPLING_80M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_DETECTOR_COUPLING_COEFF_40M,&swrm.coupling_calc[COUPLING_40M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_DETECTOR_COUPLING_COEFF_20M,&swrm.coupling_calc[COUPLING_20M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_DETECTOR_COUPLING_COEFF_15M,&swrm.coupling_calc[COUPLING_15M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_DETECTOR_COUPLING_COEFF_6M,&swrm.coupling_calc[COUPLING_6M],SWR_COUPLING_DEFAULT,SWR_COUPLING_MIN,SWR_COUPLING_MAX},
+    { ConfigEntry_UInt32_16 | Calib_Val, EEPROM_VOLTMETER_CALIBRATE,&ts.voltmeter_calibrate,POWER_VOLTMETER_CALIBRATE_DEFAULT,POWER_VOLTMETER_CALIBRATE_MIN,POWER_VOLTMETER_CALIBRATE_MAX},
+    { ConfigEntry_UInt8 | Calib_Val, EEPROM_LOW_POWER_CONFIG,&ts.low_power_config,LOW_POWER_CONFIG_DEFAULT,LOW_POWER_CONFIG_MIN,LOW_POWER_CONFIG_MAX},
     { ConfigEntry_UInt8, EEPROM_WATERFALL_COLOR_SCHEME,&ts.waterfall.color_scheme,WATERFALL_COLOR_DEFAULT,WATERFALL_COLOR_MIN,WATERFALL_COLOR_MAX},
     { ConfigEntry_UInt8, EEPROM_WATERFALL_VERTICAL_STEP_SIZE,&ts.waterfall.vert_step_size,WATERFALL_STEP_SIZE_DEFAULT,WATERFALL_STEP_SIZE_MIN,WATERFALL_STEP_SIZE_MAX},
     //{ ConfigEntry_Int32_16, EEPROM_WATERFALL_OFFSET,&ts.waterfall.offset,WATERFALL_OFFSET_DEFAULT,WATERFALL_OFFSET_MIN,WATERFALL_OFFSET_MAX},
@@ -183,7 +183,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt32_16, EEPROM_MANUAL_NOTCH,&ts.notch_frequency,800,200,5000},
     { ConfigEntry_UInt32_16, EEPROM_MANUAL_PEAK,&ts.peak_frequency,750,200,5000},
     { ConfigEntry_UInt8, EEPROM_DISPLAY_DBM,&ts.display_dbm,0,0,2},
-    { ConfigEntry_Int32_16, EEPROM_DBM_CALIBRATE,&ts.dbm_constant,0,-100,100},
+    { ConfigEntry_Int32_16 | Calib_Val, EEPROM_DBM_CALIBRATE,&ts.dbm_constant,0,-100,100},
 //    { ConfigEntry_UInt8, EEPROM_S_METER,&ts.s_meter,0,0,2},
     { ConfigEntry_UInt8, EEPROM_DIGI_MODE_CONF,&ts.digital_mode,DigitalMode_None,0,DigitalMode_Num_Modes-1},
 	{ ConfigEntry_Int32_16, EEPROM_BASS_GAIN,&ts.bass_gain,2,-20,20},
@@ -198,7 +198,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_Int32_16, EEPROM_I2C2_SPEED,&ts.i2c_speed[1], I2C2_SPEED_DEFAULT,1,20},
     { ConfigEntry_UInt8, EEPROM_SAM_FADE_LEVELER,&ads.fade_leveler,1,0,1},
     { ConfigEntry_UInt8, EEPROM_LINEOUT_GAIN,&ts.lineout_gain,LINEOUT_GAIN_DEFAULT,LINEOUT_GAIN_MIN,LINEOUT_GAIN_MAX},
-    { ConfigEntry_Int16, EEPROM_RTC_CALIB,&ts.rtc_calib,RTC_CALIB_PPM_DEFAULT, RTC_CALIB_PPM_MIN, RTC_CALIB_PPM_MAX},
+    { ConfigEntry_Int16 | Calib_Val, EEPROM_RTC_CALIB,&ts.rtc_calib,RTC_CALIB_PPM_DEFAULT, RTC_CALIB_PPM_MIN, RTC_CALIB_PPM_MAX},
     { ConfigEntry_UInt8, EEPROM_CW_DECODER_ENABLE,&ts.cw_decoder_enable,1,0,1},
 	{ ConfigEntry_UInt16, EEPROM_Scope_Graticule_Ypos,&ts.graticulePowerupYpos,0,0,480},
 	{ ConfigEntry_UInt8, EEPROM_Freq_Display_Font,&ts.FreqDisplayFont,0,0,1},
@@ -240,12 +240,12 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     UI_C_EEPROM_BAND_FULL_PF(16,160,m)
 	{ ConfigEntry_UInt8, EEPROM_Scope_TRACE_HL_BW,&ts.scope_trace_BW_colour,SPEC_COLOUR_TRACEBW_DEFAULT,0,SPEC_MAX_COLOUR},
 	{ ConfigEntry_UInt8, EEPROM_Scope_TRACE_HL_BW_BGR,&ts.scope_backgr_BW_colour,SPEC_COLOUR_BACKGRBW_DEFAULT,0,100},
-	{ ConfigEntry_Int32, EEPROM_TScal0_High,&mchf_touchscreen.cal[0], 72816,-2147483648,2147483647},
-	{ ConfigEntry_Int32, EEPROM_TScal1_High,&mchf_touchscreen.cal[1], -5,-2147483648,2147483647},
-	{ ConfigEntry_Int32, EEPROM_TScal2_High,&mchf_touchscreen.cal[2], -1615424,-2147483648,2147483647},
-	{ ConfigEntry_Int32, EEPROM_TScal3_High,&mchf_touchscreen.cal[3], -1,-2147483648,2147483647},
-	{ ConfigEntry_Int32, EEPROM_TScal4_High,&mchf_touchscreen.cal[4], 74886,-2147483648,2147483647},
-	{ ConfigEntry_Int32, EEPROM_TScal5_High,&mchf_touchscreen.cal[5], -1630326,-2147483648,2147483647},
+	{ ConfigEntry_Int32 | Calib_Val, EEPROM_TScal0_High,&mchf_touchscreen.cal[0], 72816,-2147483648,2147483647},
+	{ ConfigEntry_Int32 | Calib_Val, EEPROM_TScal1_High,&mchf_touchscreen.cal[1], -5,-2147483648,2147483647},
+	{ ConfigEntry_Int32 | Calib_Val, EEPROM_TScal2_High,&mchf_touchscreen.cal[2], -1615424,-2147483648,2147483647},
+	{ ConfigEntry_Int32 | Calib_Val, EEPROM_TScal3_High,&mchf_touchscreen.cal[3], -1,-2147483648,2147483647},
+	{ ConfigEntry_Int32 | Calib_Val, EEPROM_TScal4_High,&mchf_touchscreen.cal[4], 74886,-2147483648,2147483647},
+	{ ConfigEntry_Int32 | Calib_Val, EEPROM_TScal5_High,&mchf_touchscreen.cal[5], -1630326,-2147483648,2147483647},
 	{ ConfigEntry_UInt16, EEPROM_NUMBER_OF_ENTRIES,&dummy_val16,EEPROM_FIRST_UNUSED,EEPROM_FIRST_UNUSED,EEPROM_FIRST_UNUSED},
 	{ ConfigEntry_UInt16, EEPROM_DSP_MODE_MASK,&ts.dsp_mode_mask,DSP_SWITCH_MODEMASK_ENABLE_DEFAULT,DSP_SWITCH_MODEMASK_ENABLE_DSPOFF,DSP_SWITCH_MODEMASK_ENABLE_MASK},
     { ConfigEntry_UInt8, EEPROM_ENABLE_PTT_RTS,&ts.enable_ptt_rts,0,0,1},
@@ -305,6 +305,36 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8(uint16_t addr, 
     }
 }
 
+
+static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8x2_Split(uint16_t addr, volatile uint8_t* val_ptr_high, uint8_t default_val_high, uint8_t min_val_high, uint8_t max_val_high,
+                                                                                  volatile uint8_t* val_ptr_low, uint8_t default_val_low, uint8_t min_val_low, uint8_t max_val_low, bool load_default)
+{
+    uint16_t value;
+    if(ConfigStorage_ReadVariable(addr, &value) == 0)
+    {
+        *val_ptr_high = value >> 8;
+        *val_ptr_low  = value & 0xff;
+
+        if ((*val_ptr_high  < min_val_high) || (*val_ptr_high  > max_val_high) || load_default)
+        {
+            *val_ptr_high = default_val_high;
+        }
+
+        if ((*val_ptr_low  < min_val_low) || (*val_ptr_low  > max_val_low) || load_default)
+        {
+            *val_ptr_low = default_val_low;
+        }
+
+
+    }
+    else
+    {
+        *val_ptr_low = default_val_low;
+        *val_ptr_high = default_val_high;
+    }
+}
+
+#if 0
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8x2(uint16_t addr, volatile uint16_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val, bool load_default)
 {
     uint16_t value;
@@ -327,7 +357,7 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8x2(uint16_t addr
         *val_ptr = default_val;
     }
 }
-
+#endif
 
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt16(uint16_t addr, volatile uint16_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val, bool load_default)
 {
@@ -473,12 +503,11 @@ static uint32_t UiConfiguration_LimitFrequency(const BandInfo* bandInfo, const u
 void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low, VfoReg* vforeg, bool load_default)
 {
     uint32_t value32;
-    uint16_t value16;
 
-    UiReadSettingEEPROM_UInt8x2(band_mode + i, &value16, (DEMOD_LSB << 8) | (DigitalMode_None), 0 ,(DEMOD_MAX_MODE << 8)| (DigitalMode_Num_Modes-1), load_default);
-
-    vforeg->decod_mode = (value16 >> 8) & 0xFF;     // demodulator mode might not be right for saved band!
-    vforeg->digital_mode = value16 & 0xFF;
+    UiReadSettingEEPROM_UInt8x2_Split(band_mode + i,
+            &vforeg->decod_mode, DEMOD_LSB, 0, DEMOD_MAX_MODE,
+            &vforeg->digital_mode, DigitalMode_None, 0, DigitalMode_Num_Modes-1,
+            load_default);
 
     // Try to read Freq saved values
     UiReadSettingEEPROM_UInt32(band_freq_high + i, band_freq_low + i,&value32,bandInfo[i].tune + DEFAULT_FREQ_OFFSET,0,0xffffffff, load_default);
@@ -567,7 +596,7 @@ void UiReadSettingEEPROM_Filter(bool load_default)
 
 void UiConfiguration_ReadConfigEntryData(const ConfigEntryDescriptor* ced_ptr, bool load_default)
 {
-    switch(ced_ptr->typeId)
+    switch(ced_ptr->typeId & ConfigEntry_TypeMask)
     {
 
     case ConfigEntry_UInt8:
@@ -604,7 +633,7 @@ void UiConfiguration_ReadConfigEntryData(const ConfigEntryDescriptor* ced_ptr, b
 uint16_t UiConfiguration_WriteConfigEntryData(const ConfigEntryDescriptor* ced_ptr)
 {
     uint16_t retval = HAL_ERROR;
-    switch(ced_ptr->typeId)
+    switch(ced_ptr->typeId & ConfigEntry_TypeMask)
     {
 
     case ConfigEntry_UInt8:
@@ -696,23 +725,23 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
     bool dspmode = ts.dsp_inhibit;
     ts.dsp_inhibit = 1;     // disable dsp while loading EEPROM data
 
-    uint16_t value16;
     uint32_t value32;
 
     UiConfiguration_ReadConfigEntries(load_eeprom_defaults);
 
     // ------------------------------------------------------------------------------------
     // Try to read Band and Mode saved values, but read freq-limit-settings before
-    UiReadSettingEEPROM_UInt8x2(EEPROM_BAND_MODE,&value16,(DEMOD_LSB<< 8) | (BAND_MODE_80),0, (DEMOD_MAX_MODE<< 8) | (MAX_BANDS -1), load_eeprom_defaults);
-    {
-        ts.band = value16 & 0xFF;
-        ts.dmod_mode = (value16 >> 8) & 0xFF;       // demodulator mode might not be right for saved band!
-        if(load_freq_mode_defaults)       // freq defaults to be loaded?
-        {
-            ts.dmod_mode = DEMOD_LSB;           // yes - set to LSB
-        }
+    UiReadSettingEEPROM_UInt8x2_Split(EEPROM_BAND_MODE,
+            &ts.dmod_mode, DEMOD_LSB, 0, DEMOD_MAX_MODE,
+            &ts.band, BAND_MODE_80, 0, MAX_BANDS -1,
+            load_eeprom_defaults);
 
+    // demodulator mode might not be right for saved band!
+    if(load_freq_mode_defaults)       // freq defaults to be loaded?
+    {
+        ts.dmod_mode = DEMOD_LSB;           // yes - set to LSB
     }
+
     // ------------------------------------------------------------------------------------
     // Try to read Freq saved values
     UiReadSettingEEPROM_UInt32(EEPROM_FREQ_HIGH,EEPROM_FREQ_LOW,&value32,0,0,0xffffffff, load_eeprom_defaults);
@@ -725,12 +754,9 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
     }
     // Try to read saved per-band values for frequency, mode and filter
 
-
-    uint8_t i;
-    for(i = 0; i < MAX_BANDS; i++)
+    for(int i = 0; i < MAX_BANDS; i++)
     {
         // read from stored bands
-        // UiReadSettingsBandMode(i,EEPROM_BAND0_MODE,EEPROM_BAND0_FREQ_HIGH,EEPROM_BAND0_FREQ_LOW, &vfo[VFO_WORK].band[i]);
         UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i], load_eeprom_defaults);
         UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i], load_eeprom_defaults);
     }
@@ -746,27 +772,10 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
     // post configuration loading actions below
     df.tuning_step  = tune_steps[df.selected_idx];
     ts.tx_gain[TX_AUDIO_LINEIN_R] = ts.tx_gain[TX_AUDIO_LINEIN_L];
+
     // TODO: Right and Left Settings stored
 
-    {
-        ulong bias_val;
-        bias_val = BIAS_OFFSET + (ts.pa_bias * 2);
-        if(bias_val > 255)
-            bias_val = 255;
-
-        // Set DAC Channel1 DHR12L register with bias value
-        HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_8B_R,bias_val);
-    }
-
-    ts.alc_decay_var = ts.alc_decay;
-
-    ts.alc_tx_postfilt_gain_var =  ts.alc_tx_postfilt_gain; // "working" copy of variable
-
-    // set xlate to -12KHz at first start
-    if(ts.version_number_release == 0 && ts.version_number_minor == 0 && ts.version_number_major == 0 )
-         {
-        ts.iq_freq_mode = FREQ_IQ_CONV_MODE_DEFAULT;
-    }
+    AudioManagement_CalcTxCompLevel();
 
     ts.dsp_inhibit = dspmode;       // restore setting
 }

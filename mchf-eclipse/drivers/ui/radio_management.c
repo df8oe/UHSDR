@@ -1056,6 +1056,27 @@ uint32_t RadioManagement_SSB_AutoSideBand(uint32_t freq) {
     return retval;
 }
 
+/**
+ * Call this to switch off transmit as soon as possible
+ * Please note, this is an asynchronous request, there may be a delay until TX is switched off!
+ */
+void RadioManagement_Request_TxOn()
+{
+    ts.ptt_req = true;
+}
+
+/**
+ * Call this to switch off transmit as soon as possible
+ * Please note, this is an asynchronous request, there may be a delay until TX is switched off!
+ */
+void RadioManagement_Request_TxOff()
+{
+
+    // we have to do both here to handle a potential race condition if
+    // the CAT code deasserts RTS before we actually switched to TX.
+    ts.ptt_req = false;
+    ts.tx_stop_req = true;
+}
 
 const int32_t ptt_debounce_time = 3; // n*10ms, delay for debouncing manually started TX (using the PTT button / input line)
 

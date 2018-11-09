@@ -879,20 +879,20 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         if(ts.fm_subaudible_tone_gen_select)        // tone select not zero (tone activated
         {
             AudioManagement_CalcSubaudibleGenFreq();        // calculate frequency word
-            int a = (int)(ads.fm_subaudible_tone_gen_freq * 10);        // convert to integer, Hz*10
+            int a = (int)(ads.fm.subaudible_tone_gen_freq * 10);        // convert to integer, Hz*10
             snprintf(options,32, "%d.%01dHz", a/10, a%10);
         }
         else                                // tone is off
         {
             snprintf(options,32, "     OFF");       // make it dislay "off"
-            ads.fm_subaudible_tone_word = 0;    // set word to 0 to turn it off
+            ads.fm.subaudible_tone_word = 0;    // set word to 0 to turn it off
         }
         //
         if(ts.dmod_mode != DEMOD_FM)    // make orange if we are NOT in FM mode
         {
             clr = Orange;
         }
-        else if(ads.fm_subaudible_tone_det_freq > 200)      // yellow for tones above 200 Hz as they are more audible
+        else if(ads.fm.subaudible_tone_det_freq > 200)      // yellow for tones above 200 Hz as they are more audible
         {
             clr = Yellow;
         }
@@ -908,20 +908,20 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         if(ts.fm_subaudible_tone_det_select)        // tone select not zero (tone activated
         {
             AudioManagement_CalcSubaudibleDetFreq();        // calculate frequency word
-            int a = (int)(ads.fm_subaudible_tone_det_freq * 10);        // convert to integer, Hz*10
+            int a = (int)(ads.fm.subaudible_tone_det_freq * 10);        // convert to integer, Hz*10
             snprintf(options,32, "%d.%01dHz", a/10, a%10);
         }
         else                                // tone is off
         {
             snprintf(options,32, "     OFF");       // make it dislay "off"
-            ads.fm_subaudible_tone_word = 0;    // set word to 0 to turn it off
+            ads.fm.subaudible_tone_word = 0;    // set word to 0 to turn it off
         }
 
         if(ts.dmod_mode != DEMOD_FM)    // make orange if we are NOT in FM
         {
             clr = Orange;
         }
-        else if(ads.fm_subaudible_tone_det_freq > 200)      // yellow for tones above 200 Hz as they are more audible
+        else if(ads.fm.subaudible_tone_det_freq > 200)      // yellow for tones above 200 Hz as they are more audible
         {
             clr = Yellow;
         }
@@ -933,21 +933,20 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                     FM_TONE_BURST_OFF,
                                     1
                                    );
-        switch(ts.fm_tone_burst_mode) {
+
+        ads.fm.tone_burst_active = 0;           // make sure it is turned off
+        AudioManagement_LoadToneBurstMode();    // activate setting
+
+        switch(ts.fm_tone_burst_mode)
+        {
         case FM_TONE_BURST_1750_MODE:           // if it was 1750 Hz mode, load parameters
-            ads.fm_tone_burst_active = 0;                               // make sure it is turned off
             txt_ptr = "1750 Hz";
-            ads.fm_tone_burst_word = FM_TONE_BURST_1750;
             break;
-        case FM_TONE_BURST_2135_MODE:       // if it was 2135 Hz mode, load information
-            ads.fm_tone_burst_active = 0;                               // make sure it is turned off
+        case FM_TONE_BURST_2135_MODE:           // if it was 2135 Hz mode, load information
             txt_ptr = "2135 Hz";
-            ads.fm_tone_burst_word = FM_TONE_BURST_2135;
             break;
-        default:                                                    // anything else, turn it off
+        default:                                // anything else, turn it off
             txt_ptr = "    OFF";
-            ads.fm_tone_burst_word = FM_TONE_BURST_OFF;
-            ads.fm_tone_burst_active = 0;
         }
 
         if(ts.dmod_mode != DEMOD_FM)    // make orange if we are NOT in FM
@@ -2678,7 +2677,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                                    25);
             if(var_change)
             {
-                AudioManagement_LoadBeepFreq();
                 AudioManagement_KeyBeep();      // make beep to demonstrate frequency
             }
         }
@@ -2698,7 +2696,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
       		if(ts.beep_loudness)
       		{
       		  ts.flags2 |= FLAGS2_KEY_BEEP_ENABLE;
-          	  AudioManagement_LoadBeepFreq(); // calculate new beep loudness values
           	  AudioManagement_KeyBeep();      // make beep to demonstrate loudness
           	}
           	else

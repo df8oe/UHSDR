@@ -70,7 +70,7 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
         // Call handler
     	if (Board_PttDahLinePressed() && ts.dmod_mode != DEMOD_SAM)
     	{  // was PTT line low? Not in a RX Only Mode?
-    		ts.ptt_req = true;     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
+    	    RadioManagement_Request_TxOn();     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
     		if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry)
     		{
     			CwGen_DahIRQ();     // Yes - go to CW state machine
@@ -80,7 +80,7 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
     case PADDLE_DIT:
         if((ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry) && Board_DitLinePressed())
         {
-            ts.ptt_req = true;
+            RadioManagement_Request_TxOn();
             CwGen_DitIRQ();
         }
         break;
@@ -581,7 +581,7 @@ int mchfMain(void)
     AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
     AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
     AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency
-    AudioManagement_LoadBeepFreq();		// load/set beep frequency
+    AudioManagement_KeyBeepPrepare();		// load/set beep frequency
 
     AudioFilter_SetDefaultMemories();
 

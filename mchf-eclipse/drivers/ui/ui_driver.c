@@ -1427,10 +1427,10 @@ void UiDriver_DisplayDemodMode()
 		{
 			if(ts.txrx_mode == TRX_MODE_RX)
 			{
-				if(ads.fm_squelched == false)
+				if(ads.fm.squelched == false)
 				{
 					// is audio not squelched?
-					if((ads.fm_subaudible_tone_detected) && (ts.fm_subaudible_tone_det_select))
+					if((ads.fm.subaudible_tone_detected) && (ts.fm_subaudible_tone_det_select))
 					{
 						// is tone decoding enabled AND a tone being detected?
 						clr_fg =  Black;
@@ -1445,7 +1445,7 @@ void UiDriver_DisplayDemodMode()
 			}
 			else if(ts.txrx_mode == TRX_MODE_TX)	 	// in transmit mode?
 			{
-				if(ads.fm_tone_burst_active)	 		// yes - is tone burst active?
+				if(ads.fm.tone_burst_active)	 		// yes - is tone burst active?
 				{
 					clr_fg = Black;
 					clr_bg = Yellow;	// Yes, make "FM" yellow
@@ -2891,14 +2891,14 @@ static void UiDriver_TimeScheduler()
 		}
 
 		// update the on-screen indicator of squelch/tone detection (the "FM" mode text) if there is a change of state of squelch/tone detection
-		if((old_squelch != ads.fm_squelched)
-				|| (old_tone_det != ads.fm_subaudible_tone_detected)
+		if((old_squelch != ads.fm.squelched)
+				|| (old_tone_det != ads.fm.subaudible_tone_detected)
 				|| (old_tone_det_enable != (bool)ts.fm_subaudible_tone_det_select))       // did the squelch or tone detect state just change?
 		{
 
 			UiDriver_DisplayDemodMode();                           // yes - update on-screen indicator to show that squelch is open/closed
-			old_squelch = ads.fm_squelched;
-			old_tone_det = ads.fm_subaudible_tone_detected;
+			old_squelch = ads.fm.squelched;
+			old_tone_det = ads.fm.subaudible_tone_detected;
 			old_tone_det_enable = (bool)ts.fm_subaudible_tone_det_select;
 		}
 
@@ -2947,13 +2947,13 @@ static void UiDriver_TimeScheduler()
 		// Has the timing for the tone burst expired?
 		if(ts.sysclock > ts.fm_tone_burst_timing)
 		{
-			ads.fm_tone_burst_active = 0;               // yes, turn the tone off
+			ads.fm.tone_burst_active = 0;               // yes, turn the tone off
 		}
 
-		if(ads.fm_tone_burst_active != old_burst_active)       // did the squelch or tone detect state just change?
+		if(ads.fm.tone_burst_active != old_burst_active)       // did the squelch or tone detect state just change?
 		{
 			UiDriver_DisplayDemodMode();                           // yes - update on-screen indicator to show that tone burst is on/off
-			old_burst_active = ads.fm_tone_burst_active;
+			old_burst_active = ads.fm.tone_burst_active;
 		}
 	}
 
@@ -6249,7 +6249,7 @@ static void UiAction_ChangeRxFilterOrFmToneBurst()
 	{
 		if(ts.fm_tone_burst_mode != FM_TONE_BURST_OFF)	 	// is tone burst mode enabled?
 		{
-			ads.fm_tone_burst_active = 1;					// activate the tone burst
+			ads.fm.tone_burst_active = 1;					// activate the tone burst
 			ts.fm_tone_burst_timing = ts.sysclock + FM_TONE_BURST_DURATION;	// set the duration/timing of the tone burst
 		}
 	}
@@ -6285,7 +6285,7 @@ static void UiAction_PlayKeyerBtnN(int8_t n)
 
 			if ((ts.dmod_mode == DEMOD_CW && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT) || is_demod_psk())
 			{
-				ts.ptt_req = true;
+				RadioManagement_Request_TxOn();
 			}
 		}
 
@@ -6364,11 +6364,11 @@ static void UiAction_ToggleTxRx()
 {
 	if(ts.txrx_mode == TRX_MODE_RX)
 	{
-		ts.ptt_req = true;
+	    RadioManagement_Request_TxOn();
 	}
 	else
 	{
-		ts.tx_stop_req = true;
+	    RadioManagement_Request_TxOff();
 	}
 	UiDriver_FButton_F5Tune();
 }
@@ -6840,10 +6840,10 @@ void UiDriver_TaskHandler_MainTasks()
 			switch(k_pinfo->keys[0])
 			{
 			case KEY_F1:
-				ts.ptt_req = true;
+			    RadioManagement_Request_TxOn();
 				break;
 			case KEY_F2:
-				ts.tx_stop_req = true;
+			    RadioManagement_Request_TxOff();
 				break;
 			}
 			if (kbdChar != '\0')

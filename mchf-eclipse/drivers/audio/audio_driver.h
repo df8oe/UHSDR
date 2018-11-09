@@ -137,6 +137,28 @@ typedef struct
     float32_t               M_c2;
 } AudioDriverBuffer;
 
+
+typedef struct
+{
+    float       sql_avg;         // averaged squelch level (for FM)
+    bool        squelched;       // TRUE if FM receiver audio is to be squelched
+
+    float       subaudible_tone_gen_freq;    // frequency, in Hz, of currently-selected subaudible tone for generation
+    ulong       subaudible_tone_word;    // actively-used variable in producing the tone
+    //
+    ulong       tone_burst_word;         // this is the actively-used DDS tone word in the frequency generator
+    bool        tone_burst_active;       // this is TRUE if the tone burst is actively being generated
+    //
+    float       subaudible_tone_det_freq;    // frequency, in Hz, of currently-selected subaudible tone for detection
+    bool        subaudible_tone_detected;    // TRUE if subaudible tone has been detected
+
+    Goertzel goertzel[3];
+    #define FM_HIGH 0
+    #define FM_LOW  1
+    #define FM_CTR  2
+
+} fm_t;
+
 // Audio driver publics
 typedef struct AudioDriverState
 {
@@ -157,9 +179,7 @@ typedef struct AudioDriverState
 //    float					agc_knee;			// "knee" for AGC operation
 //    float					agc_val_max;		// maximum AGC gain (at minimum signal)
 //    float					am_fm_agc;			// Signal/AGC level in AM and FM demod mode
-    float					fm_sql_avg;			// averaged squelch level (for FM)
-    bool					fm_squelched;		// TRUE if FM receiver audio is to be squelched
-    //
+
     uchar					codec_gain;
     float					codec_gain_calc;
     bool					adc_clip;
@@ -180,15 +200,8 @@ typedef struct AudioDriverState
     ulong					dsp_zero_count;			// used for detecting zero output from DSP which can occur if it crashes
     float					dsp_nr_sample;			// used for detecting a problem with the DSP (e.g. crashing)
     //
-    float					fm_subaudible_tone_gen_freq;	// frequency, in Hz, of currently-selected subaudible tone for generation
-    ulong					fm_subaudible_tone_word;	// actively-used variable in producing the tone
-    //
-    ulong					fm_tone_burst_word;			// this is the actively-used DDS tone word in the frequency generator
-    bool					fm_tone_burst_active;		// this is TRUE if the tone burst is actively being generated
-    //
-    float					fm_subaudible_tone_det_freq;	// frequency, in Hz, of currently-selected subaudible tone for detection
-    bool					fm_subaudible_tone_detected;	// TRUE if subaudible tone has been detected
-    //
+    fm_t                   fm;
+
     soft_dds_t					beep;				// this is the actively-used DDS tone word for the radio's beep generator
     float					beep_loudness_factor;	// this is used to set the beep loudness
     int                     carrier_freq_offset;
@@ -212,10 +225,6 @@ typedef struct AudioDriverState
     //
     // The following are pre-calculated terms for the Goertzel functions used for subaudible tone detection
 
-    Goertzel fm_goertzel[3];
-    #define FM_HIGH 0
-    #define FM_LOW  1
-    #define FM_CTR  2
 
     float32_t               iq_phase_balance_rx;
     float32_t               iq_phase_balance_tx[IQ_TRANS_NUM];
@@ -343,7 +352,7 @@ typedef struct SMeter
 //#define	CUST_AGC_OFFSET_VAL	30	// RF Gain offset value used in calculations
 //#define	CUST_AGC_VAL_DEFAULT	17.8	// Value for "medium" AGC value
 //
-#define	LINE_OUT_SCALING_FACTOR	10 // was 10		// multiplication of audio for fixed LINE out level (nominally 1vpp)
+#define	LINE_OUT_SCALING_FACTOR	10 // multiplication of audio for fixed LINE out level (nominally 1vpp)
 //
 #define	LINE_IN_GAIN_RESCALE	20		// multiplier for line input gain
 #define	MIC_GAIN_RESCALE	2	// divisor for microphone gain setting
@@ -386,7 +395,7 @@ typedef struct SMeter
 #define	FM_DEMOD_COEFF1		PI/4			// Factors used in arctan approximation used in FM demodulator
 #define	FM_DEMOD_COEFF2		PI*0.75
 //
-#define	FM_RX_SCALING_2K5		33800			// Amplitude scaling factor of demodulated FM audio (normalized for +/- 2.5 kHz deviation at 1 kHZ)
+#define	FM_RX_SCALING_2K5	10000	// 33800			// Amplitude scaling factor of demodulated FM audio (normalized for +/- 2.5 kHz deviation at 1 kHZ)
 #define FM_RX_SCALING_5K	(FM_RX_SCALING_2K5/2)	// Amplitude scaling factor of demodulated FM audio (normalized for +/- 5 kHz deviation at 1 kHz)
 //
 #define FM_AGC_SCALING		2				// Scaling factor for AGC result when in FM (AGC used only for S-meter)
@@ -397,7 +406,7 @@ typedef struct SMeter
 //
 #define FM_RX_SQL_SMOOTHING	0.005			// Smoothing factor for IIR squelch noise averaging
 #define	FM_SQUELCH_HYSTERESIS	3			// Hysteresis for FM squelch
-#define FM_SQUELCH_PROC_DECIMATION	50		// Number of times we go through the FM demod algorithm before we do a squelch calculation
+#define FM_SQUELCH_PROC_DECIMATION	((uint32_t)(1/FM_RX_SQL_SMOOTHING))		// Number of times we go through the FM demod algorithm before we do a squelch calculation
 #define	FM_SQUELCH_MAX		20				// maximum setting for FM squelch
 #define	FM_SQUELCH_DEFAULT	12				// default setting for FM squelch
 //

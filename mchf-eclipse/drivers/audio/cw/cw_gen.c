@@ -37,6 +37,7 @@
 
 // Common
 #include "uhsdr_board.h"
+#include "radio_management.h"
 #include "softdds.h"
 #include "cw_gen.h"
 #include "cat_driver.h"
@@ -684,7 +685,7 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 		{
 			if (--ps.break_timer == 0)
 			{
-				ts.tx_stop_req = true;
+			    RadioManagement_Request_TxOff();
 			}
 		}
 		retval = false;
@@ -904,7 +905,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 				{
 					if (--ps.break_timer == 0)
 					{
-						ts.tx_stop_req = true;
+					    RadioManagement_Request_TxOff();
 					}
 				}
 

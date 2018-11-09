@@ -260,8 +260,8 @@ void AudioManagement_CalcTxCompLevel()
 //*----------------------------------------------------------------------------
 void AudioManagement_CalcSubaudibleGenFreq(void)
 {
-    ads.fm_subaudible_tone_gen_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_gen_select];       // look up tone frequency (in Hz)
-    ads.fm_subaudible_tone_word = (ulong)(ads.fm_subaudible_tone_gen_freq * FM_SUBAUDIBLE_TONE_WORD_CALC_FACTOR);   // calculate tone word
+    ads.fm.subaudible_tone_gen_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_gen_select];       // look up tone frequency (in Hz)
+    ads.fm.subaudible_tone_word = ads.fm.subaudible_tone_gen_freq * FM_SUBAUDIBLE_TONE_WORD_CALC_FACTOR;   // calculate tone word
 }
 
 /**
@@ -271,12 +271,12 @@ void AudioManagement_CalcSubaudibleDetFreq(void)
 {
     const uint32_t size = BUFF_LEN/2;
 
-    ads.fm_subaudible_tone_det_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select];       // look up tone frequency (in Hz)
+    ads.fm.subaudible_tone_det_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select];       // look up tone frequency (in Hz)
 
     // Calculate Goertzel terms for tone detector(s)
-    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_HIGH], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_HIGH, IQ_SAMPLE_RATE);
-    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_LOW], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_LOW, IQ_SAMPLE_RATE);
-    AudioFilter_CalcGoertzel(&ads.fm_goertzel[FM_CTR], ads.fm_subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,1.0, IQ_SAMPLE_RATE);
+    AudioFilter_CalcGoertzel(&ads.fm.goertzel[FM_HIGH], ads.fm.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_HIGH, IQ_SAMPLE_RATE);
+    AudioFilter_CalcGoertzel(&ads.fm.goertzel[FM_LOW], ads.fm.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_LOW, IQ_SAMPLE_RATE);
+    AudioFilter_CalcGoertzel(&ads.fm.goertzel[FM_CTR], ads.fm.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,1.0, IQ_SAMPLE_RATE);
 }
 
 //
@@ -288,18 +288,18 @@ void AudioManagement_CalcSubaudibleDetFreq(void)
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void AudioManagement_LoadToneBurstMode(void)
+void AudioManagement_LoadToneBurstMode()
 {
     switch(ts.fm_tone_burst_mode)
     {
     case FM_TONE_BURST_1750_MODE:
-        ads.fm_tone_burst_word = FM_TONE_BURST_1750;
+        ads.fm.tone_burst_word = FM_TONE_BURST_1750;
         break;
     case FM_TONE_BURST_2135_MODE:
-        ads.fm_tone_burst_word = FM_TONE_BURST_2135;
+        ads.fm.tone_burst_word = FM_TONE_BURST_2135;
         break;
     default:
-        ads.fm_tone_burst_word = 0;
+        ads.fm.tone_burst_word = 0;
         break;
     }
 
@@ -308,20 +308,11 @@ void AudioManagement_LoadToneBurstMode(void)
 /**
  * @brief Generates the sound for a given beep frequency, call after change of beep freq or before beep  [KA7OEI October, 2015]
  */
-void AudioManagement_LoadBeepFreq()
+void AudioManagement_KeyBeepPrepare()
 {
-    float calc;
+    softdds_setFreqDDS(&ads.beep, ts.beep_frequency,ts.samp_rate,false);
 
-    if(ts.flags2 & FLAGS2_KEY_BEEP_ENABLE)      // is beep enabled?
-    {
-        softdds_setFreqDDS(&ads.beep, ts.beep_frequency,ts.samp_rate,false);
-    }
-    else
-    {
-        softdds_setFreqDDS(&ads.beep, 0,ts.samp_rate,true); // not enabled - zero out frequency word
-    }
-
-    calc = (float)(ts.beep_loudness-1);  // range 0-20
+    float32_t calc = (float)(ts.beep_loudness-1);  // range 0-20
     calc /= 2;                          // range 0-10
     calc *= calc;                       // range 0-100
     calc += 3;                          // range 3-103
@@ -336,10 +327,30 @@ void AudioManagement_KeyBeep()
     // FIXME: Do we really need to call this here, or shall we rely on the calls
     // made when changing the freq/settings?
     // right now every beep runs the generator code
-    AudioManagement_LoadBeepFreq();       // load and calculate beep frequency
-    ts.beep_timing = ts.sysclock + BEEP_DURATION;       // set duration of beep
-    ts.beep_active = 1;                                 // activate tone
+    if(ts.flags2 & FLAGS2_KEY_BEEP_ENABLE)      // is beep enabled?
+    {
+        AudioManagement_KeyBeepPrepare();       // load and calculate beep frequency
+        ads.beep.acc = 0; // force reset of accumulator to start at zero to minimize "click" caused by an abrupt voltage transition at startup
+        ts.beep_timing = ts.sysclock + BEEP_DURATION;       // set duration of beep
+        ts.beep_active = 1;                                 // activate tone
+    }
 }
+
+/**
+ * Overlays an audio stream with a beep signal
+ * @param buffer audio buffer of blockSize (mono/single channel) samples
+ * @param blockSize
+ */
+void AudioManagement_KeyBeepGenerate(float32_t* buffer, const size_t blockSize)
+{
+    for(int i=0; i < blockSize; i++)                            // transfer to DMA buffer and do conversion to INT
+    {
+        buffer[i] += (float32_t)softdds_nextSample(&ads.beep) * ads.beep_loudness_factor; // load indexed sine wave value, adding it to audio, scaling the amplitude and putting it on "b" - speaker (ONLY)
+    }
+}
+
+// Transfer processed audio to DMA buffer
+
 
 void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
 {
