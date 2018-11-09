@@ -1,11 +1,11 @@
-# UHSDR Firmare Defect Issue (Bug) Template 1.0
+# UHSDR Firmware Defect Issue (Bug) Template 1.0
 
 Please fill out the appropriate values.  Remove inapproriate/irrelevant values, but be prepare to provide more data. This template contains the most often asked questions.
 We may adjust the template over time.
 
 Please give as much information as necessary. At the same time, try to be concise. If you want to report something else than a defect, consider using a forum first. If you want report anything else but a defect remove the template if it does not make sense for your issue. Thank you!
 
-## Your Issue Data goes here:
+## Issue Data goes here (please remove text above):
 
 Your firmware version:
 Your bootloader version: 
