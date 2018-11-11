@@ -612,8 +612,6 @@ void AudioDriver_SetupAgcWdsp(void);
 static void AudioDriver_FM_Init(fm_t* fm)
 {
     fm->sql_avg = 0;         // init FM squelch averaging
-    fm->subaudible_tone_word = 0;        // actively-used variable in producing the tone (0 disabled tone generation)
-    fm->tone_burst_word = 0;             // this is the actively-used DDS tone word in the tone burst frequency generator
     fm->subaudible_tone_det_freq = 0;    // frequency, in Hz, of currently-selected subaudible tone for detection
     fm->subaudible_tone_gen_freq = 0;    // frequency, in Hz, of currently-selected subaudible tone for generation
     fm->tone_burst_active = false;       // this is TRUE of the tone burst is actively being generated
@@ -3946,7 +3944,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
     // we may have to play a key beep. We apply it to the left channel only (on mcHF etc this is the speakers channel, not line out)
     if((ts.beep_active) && (ads.beep.step))         // is beep active?
     {
-        AudioManagement_KeyBeepGenerate(adb.a_buffer[1],blockSize);
+        softdds_addSingleTone(&ads.beep, adb.a_buffer[1], blockSize, ads.beep_loudness_factor);
     }
 
     // Transfer processed audio to DMA buffer
@@ -4263,19 +4261,10 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t *
     static float32_t    hpf_prev_a, hpf_prev_b;
     float32_t           a, b;
 
-    static uint32_t fm_mod_idx = 0, fm_mod_accum = 0, fm_tone_idx = 0, fm_tone_accum = 0, fm_tone_burst_idx = 0, fm_tone_burst_accum = 0;
+    static uint32_t fm_mod_accum = 0;
 
-    float32_t fm_mod_mult;
     // Fill I and Q buffers with left channel(same as right)
-    //
-    if(RadioManagement_FmDevIs5khz())   // are we in 5 kHz modulation mode?
-    {
-        fm_mod_mult = 2;    // yes - multiply all modulation factors by 2
-    }
-    else
-    {
-        fm_mod_mult = 1;    // not in 5 kHz mode - used default (2.5 kHz) modulation factors
-    }
+    const float32_t fm_mod_mult = RadioManagement_FmDevIs5khz() ? 2 : 1;
 
     AudioDriver_TxAudioBufferFill(src,blockSize);
 
@@ -4299,50 +4288,36 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t *
     }
 
     // do tone generation using the NCO (a.k.a. DDS) method.  This is used for subaudible tone generation and, if necessary, summing the result in "a".
-    if((ads.fm.subaudible_tone_word) && (!ads.fm.tone_burst_active))        // generate tone only if it is enabled (and not during a tone burst)
+    if((ads.fm.subaudible_tone_gen_freq > 0) && (!ads.fm.tone_burst_active))        // generate tone only if it is enabled (and not during a tone burst)
     {
-        for(int i = 0; i < blockSize; i++)
-        {
-            fm_tone_accum += ads.fm.subaudible_tone_word;   // generate tone using frequency word, calculating next sample
-            fm_tone_accum &= 0xffffff;              // limit to 16 Meg range
-            fm_tone_idx    = fm_tone_accum >> FM_TONE_DDS_ACC_SHIFT;    // shift accumulator to index sine table
-            fm_tone_idx &= (DDS_TBL_SIZE-1);        // limit lookup to range of sine table
-            adb.a_buffer[0][i] += ((float32_t)(DDS_TABLE[fm_tone_idx]) * FM_TONE_AMPLITUDE_SCALING * fm_mod_mult); // load indexed sine wave value, adding it to audio
-        }
-    }
+        softdds_addSingleTone(&ads.fm.subaudible_tone_dds, adb.a_buffer[0], blockSize, FM_SUBAUDIBLE_TONE_AMPLITUDE_SCALING * fm_mod_mult);
+     }
 
     // do tone  generation using the NCO (a.k.a. DDS) method.  This is used for tone burst ("whistle-up") generation, summing the result in "a".
     if(ads.fm.tone_burst_active)                // generate tone burst only if it is enabled
     {
-        for(int i = 0; i < blockSize; i++)
-        {
-            // Calculate next sample
-            fm_tone_burst_accum += ads.fm.tone_burst_word;  // generate tone using frequency word, calculating next sample
-            fm_tone_burst_accum &= 0xffffff;                // limit to 16 Meg range
-            fm_tone_burst_idx    = fm_tone_burst_accum >> FM_TONE_DDS_ACC_SHIFT;    // shift accumulator to index sine table
-            fm_tone_burst_idx &= (DDS_TBL_SIZE-1);      // limit lookup to range of sine table
-            adb.a_buffer[0][i] += ((float32_t)((DDS_TABLE[fm_tone_burst_idx]) * FM_MOD_SCALING * fm_mod_mult) / FM_TONE_BURST_MOD_SCALING);    // load indexed sine wave value, adding it to audio
-        }
+        softdds_addSingleTone(&ads.fm.tone_burst_dds, adb.a_buffer[0], blockSize, FM_TONE_BURST_AMPLITUDE_SCALING * fm_mod_mult);
     }
-    //
-    // do audio frequency modulation using the NCO (a.k.a. DDS) method, carrier at 6 kHz.  Audio is in "a", the result being quadrature FM in "i" and "q".
-    //
-    uint32_t fm_freq_mod_word = (FM_FREQ_MOD_WORD *  abs(AudioDriver_GetTranslateFreq()))/6000;
+
+    // do audio frequency modulation using the NCO (a.k.a. DDS) method, carrier at selected shift.
+    // Audio is in "a", the result being quadrature FM in "i" and "q".
+
+    uint32_t fm_freq_mod_word = (FM_MOD_ACC_MAX_VALUE * abs(AudioDriver_GetTranslateFreq()))/IQ_SAMPLE_RATE;
 
     for(int i = 0; i < blockSize; i++)
     {
         // Calculate next sample
-        fm_mod_accum += (ulong)(fm_freq_mod_word + (adb.a_buffer[0][i] * FM_MOD_SCALING * fm_mod_mult));   // change frequency using scaled audio
-        fm_mod_accum &= 0xffff;             // limit to 64k range
-        fm_mod_idx    = fm_mod_accum >> FM_MOD_DDS_ACC_SHIFT;
-        fm_mod_idx &= (DDS_TBL_SIZE - 1);       // limit lookup to range of sine table
-        adb.i_buffer[i] = (float32_t)(DDS_TABLE[fm_mod_idx]);               // Load I value
-        fm_mod_idx += (DDS_TBL_SIZE/4); // do 90 degree shift by indexing 1/4 into sine table
-        fm_mod_idx &= (DDS_TBL_SIZE - 1);       // limit lookup to range of sine table
-        adb.q_buffer[i] = (float32_t)(DDS_TABLE[fm_mod_idx]);   // Load Q value
+        fm_mod_accum    += fm_freq_mod_word + (adb.a_buffer[0][i] * FM_MOD_SCALING * fm_mod_mult);   // change frequency using scaled audio
+        fm_mod_accum    %= FM_MOD_ACC_MAX_VALUE;             // limit to 64k range
+
+        uint32_t fm_mod_idx = fm_mod_accum >> FM_MOD_DDS_ACC_SHIFT; // this value must be in valid table index range by construction
+        adb.i_buffer[i] = DDS_TABLE[fm_mod_idx];
+
+        // do 90 degree shifted signal for Q
+        adb.q_buffer[i] = DDS_TABLE[softdds_phase_shift90(fm_mod_idx)];
     }
 
-    bool swap = AudioDriver_GetTranslateFreq() > 0;
+    bool swap = AudioDriver_GetTranslateFreq() < 0;
 
     AudioDriver_TxIqProcessingFinal(FM_MOD_AMPLITUDE_SCALING, swap, dst, blockSize);
 }
@@ -4697,7 +4672,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
             arm_negate_f32(adb.i_buffer, q2_buffer, blockSize); // this becomes the q buffer for the upper  sideband
             arm_negate_f32(adb.q_buffer, i2_buffer, blockSize); // this becomes the i buffer for the upper  sideband
 
-            // now generate USB AM sideband signal
+            // now generate LSB AM sideband signal
             AudioDriver_TxProcessorAMSideband(adb.i_buffer, adb.q_buffer, blockSize);
             // i/q now contain the LSB AM signal
 

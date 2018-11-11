@@ -869,25 +869,27 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags2,0,options,&clr, FLAGS2_FM_MODE_ENABLE);
             break;
         case MENU_FM_GEN_SUBAUDIBLE_TONE:   // Selection of subaudible tone for FM transmission
-        UiDriverMenuItemChangeUInt32(var, mode, &ts.fm_subaudible_tone_gen_select,
+            var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.fm_subaudible_tone_gen_select,
                                      0,
                                      NUM_SUBAUDIBLE_TONES,
                                      FM_SUBAUDIBLE_TONE_OFF,
                                      1
                                     );
+            if (var_change)
+            {
+                AudioManagement_CalcSubaudibleGenFreq();
+            }
 
-        if(ts.fm_subaudible_tone_gen_select)        // tone select not zero (tone activated
+        if(ts.fm_subaudible_tone_gen_select != FM_SUBAUDIBLE_TONE_OFF)        // tone select not zero (tone activated
         {
-            AudioManagement_CalcSubaudibleGenFreq();        // calculate frequency word
             int a = (int)(ads.fm.subaudible_tone_gen_freq * 10);        // convert to integer, Hz*10
             snprintf(options,32, "%d.%01dHz", a/10, a%10);
         }
         else                                // tone is off
         {
             snprintf(options,32, "     OFF");       // make it dislay "off"
-            ads.fm.subaudible_tone_word = 0;    // set word to 0 to turn it off
         }
-        //
+
         if(ts.dmod_mode != DEMOD_FM)    // make orange if we are NOT in FM mode
         {
             clr = Orange;
@@ -914,7 +916,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         else                                // tone is off
         {
             snprintf(options,32, "     OFF");       // make it dislay "off"
-            ads.fm.subaudible_tone_word = 0;    // set word to 0 to turn it off
         }
 
         if(ts.dmod_mode != DEMOD_FM)    // make orange if we are NOT in FM

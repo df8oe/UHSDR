@@ -33,7 +33,6 @@ void    AudioManagement_CalcSubaudibleDetFreq();
 
 void    AudioManagement_KeyBeep();
 void    AudioManagement_KeyBeepPrepare();
-void    AudioManagement_KeyBeepGenerate(float32_t* buffer, const size_t blockSize);
 
 #define IQ_BALANCE_OFF  -128 // Minimum setting for IQ gain balance
 
