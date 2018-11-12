@@ -261,7 +261,7 @@ void AudioManagement_CalcTxCompLevel()
 void AudioManagement_CalcSubaudibleGenFreq(void)
 {
     ads.fm.subaudible_tone_gen_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_gen_select];       // look up tone frequency (in Hz)
-    ads.fm.subaudible_tone_word = ads.fm.subaudible_tone_gen_freq * FM_SUBAUDIBLE_TONE_WORD_CALC_FACTOR;   // calculate tone word
+    softdds_setFreqDDS(&ads.fm.subaudible_tone_dds, ads.fm.subaudible_tone_gen_freq,ts.samp_rate,false);
 }
 
 /**
@@ -290,19 +290,22 @@ void AudioManagement_CalcSubaudibleDetFreq(void)
 //*----------------------------------------------------------------------------
 void AudioManagement_LoadToneBurstMode()
 {
+    uint16_t frequency = 0;
+
     switch(ts.fm_tone_burst_mode)
     {
     case FM_TONE_BURST_1750_MODE:
-        ads.fm.tone_burst_word = FM_TONE_BURST_1750;
+        frequency = 1750;
         break;
     case FM_TONE_BURST_2135_MODE:
-        ads.fm.tone_burst_word = FM_TONE_BURST_2135;
+        frequency = 2135;
         break;
     default:
-        ads.fm.tone_burst_word = 0;
+        frequency = 0;
         break;
     }
 
+    softdds_setFreqDDS(&ads.fm.tone_burst_dds, frequency,ts.samp_rate,false);
 }
 
 /**
@@ -335,22 +338,6 @@ void AudioManagement_KeyBeep()
         ts.beep_active = 1;                                 // activate tone
     }
 }
-
-/**
- * Overlays an audio stream with a beep signal
- * @param buffer audio buffer of blockSize (mono/single channel) samples
- * @param blockSize
- */
-void AudioManagement_KeyBeepGenerate(float32_t* buffer, const size_t blockSize)
-{
-    for(int i=0; i < blockSize; i++)                            // transfer to DMA buffer and do conversion to INT
-    {
-        buffer[i] += (float32_t)softdds_nextSample(&ads.beep) * ads.beep_loudness_factor; // load indexed sine wave value, adding it to audio, scaling the amplitude and putting it on "b" - speaker (ONLY)
-    }
-}
-
-// Transfer processed audio to DMA buffer
-
 
 void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
 {

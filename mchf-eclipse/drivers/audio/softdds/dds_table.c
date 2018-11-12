@@ -15,6 +15,7 @@
 #include "uhsdr_types.h"
 #include "dds_table.h"
 
+// this table represents 2*PI, i.e. a full sine wave
 const int16_t DDS_TABLE[DDS_TBL_SIZE] =
 {
 

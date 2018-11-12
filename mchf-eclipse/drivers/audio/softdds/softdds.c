@@ -20,15 +20,13 @@
 #include "softdds.h"
 
 
-
-
 // Two Tone Dds
 soft_dds_t dbldds[2];
 
 uint32_t softdds_stepForSampleRate(float32_t freq, uint32_t samp_rate)
 {
     uint64_t freq64_shifted = freq * DDS_TBL_SIZE;
-    freq64_shifted <<= DDS_ACC_SHIFT;
+    freq64_shifted <<= SOFTDDS_ACC_SHIFT;
     uint64_t step = freq64_shifted / samp_rate;
     return step;
 }
@@ -58,19 +56,6 @@ void softdds_configRunIQ(float freq[2],uint32_t samp_rate,uint8_t smooth)
     softdds_setFreqDDS(&dbldds[0],freq[0],samp_rate,smooth);
     softdds_setFreqDDS(&dbldds[1],freq[1],samp_rate,smooth);
   }
-
-
-/*
- * Get the index which represents a -90 degree shift compared to
- * k, i.e. get  k = sin(a) => cos(a)
- */
-static inline uint32_t softdds_phase_shift90(uint32_t k)
-{
-    // make sure that
-    // index wraps around properly
-    return (k+(3*DDS_TBL_SIZE/4))%DDS_TBL_SIZE;
-}
-
 
 void softdds_genIQSingleTone(soft_dds_t* dds, float32_t *i_buff,float32_t *q_buff,uint16_t size)
 {
@@ -116,6 +101,23 @@ void softdds_genIQTwoTone(soft_dds_t* ddsA, soft_dds_t* ddsB, float *i_buff,floa
         q_buff++;
     }
 }
+
+/**
+ * Overlays an audio stream with a beep signal
+ * @param dds The previously initialized dds configuration
+ * @param buffer audio buffer of blockSize (mono/single channel) samples
+ * @param blockSize
+ * @param scaling scale the resulting sine wave with this factor
+ */
+
+void softdds_addSingleTone(soft_dds_t* dds_ptr, float32_t* buffer, const size_t blockSize, float32_t scaling)
+{
+    for(int i=0; i < blockSize; i++)                            // transfer to DMA buffer and do conversion to INT
+    {
+        buffer[i] += (float32_t)softdds_nextSample(dds_ptr) * scaling; // load indexed sine wave value, adding it to audio, scaling the amplitude and putting it on "b" - speaker (ONLY)
+    }
+}
+
 
 /*
  * Generates the sinus frequencies as IQ data stream

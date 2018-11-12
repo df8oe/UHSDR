@@ -144,9 +144,9 @@ typedef struct
     bool        squelched;       // TRUE if FM receiver audio is to be squelched
 
     float       subaudible_tone_gen_freq;    // frequency, in Hz, of currently-selected subaudible tone for generation
-    ulong       subaudible_tone_word;    // actively-used variable in producing the tone
-    //
-    ulong       tone_burst_word;         // this is the actively-used DDS tone word in the frequency generator
+    soft_dds_t  subaudible_tone_dds;
+
+    soft_dds_t  tone_burst_dds;
     bool        tone_burst_active;       // this is TRUE if the tone burst is actively being generated
     //
     float       subaudible_tone_det_freq;    // frequency, in Hz, of currently-selected subaudible tone for detection
@@ -420,33 +420,34 @@ typedef struct SMeter
 //
 #define FM_MOD_SCALING	FM_MOD_SCALING_2K5		// For FM modulator - system deviation
 #define	FM_MOD_AMPLITUDE_SCALING	0.875		// For FM modulator:  Scaling factor for output of modulator to set proper output power
-#define	FM_FREQ_MOD_WORD			8192		// FM frequency modulator word for modulation DDS/NCO at 6 kHz (6 kHz = 1/8th sample rate, 1/8th of 65536 = 8192)
-#define FM_MOD_DDS_ACC_SHIFT   6
+
+// this value represents 2*PI, here 16 bit. It must be a power of two!
+// Otherwise a simpel shift does not work as conversion
+#define FM_MOD_ACC_BITS 16
+#define FM_MOD_ACC_MAX_VALUE (1 << FM_MOD_ACC_BITS)
+
+// this is the generic formula for the conversion from the accumulator to the
+// table index
+// #define FM_MOD_ACC_DIV (FM_MOD_ACC_MAX_VALUE/DDS_TBL_SIZE)
+// but we simply state how many bits to shift to the right
+#define FM_MOD_DDS_ACC_SHIFT   (FM_MOD_ACC_BITS-DDS_TBL_BITS)
+
 //
 #define	FM_ALC_GAIN_CORRECTION	0.95
 //
 // For subaudible and burst:  FM Tone word calculation:  freq / (sample rate/2^24) => freq / (IQ_SAMPLE_RATE/16777216) => freq * 349.52533333
 //
-#define FM_TONE_AMPLITUDE_SCALING	0.00045	// Scaling factor for subaudible tone modulation - not pre-emphasized -to produce approx +/- 300 Hz deviation in 2.5kHz mode
-#define FM_TONE_DDS_ACC_SHIFT	14			// number of left-shift bits to obtain lookup word
-//
+#define FM_SUBAUDIBLE_TONE_AMPLITUDE_SCALING	0.00045	// Scaling factor for subaudible tone modulation - not pre-emphasized -to produce approx +/- 300 Hz deviation in 2.5kHz mode
+
 #define	NUM_SUBAUDIBLE_TONES 56
-//
 #define FM_SUBAUDIBLE_TONE_OFF	0
-//
-#define	FM_SUBAUDIBLE_TONE_WORD_CALC_FACTOR	(16777216/IQ_SAMPLE_RATE)	// scaling factor for calculating "tone word" for subaudible tone generator
-//
+
 #define	FM_TONE_BURST_OFF	0
 #define	FM_TONE_BURST_1750_MODE	1
 #define	FM_TONE_BURST_2135_MODE	2
 #define	FM_TONE_BURST_MAX	2
-//
-#define	FM_BURST_TONE_WORD_CALC_FACTOR	(16777216/IQ_SAMPLE_RATE)	// scaling factor for calculating "tone word" for the tone burst generator
-//
-#define FM_TONE_BURST_1750	(1750 * FM_BURST_TONE_WORD_CALC_FACTOR)
-#define FM_TONE_BURST_2135	(2135 * FM_BURST_TONE_WORD_CALC_FACTOR)
-#define	FM_TONE_BURST_MOD_SCALING 	4266	// scale tone modulation (which is NOT pre-emphasized) for approx. 2/3rds of system modulation
-//
+
+#define FM_TONE_BURST_AMPLITUDE_SCALING (FM_MOD_SCALING/4266.0) // scale tone modulation (which is NOT pre-emphasized) for approx. 2/3rds of system modulation
 #define FM_TONE_BURST_DURATION	100			// duration, in 100ths of a second, of the tone burst
 //
 // FM RX bandwidth settings
