@@ -216,7 +216,7 @@ bool RadioManagement_Tune(bool tune)
             }
 
             RadioManagement_SwitchTxRx(TRX_MODE_RX,true);                // tune OFF
-            retval = false; // no longer tuning
+            retval = (ts.txrx_mode == TRX_MODE_TX); // no longer tuning
         }
     }
     else
@@ -542,8 +542,25 @@ uint32_t RadioManagement_GetRXDialFrequency()
 // ts.tx_audio_source -> r
 // ts.power_level -> r
 
+/**
+ * @brief check if all resources are available to switch tx/rx mode in an interrupt
+ * @return true if all resources are available to switch tx/rx mode in an interrupt
+ */
+static __IO bool  radioManagement_SwitchTxRx_running;
+
+/**
+ * This function should only return true if it is absolutely safe to switch between Tx and Rx in an interrupt. Better safe than sorry.
+ * @return true if we can switch because no code is running in a critical section
+ */
+bool RadioManagement_SwitchTxRx_Possible()
+{
+    // we check all resources which may be locked by a user mode (non-interrupt activity)
+    return RadioManagement_TxRxSwitching_IsEnabled() && osc->readyForIrqCall() && Codec_ReadyForIrqCall() && radioManagement_SwitchTxRx_running == false;
+}
+
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 {
+    radioManagement_SwitchTxRx_running = true;
     uint32_t tune_new;
     bool tx_ok = false;
     bool tx_pa_disabled = false;
@@ -744,6 +761,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             ts.txrx_mode = txrx_mode_final;
         }
     }
+    radioManagement_SwitchTxRx_running = false;
 }
 
 
@@ -994,6 +1012,14 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
     AudioDriver_TxFilterInit(new_mode);
     AudioManagement_SetSidetoneForDemodMode(new_mode,false);
 
+    if (new_mode == DEMOD_SAM)
+    {
+        ts.tx_disable |= TX_DISABLE_RXMODE; // set  bit
+    }
+    else
+    {
+        ts.tx_disable &= ~TX_DISABLE_RXMODE; // clear bit
+    }
     ts.dmod_mode = new_mode;
 
     if  (ads.af_disabled) { ads.af_disabled--; }
@@ -1599,3 +1625,7 @@ void RadioManagement_FmDevSet5khz(bool is5khz)
     }
 }
 
+bool RadioManagement_TxPermitted()
+{
+    return ts.dmod_mode != DEMOD_SAM && RadioManagement_IsTxDisabled();
+}

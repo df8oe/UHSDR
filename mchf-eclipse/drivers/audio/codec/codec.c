@@ -543,3 +543,14 @@ void Codec_IQInGainAdj(uchar gain)
     Codec_InGainAdj(CODEC_IQ_I2C, gain);
 }
 
+/**
+ * @brief Checks if all codec resources are available for switching
+ * It basically checks if the I2C is currently in use
+ * This function must be called before changing the oscillator in interrupts
+ * otherwise deadlocks may happen
+ * @return true if it is safe to call codec functions in an interrupt
+ */
+bool Codec_ReadyForIrqCall()
+{
+    return (CODEC_ANA_I2C->Lock == HAL_UNLOCKED) && (CODEC_IQ_I2C->Lock == HAL_UNLOCKED);
+}

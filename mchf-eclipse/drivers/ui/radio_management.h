@@ -252,6 +252,8 @@ int32_t  RadioManagement_GetCWDialOffset();
 void RadioManagement_Request_TxOn();
 void RadioManagement_Request_TxOff();
 
+bool RadioManagement_SwitchTxRx_Possible();
+
 inline void RadioManagement_ToggleVfoMem()
 {
     ts.vfo_mem_flag = ! ts.vfo_mem_flag;
@@ -267,5 +269,19 @@ inline bool is_demod_psk()
 	return ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK;
 }
 
+inline void RadioManagement_TxRxSwitching_Disable()
+{
+    ts.txrx_switching_enabled = false;
+}
+
+inline void RadioManagement_TxRxSwitching_Enable()
+{
+    ts.txrx_switching_enabled = true;
+}
+
+inline bool RadioManagement_TxRxSwitching_IsEnabled()
+{
+    return ts.txrx_switching_enabled;
+}
 
 #endif /* DRIVERS_UI_RADIO_MANAGEMENT_H_ */

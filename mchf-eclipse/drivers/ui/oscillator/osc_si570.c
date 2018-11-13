@@ -593,6 +593,18 @@ uint8_t Si570_ResetConfiguration()
 
 static Oscillator_ResultCodes_t Si570_PrepareNextFrequency(ulong freq, int temp_factor);
 
+/**
+ * @brief Checks if all oscillator resources are available for switching frequency
+ * It basically checks if the I2C is currently in use
+ * This function must be called before changing the oscillator in interrupts
+ * otherwise deadlocks may happen
+ * @return true if it safe to call oscillator functions in an interrupt
+ */
+bool Si570_ReadyForIrqCall()
+{
+    return (SI570_I2C->Lock == HAL_UNLOCKED);
+}
+
 const OscillatorInterface_t osc_si570 =
 {
 		.init = Si570_Init,
@@ -600,8 +612,10 @@ const OscillatorInterface_t osc_si570 =
 		.setPPM = Si570_SetPPM,
 		.prepareNextFrequency = Si570_PrepareNextFrequency,
 		.changeToNextFrequency = Si570_ChangeToNextFrequency,
-		.isNextStepLarge = Si570_IsNextStepLarge
+		.isNextStepLarge = Si570_IsNextStepLarge,
+		.readyForIrqCall = Si570_ReadyForIrqCall,
 };
+
 
 void Si570_Init()
 {

@@ -619,6 +619,95 @@ static void AudioDriver_FM_Init(fm_t* fm)
     fm->subaudible_tone_detected = false;// TRUE if subaudible tone has been detected
 }
 
+#ifdef USE_LEAKY_LMS
+static void AudioDriver_LeakyLmsNr_Init()
+{
+    /////////////////////// LEAKY LMS noise reduction
+    leakyLMS.n_taps =     64; //64;                       // taps
+    leakyLMS.delay =    16; //16;                       // delay
+    leakyLMS.dline_size = LEAKYLMSDLINE_SIZE;
+    //int ANR_buff_size = FFT_length / 2.0;
+    leakyLMS.position = 0;
+    leakyLMS.two_mu =   0.0001;                     // two_mu --> "gain"
+    leakyLMS.two_mu_int = 100;
+    leakyLMS.gamma =    0.1;                      // gamma --> "leakage"
+    leakyLMS.gamma_int = 100;
+    leakyLMS.lidx =     120.0;                      // lidx
+    leakyLMS.lidx_min = 0.0;                      // lidx_min
+    leakyLMS.lidx_max = 200.0;                      // lidx_max
+    leakyLMS.ngamma =   0.001;                      // ngamma
+    leakyLMS.den_mult = 6.25e-10;                   // den_mult
+    leakyLMS.lincr =    1.0;                      // lincr
+    leakyLMS.ldecr =    3.0;                     // ldecr
+    //int leakyLMS.mask = leakyLMS.dline_size - 1;
+    leakyLMS.mask = LEAKYLMSDLINE_SIZE - 1;
+    leakyLMS.in_idx = 0;
+    leakyLMS.on = 0;
+    leakyLMS.notch = 0;
+    /////////////////////// LEAKY LMS END
+
+}
+
+// Automatic noise reduction
+// Variable-leak LMS algorithm
+// taken from (c) Warren Pratts wdsp library 2016
+// GPLv3 licensed
+void AudioDriver_LeakyLmsNr (float32_t *in_buff, float32_t *out_buff, int buff_size, bool notch)
+{
+    int i, j, idx;
+    float32_t c0, c1;
+    float32_t y, error, sigma, inv_sigp;
+    float32_t nel, nev;
+        for (i = 0; i < buff_size; i++)
+        {
+            leakyLMS.d[leakyLMS.in_idx] = in_buff[i];
+
+            y = 0;
+            sigma = 0;
+
+            for (j = 0; j < leakyLMS.n_taps; j++)
+            {
+                idx = (leakyLMS.in_idx + j + leakyLMS.delay) & leakyLMS.mask;
+                y += leakyLMS.w[j] * leakyLMS.d[idx];
+                sigma += leakyLMS.d[idx] * leakyLMS.d[idx];
+            }
+            inv_sigp = 1.0 / (sigma + 1e-10);
+            error = leakyLMS.d[leakyLMS.in_idx] - y;
+
+            if(notch)
+            { // automatic notch filter
+                out_buff[i] = error;
+            }
+            else
+            { // noise reduction
+                out_buff[i] = y;
+            }
+//          leakyLMS.out_buff[2 * i + 1] = 0.0;
+
+            if((nel = error * (1.0 - leakyLMS.two_mu * sigma * inv_sigp)) < 0.0) nel = -nel;
+            if((nev = leakyLMS.d[leakyLMS.in_idx] - (1.0 - leakyLMS.two_mu * leakyLMS.ngamma) * y - leakyLMS.two_mu * error * sigma * inv_sigp) < 0.0) nev = -nev;
+            if (nev < nel)
+            {
+                if((leakyLMS.lidx += leakyLMS.lincr) > leakyLMS.lidx_max) leakyLMS.lidx = leakyLMS.lidx_max;
+            }
+            else
+            {
+                if((leakyLMS.lidx -= leakyLMS.ldecr) < leakyLMS.lidx_min) leakyLMS.lidx = leakyLMS.lidx_min;
+            }
+            leakyLMS.ngamma = leakyLMS.gamma * (leakyLMS.lidx * leakyLMS.lidx) * (leakyLMS.lidx * leakyLMS.lidx) * leakyLMS.den_mult;
+
+            c0 = 1.0 - leakyLMS.two_mu * leakyLMS.ngamma;
+            c1 = leakyLMS.two_mu * error * inv_sigp;
+
+            for (j = 0; j < leakyLMS.n_taps; j++)
+            {
+                idx = (leakyLMS.in_idx + j + leakyLMS.delay) & leakyLMS.mask;
+                leakyLMS.w[j] = c0 * leakyLMS.w[j] + c1 * leakyLMS.d[idx];
+            }
+            leakyLMS.in_idx = (leakyLMS.in_idx + leakyLMS.mask) & leakyLMS.mask;
+        }
+}
+#endif
 
 void AudioDriver_Init(void)
 {
@@ -681,30 +770,9 @@ void AudioDriver_Init(void)
     AudioDriver_InitFilters();
 
 #ifdef USE_LEAKY_LMS
-    /////////////////////// LEAKY LMS noise reduction
-    leakyLMS.n_taps =     64; //64;                       // taps
-    leakyLMS.delay =    16; //16;                       // delay
-    leakyLMS.dline_size = LEAKYLMSDLINE_SIZE;
-    //int ANR_buff_size = FFT_length / 2.0;
-    leakyLMS.position = 0;
-    leakyLMS.two_mu =   0.0001;                     // two_mu --> "gain"
-    leakyLMS.two_mu_int = 100;
-    leakyLMS.gamma =    0.1;                      // gamma --> "leakage"
-    leakyLMS.gamma_int = 100;
-    leakyLMS.lidx =     120.0;                      // lidx
-    leakyLMS.lidx_min = 0.0;                      // lidx_min
-    leakyLMS.lidx_max = 200.0;                      // lidx_max
-    leakyLMS.ngamma =   0.001;                      // ngamma
-    leakyLMS.den_mult = 6.25e-10;                   // den_mult
-    leakyLMS.lincr =    1.0;                      // lincr
-    leakyLMS.ldecr =    3.0;                     // ldecr
-    //int leakyLMS.mask = leakyLMS.dline_size - 1;
-    leakyLMS.mask = LEAKYLMSDLINE_SIZE - 1;
-    leakyLMS.in_idx = 0;
-    leakyLMS.on = 0;
-    leakyLMS.notch = 0;
-    /////////////////////// LEAKY LMS END
+    AudioDriver_LeakyLmsNr_Init();
 #endif
+
 
     ts.codec_present = Codec_Reset(ts.samp_rate,word_size) == HAL_OK;
 
@@ -1174,6 +1242,10 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // sd.magnify 3 = 8x
     // sd.magnify 4 = 16x
     // sd.magnify 5 = 32x
+    if(sd.magnify > MAGNIFY_MAX)
+    {
+        sd.magnify = MAGNIFY_MIN;
+    }
     //
     // for 0 the mag_coeffs will a NULL  ptr, since the filter is not going to be used in this  mode!
     IIR_biquad_Zoom_FFT_I.pCoeffs = mag_coeffs[sd.magnify];
@@ -1329,10 +1401,6 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
 
     // Set up ZOOM FFT FIR decimation filters
     // switch right FIR decimation filter depending on sd.magnify
-    if(sd.magnify > MAGNIFY_MAX)
-    {
-        sd.magnify = MAGNIFY_MIN;
-    }
 
     arm_fir_decimate_init_f32(&DECIMATE_ZOOM_FFT_I,
             FirZoomFFTDecimate[sd.magnify].numTaps,
@@ -3309,69 +3377,6 @@ void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
 }
 
 
-#ifdef USE_LEAKY_LMS
-
-// Automatic noise reduction
-// Variable-leak LMS algorithm
-// taken from (c) Warren Pratts wdsp library 2016
-// GPLv3 licensed
-void AudioDriver_LeakyLmsNr (float32_t *in_buff, float32_t *out_buff, int buff_size, bool notch)
-{
-    int i, j, idx;
-    float32_t c0, c1;
-    float32_t y, error, sigma, inv_sigp;
-    float32_t nel, nev;
-		for (i = 0; i < buff_size; i++)
-		{
-			leakyLMS.d[leakyLMS.in_idx] = in_buff[i];
-
-			y = 0;
-			sigma = 0;
-
-			for (j = 0; j < leakyLMS.n_taps; j++)
-			{
-				idx = (leakyLMS.in_idx + j + leakyLMS.delay) & leakyLMS.mask;
-				y += leakyLMS.w[j] * leakyLMS.d[idx];
-				sigma += leakyLMS.d[idx] * leakyLMS.d[idx];
-			}
-			inv_sigp = 1.0 / (sigma + 1e-10);
-			error = leakyLMS.d[leakyLMS.in_idx] - y;
-
-			if(notch)
-			{ // automatic notch filter
-				out_buff[i] = error;
-			}
-			else
-			{ // noise reduction
-				out_buff[i] = y;
-			}
-//			leakyLMS.out_buff[2 * i + 1] = 0.0;
-
-			if((nel = error * (1.0 - leakyLMS.two_mu * sigma * inv_sigp)) < 0.0) nel = -nel;
-			if((nev = leakyLMS.d[leakyLMS.in_idx] - (1.0 - leakyLMS.two_mu * leakyLMS.ngamma) * y - leakyLMS.two_mu * error * sigma * inv_sigp) < 0.0) nev = -nev;
-			if (nev < nel)
-			{
-				if((leakyLMS.lidx += leakyLMS.lincr) > leakyLMS.lidx_max) leakyLMS.lidx = leakyLMS.lidx_max;
-			}
-			else
-			{
-				if((leakyLMS.lidx -= leakyLMS.ldecr) < leakyLMS.lidx_min) leakyLMS.lidx = leakyLMS.lidx_min;
-			}
-			leakyLMS.ngamma = leakyLMS.gamma * (leakyLMS.lidx * leakyLMS.lidx) * (leakyLMS.lidx * leakyLMS.lidx) * leakyLMS.den_mult;
-
-			c0 = 1.0 - leakyLMS.two_mu * leakyLMS.ngamma;
-			c1 = leakyLMS.two_mu * error * inv_sigp;
-
-			for (j = 0; j < leakyLMS.n_taps; j++)
-			{
-				idx = (leakyLMS.in_idx + j + leakyLMS.delay) & leakyLMS.mask;
-				leakyLMS.w[j] = c0 * leakyLMS.w[j] + c1 * leakyLMS.d[idx];
-			}
-			leakyLMS.in_idx = (leakyLMS.in_idx + leakyLMS.mask) & leakyLMS.mask;
-		}
-}
-
-#endif
 
 void AudioDriver_RxProcessorNoiseReduction(uint16_t blockSizeDecim, float32_t* inout_buffer)
 {
@@ -3694,7 +3699,6 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         else
 #endif
                         {
-//#ifdef OBSOLETE_NR
 #ifdef USE_LMS_AUTONOTCH
                         	AudioDriver_NotchFilter(blockSizeDecim, adb.a_buffer[0]);     // Do notch filter
 #endif
@@ -4256,11 +4260,15 @@ static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treb
     }
 }
 
+/**
+ * Runs FM modulation on audio input signal, including sub tone and tone burst generation.
+ * @param src input from audio source
+ * @param dst IQ output (shifted according to translation frequency) ready for transmission
+ * @param blockSize number of samples in src AND dst
+ */
 static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t * const dst, uint16_t blockSize)
 {
     static float32_t    hpf_prev_a, hpf_prev_b;
-    float32_t           a, b;
-
     static uint32_t fm_mod_accum = 0;
 
     // Fill I and Q buffers with left channel(same as right)
@@ -4275,16 +4283,16 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t *
 
     AudioDriver_TxCompressor(adb.a_buffer[0], blockSize, FM_ALC_GAIN_CORRECTION);  // Do the TX ALC and speech compression/processing
 
-    // Do differentiating high-pass filter to provide 6dB/octave pre-emphasis - which also removes any DC component!  Takes audio from "a" and puts it into "a".
+    // Do differentiating high-pass filter to provide 6dB/octave pre-emphasis - which also removes any DC component!
     for(int i = 0; i < blockSize; i++)
     {
-        a = adb.a_buffer[0][i];
+        float32_t a = adb.a_buffer[0][i];
 
-        b = FM_TX_HPF_ALPHA * (hpf_prev_b + a - hpf_prev_a);    // do differentiation
+        hpf_prev_b = FM_TX_HPF_ALPHA * (hpf_prev_b + a - hpf_prev_a);    // do differentiation
+
         hpf_prev_a = a;     // save "[n-1] samples for next iteration
-        hpf_prev_b = b;
 
-        adb.a_buffer[0][i] = b;    // save differentiated data in audio buffer
+        adb.a_buffer[0][i] = hpf_prev_b;    // save differentiated data in audio buffer
     }
 
     // do tone generation using the NCO (a.k.a. DDS) method.  This is used for subaudible tone generation and, if necessary, summing the result in "a".
@@ -4323,18 +4331,6 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t *
 }
 
 #ifdef USE_FREEDV
-// DO NOT USE, HAS NOT BEEN KEPT UP TO DATE WITH DEVELOPMENT IN audio_tx_processor!
-//
-// This is a stripped-down TX processor - work in progress
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_dv_tx_processor
-//* Object              :
-//* Object              : audio sample processor for DV modes - USB only, that must be reconfigured to operate at 8ksps -  - but this will require the future addition of a circular buffer and queueing in ISR!
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
 {
     // Freedv Test DL2FW
@@ -4343,9 +4339,6 @@ static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSamp
     static int16_t FDV_TX_fill_in_pt = 0;
     static FDV_IQ_Buffer* out_buffer = NULL;
     static int16_t modulus_NF = 0, modulus_MOD = 0;
-
-    // If source is digital usb in, pull from USB buffer, discard line or mic audio and
-    // let the normal processing happen
 
     if (ts.digital_mode == DigitalMode_FreeDV)
     { //we are in freedv-mode

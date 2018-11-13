@@ -44,7 +44,7 @@ typedef struct
 	Oscillator_ResultCodes_t (*prepareNextFrequency)(ulong freq, int temp_factor);
 	Oscillator_ResultCodes_t (*changeToNextFrequency)();
 	bool 			  (*isNextStepLarge)();
-
+	bool              (*readyForIrqCall)();
 } OscillatorInterface_t;
 
 extern const OscillatorInterface_t *osc;

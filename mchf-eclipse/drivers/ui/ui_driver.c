@@ -6804,7 +6804,12 @@ void UiDriver_TaskHandler_HighPrioTasks()
         alternateNR_handle();
     }
 #endif
-
+#ifdef USE_HIGH_PRIO_PTT
+    if (RadioManagement_SwitchTxRx_Possible())
+    {
+        RadioManagement_HandlePttOnOff();
+    }
+#endif
 #ifdef USE_CONVOLUTION
     	convolution_handle();
 #endif
@@ -6816,8 +6821,9 @@ void UiDriver_TaskHandler_MainTasks()
 
 	uint32_t now = ts.sysclock;
 	//        HAL_GetTick()/10;
-
+	RadioManagement_TxRxSwitching_Disable();
 	CatDriver_HandleProtocol();
+	RadioManagement_TxRxSwitching_Enable();
 
 #ifndef USE_PENDSV_FOR_HIGHPRIO_TASKS
 	UiDriver_TaskHandler_HighPrioTasks();
@@ -6859,11 +6865,12 @@ void UiDriver_TaskHandler_MainTasks()
 #endif
 #endif
     // START CALLED AS OFTEN AS POSSIBLE
-
+#ifndef USE_HIGH_PRIO_PTT
 	if (ts.tx_stop_req == true  || ts.ptt_req == true)
 	{
 		RadioManagement_HandlePttOnOff();
 	}
+#endif
 	// END CALLED AS OFTEN AS POSSIBLE
 
 	// BELOW ALL CALLING IS BASED ON SYSCLOCK 10ms clock
@@ -6873,13 +6880,17 @@ void UiDriver_TaskHandler_MainTasks()
 		// Now process events which should be handled regularly at a rate of 100 Hz
 		// Remember to keep this as short as possible since this is executed in addition
 		// to all other processing below.
+	    RadioManagement_TxRxSwitching_Disable();
 		UiDriver_CheckEncoderOne();
 		UiDriver_CheckEncoderTwo();
 		UiDriver_CheckEncoderThree();
 		UiDriver_CheckFrequencyEncoder();
 		UiDriver_KeyboardProcessOldClicks();
+#ifndef USE_HIGH_PRIO_PTT
 		RadioManagement_HandlePttOnOff();
+#endif
 		RadioManagement_UpdatePowerAndVSWR();
+		RadioManagement_TxRxSwitching_Enable();
 	}
 
 	UiSpectrum_Redraw();
@@ -6965,7 +6976,9 @@ void UiDriver_TaskHandler_MainTasks()
 			}
 			break;
 		case STATE_TASK_CHECK:
+		    RadioManagement_TxRxSwitching_Disable();
 			UiDriver_TimeScheduler();
+			RadioManagement_TxRxSwitching_Enable();
 			// Handles live update of Calibrate between TX/RX and volume control
 			break;
 		case STATE_UPDATE_FREQUENCY:
@@ -6974,14 +6987,18 @@ void UiDriver_TaskHandler_MainTasks()
 			 *  */
 			if((df.tune_old != df.tune_new))
 			{
+			    RadioManagement_TxRxSwitching_Disable();
 				UiDriver_FrequencyUpdateLOandDisplay(false);
+				RadioManagement_TxRxSwitching_Enable();
 				UiDriver_DisplayMemoryLabel();				// this is because a frequency dialing via CAT must be indicated if "CAT in sandbox" is active
 			}
 			else if (df.temp_factor_changed  || ts.tune_freq != ts.tune_freq_req)
 			{
 				// this handles the cases where the dial frequency remains the same but the
 				// LO tune frequency needs adjustment, e.g. in CW mode  or if temp of LO changes
+			    RadioManagement_TxRxSwitching_Disable();
 				RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, ts.txrx_mode);
+				RadioManagement_TxRxSwitching_Enable();
 			}
 			break;
 		case STATE_PROCESS_KEYBOARD:

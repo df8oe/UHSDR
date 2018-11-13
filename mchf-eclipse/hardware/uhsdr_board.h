@@ -131,6 +131,15 @@
 // of course.
 #define USE_PENDSV_FOR_HIGHPRIO_TASKS
 
+// OPTION: Enable handling of TX/RX switching in an interrupt. Provides very low latency switching
+// EXPERIMENTAL !!!
+#define USE_HIGH_PRIO_PTT
+
+#if !defined(USE_PENDSV_FOR_HIGHPRIO_TASKS) && defined(USE_HIGH_PRIO_PTT)
+#error USE_HIGH_PRIO_PTT requires USE_PENDSV_FOR_HIGHPRIO_TASKS
+#endif
+
+
 #include "uhsdr_mcu.h"
 // HW libs
 #ifdef STM32F7
@@ -841,6 +850,7 @@ typedef struct TransceiverState
 #define TX_DISABLE_ALWAYS       1
 #define TX_DISABLE_USER         2
 #define TX_DISABLE_OUTOFRANGE	4
+#define TX_DISABLE_RXMODE       8
     uint8_t	tx_disable;		// >0 if no transmit permitted, use RadioManagement_IsTxDisabled() to get boolean
 
 
@@ -1076,6 +1086,7 @@ typedef struct TransceiverState
 	RfBoard_t rf_board; // the detected rf board connected to the control logic
 	bool si570_is_present;
 	uint8_t special_functions_enabled;
+	bool txrx_switching_enabled;
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
