@@ -46,4 +46,5 @@ void     Codec_TxSidetoneSetgain(uint8_t mode);
 void     Codec_SwitchMicTxRxMode(uint8_t mode);
 void     Codec_PrepareTx(uint8_t current_txrx_mode);
 
+bool     Codec_ReadyForIrqCall();
 #endif

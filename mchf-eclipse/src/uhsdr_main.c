@@ -68,8 +68,8 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
         break;
     case PADDLE_DAH:
         // Call handler
-    	if (Board_PttDahLinePressed() && ts.dmod_mode != DEMOD_SAM)
-    	{  // was PTT line low? Not in a RX Only Mode?
+    	if (Board_PttDahLinePressed() && RadioManagement_IsTxDisabledBy(TX_DISABLE_RXMODE) == false)
+    	{  // was PTT line low? Is it not a RX only mode
     	    RadioManagement_Request_TxOn();     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
     		if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry)
     		{

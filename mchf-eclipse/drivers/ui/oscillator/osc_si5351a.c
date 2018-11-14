@@ -397,6 +397,18 @@ static bool              Si5351a_IsNextStepLarge()
 	return false;
 }
 
+/**
+ * @brief Checks if all oscillator resources are available for switching frequency
+ * It basically checks if the I2C is currently in use
+ * This function must be called before changing the oscillator in interrupts
+ * otherwise deadlocks may happen
+ * @return true if it is safe to call oscillator functions in an interrupt
+ */
+bool Si5351a_ReadyForIrqCall()
+{
+    return (SI5351A_I2C->Lock == HAL_UNLOCKED);
+}
+
 const OscillatorInterface_t osc_si5351a =
 {
 		.init = Si5351a_Init,
@@ -404,7 +416,8 @@ const OscillatorInterface_t osc_si5351a =
 		.setPPM = Si5351a_SetPPM,
 		.prepareNextFrequency = Si5351a_PrepareNextFrequency,
 		.changeToNextFrequency = Si5351a_ChangeToNextFrequency,
-		.isNextStepLarge = Si5351a_IsNextStepLarge
+		.isNextStepLarge = Si5351a_IsNextStepLarge,
+		.readyForIrqCall = Si5351a_ReadyForIrqCall,
 };
 
 void Si5351a_Init()

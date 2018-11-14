@@ -46,6 +46,16 @@ static bool              OscDummy_IsNextStepLarge()
 {
 	return false;
 }
+/**
+ * @brief Checks if all oscillator resources are available for switching frequency
+ * This function must be called before changing the oscillator in interrupts
+ * otherwise deadlocks may happen
+ * @return true if it is safe to call oscillator functions in an interrupt
+ */
+static bool              OscDummy_ReadyForIrqCall()
+{
+    return true;
+}
 
 
 const OscillatorInterface_t osc_dummy =
@@ -55,7 +65,8 @@ const OscillatorInterface_t osc_dummy =
 		.setPPM = OscDummy_SetPPM,
 		.prepareNextFrequency = OscDummy_PrepareNextFrequency,
 		.changeToNextFrequency = OscDummy_ChangeToNextFrequency,
-		.isNextStepLarge = OscDummy_IsNextStepLarge
+		.isNextStepLarge = OscDummy_IsNextStepLarge,
+		.readyForIrqCall = OscDummy_ReadyForIrqCall,
 };
 
 static void OscDummy_Init()
