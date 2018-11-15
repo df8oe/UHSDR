@@ -503,7 +503,7 @@ int mchfMain(void)
     // Usb Host driver init
     //keyb_driver_init();
 
-#if 1
+#if 0
 	// detection routine for special bootloader version strings which do enable debug or development functions
 	char out[14];
     for(uint8_t* begin = (uint8_t*)0x8000000; begin < (uint8_t*)EEPROM_START_ADDRESS-8; begin++)
