@@ -1087,6 +1087,8 @@ typedef struct TransceiverState
 	bool si570_is_present;
 	uint8_t special_functions_enabled;
 	bool txrx_switching_enabled;
+
+	bool paddles_active; // setting this to false disables processing of external gpio interrupts (right now just the paddles/PTT)
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

@@ -62,28 +62,31 @@
 
 void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
 {
-    switch(GPIO_Pin)
+    if (ts.paddles_active != false)
     {
-    case BUTTON_PWR:
-        break;
-    case PADDLE_DAH:
-        // Call handler
-    	if (Board_PttDahLinePressed() && RadioManagement_IsTxDisabledBy(TX_DISABLE_RXMODE) == false)
-    	{  // was PTT line low? Is it not a RX only mode
-    	    RadioManagement_Request_TxOn();     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
-    		if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry)
-    		{
-    			CwGen_DahIRQ();     // Yes - go to CW state machine
-    		}
-    	}
-    	break;
-    case PADDLE_DIT:
-        if((ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry) && Board_DitLinePressed())
+        switch(GPIO_Pin)
         {
-            RadioManagement_Request_TxOn();
-            CwGen_DitIRQ();
+        case BUTTON_PWR:
+            break;
+        case PADDLE_DAH:
+            // Call handler
+            if (Board_PttDahLinePressed() && RadioManagement_IsTxDisabledBy(TX_DISABLE_RXMODE) == false)
+            {  // was PTT line low? Is it not a RX only mode
+                RadioManagement_Request_TxOn();     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
+                if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry)
+                {
+                    CwGen_DahIRQ();     // Yes - go to CW state machine
+                }
+            }
+            break;
+        case PADDLE_DIT:
+            if((ts.dmod_mode == DEMOD_CW || is_demod_rtty() || ts.cw_text_entry) && Board_DitLinePressed())
+            {
+                RadioManagement_Request_TxOn();
+                CwGen_DitIRQ();
+            }
+            break;
         }
-        break;
     }
 }
 
@@ -606,6 +609,9 @@ int mchfMain(void)
     {
     	UiDriver_SetDemodMode(ts.dmod_mode);
     }
+
+    // now enable paddles/ptt, i.e. external input
+    ts.paddles_active = true;
 
     // Transceiver main loop
     for(;;)
