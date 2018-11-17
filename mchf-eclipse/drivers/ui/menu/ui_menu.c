@@ -561,7 +561,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
             snprintf(out,32,"%d",(STM32_GetFlashSize()));
             break;
     case INFO_CPU:
-            snprintf(out,32,"%xh",(STM32_GetSignature()));
+            snprintf(out,32,"%3lx:%04lxh",HAL_GetDEVID(),HAL_GetREVID());
             break;
     case INFO_RAM:
             snprintf(out,32,"%d",(ts.ramsize));
