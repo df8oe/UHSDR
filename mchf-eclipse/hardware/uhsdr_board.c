@@ -456,7 +456,7 @@ static volatile bool busfault_detected;
 
 #define TEST_ADDR_192 (0x20000000 + 0x0001FFFC)
 #define TEST_ADDR_256 (0x20000000 + 0x0002FFFC)
-#define TEST_ADDR_512 (0x20000000 + 0x0004FFFC)
+#define TEST_ADDR_512 (0x20000000 + 0x0005FFFC)
 
 // function below mostly based on http://stackoverflow.com/questions/23411824/determining-arm-cortex-m3-ram-size-at-run-time
 

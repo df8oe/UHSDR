@@ -1855,8 +1855,6 @@ else
     } */
 
 
-Board_RedLed(LED_STATE_OFF);
-
     if(ts.nr_first_time == 1)
     { // TODO: properly initialize all the variables
 
