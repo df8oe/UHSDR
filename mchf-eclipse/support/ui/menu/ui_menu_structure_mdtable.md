@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-10-31T19:25:33  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-11-19T21:52:50  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-10-31T19:25:33  by "./ui_menu_structure_mdtable.py"
+generated at  2018-11-19T21:52:50  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -299,6 +299,8 @@ generated at  2018-10-31T19:25:33  by "./ui_menu_structure_mdtable.py"
 | **HMC1023 Bypass**            (                  MENU_DEBUG_HMC1023_BYPASS) | Debug Setting: Set HMC1023 to bypass mode      | 
 | **HMC1023 Opamp Bias**        (                   MENU_DEBUG_HMC1023_OPAMP) | Debug Setting: Switch LPF HMC1023LP5E Opamp Bias | 
 | **HMC1023 Driver Bias**       (                    MENU_DEBUG_HMC1023_DRVR) | Debug Setting: Set HMC1023 Driver Bias         | 
+| **S-Meter Attack**            (                       CONFIG_SMETER_ATTACK) | Attack controls how quickly the S-Meter reacts to rising signal levels, higher values represent quicker reaction | 
+| **S-Meter Attack**            (                        CONFIG_SMETER_DECAY) | Decay controls how quickly the S-Meter reacts to falling signal levels, higher values represent quicker reaction | 
 
 
 [//]: # ( EOFILE                                                                       )

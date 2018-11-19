@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-10-31T19:25:30  by "./ui_menu_structure_graph.py"
+#  generated at  2018-11-19T21:52:47  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-10-31T19:25:30  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-11-19T21:52:47  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1297,6 +1297,16 @@
              shape = record
              ];
         
+        "CONFIG_SMETER_ATTACK" [
+             label = "CONFIG_SMETER_ATTACK | S-Meter Attack"
+             shape = record
+             ];
+        
+        "CONFIG_SMETER_DECAY" [
+             label = "CONFIG_SMETER_DECAY | S-Meter Attack"
+             shape = record
+             ];
+        
         "0" [
              label = "0 | M0NKA  (Chris) founder of mcHF"
              shape = record
@@ -1904,6 +1914,10 @@
             MENU_DEBUG -> MENU_DEBUG_HMC1023_OPAMP
             
             MENU_DEBUG -> MENU_DEBUG_HMC1023_DRVR
+            
+            MENU_DEBUG -> CONFIG_SMETER_ATTACK
+            
+            MENU_DEBUG -> CONFIG_SMETER_DECAY
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
