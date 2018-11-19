@@ -240,13 +240,26 @@ void AudioManagement_CalcIQPhaseAdjust(uint32_t freq);
 // S meter public
 typedef struct SMeter
 {
-    ulong	skip;
-    ulong	s_count;
-    float	gain_calc;
-    int		curr_max;
+    // configurable ALPHA = 1 - e^(-T/Tau)
+    uint8_t AttackAlpha;
+    uint8_t DecayAlpha;
+
+
+    // averaged values, used for display
     float32_t dbm;
     float32_t dbmhz;
 
+    // current measurements, used for averaging
+    float32_t dbm_cur;
+    float32_t dbmhz_cur;
+
+    // internal variables for dbm low pass calculation
+    float32_t AttackAvedbm;
+    float32_t DecayAvedbm;
+    float32_t AttackAvedbmhz;
+    float32_t DecayAvedbmhz;
+
+    uint32_t s_count; // number of S steps, used for display and CAT level
 } SMeter;
 
 
