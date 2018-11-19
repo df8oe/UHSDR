@@ -4360,6 +4360,51 @@ static void UiDriver_DisplayPowerLevel()
 	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->PW_IND.w,txt,color,Blue,0);
 }
 
+static void UiDriver_DisplayDbm()
+{
+    // TODO: Move to UI Driver
+    bool display_something = false;
+    static long oldVal=99999;
+    static uint8_t dBmShown=0;
+    if( ts.txrx_mode == TRX_MODE_RX)
+    {
+        long val;
+        const char* unit_label;
+
+        switch(ts.display_dbm)
+        {
+        case DISPLAY_S_METER_DBM:
+            display_something = true;
+            val = sm.dbm;
+            unit_label = "dBm   ";
+            break;
+        case DISPLAY_S_METER_DBMHZ:
+            display_something = true;
+            val = sm.dbmhz;
+            unit_label = "dBm/Hz";
+            break;
+        }
+
+        if ((display_something == true) && (val!=oldVal))
+        {
+            char txt[12];
+            snprintf(txt,12,"%4ld      ", val);
+            UiLcdHy28_PrintText(ts.Layout->DisplayDbm.x,ts.Layout->DisplayDbm.y,txt,White,Blue,0);
+            UiLcdHy28_PrintText(ts.Layout->DisplayDbm.x+SMALL_FONT_WIDTH * 4,ts.Layout->DisplayDbm.y,unit_label,White,Blue,4);
+            oldVal=val;     //this will prevent from useless redrawing the same
+            dBmShown=1;     //for indicate that dms are shown and erase function may it clear when needed
+        }
+    }
+
+    // clear the display since we are not showing dBm or dBm/Hz or we are in TX mode
+    if ((display_something == false) && (dBmShown==1))
+    {
+        UiLcdHy28_DrawFullRect(ts.Layout->DisplayDbm.x, ts.Layout->DisplayDbm.y, 15, SMALL_FONT_WIDTH * 10 , Black);
+        dBmShown=0;     //just to indicate that dbm is erased
+        oldVal=99999;   //some value that will enforce refresh when user enable display dbm
+    }
+}
+
 static void UiDriver_HandleSMeter()
 {
 
@@ -4367,7 +4412,43 @@ static void UiDriver_HandleSMeter()
 	if(ts.txrx_mode == TRX_MODE_RX)
 	{
 
-		RadioManagement_HandleRxIQSignalCodecGain();
+	    RadioManagement_HandleRxIQSignalCodecGain();
+
+	    // lowpass IIR filter
+	    // Wheatley 2011: two averagers with two time constants
+	    // IIR filter with one element analog to 1st order RC filter
+	    // but uses two different time constants (ALPHA = 1 - e^(-T/Tau)) depending on
+	    // whether the signal is increasing (attack) or decreasing (decay)
+	    // we scale Alpha values by 100 so that we have a usable range for configuring the speed of attack and decay in menu items (from 1 to 100)
+
+	    const float32_t alpha_scale_inv = 0.01;
+	    float32_t attackAlpha = sm.AttackAlpha *alpha_scale_inv;
+
+	    float32_t decayAlpha = sm.DecayAlpha *alpha_scale_inv;
+	    sm.AttackAvedbm =   (1.0 - attackAlpha) * sm.AttackAvedbm   + attackAlpha * sm.dbm_cur;
+	    sm.DecayAvedbm =    (1.0 - decayAlpha)  * sm.DecayAvedbm    + decayAlpha  * sm.dbm_cur;
+	    sm.AttackAvedbmhz = (1.0 - attackAlpha) * sm.AttackAvedbmhz + attackAlpha * sm.dbmhz_cur;
+	    sm.DecayAvedbmhz =  (1.0 - decayAlpha)  * sm.DecayAvedbmhz  + decayAlpha  * sm.dbmhz_cur;
+
+	    if (sm.AttackAvedbm > sm.DecayAvedbm)
+	    { // if attack average is larger then it must be an increasing signal
+	        sm.dbm = sm.AttackAvedbm; // use attack average value for output
+	        sm.DecayAvedbm = sm.AttackAvedbm; // set decay average to attack average value for next time
+	    }
+	    else
+	    { // signal is decreasing, so use decay average value
+	        sm.dbm = sm.DecayAvedbm;
+	    }
+
+	    if (sm.AttackAvedbmhz > sm.DecayAvedbmhz)
+	    { // if attack average is larger then it must be an increasing signal
+	        sm.dbmhz = sm.AttackAvedbmhz; // use attack average value for output
+	        sm.DecayAvedbmhz = sm.AttackAvedbmhz; // set decay average to attack average value for next time
+	    }
+	    else
+	    { // signal is decreasing, so use decay average value
+	        sm.dbmhz = sm.DecayAvedbmhz;
+	    }
 
 		// ONLY UI CODE BELOW
 		//
@@ -4376,30 +4457,19 @@ static void UiDriver_HandleSMeter()
 		{
 			static bool         clip_indicate = 0;
 
-// we fixed the S-Meter to display ONLY dBm, NOT dBm/Hz
-			/*
-			if (ts.s_meter == DISPLAY_S_METER_DBM) // based on dBm calculation
-			{
-				sm.gain_calc = sm.dbm;
-			}
-			else // based on dBm/Hz calculation
-			{
-				sm.gain_calc = sm.dbmhz;
-			}
-*/
-
-			sm.gain_calc = sm.dbm;
-
 			const float *S_Meter_Cal_Ptr = S_Meter_Cal_dbm;
+			uint32_t s_count = 0;
 
 			// find corresponding signal level
 			for (
-					sm.s_count = 0;
-					(sm.gain_calc >= S_Meter_Cal_Ptr[sm.s_count]) && (sm.s_count < S_Meter_Cal_Size);
-					sm.s_count++)
+					s_count = 1;
+					(sm.dbm >= S_Meter_Cal_Ptr[s_count]) && (s_count < S_Meter_Cal_Size);
+					s_count++)
 			{
 				// nothing to do here
 			}
+
+			sm.s_count = s_count; // preserve value for CAT level reading
 
 			if(ads.adc_clip)	 		// did clipping occur?
 			{
@@ -4420,7 +4490,8 @@ static void UiDriver_HandleSMeter()
 			}
 
 			// make sure that the S meter always reads something!
-			UiDriver_UpdateTopMeterA((sm.s_count>0) ? sm.s_count : 1);
+			UiDriver_UpdateTopMeterA((s_count>0) ? s_count : 1);
+            UiDriver_DisplayDbm();
 		}
 	}
 }

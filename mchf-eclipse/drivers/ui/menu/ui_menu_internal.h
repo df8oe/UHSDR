@@ -292,6 +292,8 @@ enum
     MENU_DYNAMICTUNE,
     MENU_DIGITAL_MODE_SELECT,
     MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL,
+    CONFIG_SMETER_ATTACK,
+    CONFIG_SMETER_DECAY,
     MAX_RADIO_CONFIG_ITEM   // Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
 
