@@ -731,9 +731,6 @@ void AudioDriver_Init(void)
     sm.DecayAvedbm = 0.0;
     sm.AttackAvedbmhz = 0.0;
     sm.DecayAvedbmhz = 0.0;
-    // ALPHA = 1 - e^(-T/Tau)
-    sm.AttackAlpha = 50; // we use 100 => alpha == 1.0  0.5
-    sm.DecayAlpha  = 5; // 0.05
 
 #if 0
     ads.agc_val = 1;			// Post AF Filter gain (AGC)

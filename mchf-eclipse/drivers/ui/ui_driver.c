@@ -4422,9 +4422,9 @@ static void UiDriver_HandleSMeter()
 	    // we scale Alpha values by 100 so that we have a usable range for configuring the speed of attack and decay in menu items (from 1 to 100)
 
 	    const float32_t alpha_scale_inv = 0.01;
-	    float32_t attackAlpha = sm.AttackAlpha *alpha_scale_inv;
+	    float32_t attackAlpha = sm.config.alphaSplit.AttackAlpha *alpha_scale_inv;
 
-	    float32_t decayAlpha = sm.DecayAlpha *alpha_scale_inv;
+	    float32_t decayAlpha = sm.config.alphaSplit.DecayAlpha *alpha_scale_inv;
 	    sm.AttackAvedbm =   (1.0 - attackAlpha) * sm.AttackAvedbm   + attackAlpha * sm.dbm_cur;
 	    sm.DecayAvedbm =    (1.0 - decayAlpha)  * sm.DecayAvedbm    + decayAlpha  * sm.dbm_cur;
 	    sm.AttackAvedbmhz = (1.0 - attackAlpha) * sm.AttackAvedbmhz + attackAlpha * sm.dbmhz_cur;

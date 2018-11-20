@@ -237,6 +237,8 @@ const MenuDescriptor displayGroup[] =
     { MENU_DISPLAY, MENU_ITEM, MENU_METER_COLOUR_DOWN, NULL, "Lower Meter Colour", UiMenuDesc("Set the colour of the scale of combined SWR/AUD/ALC-Meter") },
     { MENU_DISPLAY, MENU_ITEM, MENU_DBM_DISPLAY, NULL, "dBm display", UiMenuDesc("RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. This value is supposed to be quite accurate to +-3dB. Preferably use low spectrum display magnify settings. Accuracy is lower for very very weak and very very strong signals.")},
     { MENU_DISPLAY, MENU_ITEM, MENU_DBM_CALIBRATE, NULL, "dBm calibrate", UiMenuDesc("dBm display calibration. Just an offset (in dB) that is added to the internally calculated dBm or dBm/Hz value.")},
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_SMETER_ATTACK, NULL, "S-Meter Attack", UiMenuDesc("Attack controls how quickly the S-Meter reacts to rising signal levels, higher values represent quicker reaction") },
+    { MENU_DISPLAY, MENU_ITEM, CONFIG_SMETER_DECAY, NULL, "S-Meter Decay", UiMenuDesc("Decay controls how quickly the S-Meter reacts to falling signal levels, higher values represent quicker reaction") },
 #ifdef USE_8bit_FONT
 	{ MENU_DISPLAY, MENU_ITEM, MENU_FREQ_FONT, NULL, "Freq display font", UiMenuDesc("Font selection for frequency display. Allows selection of old/modern fonts")},
 #endif
@@ -444,8 +446,6 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_BYPASS, &hmc1023.present,"HMC1023 Bypass", UiMenuDesc("Debug Setting: Set HMC1023 to bypass mode") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_OPAMP, &hmc1023.present,"HMC1023 Opamp Bias", UiMenuDesc("Debug Setting: Switch LPF HMC1023LP5E Opamp Bias") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_DRVR, &hmc1023.present,"HMC1023 Driver Bias", UiMenuDesc("Debug Setting: Set HMC1023 Driver Bias") },
-    { MENU_DEBUG, MENU_ITEM, CONFIG_SMETER_ATTACK, NULL, "S-Meter Attack", UiMenuDesc("Attack controls how quickly the S-Meter reacts to rising signal levels, higher values represent quicker reaction") },
-    { MENU_DEBUG, MENU_ITEM, CONFIG_SMETER_DECAY, NULL, "S-Meter Decay", UiMenuDesc("Decay controls how quickly the S-Meter reacts to falling signal levels, higher values represent quicker reaction") },
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
