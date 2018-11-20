@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-11-19T21:52:47  by "./ui_menu_structure_graph.py"
+#  generated at  2018-11-20T10:45:47  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-11-19T21:52:47  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-11-20T10:45:47  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1303,7 +1303,7 @@
              ];
         
         "CONFIG_SMETER_DECAY" [
-             label = "CONFIG_SMETER_DECAY | S-Meter Attack"
+             label = "CONFIG_SMETER_DECAY | S-Meter Decay"
              shape = record
              ];
         

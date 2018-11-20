@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-12498 752,-12498 752,4 -4,4"/>
 <text text-anchor="middle" x="374" y="-22.8" font-family="Times,serif" font-size="14.00" fill="#000000">mcHF v.. &#45; Menus Overview</text>
-<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00" fill="#000000">generated at &#160;2018&#45;11&#45;19T21:52:47 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00" fill="#000000">generated at &#160;2018&#45;11&#45;20T10:45:47 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node">
 <title>MENU_TOP</title>
@@ -3568,7 +3568,7 @@
 <polygon fill="none" stroke="#000000" points="465,-105.5 465,-151.5 646,-151.5 646,-105.5 465,-105.5"/>
 <text text-anchor="middle" x="555.5" y="-136.3" font-family="Times,serif" font-size="14.00" fill="#000000">CONFIG_SMETER_DECAY</text>
 <polyline fill="none" stroke="#000000" points="465,-128.5 646,-128.5 "/>
-<text text-anchor="middle" x="555.5" y="-113.3" font-family="Times,serif" font-size="14.00" fill="#000000">S&#45;Meter Attack</text>
+<text text-anchor="middle" x="555.5" y="-113.3" font-family="Times,serif" font-size="14.00" fill="#000000">S&#45;Meter Decay</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;CONFIG_SMETER_DECAY -->
 <g id="edge231" class="edge">
