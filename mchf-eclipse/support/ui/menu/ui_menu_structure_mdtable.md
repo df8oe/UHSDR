@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-11-20T10:45:52  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-11-20T21:26:00  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-11-20T10:45:52  by "./ui_menu_structure_mdtable.py"
+generated at  2018-11-20T21:26:00  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -144,6 +144,8 @@ generated at  2018-11-20T10:45:52  by "./ui_menu_structure_mdtable.py"
 | **Lower Meter Colour**        (                     MENU_METER_COLOUR_DOWN) | Set the colour of the scale of combined SWR/AUD/ALC-Meter | 
 | **dBm display**               (                           MENU_DBM_DISPLAY) | RX signal power (measured within the filter bandwidth) can be displayed in dBm or normalized as dBm/Hz. This value is supposed to be quite accurate to +-3dB. Preferably use low spectrum display magnify settings. Accuracy is lower for very very weak and very very strong signals. | 
 | **dBm calibrate**             (                         MENU_DBM_CALIBRATE) | dBm display calibration. Just an offset (in dB) that is added to the internally calculated dBm or dBm/Hz value. | 
+| **S-Meter Attack**            (                       CONFIG_SMETER_ATTACK) | Attack controls how quickly the S-Meter reacts to rising signal levels, higher values represent quicker reaction | 
+| **S-Meter Decay**             (                        CONFIG_SMETER_DECAY) | Decay controls how quickly the S-Meter reacts to falling signal levels, higher values represent quicker reaction | 
 | **Freq display font**         (                             MENU_FREQ_FONT) | Font selection for frequency display. Allows selection of old/modern fonts | 
 | **Menu Inverse Scrolling**    (                  MENU_UI_INVERSE_SCROLLING) | Inverts Enc2/Enc3 behavior in menu up/down and show/hide UI scrolling actions, used for side-mounted encoder dials. | 
 
@@ -299,8 +301,6 @@ generated at  2018-11-20T10:45:52  by "./ui_menu_structure_mdtable.py"
 | **HMC1023 Bypass**            (                  MENU_DEBUG_HMC1023_BYPASS) | Debug Setting: Set HMC1023 to bypass mode      | 
 | **HMC1023 Opamp Bias**        (                   MENU_DEBUG_HMC1023_OPAMP) | Debug Setting: Switch LPF HMC1023LP5E Opamp Bias | 
 | **HMC1023 Driver Bias**       (                    MENU_DEBUG_HMC1023_DRVR) | Debug Setting: Set HMC1023 Driver Bias         | 
-| **S-Meter Attack**            (                       CONFIG_SMETER_ATTACK) | Attack controls how quickly the S-Meter reacts to rising signal levels, higher values represent quicker reaction | 
-| **S-Meter Decay**             (                        CONFIG_SMETER_DECAY) | Decay controls how quickly the S-Meter reacts to falling signal levels, higher values represent quicker reaction | 
 
 
 [//]: # ( EOFILE                                                                       )

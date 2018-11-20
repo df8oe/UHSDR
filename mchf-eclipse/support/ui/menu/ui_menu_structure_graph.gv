@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-11-20T10:45:47  by "./ui_menu_structure_graph.py"
+#  generated at  2018-11-20T21:25:54  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-11-20T10:45:47  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-11-20T21:25:54  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -639,6 +639,16 @@
         
         "MENU_DBM_CALIBRATE" [
              label = "MENU_DBM_CALIBRATE | dBm calibrate"
+             shape = record
+             ];
+        
+        "CONFIG_SMETER_ATTACK" [
+             label = "CONFIG_SMETER_ATTACK | S-Meter Attack"
+             shape = record
+             ];
+        
+        "CONFIG_SMETER_DECAY" [
+             label = "CONFIG_SMETER_DECAY | S-Meter Decay"
              shape = record
              ];
         
@@ -1297,16 +1307,6 @@
              shape = record
              ];
         
-        "CONFIG_SMETER_ATTACK" [
-             label = "CONFIG_SMETER_ATTACK | S-Meter Attack"
-             shape = record
-             ];
-        
-        "CONFIG_SMETER_DECAY" [
-             label = "CONFIG_SMETER_DECAY | S-Meter Decay"
-             shape = record
-             ];
-        
         "0" [
              label = "0 | M0NKA  (Chris) founder of mcHF"
              shape = record
@@ -1915,10 +1915,6 @@
             
             MENU_DEBUG -> MENU_DEBUG_HMC1023_DRVR
             
-            MENU_DEBUG -> CONFIG_SMETER_ATTACK
-            
-            MENU_DEBUG -> CONFIG_SMETER_DECAY
-            
         }  ## END subgraph MENU_HALL_OF_FAME
     
         #  -  -  -  -
@@ -2012,6 +2008,10 @@
             MENU_DISPLAY -> MENU_DBM_DISPLAY
             
             MENU_DISPLAY -> MENU_DBM_CALIBRATE
+            
+            MENU_DISPLAY -> CONFIG_SMETER_ATTACK
+            
+            MENU_DISPLAY -> CONFIG_SMETER_DECAY
             
             MENU_DISPLAY -> MENU_FREQ_FONT
             
