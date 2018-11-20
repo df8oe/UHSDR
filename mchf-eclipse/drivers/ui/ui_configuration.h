@@ -26,6 +26,7 @@ enum
     ConfigEntry_Int32_16,
     ConfigEntry_Int16,
 	ConfigEntry_Int32,			//this type saves and reads two subsequent 16bit words
+	ConfigEntry_UInt8x2,      // this type saves and reads two indepent 8 bit values stored in a 16bit structure. This is relevant for defaults, which are independent
 //  ConfigEntry_Bool,
 	Calib_Val = 0x10000000,     // if this is "or"ed with a normal ConfigEntry_... value, it indicates this parameter is a hardware calibration parameter.
 	ConfigEntry_TypeMask = 0x0000ffff, // we support 2^16 different types, this is plenty.
@@ -595,9 +596,10 @@ void		UiConfiguration_UpdateMacroCap(void);
 
 #define EEPROM_DSP_MODE_MASK				408
 #define EEPROM_ENABLE_PTT_RTS				409
-#define EEPROM_CW_DECODER_THRESH					410
-#define EEPROM_CW_DECODER_BLOCKSIZE				411
-#define EEPROM_FIRST_UNUSED 				412		// change this if new value ids are introduced, must be correct at any time
+#define EEPROM_CW_DECODER_THRESH			410
+#define EEPROM_CW_DECODER_BLOCKSIZE			411
+#define EEPROM_SMETER_ALPHAS                412
+#define EEPROM_FIRST_UNUSED 				413		// change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

@@ -236,14 +236,28 @@ typedef struct AudioDriverState
 
 void AudioManagement_CalcIQPhaseAdjust(uint32_t freq);
 
-
 // S meter public
 typedef struct SMeter
 {
     // configurable ALPHA = 1 - e^(-T/Tau)
-    uint8_t AttackAlpha;
-    uint8_t DecayAlpha;
+    // we use alpha config value scaling of 100, i.e. 100 => alpha = 1.00
+    // this construct permits us to use a single configuration store for both
+    // it looks rather complex but this is necessary to ensure type safety checks are working
+    union {
+        uint16_t alphaCombined;
+        struct
+        {
+            uint8_t DecayAlpha;
+            uint8_t AttackAlpha;
+        } alphaSplit;
+    } config;
 
+// first/upper 8 bits is AttackAlpha
+// second/lower 8 bits is DecayAlpha
+#define SMETER_ALPHA_ATTACK_DEFAULT 50
+#define SMETER_ALPHA_DECAY_DEFAULT   5
+#define SMETER_ALPHA_MIN             1 // used for both alphas
+#define SMETER_ALPHA_MAX           100 // used for both alphas
 
     // averaged values, used for display
     float32_t dbm;

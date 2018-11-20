@@ -35,6 +35,8 @@
 
 static uint16_t dummy_val16; // we need this to be able to read config values without modifying anything
 
+#define CONFIG_UINT8x2_COMBINE(a,b) ((((a) << 8) | (b)))
+
 #define UI_C_EEPROM_BAND_5W_PF(bandNo,bandName1,bandName2) { ConfigEntry_UInt8 | Calib_Val, EEPROM_BAND##bandNo##_5W,&ts.pwr_adj[ADJ_5W][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX },
 #define UI_C_EEPROM_BAND_FULL_PF(bandNo,bandName1,bandName2) { ConfigEntry_UInt8 | Calib_Val, EEPROM_BAND##bandNo##_FULL,&ts.pwr_adj[ADJ_FULL_POWER][BAND_MODE_##bandName1],TX_POWER_FACTOR_##bandName1##_DEFAULT,0,TX_POWER_FACTOR_MAX },
 
@@ -251,6 +253,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_ENABLE_PTT_RTS,&ts.enable_ptt_rts,0,0,1},
 	{ ConfigEntry_Int32_16, EEPROM_CW_DECODER_THRESH,&cw_decoder_config.thresh,CW_DECODER_THRESH_DEFAULT,CW_DECODER_THRESH_MIN,CW_DECODER_THRESH_MAX},
 	{ ConfigEntry_Int32_16, EEPROM_CW_DECODER_BLOCKSIZE,&cw_decoder_config.blocksize,CW_DECODER_BLOCKSIZE_DEFAULT,CW_DECODER_BLOCKSIZE_MIN,CW_DECODER_BLOCKSIZE_MAX},
+	{ ConfigEntry_UInt8x2, EEPROM_SMETER_ALPHAS,&sm.config.alphaCombined,CONFIG_UINT8x2_COMBINE(SMETER_ALPHA_ATTACK_DEFAULT, SMETER_ALPHA_DECAY_DEFAULT), CONFIG_UINT8x2_COMBINE(SMETER_ALPHA_MIN, SMETER_ALPHA_MIN), CONFIG_UINT8x2_COMBINE(SMETER_ALPHA_MAX,SMETER_ALPHA_MAX) },
     // the entry below MUST be the last entry, and only at the last position Stop is allowed
     {
         ConfigEntry_Stop
@@ -334,7 +337,6 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8x2_Split(uint16_
     }
 }
 
-#if 0
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8x2(uint16_t addr, volatile uint16_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val, bool load_default)
 {
     uint16_t value;
@@ -342,12 +344,12 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8x2(uint16_t addr
     {
         *val_ptr = value;
 
-        if ( (((*val_ptr >> 8) && 0xff)  < ((min_val >> 8) && 0xff)) || (((*val_ptr >> 8) && 0xff)  > ((max_val >> 8) && 0xff)) || load_default)
+        if ( (((*val_ptr >> 8) & 0xff)  < ((min_val >> 8) & 0xff)) || (((*val_ptr >> 8) & 0xff)  > ((max_val >> 8) & 0xff)) || load_default)
         {
             *val_ptr = (*val_ptr & 0xff) | (default_val & 0xff00);
         }
 
-        if ( ((*val_ptr && 0xff)  < (min_val && 0xff)) || ((*val_ptr && 0xff)  > (max_val && 0xff)) || load_default)
+        if ( ((*val_ptr & 0xff)  < (min_val & 0xff)) || ((*val_ptr & 0xff)  > (max_val & 0xff)) || load_default)
         {
             *val_ptr = (*val_ptr & 0xff00) | (default_val & 0x00ff);
         }
@@ -357,7 +359,6 @@ static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt8x2(uint16_t addr
         *val_ptr = default_val;
     }
 }
-#endif
 
 static void __attribute__ ((noinline)) UiReadSettingEEPROM_UInt16(uint16_t addr, volatile uint16_t* val_ptr, uint16_t default_val, uint16_t min_val, uint16_t max_val, bool load_default)
 {
@@ -614,6 +615,9 @@ void UiConfiguration_ReadConfigEntryData(const ConfigEntryDescriptor* ced_ptr, b
     case ConfigEntry_Int16:
         UiReadSettingEEPROM_Int16(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max, load_default);
         break;
+    case ConfigEntry_UInt8x2:
+        UiReadSettingEEPROM_UInt8x2(ced_ptr->id,ced_ptr->val_ptr,ced_ptr->val_default,ced_ptr->val_min,ced_ptr->val_max, load_default);
+        break;
     case ConfigEntry_Int32:
     {
     	uint32_t Data;
@@ -638,6 +642,9 @@ uint16_t UiConfiguration_WriteConfigEntryData(const ConfigEntryDescriptor* ced_p
 
     case ConfigEntry_UInt8:
         retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id,*(uint8_t*)ced_ptr->val_ptr);
+        break;
+    case ConfigEntry_UInt8x2:
+        retval = UiWriteSettingEEPROM_UInt8x2(ced_ptr->id,*(uint16_t*)ced_ptr->val_ptr);
         break;
     case ConfigEntry_UInt16:
         retval = UiWriteSettingEEPROM_UInt16(ced_ptr->id,*(uint16_t*)ced_ptr->val_ptr);

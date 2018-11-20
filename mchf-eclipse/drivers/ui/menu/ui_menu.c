@@ -4245,12 +4245,12 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
 #endif
         case CONFIG_SMETER_ATTACK:
-            var_change = UiDriverMenuItemChangeUInt8(var, mode, &sm.AttackAlpha,1,100,50,1);
-            snprintf(options,32,"     %d",sm.AttackAlpha);
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &sm.config.alphaSplit.AttackAlpha, SMETER_ALPHA_MIN, SMETER_ALPHA_MAX, SMETER_ALPHA_ATTACK_DEFAULT,1);
+            snprintf(options,32,"     %d",sm.config.alphaSplit.AttackAlpha);
             break;
         case CONFIG_SMETER_DECAY:
-            var_change = UiDriverMenuItemChangeUInt8(var, mode, &sm.DecayAlpha,1,100,5,1);
-            snprintf(options,32,"     %d",sm.DecayAlpha);
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &sm.config.alphaSplit.DecayAlpha, SMETER_ALPHA_MIN, SMETER_ALPHA_MAX, SMETER_ALPHA_DECAY_DEFAULT,1);
+            snprintf(options,32,"     %d",sm.config.alphaSplit.DecayAlpha);
             break;
 
     default:                        // Move to this location if we get to the bottom of the table!
