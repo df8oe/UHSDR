@@ -314,15 +314,15 @@ $(BOOTLOADER):  $(BOOTLOADER).bin $(BOOTLOADER).dfu
 # compilation
 $(FIRMWARE).elf:  $(HAL_OBJS) $(DSPLIB_OBJS) $(OBJS)
 	$(ECHO) "  [LD] $@"
-	@$(file > firmware_obj_list.lst,$^)
-	@$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ @firmware_obj_list.lst $(LIBS)
+	@$(file > ./firmware_obj_list.lst,$^)
+	@$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ @./firmware_obj_list.lst $(LIBS)
 	$(RM) $(call FixPath,firmware_obj_list.lst)
 
 # compilation
 $(BOOTLOADER).elf:  $(BL_HAL_OBJS) $(BL_OBJS)
 	$(ECHO) "  [LD] $@"
-	@$(file > bootloader_obj_list.lst,$^)
-	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ @bootloader_obj_list.lst $(LIBS)
+	@$(file > ./bootloader_obj_list.lst,$^)
+	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ @./bootloader_obj_list.lst $(LIBS)
 	$(RM) $(call FixPath,bootloader_obj_list.lst)
 
 $(TRX_ID).handbook:
