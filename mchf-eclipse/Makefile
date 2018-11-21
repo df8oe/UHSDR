@@ -196,7 +196,7 @@ OS = @${PREFIX}/bin/arm-none-eabi-size
 HEX2DFU = $(ROOTLOC)/support/hex2dfu/hex2dfu.py
 
 ifdef SystemRoot  # WINxx
-	HEX2DFU = python $(ROOTLOC)/support/hex2dfu/hex2dfu.py
+    HEX2DFU = python $(ROOTLOC)/support/hex2dfu/hex2dfu.py
     CC = arm-none-eabi-gcc
     CXX = arm-none-eabi-g++
     OC = arm-none-eabi-objcopy
@@ -204,7 +204,7 @@ ifdef SystemRoot  # WINxx
 endif
 
 ifdef MSYSTEM
-	HEX2DFU = python $(ROOTLOC)/support/hex2dfu/hex2dfu.py
+    HEX2DFU = python $(ROOTLOC)/support/hex2dfu/hex2dfu.py
     CC = arm-none-eabi-gcc
     CXX = arm-none-eabi-g++
     OC = arm-none-eabi-objcopy
@@ -314,15 +314,15 @@ $(BOOTLOADER):  $(BOOTLOADER).bin $(BOOTLOADER).dfu
 # compilation
 $(FIRMWARE).elf:  $(HAL_OBJS) $(DSPLIB_OBJS) $(OBJS)
 	$(ECHO) "  [LD] $@"
-	@$(file > $(ROOTLOC)/firmware_obj_list.lst,$^)
-	@$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ @$(ROOTLOC)/firmware_obj_list.lst $(LIBS)
+	@$(file > firmware_obj_list.lst,$^)
+	@$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ @firmware_obj_list.lst $(LIBS)
 	$(RM) $(call FixPath,firmware_obj_list.lst)
 
 # compilation
 $(BOOTLOADER).elf:  $(BL_HAL_OBJS) $(BL_OBJS)
 	$(ECHO) "  [LD] $@"
-	@$(file > $(ROOTLOC)/bootloader_obj_list.lst,$^)
-	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ @$(ROOTLOC)/bootloader_obj_list.lst $(LIBS)
+	@$(file > bootloader_obj_list.lst,$^)
+	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ @bootloader_obj_list.lst $(LIBS)
 	$(RM) $(call FixPath,bootloader_obj_list.lst)
 
 $(TRX_ID).handbook:
