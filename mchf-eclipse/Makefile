@@ -316,13 +316,14 @@ $(FIRMWARE).elf:  $(HAL_OBJS) $(DSPLIB_OBJS) $(OBJS)
 	$(ECHO) "  [LD] $@"
 	@$(file > $(ROOTLOC)/firmware_obj_list.lst,$^)
 	@$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ @$(ROOTLOC)/firmware_obj_list.lst $(LIBS)
+	$(RM) $(call FixPath,firmware_obj_list.lst)
 
 # compilation
 $(BOOTLOADER).elf:  $(BL_HAL_OBJS) $(BL_OBJS)
 	$(ECHO) "  [LD] $@"
 	@$(file > $(ROOTLOC)/bootloader_obj_list.lst,$^)
 	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ @$(ROOTLOC)/bootloader_obj_list.lst $(LIBS)
-
+	$(RM) $(call FixPath,bootloader_obj_list.lst)
 
 $(TRX_ID).handbook:
 	@$(ROOTLOC)/support/ui/menu/mk-menu-handbook auto
