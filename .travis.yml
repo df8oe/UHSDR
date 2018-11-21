@@ -5,7 +5,7 @@ env:
 
 sudo: required
 language: generic
-dist: trusty 
+dist: xenial 
 
 addons:
   apt:
@@ -22,8 +22,6 @@ install:
     - export GCC_URL=https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/$GCC_SHORT/$GCC_BASE-linux.tar.bz2
     - if [ ! -e $GCC_DIR/bin/arm-none-eabi-g++ ]; then wget $GCC_URL -O $GCC_ARCHIVE; tar xfj $GCC_ARCHIVE -C $HOME; fi
 script:
-    - sudo apt-get update
-    - sudo apt-get install make
     - mkdir -p mchf-eclipse/build-bl-f4
     - mkdir -p mchf-eclipse/build-fw-f4
     - mkdir -p mchf-eclipse/build-bl-f7
