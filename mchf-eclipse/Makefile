@@ -138,7 +138,7 @@ ifeq ($(BUILDFOR),F4)
 $(BOOTLOADER).elf : CFLAGS = ${BASECFLAGS_F4} -Os -DBOOTLOADER_BUILD
 $(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F4} -O2
 $(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F4} -T$(LINKERLOC)/arm-gcc-link-bootloader_f4.ld
-$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(LINKERLOC)/arm-gcc-link_f4_flash512k.ld
+$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(LINKERLOC)/arm-gcc-link_f4_flash1024k.ld
 	
 
 

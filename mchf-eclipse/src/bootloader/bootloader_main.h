@@ -25,8 +25,17 @@ void BL_Application();
 int bootloader_main();
 void bootTypeSelector();
 void mchfBl_CheckAndGoForDfuBoot();
+void mchfBl_CheckAndGoForNormalBoot();
 void BL_InfoScreen();
 void BL_PrintLine(const char* txt);
+
+enum
+{
+    BOOT_CLEARED = 0,
+    BOOT_REBOOT = 0x55, // this command can be issue also by the firmware indicate immediate start
+    BOOT_DFU = 0x99,
+    BOOT_FIRMWARE = 0x66993300,
+};
 
 #ifdef __cplusplus
 }

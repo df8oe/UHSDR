@@ -94,6 +94,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 #ifdef BOOTLOADER_BUILD
   mchfBl_CheckAndGoForDfuBoot();
+  mchfBl_CheckAndGoForNormalBoot();
   //  we need to do this as early as possible
 #endif
   /* USER CODE END 1 */
