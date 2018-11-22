@@ -9,6 +9,7 @@
 # Rev. 2016-04-06 cleanup - Stephan HB9ocq
 # Rev. 06/12/2016 possibility of choosing individual toolchain - Andreas Richter DF8OE
 # Rev. 2017-01-06 HB9ocq - added versioning of build: extracted from source, propagated to env.vars
+# Rev. 20/11/2018 RV9YW (m-chichikalov) - fixed limitation of parameter length on cmd.exe windows by passing all obj. as one file to linker
 
 #  -*- makefile -*-
 # if you want to build in a different directory than this one
@@ -195,6 +196,7 @@ OS = @${PREFIX}/bin/arm-none-eabi-size
 HEX2DFU = $(ROOTLOC)/support/hex2dfu/hex2dfu.py
 
 ifdef SystemRoot  # WINxx
+    HEX2DFU = python $(ROOTLOC)/support/hex2dfu/hex2dfu.py
     CC = arm-none-eabi-gcc
     CXX = arm-none-eabi-g++
     OC = arm-none-eabi-objcopy
@@ -202,6 +204,7 @@ ifdef SystemRoot  # WINxx
 endif
 
 ifdef MSYSTEM
+    HEX2DFU = python $(ROOTLOC)/support/hex2dfu/hex2dfu.py
     CC = arm-none-eabi-gcc
     CXX = arm-none-eabi-g++
     OC = arm-none-eabi-objcopy
@@ -221,6 +224,9 @@ else ifeq ($(shell uname), Darwin)
     RM = rm -f
     FixPath = $1
 else ifeq ($(shell uname), CYGWIN_NT-10.0)
+    RM = rm -f
+    FixPath = $1
+else
     RM = rm -f
     FixPath = $1
 endif
@@ -308,13 +314,16 @@ $(BOOTLOADER):  $(BOOTLOADER).bin $(BOOTLOADER).dfu
 # compilation
 $(FIRMWARE).elf:  $(HAL_OBJS) $(DSPLIB_OBJS) $(OBJS)
 	$(ECHO) "  [LD] $@"
-	@$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ $^ $(LIBS)
+	@$(file > ./firmware_obj_list.lst,$^)
+	@$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ @./firmware_obj_list.lst $(LIBS)
+	$(RM) $(call FixPath,firmware_obj_list.lst)
 
 # compilation
 $(BOOTLOADER).elf:  $(BL_HAL_OBJS) $(BL_OBJS)
 	$(ECHO) "  [LD] $@"
-	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ $^ $(LIBS)
-
+	@$(file > ./bootloader_obj_list.lst,$^)
+	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(BOOTLOADER).map -o$@ @./bootloader_obj_list.lst $(LIBS)
+	$(RM) $(call FixPath,bootloader_obj_list.lst)
 
 $(TRX_ID).handbook:
 	@$(ROOTLOC)/support/ui/menu/mk-menu-handbook auto
@@ -345,7 +354,6 @@ clean-libs:
 	# remove libs object files (.o)
 	$(RM) $(call FixPath,$(DSPLIB_OBJS))
 	$(RM) $(call FixPath,$(HAL_OBJS))
-
 
 clean:  clean-firmware clean-bootloader clean-libs
 	# remove the executables, map, dmp and all object files (.o)

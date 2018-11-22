@@ -3,6 +3,7 @@
 *.d
 *~
 *.pyc
+*.lst
 bl-*.bin
 bl-*.dfu
 bl-*.elf
