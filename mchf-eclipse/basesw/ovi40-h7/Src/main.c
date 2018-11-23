@@ -103,7 +103,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 #ifdef BOOTLOADER_BUILD
-  mchfBl_CheckAndGoForDfuBoot();
+    Bootloader_CheckAndGoForBootTarget();
   //  we need to do this as early as possible
 #endif
   /* USER CODE END 1 */
@@ -131,7 +131,7 @@ int main(void)
   SystemClock_Config();
 
 #ifdef BOOTLOADER_BUILD
-  bootloader_main();
+  Bootloader_Main();
 #else
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
@@ -189,7 +189,7 @@ int main(void)
     MX_USB_HOST_Process();
 
   /* USER CODE BEGIN 3 */
-    BL_Application();
+    Bootloader_UsbHostApplication();
 
   }
 #endif

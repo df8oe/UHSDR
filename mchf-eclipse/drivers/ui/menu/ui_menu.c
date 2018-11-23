@@ -480,7 +480,6 @@ void __attribute__ ((noinline)) UiDriverMenuMapStrings(char* output, uint32_t va
     strcpy(output,(value <= string_max)?strings[value]:"UNDEFINED");
 }
 
-
 /**
  * @returns: information for requested item as string. Do not write to this string.
  */
@@ -609,36 +608,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_BL_VERSION:
     {
-        outs = "Unknown BL";
-
-        // We search for string "Version: " in bootloader memory
-        // this assume the bootloader starting at 0x8000000 and being followed by the virtual eeprom
-        // which starts at EEPROM_START_ADDRESS
-        for(uint8_t* begin = (uint8_t*)0x8000000; begin < (uint8_t*)EEPROM_START_ADDRESS-8; begin++)
-        {
-            if (memcmp("Version: ",begin,9) == 0)
-            {
-                snprintf(out,32, "%s", &begin[9]);
-                outs = out;
-                break;
-            }
-            else
-            {
-                if (memcmp("M0NKA 2",begin,7) == 0)
-                {
-                    if (begin[11] == 0xb5)
-                    {
-                        outs = "M0NKA 0.0.0.9";
-                        break;
-                    }
-                    else if (begin[11] == 0xd1)
-                    {
-                        outs = "M0NKA 0.0.0.14";
-                        break;
-                    }
-                }
-            }
-        }
+        outs = Board_BootloaderVersion();
     }
     break;
     case INFO_FW_VERSION:

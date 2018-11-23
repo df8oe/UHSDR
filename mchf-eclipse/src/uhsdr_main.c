@@ -581,6 +581,14 @@ int mchfMain(void)
     UiDriver_StartupScreen_LogIfProblem(ts.codec_present == false,
             "Audiocodec WM8731 NOT detected!");
 
+    const char* bl_version = Board_BootloaderVersion();
+
+    UiDriver_StartupScreen_LogIfProblem(
+            (bl_version[0] == '1' || bl_version[0] == '2' || bl_version[0] == '3' || bl_version[0] == '4')  && bl_version[1] == '.',
+
+                "Upgrade bootloader to 5.0.1 or newer");
+
+
     AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
     AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
     AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency

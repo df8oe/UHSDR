@@ -76,9 +76,9 @@ void FlashFail_Handler(mchf_bootloader_error_t redCount)
     char txt[16] = "Error Code  X";
     txt[12] = redCount + '0';
 
-    BL_PrintLine("");
-    BL_PrintLine(txt);
-    BL_PrintLine(error_help[redCount]);
+    Bootloader_PrintLine("");
+    Bootloader_PrintLine(txt);
+    Bootloader_PrintLine(error_help[redCount]);
 
 
     while(1)

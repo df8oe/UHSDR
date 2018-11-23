@@ -136,14 +136,14 @@ static void Debug_FaultGetRegistersFromStack( uint32_t *pulFaultStackAddress, ui
 away as the variables never actually get used.  If the debugger won't show the
 values of the variables, make them global my moving their declaration outside
 of this function. */
-volatile uint32_t r0;
-volatile uint32_t r1;
-volatile uint32_t r2;
-volatile uint32_t r3;
-volatile uint32_t r12;
-volatile uint32_t lr; /* Link register. */
-volatile uint32_t pc; /* Program counter. */
-volatile uint32_t psr;/* Program status register. */
+volatile uint32_t r0  __attribute__ ((unused));
+volatile uint32_t r1 __attribute__ ((unused));
+volatile uint32_t r2 __attribute__ ((unused));
+volatile uint32_t r3 __attribute__ ((unused));
+volatile uint32_t r12 __attribute__ ((unused));
+volatile uint32_t lr __attribute__ ((unused)); /* Link register. */
+volatile uint32_t pc __attribute__ ((unused)); /* Program counter. */
+volatile uint32_t psr __attribute__ ((unused));/* Program status register. */
 
     r0 = pulFaultStackAddress[ 0 ];
     r1 = pulFaultStackAddress[ 1 ];
