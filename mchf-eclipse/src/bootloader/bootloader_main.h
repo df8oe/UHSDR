@@ -21,13 +21,10 @@ extern "C" {
 #endif
 
 
-void BL_Application();
-int bootloader_main();
-void bootTypeSelector();
-void mchfBl_CheckAndGoForDfuBoot();
-void mchfBl_CheckAndGoForNormalBoot();
-void BL_InfoScreen();
-void BL_PrintLine(const char* txt);
+void Bootloader_UsbHostApplication();
+int  Bootloader_Main();
+void Bootloader_CheckAndGoForBootTarget();
+void Bootloader_PrintLine(const char* txt);
 
 enum
 {

@@ -1245,7 +1245,7 @@ inline bool Board_DitLinePressed() {
 unsigned int Board_RamSizeGet();
 void Board_RamSizeDetection();
 void Board_TouchscreenInit();
-
+const char* Board_BootloaderVersion();
 // in main.c
 void CriticalError(ulong error);
 

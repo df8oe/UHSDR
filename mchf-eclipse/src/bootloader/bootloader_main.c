@@ -35,7 +35,7 @@ char USBDISKPath[4];          /* USB Host logical drive path */
 bool boot_failed;
 
 extern USBH_HandleTypeDef hUsbHostHS;
-static uint8_t mcHF_USBConnected()
+static uint8_t Bootloader_USBConnected()
 {
     return hUsbHostHS.device.is_connected;
 }
@@ -56,7 +56,7 @@ static const char*  bl_help[] =
 };
 
 
-static void BL_DisplayInit()
+static void Bootloader_DisplayInit()
 {
     MX_DMA_Init();
     MX_SPI2_Init();
@@ -84,31 +84,31 @@ static void BL_DisplayInit()
 // bin rw: 0 1 2 3 4
 // dfu     0 1 5 4 6 7 8 9
 
-void BL_InfoScreen()
+static void Bootloader_InfoScreen()
 {
-    BL_DisplayInit();
-    BL_PrintLine(bl_help[0]);
-    BL_PrintLine(bl_help[1]);
-    BL_PrintLine(bl_help[2]);
-    BL_PrintLine(bl_help[4]);
-    BL_PrintLine(bl_help[3]);
-    BL_PrintLine(bl_help[4]);
+    Bootloader_DisplayInit();
+    Bootloader_PrintLine(bl_help[0]);
+    Bootloader_PrintLine(bl_help[1]);
+    Bootloader_PrintLine(bl_help[2]);
+    Bootloader_PrintLine(bl_help[4]);
+    Bootloader_PrintLine(bl_help[3]);
+    Bootloader_PrintLine(bl_help[4]);
 }
 
-void BL_InfoScreenDFU()
+static void Bootloader_InfoScreenDFU()
 {
-    BL_DisplayInit();
-    BL_PrintLine(bl_help[0]);
-    BL_PrintLine(bl_help[1]);
-    BL_PrintLine(bl_help[5]);
-    BL_PrintLine(bl_help[4]);
-    BL_PrintLine(bl_help[6]);
-    BL_PrintLine(bl_help[7]);
-    BL_PrintLine(bl_help[8]);
-    BL_PrintLine(bl_help[9]);
+    Bootloader_DisplayInit();
+    Bootloader_PrintLine(bl_help[0]);
+    Bootloader_PrintLine(bl_help[1]);
+    Bootloader_PrintLine(bl_help[5]);
+    Bootloader_PrintLine(bl_help[4]);
+    Bootloader_PrintLine(bl_help[6]);
+    Bootloader_PrintLine(bl_help[7]);
+    Bootloader_PrintLine(bl_help[8]);
+    Bootloader_PrintLine(bl_help[9]);
 }
 
-void BL_Idle_Application(void)
+static void Bootloader_UsbHost_Idle()
 {
     static bool power_was_up = false;
     static uint32_t tick;
@@ -135,12 +135,12 @@ void BL_Idle_Application(void)
 
 }
 
-int BL_MSC_Application(void)
+static int Bootloader_UsbMSCDevice_Application(void)
 {
 
-    mcHF_PowerHoldOn(); // make sure we have uninterrupted power
+    Bootloader_PowerHoldOn(); // make sure we have uninterrupted power
 
-    BL_PrintLine("USB Drive detected.");
+    Bootloader_PrintLine("USB Drive detected.");
     /* Register the file system object to the FatFs module */
     if(f_mount(&USBDISKFatFs, (TCHAR const*)USBDISKPath, 0) != FR_OK)
     {
@@ -155,28 +155,28 @@ int BL_MSC_Application(void)
         /* Reads all flash memory */
 		if(was_download)
 		{
-        BL_PrintLine("Firmware will be updated...");
+        Bootloader_PrintLine("Firmware will be updated...");
 		}
-        BL_PrintLine("Saving Flash to \"" UPLOAD_FILE  "\"...");
+        Bootloader_PrintLine("Saving Flash to \"" UPLOAD_FILE  "\"...");
         COMMAND_UPLOAD();
 
         /* Check if BAND- Button was pressed */
         if (was_download)
         {
             /* Writes Flash memory */
-            BL_PrintLine("Updating firmware using \"" DOWNLOAD_FILE "\"...");
+            Bootloader_PrintLine("Updating firmware using \"" DOWNLOAD_FILE "\"...");
             COMMAND_DOWNLOAD();
         }
         else
         {
-            BL_PrintLine("Skipping firmware update.");
+            Bootloader_PrintLine("Skipping firmware update.");
         }
 
-        BL_PrintLine("");
-        BL_PrintLine("Finished.");
-        BL_PrintLine("");
-        BL_PrintLine("Remove drive or press Band- to reboot.");
-        BL_PrintLine("Press Power to switch off.");
+        Bootloader_PrintLine("");
+        Bootloader_PrintLine("Finished.");
+        Bootloader_PrintLine("");
+        Bootloader_PrintLine("Remove drive or press Band- to reboot.");
+        Bootloader_PrintLine("Press Power to switch off.");
 
         // if we don't have a display, turn off backlight
         if (mchf_display.DeviceCode == 0x0000)
@@ -189,7 +189,7 @@ int BL_MSC_Application(void)
         {}
 
         /* Waiting User Button Pressed or usb drive removed. If drive is removed, we go straight to reboot */
-        while ((mchfBl_ButtonGetState(BUTTON_BANDM) == 1) && mcHF_USBConnected() != 0)
+        while ((mchfBl_ButtonGetState(BUTTON_BANDM) == 1) && Bootloader_USBConnected() != 0)
         {
             /* switch off if power button is pressed */
             if(mchfBl_ButtonGetState(BUTTON_POWER) == 0)
@@ -199,7 +199,7 @@ int BL_MSC_Application(void)
         }
 
         /* Waiting User Button Released or usb drive removed.  If drive is removed, we go straight to reboot */
-        while ((mchfBl_ButtonGetState(BUTTON_BANDM) == 0) && mcHF_USBConnected() != 0)
+        while ((mchfBl_ButtonGetState(BUTTON_BANDM) == 0) && Bootloader_USBConnected() != 0)
         {}
 
         /* Jumps to user application code located in the internal Flash memory */
@@ -251,7 +251,7 @@ bool uhsdrBl_IsValidApplication(uint32_t ApplicationAddress)
     return  APPLICATION_PTR[0] <= (linker_ram_start_addr + (1024 * 1024)) && ( APPLICATION_PTR[0] >= linker_ram_start_addr);
 }
 
-void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
+void UhsdrBl_JumpToApplication(uint32_t ApplicationAddress)
 {
 
     if (uhsdrBl_IsValidApplication(ApplicationAddress))
@@ -264,7 +264,7 @@ void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
     }
 }
 
-int bootloader_main()
+int Bootloader_Main()
 {
     double i,border;
 	/* prevention of erratical boot loop */
@@ -295,12 +295,16 @@ int bootloader_main()
     }
 #else
 #endif
-    mcHF_PowerHoldOn();
+    Bootloader_PowerHoldOn();
     HAL_Delay(50);
 
-    if (mchfBl_ButtonGetState(BUTTON_BANDP) == 0)
+    if (boot_failed == true)
     {
-        BL_InfoScreenDFU();
+        BootFail_Handler(3);
+    }
+    else if (mchfBl_ButtonGetState(BUTTON_BANDP) == 0)
+    {
+        Bootloader_InfoScreenDFU();
         // BANDP pressed, DFU boot requested
         while (mchfBl_ButtonGetState(BUTTON_BANDP) == 0) {};
         COMMAND_ResetMCU(BOOT_DFU);
@@ -318,7 +322,8 @@ int bootloader_main()
         // we had that and it is pain to debug, see #1610 in GitHub!
         if (uhsdrBl_IsValidApplication(APPLICATION_ADDRESS))
         {
-            COMMAND_ResetMCU(BOOT_FIRMWARE);
+            HAL_SuspendTick();
+            UhsdrBl_JumpToApplication(APPLICATION_ADDRESS);
         }
         else
         {
@@ -328,7 +333,7 @@ int bootloader_main()
     }
 
     /* Init upgrade mode display */
-    BL_InfoScreen();
+    Bootloader_InfoScreen();
     mchfBl_PinOn(BACKLIGHT);
     // now give user a chance to let go off the BAND- button
     HAL_Delay(3000);
@@ -338,12 +343,12 @@ int bootloader_main()
 
 extern ApplicationTypeDef Appli_state;
 
-void BL_Application()
+void Bootloader_UsbHostApplication()
 {
     switch(Appli_state)
     {
     case APPLICATION_READY:
-      BL_MSC_Application();
+      Bootloader_UsbMSCDevice_Application();
       Appli_state = APPLICATION_IDLE;
       break;
     case APPLICATION_DISCONNECT:
@@ -356,27 +361,14 @@ void BL_Application()
 
     }
 
-    BL_Idle_Application();
-}
-
-
-void mchfBl_CheckAndGoForNormalBoot()
-{
-
-    if(*(uint32_t*)(SRAM2_BASE) == BOOT_FIRMWARE)
-    {
-        *(uint32_t*)(SRAM2_BASE) = BOOT_CLEARED;
-        mchfBl_JumpToApplication(APPLICATION_ADDRESS);
-        // start the STM32Fxxx bootloader at address dfu_boot_start;
-        boot_failed = true;
-    }
+    Bootloader_UsbHost_Idle();
 }
 
 /*
  * This does not work if data cache is enabled, since we then need to flush the SRAM2_BASE write
  * but here flash should not be enabled anyway!
  */
-void mchfBl_CheckAndGoForDfuBoot()
+void Bootloader_CheckAndGoForBootTarget()
 {
 
     if(*(uint32_t*)(SRAM2_BASE) == BOOT_DFU)
@@ -405,16 +397,25 @@ void mchfBl_CheckAndGoForDfuBoot()
 #elif defined(STM32H7)
         const uint32_t dfu_boot_start = 0x1FF09800;
 #endif
-        mchfBl_JumpToApplication(dfu_boot_start);
+        UhsdrBl_JumpToApplication(dfu_boot_start);
         // start the STM32Fxxx bootloader at address dfu_boot_start;
     }
+
+    if(*(uint32_t*)(SRAM2_BASE) == BOOT_FIRMWARE)
+    {
+        *(uint32_t*)(SRAM2_BASE) = BOOT_CLEARED;
+        UhsdrBl_JumpToApplication(APPLICATION_ADDRESS);
+        // start the STM32Fxxx bootloader at address dfu_boot_start;
+        boot_failed = true;
+    }
+
 }
 
 #include "uhsdr_board_config.h"
 
 static uint8_t current_line;
 
-void BL_PrintLine(const char* txt)
+void Bootloader_PrintLine(const char* txt)
 {
     UiLcdHy28_PrintText(4,4+current_line*16,txt,Yellow,Black,0);
     current_line++;
