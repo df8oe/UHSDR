@@ -1742,6 +1742,8 @@ static void UiDriver_CreateDesktop()
 	//UiSpectrum_GetSpectrumGraticule()->y=ts.graticulePowerupYpos;
 	// Spectrum scope
 	UiSpectrum_Init();
+	//*(volatile uint32_t*)(0x20000000 + 0x0002FFFC) = 123;
+
 
 	UiDriver_RefreshEncoderDisplay();
 

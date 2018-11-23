@@ -32,6 +32,8 @@ FATFS USBDISKFatFs;           /* File system object for USB disk logical drive *
 FIL MyFile;                   /* File object */
 char USBDISKPath[4];          /* USB Host logical drive path */
 
+bool boot_failed;
+
 extern USBH_HandleTypeDef hUsbHostHS;
 static uint8_t mcHF_USBConnected()
 {
@@ -201,7 +203,7 @@ int BL_MSC_Application(void)
         {}
 
         /* Jumps to user application code located in the internal Flash memory */
-        COMMAND_ResetMCU(0x55);
+        COMMAND_ResetMCU(BOOT_FIRMWARE);
     }
 
     // this below is a trick to get sbrk() linked in at the right time so that
@@ -234,13 +236,28 @@ void BSP_Init(void)
 extern const uint32_t* _linker_ram_start; // we get this from the linker script
 static const uint32_t linker_ram_start_addr = (uint32_t)&_linker_ram_start;
 
+/**
+ * We check whether the supplied address is pointing to a valid vector table
+ * Checks are simple (right now we just look if the stack pointer points in the region of RAM)
+ *
+ * @param ApplicationAddress an 32 bit value pointing to the start of a vector table
+ * @return true we should try to use this address
+ */
+bool uhsdrBl_IsValidApplication(uint32_t ApplicationAddress)
+{
+    // TODO: Better checks
+    // check if the stackpointer points into a likely ram area (normal RAM start + 1MB)
+    uint32_t* const APPLICATION_PTR = (uint32_t*)ApplicationAddress;
+    return  APPLICATION_PTR[0] <= (linker_ram_start_addr + (1024 * 1024)) && ( APPLICATION_PTR[0] >= linker_ram_start_addr);
+}
+
 void mchfBl_JumpToApplication(uint32_t ApplicationAddress)
 {
-    uint32_t* const APPLICATION_PTR = (uint32_t*)ApplicationAddress;
 
-    // check if the stackpointer points into a likely ram area (normal RAM start + 1MB)
-    if (APPLICATION_PTR[0] <= (linker_ram_start_addr + (1024 * 1024)) && ( APPLICATION_PTR[0] >= linker_ram_start_addr))
+    if (uhsdrBl_IsValidApplication(ApplicationAddress))
     {
+        uint32_t* const APPLICATION_PTR = (uint32_t*)ApplicationAddress;
+
         __set_MSP(APPLICATION_PTR[0]);
         /* Jump to user application */
         ((pFunction) APPLICATION_PTR[1])();
@@ -251,7 +268,7 @@ int bootloader_main()
 {
     double i,border;
 	/* prevention of erratical boot loop */
-	if( *(__IO uint32_t*)(SRAM2_BASE) != 0x55)
+	if( *(__IO uint32_t*)(SRAM2_BASE) != BOOT_REBOOT)
 	{
   	  border = 300000; // long delay if firmware was not running before or at powerdown
   	}
@@ -286,7 +303,7 @@ int bootloader_main()
         BL_InfoScreenDFU();
         // BANDP pressed, DFU boot requested
         while (mchfBl_ButtonGetState(BUTTON_BANDP) == 0) {};
-        COMMAND_ResetMCU(0x99);
+        COMMAND_ResetMCU(BOOT_DFU);
     }
     /* Test if BAND- button on mchf is NOT pressed */
     else if (mchfBl_ButtonGetState(BUTTON_BANDM) == 1)
@@ -296,8 +313,17 @@ int bootloader_main()
            We do that be reading the stack pointer value stored at APPLICATION_ADDRESS
            and roughly check if it points to a RAM SPACE address
          */
-        mchfBl_JumpToApplication(APPLICATION_ADDRESS);
-        BootFail_Handler(2);
+        // we go through restart here to have all interrupts turned off and everything as
+        // pristine as it gets after reset, avoids issues with enabled interrupts etc.
+        // we had that and it is pain to debug, see #1610 in GitHub!
+        if (uhsdrBl_IsValidApplication(APPLICATION_ADDRESS))
+        {
+            COMMAND_ResetMCU(BOOT_FIRMWARE);
+        }
+        else
+        {
+            BootFail_Handler(2);
+        }
         // never reached, is endless loop
     }
 
@@ -333,6 +359,19 @@ void BL_Application()
     BL_Idle_Application();
 }
 
+
+void mchfBl_CheckAndGoForNormalBoot()
+{
+
+    if(*(uint32_t*)(SRAM2_BASE) == BOOT_FIRMWARE)
+    {
+        *(uint32_t*)(SRAM2_BASE) = BOOT_CLEARED;
+        mchfBl_JumpToApplication(APPLICATION_ADDRESS);
+        // start the STM32Fxxx bootloader at address dfu_boot_start;
+        boot_failed = true;
+    }
+}
+
 /*
  * This does not work if data cache is enabled, since we then need to flush the SRAM2_BASE write
  * but here flash should not be enabled anyway!
@@ -340,9 +379,9 @@ void BL_Application()
 void mchfBl_CheckAndGoForDfuBoot()
 {
 
-    if(*(uint32_t*)(SRAM2_BASE) == 0x99)
+    if(*(uint32_t*)(SRAM2_BASE) == BOOT_DFU)
     {
-        *(uint32_t*)(SRAM2_BASE) = 0;
+        *(uint32_t*)(SRAM2_BASE) = BOOT_CLEARED;
 #if defined(STM32F4)
         __HAL_REMAPMEMORY_SYSTEMFLASH();
 
