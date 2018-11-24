@@ -280,7 +280,8 @@ void COMMAND_ResetMCU(uint32_t code)
 {
     *(__IO uint32_t*)(SRAM2_BASE) = code;
     __DSB();
-#if defined(STM32F7) || defined(STM32H7)
+#if defined(STM32F7)
+    // || defined(STM32H7) H7 crashes here if we would call SCB_CleanDCache since we do not enable it in the first place in main.c!
     SCB_CleanDCache();
 #endif
     /* Software reset */
