@@ -198,7 +198,7 @@ typedef struct SpectrumDisplay
     uint16_t    Old_PosData[SPECTRUM_WIDTH_MAX];
 
     // Current data ptr
-    ulong   samp_ptr;
+    uint32_t   samp_ptr;
     volatile bool    reading_ringbuffer;
     // if the user level code wants to read the ring buffer
     // simply set this, and the audio driver will stop writing
@@ -243,13 +243,13 @@ typedef struct SpectrumDisplay
     uint8_t  waterfall[(WATERFALL_HEIGHT+10)*256];    // circular buffer used for storing waterfall data - remember to increase this if the waterfall is made larger!
     uint32_t waterfall_frequencies[(WATERFALL_HEIGHT+10)]; // we reserve hopefully enough frequency stores here. We store for each line in waterfall the center frequency of it.
     //uint8_t wfall_DrawDirection;	//0=upward (water fountain), 1=downward (real waterfall)
-    uint16_t wfall_line;        // pointer to current line of waterfall data
-    uint16_t wfall_size;        // vertical size of the waterfall data (number of stored fft results)
+    uint32_t wfall_line;        // pointer to current line of waterfall data
+    uint32_t wfall_size;        // vertical size of the waterfall data (number of stored fft results)
     //uint16_t wfall_disp_lines;        // vertical size of the waterfall on display
-    uint16_t wfall_ystart;
+    uint32_t wfall_ystart;
 
-    uint16_t scope_size;
-    uint16_t scope_ystart;
+    uint32_t scope_size;
+    uint32_t scope_ystart;
 
     float32_t hz_per_pixel;        // how many Hertz is one pixel in the spectrum
     float32_t rx_carrier_pos;      // where is the current receiving frequency carrier (in pixels)
