@@ -62,7 +62,8 @@ const arm_fir_interpolate_instance_f32 FirRxInterpolate=
         -0.072726968058963559,
         -0.031602889405696735,
         -0.009023372039440496
-    }
+    },
+    .pState = NULL
 };
 
 /*#####################################################
@@ -92,8 +93,8 @@ const arm_fir_interpolate_instance_f32 FirRxInterpolate_4_5k=
         0.292367020487055873,
         0.292367020487055873,
         0.210149639888675743
-
-    }
+    },
+    .pState = NULL
 };
 
 const arm_fir_interpolate_instance_f32 FirRxInterpolate_4_10k=
@@ -105,7 +106,8 @@ const arm_fir_interpolate_instance_f32 FirRxInterpolate_4_10k=
         0.460435107346899464,
         0.460435107346899464,
         0.139302961114601442
-    }
+    },
+    .pState = NULL
 };
 
 // FIXME: Is this the right file for a FreeDV TX filter?
@@ -147,7 +149,8 @@ const arm_fir_instance_f32 Fir_TxFreeDV_Interpolate =
     	-0.005575655191465650,
     	-0.003185783059285283,
     	-0.001351058376639693
-    }
+    },
+    .pState = NULL
 };
 /*
 

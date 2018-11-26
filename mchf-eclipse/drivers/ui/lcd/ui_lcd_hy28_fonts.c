@@ -1825,12 +1825,11 @@ const sFONT GL_Font16x24_8b_Square =
     .table = GL_ASCII16x24_8b_Square,
     .Width = 15, /* Width */
     .Height = 24, /* Height */
-    .maxCode = 0x7f,
-	.BitCount = 8,
-	.heightTable = GL_Font16x24_8b_Square_H,
-	.widthTable = GL_Font16x24_8b_Square_W,
-	.firstCode = 0x2e,
-	.maxCode = (46+12),
-	.offsetTable = GL_Font16x24_8b_Square_Offset
+    .BitCount = 8,
+    .heightTable = GL_Font16x24_8b_Square_H,
+    .widthTable = GL_Font16x24_8b_Square_W,
+    .firstCode = 0x2e,
+    .maxCode = (0x2e + 12),
+    .offsetTable = GL_Font16x24_8b_Square_Offset
 };
 #endif

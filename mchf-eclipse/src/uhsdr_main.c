@@ -404,7 +404,7 @@ void MiscInit(void)
 }
 
 
-const static uint8_t canary_word[16] = { 'D', 'O',' ' ,'N', 'O', 'T', ' ', 'O', 'V', 'E', 'R' , 'W', 'R' , 'I', 'T','E' };
+static const uint8_t canary_word[16] = { 'D', 'O',' ' ,'N', 'O', 'T', ' ', 'O', 'V', 'E', 'R' , 'W', 'R' , 'I', 'T','E' };
 uint8_t* canary_word_ptr;
 
 // in hex 44 4f 20 4e 4f 54 20 4f 56 45 52 57 52 49 54 45

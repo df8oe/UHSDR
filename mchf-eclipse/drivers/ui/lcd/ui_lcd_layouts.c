@@ -173,7 +173,7 @@ static const touchaction_descr_t R480320_touchactions_normal[] =
 // this is the map for menu mode, right now only used for debugging/experimental purposes
 static const touchaction_descr_t R480320_touchactions_menu[] =
 {
-		{ { R480320_SM_IND_X+R480320_SM_IND_W-16,R480320_SM_IND_Y,16,16 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
+		{ { R480320_SM_IND_X+R480320_SM_IND_W-16,R480320_SM_IND_Y,16,16 }, UiAction_ChangeDebugInfoDisplay, NULL}, // S-Meter db: toggle show tp coordinates
 };
 
 static const touchaction_list_descr_t R480320_touch_regions[] =
@@ -207,7 +207,7 @@ static const touchaction_descr_t R320240_touchactions_normal[] =
 // this is the map for menu mode, right now only used for debugging/experimental purposes
 static const touchaction_descr_t R320240_touchactions_menu[] =
 {
-		{ { R320240_SM_IND_X+R320240_SM_IND_W-16,R320240_SM_IND_Y,16,16 }, UiAction_ChangeDebugInfoDisplay}, // S-Meter db: toggle show tp coordinates
+		{ { R320240_SM_IND_X+R320240_SM_IND_W-16,R320240_SM_IND_Y,16,16 }, UiAction_ChangeDebugInfoDisplay, NULL}, // S-Meter db: toggle show tp coordinates
 };
 
 static const touchaction_list_descr_t R320240__touch_regions[] =

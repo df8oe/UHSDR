@@ -52,6 +52,7 @@ const arm_fir_decimate_instance_f32 FirRxDecimateMinLPF =
         0.135814345129,
         0.5586516940301,
         0.4419794765896
-    }
+    },
+    .pState = NULL
 };
 

@@ -221,7 +221,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeInt(int var, uint32_t mode
     return old_val != *val_ptr;
 }
 
-bool inline UiDriverMenuItemChangeInt32(int var, uint32_t mode, volatile int32_t* val_ptr,int val_min,int val_max, int val_default, uint32_t increment)
+inline bool UiDriverMenuItemChangeInt32(int var, uint32_t mode, volatile int32_t* val_ptr,int val_min,int val_max, int val_default, uint32_t increment)
 {
     return UiDriverMenuItemChangeInt(var, mode, (int*)val_ptr,val_min,val_max, val_default, increment);
 }
@@ -592,7 +592,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         const char* i2c_size_unit = "K";
         uint i2c_size = 0;
 
-        if(ts.ser_eeprom_type >= 0 && ts.ser_eeprom_type < SERIAL_EEPROM_DESC_NUM)
+        if(ts.ser_eeprom_type < SERIAL_EEPROM_DESC_NUM)
         {
             i2c_size = SerialEEPROM_eepromTypeDescs[ts.ser_eeprom_type].size / 1024;
         }

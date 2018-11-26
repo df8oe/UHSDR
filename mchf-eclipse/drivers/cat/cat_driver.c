@@ -1344,6 +1344,7 @@ void CatDriver_HandleProtocol()
             ft817.cloneout_state = CLONEOUT_INIT;
             ft817.clonein_state = CLONEIN_INIT;
             ft817.state = CAT_CAT;
+            /* fall through */  // this is for the compiler, the following comment is for Eclipse
             /* no break */
         case CAT_CAT:
             CatDriver_HandleCommands();

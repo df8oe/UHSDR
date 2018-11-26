@@ -77,6 +77,7 @@ static void UiVk_DrawButton(UiArea_t* Btn_area, bool Warning, uint8_t Vbtn_State
 		col_Text=text_color_Pressed;
 		break;
 	case Vbtn_State_Normal:
+	default:
 		col_LeftUP=Col_BtnLightLeftTop;
 		col_RightBot=Col_BtnLightRightBot;
 		col_Bcgr=Warning?Col_Warning:Col_BtnForeCol;
