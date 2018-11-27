@@ -45,10 +45,9 @@ typedef struct {
 extern EventProfile_t eventProfile;
 
 #define PROFILE_EVENTS
-
 inline void profileEvent(const ProfiledEventNames pe) {
 #ifdef PROFILE_EVENTS
-    if (pe<EventProfileMax && pe >= 0) {
+    if (pe<EventProfileMax) {
         eventProfile.event[pe].count++;
     }
 #endif
@@ -125,7 +124,7 @@ inline void profileTimedEventInit()
 inline void profileTimedEventStart(const ProfiledEventNames pe)
 {
 #ifdef PROFILE_EVENTS
-    if (pe<EventProfileMax && pe >= 0) {
+    if (pe<EventProfileMax) {
         eventProfile.event[pe].start = profileCycleCount_get();
     }
 #endif
@@ -136,7 +135,7 @@ inline void profileTimedEventStop(const ProfiledEventNames pe)
 
 #ifdef PROFILE_EVENTS
     uint32_t stop = profileCycleCount_get();
-    if (pe<EventProfileMax && pe >= 0) {
+    if (pe<EventProfileMax) {
         eventProfile.event[pe].stop = stop;
         eventProfile.event[pe].count++;
         eventProfile.event[pe].duration += (eventProfile.event[pe].stop-eventProfile.event[pe].start);
@@ -147,7 +146,7 @@ inline void profileTimedEventStop(const ProfiledEventNames pe)
 inline void profileTimedEventReset(const ProfiledEventNames pe)
 {
 #ifdef PROFILE_EVENTS
-    if (pe<EventProfileMax && pe >= 0) {
+    if (pe<EventProfileMax) {
         eventProfile.event[pe].start = 0;
         eventProfile.event[pe].stop = 0;
         eventProfile.event[pe].count = 0;
@@ -160,7 +159,7 @@ inline  ProfilingTimedEvent* profileTimedEventGet(const ProfiledEventNames pe)
 {
     ProfilingTimedEvent* pe_ptr = NULL;
 #ifdef PROFILE_EVENTS
-    if (pe<EventProfileMax && pe >= 0) {
+    if (pe<EventProfileMax) {
         pe_ptr = &eventProfile.event[pe];
     }
 #endif

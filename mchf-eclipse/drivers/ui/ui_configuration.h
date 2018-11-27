@@ -40,8 +40,8 @@ typedef struct
     int32_t val_default;
     int32_t val_min;
     int32_t val_max;
-    uint16_t item_count; // 0 or 1 indicates single value; higher values indicate arrays
-    uint16_t  item_data_spacing; // only used for 32bit values; indicates the distance of the higher 16 bits from the lower 16bits
+    // uint16_t item_count; // 0 or 1 indicates single value; higher values indicate arrays
+    // uint16_t  item_data_spacing; // only used for 32bit values; indicates the distance of the higher 16 bits from the lower 16bits
 } ConfigEntryDescriptor;
 
 const ConfigEntryDescriptor* UiConfiguration_GetEntry(uint16_t id);

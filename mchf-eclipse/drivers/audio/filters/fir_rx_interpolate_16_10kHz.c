@@ -58,6 +58,7 @@ const arm_fir_interpolate_instance_f32 FirRxInterpolate10KHZ=
         -0.7311312926885,
         0.05542105288489,
         0.4430274622578
-    }
+    },
+    .pState = NULL
 };
 

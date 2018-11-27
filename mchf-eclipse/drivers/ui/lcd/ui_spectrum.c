@@ -54,7 +54,7 @@ SpectrumAreas_t slayout;
  * @brief Implements the full calculation of coordinates for a variable sized spectrum display
  * This algorithm can also be used to calculate the layout statically offline (we don't do this yet).
  */
-void UiSpectrum_CalculateLayout(const bool is_big, const bool scope_enabled, const bool wfall_enabled, const UiArea_t* full_ptr, const uint16_t padding)
+void UiSpectrum_CalculateLayout(const bool is_big, const UiArea_t* full_ptr, const uint16_t padding)
 {
 	sd.Slayout=&slayout;
 
@@ -244,7 +244,7 @@ static void		UiSpectrum_CalculateDBm();
 static void UiSpectrum_UpdateSpectrumPixelParameters()
 {
     static uint16_t old_magnify = 0xFF;
-    static bool old_cw_lsb = false;
+    static bool old_lsb = false;
     static uint8_t old_dmod_mode = 0xFF;
     static uint8_t old_iq_freq_mode = 0xFF;
     static uint16_t old_cw_sidetone_freq = 0;
@@ -261,7 +261,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
 
     if (ts.iq_freq_mode != old_iq_freq_mode  || force_update)
     {
-        old_iq_freq_mode = ts.dmod_mode;
+        old_iq_freq_mode = ts.iq_freq_mode;
         force_update = true;
 
         if(!sd.magnify)     // is magnify mode on?
@@ -273,9 +273,11 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
             sd.rx_carrier_pos = slayout.scope.w/2 -0.5;                                // line is always in center in "magnify" mode
         }
     }
-    if (ts.cw_lsb != old_cw_lsb || ts.cw_sidetone_freq != old_cw_sidetone_freq || ts.dmod_mode != old_dmod_mode || ts.digital_mode != old_digital_mode || force_update)
+    bool cur_lsb = RadioManagement_LSBActive(ts.dmod_mode);
+
+    if (cur_lsb != old_lsb || ts.cw_sidetone_freq != old_cw_sidetone_freq || ts.dmod_mode != old_dmod_mode || ts.digital_mode != old_digital_mode || force_update)
     {
-        old_cw_lsb = ts.cw_lsb;
+        old_lsb = cur_lsb;
         old_cw_sidetone_freq = ts.cw_sidetone_freq;
         old_dmod_mode = ts.dmod_mode;
         old_digital_mode = ts.digital_mode;
@@ -319,7 +321,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
                 sd.marker_num = 1;
             }
 
-            for (uint16_t idx; idx < sd.marker_num; idx++)
+            for (uint16_t idx = 0; idx < sd.marker_num; idx++)
             {
                 mode_marker_offset[idx] = (ts.digi_lsb?-1.0:1.0)*(mode_marker[idx] / sd.hz_per_pixel);
             }
@@ -330,7 +332,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
             sd.marker_num = 1;
         }
 
-        for (uint16_t idx; idx < sd.marker_num; idx++)
+        for (uint16_t idx = 0; idx < sd.marker_num; idx++)
         {
             sd.marker_offset[idx] = tx_vfo_offset + mode_marker_offset[idx];
             sd.marker_pos[idx] = sd.rx_carrier_pos + sd.marker_offset[idx];
@@ -341,6 +343,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
         	sd.marker_pos[idx] = slayout.scope.w; // this is an invalid position out of screen
         }
 
+        force_update = false;
     }
 }
 
@@ -686,7 +689,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     const uint16_t spec_height_limit = sd.scope_size - 1;
     const uint16_t spec_top_y = sd.scope_ystart + sd.scope_size;
 
-    uint32_t clr_scope, clr_scope_normal, clr_scope_fltr, clr_scope_fltrbg;
+    uint32_t clr_scope_normal, clr_scope_fltr, clr_scope_fltrbg;
     uint16_t clr_bg;
 
     //calculations of bandwidth highlight parameters and colours
@@ -736,9 +739,9 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     		x_end=right_filter_border_pos;
     	}
 
-    	uint16_t xh;
-    	for(xh=x_start;xh<=x_end;xh++)
+    	for(uint16_t xh=x_start;xh<=x_end;xh++)
     	{
+    	    uint16_t clr_scope;
             if((xh>=left_filter_border_pos)&&(xh<=right_filter_border_pos)) //BW highlight control
             {
             	clr_scope=clr_scope_fltr;
@@ -816,7 +819,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
                             sd.marker_line_pos_prev[idx],
                             spec_top_y - spec_height_limit /* old = max pos */ ,
                             spec_top_y /* new = min pos */,
-                            clr_scope, clr_bg,	//TODO: add highlight color here
+                            clr_scope_normal, clr_bg,	//TODO: add highlight color here
                             false);
 
                     // we erase the memory for this location, so that it is fully redrawn
@@ -859,6 +862,8 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
     // we stop if there is a ptt_request and go straight out of the display update
     for(uint16_t x = slayout.scope.x, idx = 0; ts.ptt_req == false && idx < slayout.scope.w; x++, idx++)
     {
+        uint16_t clr_scope;
+
         if((x>=left_filter_border_pos)&&(x<=right_filter_border_pos)) //BW highlight control
         {
         	clr_scope=clr_scope_fltr;
@@ -1031,7 +1036,7 @@ static void UiSpectrum_InitSpectrumDisplayData()
     // now make sure we fit in
     // please note, this works only if we have enough memory for have the lines
     // otherwise we will reduce size of displayed waterfall
-    if(sd.wfall_size * slayout.scope.w > sizeof(sd.waterfall))
+    if((sd.wfall_size * slayout.scope.w) > sizeof(sd.waterfall))
     {
         //sd.doubleWaterfallLine = 1;
 
@@ -1126,7 +1131,7 @@ static void UiSpectrum_DrawWaterfall()
     	sd.wfall_line++;        // bump to the next line in the circular buffer for next go-around
     }
 
-    uint16_t lptr = sd.wfall_line;      // get current line of "bottom" of waterfall in circular buffer
+    uint32_t lptr = sd.wfall_line;      // get current line of "bottom" of waterfall in circular buffer
 
     sd.wfall_line_update++;                                 // update waterfall line count
     sd.wfall_line_update %= ts.waterfall.vert_step_size;    // clip it to number of lines per iteration
@@ -1553,7 +1558,7 @@ void UiSpectrum_Init()
 #endif
     }
   */
-    UiSpectrum_CalculateLayout(ts.spectrum_size == SPECTRUM_BIG, is_scopemode(), is_waterfallmode(), &ts.Layout->SpectrumWindow, ts.Layout->SpectrumWindowPadding);
+    UiSpectrum_CalculateLayout(ts.spectrum_size == SPECTRUM_BIG, &ts.Layout->SpectrumWindow, ts.Layout->SpectrumWindowPadding);
     UiSpectrum_InitSpectrumDisplayData();
     UiSpectrum_Clear();         // clear display under spectrum scope
     UiSpectrum_CreateDrawArea();

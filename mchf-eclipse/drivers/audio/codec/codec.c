@@ -480,6 +480,7 @@ void Codec_VolumeLineOut(uint8_t txrx_mode)
         Codec_WriteRegister(CODEC_ANA_I2C, W8731_RIGHT_HEADPH_OUT,lov);   // value selected for 0.5VRMS at AGC setting
     }
 #elif defined(UI_BRD_OVI40)
+    UNUSED(txrx_mode); // only needed if we have MCHF_UI
     // we have a special shared lineout/headphone on the OVI40.
     // And since we have a dedidacted IQ codec, there is no need to switch of the lineout or headphones here
     Codec_WriteRegister(CODEC_ANA_I2C, W8731_RIGHT_HEADPH_OUT, lov | W8731_HEADPH_OUT_ZCEN | W8731_HEADPH_OUT_HPBOTH );   // value selected for 0.5VRMS at AGC setting

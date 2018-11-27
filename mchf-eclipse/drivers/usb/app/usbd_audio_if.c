@@ -181,7 +181,7 @@ static void audio_out_put_buffer(int16_t sample)
     }
 }
 
-volatile uint16_t audio_out_buffer_fill()
+uint16_t audio_out_buffer_fill()
 {
     uint16_t temp_head = out_buffer_head;
     return ((((temp_head < out_buffer_tail)?USB_AUDIO_OUT_BUF_SIZE:0) + temp_head) - out_buffer_tail);

@@ -483,31 +483,28 @@ static void CwGen_RemoveClickOnRisingEdge(float *i_buffer,float *q_buffer,ulong 
 static void CwGen_RemoveClickOnFallingEdge(float *i_buffer,float *q_buffer,ulong size)
 {
 	// Do not overload
-	if(ps.sm_tbl_ptr >= 0)
-	{
 		// Fix ptr, so we start from the last element
-		if(ps.sm_tbl_ptr > (CW_SMOOTH_TBL_SIZE - 1))
-		{
-			ps.sm_tbl_ptr = (CW_SMOOTH_TBL_SIZE - 1);
-		}
+    if(ps.sm_tbl_ptr > (CW_SMOOTH_TBL_SIZE - 1))
+    {
+        ps.sm_tbl_ptr = (CW_SMOOTH_TBL_SIZE - 1);
+    }
 
-		for(int i = 0,j = 0; i < size; i++) // iterate over the I&Q audio buffer elements
-		{
-			i_buffer[i] = i_buffer[i] * sm_table[ps.sm_tbl_ptr];
-			q_buffer[i] = q_buffer[i] * sm_table[ps.sm_tbl_ptr];
+    for(int i = 0,j = 0; i < size; i++) // iterate over the I&Q audio buffer elements
+    {
+        i_buffer[i] = i_buffer[i] * sm_table[ps.sm_tbl_ptr];
+        q_buffer[i] = q_buffer[i] * sm_table[ps.sm_tbl_ptr];
 
-			j++;
-			if(j == CW_SMOOTH_LEN)
-			{
-				j = 0;
+        j++;
+        if(j == CW_SMOOTH_LEN)
+        {
+            j = 0;
 
-				if(ps.sm_tbl_ptr > 0) // keep value @ ptr=0 to prevent trailing CW spike
-				{
-					ps.sm_tbl_ptr--;
-				}
-			}
-		}
-	}
+            if(ps.sm_tbl_ptr > 0) // keep value @ ptr=0 to prevent trailing CW spike
+            {
+                ps.sm_tbl_ptr--;
+            }
+        }
+    }
 }
 
 
@@ -727,7 +724,7 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 		if(ps.key_timer < 2)
 		{
 			CwGen_RemoveClickOnFallingEdge(i_buffer,q_buffer,blockSize);
-			if(ps.sm_tbl_ptr <= 0) // end of falling edge when pointer at end of table
+			if(ps.sm_tbl_ptr == 0) // end of falling edge when pointer at end of table
 			{
 				CwGen_SetBreakTime();
 				ps.key_timer = 0;

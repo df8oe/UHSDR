@@ -604,6 +604,7 @@ static bool RttyDecoder_waitForStartBit(float32_t sample) {
 	case 2:
 		wait_for_half = rttyDecoderData.oneBitSampleCount/2;
 		wait_for_start_state ++;
+        /* fall through */ // this is for the compiler, the following comment is for Eclipse
 		/* no break */
 	case 3:
 		wait_for_half--;
@@ -686,14 +687,16 @@ void RttyDecoder_ProcessSample(float32_t sample)
 			default:
 				switch (rttyDecoderData.charSetMode)
 				{
-				case RTTY_MODE_LETTERS:
-					charResult = RTTYLetters[rttyDecoderData.byteResult];
-					break;
 				case RTTY_MODE_SYMBOLS:
 					charResult = RTTYSymbols[rttyDecoderData.byteResult];
 					break;
+                case RTTY_MODE_LETTERS:
+                default:
+                    charResult = RTTYLetters[rttyDecoderData.byteResult];
+                    break;
 				}
 				UiDriver_TextMsgPutChar(charResult);
+				break;
 			}
 			rttyDecoderData.state = RTTY_RUN_STATE_WAIT_START;
 		}
