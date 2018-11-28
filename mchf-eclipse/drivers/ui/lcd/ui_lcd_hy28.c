@@ -2240,7 +2240,7 @@ static void UiLcdHy28_SetCursorA_SSD1289( unsigned short Xpos, unsigned short Yp
 
 const uhsdr_display_info_t display_infos[] = {
         {
-                DISPLAY_NONE,  "No Display", NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0
+                DISPLAY_NONE,  "No Display", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0
         },
 #ifdef USE_DISPLAY_PAR
 #ifdef USE_GFX_ILI9486
@@ -2392,7 +2392,7 @@ const uhsdr_display_info_t display_infos[] = {
         // RPI_SPI NEEDS TO BE LAST IN LIST!!!
 #endif
         {
-                DISPLAY_NUM, "Unknown", NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0
+                DISPLAY_NUM, "Unknown", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0
         }
  };
 
