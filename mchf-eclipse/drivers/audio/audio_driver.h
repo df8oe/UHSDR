@@ -159,6 +159,17 @@ typedef struct
 
 } fm_t;
 
+typedef enum
+{
+  SAM_SIDEBAND_BOTH = 0,
+  SAM_SIDEBAND_LSB,
+  SAM_SIDEBAND_USB,
+#ifdef USE_TWO_CHANNEL_AUDIO
+  SAM_SIDEBAND_STEREO,
+#endif
+  SAM_SIDEBAND_MAX
+} sam_sideband_t;
+
 // Audio driver publics
 typedef struct AudioDriverState
 {
@@ -210,15 +221,7 @@ typedef struct AudioDriverState
     int                     omegaN_int;
     uint8_t                 sam_sideband; // 0 = both, 1 = LSB, 2 = USB
     uint8_t                 fade_leveler;
-    #define SAM_SIDEBAND_BOTH 0
-    #define SAM_SIDEBAND_LSB 1
-    #define SAM_SIDEBAND_USB 2
-#ifdef USE_TWO_CHANNEL_AUDIO
-	#define SAM_SIDEBAND_STEREO 3
-	#define SAM_SIDEBAND_MAX (SAM_SIDEBAND_STEREO)
-#else
-    #define SAM_SIDEBAND_MAX (SAM_SIDEBAND_USB)
-#endif
+
     //    int                     tauR_int;
 //    int                     tauI_int;
 
