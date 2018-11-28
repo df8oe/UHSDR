@@ -82,6 +82,9 @@
   // SSD1289 support is not yet working, also requires USE_GFX_ILI932x to be enabled for now.
   // #define USE_GFX_SSD1289
   #define USE_DISP_480_320
+#if defined(STM32F7) || defined(STM32H7)
+  #define USE_GFX_RA8875
+#endif
 #endif
 
 #if !defined(USE_GFX_ILI932x) && !defined(USE_GFX_ILI9486)
@@ -91,8 +94,6 @@
 #define USE_FFT_1024
 
 #ifndef IS_SMALL_BUILD
-
-  #define USE_GFX_RA8875
   #define USE_8bit_FONT
   #define USE_PREDEFINED_WINDOW_DATA
 #endif
