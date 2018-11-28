@@ -44,7 +44,7 @@ script:
     - cd ../build-bl-f7
     - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" bootloader
     - cd ../build-fw-f4-ili9486-480
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." LCD_TYPE=1 all
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." CONFIGFLAGS="-DEXTERNAL_USE_GFX_CONFIG -DUSE_DISP_480_320 -DUSE_GFX_ILI9486" all 
     - cd ../build-fw-f4-small
     - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR CONFIGFLAGS="-DIS_SMALL_BUILD" ROOTLOC=".." all
     - cd ..

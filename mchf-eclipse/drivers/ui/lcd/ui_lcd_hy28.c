@@ -283,7 +283,6 @@ static const RegisterValueSetInfo_t spdfd5408b_regs =
 {
     spdfd5408b, sizeof(spdfd5408b)/sizeof(RegisterValue_t)
 };
-#define USE_GFX_SSD1289
 #ifdef USE_GFX_SSD1289
 static const RegisterValue_t ssd1289[] =
 {
@@ -2163,7 +2162,8 @@ const uhsdr_display_info_t display_infos[] = {
         },
 #endif
 #endif
-#ifdef UI_BRD_MCHF
+// we support HY28A SPI only on the UI_BRD_MCHF
+#if defined(USE_GFX_ILI932x) && defined(USE_SPI_DISPLAY) && defined(UI_BRD_MCHF)
         {
                 DISPLAY_HY28A_SPI, "HY28A SPI",
                 .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI932x,
@@ -2175,7 +2175,7 @@ const uhsdr_display_info_t display_infos[] = {
                 LCD_D11_PIO, LCD_D11, true, false
         },
 #endif
-#ifdef USE_SPI_DISPLAY
+#if defined(USE_GFX_ILI932x) && defined(USE_SPI_DISPLAY)
         {
                 DISPLAY_HY28B_SPI, "HY28B SPI",
                 .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI932x,
