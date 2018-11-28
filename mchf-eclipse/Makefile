@@ -25,9 +25,13 @@ endif
 
 # F4-512KB results in "small build for F4"
 ifeq ($(BUILDFOR),F4-512KB)
+  FW_LINKERFILE_F4=arm-gcc-link_f4_flash512k.ld
   BUILDFOR=F4
-  CONFIGFLAGS="-DIS_SMALL_BUILD"
+  CONFIGFLAGS +="-DIS_SMALL_BUILD"
+else
+  FW_LINKERFILE_F4=arm-gcc-link_f4_flash1024k.ld
 endif
+
 ifeq ($(BUILDFOR),F7)
   TRX_NAME="OVI40 F7"
 endif
@@ -48,9 +52,6 @@ ifeq ($(TRX_NAME),mcHF)
 endif
 ifndef TRX_NAME
   TRX_NAME='mcHF QRP'
-endif
-ifdef LCD_TYPE
-  CONFIGFLAGS += -DLCD_TYPE=$(LCD_TYPE)
 endif
 
 # If you want to hold different toolchains on Linux in /opt you can get them from
@@ -99,10 +100,10 @@ BASECFLAGS_H7  = $(MACHFLAGS_H7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
 
 LINKERLOC=$(ROOTLOC)/linker
 
-LDFLAGS_BASE := -L$(LINKERLOC) -flto --specs=nano.specs -g3
-LDFLAGS_F4 := $(LDFLAGS_BASE) $(MACHFLAGS_F4)
-LDFLAGS_F7 := $(LDFLAGS_BASE) $(MACHFLAGS_F7) 
-LDFLAGS_H7 := $(LDFLAGS_BASE) $(MACHFLAGS_H7) 
+LDFLAGS_BASE = -L$(LINKERLOC) -flto --specs=nano.specs -g3 $(CFLAGS) $(CXXFLAGS)
+LDFLAGS_F4 = $(LDFLAGS_BASE) $(MACHFLAGS_F4)
+LDFLAGS_F7 = $(LDFLAGS_BASE) $(MACHFLAGS_F7) 
+LDFLAGS_H7 = $(LDFLAGS_BASE) $(MACHFLAGS_H7) 
 
 LIBS := -lm -lc -lnosys
 
@@ -139,7 +140,7 @@ ifeq ($(BUILDFOR),F4)
 $(BOOTLOADER).elf : CFLAGS = ${BASECFLAGS_F4} -Os -DBOOTLOADER_BUILD
 $(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F4} -O2
 $(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F4} -T$(LINKERLOC)/arm-gcc-link-bootloader_f4.ld
-$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(LINKERLOC)/arm-gcc-link_f4_flash1024k.ld
+$(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(LINKERLOC)/$(FW_LINKERFILE_F4)
 	
 
 
@@ -315,7 +316,7 @@ $(BOOTLOADER):  $(BOOTLOADER).bin $(BOOTLOADER).dfu
 $(FIRMWARE).elf:  $(HAL_OBJS) $(DSPLIB_OBJS) $(OBJS)
 	$(ECHO) "  [LD] $@"
 	@$(file > ./firmware_obj_list.lst,$^)
-	@$(CXX) $(LDFLAGS)  -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ @./firmware_obj_list.lst $(LIBS)
+	$(CXX) $(LDFLAGS) -Xlinker --gc-sections -Llibs -Wl,-Map,$(FIRMWARE).map -o$@ @./firmware_obj_list.lst $(LIBS)
 	$(RM) $(call FixPath,firmware_obj_list.lst)
 
 # compilation

@@ -73,10 +73,16 @@
 // this is the standard NR now (Febr 2018)
 #define USE_ALTERNATE_NR
 
-
+// you may optionally define the list of supported GFX drivers externally
+// if you just define EXTERNAL_USE_GFX_CONFIG and no USE_GFX_...
+// you will get a headless system using a dummy display driver
+#ifndef EXTERNAL_USE_GFX_CONFIG
   #define USE_GFX_ILI932x
   #define USE_GFX_ILI9486
+  #define USE_GFX_SSD1289
   #define USE_DISP_480_320
+#endif
+
   #define USE_FFT_1024
 #ifndef IS_SMALL_BUILD
   #define USE_8bit_FONT
