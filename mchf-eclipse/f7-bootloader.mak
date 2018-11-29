@@ -1,6 +1,7 @@
 # IMPORTANT: Keep startup_stm32f767xx.S the first entry, otherwise build will not work with gcc 7, see github issue #1416
 BL_HAL_SRC := \
 basesw/ovi40/Src/startup_stm32f767xx.S \
+basesw/ovi40/Src/system_stm32f7xx.c \
 basesw/ovi40/Src/adc.c \
 basesw/ovi40/Src/dac.c \
 basesw/ovi40/Src/dma.c \
@@ -119,5 +120,4 @@ basesw/ovi40/Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_ll_tim.c \
 basesw/ovi40/Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_ll_usart.c \
 basesw/ovi40/Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_ll_usb.c \
 basesw/ovi40/Drivers/STM32F7xx_HAL_Driver/Src/stm32f7xx_ll_utils.c \
-basesw/ovi40/Src/system_stm32f7xx.c \
 

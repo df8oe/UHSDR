@@ -3108,7 +3108,6 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
         {   // NCO
 
             float32_t ai, bi, aq, bq;
-            float32_t ai_ps, bi_ps, aq_ps, bq_ps;
             float32_t Sin, Cos;
 
             static float32_t dsI;             // delayed sample, I path
@@ -3121,15 +3120,25 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             aq = Cos * adb.q_buffer[i];
             bq = Sin * adb.q_buffer[i];
 
+            float32_t audio[NUM_AUDIO_CHANNELS];
+
+            // we initialize the often unused stereo channel
+            // to keep the compiler happy
+#ifdef USE_TWO_CHANNEL_AUDIO
+            audio[1] = 0;
+#endif
+
+            float32_t corr[2] = { ai + bq, -bi + aq };
+
             if (ads.sam_sideband != SAM_SIDEBAND_BOTH)
             {
 
 #define OUT_IDX   (3 * SAM_PLL_HILBERT_STAGES)
 
-                static float32_t a[3 * SAM_PLL_HILBERT_STAGES + 3];     // Filter a variables
-                static float32_t b[3 * SAM_PLL_HILBERT_STAGES + 3];     // Filter b variables
-                static float32_t c[3 * SAM_PLL_HILBERT_STAGES + 3];     // Filter c variables
-                static float32_t d[3 * SAM_PLL_HILBERT_STAGES + 3];     // Filter d variables
+                static float32_t a[OUT_IDX + 3];     // Filter a variables
+                static float32_t b[OUT_IDX + 3];     // Filter b variables
+                static float32_t c[OUT_IDX + 3];     // Filter c variables
+                static float32_t d[OUT_IDX + 3];     // Filter d variables
 
                 a[0] = dsI;
                 b[0] = bi;
@@ -3147,10 +3156,10 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                     d[k + 3] = adb.c1[j] * (d[k] - d[k + 5]) + d[k + 2];
                 }
 
-                ai_ps = a[OUT_IDX];
-                bi_ps = b[OUT_IDX];
-                bq_ps = c[OUT_IDX];
-                aq_ps = d[OUT_IDX];
+                float32_t ai_ps = a[OUT_IDX];
+                float32_t bi_ps = b[OUT_IDX];
+                float32_t bq_ps = c[OUT_IDX];
+                float32_t aq_ps = d[OUT_IDX];
 
                 // make room for next sample
                 for (int j = OUT_IDX + 2; j > 0; j--)
@@ -3160,39 +3169,30 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
                     c[j] = c[j - 1];
                     d[j] = d[j - 1];
                 }
+
+                switch(ads.sam_sideband)
+                {
+                default:
+                case SAM_SIDEBAND_USB:
+                    audio[0] = (ai_ps - bi_ps) + (aq_ps + bq_ps);
+                    break;
+                case SAM_SIDEBAND_LSB:
+                    audio[0] = (ai_ps + bi_ps) - (aq_ps - bq_ps);
+                    break;
+    #ifdef USE_TWO_CHANNEL_AUDIO
+                case SAM_SIDEBAND_STEREO:
+                    audio[0] = (ai_ps + bi_ps) - (aq_ps - bq_ps);
+                    audio[1] = (ai_ps - bi_ps) + (aq_ps + bq_ps);
+                    break;
+    #endif
+                }
+
             }
-
-            float32_t audio[NUM_AUDIO_CHANNELS];
-
-            float32_t corr[2] = { ai + bq, -bi + aq };
-
-            switch(ads.sam_sideband)
-            {
-            case SAM_SIDEBAND_BOTH:
+            else
             {
                 audio[0] = corr[0];
-                break;
             }
-            case SAM_SIDEBAND_USB:
-            {
-                audio[0] = (ai_ps - bi_ps) + (aq_ps + bq_ps);
-                break;
-            }
-            case SAM_SIDEBAND_LSB:
-            {
-                audio[0] = (ai_ps + bi_ps) - (aq_ps - bq_ps);
-                break;
-            }
-#ifdef USE_TWO_CHANNEL_AUDIO
-            case SAM_SIDEBAND_STEREO:
-            {
-                audio[0] = (ai_ps + bi_ps) - (aq_ps - bq_ps);
-                audio[1] = (ai_ps - bi_ps) + (aq_ps + bq_ps);
-                break;
-            }
-#endif
 
-            }
 
             // "fade leveler", taken from Warren Pratts WDSP / HPSDR, 2016
             // http://svn.tapr.org/repos_sdr_hpsdr/trunk/W5WC/PowerSDR_HPSDR_mRX_PS/Source/wdsp/

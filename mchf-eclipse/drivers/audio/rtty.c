@@ -641,7 +641,7 @@ void RttyDecoder_ProcessSample(float32_t sample)
 		// reading 7 more bits
 		if (rttyDecoderData.byteResultp < 8)
 		{
-			bool bitResult;
+			bool bitResult = false;
 			if (RttyDecoder_getBitDPLL(sample, &bitResult))
 			{
 				switch (rttyDecoderData.byteResultp)
@@ -866,14 +866,16 @@ int16_t Rtty_Modulator_GenSample()
 			bool bitsFilled = false;
 			while (DigiModes_TxBufferHasData() && bitsFilled == false)
 			{
-				uint8_t current_ascii;
-				DigiModes_TxBufferRemove(&current_ascii);
-				uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
-				if (current_baudot > 0)
-				{ // we have valid baudot code
-					Rtty_Modulator_Code2Bits(current_baudot);
-					bitsFilled = true;
-				}
+			    uint8_t current_ascii;
+			    if (DigiModes_TxBufferRemove(&current_ascii))
+			    {
+			        uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
+			        if (current_baudot > 0)
+			        { // we have valid baudot code
+			            Rtty_Modulator_Code2Bits(current_baudot);
+			            bitsFilled = true;
+			        }
+			    }
 			}
 
 			if (bitsFilled == false)
