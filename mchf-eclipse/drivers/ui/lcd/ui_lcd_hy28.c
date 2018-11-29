@@ -1949,6 +1949,7 @@ static uint16_t UiLcdHy28_ReadDisplayId_ILI9486()
 {
     uint16_t retval = 0x9486;
 
+#ifdef USE_DISPLAY_PAR
     // we can't read the id from SPI if it is the dumb RPi SPI
     if (mchf_display.use_spi == false)
     {
@@ -1957,7 +1958,7 @@ static uint16_t UiLcdHy28_ReadDisplayId_ILI9486()
         retval = (LCD_RAM&0xff)<<8;
         retval |=LCD_RAM&0xff;
     }
-
+#endif
     switch (retval)
     {
     case 0x9486:
@@ -2162,8 +2163,11 @@ const uhsdr_display_info_t display_infos[] = {
         },
 #endif
 #endif
+#endif
+
+#if  defined(USE_SPI_DISPLAY)
 // we support HY28A SPI only on the UI_BRD_MCHF
-#if defined(USE_GFX_ILI932x) && defined(USE_SPI_DISPLAY) && defined(UI_BRD_MCHF)
+#if defined(USE_GFX_ILI932x) && defined(UI_BRD_MCHF)
         {
                 DISPLAY_HY28A_SPI, "HY28A SPI",
                 .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI932x,
@@ -2175,7 +2179,7 @@ const uhsdr_display_info_t display_infos[] = {
                 LCD_D11_PIO, LCD_D11, true, false
         },
 #endif
-#if defined(USE_GFX_ILI932x) && defined(USE_SPI_DISPLAY)
+#if defined(USE_GFX_ILI932x)
         {
                 DISPLAY_HY28B_SPI, "HY28B SPI",
                 .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI932x,
@@ -2189,8 +2193,7 @@ const uhsdr_display_info_t display_infos[] = {
                 true, false
         },
 #endif
-#endif
-#if defined(USE_GFX_ILI9486) && defined(USE_SPI_DISPLAY)
+#if defined(USE_GFX_ILI9486)
         {       DISPLAY_RPI_SPI, "RPi 3.5 SPI",
                 .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI9486,
                 .SetActiveWindow = UiLcdHy28_SetActiveWindow_ILI9486,
@@ -2203,6 +2206,7 @@ const uhsdr_display_info_t display_infos[] = {
                 true, true
         },
         // RPI_SPI NEEDS TO BE LAST IN LIST!!!
+#endif
 #endif
 #ifdef USE_GFX_RA8875
         // Due to currently missing detection algorithm the first RA8875 is
