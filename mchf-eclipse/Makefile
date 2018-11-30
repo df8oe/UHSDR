@@ -39,8 +39,11 @@ ifeq ($(BUILDFOR),H7)
   TRX_NAME="OVI40 H7"
 endif
 
- ROOTLOC=.
-VPATH=$(ROOTLOC)
+ROOTLOC=.
+vpath %.h $(ROOTLOC)
+vpath %.c $(ROOTLOC)
+vpath %.cpp $(ROOTLOC)
+vpath %.S $(ROOTLOC)
 
 # you can set these environment to your individual values here or via environment variables
 # TRX_ID maximum lenght is 5 characters!!
