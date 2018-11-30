@@ -37,6 +37,11 @@
 #define USE_SPI_DISPLAY
 #define USE_DISPLAY_PAR
 
+
+#if !defined(USE_DISPLAY_PAR) && !defined(USE_SPI_DISPLAY)
+#warning Both USE_DISPLAY_PAR and USE_SPI_DISPLAY are disabled, no display driver will be available!
+#endif
+
 #include "spi.h"
 
 #ifdef USE_DISPLAY_PAR

@@ -84,7 +84,12 @@
   #define USE_DISP_480_320
 #endif
 
-  #define USE_FFT_1024
+#if !defined(USE_GFX_ILI932x) && !defined(USE_GFX_ILI9486)
+#warning Both USE_GFX_ILI932x and USE_GFX_ILI9486 are disabled, no display driver will be available!
+#endif
+
+#define USE_FFT_1024
+
 #ifndef IS_SMALL_BUILD
   #define USE_8bit_FONT
   #define USE_PREDEFINED_WINDOW_DATA
