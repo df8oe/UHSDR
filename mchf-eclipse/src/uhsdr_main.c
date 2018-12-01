@@ -240,7 +240,6 @@ void TransceiverStateInit(void)
     // is NEVER reset and is used for timing certain events.
     ts.version_number_release	= 0;			// version release - used to detect firmware change
     ts.version_number_major = 0;				// version build - used to detect firmware change
-    ts.nb_agc_time_const	= 0;				// used to calculate the AGC time constant
     ts.cw_offset_mode	= CW_OFFSET_USB_RX;		// CW offset mode (USB, LSB, etc.)
     ts.cw_lsb			= false;				// Flag that indicates CW operates in LSB mode when TRUE
     ts.iq_freq_mode		= FREQ_IQ_CONV_MODE_DEFAULT;					// used to set/configure the I/Q frequency/conversion mode

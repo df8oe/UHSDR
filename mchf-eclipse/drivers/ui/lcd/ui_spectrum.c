@@ -248,6 +248,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
     static uint8_t old_dmod_mode = 0xFF;
     static uint8_t old_iq_freq_mode = 0xFF;
     static uint16_t old_cw_sidetone_freq = 0;
+    static uint16_t old_rtty_shift = 0;
     static uint8_t old_digital_mode = 0xFF;
 
     static bool force_update = true;
@@ -275,12 +276,13 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
     }
     bool cur_lsb = RadioManagement_LSBActive(ts.dmod_mode);
 
-    if (cur_lsb != old_lsb || ts.cw_sidetone_freq != old_cw_sidetone_freq || ts.dmod_mode != old_dmod_mode || ts.digital_mode != old_digital_mode || force_update)
+    if (cur_lsb != old_lsb || ts.cw_sidetone_freq != old_cw_sidetone_freq || old_rtty_shift != rtty_ctrl_config.shift_idx || ts.dmod_mode != old_dmod_mode || ts.digital_mode != old_digital_mode || force_update)
     {
         old_lsb = cur_lsb;
         old_cw_sidetone_freq = ts.cw_sidetone_freq;
         old_dmod_mode = ts.dmod_mode;
         old_digital_mode = ts.digital_mode;
+        old_rtty_shift = rtty_ctrl_config.shift_idx;
 
         float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())/TUNE_MULT))/sd.hz_per_pixel;
 

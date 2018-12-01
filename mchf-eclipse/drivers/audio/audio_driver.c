@@ -568,7 +568,28 @@ __IO SMeter					sm;
 // IF THE SIZE OF  THE DATA STRUCTURE GROWS IT WILL QUICKLY BE OUT OF SPACE IN CCM
 // Be careful! Check mchf-eclipse.map for current allocation
 AudioDriverState   __MCHF_SPECIALMEM ads;
-AudioDriverBuffer  __MCHF_SPECIALMEM adb;
+AudioDriverBuffer  __MCHF_SPECIALMEM adb = {
+
+        //sideband separation, these values never change
+        .sam.c0 = {
+                -0.328201924180698,
+                -0.744171491539427,
+                -0.923022915444215,
+                -0.978490468768238,
+                -0.994128272402075,
+                -0.998458978159551,
+                -0.999790306259206,
+        },
+        .sam.c1 = {
+                -0.0991227952747244,
+                -0.565619728761389,
+                -0.857467122550052,
+                -0.959123933111275,
+                -0.988739372718090,
+                -0.996959189310611,
+                -0.999282492800792,
+        }
+};
 
 
 #if defined(OBSOLETE_NR) || defined(USE_LMS_AUTONOTCH)
@@ -732,16 +753,7 @@ void AudioDriver_Init(void)
     sm.AttackAvedbmhz = 0.0;
     sm.DecayAvedbmhz = 0.0;
 
-#if 0
-    ads.agc_val = 1;			// Post AF Filter gain (AGC)
-    ads.agc_var = 1;			// used in AGC processing
-    ads.agc_calc = 1;			// used in AGC processing
-    ads.agc_holder = 1;			// initialize holder for AGC value
-    for(uint32_t x = 0; x < BUFF_LEN; x++)	// initialize running buffer for AGC delay
-    {
-        adb.agc_valbuf[x] = 1;
-    }
-#endif
+
     ads.alc_val = 1;			// init TX audio auto-level-control (ALC)
 
     AudioDriver_FM_Init(&ads.fm);
@@ -753,24 +765,29 @@ void AudioDriver_Init(void)
 
     //
     //
-//    AudioManagement_CalcAGCDecay();	// initialize AGC decay ("hang time") values
-    //
-//    AudioManagement_CalcRFGain();		// convert from user RF gain value to "working" RF gain value
-    //
+#ifdef OBSOLETE_AGC
+    ads.agc_val = 1;            // Post AF Filter gain (AGC)
+    ads.agc_var = 1;            // used in AGC processing
+    ads.agc_calc = 1;           // used in AGC processing
+    ads.agc_holder = 1;         // initialize holder for AGC value
+    for(uint32_t x = 0; x < BUFF_LEN; x++)  // initialize running buffer for AGC delay
+    {
+        adb.agc_valbuf[x] = 1;
+    }
+
+    AudioManagement_CalcAGCDecay();	// initialize AGC decay ("hang time") values
+    AudioManagement_CalcAGCVals();  // calculate AGC internal values from user settings
+    AudioManagement_CalcRFGain();        // convert from user RF gain value to "working" RF gain value
+    AudioManagement_CalcNB_AGC();       // set up noise blanker AGC values
+
+#endif
+
     AudioManagement_CalcALCDecay();	// initialize ALC decay values
-    //
-//    AudioManagement_CalcAGCVals();	// calculate AGC internal values from user settings
-    //
-//    AudioManagement_CalcNB_AGC();		// set up noise blanker AGC values
-    //
+
     ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();	// set up CW sideband mode setting
-    //
-    // The "active" NCO in the frequency translate function is NOT used, but rather a "static" sine that is an integer divisor of the sample rate.
-    //
-    //audio_driver_config_nco();	// Configure the NCO in the frequency translate function
-    //
+
     ads.tx_filter_adjusting = 0;	// used to disable TX I/Q filter during adjustment
-    // Audio Filter Init init
+
     AudioDriver_InitFilters();
 
 #ifdef USE_LEAKY_LMS
@@ -793,10 +810,11 @@ void AudioDriver_SetSamPllParameters()
 {
 
     // definitions and intializations for synchronous AM demodulation = SAM
-    //    adb.DF = 1.0; //ads.decimation_rate;
-    adb.DF = (float32_t)(ads.decimation_rate);
+    //    adb_DF = 1.0; //ads.decimation_rate;
+    const float32_t decim_rate_f = ads.decimation_rate;
     //ads.pll_fmax_int = 2500;
-    adb.pll_fmax = (float32_t)ads.pll_fmax_int;
+    const float32_t pll_fmax = ads.pll_fmax_int;
+
     // DX adjustments: zeta = 0.15, omegaN = 100.0
     // very stable, but does not lock very fast
     // standard settings: zeta = 1.0, omegaN = 250.0
@@ -808,53 +826,36 @@ void AudioDriver_SetSamPllParameters()
     //ads.zeta_int = 80; // zeta * 100 !!!
     // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
     //ads.omegaN_int = 250; //200.0; // PLL bandwidth 50.0 - 1000.0
-    adb.omegaN = (float32_t)ads.omegaN_int;
-    adb.zeta = (float32_t)ads.zeta_int / 100.0;
+
+    float32_t omegaN = ads.omegaN_int; //200.0; // PLL bandwidth 50.0 - 1000.0
+    float32_t zeta = (float32_t)ads.zeta_int / 100.0; // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
+
     //pll
-    adb.omega_min = - (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //-0.5235987756; //
-    adb.omega_max = (2.0 * PI * adb.pll_fmax * adb.DF / IQ_SAMPLE_RATE_F); //0.5235987756; //
-    adb.g1 = (1.0 - expf(-2.0 * adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)); //0.0082987073611; //
-    adb.g2 = (- adb.g1 + 2.0 * (1 - expf(- adb.omegaN * adb.zeta * adb.DF / IQ_SAMPLE_RATE_F)
-            * cosf(adb.omegaN * adb.DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - adb.zeta * adb.zeta)))); //0.01036367597097734813032783691644; //
+    adb.sam.omega_min = - (2.0 * PI * pll_fmax * decim_rate_f / IQ_SAMPLE_RATE_F); //-0.5235987756; //
+    adb.sam.omega_max = (2.0 * PI * pll_fmax * decim_rate_f / IQ_SAMPLE_RATE_F); //0.5235987756; //
+    adb.sam.g1 = (1.0 - expf(-2.0 * omegaN * zeta * decim_rate_f / IQ_SAMPLE_RATE_F)); //0.0082987073611; //
+    adb.sam.g2 = (- adb.sam.g1 + 2.0 * (1 - expf(- omegaN * zeta * decim_rate_f / IQ_SAMPLE_RATE_F)
+            * cosf(omegaN * decim_rate_f / IQ_SAMPLE_RATE_F * sqrtf(1.0 - zeta * zeta)))); //0.01036367597097734813032783691644; //
+
     //fade leveler
     //    ads.tauR_int = 20; // -->  / 1000 = 0.02
     //    ads.tauI_int = 140; // --> / 100 = 1.4
-    adb.tauR = 0.02; // ((float32_t)ads.tauR_int) / 1000.0; //0.02; // original 0.02;
-    adb.tauI = 1.4; // ((float32_t)ads.tauI_int) / 100.0; //1.4; // original 1.4;
-    adb.mtauR = (expf(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauR))); //0.99948;
-    adb.onem_mtauR = (1.0 - adb.mtauR);
-    adb.mtauI = (expf(- adb.DF / (IQ_SAMPLE_RATE_F * adb.tauI))); //0.99999255955;
-    adb.onem_mtauI = (1.0 - adb.mtauI);
+    float32_t tauR = 0.02; // ((float32_t)ads.tauR_int) / 1000.0; //0.02; // original 0.02;
+    float32_t tauI = 1.4; // ((float32_t)ads.tauI_int) / 100.0; //1.4; // original 1.4;
+    adb.sam.mtauR = (expf(- decim_rate_f / (IQ_SAMPLE_RATE_F * tauR))); //0.99948;
+    adb.sam.onem_mtauR = (1.0 - adb.sam.mtauR);
+    adb.sam.mtauI = (expf(- decim_rate_f / (IQ_SAMPLE_RATE_F * tauI))); //0.99999255955;
+    adb.sam.onem_mtauI = (1.0 - adb.sam.mtauI);
 }
 
-void AudioDriver_SetRxAudioProcessingSAM(uint8_t dmod_mode)
+static void AudioDriver_SetRxIqCorrection()
 {
-
-    AudioDriver_SetSamPllParameters();
-
-    //sideband separation, these values never change
-    adb.c0[0] = -0.328201924180698;
-    adb.c0[1] = -0.744171491539427;
-    adb.c0[2] = -0.923022915444215;
-    adb.c0[3] = -0.978490468768238;
-    adb.c0[4] = -0.994128272402075;
-    adb.c0[5] = -0.998458978159551;
-    adb.c0[6] = -0.999790306259206;
-
-    adb.c1[0] = -0.0991227952747244;
-    adb.c1[1] = -0.565619728761389;
-    adb.c1[2] = -0.857467122550052;
-    adb.c1[3] = -0.959123933111275;
-    adb.c1[4] = -0.988739372718090;
-    adb.c1[5] = -0.996959189310611;
-    adb.c1[6] = -0.999282492800792;
-
     // these change during operation
-    adb.M_c1 = 0.0;
-    adb.M_c2 = 1.0;
-    adb.teta1_old = 0.0;
-    adb.teta2_old = 0.0;
-    adb.teta3_old = 0.0;
+    adb.iq_corr.M_c1 = 0.0;
+    adb.iq_corr.M_c2 = 1.0;
+    adb.iq_corr.teta1_old = 0.0;
+    adb.iq_corr.teta2_old = 0.0;
+    adb.iq_corr.teta3_old = 0.0;
 }
 
 
@@ -1274,6 +1275,8 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // It is (sort of) initalized "twice" since this it what it seems to take for the LMS function to
     // start reliably and consistently!
     //
+    ads.dsp_zero_count = 0;     // initialize "zero" count to detect if DSP has crashed
+
     calc_taps = ts.dsp_nr_numtaps;
     if((calc_taps < DSP_NR_NUMTAPS_MIN) || (calc_taps > DSP_NR_NUMTAPS_MAX))
     {
@@ -1327,37 +1330,6 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
         ts.dsp_nr_delaybuf_len = DSP_NR_BUFLEN_DEFAULT;
     }
 
-    // AUTO NOTCH INIT START
-    // LMS instance 2 - Automatic Notch Filter
-
-    calc_taps = ts.dsp_notch_numtaps;
-    lmsData.lms2Norm_instance.numTaps = calc_taps;
-    lmsData.lms2Norm_instance.pCoeffs = lmsData.lms2NormCoeff_f32;
-    lmsData.lms2Norm_instance.pState = lmsData.lms2StateF32;
-
-    // Calculate "mu" (convergence rate) from user "Notch ConvRate" setting
-    mu_calc = ts.dsp_notch_mu;		// get user setting (0 = slowest)
-    mu_calc += 1;
-    mu_calc /= 1500;
-    mu_calc += 1;
-    mu_calc = log10f(mu_calc);
-
-    // use "canned" init to initialize the filter coefficients
-    arm_lms_norm_init_f32(&lmsData.lms2Norm_instance, calc_taps, &lmsData.lms2NormCoeff_f32[0], &lmsData.lms2StateF32[0], mu_calc, 64);
-
-    arm_fill_f32(0.0,lmsData.lms2_nr_delay,DSP_NOTCH_BUFLEN_MAX);
-    arm_fill_f32(0.0,lmsData.lms2StateF32,LMS2_NOTCH_STATE_ARRAY_SIZE);
-
-    if(reset_dsp_nr)             // are we to reset the coefficient buffer as well?
-    {
-        arm_fill_f32(0.0,lmsData.lms2NormCoeff_f32,DSP_NOTCH_NUMTAPS_MAX);      // yes - zero coefficient buffers
-    }
-
-    if((ts.dsp_notch_delaybuf_len > DSP_NOTCH_BUFLEN_MAX) || (ts.dsp_notch_delaybuf_len < DSP_NOTCH_BUFLEN_MIN))
-    {
-        ts.dsp_nr_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
-    }
-    // AUTO NOTCH INIT END
 #endif
 
 #ifdef USE_LMS_AUTONOTCH
@@ -1400,8 +1372,10 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = FilterPathInfo[ts.filter_path].sample_rate_dec;
 
-//    ads.agc_decimation_scaling = ads.decimation_rate;
-//    ads.agc_delay_buflen = AUDIO_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
+#ifdef OBSOLETE_AGC
+    ads.agc_decimation_scaling = ads.decimation_rate;
+    ads.agc_delay_buflen = AUDIO_DELAY_BUFSIZE/(ulong)ads.decimation_rate;	// calculate post-AGC delay based on post-decimation sampling rate
+#endif
 
     // Set up ZOOM FFT FIR decimation filters
     // switch right FIR decimation filter depending on sd.magnify
@@ -1512,12 +1486,8 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr)
     arm_fir_interpolate_init_f32(&INTERPOLATE_NR, 2, NR_INTERPOLATE_NO_TAPS, NR_interpolate_coeffs, interplNRState, FIR_RXAUDIO_BLOCK_SIZE);
     // should be a very light lowpass @2k7
 
-    ads.dsp_zero_count = 0;		// initialize "zero" count to detect if DSP has crashed
-
-    // if (dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM)
-    {
-        AudioDriver_SetRxAudioProcessingSAM(dmod_mode);
-    }
+    AudioDriver_SetSamPllParameters();
+    AudioDriver_SetRxIqCorrection();
 
     AudioFilter_InitRxHilbertFIR(dmod_mode); // this switches the Hilbert/FIR-filters
 
@@ -1934,9 +1904,9 @@ static void AudioDriver_RxProcessor_Bpsk(float32_t * const src, int16_t blockSiz
 void AudioDriver_SetupAgcWdsp()
 {
     static bool initialised = false;
-	float32_t tmp;
-    float32_t sample_rate = IQ_SAMPLE_RATE_F / (float32_t)ads.decimation_rate;
     static uchar decimation_rate_old = 0; // will be set to current decimation rate in first round
+
+    const float32_t sample_rate = IQ_SAMPLE_RATE_F / (float32_t)ads.decimation_rate;
 
     // this is a quick and dirty hack
     // it initialises the AGC variables once again,
@@ -2040,8 +2010,8 @@ loadWcpAGC(a);
 
     //    hangtime = 0.250;                // hangtime
     agc_wdsp.hangtime = (float32_t)ts.agc_wdsp_hang_time / 1000.0;
-    //    hang_thresh = 0.250;             // hang_thresh
 
+    //    hang_thresh = 0.250;             // hang_thresh
     //    tau_hang_decay = 0.100;          // tau_hang_decay
 
     //calculate internal parameters
@@ -2112,12 +2082,12 @@ loadWcpAGC(a);
     agc_wdsp.min_volts = agc_wdsp.out_target / (agc_wdsp.var_gain * agc_wdsp.max_gain);
     agc_wdsp.inv_out_target = 1.0 / agc_wdsp.out_target;
 
-    tmp = log10f(agc_wdsp.out_target / (agc_wdsp.max_input * agc_wdsp.var_gain * agc_wdsp.max_gain));
-    if (tmp == 0.0)
+    float32_t tmpA = log10f(agc_wdsp.out_target / (agc_wdsp.max_input * agc_wdsp.var_gain * agc_wdsp.max_gain));
+    if (tmpA == 0.0)
     {
-        tmp = 1e-16;
+        tmpA = 1e-16;
     }
-    agc_wdsp.slope_constant = (agc_wdsp.out_target * (1.0 - 1.0 / agc_wdsp.var_gain)) / tmp;
+    agc_wdsp.slope_constant = (agc_wdsp.out_target * (1.0 - 1.0 / agc_wdsp.var_gain)) / tmpA;
 
     agc_wdsp.inv_max_input = 1.0 / agc_wdsp.max_input;
 
@@ -2125,21 +2095,21 @@ loadWcpAGC(a);
     {
         float32_t convert
 		= powf (10.0, (float32_t)ts.agc_wdsp_hang_thresh / 20.0);
-        tmp = (convert - agc_wdsp.min_volts) / (agc_wdsp.max_input - agc_wdsp.min_volts);
-        if(tmp < 1e-8)
+        float32_t tmpB = (convert - agc_wdsp.min_volts) / (agc_wdsp.max_input - agc_wdsp.min_volts);
+        if(tmpB < 1e-8)
         {
-        	tmp = 1e-8;
+        	tmpB = 1e-8;
         }
-        agc_wdsp.hang_thresh = 1.0 + 0.125 * log10f (tmp);
+        agc_wdsp.hang_thresh = 1.0 + 0.125 * log10f (tmpB);
     }
     else
     {
         agc_wdsp.hang_thresh = 1.0;
     }
 
-    tmp = powf (10.0, (agc_wdsp.hang_thresh - 1.0) / 0.125);
-    agc_wdsp.hang_level = (agc_wdsp.max_input * tmp + (agc_wdsp.out_target /
-            (agc_wdsp.var_gain * agc_wdsp.max_gain)) * (1.0 - tmp)) * 0.637;
+    float32_t tmpC = powf (10.0, (agc_wdsp.hang_thresh - 1.0) / 0.125);
+    agc_wdsp.hang_level = (agc_wdsp.max_input * tmpC + (agc_wdsp.out_target /
+            (agc_wdsp.var_gain * agc_wdsp.max_gain)) * (1.0 - tmpC)) * 0.637;
 
     agc_wdsp.hang_backmult = 1.0 - expf(-1.0 / (sample_rate * agc_wdsp.tau_hang_backmult));
     agc_wdsp.onemhang_backmult = 1.0 - agc_wdsp.hang_backmult;
@@ -2415,7 +2385,7 @@ void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t (*agcbuffer)[IQ_BLOCK_SI
 }
 
 
-#if 0
+#ifdef OBSOLETE_AGC
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_agc_processor
 //* Object              :
@@ -2522,9 +2492,50 @@ static void AudioDriver_RxAgcProcessor(int16_t blockSize, float32_t *agcbuffer)
     arm_mult_f32(agcbuffer, adb.agc_valbuf, agcbuffer, blockSize);		// do vector multiplication to apply delayed "running" AGC data
 
 }
+
+
+static void AudioDriver_FmAgcProcessor(float32_t i_prev, float32_t q_prev)
+{
+
+    if (!ts.agc_wdsp)
+    {
+        //
+        ads.am_fm_agc = sqrtf(
+                (q_prev * q_prev) + (i_prev * i_prev)) * FM_AGC_SCALING;// calculate amplitude of carrier to use for AGC indication only (we need it for nothing else!)
+        //
+        // Do "AGC" on FM signal:  Calculate/smooth signal level ONLY - no need for audio scaling
+        //
+        ads.agc_calc = ads.am_fm_agc * ads.agc_val;
+        //
+        if (ads.agc_calc < ads.agc_knee)// is audio below AGC "knee" value?
+        {
+            ads.agc_var = ads.agc_knee - ads.agc_calc;// calculate difference between agc value and "knee" value
+            ads.agc_var /= ads.agc_knee;// calculate ratio of difference between knee value and this value
+            ads.agc_val += ads.agc_val * AGC_DECAY_FM * ads.agc_var;// Yes - Increase gain for AGC DECAY (always fast in FM)
+        }
+        else
+        {
+            ads.agc_var = ads.agc_calc - ads.agc_knee;// calculate difference between agc value and "knee" value
+            ads.agc_var /= ads.agc_knee;// calculate ratio of difference between knee value and this value
+            ads.agc_val -= ads.agc_val * AGC_ATTACK_FM * ads.agc_var;// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
+            if (ads.agc_val <= AGC_VAL_MIN) // Prevent zero or "negative" gain values
+            {
+                ads.agc_val = AGC_VAL_MIN;
+            }
+        }
+        if (ads.agc_val >= ads.agc_rf_gain) // limit AGC to reasonable values when low/no signals present
+        {
+            ads.agc_val = ads.agc_rf_gain;
+            if (ads.agc_val >= ads.agc_val_max) // limit maximum gain under no-signal conditions
+            {
+                ads.agc_val = ads.agc_val_max;
+            }
+        }
+    }
+}
 #endif
 
-#if 0
+#ifdef OBSOLETE_ATAN2APPROX
 /*
  *
  *   What follows was adapted from "Fixed-Point Atan2 With Self Normalization", public domain code by "Jim Shima".
@@ -2565,7 +2576,7 @@ static float AudioDriver_Atan2Approx(float32_t x, float32_t y)
  * @author KA7OEI
  * @param blockSize size of sample buffer
  */
-static void AudioDriver_DemodFM(const int16_t blockSize)
+static void AudioDriver_DemodFM(const float32_t* i_buffer, const float32_t* q_buffer, float32_t* a_buffer, const int16_t blockSize)
 {
 	float32_t goertzel_buf[blockSize], squelch_buf[blockSize];
 
@@ -2584,10 +2595,10 @@ static void AudioDriver_DemodFM(const int16_t blockSize)
 		{
 			// first, calculate "x" and "y" for the arctan2, comparing the vectors of present data with previous data
 
-			float32_t y = (i_prev * adb.q_buffer[i]) - (adb.i_buffer[i] * q_prev);
-			float32_t x = (i_prev * adb.i_buffer[i]) + (adb.q_buffer[i] * q_prev);
+			float32_t y = (i_prev * q_buffer[i]) - (i_buffer[i] * q_prev);
+			float32_t x = (i_prev * i_buffer[i]) + (q_buffer[i] * q_prev);
 
-#if 0
+#ifdef OBSOLETE_ATAN2APPROX
 			/*
 			  we do not use this approximation any more, because it does not contribute significantly to saving processor cycles,
 			  and does not deliver as clean audio as we would expect.
@@ -2617,53 +2628,19 @@ static void AudioDriver_DemodFM(const int16_t blockSize)
 				hpf_prev_a = a;		// save "[n-1]" samples for next iteration
 				hpf_prev_b = b;
 
-				adb.a_buffer[0][i] = b;// save demodulated and filtered audio in main audio processing buffer
+				a_buffer[i] = b;// save demodulated and filtered audio in main audio processing buffer
 			}
 			else if ((ads.fm.squelched)
 					|| ((!ads.fm.subaudible_tone_detected) && (tone_det_enabled)))// were we squelched or tone NOT detected?
 			{
-				adb.a_buffer[0][i] = 0;// do not filter receive audio - fill buffer with zeroes to mute it
+				a_buffer[i] = 0;// do not filter receive audio - fill buffer with zeroes to mute it
 			}
 
-			q_prev = adb.q_buffer[i];// save "previous" value of each channel to allow detection of the change of angle in next go-around
-			i_prev = adb.i_buffer[i];
+			q_prev = q_buffer[i];// save "previous" value of each channel to allow detection of the change of angle in next go-around
+			i_prev = i_buffer[i];
 		}
-#if 0
-		if (!ts.agc_wdsp)
-		{
-			//
-			ads.am_fm_agc = sqrtf(
-					(q_prev * q_prev) + (i_prev * i_prev)) * FM_AGC_SCALING;// calculate amplitude of carrier to use for AGC indication only (we need it for nothing else!)
-			//
-			// Do "AGC" on FM signal:  Calculate/smooth signal level ONLY - no need for audio scaling
-			//
-			ads.agc_calc = ads.am_fm_agc * ads.agc_val;
-			//
-			if (ads.agc_calc < ads.agc_knee)// is audio below AGC "knee" value?
-			{
-				ads.agc_var = ads.agc_knee - ads.agc_calc;// calculate difference between agc value and "knee" value
-				ads.agc_var /= ads.agc_knee;// calculate ratio of difference between knee value and this value
-				ads.agc_val += ads.agc_val * AGC_DECAY_FM * ads.agc_var;// Yes - Increase gain for AGC DECAY (always fast in FM)
-			}
-			else
-			{
-				ads.agc_var = ads.agc_calc - ads.agc_knee;// calculate difference between agc value and "knee" value
-				ads.agc_var /= ads.agc_knee;// calculate ratio of difference between knee value and this value
-				ads.agc_val -= ads.agc_val * AGC_ATTACK_FM * ads.agc_var;// Fast attack to increase attenuation (do NOT scale w/decimation or else oscillation results)
-				if (ads.agc_val <= AGC_VAL_MIN)	// Prevent zero or "negative" gain values
-				{
-					ads.agc_val = AGC_VAL_MIN;
-				}
-			}
-			if (ads.agc_val >= ads.agc_rf_gain)	// limit AGC to reasonable values when low/no signals present
-			{
-				ads.agc_val = ads.agc_rf_gain;
-				if (ads.agc_val >= ads.agc_val_max)	// limit maximum gain under no-signal conditions
-				{
-					ads.agc_val = ads.agc_val_max;
-				}
-			}
-		}
+#ifdef OBSOLETE_AGC
+		AudioDriver_FmAgcProcessor(i_prev, q_prev);
 #endif
 
 		// *** Squelch Processing ***
@@ -2809,7 +2786,7 @@ static void AudioDriver_DemodFM(const int16_t blockSize)
 	}
 }
 
-#if defined (OBSOLETE_NR) || defined (USE_LMS_AUTONOTCH)
+#if defined (USE_LMS_AUTONOTCH)
 //
 //
 //*----------------------------------------------------------------------------
@@ -2862,7 +2839,7 @@ static void AudioDriver_NoiseReduction(int16_t blockSize, float32_t *nrbuffer)
     //
     // Detect if the DSP output has gone to (near) zero output - a sign of it crashing!
     //
-    if((((ulong)fabs(nrbuffer[0])) * DSP_ZERO_DET_MULT_FACTOR) < DSP_OUTPUT_MINVAL)	 	// is DSP level too low?
+    if((((ulong)fabsf(nrbuffer[0])) * DSP_ZERO_DET_MULT_FACTOR) < DSP_OUTPUT_MINVAL)	 	// is DSP level too low?
     {
         // For some stupid reason we can't just compare above to a small fractional value  (e.g. "x < 0.001") so we must multiply it first!
         if(ads.dsp_zero_count < MAX_DSP_ZERO_COUNT)
@@ -2871,7 +2848,9 @@ static void AudioDriver_NoiseReduction(int16_t blockSize, float32_t *nrbuffer)
         }
     }
     else
+    {
         ads.dsp_zero_count = 0;
+    }
     //
     ads.dsp_nr_sample = nrbuffer[0];		// provide a sample of the DSP output for crash detection
     //
@@ -3050,8 +3029,8 @@ static float32_t AudioDriver_FadeLeveler(int chan, float32_t audio, float32_t co
     static float32_t dc27[NUM_AUDIO_CHANNELS]; // static will be initialized with 0
     static float32_t dc_insert[NUM_AUDIO_CHANNELS];
 
-    dc27[chan] = adb.mtauR * dc27[chan] + adb.onem_mtauR * audio;
-    dc_insert[chan] = adb.mtauI * dc_insert[chan] + adb.onem_mtauI * corr;
+    dc27[chan] = adb.sam.mtauR * dc27[chan] + adb.sam.onem_mtauR * audio;
+    dc_insert[chan] = adb.sam.mtauI * dc_insert[chan] + adb.sam.onem_mtauI * corr;
     audio = audio + dc_insert[chan] - dc27[chan];
 
     return audio;
@@ -3065,7 +3044,30 @@ static float32_t AudioDriver_FadeLeveler(int chan, float32_t audio, float32_t co
 //* Output Parameters   : adb.a_buffer[0]
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void AudioDriver_DemodSAM(int16_t blockSize)
+typedef struct
+{
+    uint16_t  count;
+
+    float32_t fil_out;
+    float32_t lowpass;
+    float32_t omega2;
+    float32_t phs;
+
+    float32_t dsI;             // delayed sample, I path
+    float32_t dsQ;             // delayed sample, Q path
+
+#define OUT_IDX   (3 * SAM_PLL_HILBERT_STAGES)
+
+    float32_t a[OUT_IDX + 3];     // Filter a variables
+    float32_t b[OUT_IDX + 3];     // Filter b variables
+    float32_t c[OUT_IDX + 3];     // Filter c variables
+    float32_t d[OUT_IDX + 3];     // Filter d variables
+
+} demod_sam_data_t;
+
+demod_sam_data_t sam_data;
+
+static void AudioDriver_DemodSAM(float32_t* i_buffer, float32_t* q_buffer, float32_t a_buffer[][IQ_BLOCK_SIZE], int16_t blockSize)
 {
     //#define STAGES    7
 
@@ -3074,51 +3076,42 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
     //*****************************
 
     // First of all: decimation of I and Q path
-    arm_fir_decimate_f32(&FirDecim_RxSam_I, adb.i_buffer, adb.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
-    arm_fir_decimate_f32(&FirDecim_RxSam_Q, adb.q_buffer, adb.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+    arm_fir_decimate_f32(&FirDecim_RxSam_I, i_buffer, i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
+    arm_fir_decimate_f32(&FirDecim_RxSam_Q, q_buffer, q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
 
+    const float32_t decim_rate_f = ads.decimation_rate;
     switch(ts.dmod_mode)
     {
     case DEMOD_AM:
-        for(int i = 0; i < blockSize / adb.DF; i++)
+        for(int i = 0; i < blockSize / decim_rate_f; i++)
         {
             float32_t audio;
 
-            arm_sqrt_f32 (adb.i_buffer[i] * adb.i_buffer[i] + adb.q_buffer[i] * adb.q_buffer[i], &audio);
+            arm_sqrt_f32 (i_buffer[i] * i_buffer[i] + q_buffer[i] * q_buffer[i], &audio);
             if(ads.fade_leveler)
             {
                 audio = AudioDriver_FadeLeveler(0,audio,0);
             }
-            adb.a_buffer[0][i] = audio;
+            a_buffer[0][i] = audio;
         }
         break;
 
     case DEMOD_SAM:
     {
 
-        static uint16_t  count = 0;
-
-        static float32_t fil_out = 0.0;
-        static float32_t lowpass = 0.0;
-        static float32_t omega2 = 0.0;
-        static float32_t phs = 0.0;
-
         // Wheatley 2011 cuteSDR & Warren Pratts WDSP, 2016
-        for(int i = 0; i < blockSize / adb.DF; i++)
+        for(int i = 0; i < blockSize / decim_rate_f; i++)
         {   // NCO
 
             float32_t ai, bi, aq, bq;
             float32_t Sin, Cos;
 
-            static float32_t dsI;             // delayed sample, I path
-            static float32_t dsQ;             // delayed sample, Q path
 
-
-            sincosf(phs,&Sin,&Cos);
-            ai = Cos * adb.i_buffer[i];
-            bi = Sin * adb.i_buffer[i];
-            aq = Cos * adb.q_buffer[i];
-            bq = Sin * adb.q_buffer[i];
+            sincosf(sam_data.phs,&Sin,&Cos);
+            ai = Cos * i_buffer[i];
+            bi = Sin * i_buffer[i];
+            aq = Cos * q_buffer[i];
+            bq = Sin * q_buffer[i];
 
             float32_t audio[NUM_AUDIO_CHANNELS];
 
@@ -3133,41 +3126,34 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
             if (ads.sam_sideband != SAM_SIDEBAND_BOTH)
             {
 
-#define OUT_IDX   (3 * SAM_PLL_HILBERT_STAGES)
-
-                static float32_t a[OUT_IDX + 3];     // Filter a variables
-                static float32_t b[OUT_IDX + 3];     // Filter b variables
-                static float32_t c[OUT_IDX + 3];     // Filter c variables
-                static float32_t d[OUT_IDX + 3];     // Filter d variables
-
-                a[0] = dsI;
-                b[0] = bi;
-                c[0] = dsQ;
-                d[0] = aq;
-                dsI = ai;
-                dsQ = bq;
+                sam_data.a[0] = sam_data.dsI;
+                sam_data.b[0] = bi;
+                sam_data.c[0] = sam_data.dsQ;
+                sam_data.d[0] = aq;
+                sam_data.dsI = ai;
+                sam_data.dsQ = bq;
 
                 for (int j = 0; j < SAM_PLL_HILBERT_STAGES; j++)
                 {
                     int k = 3 * j;
-                    a[k + 3] = adb.c0[j] * (a[k] - a[k + 5]) + a[k + 2];
-                    b[k + 3] = adb.c1[j] * (b[k] - b[k + 5]) + b[k + 2];
-                    c[k + 3] = adb.c0[j] * (c[k] - c[k + 5]) + c[k + 2];
-                    d[k + 3] = adb.c1[j] * (d[k] - d[k + 5]) + d[k + 2];
+                    sam_data.a[k + 3] = adb.sam.c0[j] * (sam_data.a[k] - sam_data.a[k + 5]) + sam_data.a[k + 2];
+                    sam_data.b[k + 3] = adb.sam.c1[j] * (sam_data.b[k] - sam_data.b[k + 5]) + sam_data.b[k + 2];
+                    sam_data.c[k + 3] = adb.sam.c0[j] * (sam_data.c[k] - sam_data.c[k + 5]) + sam_data.c[k + 2];
+                    sam_data.d[k + 3] = adb.sam.c1[j] * (sam_data.d[k] - sam_data.d[k + 5]) + sam_data.d[k + 2];
                 }
 
-                float32_t ai_ps = a[OUT_IDX];
-                float32_t bi_ps = b[OUT_IDX];
-                float32_t bq_ps = c[OUT_IDX];
-                float32_t aq_ps = d[OUT_IDX];
+                float32_t ai_ps = sam_data.a[OUT_IDX];
+                float32_t bi_ps = sam_data.b[OUT_IDX];
+                float32_t bq_ps = sam_data.c[OUT_IDX];
+                float32_t aq_ps = sam_data.d[OUT_IDX];
 
                 // make room for next sample
                 for (int j = OUT_IDX + 2; j > 0; j--)
                 {
-                    a[j] = a[j - 1];
-                    b[j] = b[j - 1];
-                    c[j] = c[j - 1];
-                    d[j] = d[j - 1];
+                    sam_data.a[j] = sam_data.a[j - 1];
+                    sam_data.b[j] = sam_data.b[j - 1];
+                    sam_data.c[j] = sam_data.c[j - 1];
+                    sam_data.d[j] = sam_data.d[j - 1];
                 }
 
                 switch(ads.sam_sideband)
@@ -3212,42 +3198,44 @@ static void AudioDriver_DemodSAM(int16_t blockSize)
 
             for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
             {
-                adb.a_buffer[chan][i] = audio[chan];
+                a_buffer[chan][i] = audio[chan];
             }
 
             // determine phase error
             float32_t phzerror = atan2f(corr[1], corr[0]);
 
-            float32_t del_out = fil_out;
+            float32_t del_out = sam_data.fil_out;
             // correct frequency 1st step
-            omega2 = omega2 + adb.g2 * phzerror;
-            if (omega2 < adb.omega_min)
+            sam_data.omega2 = sam_data.omega2 + adb.sam.g2 * phzerror;
+            if (sam_data.omega2 < adb.sam.omega_min)
             {
-                omega2 = adb.omega_min;
+                sam_data.omega2 = adb.sam.omega_min;
             }
-            else if (omega2 > adb.omega_max)
+            else if (sam_data.omega2 > adb.sam.omega_max)
             {
-                omega2 = adb.omega_max;
+                sam_data.omega2 = adb.sam.omega_max;
             }
             // correct frequency 2nd step
-            fil_out = adb.g1 * phzerror + omega2;
-            phs = phs + del_out;
+            sam_data.fil_out = adb.sam.g1 * phzerror + sam_data.omega2;
+            sam_data.phs = sam_data.phs + del_out;
 
             // wrap round 2PI, modulus
-            while (phs >= 2.0 * PI) phs -= (2.0 * PI);
-            while (phs < 0.0) phs += (2.0 * PI);
+            while (sam_data.phs >= 2.0 * PI) { sam_data.phs -= (2.0 * PI); }
+            while (sam_data.phs < 0.0) { sam_data.phs += (2.0 * PI); }
         }
-        count++;
-        if(count > 50) // to display the exact carrier frequency that the PLL is tuned to
+
+        sam_data.count++;
+
+        if(sam_data.count > 50) // to display the exact carrier frequency that the PLL is tuned to
             // in the small frequency display
             // we calculate carrier offset here and the display function is
             // then called in UiDriver_MainHandler approx. every 40-80ms
         { // to make this smoother, a simple lowpass/exponential averager here . . .
-            float32_t carrier = 0.1 * (omega2 * IQ_SAMPLE_RATE) / (adb.DF * 2.0 * PI);
-            carrier = carrier + 0.9 * lowpass;
-            ads.carrier_freq_offset =  (int)carrier;
-            count = 0;
-            lowpass = carrier;
+            float32_t carrier = 0.1 * (sam_data.omega2 * IQ_SAMPLE_RATE) / (decim_rate_f * 2.0 * PI);
+            carrier = carrier + 0.9 * sam_data.lowpass;
+            ads.carrier_freq_offset = carrier;
+            sam_data.count = 0;
+            sam_data.lowpass = carrier;
         }
     }
     break;
@@ -3293,37 +3281,37 @@ void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
         }
         for(uint32_t i = 0; i < blockSize; i++)
         {
-            adb.teta1 += sign_new(adb.i_buffer[i]) * adb.q_buffer[i]; // eq (34)
-            adb.teta2 += sign_new(adb.i_buffer[i]) * adb.i_buffer[i]; // eq (35)
-            adb.teta3 += sign_new(adb.q_buffer[i]) * adb.q_buffer[i]; // eq (36)
+            adb.iq_corr.teta1 += sign_new(adb.i_buffer[i]) * adb.q_buffer[i]; // eq (34)
+            adb.iq_corr.teta2 += sign_new(adb.i_buffer[i]) * adb.i_buffer[i]; // eq (35)
+            adb.iq_corr.teta3 += sign_new(adb.q_buffer[i]) * adb.q_buffer[i]; // eq (36)
             IQ_auto_counter++;
         }
         if(IQ_auto_counter >= 8)
         {
-            adb.teta1 = -0.003 * (adb.teta1 / blockSize / 8.0 ) + 0.997 * adb.teta1_old; // eq (34) and first order lowpass
-            adb.teta2 =  0.003 * (adb.teta2 / blockSize / 8.0 ) + 0.997 * adb.teta2_old; // eq (35) and first order lowpass
-            adb.teta3 =  0.003 * (adb.teta3 / blockSize / 8.0 ) + 0.997 * adb.teta3_old; // eq (36) and first order lowpass
-            if(adb.teta2 != 0.0)// prevent divide-by-zero
+            adb.iq_corr.teta1 = -0.003 * (adb.iq_corr.teta1 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta1_old; // eq (34) and first order lowpass
+            adb.iq_corr.teta2 =  0.003 * (adb.iq_corr.teta2 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta2_old; // eq (35) and first order lowpass
+            adb.iq_corr.teta3 =  0.003 * (adb.iq_corr.teta3 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta3_old; // eq (36) and first order lowpass
+            if(adb.iq_corr.teta2 != 0.0)// prevent divide-by-zero
             {
-                adb.M_c1 = adb.teta1 / adb.teta2; // eq (30)
+                adb.iq_corr.M_c1 = adb.iq_corr.teta1 / adb.iq_corr.teta2; // eq (30)
             }
             else
             {
-                adb.M_c1 = 0.0;
+                adb.iq_corr.M_c1 = 0.0;
             }
 
-            float32_t help = (adb.teta2 * adb.teta2);
+            float32_t help = (adb.iq_corr.teta2 * adb.iq_corr.teta2);
             if(help > 0.0)// prevent divide-by-zero
             {
-                help = (adb.teta3 * adb.teta3 - adb.teta1 * adb.teta1) / help; // eq (31)
+                help = (adb.iq_corr.teta3 * adb.iq_corr.teta3 - adb.iq_corr.teta1 * adb.iq_corr.teta1) / help; // eq (31)
             }
             if (help > 0.0)// prevent sqrtf of negative value
             {
-                adb.M_c2 = sqrtf(help); // eq (31)
+                adb.iq_corr.M_c2 = sqrtf(help); // eq (31)
             }
             else
             {
-                adb.M_c2 = 1.0;
+                adb.iq_corr.M_c2 = 1.0;
             }
             // Test and fix of the "twinpeak syndrome"
             // which occurs sporadically and can -to our knowledge- only be fixed
@@ -3332,14 +3320,14 @@ void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
             // so I & Q have essentially the same phase
             // We use this to identify the snydrome and reset the codec accordingly:
             // calculate phase between I & Q
-            if(adb.teta3 != 0.0 && !ts.twinpeaks_tested) // prevent divide-by-zero
+            if(adb.iq_corr.teta3 != 0.0 && !ts.twinpeaks_tested) // prevent divide-by-zero
                 // twinpeak_tested = 2 --> wait for system to warm up
                 // twinpeak_tested = 0 --> go and test the IQ phase
                 // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
             {   // Moseley & Slump (2006) eq. (33)
                 // this gives us the phase error between I & Q in radians
-                float32_t phase_IQ = asinf(adb.teta1 / adb.teta3);
-                if ((phase_IQ > 0.3926990817 || phase_IQ < -0.3926990817) && codec_restarts < 5)
+                float32_t phase_IQ = asinf(adb.iq_corr.teta1 / adb.iq_corr.teta3);
+                if (fabsf(phase_IQ) > (M_PI/8)  && codec_restarts < 5)
                     // threshold of 22.5 degrees phase shift == PI / 8 == 0.3926990817
                     // hopefully your hardware is not so bad, that its phase error is more than 22 degrees ;-)
                     // if it is that bad, adjust this threshold to maybe PI / 7 or PI / 6
@@ -3361,21 +3349,21 @@ void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
                     ts.twinpeaks_tested = 1;
                 }
             }
-            adb.teta1_old = adb.teta1;
-            adb.teta2_old = adb.teta2;
-            adb.teta3_old = adb.teta3;
-            adb.teta1 = 0.0;
-            adb.teta2 = 0.0;
-            adb.teta3 = 0.0;
+            adb.iq_corr.teta1_old = adb.iq_corr.teta1;
+            adb.iq_corr.teta2_old = adb.iq_corr.teta2;
+            adb.iq_corr.teta3_old = adb.iq_corr.teta3;
+            adb.iq_corr.teta1 = 0.0;
+            adb.iq_corr.teta2 = 0.0;
+            adb.iq_corr.teta3 = 0.0;
             IQ_auto_counter = 0;
         }
         // first correct Q and then correct I --> this order is crucially important!
         for(uint32_t i = 0; i < blockSize; i++)
         {   // see fig. 5
-            adb.q_buffer[i] += adb.M_c1 * adb.i_buffer[i];
+            adb.q_buffer[i] += adb.iq_corr.M_c1 * adb.i_buffer[i];
         }
         // see fig. 5
-        arm_scale_f32 (adb.i_buffer, adb.M_c2, adb.i_buffer, blockSize);
+        arm_scale_f32 (adb.i_buffer, adb.iq_corr.M_c2, adb.i_buffer, blockSize);
     }
 
 }
@@ -3508,11 +3496,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 #ifdef USE_TWO_CHANNEL_AUDIO
     const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
 #endif
-    float post_agc_gain_scaling;
 
     if (tx_audio_source == TX_AUDIO_DIGIQ)
     {
-
         for(uint32_t i = 0; i < blockSize; i++)
         {
             // 16 bit format - convert to float and increment
@@ -3633,7 +3619,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
             case DEMOD_AM:
             case DEMOD_SAM:
-                AudioDriver_DemodSAM(blockSize); // lowpass filtering, decimation, and SAM demodulation
+                AudioDriver_DemodSAM(adb.i_buffer, adb.q_buffer, adb.a_buffer, blockSize); // lowpass filtering, decimation, and SAM demodulation
                 // TODO: the above is "real" SAM, old SAM mode (below) could be renamed and implemented as DSB (double sideband mode)
                 // if anybody needs that
 
@@ -3643,7 +3629,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
 
                 break;
             case DEMOD_FM:
-                AudioDriver_DemodFM(blockSize);
+                AudioDriver_DemodFM(adb.i_buffer, adb.q_buffer, adb.a_buffer[0], blockSize);
                 break;
             case DEMOD_DIGI:
                 // if we are here, the digital codec (e.g. because of no signal) asked to decode
@@ -3786,25 +3772,17 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 } // end of new nb
 
                 // Calculate scaling based on decimation rate since this affects the audio gain
-                if ((FilterPathInfo[ts.filter_path].sample_rate_dec) == RX_DECIMATION_RATE_12KHZ)
-                {
-                    post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_4;
-                }
-                else
-                {
-                    post_agc_gain_scaling = POST_AGC_GAIN_SCALING_DECIMATE_2;
-                }
+                const float32_t post_agc_gain_scaling =
+                        (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ) ?
+                        POST_AGC_GAIN_SCALING_DECIMATE_4 : POST_AGC_GAIN_SCALING_DECIMATE_2;
+
 
                 // Scale audio according to AGC setting, demodulation mode and required fixed levels and scaling
-                float32_t scale_gain;
-                if(dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM)
-                {
-                        scale_gain = post_agc_gain_scaling * 0.5; // ignore ts.max_rf_gain  --> has no meaning with WDSP AGC; and take into account AM scaling factor
-                }
-                else        // Not AM
-                {
-                        scale_gain = post_agc_gain_scaling * 0.333; // ignore ts.max_rf_gain --> has no meaning with WDSP AGC
-                }
+                const float32_t scale_gain =
+                        (dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM)?
+                        post_agc_gain_scaling * 0.5: // AM/SAM
+                        post_agc_gain_scaling * 0.333; // not AM/SAM
+
                 arm_scale_f32(adb.a_buffer[0],scale_gain, adb.a_buffer[0], blockSizeDecim); // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
 #ifdef USE_TWO_CHANNEL_AUDIO
                 if(use_stereo)
@@ -3830,10 +3808,9 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                 {
                     AudioDriver_RxProcessor_Bpsk(adb.a_buffer[0], blockSizeDecim);
                 }
-//                if(blockSizeDecim ==8 && dmod_mode == DEMOD_CW)
-//                if(ts.cw_decoder_enable && blockSizeDecim ==8 && (dmod_mode == DEMOD_CW || dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM))
+
                 if(blockSizeDecim ==8 && (dmod_mode == DEMOD_CW || dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM))
-// switch to use TUNE HELPER in AM/SAM
+                // switch to use TUNE HELPER in AM/SAM
                 {
                 	CwDecode_RxProcessor(adb.a_buffer[0], blockSizeDecim);
                 }
@@ -3879,7 +3856,7 @@ static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * c
                         RadioManagement_FmDevIs5khz() ? FM_RX_SCALING_5K : FM_RX_SCALING_2K5,
                                 adb.a_buffer[1],
                                 blockSizeDecim);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
-                    AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
+                AudioDriver_RxAgcWdsp(blockSizeDecim, adb.a_buffer);
             }
 
             // this is the biquad filter, a highshelf filter
@@ -4020,43 +3997,34 @@ static void AudioDriver_TxCompressor(float32_t* buffer, int16_t blockSize, float
         }
         else
         {
-            // since both values are marked as volatile, we copy them before using them, saves some cpu cycles.
-            static float32_t alc_val;
-            alc_val = ads.alc_val;
-            float32_t alc_decay = ads.alc_decay;
-
             for(uint16_t i = 0; i < blockSize; i++)
             {
                 // perform ALC on post-filtered audio (You will notice the striking similarity to the AGC code!)
 
                 // calculate current level by scaling it with ALC value
-                float32_t alc_var = fabsf(buffer[i] * alc_val)/ALC_KNEE - 1.0; // calculate difference between ALC value and "knee" value
+                float32_t alc_var = fabsf(buffer[i] * ads.alc_val)/ALC_KNEE - 1.0; // calculate difference between ALC value and "knee" value
                 if(alc_var < 0)	 	// is audio below ALC "knee" value?
                 {
                     // alc_var is a negative value, so the resulting expression is negative
                     // but we want to increase the alc_val -> we subtract it
-                    alc_val -= alc_val * alc_decay * alc_var;	// (ALC DECAY) Yes - Increase gain slowly
+                    ads.alc_val -= ads.alc_val * ads.alc_decay * alc_var;	// (ALC DECAY) Yes - Increase gain slowly
                 }
                 else
                 {
                     // alc_var is a positive value
-                    alc_val -= alc_val * ALC_ATTACK * alc_var;	// Fast attack to increase gain
-                    if(alc_val < ALC_VAL_MIN)	// Prevent zero or "negative" gain values
+                    ads.alc_val -= ads.alc_val * ALC_ATTACK * alc_var;	// Fast attack to increase gain
+                    if(ads.alc_val < ALC_VAL_MIN)	// Prevent zero or "negative" gain values
                     {
-                        alc_val = ALC_VAL_MIN;
+                        ads.alc_val = ALC_VAL_MIN;
                     }
                 }
-                if(alc_val > ALC_VAL_MAX)	// limit to fixed values within the code
+                if(ads.alc_val > ALC_VAL_MAX)	// limit to fixed values within the code
                 {
-                    alc_val = ALC_VAL_MAX;
+                    ads.alc_val = ALC_VAL_MAX;
                 }
 
-                adb.agc_valbuf[i] = (alc_val * gain_scaling);	// store in "running" ALC history buffer for later application to audio data
+                adb.agc_valbuf[i] = (ads.alc_val * gain_scaling);	// store in "running" ALC history buffer for later application to audio data
             }
-
-            // copy final alc_val back into "storage"
-            ads.alc_val = alc_val;
-
         }
 
         // Delay the post-ALC audio slightly so that the ALC's "attack" will very slightly lead the audio being acted upon by the ALC.
@@ -4249,19 +4217,6 @@ static void AudioDriver_TxProcessorAMSideband(float32_t* i_buffer, float32_t* q_
 
     // check and apply correct translate mode
     FreqShift(i_buffer, q_buffer, blockSize, (AudioDriver_GetTranslateFreq() > 0));
-}
-
-static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize)
-{
-    if (do_bandpass)
-    {
-        arm_iir_lattice_f32(&IIR_TXFilter, inBlock, outBlock, blockSize);
-    }
-    if (do_bass_treble)
-    {
-        // biquad filter for bass & treble --> NOT enabled when using USB Audio (eg. for Digimodes)
-        arm_biquad_cascade_df1_f32 (&IIR_TX_biquad, outBlock,outBlock, blockSize);
-    }
 }
 
 /**
@@ -4469,6 +4424,20 @@ static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSamp
     }
 }
 #endif
+
+static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treble, float32_t* inBlock, float32_t* outBlock, const uint16_t blockSize)
+{
+    if (do_bandpass)
+    {
+        arm_iir_lattice_f32(&IIR_TXFilter, inBlock, outBlock, blockSize);
+    }
+    if (do_bass_treble)
+    {
+        // biquad filter for bass & treble --> NOT enabled when using USB Audio (eg. for Digimodes)
+        arm_biquad_cascade_df1_f32 (&IIR_TX_biquad, outBlock,outBlock, blockSize);
+    }
+}
+
 
 static void AudioDriver_TxProcessorRtty(AudioSample_t * const dst, uint16_t blockSize)
 {
