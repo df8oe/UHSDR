@@ -912,7 +912,9 @@ typedef struct TransceiverState
     uint16_t	version_number_minor;		// version number - minor - used to hold version number and detect change
     uint16_t	version_number_major;		// version number - build - used to hold version number and detect change
     uint16_t	version_number_release;		// version number - release - used to hold version number and detect change
+#ifdef OBSOLETE_AGC
     uint8_t	nb_agc_time_const;			// used to calculate the AGC time constant
+#endif
     uint8_t	cw_offset_mode;				// CW offset mode (USB, LSB, etc.)
     bool	cw_lsb;					// flag used to indicate that CW is to operate in LSB when TRUE
     int32_t	iq_freq_mode;				// used to set/configure the I/Q frequency/conversion mode

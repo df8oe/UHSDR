@@ -83,22 +83,10 @@ typedef struct {
     #define NUM_AUDIO_CHANNELS 1
 #endif
 
-
-
 typedef struct
 {
-    // Stereo buffers
-    float32_t               i_buffer[IQ_BLOCK_SIZE];
-    float32_t               q_buffer[IQ_BLOCK_SIZE];
-
-    float32_t               agc_valbuf[IQ_BLOCK_SIZE];   // holder for "running" AGC value
-    float32_t               DF;
-
-    float32_t               a_buffer[2][IQ_BLOCK_SIZE];
-
 
     // for SAM demodulation
-    float32_t               pll_fmax;
     // DX adjustments: zeta = 0.15, omegaN = 100.0
     // very stable, but does not lock very fast
     // standard settings: zeta = 1.0, omegaN = 250.0
@@ -108,8 +96,6 @@ typedef struct
     // medium 0.6, 200
     // fast 1.2, 500
 
-    float32_t               zeta; // 0.01;// 0.001; // 0.1; //0.65; // PLL step response: smaller, slower response 1.0 - 0.1
-    float32_t               omegaN; //200.0; // PLL bandwidth 50.0 - 1000.0
 
       //pll
     float32_t               omega_min; // (2.0 * 3.141592653589793f * pll_fmin * DF / IQ_SAMPLE_RATE_F);
@@ -119,14 +105,19 @@ typedef struct
         //  * cosf(omegaN * DF / IQ_SAMPLE_RATE_F * sqrtf(1.0 - zeta * zeta))));
 
       //fade leveler
-    float32_t               tauR; // original 0.02;
-    float32_t               tauI; // original 1.4;
     float32_t               mtauR; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauR))); //0.99948;
     float32_t               onem_mtauR;
     float32_t               mtauI; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauI))); //0.99999255955;
     float32_t               onem_mtauI;
-    float32_t               c0[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 0
-    float32_t               c1[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 1
+
+    const float32_t               c0[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 0
+    const float32_t               c1[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 1
+} demod_sam_param_t;
+
+
+
+typedef struct
+{
     float32_t               teta1;
     float32_t               teta2;
     float32_t               teta3;
@@ -135,6 +126,20 @@ typedef struct
     float32_t               teta3_old;
     float32_t               M_c1;
     float32_t               M_c2;
+} iq_correction_data_t;
+
+typedef struct
+{
+    // Stereo buffers
+    float32_t               i_buffer[IQ_BLOCK_SIZE];
+    float32_t               q_buffer[IQ_BLOCK_SIZE];
+
+    float32_t               agc_valbuf[IQ_BLOCK_SIZE];   // holder for "running" AGC value
+
+    float32_t               a_buffer[2][IQ_BLOCK_SIZE];
+
+    demod_sam_param_t sam;
+    iq_correction_data_t iq_corr;
 } AudioDriverBuffer;
 
 
@@ -179,56 +184,58 @@ typedef struct AudioDriverState
     volatile bool					af_disabled;			// if TRUE, audio filtering is disabled (used during filter bandwidth changing, etc.)
     volatile bool					tx_filter_adjusting;	// used to disable TX I/Q filter during phase adjustment
 
+#ifdef OBSOLETE_AGC
     // AGC and audio related variables
+    float 					agc_val;			// "live" receiver AGC value
+    float					agc_var;
+    float					agc_calc;
+    float					agc_holder;			// used to hold AGC value during transmit and tuning
+    float					agc_decay;			// decay rate (speed) of AGC
+    float					agc_rf_gain;		// manual RF gain (actual) - calculated from the value of "ts.rf_gain"
+    float					agc_knee;			// "knee" for AGC operation
+    float					agc_val_max;		// maximum AGC gain (at minimum signal)
+    float					am_fm_agc;			// Signal/AGC level in AM and FM demod mode
+    ulong                   agc_delay_buflen;       // AGC delay buffer length
+    float                   agc_decimation_scaling; // used to adjust AGC timing based on sample rate
 
-//    float 					agc_val;			// "live" receiver AGC value
-//    float					agc_var;
-//    float					agc_calc;
-//    float					agc_holder;			// used to hold AGC value during transmit and tuning
-//    float					agc_decay;			// decay rate (speed) of AGC
-//    float					agc_rf_gain;		// manual RF gain (actual) - calculated from the value of "ts.rf_gain"
-//    float					agc_knee;			// "knee" for AGC operation
-//    float					agc_val_max;		// maximum AGC gain (at minimum signal)
-//    float					am_fm_agc;			// Signal/AGC level in AM and FM demod mode
+    float                   nb_agc_filt;            // used for the filtering/determination of the noise blanker AGC level
+    float                   nb_sig_filt;
+#endif
+#ifdef OBSOLETE_NR
+    ulong                   dsp_zero_count;         // used for detecting zero output from DSP which can occur if it crashes
+    float                   dsp_nr_sample;          // used for detecting a problem with the DSP (e.g. crashing)
+#endif
 
-    uchar					codec_gain;
-    float					codec_gain_calc;
-    bool					adc_clip;
-    bool					adc_half_clip;
-    bool					adc_quarter_clip;
+    float					codec_gain_calc;    // spectrum gain value
+
+    bool					adc_clip;           // used to display warning in s meter
+    bool					adc_half_clip;      // used to control input gain and spectrum gain
+    bool					adc_quarter_clip;   // used to control input gain and spectrum gain
     float					peak_audio;			// used for audio metering to detect the peak audio level
 
     float					alc_val;			// "live" transmitter ALC value
     float					alc_decay;			// decay rate (speed) of ALC
-    float					post_agc_gain;		// post AGC gain scaling
-    //
-    uchar					decimation_rate;		// current decimation/interpolation rate
-//    ulong					agc_delay_buflen;		// AGC delay buffer length
-//    float					agc_decimation_scaling;	// used to adjust AGC timing based on sample rate
-    //
-//    float					nb_agc_filt;			// used for the filtering/determination of the noise blanker AGC level
-//    float					nb_sig_filt;
-    ulong					dsp_zero_count;			// used for detecting zero output from DSP which can occur if it crashes
-    float					dsp_nr_sample;			// used for detecting a problem with the DSP (e.g. crashing)
-    //
-    fm_t                   fm;
 
-    soft_dds_t					beep;				// this is the actively-used DDS tone word for the radio's beep generator
+    uchar					decimation_rate;		// current decimation/interpolation rate
+
+    fm_t                    fm;
+
+    soft_dds_t              beep;				// this is the actively-used DDS tone word for the radio's beep generator
     float					beep_loudness_factor;	// this is used to set the beep loudness
+
+    /* SAM */
+    // sam related output variables
     int                     carrier_freq_offset;
+
+    // sam related configuration parameters, stored in config memory
     int                     pll_fmax_int;
     int                     zeta_int; // zeta * 100
     int                     omegaN_int;
-    uint8_t                 sam_sideband; // 0 = both, 1 = LSB, 2 = USB
-    uint8_t                 fade_leveler;
+    uint8_t                 fade_leveler; // boolean
+    // sam related operation parameters, not stored in config memory
+    sam_sideband_t          sam_sideband; // 0 = both, 1 = LSB, 2 = USB
 
-    //    int                     tauR_int;
-//    int                     tauI_int;
-
-    //
-    // The following are pre-calculated terms for the Goertzel functions used for subaudible tone detection
-
-
+    /* IQ Balance */
     float32_t               iq_phase_balance_rx;
     float32_t               iq_phase_balance_tx[IQ_TRANS_NUM];
 
@@ -632,8 +639,8 @@ void AudioDriver_Init(void);
 void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr);
 void AudioDriver_TxFilterInit(uint8_t dmod_mode);
 int32_t AudioDriver_GetTranslateFreq();
-void AudioDriver_SetSamPllParameters (void);
-void AudioDriver_SetupAgcWdsp(void);
+void AudioDriver_SetSamPllParameters ();
+void AudioDriver_SetupAgcWdsp();
 float log10f_fast(float X);
 
 void RttyDecoder_Init();
