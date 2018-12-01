@@ -389,6 +389,7 @@ const MenuDescriptor infoGroup[] =
     { MENU_SYSINFO, MENU_INFO, INFO_BL_VERSION, NULL,"Bootloader", UiMenuDesc("bootloader version") },
     { MENU_SYSINFO, MENU_INFO, INFO_RFBOARD, NULL,"RF Board", UiMenuDesc("Displays the detected RF Board hardware identification.") },
     { MENU_SYSINFO, MENU_INFO, INFO_CODEC, NULL,"Audio Codec Presence", UiMenuDesc("Audio Codec I2C communication successfully tested? This is not a full test of the Audio Codec functionality, it only reports if I2C communication reported no problem talking to the codec.") },
+    { MENU_SYSINFO, MENU_INFO, INFO_CODEC_TWINPEAKS, NULL,"Audio Codec Twinpeaks Corr.", UiMenuDesc("In some cases the audio codec needs to be restarted to produce correct IQ. The IQ auto correction detects this. If this fixes the problem, Done is displayed, Failed otherwise") },
     { MENU_SYSINFO, MENU_INFO, INFO_VBAT, NULL,"Backup RAM Battery", UiMenuDesc("Battery Support for Backup RAM present?") },
     { MENU_SYSINFO, MENU_INFO, INFO_RTC, NULL,"Real Time Clock", UiMenuDesc("Battery Supported Real Time Clock present?") },
     { MENU_SYSINFO, MENU_INFO, INFO_LICENCE, NULL,"FW license", UiMenuDesc("Display license of firmware") },

@@ -989,6 +989,14 @@ typedef struct TransceiverState
 	uint8_t	meter_colour_down;
 	uint8_t   iq_auto_correction;     // switch variable for automatic IQ correction
 	bool	display_rx_iq;
+
+	// twinpeak_tested = 2 --> wait for system to warm up
+    // twinpeak_tested = 0 --> go and test the IQ phase
+    // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
+#define TWINPEAKS_WAIT 2
+#define TWINPEAKS_DONE 1
+#define TWINPEAKS_SAMPLING 0
+#define TWINPEAKS_UNCORRECTABLE 4
 	uint8_t twinpeaks_tested;
 //	uint8_t agc_wdsp;
 	uint8_t agc_wdsp_mode;

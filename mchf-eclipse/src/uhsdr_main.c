@@ -321,9 +321,7 @@ void TransceiverStateInit(void)
 //    ts.dBm_count = 0;						// timer start
     ts.tx_filter = 0;						// which TX filter has been chosen by the user
     ts.iq_auto_correction = 1;              // disable/enable automatic IQ correction
-    ts.twinpeaks_tested = 2;                // twinpeak_tested = 2 --> wait for system to warm up
-    // twinpeak_tested = 0 --> go and test the IQ phase
-    // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
+    ts.twinpeaks_tested = TWINPEAKS_WAIT;
 //    ts.agc_wdsp = 0;
     ts.agc_wdsp_mode = 2;
     ts.agc_wdsp_slope = 70;

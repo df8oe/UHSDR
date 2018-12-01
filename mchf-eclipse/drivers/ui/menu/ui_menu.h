@@ -64,6 +64,7 @@ enum MENU_INFO_ITEM
     INFO_LICENCE,
     INFO_HWLICENCE,
     INFO_CODEC,
+    INFO_CODEC_TWINPEAKS,
 };
 
 const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item);
