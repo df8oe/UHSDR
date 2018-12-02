@@ -2285,6 +2285,21 @@ const uhsdr_display_info_t display_infos[] = {
         },
 #endif
 #endif
+#ifdef USE_GFX_RA8875
+        {
+                DISPLAY_RA8875_PARALLEL, "RA8875 Para.",
+				.ReadDisplayId = UiLcdHy28_ReadDisplayId_RA8875,
+                .SetActiveWindow = UiLcdHy28_SetActiveWindow_RA8875,
+                .SetCursorA = UiLcdHy28_SetCursorA_RA8875,
+                .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_RA8875,
+				.WriteReg = UiLcdHy28_WriteRegRA8875,
+				.ReadReg = UiLcdHy28_ReadRegRA8875,
+				.DrawStraightLine = UiLcdHy28_DrawStraightLine_RA8875,
+				.DrawFullRect = UiLcdHy28_DrawFullRect_RA8875,
+				.DrawColorPoint = UiLcdHy28_DrawColorPoint_RA8875,
+
+        },
+#endif
 #endif
 
 #if  defined(USE_SPI_DISPLAY)
@@ -2328,37 +2343,7 @@ const uhsdr_display_info_t display_infos[] = {
 				.spi_speed=false
         },
 #endif
-#if defined(USE_GFX_ILI9486)
-        {       DISPLAY_RPI_SPI, "RPi 3.5 SPI",
-                .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI9486,
-                .SetActiveWindow = UiLcdHy28_SetActiveWindow_ILI9486,
-                .SetCursorA = UiLcdHy28_SetCursorA_ILI9486,
-                .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_ILI9486,
-                .WriteDataSpiStart_Prepare = UiLcdHy28_WriteDataSpiStart_Prepare_ILI9486,
-                .WriteIndexSpi_Prepare = UiLcdHy28_WriteIndexSpi_Prepare_ILI9486,
-                .spi_cs_port = LCD_CSA_PIO,
-                .spi_cs_pin = LCD_CSA,
-                true, true
-        },
-        // RPI_SPI NEEDS TO BE LAST IN LIST!!!
-#endif
-#endif
 #ifdef USE_GFX_RA8875
-        {
-                DISPLAY_RA8875_PARALLEL, "RA8875 Para.",
-				.ReadDisplayId = UiLcdHy28_ReadDisplayId_RA8875,
-                .SetActiveWindow = UiLcdHy28_SetActiveWindow_RA8875,
-                .SetCursorA = UiLcdHy28_SetCursorA_RA8875,
-                .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_RA8875,
-				.WriteReg = UiLcdHy28_WriteRegRA8875,
-				.ReadReg = UiLcdHy28_ReadRegRA8875,
-				.DrawStraightLine = UiLcdHy28_DrawStraightLine_RA8875,
-				.DrawFullRect = UiLcdHy28_DrawFullRect_RA8875,
-				.DrawColorPoint = UiLcdHy28_DrawColorPoint_RA8875,
-                .spi_cs_port = LCD_CSA_PIO,
-                .spi_cs_pin = LCD_CSA,
-
-        },
 		//currently RA8875 parallel interface supported only
 /*        {
                 DISPLAY_RA8875_SPI, "RA8875 SPI",
@@ -2367,11 +2352,16 @@ const uhsdr_display_info_t display_infos[] = {
                 .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_RA8875,
                 .WriteDataSpiStart_Prepare = UiLcdHy28_WriteDataSpiStart_Prepare_RA8875,
                 .WriteIndexSpi_Prepare = UiLcdHy28_WriteIndexSpi_Prepare_RA8875,
+  				.WriteReg = UiLcdHy28_WriteRegRA8875,
+				.ReadReg = UiLcdHy28_ReadRegRA8875,
+				.DrawStraightLine = UiLcdHy28_DrawStraightLine_RA8875,
+				.DrawFullRect = UiLcdHy28_DrawFullRect_RA8875,
+				.DrawColorPoint = UiLcdHy28_DrawColorPoint_RA8875,
                 .spi_cs_port = LCD_CSA_PIO,
                 .spi_cs_pin = LCD_CSA,
                 true, false },*/
 #endif
-#if defined(USE_GFX_ILI9486) && defined(USE_SPI_DISPLAY)
+#if defined(USE_GFX_ILI9486)
         {       DISPLAY_RPI_SPI, "RPi 3.5 SPI",
                 .ReadDisplayId = UiLcdHy28_ReadDisplayId_ILI9486,
                 .SetActiveWindow = UiLcdHy28_SetActiveWindow_ILI9486,
@@ -2391,6 +2381,8 @@ const uhsdr_display_info_t display_infos[] = {
         },
         // RPI_SPI NEEDS TO BE LAST IN LIST!!!
 #endif
+#endif
+
         {
                 DISPLAY_NUM, "Unknown", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0
         }
