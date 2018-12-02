@@ -857,7 +857,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         if(ts.fm_subaudible_tone_gen_select != FM_SUBAUDIBLE_TONE_OFF)        // tone select not zero (tone activated
         {
-            int a = (int)(ads.fm.subaudible_tone_gen_freq * 10);        // convert to integer, Hz*10
+            int a = (int)(ads.fm_conf.subaudible_tone_gen_freq * 10);        // convert to integer, Hz*10
             snprintf(options,32, "%d.%01dHz", a/10, a%10);
         }
         else                                // tone is off
@@ -869,7 +869,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             clr = Orange;
         }
-        else if(ads.fm.subaudible_tone_det_freq > 200)      // yellow for tones above 200 Hz as they are more audible
+        else if(ads.fm_conf.subaudible_tone_det_freq > 200)      // yellow for tones above 200 Hz as they are more audible
         {
             clr = Yellow;
         }
@@ -885,7 +885,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         if(ts.fm_subaudible_tone_det_select)        // tone select not zero (tone activated
         {
             AudioManagement_CalcSubaudibleDetFreq();        // calculate frequency word
-            int a = (int)(ads.fm.subaudible_tone_det_freq * 10);        // convert to integer, Hz*10
+            int a = (int)(ads.fm_conf.subaudible_tone_det_freq * 10);        // convert to integer, Hz*10
             snprintf(options,32, "%d.%01dHz", a/10, a%10);
         }
         else                                // tone is off
@@ -897,7 +897,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             clr = Orange;
         }
-        else if(ads.fm.subaudible_tone_det_freq > 200)      // yellow for tones above 200 Hz as they are more audible
+        else if(ads.fm_conf.subaudible_tone_det_freq > 200)      // yellow for tones above 200 Hz as they are more audible
         {
             clr = Yellow;
         }
@@ -910,7 +910,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                     1
                                    );
 
-        ads.fm.tone_burst_active = 0;           // make sure it is turned off
+        ads.fm_conf.tone_burst_active = 0;           // make sure it is turned off
         AudioManagement_LoadToneBurstMode();    // activate setting
 
         switch(ts.fm_tone_burst_mode)
@@ -1062,13 +1062,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 #endif
     case MENU_AGC_WDSP_MODE: // AGC mode
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_mode,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_conf.mode,
                                               0, //
                                               5,
                                               2,
                                               1
                                              );
-        switch(ts.agc_wdsp_mode) {
+        switch(ts.agc_wdsp_conf.mode) {
         case 0:
             txt_ptr = "very LONG";
             break;
@@ -1093,7 +1093,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         if(var_change)
         {
             // now set the AGC parameters
-            ts.agc_wdsp_switch_mode = 1; // set flag to 1 for parameter change
+            ts.agc_wdsp_conf.switch_mode = 1; // set flag to 1 for parameter change
             AudioDriver_SetupAgcWdsp();
             UiMenu_RenderMenu(MENU_RENDER_ONLY);
         }
@@ -1104,7 +1104,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         break;
 
     case MENU_AGC_WDSP_SLOPE:      //
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_slope,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_conf.slope,
                                             0,
                                             200,
                                             40,
@@ -1114,11 +1114,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             AudioDriver_SetupAgcWdsp();
         }
-        snprintf(options, 32, "  %ddB", ts.agc_wdsp_slope / 10);
+        snprintf(options, 32, "  %ddB", ts.agc_wdsp_conf.slope / 10);
         break;
 
     case MENU_AGC_WDSP_THRESH:      //
-        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_thresh,
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_conf.thresh,
                                             -20,
                                             120,
                                             40,
@@ -1128,11 +1128,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             AudioDriver_SetupAgcWdsp();
         }
-        snprintf(options, 32, "  %ddB", ts.agc_wdsp_thresh);
+        snprintf(options, 32, "  %ddB", ts.agc_wdsp_conf.thresh);
         break;
 
     case MENU_AGC_WDSP_HANG_THRESH:      //
-        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_hang_thresh,
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_conf.hang_thresh,
                                             -20,
                                             120,
                                             40,
@@ -1142,11 +1142,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             AudioDriver_SetupAgcWdsp();
         }
-        snprintf(options, 32, "  %ddB", ts.agc_wdsp_hang_thresh);
+        snprintf(options, 32, "  %ddB", ts.agc_wdsp_conf.hang_thresh);
         break;
 
     case MENU_AGC_WDSP_TAU_DECAY:      //
-       var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode],
+       var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_conf.tau_decay[ts.agc_wdsp_conf.mode],
                                            100,
                                            5000,
                                            1000,
@@ -1156,11 +1156,11 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
        {
            AudioDriver_SetupAgcWdsp();
        }
-       snprintf(options, 32, "  %ums", ts.agc_wdsp_tau_decay[ts.agc_wdsp_mode]);
+       snprintf(options, 32, "  %ums", ts.agc_wdsp_conf.tau_decay[ts.agc_wdsp_conf.mode]);
        break;
 
     case MENU_AGC_WDSP_TAU_HANG_DECAY:      //
-       var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_tau_hang_decay,
+       var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_conf.tau_hang_decay,
                                            100,
                                            5000,
                                            1000,
@@ -1170,7 +1170,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
        {
            AudioDriver_SetupAgcWdsp();
        }
-       snprintf(options, 32, "  %ums", ts.agc_wdsp_tau_hang_decay);
+       snprintf(options, 32, "  %ums", ts.agc_wdsp_conf.tau_hang_decay);
        break;
 
      case MENU_DBM_CALIBRATE:      //
@@ -1192,7 +1192,7 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
          break;
 
     case MENU_AGC_WDSP_HANG_TIME:      //
-        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_hang_time,
+        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_conf.hang_time,
                                             10,
                                             5000,
                                             250,
@@ -1202,17 +1202,17 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         {
             AudioDriver_SetupAgcWdsp();
         }
-        snprintf(options, 32, "  %dms", ts.agc_wdsp_hang_time);
+        snprintf(options, 32, "  %dms", ts.agc_wdsp_conf.hang_time);
         break;
 #if 0
         case MENU_AGC_WDSP_SWITCH:     // Enable/Disable wdsp AGC
-            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp,
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_conf,
                                                   0,
                                                   1,
                                                   0,
                                                   1
                                                  );
-            switch(ts.agc_wdsp)
+            switch(ts.agc_wdsp_conf)
             {
             case 1:       //
                 txt_ptr = "    WDSP AGC";        //
@@ -1223,13 +1223,13 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             break;
 #endif
             case MENU_AGC_WDSP_HANG_ENABLE:     //
-            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_hang_enable,
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_conf.hang_enable,
                                                   0,
                                                   1,
                                                   0,
                                                   1
                                                  );
-            switch(ts.agc_wdsp_hang_enable)
+            switch(ts.agc_wdsp_conf.hang_enable)
             {
             case 1:       //
                 txt_ptr = "  ON";        //

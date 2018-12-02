@@ -162,7 +162,7 @@ typedef struct
     #define FM_LOW  1
     #define FM_CTR  2
 
-} fm_t;
+} fm_conf_t;
 
 typedef enum
 {
@@ -218,7 +218,7 @@ typedef struct AudioDriverState
 
     uchar					decimation_rate;		// current decimation/interpolation rate
 
-    fm_t                    fm;
+    fm_conf_t               fm_conf;       // configuration parameters for the fm demodulator
 
     soft_dds_t              beep;				// this is the actively-used DDS tone word for the radio's beep generator
     float					beep_loudness_factor;	// this is used to set the beep loudness

@@ -322,24 +322,25 @@ void TransceiverStateInit(void)
     ts.tx_filter = 0;						// which TX filter has been chosen by the user
     ts.iq_auto_correction = 1;              // disable/enable automatic IQ correction
     ts.twinpeaks_tested = TWINPEAKS_WAIT;
-//    ts.agc_wdsp = 0;
-    ts.agc_wdsp_mode = 2;
-    ts.agc_wdsp_slope = 70;
-    ts.agc_wdsp_hang_enable = 0;
-    ts.agc_wdsp_hang_time = 500;
-    ts.agc_wdsp_hang_thresh = 45;
-    ts.agc_wdsp_thresh = 60;
-    ts.agc_wdsp_action = 0;
-    ts.agc_wdsp_switch_mode = 1;
-    ts.agc_wdsp_hang_action = 0;
-    ts.agc_wdsp_tau_decay[0] = 4000;
-    ts.agc_wdsp_tau_decay[1] = 2000;
-    ts.agc_wdsp_tau_decay[2] = 500;
-    ts.agc_wdsp_tau_decay[3] = 250;
-    ts.agc_wdsp_tau_decay[4] = 50;
-    ts.agc_wdsp_tau_decay[5] = 500;
 
-    ts.agc_wdsp_tau_hang_decay = 200;
+    ts.agc_wdsp_conf.mode = 2;
+    ts.agc_wdsp_conf.slope = 70;
+    ts.agc_wdsp_conf.hang_enable = 0;
+    ts.agc_wdsp_conf.hang_time = 500;
+    ts.agc_wdsp_conf.hang_thresh = 45;
+    ts.agc_wdsp_conf.thresh = 60;
+    ts.agc_wdsp_conf.action = 0;
+    ts.agc_wdsp_conf.switch_mode = 1;
+    ts.agc_wdsp_conf.hang_action = 0;
+    ts.agc_wdsp_conf.tau_decay[0] = 4000;
+    ts.agc_wdsp_conf.tau_decay[1] = 2000;
+    ts.agc_wdsp_conf.tau_decay[2] = 500;
+    ts.agc_wdsp_conf.tau_decay[3] = 250;
+    ts.agc_wdsp_conf.tau_decay[4] = 50;
+    ts.agc_wdsp_conf.tau_decay[5] = 500;
+
+    ts.agc_wdsp_conf.tau_hang_decay = 200;
+
     ts.dbm_constant = 0;
 
     ts.FDV_TX_encode_ready = false;		// FREEDV handshaking test DL2FW
@@ -558,15 +559,10 @@ int mchfMain(void)
     mchf_hw_i2c2_init();
 
 	// disable rx iq settings in menu when autocorr is enabled
-	if(ts.iq_auto_correction == 1)
-	{
-	  ts.display_rx_iq = false;
-	}
-	else
-	{
-	  ts.display_rx_iq = true;
-	}
-    profileTimedEventInit();
+    ts.display_rx_iq = ts.iq_auto_correction == 0;
+
+
+	profileTimedEventInit();
 
 #ifdef USE_HMC1023
     hmc1023_init();
