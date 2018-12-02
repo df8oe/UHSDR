@@ -158,8 +158,8 @@ void AudioManagement_CalcTxCompLevel()
 //*----------------------------------------------------------------------------
 void AudioManagement_CalcSubaudibleGenFreq(void)
 {
-    ads.fm.subaudible_tone_gen_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_gen_select];       // look up tone frequency (in Hz)
-    softdds_setFreqDDS(&ads.fm.subaudible_tone_dds, ads.fm.subaudible_tone_gen_freq,ts.samp_rate,false);
+    ads.fm_conf.subaudible_tone_gen_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_gen_select];       // look up tone frequency (in Hz)
+    softdds_setFreqDDS(&ads.fm_conf.subaudible_tone_dds, ads.fm_conf.subaudible_tone_gen_freq,ts.samp_rate,false);
 }
 
 /**
@@ -169,12 +169,12 @@ void AudioManagement_CalcSubaudibleDetFreq(void)
 {
     const uint32_t size = BUFF_LEN/2;
 
-    ads.fm.subaudible_tone_det_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select];       // look up tone frequency (in Hz)
+    ads.fm_conf.subaudible_tone_det_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select];       // look up tone frequency (in Hz)
 
     // Calculate Goertzel terms for tone detector(s)
-    AudioFilter_CalcGoertzel(&ads.fm.goertzel[FM_HIGH], ads.fm.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_HIGH, IQ_SAMPLE_RATE);
-    AudioFilter_CalcGoertzel(&ads.fm.goertzel[FM_LOW], ads.fm.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_LOW, IQ_SAMPLE_RATE);
-    AudioFilter_CalcGoertzel(&ads.fm.goertzel[FM_CTR], ads.fm.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,1.0, IQ_SAMPLE_RATE);
+    AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_HIGH], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_HIGH, IQ_SAMPLE_RATE);
+    AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_LOW], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_LOW, IQ_SAMPLE_RATE);
+    AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_CTR], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,1.0, IQ_SAMPLE_RATE);
 }
 
 //
@@ -203,7 +203,7 @@ void AudioManagement_LoadToneBurstMode()
         break;
     }
 
-    softdds_setFreqDDS(&ads.fm.tone_burst_dds, frequency,ts.samp_rate,false);
+    softdds_setFreqDDS(&ads.fm_conf.tone_burst_dds, frequency,ts.samp_rate,false);
 }
 
 /**

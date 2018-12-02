@@ -604,6 +604,22 @@ enum
 extern BandRegs vfo[VFO_MAX];
 
 
+typedef struct
+{
+    uint8_t mode;
+        uint8_t slope;
+        uint8_t hang_enable;
+        int     thresh;
+        int     hang_thresh;
+        int hang_time;
+        uint8_t action;
+        uint8_t switch_mode;
+        uint8_t hang_action;
+        int tau_decay[6];
+        int tau_hang_decay;
+} agc_wdsp_param_t;
+
+
 // Transceiver state public structure
 typedef struct TransceiverState
 {
@@ -998,19 +1014,10 @@ typedef struct TransceiverState
 #define TWINPEAKS_SAMPLING 0
 #define TWINPEAKS_UNCORRECTABLE 4
 	uint8_t twinpeaks_tested;
-//	uint8_t agc_wdsp;
-	uint8_t agc_wdsp_mode;
-	uint8_t agc_wdsp_slope;
-	uint8_t agc_wdsp_hang_enable;
-	int     agc_wdsp_thresh;
-	int     agc_wdsp_hang_thresh;
-	int agc_wdsp_hang_time;
-	uint8_t agc_wdsp_action;
-	uint8_t agc_wdsp_switch_mode;
-	uint8_t agc_wdsp_hang_action;
-	int dbm_constant;
-	int agc_wdsp_tau_decay[6];
-	int agc_wdsp_tau_hang_decay;
+
+	agc_wdsp_param_t agc_wdsp_conf;
+
+    int dbm_constant;
 
 //#define DISPLAY_S_METER_STD   0
 #define DISPLAY_S_METER_DBM   1
