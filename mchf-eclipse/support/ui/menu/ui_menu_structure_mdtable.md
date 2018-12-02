@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-11-20T21:26:00  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-12-02T10:40:43  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-11-20T21:26:00  by "./ui_menu_structure_mdtable.py"
+generated at  2018-12-02T10:40:43  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -268,6 +268,7 @@ generated at  2018-11-20T21:26:00  by "./ui_menu_structure_mdtable.py"
 | **Bootloader**                (                            INFO_BL_VERSION) | bootloader version                             | 
 | **RF Board**                  (                               INFO_RFBOARD) | Displays the detected RF Board hardware identification. | 
 | **Audio Codec Presence**      (                                 INFO_CODEC) | Audio Codec I2C communication successfully tested? This is not a full test of the Audio Codec functionality, it only reports if I2C communication reported no problem talking to the codec. | 
+| **Audio Codec Twinpeaks Corr.** (                       INFO_CODEC_TWINPEAKS) | In some cases the audio codec needs to be restarted to produce correct IQ. The IQ auto correction detects this. If this fixes the problem, Done is displayed, Failed otherwise | 
 | **Backup RAM Battery**        (                                  INFO_VBAT) | Battery Support for Backup RAM present?        | 
 | **Real Time Clock**           (                                   INFO_RTC) | Battery Supported Real Time Clock present?     | 
 | **FW license**                (                               INFO_LICENCE) | Display license of firmware                    | 
