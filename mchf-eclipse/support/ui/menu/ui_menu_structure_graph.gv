@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-12-02T10:40:38  by "./ui_menu_structure_graph.py"
+#  generated at  2018-12-02T22:39:40  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-12-02T10:40:38  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-12-02T22:39:40  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1312,6 +1312,11 @@
              shape = record
              ];
         
+        "MENU_DEBUG_TWINPEAKS_CORR_RUN" [
+             label = "MENU_DEBUG_TWINPEAKS_CORR_RUN | Trigger Twinpeaks Corr."
+             shape = record
+             ];
+        
         "0" [
              label = "0 | M0NKA  (Chris) founder of mcHF"
              shape = record
@@ -1921,6 +1926,8 @@
             MENU_DEBUG -> MENU_DEBUG_HMC1023_OPAMP
             
             MENU_DEBUG -> MENU_DEBUG_HMC1023_DRVR
+            
+            MENU_DEBUG -> MENU_DEBUG_TWINPEAKS_CORR_RUN
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
