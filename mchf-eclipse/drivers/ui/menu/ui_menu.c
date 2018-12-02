@@ -2482,6 +2482,27 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             var = 0;
         }
         break;
+    case MENU_DEBUG_TWINPEAKS_CORR_RUN:
+        if (ts.iq_auto_correction == 0)
+        {
+            txt_ptr = "Not possible";
+            clr = Red;
+        }
+        else
+        {
+            txt_ptr = "  Do it!";
+            clr = White;
+        }
+        if(var>=1)
+        {
+
+            UiMenu_DisplayValue(" Started",Green, pos);
+            ts.twinpeaks_tested = TWINPEAKS_WAIT;
+            while(ts.twinpeaks_tested != TWINPEAKS_DONE && ts.twinpeaks_tested != TWINPEAKS_UNCORRECTABLE ) { asm("nop");}
+            UiMenu_DisplayValue("Finished",Green, pos);
+            var = 0;
+        }
+        break;
     case CONFIG_FREQ_STEP_MARKER_LINE:  // Frequency step marker line on/off
         var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.freq_step_config,0,options,&clr, FREQ_STEP_SHOW_MARKER);
         if(var_change)          // something changed?
