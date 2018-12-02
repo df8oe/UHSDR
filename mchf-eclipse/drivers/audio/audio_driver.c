@@ -1901,6 +1901,9 @@ static void AudioDriver_RxProcessor_Bpsk(float32_t * const src, int16_t blockSiz
     }
 }
 
+/**
+ * Initializes the AGC data structures, has to be called when switching modes, filter changes
+ */
 void AudioDriver_SetupAgcWdsp()
 {
     static bool initialised = false;
@@ -2066,7 +2069,7 @@ loadWcpAGC(a);
     agc_wdsp.fixed_gain = agc_wdsp.max_gain / 10.0;
     // attack_buff_size is 48 for sample rate == 12000 and
     // 96 for sample rate == 24000
-    agc_wdsp.attack_buffsize = (int)ceil(sample_rate * agc_wdsp.n_tau * agc_wdsp.tau_attack);
+    agc_wdsp.attack_buffsize = ceilf(sample_rate * agc_wdsp.n_tau * agc_wdsp.tau_attack);
 
     agc_wdsp.in_index = agc_wdsp.attack_buffsize + agc_wdsp.out_index; // attack_buffsize + out_index can be more than 2x ring_bufsize !!!
     agc_wdsp.in_index %= agc_wdsp.ring_buffsize; // need to keep this within the index boundaries
@@ -3248,11 +3251,15 @@ float32_t sign_new (float32_t x) {
 }
 
 
-
+/**
+ *
+ * @param blockSize
+ */
 void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
 {
 
-    static uint8_t  IQ_auto_counter = 0;
+    assert(blockSize >= 8);
+
     static ulong    twinpeaks_counter = 0;
     static uint8_t  codec_restarts = 0;
 
@@ -3270,93 +3277,89 @@ void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
     {   // Moseley, N.A. & C.H. Slump (2006): A low-complexity feed-forward I/Q imbalance compensation algorithm.
         // in 17th Annual Workshop on Circuits, Nov. 2006, pp. 158-164.
         // http://doc.utwente.nl/66726/1/moseley.pdf
-        if (ts.twinpeaks_tested == 2)
+        if (ts.twinpeaks_tested == TWINPEAKS_WAIT)
         {
             twinpeaks_counter++;
         }
-        if(twinpeaks_counter > 1000) // wait 0.667ms for the system to settle: with 32 IQ samples per block and 48ksps (0.66667ms/block)
+
+        if(twinpeaks_counter > 1000) // wait 0.667s for the system to settle: with 32 IQ samples per block and 48ksps (0.66667ms/block)
         {
-            ts.twinpeaks_tested = 0;
+            ts.twinpeaks_tested = TWINPEAKS_SAMPLING;
             twinpeaks_counter = 0;
         }
+
         for(uint32_t i = 0; i < blockSize; i++)
         {
             adb.iq_corr.teta1 += sign_new(adb.i_buffer[i]) * adb.q_buffer[i]; // eq (34)
             adb.iq_corr.teta2 += sign_new(adb.i_buffer[i]) * adb.i_buffer[i]; // eq (35)
             adb.iq_corr.teta3 += sign_new(adb.q_buffer[i]) * adb.q_buffer[i]; // eq (36)
-            IQ_auto_counter++;
         }
-        if(IQ_auto_counter >= 8)
+
+        adb.iq_corr.teta1 = -0.003 * (adb.iq_corr.teta1 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta1_old; // eq (34) and first order lowpass
+        adb.iq_corr.teta2 =  0.003 * (adb.iq_corr.teta2 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta2_old; // eq (35) and first order lowpass
+        adb.iq_corr.teta3 =  0.003 * (adb.iq_corr.teta3 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta3_old; // eq (36) and first order lowpass
+
+        adb.iq_corr.M_c1 = (adb.iq_corr.teta2 != 0.0) ? adb.iq_corr.teta1 / adb.iq_corr.teta2 : 1.0; // eq (30)
+        // prevent divide-by-zero
+
+        float32_t help = (adb.iq_corr.teta2 * adb.iq_corr.teta2);
+
+        if(help > 0.0)// prevent divide-by-zero
         {
-            adb.iq_corr.teta1 = -0.003 * (adb.iq_corr.teta1 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta1_old; // eq (34) and first order lowpass
-            adb.iq_corr.teta2 =  0.003 * (adb.iq_corr.teta2 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta2_old; // eq (35) and first order lowpass
-            adb.iq_corr.teta3 =  0.003 * (adb.iq_corr.teta3 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta3_old; // eq (36) and first order lowpass
-            if(adb.iq_corr.teta2 != 0.0)// prevent divide-by-zero
-            {
-                adb.iq_corr.M_c1 = adb.iq_corr.teta1 / adb.iq_corr.teta2; // eq (30)
-            }
-            else
-            {
-                adb.iq_corr.M_c1 = 0.0;
-            }
-
-            float32_t help = (adb.iq_corr.teta2 * adb.iq_corr.teta2);
-            if(help > 0.0)// prevent divide-by-zero
-            {
-                help = (adb.iq_corr.teta3 * adb.iq_corr.teta3 - adb.iq_corr.teta1 * adb.iq_corr.teta1) / help; // eq (31)
-            }
-            if (help > 0.0)// prevent sqrtf of negative value
-            {
-                adb.iq_corr.M_c2 = sqrtf(help); // eq (31)
-            }
-            else
-            {
-                adb.iq_corr.M_c2 = 1.0;
-            }
-            // Test and fix of the "twinpeak syndrome"
-            // which occurs sporadically and can -to our knowledge- only be fixed
-            // by a reset of the codec
-            // It can be identified by a totally non-existing mirror rejection,
-            // so I & Q have essentially the same phase
-            // We use this to identify the snydrome and reset the codec accordingly:
-            // calculate phase between I & Q
-            if(adb.iq_corr.teta3 != 0.0 && !ts.twinpeaks_tested) // prevent divide-by-zero
-                // twinpeak_tested = 2 --> wait for system to warm up
-                // twinpeak_tested = 0 --> go and test the IQ phase
-                // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
-            {   // Moseley & Slump (2006) eq. (33)
-                // this gives us the phase error between I & Q in radians
-                float32_t phase_IQ = asinf(adb.iq_corr.teta1 / adb.iq_corr.teta3);
-                if (fabsf(phase_IQ) > (M_PI/8)  && codec_restarts < 5)
-                    // threshold of 22.5 degrees phase shift == PI / 8 == 0.3926990817
-                    // hopefully your hardware is not so bad, that its phase error is more than 22 degrees ;-)
-                    // if it is that bad, adjust this threshold to maybe PI / 7 or PI / 6
-                {
-                    Codec_RestartI2S();
-                    ts.twinpeaks_tested = 2;
-                    codec_restarts++;
-                    // TODO: we should set a maximum number of codec resets
-                    // and print out a message, if twinpeaks remains after the
-                    // 5th reset for example --> could then be a severe hardware error !
-                    if(codec_restarts >= 4)
-                    {
-                        // PRINT OUT WARNING MESSAGE
-
-                    }
-                }
-                else
-                {
-                    ts.twinpeaks_tested = 1;
-                }
-            }
-            adb.iq_corr.teta1_old = adb.iq_corr.teta1;
-            adb.iq_corr.teta2_old = adb.iq_corr.teta2;
-            adb.iq_corr.teta3_old = adb.iq_corr.teta3;
-            adb.iq_corr.teta1 = 0.0;
-            adb.iq_corr.teta2 = 0.0;
-            adb.iq_corr.teta3 = 0.0;
-            IQ_auto_counter = 0;
+            help = (adb.iq_corr.teta3 * adb.iq_corr.teta3 - adb.iq_corr.teta1 * adb.iq_corr.teta1) / help; // eq (31)
         }
+
+        adb.iq_corr.M_c2 = (help > 0.0) ? sqrtf(help) : 1.0;  // eq (31)
+        // prevent sqrtf of negative value
+
+        // Test and fix of the "twinpeak syndrome"
+        // which occurs sporadically and can -to our knowledge- only be fixed
+        // by a reset of the codec
+        // It can be identified by a totally non-existing mirror rejection,
+        // so I & Q have essentially the same phase
+        // We use this to identify the snydrome and reset the codec accordingly:
+        // calculate phase between I & Q
+
+        if(adb.iq_corr.teta3 != 0.0 && ts.twinpeaks_tested == TWINPEAKS_SAMPLING) // prevent divide-by-zero
+            // twinpeak_tested = 2 --> wait for system to warm up
+            // twinpeak_tested = 0 --> go and test the IQ phase
+            // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
+            // twinpeak_tested = 3 --> was not correctable
+        {   // Moseley & Slump (2006) eq. (33)
+            // this gives us the phase error between I & Q in radians
+            float32_t phase_IQ = asinf(adb.iq_corr.teta1 / adb.iq_corr.teta3);
+
+            if (fabsf(phase_IQ) > (M_PI/8.0))
+                // threshold of 22.5 degrees phase shift == PI / 8
+                // hopefully your hardware is not so bad, that its phase error is more than 22 degrees ;-)
+                // if it is that bad, adjust this threshold to maybe PI / 7 or PI / 6
+            {
+                Codec_RestartI2S();
+                ts.twinpeaks_tested = TWINPEAKS_WAIT;
+                codec_restarts++;
+                // TODO: we should set a maximum number of codec resets
+                // and print out a message, if twinpeaks remains after the
+                // 5th reset for example --> could then be a severe hardware error !
+                if(codec_restarts >= 4)
+                {
+                    ts.twinpeaks_tested = TWINPEAKS_UNCORRECTABLE;
+                    codec_restarts = 0;
+                }
+            }
+            else
+            {
+                ts.twinpeaks_tested = TWINPEAKS_DONE;
+                codec_restarts = 0;
+            }
+        }
+
+        adb.iq_corr.teta1_old = adb.iq_corr.teta1;
+        adb.iq_corr.teta2_old = adb.iq_corr.teta2;
+        adb.iq_corr.teta3_old = adb.iq_corr.teta3;
+        adb.iq_corr.teta1 = 0.0;
+        adb.iq_corr.teta2 = 0.0;
+        adb.iq_corr.teta3 = 0.0;
+
         // first correct Q and then correct I --> this order is crucially important!
         for(uint32_t i = 0; i < blockSize; i++)
         {   // see fig. 5

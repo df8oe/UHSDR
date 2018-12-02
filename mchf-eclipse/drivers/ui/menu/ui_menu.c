@@ -644,6 +644,11 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         snprintf(out,32, "%s", ts.codec_present?"Yes":"N/A");
     }
     break;
+    case INFO_CODEC_TWINPEAKS:
+    {
+        snprintf(out,32, "%s", (ts.twinpeaks_tested == TWINPEAKS_UNCORRECTABLE)? "Failed" : "Done");
+    }
+    break;
     case INFO_LICENCE:
     {
         snprintf(out,32, "%s", UHSDR_LICENCE);

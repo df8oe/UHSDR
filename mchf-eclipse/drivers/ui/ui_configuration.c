@@ -95,7 +95,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8 | Calib_Val, EEPROM_PA_BIAS,&ts.pa_bias,PA_BIAS_DEFAULT,0,PA_BIAS_MAX},
     { ConfigEntry_UInt8 | Calib_Val, EEPROM_PA_CW_BIAS,&ts.pa_cw_bias,PA_BIAS_DEFAULT,0,PA_BIAS_MAX},
 
-    { ConfigEntry_UInt8, EEPROM_IQ_AUTO_CORRECTION,&ts.iq_auto_correction,0,0, 1},
+    { ConfigEntry_UInt8, EEPROM_IQ_AUTO_CORRECTION,&ts.iq_auto_correction,1, 0, 1},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_80M_GAIN_BALANCE,&ts.tx_iq_gain_balance[IQ_80M].value[IQ_TRANS_ON],IQ_BALANCE_OFF, MIN_IQ_GAIN_BALANCE, MAX_IQ_GAIN_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_10M_GAIN_BALANCE,&ts.tx_iq_gain_balance[IQ_10M].value[IQ_TRANS_ON],IQ_BALANCE_OFF, MIN_IQ_GAIN_BALANCE, MAX_IQ_GAIN_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_80M_PHASE_BALANCE,&ts.tx_iq_phase_balance[IQ_80M].value[IQ_TRANS_ON],IQ_BALANCE_OFF, MIN_IQ_PHASE_BALANCE, MAX_IQ_PHASE_BALANCE},
