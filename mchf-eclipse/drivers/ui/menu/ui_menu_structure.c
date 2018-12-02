@@ -447,6 +447,7 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_BYPASS, &hmc1023.present,"HMC1023 Bypass", UiMenuDesc("Debug Setting: Set HMC1023 to bypass mode") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_OPAMP, &hmc1023.present,"HMC1023 Opamp Bias", UiMenuDesc("Debug Setting: Switch LPF HMC1023LP5E Opamp Bias") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_DRVR, &hmc1023.present,"HMC1023 Driver Bias", UiMenuDesc("Debug Setting: Set HMC1023 Driver Bias") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TWINPEAKS_CORR_RUN, NULL,"Trigger Twinpeaks Corr.", UiMenuDesc("Trigger Twinpeaks Correction Manually if IQ Auto Correction is enabled, otherwise you will see 'Not Possible'") },
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
