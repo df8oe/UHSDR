@@ -646,7 +646,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_CODEC_TWINPEAKS:
     {
-        if (ts.iq_auto_correction == 0)
+        if (ts.iq_auto_correction == 1)
         {
             switch (ts.twinpeaks_tested)
             {
