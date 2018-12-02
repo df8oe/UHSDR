@@ -646,7 +646,24 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     break;
     case INFO_CODEC_TWINPEAKS:
     {
-        snprintf(out,32, "%s", (ts.twinpeaks_tested == TWINPEAKS_UNCORRECTABLE)? "Failed" : "Done");
+        if (ts.iq_auto_correction == 0)
+        {
+            switch (ts.twinpeaks_tested)
+            {
+            case TWINPEAKS_UNCORRECTABLE:
+                outs = "Failed";
+                break;
+            case TWINPEAKS_DONE:
+                outs = "Done";
+                break;
+            default:
+                outs = "Not done";
+            }
+        }
+        else
+        {
+            outs = "Deactivated"; // IQ correction is off, Twinpeaks auto correction cannot be done.
+        }
     }
     break;
     case INFO_LICENCE:
