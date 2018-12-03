@@ -4327,7 +4327,7 @@ static void UiDriver_DisplayModulationType()
 	// Draw line for box
 	UiLcdHy28_DrawStraightLine(ts.Layout->DIGMODE.x,(ts.Layout->DIGMODE.y - 1),ts.Layout->DIGMODE.w,LCD_DIR_HORIZONTAL,bgclr);
 	UiLcdHy28_PrintTextCentered(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y,ts.Layout->DIGMODE.w,txt,color,bgclr,0);
-	if(disp_resolution==RESOLUTION_480_320)
+	if(disp_resolution!=RESOLUTION_320_240)
 	{
 		UiLcdHy28_DrawStraightLineDouble(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y+12,ts.Layout->DIGMODE.w,LCD_DIR_HORIZONTAL,bgclr);
 		UiLcdHy28_DrawStraightLine(ts.Layout->DIGMODE.x,ts.Layout->DIGMODE.y+14,ts.Layout->DIGMODE.w,LCD_DIR_HORIZONTAL,Blue);
@@ -5838,7 +5838,7 @@ void UiDriver_StartUpScreenFinish()
 	}
 	if (UiDriver_FirmwareVersionCheck())
 	{
-		hold_time = 10000; // 15s
+		hold_time = 10000; // 10s
 		txp = "Firmware change detected!\nPlease review settings!";
 		startUpScreen_nextLineY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x,startUpScreen_nextLineY + 10,320,txp,White,Black,0);
 
@@ -5848,6 +5848,7 @@ void UiDriver_StartUpScreenFinish()
 	if(startUpError == true)
 	{
 		hold_time = 15000; // 15s
+		//hold_time = 3000; // 3s
 		txp = "Boot Delay because of Errors or Warnings";
 		clr = Red3;
 		fg_clr = Black;

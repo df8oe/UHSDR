@@ -360,7 +360,81 @@ const LcdLayout LcdLayouts[LcdLayoutsCount]=
 				.MENU_TEXT_SIZE_MAX=40,
 
 				.touchaction_list=R480320_touch_regions
+		},
+		//-----------------------------------------------------------------
+		{		//800x480
+				.Size = { 800, 480},
+				.StartUpScreen_START ={ 80, 60},
+				.SpectrumWindow={ .x = 0, .y = 110, .w = 480, .h = 176 },
+				.SpectrumWindowPadding=0,
+
+				.TUNE_FREQ= { R480320_TUNE_FREQ_X, R480320_TUNE_FREQ_Y},
+				.TUNE_SPLIT_FREQ_X=R480320_TUNE_SPLIT_FREQ_X,
+				.TUNE_SPLIT_MARKER_X=R480320_TUNE_SPLIT_MARKER_X,
+				.TUNE_SPLIT_FREQ_Y_TX=R480320_TUNE_SPLIT_FREQ_Y_TX,
+				.TUNE_SFREQ = { R480320_TUNE_SFREQ_X, R480320_TUNE_SFREQ_Y},
+				.DisplayDbm = { R480320_DisplayDbm_X, R480320_DisplayDbm_Y},
+				.MEMORYLABEL = { R480320_MEMORYLABEL_X, R480320_MEMORYLABEL_Y},
+
+				.BAND_MODE = { R480320_BAND_MODE_X, R480320_BAND_MODE_Y},
+				.BAND_MODE_MASK = { .x = R480320_BAND_MODE_MASK_X, .y = R480320_BAND_MODE_MASK_Y, .h = R480320_BAND_MODE_MASK_H, .w= R480320_BAND_MODE_MASK_W},
+
+				.DEMOD_MODE_MASK = { .x = R480320_DEMOD_MODE_MASK_X, .y = R480320_DEMOD_MODE_MASK_Y, .h = R480320_DEMOD_MODE_MASK_H,
+                .w = R480320_DEMOD_MODE_MASK_W},
+				.AGC_MASK = {.x = R480320_AGC_MASK_X, .y = R480320_AGC_MASK_Y, .h = R480320_AGC_MASK_H,
+		                .w = R480320_AGC_MASK_W},
+				.TUNE_STEP={.x=R480320_TUNE_STEP_X, .y=R480320_TUNE_STEP_Y, .h=R480320_TUNE_STEP_MASK_H, .w=R480320_TUNE_STEP_MASK_W},
+
+				.ENCODER_IND = { R480320_ENCODER_IND_X, R480320_ENCODER_IND_Y},
+				.ENCODER_MODE=MODE_HORIZONTAL,
+
+				.DIGMODE={.x=R480320_DIGMODE_IND_X,.y=R480320_DIGMODE_IND_Y,.w=R480320_DIGMODE_IND_W},
+
+				.LEFTBOXES_IND = { .x=R480320_LEFTBOXES_IND_X, .y=R480320_LEFTBOXES_IND_Y, .w=R480320_LEFTBOX_WIDTH, .h=R480320_LEFTBOX_ROW_H},
+				.LEFTBOXES_MODE=MODE_HORIZONTAL,
+				.LEFTBOXES_ROW_2ND_OFF=R480320_LEFTBOX_ROW_2ND_OFF,
+
+				.PW_IND = { .x=R480320_PW_IND_X, .y=R480320_PW_IND_Y, .w=R480320_PW_IND_W},
+				.TEMP_IND={.x = 370,.y = 64},
+				.RTC_IND={.x = 415,.y = 80},
+
+				.LOADANDDEBUG_Y=96,
+				.DEBUG_X=0,
+				.LOAD_X=280,
+
+				.PWR_NUM_IND ={ 320, 96},
+
+				.CW_DECODER_WPM = { 420, 290},
+
+				.SNAP_CARRIER= { 242, 29},
+
+				.TextMsgLine = { 0, 290 },
+				.TextMsg_buffer_max=50,
+				.TextMsg_font=0,
+
+				//.FREEDV_SNR = { 280, 28},
+				//.FREEDV_BER = {380, 28},
+				.FREEDV_SNR = {410,288},
+				.FREEDV_BER = {410,297},
+				.FREEDV_FONT=4,
+
+				.SM_IND={.x = R480320_SM_IND_X, .y = R480320_SM_IND_Y, .h = R480320_SM_IND_H, .w = R480320_SM_IND_W},
+				.PWR_IND={ .x = 420, .y = 307},
+
+#ifdef UI_BRD_OVI40
+				.BOTTOM_BAR={.x=0,.y=308, .h=16, .w=74},
+#else
+				.BOTTOM_BAR={.x=32,.y=308, .h=16, .w=74},
+#endif
+				.MENUSIZE=14,
+				.MENU_IND = { 80, 110 },
+				.MENU_CHANGE_X=280,
+				.MENU_CURSOR_X=360,
+				.MENU_TEXT_SIZE_MAX=40,
+
+				.touchaction_list=R480320_touch_regions
 		}
+
 };
 
 

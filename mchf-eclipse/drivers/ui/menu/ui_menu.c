@@ -502,7 +502,14 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     {
         // const char* disp_com = ts.display_type==3?"parallel":"SPI";
         // snprintf(out,32,"ILI%04x %s",ts.DeviceCode,disp_com);
-        snprintf(out,32,"ILI%04x",ts.display->DeviceCode);
+    	if(ts.display->DeviceCode==0x8875)
+    	{
+    		snprintf(out,32,"RA%04x",ts.display->DeviceCode);
+    	}
+    	else
+    	{
+    		snprintf(out,32,"ILI%04x",ts.display->DeviceCode);
+    	}
         break;
     }
 #ifdef USE_OSC_SI570
