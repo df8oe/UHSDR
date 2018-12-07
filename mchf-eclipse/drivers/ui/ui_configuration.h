@@ -599,7 +599,21 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_CW_DECODER_THRESH			410
 #define EEPROM_CW_DECODER_BLOCKSIZE			411
 #define EEPROM_SMETER_ALPHAS                412
-#define EEPROM_FIRST_UNUSED 				413		// change this if new value ids are introduced, must be correct at any time
+//#define EEPROM_FIRST_UNUSED 				413		// change this if new value ids are introduced, must be correct at any time
+#define EEPROM_ADJ_TX_IQ_SOMEBANDS	        413     // Manual TX IQ adjusting on some bands for improvement of approximation
+#define EEPROM_TX_IQ_20M_GAIN_BALANCE		        414
+#define EEPROM_TX_IQ_20M_PHASE_BALANCE		        415
+#define EEPROM_TX_IQ_15M_GAIN_BALANCE		        416
+#define EEPROM_TX_IQ_15M_PHASE_BALANCE		        417
+#define EEPROM_TX_IQ_10M_UP_GAIN_BALANCE		    418
+#define EEPROM_TX_IQ_10M_UP_PHASE_BALANCE		    419
+#define EEPROM_TX_IQ_20M_GAIN_BALANCE_TRANS_OFF		420
+#define EEPROM_TX_IQ_20M_PHASE_BALANCE_TRANS_OFF	421
+#define EEPROM_TX_IQ_15M_GAIN_BALANCE_TRANS_OFF		422
+#define EEPROM_TX_IQ_15M_PHASE_BALANCE_TRANS_OFF	423
+#define EEPROM_TX_IQ_10M_UP_GAIN_BALANCE_TRANS_OFF	424
+#define EEPROM_TX_IQ_10M_UP_PHASE_BALANCE_TRANS_OFF	425
+#define EEPROM_FIRST_UNUSED 				426		// change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

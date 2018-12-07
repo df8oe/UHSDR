@@ -652,12 +652,15 @@ typedef struct TransceiverState
 
     // timer for muting of input into signal processing chains (TX/RX)
     uint16_t    audio_processor_input_mute_counter;
-#define IQ_ADJUST_POINTS_NUM 4
+//#define IQ_ADJUST_POINTS_NUM 4
+#define IQ_ADJUST_POINTS_NUM 5
 
     // corresponding frequencies are stored in const array iq_adjust_freq
 #define IQ_80M 0
 #define IQ_10M 1
 #define IQ_20M 2
+#define IQ_15M 3
+#define IQ_10M_UP 4
 
     iq_balance_data_t tx_iq_gain_balance[IQ_ADJUST_POINTS_NUM];  // setting for TX IQ gain balance
     iq_balance_data_t tx_iq_phase_balance[IQ_ADJUST_POINTS_NUM]; // setting for TX IQ phase balance
@@ -1121,6 +1124,7 @@ typedef struct TransceiverState
 	bool txrx_switching_enabled;
 
 	bool paddles_active; // setting this to false disables processing of external gpio interrupts (right now just the paddles/PTT)
+	bool adj_tx_iq_somebands;  // TRUE - adjusting TX IQ on some ham bands over 80m and 10m - for improvement of approximation
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
