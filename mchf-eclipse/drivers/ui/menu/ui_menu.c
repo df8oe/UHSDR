@@ -4272,7 +4272,45 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &sm.config.alphaSplit.DecayAlpha, SMETER_ALPHA_MIN, SMETER_ALPHA_MAX, SMETER_ALPHA_DECAY_DEFAULT,1);
             snprintf(options,32,"     %d",sm.config.alphaSplit.DecayAlpha);
             break;
-
+        case MENU_DEBUG_ADJ_TX_IQ_SOMEBANDS:
+            var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.adj_tx_iq_somebands,0,options,&clr);
+    	    break;
+        case MENU_DEBUG_20M_TX_IQ_GAIN_BAL:
+            UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_20M], TRX_MODE_TX, IQ_TRANS_ON);
+            break;
+        case MENU_DEBUG_20M_TX_IQ_PHASE_BAL:
+            UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_20M], TRX_MODE_TX, IQ_TRANS_ON);
+            break;
+        case MENU_DEBUG_15M_TX_IQ_GAIN_BAL:
+            UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_15M], TRX_MODE_TX, IQ_TRANS_ON);
+            break;
+        case MENU_DEBUG_15M_TX_IQ_PHASE_BAL:
+            UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_15M], TRX_MODE_TX, IQ_TRANS_ON);
+            break;
+        case MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL:
+            UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_10M_UP], TRX_MODE_TX, IQ_TRANS_ON);
+            break;
+        case MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL:
+            UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_10M_UP], TRX_MODE_TX, IQ_TRANS_ON);
+            break;
+        case MENU_DEBUG_20M_TX_IQ_GAIN_BAL_TRANS_OFF:
+            UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_20M], TRX_MODE_TX, IQ_TRANS_OFF);
+            break;
+        case MENU_DEBUG_20M_TX_IQ_PHASE_BAL_TRANS_OFF:
+            UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_20M], TRX_MODE_TX, IQ_TRANS_OFF);
+            break;
+        case MENU_DEBUG_15M_TX_IQ_GAIN_BAL_TRANS_OFF:
+            UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_15M], TRX_MODE_TX, IQ_TRANS_OFF);
+            break;
+        case MENU_DEBUG_15M_TX_IQ_PHASE_BAL_TRANS_OFF:
+            UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_15M], TRX_MODE_TX, IQ_TRANS_OFF);
+            break;
+        case MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF:
+            UiMenu_HandleIQAdjustGain(var, mode, options, &clr, &ts.tx_iq_gain_balance[IQ_10M_UP], TRX_MODE_TX, IQ_TRANS_OFF);
+            break;
+        case MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF:
+            UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_10M_UP], TRX_MODE_TX, IQ_TRANS_OFF);
+            break;
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;
