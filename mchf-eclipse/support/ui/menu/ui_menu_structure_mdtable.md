@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-12-02T22:39:44  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-12-08T17:39:23  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-12-02T22:39:44  by "./ui_menu_structure_mdtable.py"
+generated at  2018-12-08T17:39:23  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -303,6 +303,19 @@ generated at  2018-12-02T22:39:44  by "./ui_menu_structure_mdtable.py"
 | **HMC1023 Opamp Bias**        (                   MENU_DEBUG_HMC1023_OPAMP) | Debug Setting: Switch LPF HMC1023LP5E Opamp Bias | 
 | **HMC1023 Driver Bias**       (                    MENU_DEBUG_HMC1023_DRVR) | Debug Setting: Set HMC1023 Driver Bias         | 
 | **Trigger Twinpeaks Corr.**   (              MENU_DEBUG_TWINPEAKS_CORR_RUN) | Trigger Twinpeaks Correction Manually if IQ Auto Correction is enabled, otherwise you will see 'Not Possible' | 
+| **Adj.TX IQ on some bands**   (             MENU_DEBUG_ADJ_TX_IQ_SOMEBANDS) | Manual adjusting TX IQ on some ham bands - for improvement of approximation | 
+| **TX IQ Balance (20m)**       (              MENU_DEBUG_20M_TX_IQ_GAIN_BAL) | IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 14.100 MHz. | 
+| **TX IQ Phase   (20m)**       (             MENU_DEBUG_20M_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 14.100 MHz. | 
+| **TX IQ Balance (15m)**       (              MENU_DEBUG_15M_TX_IQ_GAIN_BAL) | IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 21.100 MHz. | 
+| **TX IQ Phase   (15m)**       (             MENU_DEBUG_15M_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 21.100 MHz. | 
+| **TX IQ Balance (10mUp)**     (           MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL) | IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 29.650 MHz. | 
+| **TX IQ Phase   (10mUp)**     (          MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 29.650 MHz. | 
+| **TX IQ Balance (20m,CW)**    (    MENU_DEBUG_20M_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 14.100 MHz. | 
+| **TX IQ Phase   (20m,CW)**    (   MENU_DEBUG_20M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 14.100 MHz. | 
+| **TX IQ Balance (15m,CW)**    (    MENU_DEBUG_15M_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz. | 
+| **TX IQ Phase   (15m,CW)**    (   MENU_DEBUG_15M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz. | 
+| **TX IQ Balance (10mUp,CW)**  ( MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz. | 
+| **TX IQ Phase   (10mUp,CW)**  (MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz. | 
 
 
 [//]: # ( EOFILE                                                                       )
