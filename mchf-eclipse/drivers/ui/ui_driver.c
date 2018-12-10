@@ -833,7 +833,7 @@ void UiDriver_Init()
 	  UiDriver_StartupScreen_LogIfProblem(AudioDriver_GetTranslateFreq() == 0,
 			"WARNING:  Freq. Translation is OFF!!!\nTranslation is STRONGLY recommended!!");
 	}
-
+	
 	// now run all inits which need to be done BEFORE going into test screen mode
 	uint8_t mirtemp;
 	if(ts.flags1 & FLAGS1_REVERSE_X_TOUCHSCREEN)
@@ -6513,8 +6513,6 @@ static void UiAction_ToggleKeyerMode()
 
 static void UiAction_BandMinusHold()
 {
-    uint8_t mag;
-
 	if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))	 	// and POWER button pressed-and-held at the same time?
 	{
 		UiDriver_LcdBlankingStealthSwitch();
@@ -6526,40 +6524,10 @@ static void UiAction_BandMinusHold()
 			UiAction_ToggleWaterfallScopeDisplay();
 		}
 	}
-	else                                                    //skip freq -45kHz - for quick skan of band
-    {
-        if(ts.txrx_mode == TRX_MODE_RX)
-        {
-            switch(sd.magnify)
-            {
-            case 0:
-                mag = 1;
-                break;
-            case 1:
-                mag = 2;
-                break;
-            case 2:
-                mag = 4;
-                break;
-            case 3:
-                mag = 8;
-                break;
-            case 4:
-                mag = 16;
-                break;
-            case 5:
-                mag = 32;
-                break;
-            }
-            RadioManagement_ChangeFrequency(false,ts.tune_freq - (48000 / mag), ts.txrx_mode);
-        }
-    }
 }
 
 static void UiAction_BandPlusHold()
 {
-    uint8_t mag;
-
 	if(UiDriver_IsButtonPressed(BUTTON_BNDM_PRESSED))	 	// and BAND-DOWN pressed at the same time?
 	{
 		if(!ts.menu_mode)	 		// do not do this if in menu mode!
@@ -6571,34 +6539,6 @@ static void UiAction_BandPlusHold()
 	{
 		UiDriver_PowerDownCleanup(false); // do not save the configuration
 	}
-	else                                                    //skip freq +45kHz - for quick skan of band
-    {
-        if(ts.txrx_mode == TRX_MODE_RX)
-        {
-            switch(sd.magnify)
-            {
-            case 0:
-                mag = 1;
-                break;
-            case 1:
-                mag = 2;
-                break;
-            case 2:
-                mag = 4;
-                break;
-            case 3:
-                mag = 8;
-                break;
-            case 4:
-                mag = 16;
-                break;
-            case 5:
-                mag = 32;
-                break;
-            }
-            RadioManagement_ChangeFrequency(false,ts.tune_freq + (45000 / mag), ts.txrx_mode);
-        }
-    }
 }
 
 static void UiAction_PowerHold()
