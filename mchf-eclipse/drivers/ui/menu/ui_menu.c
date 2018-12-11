@@ -3444,6 +3444,8 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
                                                   PA_LEVEL_TUNE_KEEP_CURRENT,
                                                   PA_LEVEL_TUNE_KEEP_CURRENT,
                                                   1);
+            UiDriver_TextMsgClear(); // Clear message "VSWR protection worked" on LCD, if there is
+
             switch(ts.tune_power_level)
             {
             case PA_LEVEL_FULL:

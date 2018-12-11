@@ -50,6 +50,8 @@
 #include "psk.h"
 #include "rtty.h"
 
+#include "ui_driver.h"
+
 #define SWR_SAMPLES_SKP             1   //5000
 #define SWR_SAMPLES_CNT             5//10
 #define SWR_ADC_FULL_SCALE          4095    // full scale of A/D converter (4095 = 10 bits)
@@ -189,6 +191,9 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
         // Set TX power factor - to reflect changed power
         RadioManagement_SetBandPowerFactor(band);
     }
+
+    UiDriver_TextMsgClear(); // Clear message "VSWR protection worked" on LCD, if there is
+
     return retval;
 }
 
