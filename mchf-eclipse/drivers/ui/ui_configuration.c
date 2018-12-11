@@ -269,6 +269,9 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_15M_PHASE_BALANCE_TRANS_OFF,&ts.tx_iq_phase_balance[IQ_15M].value[IQ_TRANS_OFF],IQ_BALANCE_OFF,  MIN_IQ_PHASE_BALANCE, MAX_IQ_PHASE_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_10M_UP_GAIN_BALANCE_TRANS_OFF,&ts.tx_iq_gain_balance[IQ_10M_UP].value[IQ_TRANS_OFF],IQ_BALANCE_OFF,  MIN_IQ_GAIN_BALANCE, MAX_IQ_GAIN_BALANCE},
     { ConfigEntry_Int32_16, EEPROM_TX_IQ_10M_UP_PHASE_BALANCE_TRANS_OFF,&ts.tx_iq_phase_balance[IQ_10M_UP].value[IQ_TRANS_OFF],IQ_BALANCE_OFF,  MIN_IQ_PHASE_BALANCE, MAX_IQ_PHASE_BALANCE},
+	{ ConfigEntry_UInt8, EEPROM_VSWR_PROTECTION,&ts.vswr_protection,1,0,1},
+    { ConfigEntry_UInt8, EEPROM_TX_POWER_LEVEL_VSWR3,&ts.tx_power_level_vswr3,PA_LEVEL_DEFAULT,0,PA_LEVEL_0_5W},
+    { ConfigEntry_UInt8, EEPROM_TX_POWER_LEVEL_VSWR5,&ts.tx_power_level_vswr5,PA_LEVEL_DEFAULT,0,PA_LEVEL_0_5W},
     // the entry below MUST be the last entry, and only at the last position Stop is allowed
     {
         ConfigEntry_Stop

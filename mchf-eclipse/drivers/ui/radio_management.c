@@ -1438,6 +1438,63 @@ bool RadioManagement_UpdatePowerAndVSWR()
         // Calculate VSWR from power readings
 
         swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrtf(swrm.rev_pwr/swrm.fwd_pwr));
+
+        if(ts.vswr_protection == true) // VSWR protection of PA is activated
+        {
+            bool vswr_protection_worked = false;
+
+            if((swrm.vswr > 10) && ((ts.power_level < PA_LEVEL_0_5W) || (ts.tune_power_level < PA_LEVEL_0_5W)))
+            {
+                vswr_protection_worked = true;
+                ts.power_level = ts.power_level < PA_LEVEL_0_5W? PA_LEVEL_0_5W: ts.power_level;
+                ts.tune_power_level = ts.tune_power_level < PA_LEVEL_0_5W?  PA_LEVEL_0_5W: ts.tune_power_level;
+            }
+            else if((swrm.vswr > 5) && ((ts.power_level < ts.tx_power_level_vswr5) || (ts.tune_power_level < ts.tx_power_level_vswr5)))
+            {
+                vswr_protection_worked = true;
+                ts.power_level = ts.power_level < ts.tx_power_level_vswr5? ts.tx_power_level_vswr5: ts.power_level;
+                ts.tune_power_level = ts.tune_power_level < ts.tx_power_level_vswr5?  ts.tx_power_level_vswr5: ts.tune_power_level;
+            }
+            else if((swrm.vswr > 3) && ((ts.power_level < ts.tx_power_level_vswr3) || (ts.tune_power_level < ts.tx_power_level_vswr3)))
+            {
+                vswr_protection_worked = true;
+                ts.power_level = ts.power_level < ts.tx_power_level_vswr3? ts.tx_power_level_vswr3: ts.power_level;
+                ts.tune_power_level = ts.tune_power_level < ts.tx_power_level_vswr3?  ts.tx_power_level_vswr3: ts.tune_power_level;
+            }
+
+            if (vswr_protection_worked == true)
+            {
+                if(ts.tune && !ts.iq_freq_mode)         // recalculate sidetone gain only if transmitting/tune mode
+                {
+                Codec_TxSidetoneSetgain(ts.txrx_mode);
+                }
+                RadioManagement_SetBandPowerFactor(RadioManagement_GetBand(ts.tune_freq));
+
+                UiDriver_TextMsgClear();
+                UiDriver_TextMsgPutChar('V');
+                UiDriver_TextMsgPutChar('S');
+                UiDriver_TextMsgPutChar('W');
+                UiDriver_TextMsgPutChar('R');
+                UiDriver_TextMsgPutChar(' ');
+                UiDriver_TextMsgPutChar('p');
+                UiDriver_TextMsgPutChar('r');
+                UiDriver_TextMsgPutChar('o');
+                UiDriver_TextMsgPutChar('t');
+                UiDriver_TextMsgPutChar('e');
+                UiDriver_TextMsgPutChar('c');
+                UiDriver_TextMsgPutChar('t');
+                UiDriver_TextMsgPutChar('i');
+                UiDriver_TextMsgPutChar('o');
+                UiDriver_TextMsgPutChar('n');
+                UiDriver_TextMsgPutChar(' ');
+                UiDriver_TextMsgPutChar('w');
+                UiDriver_TextMsgPutChar('o');
+                UiDriver_TextMsgPutChar('r');
+                UiDriver_TextMsgPutChar('k');
+                UiDriver_TextMsgPutChar('e');
+                UiDriver_TextMsgPutChar('d');
+            }
+        }
         retval = true;
     }
     return retval;

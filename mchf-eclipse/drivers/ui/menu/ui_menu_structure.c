@@ -462,6 +462,9 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_15M_TX_IQ_PHASE_BAL_TRANS_OFF, NULL, "TX IQ Phase   (15m,CW)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz.") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF, NULL, "TX IQ Balance (10mUp,CW)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz.") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF, NULL, "TX IQ Phase   (10mUp,CW)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_VSWR_PROTECTION, NULL, "VSWR Protection", UiMenuDesc("If ON, TX/Tune power will down in case of VSWR>3 (0.5W if VSWR>10)") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TX_POWER_LEVEL_VSWR3, NULL, "TX Pwr Level if VSWR>3", UiMenuDesc("TX Power level in case VSWR>3.") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TX_POWER_LEVEL_VSWR5, NULL, "TX Pwr Level if VSWR>5", UiMenuDesc("TX Power level in case VSWR>5.") },
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 

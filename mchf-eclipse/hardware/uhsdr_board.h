@@ -1125,6 +1125,9 @@ typedef struct TransceiverState
 
 	bool paddles_active; // setting this to false disables processing of external gpio interrupts (right now just the paddles/PTT)
 	bool adj_tx_iq_somebands;  // TRUE - adjusting TX IQ on some ham bands over 80m and 10m - for improvement of approximation
+	bool vswr_protection;  // TRUE - VSWR protection of PA is activated
+    uint8_t	tx_power_level_vswr3;		// TX power if VSWR>3
+    uint8_t	tx_power_level_vswr5;		// TX power if VSWR>5
 } TransceiverState;
 //
 extern __IO TransceiverState ts;

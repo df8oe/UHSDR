@@ -613,7 +613,10 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_TX_IQ_15M_PHASE_BALANCE_TRANS_OFF	423
 #define EEPROM_TX_IQ_10M_UP_GAIN_BALANCE_TRANS_OFF	424
 #define EEPROM_TX_IQ_10M_UP_PHASE_BALANCE_TRANS_OFF	425
-#define EEPROM_FIRST_UNUSED 				426		// change this if new value ids are introduced, must be correct at any time
+#define EEPROM_VSWR_PROTECTION                  	426
+#define EEPROM_TX_POWER_LEVEL_VSWR3                 427
+#define EEPROM_TX_POWER_LEVEL_VSWR5                 428
+#define EEPROM_FIRST_UNUSED 				        429		// change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
