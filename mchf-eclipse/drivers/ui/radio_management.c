@@ -1438,20 +1438,6 @@ bool RadioManagement_UpdatePowerAndVSWR()
         // Calculate VSWR from power readings
 
         swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrtf(swrm.rev_pwr/swrm.fwd_pwr));
-
-        if(ts.vswr_protection) // VSWR protection of PA
-        {
-            if((swrm.vswr >= 3) && ((ts.power_level < 2) || (ts.tune_power_level < 2)))
-            {
-                ts.power_level = PA_LEVEL_2W;
-                ts.tune_power_level = PA_LEVEL_2W;
-                if(ts.tune && !ts.iq_freq_mode)         // recalculate sidetone gain only if transmitting/tune mode
-                {
-                Codec_TxSidetoneSetgain(ts.txrx_mode);
-                }
-                RadioManagement_SetBandPowerFactor(band);
-            }
-        }
         retval = true;
     }
     return retval;
