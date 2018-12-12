@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-12-11T07:28:46  by "./ui_menu_structure_graph.py"
+#  generated at  2018-12-12T08:42:43  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-12-11T07:28:46  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-12-12T08:42:43  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1317,68 +1317,63 @@
              shape = record
              ];
         
-        "MENU_DEBUG_ADJ_TX_IQ_SOMEBANDS" [
-             label = "MENU_DEBUG_ADJ_TX_IQ_SOMEBANDS | Adj.TX IQ on some bands"
+        "CONFIG_20M_TX_IQ_GAIN_BAL" [
+             label = "CONFIG_20M_TX_IQ_GAIN_BAL | TX IQ Balance (20m)"
              shape = record
              ];
         
-        "MENU_DEBUG_20M_TX_IQ_GAIN_BAL" [
-             label = "MENU_DEBUG_20M_TX_IQ_GAIN_BAL | TX IQ Balance (20m)"
+        "CONFIG_20M_TX_IQ_PHASE_BAL" [
+             label = "CONFIG_20M_TX_IQ_PHASE_BAL | TX IQ Phase   (20m)"
              shape = record
              ];
         
-        "MENU_DEBUG_20M_TX_IQ_PHASE_BAL" [
-             label = "MENU_DEBUG_20M_TX_IQ_PHASE_BAL | TX IQ Phase   (20m)"
+        "CONFIG_15M_TX_IQ_GAIN_BAL" [
+             label = "CONFIG_15M_TX_IQ_GAIN_BAL | TX IQ Balance (15m)"
              shape = record
              ];
         
-        "MENU_DEBUG_15M_TX_IQ_GAIN_BAL" [
-             label = "MENU_DEBUG_15M_TX_IQ_GAIN_BAL | TX IQ Balance (15m)"
+        "CONFIG_15M_TX_IQ_PHASE_BAL" [
+             label = "CONFIG_15M_TX_IQ_PHASE_BAL | TX IQ Phase   (15m)"
              shape = record
              ];
         
-        "MENU_DEBUG_15M_TX_IQ_PHASE_BAL" [
-             label = "MENU_DEBUG_15M_TX_IQ_PHASE_BAL | TX IQ Phase   (15m)"
+        "CONFIG_10M_UP_TX_IQ_GAIN_BAL" [
+             label = "CONFIG_10M_UP_TX_IQ_GAIN_BAL | TX IQ Balance (10mUp)"
              shape = record
              ];
         
-        "MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL" [
-             label = "MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL | TX IQ Balance (10mUp)"
+        "CONFIG_10M_UP_TX_IQ_PHASE_BAL" [
+             label = "CONFIG_10M_UP_TX_IQ_PHASE_BAL | TX IQ Phase   (10mUp)"
              shape = record
              ];
         
-        "MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL" [
-             label = "MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL | TX IQ Phase   (10mUp)"
+        "CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF" [
+             label = "CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (20m,CW)"
              shape = record
              ];
         
-        "MENU_DEBUG_20M_TX_IQ_GAIN_BAL_TRANS_OFF" [
-             label = "MENU_DEBUG_20M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (20m,CW)"
+        "CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF" [
+             label = "CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (20m,CW)"
              shape = record
              ];
         
-        "MENU_DEBUG_20M_TX_IQ_PHASE_BAL_TRANS_OFF" [
-             label = "MENU_DEBUG_20M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (20m,CW)"
+        "CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF" [
+             label = "CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (15m,CW)"
              shape = record
              ];
         
-        "MENU_DEBUG_15M_TX_IQ_GAIN_BAL_TRANS_OFF" [
-             label = "MENU_DEBUG_15M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (15m,CW)"
+        "CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF" [
+             label = "CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (15m,CW)"
              shape = record
              ];
         
-        "MENU_DEBUG_15M_TX_IQ_PHASE_BAL_TRANS_OFF" [
-             label = "MENU_DEBUG_15M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (15m,CW)"
+        "CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF" [
+             label = "CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (10mUp,CW)"
              shape = record
              ];
         
-        "MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF" [
-             label = "MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (10mUp,CW)"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF" [
-             label = "MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (10mUp,CW)"
+        "CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF" [
+             label = "CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (10mUp,CW)"
              shape = record
              ];
         
@@ -1999,31 +1994,29 @@
             
             MENU_DEBUG -> MENU_DEBUG_TWINPEAKS_CORR_RUN
             
-            MENU_DEBUG -> MENU_DEBUG_ADJ_TX_IQ_SOMEBANDS
+            MENU_DEBUG -> CONFIG_20M_TX_IQ_GAIN_BAL
             
-            MENU_DEBUG -> MENU_DEBUG_20M_TX_IQ_GAIN_BAL
+            MENU_DEBUG -> CONFIG_20M_TX_IQ_PHASE_BAL
             
-            MENU_DEBUG -> MENU_DEBUG_20M_TX_IQ_PHASE_BAL
+            MENU_DEBUG -> CONFIG_15M_TX_IQ_GAIN_BAL
             
-            MENU_DEBUG -> MENU_DEBUG_15M_TX_IQ_GAIN_BAL
+            MENU_DEBUG -> CONFIG_15M_TX_IQ_PHASE_BAL
             
-            MENU_DEBUG -> MENU_DEBUG_15M_TX_IQ_PHASE_BAL
+            MENU_DEBUG -> CONFIG_10M_UP_TX_IQ_GAIN_BAL
             
-            MENU_DEBUG -> MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL
+            MENU_DEBUG -> CONFIG_10M_UP_TX_IQ_PHASE_BAL
             
-            MENU_DEBUG -> MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL
+            MENU_DEBUG -> CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF
             
-            MENU_DEBUG -> MENU_DEBUG_20M_TX_IQ_GAIN_BAL_TRANS_OFF
+            MENU_DEBUG -> CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF
             
-            MENU_DEBUG -> MENU_DEBUG_20M_TX_IQ_PHASE_BAL_TRANS_OFF
+            MENU_DEBUG -> CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF
             
-            MENU_DEBUG -> MENU_DEBUG_15M_TX_IQ_GAIN_BAL_TRANS_OFF
+            MENU_DEBUG -> CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF
             
-            MENU_DEBUG -> MENU_DEBUG_15M_TX_IQ_PHASE_BAL_TRANS_OFF
+            MENU_DEBUG -> CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF
             
-            MENU_DEBUG -> MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF
-            
-            MENU_DEBUG -> MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF
+            MENU_DEBUG -> CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
