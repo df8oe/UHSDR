@@ -96,12 +96,29 @@ static void AudioManagement_FindFreqRange(freq_adjust_point_t* points, uint32_t 
     uint32_t idx = AudioManagement_GetNextValid(points, 0, what);
     uint32_t previous_idx = idx;
     uint32_t before_previous_idx = idx;
+    uint32_t valid_points = 0;
     bool found_match = false;
 
+    // searching for the frist valid calibration point just higher than then frequency
     while (points[idx].freq != 0)
     {
+        valid_points++;
         if (freq < points[idx].freq)
         {
+            // we found one valid calibration point which is higher.
+            // now we need to see if there is a second point if possible.
+            // if the idx is not equal previous_idx, there was a valid lower frequency calibration point
+            // which is nice otherwise we try to find one more higher point
+            if (previous_idx == idx)
+            {
+                // we are lower than the lowest entry, now check if there is one more valid calibration point
+                idx = AudioManagement_GetNextValid(points, idx+1, what);
+                if (points[idx].freq == 0) // stop entry
+                {
+                    // no more valid points, too bad
+                    idx = previous_idx; // we keep both points identical then
+                }
+            }
             found_match = true;
             break;
         }
@@ -110,20 +127,25 @@ static void AudioManagement_FindFreqRange(freq_adjust_point_t* points, uint32_t 
         idx = AudioManagement_GetNextValid(points, idx+1, what);
     }
 
-    if (points[idx].freq != 0 && previous_idx == idx)
+    if (found_match == false)
     {
-        // this happens for frequencies lower than the lowest setting
-        // we just try to find the next higher setting
-        idx = AudioManagement_GetNextValid(points, idx+1, what);
-        found_match = true;
-    }
+        if (valid_points > 1)
+        {
+            // we had two or more valid points, but all are below or equal the frequency
+            // just use the last two valid points, idx is not a valid point but the stop entry
+            idx = previous_idx;
+            previous_idx = before_previous_idx;
+        }
+        else
+        {
+            // if we had not a single valid calibration point, too bad
+            // idx is same as previous_idx and both point to the last "stop" entry
+            // nothing to be done now, but we handle it like the next case, makes no difference
 
-    if (found_match == false && points[idx].freq == 0 && previous_idx != idx )
-    {
-        // this happens if we have a higher frequency than highest entry
-        idx = previous_idx;
-        previous_idx = before_previous_idx;
-        found_match = true;
+            // we had only one valid point, and that must be in previous_idx
+            // no problem, we use it for all frequencies
+            idx = previous_idx;
+        }
     }
 
     *adj_high_ptr = AudioManagement_GetBalanceValFromStruct(&points[idx], what);
@@ -157,7 +179,10 @@ static float AudioManagement_CalcAdjustInFreqRangeHelperNew(freq_adjust_point_t*
         // we use the high value for both
         adj_low = adj_high;
     }
-    return ((adj_high - adj_low) / (freq_high - freq_low) * (freq - freq_low) + adj_low)/scaling;
+    float32_t adj_delta =  (freq_high != freq_low)? (adj_high - adj_low) / (freq_high - freq_low) * (freq - freq_low) : 0;
+
+
+    return (adj_delta + adj_low)/scaling;
     // get current gain adjustment setting  USB and other modes
 }
 
