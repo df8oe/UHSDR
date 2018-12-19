@@ -1440,6 +1440,7 @@ bool RadioManagement_UpdatePowerAndVSWR()
         // Calculate VSWR from power readings
 
         swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrtf(swrm.rev_pwr/swrm.fwd_pwr));
+<<<<<<< HEAD
 
         if(ts.vswr_protection == true) // VSWR protection of PA is activated
         {
@@ -1478,6 +1479,8 @@ bool RadioManagement_UpdatePowerAndVSWR()
                 UiLcdHy28_PrintTextCentered(sd.Slayout->full.x,sd.Slayout->full.h/2+sd.Slayout->full.y,sd.Slayout->full.w,txp,txc,Black,0);
             }
         }
+=======
+>>>>>>> parent of 3522f2d0... Added VSWR protection of PA
         retval = true;
     }
     return retval;

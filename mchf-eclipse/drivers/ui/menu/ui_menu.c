@@ -4311,59 +4311,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         case MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF:
             UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_10M_UP], TRX_MODE_TX, IQ_TRANS_OFF);
             break;
-        case MENU_DEBUG_VSWR_PROTECTION:
-            var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.vswr_protection,0,options,&clr);
-    	    break;
-        case MENU_DEBUG_TX_POWER_LEVEL_VSWR3:
-            var_change = UiDriverMenuItemChangeUInt8(var*(-1), mode, &ts.tx_power_level_vswr3,
-                                                  0,
-                                                  PA_LEVEL_0_5W,
-                                                  PA_LEVEL_0_5W,
-                                                  1);
-            switch(ts.tx_power_level_vswr3)
-            {
-            case PA_LEVEL_FULL:
-                txt_ptr = "FULL POWER";
-                break;
-            case PA_LEVEL_5W:
-                txt_ptr = "        5W";
-                break;
-            case PA_LEVEL_2W:
-                txt_ptr = "        2W";
-                break;
-            case PA_LEVEL_1W:
-                txt_ptr = "        1W";
-                break;
-            case PA_LEVEL_0_5W:
-                txt_ptr = "      0.5W";
-                break;
-            }
-            break;
-        case MENU_DEBUG_TX_POWER_LEVEL_VSWR5:
-            var_change = UiDriverMenuItemChangeUInt8(var*(-1), mode, &ts.tx_power_level_vswr5,
-                                                  0,
-                                                  PA_LEVEL_0_5W,
-                                                  PA_LEVEL_0_5W,
-                                                  1);
-            switch(ts.tx_power_level_vswr5)
-            {
-            case PA_LEVEL_FULL:
-                txt_ptr = "FULL POWER";
-                break;
-            case PA_LEVEL_5W:
-                txt_ptr = "        5W";
-                break;
-            case PA_LEVEL_2W:
-                txt_ptr = "        2W";
-                break;
-            case PA_LEVEL_1W:
-                txt_ptr = "        1W";
-                break;
-            case PA_LEVEL_0_5W:
-                txt_ptr = "      0.5W";
-                break;
-            }
-            break;
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

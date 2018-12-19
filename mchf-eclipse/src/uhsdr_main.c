@@ -393,9 +393,6 @@ void TransceiverStateInit(void)
     ts.cw_text_entry = false;
     ts.debug_si5351a_pllreset = 2;		//start with "reset on IQ Divider"
     ts.adj_tx_iq_somebands = 0;		// TRUE - adjusting TX IQ on some ham bands over 80m and 10m - for improvement of approximation
-    ts.vswr_protection = 0;         // TRUE - VSWR protection of PA is acitivated
-    ts.tx_power_level_vswr3 = PA_LEVEL_0_5W;  // TX power if VSWR>3
-    ts.tx_power_level_vswr5 = PA_LEVEL_0_5W;  // TX power if VSWR>5
 }
 
 void MiscInit(void)
