@@ -371,12 +371,12 @@ void		UiConfiguration_UpdateMacroCap(void);
 //
 #define EEPROM_TX_DISABLE					169     // TRUE of transmit is to be disabled
 #define EEPROM_FLAGS1						170     // Miscellaneous status flag, saved in EEPROM - see variable "flags1"
-#define EEPROM_VERSION_NUMBER				171     // Storage of current version release - used to detect change of firmware
+#define EEPROM_VERSION_RELEASE				171     // Storage of current version release - used to detect change of firmware
 #define EEPROM_NB_AGC_TIME_CONST			172     // Noise blanker AGC time constant setting
 #define EEPROM_CW_OFFSET_MODE				173     // CW Offset mode
 #define EEPROM_FREQ_CONV_MODE				174     // Frequency Conversion Mode (e.g. I/Q frequency conversion done in receive/transmit to offset from zero)
 #define EEPROM_LSB_USB_AUTO_SELECT			175     // Auto selection of LSB/USB above/below 10 MHz (including 60 meters)
-#define EEPROM_VERSION_BUILD				176     // Storage of current version build number - used to detect change of firmware
+#define EEPROM_VERSION_MAJOR				176     // Storage of current version build number - used to detect change of firmware
 #define EEPROM_LCD_BLANKING_CONFIG			177     // Configuration of automatic LCD blanking mode settings
 #define EEPROM_VOLTMETER_CALIBRATE			178     // Holder for calibration of the on-screen voltmeter
 #define EEPROM_WATERFALL_COLOR_SCHEME		179     // Color scheme for waterfall display
@@ -514,7 +514,7 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_FLAGS2						298     // Miscellaneous status flag, saved in EEPROM - see variable "flags2"
 #define EEPROM_FILTER_DISP_COLOUR			299     // This contains the color of the line under the spectrum/waterfall display
 #define EEPROM_TX_IQ_10M_GAIN_BALANCE_TRANS_OFF		300     // IQ Gain balance for AM transmission
-#define EEPROM_TX_IQ_10_PHASE_BALANCE_TRANS_OFF		301     // IQ Gain balance for FM transmission
+#define EEPROM_TX_IQ_10M_PHASE_BALANCE_TRANS_OFF		301     // IQ Gain balance for FM transmission
 #define EEPROM_FM_SUBAUDIBLE_TONE_GEN		302     // index for storage of subaudible tone generation
 #define EEPROM_FM_TONE_BURST_MODE			303     // tone burst mode
 #define EEPROM_FM_SQUELCH_SETTING			304     // FM squelch setting
@@ -599,8 +599,7 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_CW_DECODER_THRESH			410
 #define EEPROM_CW_DECODER_BLOCKSIZE			411
 #define EEPROM_SMETER_ALPHAS                412
-//#define EEPROM_FIRST_UNUSED 				413		// change this if new value ids are introduced, must be correct at any time
-#define EEPROM_ADJ_TX_IQ_SOMEBANDS	        413     // Manual TX IQ adjusting on some bands for improvement of approximation
+#define EEPROM_ADJ_TX_IQ_SOMEBANDS	        413     // unused, may be reused due to short usage time in its original
 #define EEPROM_TX_IQ_20M_GAIN_BALANCE		        414
 #define EEPROM_TX_IQ_20M_PHASE_BALANCE		        415
 #define EEPROM_TX_IQ_15M_GAIN_BALANCE		        416

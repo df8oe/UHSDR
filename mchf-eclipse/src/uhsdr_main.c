@@ -129,18 +129,6 @@ void TransceiverStateInit(void)
     ts.audio_spkr_unmute_delay_count		= VOICE_TX2RX_DELAY_DEFAULT;			// TX->RX delay turnaround
 
     ts.nb_setting		= 0;					// Noise Blanker setting
-
-    for (int i = 0; i < IQ_ADJUST_POINTS_NUM; i++)
-    {
-        for (int j = 0; j < IQ_TRANS_NUM; j++)
-        {
-            ts.tx_iq_gain_balance[i].value[j]   = IQ_BALANCE_OFF;                // Default settings for RX and TX gain and phase balance
-            ts.tx_iq_phase_balance[i].value[j]   = IQ_BALANCE_OFF;                // Default settings for RX and TX gain and phase balance
-            ts.rx_iq_gain_balance[i].value[j]   = IQ_BALANCE_OFF;                // Default settings for RX and TX gain and phase balance
-            ts.rx_iq_phase_balance[i].value[j]   = IQ_BALANCE_OFF;                // Default settings for RX and TX gain and phase balance
-        }
-    }
-
     ts.tune_freq		= 0;
     //ts.tune_freq_old	= 0;
 
@@ -392,8 +380,6 @@ void TransceiverStateInit(void)
     ts.buffered_tx = false;
     ts.cw_text_entry = false;
     ts.debug_si5351a_pllreset = 2;		//start with "reset on IQ Divider"
-    ts.adj_tx_iq_somebands = 0;		// TRUE - adjusting TX IQ on some ham bands over 80m and 10m - for improvement of approximation
-    ts.debug_vswr_protection_threshold = 0; // OFF
 }
 
 void MiscInit(void)

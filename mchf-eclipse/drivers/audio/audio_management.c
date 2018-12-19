@@ -25,9 +25,143 @@ void AudioManagement_CalcALCDecay(void)
     ads.alc_decay = powf(10,-((((float32_t)ts.alc_decay_var)+35.0)/10.0));
 }
 
-//static float AudioManagement_CalcAdjustInFreqRangeHelper(float32_t adj_low, float32_t adj_high, float32_t freq, float32_t scaling)
-static float AudioManagement_CalcAdjustInFreqRangeHelper(float32_t adj_low, float32_t adj_high, float32_t fpoint_low, float32_t freq, float32_t fpoint_high, float32_t scaling)
+// make sure the frequencies below match the order of iq_freq_enum_t !
+
+#define AUDIO_M_IQ_ADJUST_INIT(freqVal)         { .freq = freqVal , .adj = { .rx = { IQ_BALANCE_OFF, IQ_BALANCE_OFF },  .tx = { { IQ_BALANCE_OFF, IQ_BALANCE_OFF }, { IQ_BALANCE_OFF,IQ_BALANCE_OFF } } } },
+
+freq_adjust_point_t iq_adjust[IQ_FREQ_NUM+1] =
 {
+        AUDIO_M_IQ_ADJUST_INIT( 3600000)
+        AUDIO_M_IQ_ADJUST_INIT(14100000)
+        AUDIO_M_IQ_ADJUST_INIT(21100000)
+        AUDIO_M_IQ_ADJUST_INIT(28100000)
+        AUDIO_M_IQ_ADJUST_INIT(29650000)
+        // this must be last
+        AUDIO_M_IQ_ADJUST_INIT(0)
+};
+
+
+static int32_t AudioManagement_GetBalanceValFromStruct(freq_adjust_point_t* point, iq_adjust_params_t what)
+{
+    int32_t retval = IQ_BALANCE_OFF;
+    switch(what)
+    {
+    case IQ_RX_GAIN:
+        retval = point->adj.rx.gain;
+        break;
+    case IQ_RX_PHASE:
+         retval = point->adj.rx.phase;
+         break;
+    case IQ_TX_TRANS_ON_GAIN:
+        retval = point->adj.tx[IQ_TRANS_ON].gain;
+        break;
+    case IQ_TX_TRANS_OFF_GAIN:
+        retval = point->adj.tx[IQ_TRANS_OFF].gain;
+        break;
+    case IQ_TX_TRANS_ON_PHASE:
+        retval = point->adj.tx[IQ_TRANS_ON].phase;
+        break;
+    case IQ_TX_TRANS_OFF_PHASE:
+        retval = point->adj.tx[IQ_TRANS_OFF].phase;
+        break;
+    }
+    return retval;
+}
+
+
+/**
+ *
+ * @param freq for which the two closest points shall be found
+ * @return idx of lower frequency point, please note that the higher frequency point may be the stop value
+ */
+
+static uint32_t AudioManagement_GetNextValid(freq_adjust_point_t* points, uint32_t idx,  iq_adjust_params_t what)
+{
+    // uint32_t idx = 0;
+    while (points[idx].freq != 0)
+      {
+          int32_t val = AudioManagement_GetBalanceValFromStruct(&points[idx], what);
+          if (val != IQ_BALANCE_OFF)
+          {
+              break;
+          }
+          idx++;
+      }
+    return idx;
+}
+
+static void AudioManagement_FindFreqRange(freq_adjust_point_t* points, uint32_t freq,  iq_adjust_params_t what, float32_t* adj_low_ptr, float32_t* adj_high_ptr, float32_t* freq_low_ptr, float32_t* freq_high_ptr )
+{
+    // AudioManagement_GetBalanceValFromStruct(&points[idx], what);
+    uint32_t idx = AudioManagement_GetNextValid(points, 0, what);
+    uint32_t previous_idx = idx;
+    uint32_t before_previous_idx = idx;
+    uint32_t valid_points = 0;
+    bool found_match = false;
+
+    // searching for the frist valid calibration point just higher than then frequency
+    while (points[idx].freq != 0)
+    {
+        valid_points++;
+        if (freq < points[idx].freq)
+        {
+            // we found one valid calibration point which is higher.
+            // now we need to see if there is a second point if possible.
+            // if the idx is not equal previous_idx, there was a valid lower frequency calibration point
+            // which is nice otherwise we try to find one more higher point
+            if (previous_idx == idx)
+            {
+                // we are lower than the lowest entry, now check if there is one more valid calibration point
+                idx = AudioManagement_GetNextValid(points, idx+1, what);
+                if (points[idx].freq == 0) // stop entry
+                {
+                    // no more valid points, too bad
+                    idx = previous_idx; // we keep both points identical then
+                }
+            }
+            found_match = true;
+            break;
+        }
+        before_previous_idx = previous_idx;
+        previous_idx = idx;
+        idx = AudioManagement_GetNextValid(points, idx+1, what);
+    }
+
+    if (found_match == false)
+    {
+        if (valid_points > 1)
+        {
+            // we had two or more valid points, but all are below or equal the frequency
+            // just use the last two valid points, idx is not a valid point but the stop entry
+            idx = previous_idx;
+            previous_idx = before_previous_idx;
+        }
+        else
+        {
+            // if we had not a single valid calibration point, too bad
+            // idx is same as previous_idx and both point to the last "stop" entry
+            // nothing to be done now, but we handle it like the next case, makes no difference
+
+            // we had only one valid point, and that must be in previous_idx
+            // no problem, we use it for all frequencies
+            idx = previous_idx;
+        }
+    }
+
+    *adj_high_ptr = AudioManagement_GetBalanceValFromStruct(&points[idx], what);
+    *adj_low_ptr = AudioManagement_GetBalanceValFromStruct(&points[previous_idx], what);
+    *freq_high_ptr = points[idx].freq;
+    *freq_low_ptr = points[previous_idx].freq;
+
+}
+
+static float AudioManagement_CalcAdjustInFreqRangeHelperNew(freq_adjust_point_t* points, iq_adjust_params_t what, float32_t freq, float32_t scaling)
+{
+    float32_t adj_low, adj_high;
+    float32_t freq_low, freq_high;
+
+    AudioManagement_FindFreqRange(points, freq, what, &adj_low, &adj_high, &freq_low, &freq_high);
+
     if (adj_high == IQ_BALANCE_OFF)
     {
         if (adj_low == IQ_BALANCE_OFF)
@@ -45,8 +179,11 @@ static float AudioManagement_CalcAdjustInFreqRangeHelper(float32_t adj_low, floa
         // we use the high value for both
         adj_low = adj_high;
     }
- //   return ((adj_high - adj_low) / (28100000.0 - 3600000.0) * (freq - 3600000.0) + adj_low)/scaling;        // get current gain adjustment setting  USB and other modes
-    return ((adj_high - adj_low) / (fpoint_high - fpoint_low) * (freq - fpoint_low) + adj_low)/scaling;
+    float32_t adj_delta =  (freq_high != freq_low)? (adj_high - adj_low) / (freq_high - freq_low) * (freq - freq_low) : 0;
+
+
+    return (adj_delta + adj_low)/scaling;
+    // get current gain adjustment setting  USB and other modes
 }
 
 static void AudioManagement_CalcIqGainAdjustVarHelper(volatile iq_float_t* var, float32_t adj)
@@ -62,102 +199,49 @@ void AudioManagement_CalcIqPhaseGainAdjust(float freq)
     // this is justified because the phase shift between two signals of equal frequency can
     // be regulated by adjusting the amplitudes of the two signals!
 
-    float frecpoint_low = 3600000.0;
-    float frecpoint_high = 28100000.0;
-    uint16_t IQ_LOW = IQ_80M;
-    uint16_t IQ_HIGH = IQ_10M;
-
-    ads.iq_phase_balance_rx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            ts.rx_iq_phase_balance[IQ_80M].value[IQ_TRANS_ON],
-            ts.rx_iq_phase_balance[IQ_10M].value[IQ_TRANS_ON],
-            frecpoint_low,
+    ads.iq_phase_balance_rx = AudioManagement_CalcAdjustInFreqRangeHelperNew(
+            iq_adjust,
+            IQ_RX_PHASE,
             freq,
-            frecpoint_high,
             SCALING_FACTOR_IQ_PHASE_ADJUST);
 
 
     // please note that the RX adjustments for gain are negative
     // and the adjustments for TX (in the function AudioManagement_CalcTxIqGainAdj) are positive
-    float32_t adj_i_rx = AudioManagement_CalcAdjustInFreqRangeHelper(
-            -ts.rx_iq_gain_balance[IQ_80M].value[IQ_TRANS_ON],
-            -ts.rx_iq_gain_balance[IQ_10M].value[IQ_TRANS_ON],
-            frecpoint_low,
+    float32_t adj_i_rx = -AudioManagement_CalcAdjustInFreqRangeHelperNew(
+            iq_adjust,
+            IQ_RX_GAIN,
             freq,
-            frecpoint_high,
             SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
 
-    if (ts.adj_tx_iq_somebands == true)  // Manual adjusting TX IQ on some ham bands - for improvement of approximation
-    {
-        if (freq <= 3600000.0)  // constant adjusting
-        {
-            IQ_LOW = IQ_80M;
-            IQ_HIGH = IQ_80M;
-            frecpoint_low = 900000;     // dummy
-            frecpoint_high = 3600000.0; // dummy
-        }
-        else if (freq <= 14100000.0)  // linear approximation
-        {
-            IQ_LOW = IQ_80M;
-            IQ_HIGH = IQ_20M;
-            frecpoint_low = 3600000.0;
-            frecpoint_high = 14100000.0;
-        }
-        else if (freq <= 21100000.0)  // linear approximation
-        {
-            IQ_LOW = IQ_20M;
-            IQ_HIGH = IQ_15M;
-            frecpoint_low = 14100000.0;
-            frecpoint_high = 21100000.0;
-        }
-        else if (freq <= 28100000.0)  // linear approximation
-        {
-            IQ_LOW = IQ_15M;
-            IQ_HIGH = IQ_10M;
-            frecpoint_low = 21100000.0;
-            frecpoint_high = 28100000.0;
-        }
-        else if (freq <= 29650000.0)  // linear approximation
-        {
-            IQ_LOW = IQ_10M;
-            IQ_HIGH = IQ_10M_UP;
-            frecpoint_low = 28100000.0;
-            frecpoint_high = 29650000.0;
-        }
-        else                          // constant adjusting
-        {
-            IQ_LOW = IQ_10M_UP;
-            IQ_HIGH = IQ_10M_UP;
-            frecpoint_low = 29650000.0;  // dummy
-            frecpoint_high = 32000000.0; // dummy
-        }
-    }
-
-    for (int i = 0; i < IQ_TRANS_NUM; i++)
-    {
-        ads.iq_phase_balance_tx[i] = AudioManagement_CalcAdjustInFreqRangeHelper(
- //                   ts.tx_iq_phase_balance[IQ_80M].value[i],
- //                   ts.tx_iq_phase_balance[IQ_10M].value[i],
-                    ts.tx_iq_phase_balance[IQ_LOW].value[i],
-                    ts.tx_iq_phase_balance[IQ_HIGH].value[i],
-                    frecpoint_low,
-                    freq,
-                    frecpoint_high,
-                    SCALING_FACTOR_IQ_PHASE_ADJUST);
-
-        float32_t adj_i_tx= AudioManagement_CalcAdjustInFreqRangeHelper(
- //               ts.tx_iq_gain_balance[IQ_80M].value[i],
- //               ts.tx_iq_gain_balance[IQ_10M].value[i],
-                ts.tx_iq_gain_balance[IQ_LOW].value[i],
-                ts.tx_iq_gain_balance[IQ_HIGH].value[i],
-                frecpoint_low,
-                freq,
-                frecpoint_high,
-                SCALING_FACTOR_IQ_AMPLITUDE_ADJUST);
-
-        AudioManagement_CalcIqGainAdjustVarHelper(&ts.tx_adj_gain_var[i],adj_i_tx);
-    }
-
     AudioManagement_CalcIqGainAdjustVarHelper(&ts.rx_adj_gain_var,adj_i_rx);
+
+
+    ads.iq_phase_balance_tx[IQ_TRANS_ON] = AudioManagement_CalcAdjustInFreqRangeHelperNew(
+            iq_adjust,
+            IQ_TX_TRANS_ON_PHASE,
+            freq,
+            SCALING_FACTOR_IQ_PHASE_ADJUST);
+    ads.iq_phase_balance_tx[IQ_TRANS_OFF] = AudioManagement_CalcAdjustInFreqRangeHelperNew(
+            iq_adjust,
+            IQ_TX_TRANS_OFF_PHASE,
+            freq,
+            SCALING_FACTOR_IQ_PHASE_ADJUST);
+
+    AudioManagement_CalcIqGainAdjustVarHelper(&ts.tx_adj_gain_var[IQ_TRANS_ON],AudioManagement_CalcAdjustInFreqRangeHelperNew(
+            iq_adjust,
+            IQ_TX_TRANS_ON_GAIN,
+            freq,
+            SCALING_FACTOR_IQ_AMPLITUDE_ADJUST));
+
+    AudioManagement_CalcIqGainAdjustVarHelper(
+            &ts.tx_adj_gain_var[IQ_TRANS_OFF],
+            AudioManagement_CalcAdjustInFreqRangeHelperNew(
+                    iq_adjust,
+                    IQ_TX_TRANS_OFF_GAIN,
+                    freq,
+                    SCALING_FACTOR_IQ_AMPLITUDE_ADJUST));
+
 
 }
 

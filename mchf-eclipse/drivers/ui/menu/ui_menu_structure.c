@@ -448,28 +448,25 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_OPAMP, &hmc1023.present,"HMC1023 Opamp Bias", UiMenuDesc("Debug Setting: Switch LPF HMC1023LP5E Opamp Bias") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_HMC1023_DRVR, &hmc1023.present,"HMC1023 Driver Bias", UiMenuDesc("Debug Setting: Set HMC1023 Driver Bias") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TWINPEAKS_CORR_RUN, NULL,"Trigger Twinpeaks Corr.", UiMenuDesc("Trigger Twinpeaks Correction Manually if IQ Auto Correction is enabled, otherwise you will see 'Not Possible'") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ADJ_TX_IQ_SOMEBANDS, NULL, "Adj.TX IQ on some bands", UiMenuDesc("Manual adjusting TX IQ on some ham bands - for improvement of approximation") },
-    // Highly recommended to calibrate from low bands to high twice
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_20M_TX_IQ_GAIN_BAL, NULL, "TX IQ Balance (20m)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 14.100 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_20M_TX_IQ_PHASE_BAL, NULL, "TX IQ Phase   (20m)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 14.100 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_15M_TX_IQ_GAIN_BAL, NULL, "TX IQ Balance (15m)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 21.100 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_15M_TX_IQ_PHASE_BAL, NULL, "TX IQ Phase   (15m)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 21.100 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL, NULL, "TX IQ Balance (10mUp)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 29.650 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL, NULL, "TX IQ Phase   (10mUp)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 29.650 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_20M_TX_IQ_GAIN_BAL_TRANS_OFF, NULL, "TX IQ Balance (20m,CW)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 14.100 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_20M_TX_IQ_PHASE_BAL_TRANS_OFF, NULL, "TX IQ Phase   (20m,CW)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 14.100 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_15M_TX_IQ_GAIN_BAL_TRANS_OFF, NULL, "TX IQ Balance (15m,CW)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_15M_TX_IQ_PHASE_BAL_TRANS_OFF, NULL, "TX IQ Phase   (15m,CW)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF, NULL, "TX IQ Balance (10mUp,CW)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF, NULL, "TX IQ Phase   (10mUp,CW)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_VSWR_PROTECTION_THRESHOLD, NULL, "VSWR Protect. threshold", UiMenuDesc("If not OFF, on TX/tune the bias of PA will down to 0 when exceeding the specified value of VSWR") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_20M_TX_IQ_GAIN_BAL, NULL, "TX IQ Balance (20m)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 14.100 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_20M_TX_IQ_PHASE_BAL, NULL, "TX IQ Phase   (20m)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 14.100 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_15M_TX_IQ_GAIN_BAL, NULL, "TX IQ Balance (15m)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 21.100 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_15M_TX_IQ_PHASE_BAL, NULL, "TX IQ Phase   (15m)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 21.100 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_10M_UP_TX_IQ_GAIN_BAL, NULL, "TX IQ Balance (10mUp)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 29.650 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_10M_UP_TX_IQ_PHASE_BAL, NULL, "TX IQ Phase   (10mUp)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 29.650 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF, NULL, "TX IQ Balance (20m,CW)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 14.100 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF, NULL, "TX IQ Phase   (20m,CW)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 14.100 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF, NULL, "TX IQ Balance (15m,CW)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF, NULL, "TX IQ Phase   (15m,CW)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF, NULL, "TX IQ Balance (10mUp,CW)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz.") },
+    { MENU_DEBUG, MENU_ITEM, CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF, NULL, "TX IQ Phase   (10mUp,CW)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz.") },
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
 const MenuDescriptor hall_of_fameGroup[] =
 {
-    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"M0NKA  (Chris) founder of mcHF", UiMenuDesc("") },
-    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"KA7OEI (Clint) 1st great work", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"M0NKA  (Chris) mcHF founder", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"KA7OEI (Clint) 1st great FW", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"DF8OE  (Andreas)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"DL4SAI (Harald)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"DB4PLE (Danilo)", UiMenuDesc("") },
@@ -484,6 +481,7 @@ const MenuDescriptor hall_of_fameGroup[] =
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"SP9BSL (Slawek)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"HB9GND (Dimce)", UiMenuDesc("") },
     { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"MM0MZW (Mike)", UiMenuDesc("") },
+    { MENU_HALL_OF_FAME, MENU_TEXT, 0, NULL,"ex UA9YPF (Yuri)", UiMenuDesc("") },
 
     { MENU_HALL_OF_FAME, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };

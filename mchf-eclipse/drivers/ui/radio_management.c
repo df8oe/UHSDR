@@ -50,15 +50,6 @@
 #include "psk.h"
 #include "rtty.h"
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-#include "ui_lcd_hy28.h"
-=======
-#include "ui_driver.h"
->>>>>>> parent of 9ed0bff4... Changed output of text message to LCD
-
-=======
->>>>>>> parent of e3c58ec7... Add clearing of message "VSWR ...
 #define SWR_SAMPLES_SKP             1   //5000
 #define SWR_SAMPLES_CNT             5//10
 #define SWR_ADC_FULL_SCALE          4095    // full scale of A/D converter (4095 = 10 bits)
@@ -198,9 +189,6 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
         // Set TX power factor - to reflect changed power
         RadioManagement_SetBandPowerFactor(band);
     }
-
-    UiDriver_TextMsgClear(); // Clear message "VSWR protection worked" on LCD, if there is
-
     return retval;
 }
 
@@ -1450,76 +1438,6 @@ bool RadioManagement_UpdatePowerAndVSWR()
         // Calculate VSWR from power readings
 
         swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrtf(swrm.rev_pwr/swrm.fwd_pwr));
-<<<<<<< HEAD
-
-        if(ts.vswr_protection == true) // VSWR protection of PA is activated
-        {
-            bool vswr_protection_worked = false;
-
-            if((swrm.vswr > 10) && ((ts.power_level < PA_LEVEL_0_5W) || (ts.tune_power_level < PA_LEVEL_0_5W)))
-            {
-                vswr_protection_worked = true;
-                ts.power_level = ts.power_level < PA_LEVEL_0_5W? PA_LEVEL_0_5W: ts.power_level;
-                ts.tune_power_level = ts.tune_power_level < PA_LEVEL_0_5W?  PA_LEVEL_0_5W: ts.tune_power_level;
-            }
-            else if((swrm.vswr > 5) && ((ts.power_level < ts.tx_power_level_vswr5) || (ts.tune_power_level < ts.tx_power_level_vswr5)))
-            {
-                vswr_protection_worked = true;
-                ts.power_level = ts.power_level < ts.tx_power_level_vswr5? ts.tx_power_level_vswr5: ts.power_level;
-                ts.tune_power_level = ts.tune_power_level < ts.tx_power_level_vswr5?  ts.tx_power_level_vswr5: ts.tune_power_level;
-            }
-            else if((swrm.vswr > 3) && ((ts.power_level < ts.tx_power_level_vswr3) || (ts.tune_power_level < ts.tx_power_level_vswr3)))
-            {
-                vswr_protection_worked = true;
-                ts.power_level = ts.power_level < ts.tx_power_level_vswr3? ts.tx_power_level_vswr3: ts.power_level;
-                ts.tune_power_level = ts.tune_power_level < ts.tx_power_level_vswr3?  ts.tx_power_level_vswr3: ts.tune_power_level;
-            }
-
-            if (vswr_protection_worked == true)
-            {
-                if(ts.tune && !ts.iq_freq_mode)         // recalculate sidetone gain only if transmitting/tune mode
-                {
-                Codec_TxSidetoneSetgain(ts.txrx_mode);
-                }
-                RadioManagement_SetBandPowerFactor(RadioManagement_GetBand(ts.tune_freq));
-
-                UiDriver_TextMsgClear();
-                UiDriver_TextMsgPutChar('V');
-                UiDriver_TextMsgPutChar('S');
-                UiDriver_TextMsgPutChar('W');
-                UiDriver_TextMsgPutChar('R');
-                UiDriver_TextMsgPutChar(' ');
-                UiDriver_TextMsgPutChar('p');
-                UiDriver_TextMsgPutChar('r');
-                UiDriver_TextMsgPutChar('o');
-                UiDriver_TextMsgPutChar('t');
-                UiDriver_TextMsgPutChar('e');
-                UiDriver_TextMsgPutChar('c');
-                UiDriver_TextMsgPutChar('t');
-                UiDriver_TextMsgPutChar('i');
-                UiDriver_TextMsgPutChar('o');
-                UiDriver_TextMsgPutChar('n');
-                UiDriver_TextMsgPutChar(' ');
-                UiDriver_TextMsgPutChar('w');
-                UiDriver_TextMsgPutChar('o');
-                UiDriver_TextMsgPutChar('r');
-                UiDriver_TextMsgPutChar('k');
-                UiDriver_TextMsgPutChar('e');
-                UiDriver_TextMsgPutChar('d');
-            }
-        }
-=======
->>>>>>> parent of 3522f2d0... Added VSWR protection of PA
-
-        if (ts.debug_vswr_protection_threshold > 1)
-        {
-        	if(swrm.vswr > ts.debug_vswr_protection_threshold)
-        	{
-        	RadioManagement_DisablePaBias();
-        	swrm.high_vswr_detected = true;
-        	}
-        }
-
         retval = true;
     }
     return retval;

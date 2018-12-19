@@ -4516,17 +4516,11 @@ static void UiDriver_HandleTXMeters()
         swrm.p_curr   = 0;
         swrm.fwd_calc = 0;
         swrm.rev_calc = 0;
-        swrm.high_vswr_detected = 0;
 
 	}
 	else
 	{
 		static uint8_t    old_power_level = 99;
-
-		if(swrm.high_vswr_detected == true)
-		{
-			Board_RedLed(LED_STATE_TOGGLE);
-		}
 
 		// display FWD, REV power, in milliwatts - used for calibration - IF ENABLED
 		if(swrm.pwr_meter_disp)
@@ -6530,11 +6524,11 @@ static void UiAction_BandMinusHold()
 			UiAction_ToggleWaterfallScopeDisplay();
 		}
 	}
-	else                                                    //skip freq -48kHz/magnify - for quick skan of band
+	else                                                    //skip freq -48kHz/magnify - for quick scan of band
     {
         if(ts.txrx_mode == TRX_MODE_RX)
         {
-            RadioManagement_ChangeFrequency(false,ts.tune_freq - (48000 / (1 << sd.magnify)), ts.txrx_mode);
+            df.tune_new -= TUNE_MULT * (48000 / (1 << sd.magnify));
         }
     }
 }
@@ -6548,15 +6542,15 @@ static void UiAction_BandPlusHold()
 			UiAction_ToggleWaterfallScopeDisplay();
 		}
 	}
-	if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))	 	// and POWER button pressed-and-held at the same time?
+	else if(UiDriver_IsButtonPressed(BUTTON_PWR_PRESSED))	 	// and POWER button pressed-and-held at the same time?
 	{
 		UiDriver_PowerDownCleanup(false); // do not save the configuration
 	}
-	else                                                    //skip freq +48kHz/magnify - for quick skan of band
+	else                                                    //skip freq +48kHz/magnify - for quick scan of band
     {
         if(ts.txrx_mode == TRX_MODE_RX)
         {
-            RadioManagement_ChangeFrequency(false,ts.tune_freq - (48000 / (1 << sd.magnify)), ts.txrx_mode);
+            df.tune_new += TUNE_MULT * (48000 / (1 << sd.magnify));
         }
     }
 }
