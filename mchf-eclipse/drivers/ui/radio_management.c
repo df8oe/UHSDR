@@ -51,7 +51,11 @@
 #include "rtty.h"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "ui_lcd_hy28.h"
+=======
+#include "ui_driver.h"
+>>>>>>> parent of 9ed0bff4... Changed output of text message to LCD
 
 =======
 >>>>>>> parent of e3c58ec7... Add clearing of message "VSWR ...
@@ -194,6 +198,9 @@ bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
         // Set TX power factor - to reflect changed power
         RadioManagement_SetBandPowerFactor(band);
     }
+
+    UiDriver_TextMsgClear(); // Clear message "VSWR protection worked" on LCD, if there is
+
     return retval;
 }
 
@@ -1476,10 +1483,29 @@ bool RadioManagement_UpdatePowerAndVSWR()
                 }
                 RadioManagement_SetBandPowerFactor(RadioManagement_GetBand(ts.tune_freq));
 
-                const char* txp = "VSWR protection worked";
-	            uint16_t txc = Red;
-
-                UiLcdHy28_PrintTextCentered(sd.Slayout->full.x,sd.Slayout->full.h/2+sd.Slayout->full.y,sd.Slayout->full.w,txp,txc,Black,0);
+                UiDriver_TextMsgClear();
+                UiDriver_TextMsgPutChar('V');
+                UiDriver_TextMsgPutChar('S');
+                UiDriver_TextMsgPutChar('W');
+                UiDriver_TextMsgPutChar('R');
+                UiDriver_TextMsgPutChar(' ');
+                UiDriver_TextMsgPutChar('p');
+                UiDriver_TextMsgPutChar('r');
+                UiDriver_TextMsgPutChar('o');
+                UiDriver_TextMsgPutChar('t');
+                UiDriver_TextMsgPutChar('e');
+                UiDriver_TextMsgPutChar('c');
+                UiDriver_TextMsgPutChar('t');
+                UiDriver_TextMsgPutChar('i');
+                UiDriver_TextMsgPutChar('o');
+                UiDriver_TextMsgPutChar('n');
+                UiDriver_TextMsgPutChar(' ');
+                UiDriver_TextMsgPutChar('w');
+                UiDriver_TextMsgPutChar('o');
+                UiDriver_TextMsgPutChar('r');
+                UiDriver_TextMsgPutChar('k');
+                UiDriver_TextMsgPutChar('e');
+                UiDriver_TextMsgPutChar('d');
             }
         }
 =======
