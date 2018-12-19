@@ -393,6 +393,7 @@ void TransceiverStateInit(void)
     ts.cw_text_entry = false;
     ts.debug_si5351a_pllreset = 2;		//start with "reset on IQ Divider"
     ts.adj_tx_iq_somebands = 0;		// TRUE - adjusting TX IQ on some ham bands over 80m and 10m - for improvement of approximation
+    ts.debug_vswr_protection_threshold = 0; // OFF
 }
 
 void MiscInit(void)

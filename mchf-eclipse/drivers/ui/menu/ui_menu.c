@@ -4313,6 +4313,37 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
         case MENU_DEBUG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF:
             UiMenu_HandleIQAdjustPhase(var, mode, options, &clr, &ts.tx_iq_phase_balance[IQ_10M_UP], TRX_MODE_TX, IQ_TRANS_OFF);
             break;
+        case MENU_DEBUG_VSWR_PROTECTION_THRESHOLD:
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.debug_vswr_protection_threshold,
+                    0,
+                    6,
+                    0,
+                    1);
+            switch(ts.debug_vswr_protection_threshold)
+            {
+            case 0:
+                txt_ptr = "OFF";
+                break;
+            case 1:
+                txt_ptr = "OFF";
+                break;
+            case 2:
+                txt_ptr = "  2";
+                break;
+            case 3:
+                txt_ptr = "  3";
+                break;
+            case 4:
+                txt_ptr = "  4";
+                break;
+            case 5:
+                txt_ptr = "  5";
+                break;
+            case 6:
+                txt_ptr = "  6";
+                break;
+            }
+            break;
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

@@ -1510,6 +1510,16 @@ bool RadioManagement_UpdatePowerAndVSWR()
         }
 =======
 >>>>>>> parent of 3522f2d0... Added VSWR protection of PA
+
+        if (ts.debug_vswr_protection_threshold > 1)
+        {
+        	if(swrm.vswr > ts.debug_vswr_protection_threshold)
+        	{
+        	RadioManagement_DisablePaBias();
+        	swrm.high_vswr_detected = true;
+        	}
+        }
+
         retval = true;
     }
     return retval;
