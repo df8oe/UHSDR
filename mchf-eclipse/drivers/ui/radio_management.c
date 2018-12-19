@@ -50,8 +50,11 @@
 #include "psk.h"
 #include "rtty.h"
 
+<<<<<<< HEAD
 #include "ui_lcd_hy28.h"
 
+=======
+>>>>>>> parent of e3c58ec7... Add clearing of message "VSWR ...
 #define SWR_SAMPLES_SKP             1   //5000
 #define SWR_SAMPLES_CNT             5//10
 #define SWR_ADC_FULL_SCALE          4095    // full scale of A/D converter (4095 = 10 bits)
