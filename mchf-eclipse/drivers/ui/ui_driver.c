@@ -4516,7 +4516,7 @@ static void UiDriver_HandleTXMeters()
         swrm.p_curr   = 0;
         swrm.fwd_calc = 0;
         swrm.rev_calc = 0;
-        swrm.high_vswr_detected = 0;
+        swrm.high_vswr_detected = false;
 
 	}
 	else
