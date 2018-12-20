@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2018-12-12T08:42:48  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2018-12-20T18:44:19  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2018-12-12T08:42:48  by "./ui_menu_structure_mdtable.py"
+generated at  2018-12-20T18:44:19  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -315,6 +315,7 @@ generated at  2018-12-12T08:42:48  by "./ui_menu_structure_mdtable.py"
 | **TX IQ Phase   (15m,CW)**    (       CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz. | 
 | **TX IQ Balance (10mUp,CW)**  (     CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz. | 
 | **TX IQ Phase   (10mUp,CW)**  (    CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz. | 
+| **VSWR Protect. threshold**   (       MENU_DEBUG_VSWR_PROTECTION_THRESHOLD) | If not OFF, on TX/tune the bias of PA will be down to 0 when exceeding the specified value of VSWR | 
 
 
 [//]: # ( EOFILE                                                                       )

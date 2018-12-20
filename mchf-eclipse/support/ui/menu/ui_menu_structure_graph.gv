@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-12-12T08:42:43  by "./ui_menu_structure_graph.py"
+#  generated at  2018-12-20T18:44:17  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-12-12T08:42:43  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-12-20T18:44:17  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1377,6 +1377,11 @@
              shape = record
              ];
         
+        "MENU_DEBUG_VSWR_PROTECTION_THRESHOLD" [
+             label = "MENU_DEBUG_VSWR_PROTECTION_THRESHOLD | VSWR Protect. threshold"
+             shape = record
+             ];
+        
         "0" [
              label = "0 | M0NKA  (Chris) mcHF founder"
              shape = record
@@ -2017,6 +2022,8 @@
             MENU_DEBUG -> CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF
             
             MENU_DEBUG -> CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF
+            
+            MENU_DEBUG -> MENU_DEBUG_VSWR_PROTECTION_THRESHOLD
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
