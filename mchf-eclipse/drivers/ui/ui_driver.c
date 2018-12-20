@@ -4516,11 +4516,17 @@ static void UiDriver_HandleTXMeters()
         swrm.p_curr   = 0;
         swrm.fwd_calc = 0;
         swrm.rev_calc = 0;
+        swrm.high_vswr_detected = false;
 
 	}
 	else
 	{
 		static uint8_t    old_power_level = 99;
+
+		if(swrm.high_vswr_detected == true)
+		{
+			Board_RedLed(LED_STATE_TOGGLE);
+		}
 
 		// display FWD, REV power, in milliwatts - used for calibration - IF ENABLED
 		if(swrm.pwr_meter_disp)

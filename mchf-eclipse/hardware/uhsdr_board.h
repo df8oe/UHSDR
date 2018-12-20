@@ -1112,6 +1112,8 @@ typedef struct TransceiverState
 	bool txrx_switching_enabled;
 
 	bool paddles_active; // setting this to false disables processing of external gpio interrupts (right now just the paddles/PTT)
+
+	uint8_t debug_vswr_protection_threshold; // 0 - protection OFF
 } TransceiverState;
 //
 extern __IO TransceiverState ts;
