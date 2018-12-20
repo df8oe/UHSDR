@@ -461,6 +461,7 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF, NULL, "TX IQ Balance (10mUp,CW)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz.") },
     { MENU_DEBUG, MENU_ITEM, CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF, NULL, "TX IQ Phase   (10mUp,CW)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz.") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_VSWR_PROTECTION_THRESHOLD, NULL, "VSWR Protect. threshold", UiMenuDesc("If not OFF, on TX/tune the bias of PA will be down to 0 when exceeding the specified value of VSWR") },
+
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
 
