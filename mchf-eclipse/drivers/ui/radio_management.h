@@ -135,6 +135,8 @@ typedef struct SWRMeter
 
     uint8_t coupling_calc[COUPLING_MAX];
 
+    bool high_vswr_detected;
+
 } SWRMeter;
 
 // New modes need to be added so that configuration compatibility is retained
