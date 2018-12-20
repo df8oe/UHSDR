@@ -4268,37 +4268,6 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &sm.config.alphaSplit.DecayAlpha, SMETER_ALPHA_MIN, SMETER_ALPHA_MAX, SMETER_ALPHA_DECAY_DEFAULT,1);
             snprintf(options,32,"     %d",sm.config.alphaSplit.DecayAlpha);
             break;
-        case MENU_DEBUG_VSWR_PROTECTION_THRESHOLD:
-            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.debug_vswr_protection_threshold,
-                    0,
-                    6,
-                    0,
-                    1);
-            switch(ts.debug_vswr_protection_threshold)
-            {
-            case 0:
-                txt_ptr = "OFF";
-                break;
-            case 1:
-                txt_ptr = "OFF";
-                break;
-            case 2:
-                txt_ptr = "  2";
-                break;
-            case 3:
-                txt_ptr = "  3";
-                break;
-            case 4:
-                txt_ptr = "  4";
-                break;
-            case 5:
-                txt_ptr = "  5";
-                break;
-            case 6:
-                txt_ptr = "  6";
-                break;
-            }
-            break;
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

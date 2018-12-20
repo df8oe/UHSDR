@@ -1438,16 +1438,6 @@ bool RadioManagement_UpdatePowerAndVSWR()
         // Calculate VSWR from power readings
 
         swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrtf(swrm.rev_pwr/swrm.fwd_pwr));
-
-        if (ts.debug_vswr_protection_threshold > 1)
-        {
-        	if(swrm.vswr > ts.debug_vswr_protection_threshold)
-        	{
-        	RadioManagement_DisablePaBias();
-        	swrm.high_vswr_detected = true;
-        	}
-        }
-
         retval = true;
     }
     return retval;
