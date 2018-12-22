@@ -3305,9 +3305,9 @@ void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
             adb.iq_corr.teta3 += sign_new(adb.q_buffer[i]) * adb.q_buffer[i]; // eq (36)
         }
 
-        adb.iq_corr.teta1 = -0.003 * (adb.iq_corr.teta1 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta1_old; // eq (34) and first order lowpass
-        adb.iq_corr.teta2 =  0.003 * (adb.iq_corr.teta2 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta2_old; // eq (35) and first order lowpass
-        adb.iq_corr.teta3 =  0.003 * (adb.iq_corr.teta3 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta3_old; // eq (36) and first order lowpass
+        adb.iq_corr.teta1 = -0.003 * (adb.iq_corr.teta1 / blockSize) + 0.997 * adb.iq_corr.teta1_old; // eq (34) and first order lowpass
+        adb.iq_corr.teta2 =  0.003 * (adb.iq_corr.teta2 / blockSize) + 0.997 * adb.iq_corr.teta2_old; // eq (35) and first order lowpass
+        adb.iq_corr.teta3 =  0.003 * (adb.iq_corr.teta3 / blockSize) + 0.997 * adb.iq_corr.teta3_old; // eq (36) and first order lowpass
 
         adb.iq_corr.M_c1 = (adb.iq_corr.teta2 != 0.0) ? adb.iq_corr.teta1 / adb.iq_corr.teta2 : 0.0; // eq (30)
         // prevent divide-by-zero
