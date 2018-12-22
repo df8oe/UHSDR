@@ -105,7 +105,7 @@ void float2fixedstr(char* buf, int maxchar, float32_t f, uint16_t digitsBefore, 
 
 
 // returns true if the value was changed in its value!
-bool __attribute__ ((noinline)) UiDriverMenuItemChangeUInt8(int var, uint8_t mode, volatile uint8_t* val_ptr,uint8_t val_min,uint8_t val_max, uint8_t val_default, uint8_t increment)
+bool __attribute__ ((noinline)) UiDriverMenuItemChangeUInt8(int var, MenuProcessingMode_t mode, volatile uint8_t* val_ptr,uint8_t val_min,uint8_t val_max, uint8_t val_default, uint8_t increment)
 {
     uint8_t old_val = *val_ptr;
 
@@ -145,7 +145,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeUInt8(int var, uint8_t mod
     return old_val != *val_ptr;
 }
 
-bool __attribute__ ((noinline)) UiDriverMenuItemChangeUInt32(int var, uint32_t mode, volatile uint32_t* val_ptr,uint32_t val_min,uint32_t val_max, uint32_t val_default, uint32_t increment)
+bool __attribute__ ((noinline)) UiDriverMenuItemChangeUInt32(int var, MenuProcessingMode_t mode, volatile uint32_t* val_ptr,uint32_t val_min,uint32_t val_max, uint32_t val_default, uint32_t increment)
 {
     uint32_t old_val = *val_ptr;
     if(var >= 1)	 	// setting increase?
@@ -183,7 +183,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeUInt32(int var, uint32_t m
     return old_val != *val_ptr;
 }
 
-bool __attribute__ ((noinline)) UiDriverMenuItemChangeInt(int var, uint32_t mode, volatile int* val_ptr,int val_min,int val_max, int val_default, uint32_t increment)
+bool __attribute__ ((noinline)) UiDriverMenuItemChangeInt(int var, MenuProcessingMode_t mode, volatile int* val_ptr,int val_min,int val_max, int val_default, uint32_t increment)
 {
     uint32_t old_val = *val_ptr;
     if(var >= 1)	 	// setting increase?
@@ -221,13 +221,13 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeInt(int var, uint32_t mode
     return old_val != *val_ptr;
 }
 
-inline bool UiDriverMenuItemChangeInt32(int var, uint32_t mode, volatile int32_t* val_ptr,int val_min,int val_max, int val_default, uint32_t increment)
+inline bool UiDriverMenuItemChangeInt32(int var, MenuProcessingMode_t mode, volatile int32_t* val_ptr,int val_min,int val_max, int val_default, uint32_t increment)
 {
     return UiDriverMenuItemChangeInt(var, mode, (int*)val_ptr,val_min,val_max, val_default, increment);
 }
 
 
-bool __attribute__ ((noinline)) UiDriverMenuItemChangeInt16(int var, uint32_t mode, volatile int16_t* val_ptr,int16_t val_min,int16_t val_max, int16_t val_default, uint16_t increment)
+bool __attribute__ ((noinline)) UiDriverMenuItemChangeInt16(int var, MenuProcessingMode_t mode, volatile int16_t* val_ptr,int16_t val_min,int16_t val_max, int16_t val_default, uint16_t increment)
 {
     uint32_t old_val = *val_ptr;
     if(var >= 1)	 	// setting increase?
@@ -265,7 +265,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeInt16(int var, uint32_t mo
     return old_val != *val_ptr;
 }
 
-bool __attribute__ ((noinline)) UiDriverMenuItemChangeOnOff(int var, uint8_t mode, volatile uint8_t* val_ptr, uint8_t val_default)
+bool __attribute__ ((noinline)) UiDriverMenuItemChangeOnOff(int var, MenuProcessingMode_t mode, volatile uint8_t* val_ptr, uint8_t val_default)
 {
     // we have to align the values to true and false, since sometimes other values are passed for true (use of temp_var)
     // but this does not work properly.
@@ -282,7 +282,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeOnOff(int var, uint8_t mod
 }
 
 // always sets 1 or 0 as result, no matter what is passed as "true" value. Only 0 is recognized as false/
-bool __attribute__ ((noinline)) UiDriverMenuItemChangeDisableOnOff(int var, uint8_t mode, volatile uint8_t* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr)
+bool __attribute__ ((noinline)) UiDriverMenuItemChangeDisableOnOff(int var, MenuProcessingMode_t mode, volatile uint8_t* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr)
 {
     bool res = UiDriverMenuItemChangeOnOff(var, mode, val_ptr, val_default);
     strcpy(options, *val_ptr?"OFF":" ON");
@@ -294,7 +294,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeDisableOnOff(int var, uint
     return res;
 }
 
-bool __attribute__ ((noinline)) UiDriverMenuItemChangeEnableOnOff(int var, uint8_t mode, volatile uint8_t* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr)
+bool __attribute__ ((noinline)) UiDriverMenuItemChangeEnableOnOff(int var, MenuProcessingMode_t mode, volatile uint8_t* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr)
 {
     bool res = UiDriverMenuItemChangeOnOff(var, mode, val_ptr, val_default);
     strcpy(options, *val_ptr?" ON":"OFF");
@@ -305,7 +305,7 @@ bool __attribute__ ((noinline)) UiDriverMenuItemChangeEnableOnOff(int var, uint8
 
     return res;
 }
-bool UiDriverMenuItemChangeEnableOnOffBool(int var, uint8_t mode, volatile bool* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr)
+bool UiDriverMenuItemChangeEnableOnOffBool(int var, MenuProcessingMode_t mode, volatile bool* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr)
 {
     uint8_t temp = *val_ptr;
 
@@ -313,7 +313,7 @@ bool UiDriverMenuItemChangeEnableOnOffBool(int var, uint8_t mode, volatile bool*
     *val_ptr = temp;
     return res;
 }
-bool UiDriverMenuItemChangeEnableOnOffFlag(int var, uint8_t mode, volatile uint16_t* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr, uint16_t mask)
+bool UiDriverMenuItemChangeEnableOnOffFlag(int var, MenuProcessingMode_t mode, volatile uint16_t* val_ptr, uint8_t val_default, char* options, uint32_t* clr_ptr, uint16_t mask)
 {
     uint8_t temp = (*val_ptr & mask)?1:0;
 
@@ -325,7 +325,7 @@ bool UiDriverMenuItemChangeEnableOnOffFlag(int var, uint8_t mode, volatile uint1
 }
 
 
-bool __attribute__ ((noinline)) UiMenu_ChangeFilterPathMemory(int var, uint8_t mode, char* options, uint32_t* clr_ptr, uint16_t filter_mode,uint8_t memory_idx)
+bool __attribute__ ((noinline)) UiMenu_ChangeFilterPathMemory(int var, MenuProcessingMode_t mode, char* options, uint32_t* clr_ptr, uint16_t filter_mode,uint8_t memory_idx)
 {
     uint32_t temp_var = ts.filter_path_mem[filter_mode][memory_idx];
     uint16_t old_fp = temp_var;
@@ -358,7 +358,7 @@ bool __attribute__ ((noinline)) UiMenu_ChangeFilterPathMemory(int var, uint8_t m
     return tchange;
 }
 
-void UiMenu_HandleDemodModeDisable(int var, uint8_t mode, char* options, uint32_t* clr_ptr, uint16_t demod_mode_disable)
+void UiMenu_HandleDemodModeDisable(int var, MenuProcessingMode_t mode, char* options, uint32_t* clr_ptr, uint16_t demod_mode_disable)
 {
 	uint8_t var_change;
     uint8_t mode_disable = 1;
@@ -380,7 +380,7 @@ void UiMenu_HandleDemodModeDisable(int var, uint8_t mode, char* options, uint32_
   	}
 }
 
-void UiMenu_HandleIQAdjust(int var, uint8_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t txrx_mode, int32_t min, int32_t max, iq_trans_idx_t valid_for)
+void UiMenu_HandleIQAdjust(int var, MenuProcessingMode_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t txrx_mode, int32_t min, int32_t max, iq_trans_idx_t valid_for)
 {
     bool tchange = false;
 
@@ -423,12 +423,12 @@ void UiMenu_HandleIQAdjust(int var, uint8_t mode, char* options, uint32_t* clr_p
     }
 }
 
-void UiMenu_HandleIQAdjustGain(int var, uint8_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t txrx_mode, iq_trans_idx_t valid_for)
+void UiMenu_HandleIQAdjustGain(int var, MenuProcessingMode_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t txrx_mode, iq_trans_idx_t valid_for)
 {
     UiMenu_HandleIQAdjust(var, mode, options, clr_ptr, val_ptr, txrx_mode, MIN_IQ_GAIN_BALANCE, MAX_IQ_GAIN_BALANCE, valid_for);
 }
 
-void UiMenu_HandleIQAdjustPhase(int var, uint8_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t txrx_mode, iq_trans_idx_t valid_for)
+void UiMenu_HandleIQAdjustPhase(int var, MenuProcessingMode_t mode, char* options, uint32_t* clr_ptr, volatile int32_t* val_ptr, const uint16_t txrx_mode, iq_trans_idx_t valid_for)
 {
     UiMenu_HandleIQAdjust(var, mode, options, clr_ptr, val_ptr, txrx_mode, MIN_IQ_PHASE_BALANCE, MAX_IQ_PHASE_BALANCE, valid_for);
 }
@@ -697,7 +697,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 
 
 
-bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mode, uint8_t band_mode, uint8_t pa_level, char* options, uint32_t* clr_ptr)
+bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcessingMode_t mode, uint8_t band_mode, uint8_t pa_level, char* options, uint32_t* clr_ptr)
 {
     volatile uint8_t* adj_ptr;
     adj_ptr = &ts.pwr_adj[pa_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band_mode];
@@ -728,7 +728,7 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, uint8_t mod
     return tchange;
 }
 
-bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, uint8_t mode, uint8_t filter_band, char* options, uint32_t* clr_ptr)
+bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, MenuProcessingMode_t mode, uint8_t filter_band, char* options, uint32_t* clr_ptr)
 {
     bool tchange = false;
     volatile uint8_t *adj_ptr = &swrm.coupling_calc[filter_band];
@@ -748,18 +748,17 @@ bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, uint
 }
 
 
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverUpdateMenuLines
-//* Object              :
-//* Input Parameters    : index:  Line to display  mode:  ,
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-
-void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* options, const char** txt_ptr_ptr, uint32_t* clr_ptr)
+/**
+ *
+ * @param select
+ * @param mode selects if the entry is just to be displayed or can be changed.
+ * @param pos which line the menu item is being displayed on, used for positioning value display in some cases.
+ * @param var the actual menu item to change / display
+ * @param options the to be displayed value is returned as a string in this array. Shown unless txt_ptr_ptr does not point to a NULL ptr
+ * @param txt_ptr_ptr this is a return value. if the address in the referenced pointer is not NULL, this is displayed, not options.
+ * @param clr_ptr pointer to the value display color
+ */
+void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int var, char* options, const char** txt_ptr_ptr, uint32_t* clr_ptr)
 {
 
     const char* txt_ptr = NULL;
@@ -4271,36 +4270,19 @@ void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* o
 
         case MENU_DEBUG_VSWR_PROTECTION_THRESHOLD:
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.debug_vswr_protection_threshold,
-                    0,
+                    1,
                     6,
-                    0,
+                    1,
                     1);
-            switch(ts.debug_vswr_protection_threshold)
+            if (ts.debug_vswr_protection_threshold < 2)
             {
-            case 0:
                 txt_ptr = "OFF";
-                break;
-            case 1:
-                txt_ptr = "OFF";
-                break;
-            case 2:
-                txt_ptr = "  2";
-                break;
-            case 3:
-                txt_ptr = "  3";
-                break;
-            case 4:
-                txt_ptr = "  4";
-                break;
-            case 5:
-                txt_ptr = "  5";
-                break;
-            case 6:
-                txt_ptr = "  6";
-                break;
+            }
+            else
+            {
+                snprintf(options,32,"     %d",ts.debug_vswr_protection_threshold);
             }
             break;
-
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;
