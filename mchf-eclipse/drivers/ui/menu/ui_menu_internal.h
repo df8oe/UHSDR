@@ -382,7 +382,7 @@ typedef struct
 
 extern const MenuGroupDescriptor groups[];
 
-void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* options, const char** txt_ptr_ptr, uint32_t* clr_ptr);
+void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int var, char* options, const char** txt_ptr_ptr, uint32_t* clr_ptr);
 void UiMenu_DisplayValue(const char* value,uint32_t clr,uint16_t pos);
 
 #endif /* DRIVERS_UI_UI_MENU_INTERNAL_H_ */

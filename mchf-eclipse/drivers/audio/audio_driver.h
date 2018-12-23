@@ -109,12 +109,7 @@ typedef struct
     float32_t               onem_mtauR;
     float32_t               mtauI; //(exp(- DF / (IQ_SAMPLE_RATE_F * tauI))); //0.99999255955;
     float32_t               onem_mtauI;
-
-    const float32_t               c0[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 0
-    const float32_t               c1[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 1
 } demod_sam_param_t;
-
-
 
 typedef struct
 {

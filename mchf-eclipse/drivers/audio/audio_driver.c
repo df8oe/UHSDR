@@ -568,29 +568,7 @@ __IO SMeter					sm;
 // IF THE SIZE OF  THE DATA STRUCTURE GROWS IT WILL QUICKLY BE OUT OF SPACE IN CCM
 // Be careful! Check mchf-eclipse.map for current allocation
 AudioDriverState   __MCHF_SPECIALMEM ads;
-AudioDriverBuffer  __MCHF_SPECIALMEM adb = {
-
-        //sideband separation, these values never change
-        .sam.c0 = {
-                -0.328201924180698,
-                -0.744171491539427,
-                -0.923022915444215,
-                -0.978490468768238,
-                -0.994128272402075,
-                -0.998458978159551,
-                -0.999790306259206,
-        },
-        .sam.c1 = {
-                -0.0991227952747244,
-                -0.565619728761389,
-                -0.857467122550052,
-                -0.959123933111275,
-                -0.988739372718090,
-                -0.996959189310611,
-                -0.999282492800792,
-        }
-};
-
+AudioDriverBuffer  __MCHF_SPECIALMEM adb;
 
 #if defined(OBSOLETE_NR) || defined(USE_LMS_AUTONOTCH)
 LMSData            __MCHF_SPECIALMEM lmsData;
@@ -3059,6 +3037,36 @@ static float32_t AudioDriver_FadeLeveler(int chan, float32_t audio, float32_t co
 //*----------------------------------------------------------------------------
 typedef struct
 {
+    const float32_t               c0[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 0
+    const float32_t               c1[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 1
+} demod_sam_const_t;
+
+//sideband separation, these values never change
+const demod_sam_const_t demod_sam_const =
+{
+    .c0 = {
+        -0.328201924180698,
+        -0.744171491539427,
+        -0.923022915444215,
+        -0.978490468768238,
+        -0.994128272402075,
+        -0.998458978159551,
+        -0.999790306259206,
+    },
+
+    .c1 = {
+        -0.0991227952747244,
+        -0.565619728761389,
+        -0.857467122550052,
+        -0.959123933111275,
+        -0.988739372718090,
+        -0.996959189310611,
+        -0.999282492800792,
+    },
+};
+
+typedef struct
+{
     uint16_t  count;
 
     float32_t fil_out;
@@ -3149,10 +3157,10 @@ static void AudioDriver_DemodSAM(float32_t* i_buffer, float32_t* q_buffer, float
                 for (int j = 0; j < SAM_PLL_HILBERT_STAGES; j++)
                 {
                     int k = 3 * j;
-                    sam_data.a[k + 3] = adb.sam.c0[j] * (sam_data.a[k] - sam_data.a[k + 5]) + sam_data.a[k + 2];
-                    sam_data.b[k + 3] = adb.sam.c1[j] * (sam_data.b[k] - sam_data.b[k + 5]) + sam_data.b[k + 2];
-                    sam_data.c[k + 3] = adb.sam.c0[j] * (sam_data.c[k] - sam_data.c[k + 5]) + sam_data.c[k + 2];
-                    sam_data.d[k + 3] = adb.sam.c1[j] * (sam_data.d[k] - sam_data.d[k + 5]) + sam_data.d[k + 2];
+                    sam_data.a[k + 3] = demod_sam_const.c0[j] * (sam_data.a[k] - sam_data.a[k + 5]) + sam_data.a[k + 2];
+                    sam_data.b[k + 3] = demod_sam_const.c1[j] * (sam_data.b[k] - sam_data.b[k + 5]) + sam_data.b[k + 2];
+                    sam_data.c[k + 3] = demod_sam_const.c0[j] * (sam_data.c[k] - sam_data.c[k + 5]) + sam_data.c[k + 2];
+                    sam_data.d[k + 3] = demod_sam_const.c1[j] * (sam_data.d[k] - sam_data.d[k + 5]) + sam_data.d[k + 2];
                 }
 
                 float32_t ai_ps = sam_data.a[OUT_IDX];
@@ -3270,8 +3278,11 @@ void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
 
     assert(blockSize >= 8);
 
-    static ulong    twinpeaks_counter = 0;
-    static uint8_t  codec_restarts = 0;
+    static uint32_t  twinpeaks_counter = 0;
+    static uint32_t  codec_restarts = 0;
+    static float32_t phase_IQ; // used to determine the twin peaks issue state
+    static uint32_t  phase_IQ_runs;
+
 
     if(!ts.iq_auto_correction) // Manual IQ imbalance correction
     {
@@ -3296,6 +3307,8 @@ void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
         {
             ts.twinpeaks_tested = TWINPEAKS_SAMPLING;
             twinpeaks_counter = 0;
+            phase_IQ = 0.0;
+            phase_IQ_runs = 0;
         }
 
         for(uint32_t i = 0; i < blockSize; i++)
@@ -3305,9 +3318,9 @@ void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
             adb.iq_corr.teta3 += sign_new(adb.q_buffer[i]) * adb.q_buffer[i]; // eq (36)
         }
 
-        adb.iq_corr.teta1 = -0.003 * (adb.iq_corr.teta1 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta1_old; // eq (34) and first order lowpass
-        adb.iq_corr.teta2 =  0.003 * (adb.iq_corr.teta2 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta2_old; // eq (35) and first order lowpass
-        adb.iq_corr.teta3 =  0.003 * (adb.iq_corr.teta3 / blockSize / 8.0 ) + 0.997 * adb.iq_corr.teta3_old; // eq (36) and first order lowpass
+        adb.iq_corr.teta1 = -0.003 * (adb.iq_corr.teta1 / blockSize) + 0.997 * adb.iq_corr.teta1_old; // eq (34) and first order lowpass
+        adb.iq_corr.teta2 =  0.003 * (adb.iq_corr.teta2 / blockSize) + 0.997 * adb.iq_corr.teta2_old; // eq (35) and first order lowpass
+        adb.iq_corr.teta3 =  0.003 * (adb.iq_corr.teta3 / blockSize) + 0.997 * adb.iq_corr.teta3_old; // eq (36) and first order lowpass
 
         adb.iq_corr.M_c1 = (adb.iq_corr.teta2 != 0.0) ? adb.iq_corr.teta1 / adb.iq_corr.teta2 : 0.0; // eq (30)
         // prevent divide-by-zero
@@ -3337,29 +3350,44 @@ void AudioDriver_RxHandleIqCorrection(const uint16_t blockSize)
             // twinpeak_tested = 3 --> was not correctable
         {   // Moseley & Slump (2006) eq. (33)
             // this gives us the phase error between I & Q in radians
-            float32_t phase_IQ = asinf(adb.iq_corr.teta1 / adb.iq_corr.teta3);
+            float32_t phase_IQ_cur = asinf(adb.iq_corr.teta1 / adb.iq_corr.teta3);
 
-            if (fabsf(phase_IQ) > (M_PI/8.0))
-                // threshold of 22.5 degrees phase shift == PI / 8
-                // hopefully your hardware is not so bad, that its phase error is more than 22 degrees ;-)
-                // if it is that bad, adjust this threshold to maybe PI / 7 or PI / 6
+            // we combine 50 cycles (1/30s) to calculate the "final" phase_IQ
+            if (phase_IQ_runs == 0)
             {
-                Codec_RestartI2S();
-                ts.twinpeaks_tested = TWINPEAKS_WAIT;
-                codec_restarts++;
-                // TODO: we should set a maximum number of codec resets
-                // and print out a message, if twinpeaks remains after the
-                // 5th reset for example --> could then be a severe hardware error !
-                if(codec_restarts >= 4)
-                {
-                    ts.twinpeaks_tested = TWINPEAKS_UNCORRECTABLE;
-                    codec_restarts = 0;
-                }
+                phase_IQ = phase_IQ_cur;
             }
             else
             {
-                ts.twinpeaks_tested = TWINPEAKS_DONE;
-                codec_restarts = 0;
+                phase_IQ = 0.05 * phase_IQ_cur + 0.95 * phase_IQ;
+            }
+            phase_IQ_runs ++;
+
+            if (phase_IQ_runs == 50)
+            {
+
+                if (fabsf(phase_IQ) > (M_PI/8.0))
+                    // threshold of 22.5 degrees phase shift == PI / 8
+                    // hopefully your hardware is not so bad, that its phase error is more than 22 degrees ;-)
+                    // if it is that bad, adjust this threshold to maybe PI / 7 or PI / 6
+                {
+                    Codec_RestartI2S();
+                    ts.twinpeaks_tested = TWINPEAKS_WAIT;
+                    codec_restarts++;
+                    // TODO: we should set a maximum number of codec resets
+                    // and print out a message, if twinpeaks remains after the
+                    // 5th reset for example --> could then be a severe hardware error !
+                    if(codec_restarts >= 4)
+                    {
+                        ts.twinpeaks_tested = TWINPEAKS_UNCORRECTABLE;
+                        codec_restarts = 0;
+                    }
+                }
+                else
+                {
+                    ts.twinpeaks_tested = TWINPEAKS_DONE;
+                    codec_restarts = 0;
+                }
             }
         }
 
