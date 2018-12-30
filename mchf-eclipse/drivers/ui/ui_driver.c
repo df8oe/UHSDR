@@ -5822,7 +5822,9 @@ void UiDriver_StartUpScreenFinish()
 	uint32_t hold_time;
 
 	UiDriver_StartupScreen_LogIfProblem(osc->isPresent() == false, "Local Oscillator NOT Detected!");
-	if(!Si5351a_IsPresent()) {
+
+	if(!Si5351a_IsPresent() && RadioManagement_TcxoIsEnabled())
+	{
 		UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
 	}
 

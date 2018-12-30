@@ -61,12 +61,20 @@ typedef struct DialFrequency
 // Frequency public
 extern DialFrequency               df;
 
+typedef enum
+{
+    TCXO_OFF =              0,      // TXCO temperature compensation off,
+    TCXO_ON  =              1,      // TCXO temperature compensation on
+    TCXO_STOP =             2,      // TXCO temperature compensation off, but read temperature sensor
+    TCXO_STATE_NUMBER               // Maximum setting for TCXO setting state
+} Tcxo_Mode_t;
 
-inline uint8_t RadioManagement_TcxoGetMode()
+
+inline Tcxo_Mode_t RadioManagement_TcxoGetMode()
 {
     return (df.temp_enabled & TCXO_MODE_MASK);
 }
-inline void RadioManagement_TcxoSetMode(uint8_t mode)
+inline void RadioManagement_TcxoSetMode(Tcxo_Mode_t mode)
 {
     df.temp_enabled = (df.temp_enabled & ~TCXO_MODE_MASK) | (mode & TCXO_MODE_MASK) ;
 }
