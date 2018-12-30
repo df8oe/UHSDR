@@ -6267,7 +6267,7 @@ static void UiAction_ChangeTuningStepUpOrDown()
 
 static void UiAction_ChangeBacklightBrightness()
 {
-	incr_wrap_uint8(&ts.lcd_backlight_brightness,0,3);
+	incr_wrap_uint8(&ts.lcd_backlight_brightness,LCD_DIMMING_LEVEL_MIN,LCD_DIMMING_LEVEL_MAX);
 }
 
 static void UiAction_ToggleTxDisable()
@@ -7170,21 +7170,38 @@ void UiDriver_TaskHandler_MainTasks()
  * at a rate of 1.5khz The rate itself is not too critical,
  * just needs to be high and very regular.
  */
+
+#define LCD_DIMMING_PWM_COUNTS 16
+
 void UiDriver_BacklightDimHandler()
 {
-	static uchar lcd_dim = 0, lcd_dim_prescale = 0;
+	static uchar lcd_dim = 0;
+	static const uint16_t dimming_pattern_map[1 + LCD_DIMMING_LEVEL_MAX - LCD_DIMMING_LEVEL_MIN] =
+	{
+	        0xffff, // 16/16
+	        0x3f3f, // 12/16
+	        0x0f0f, // 8/16
+	        0x0303, // 4/16
+	        0x0101, // 2/16
+	        0x0001, // 1/1
+	};
+    // most of the patterns generate a 1500/8 =  187.5 Hz noise, lowest 1500/16 = 93.75 Hz.
+
+	static uint16_t dim_pattern = 0xffff; // gives us the maximum brightness
 
 	if(!ts.lcd_blanking_flag)       // is LCD *NOT* blanked?
 	{
-		if(!lcd_dim_prescale)       // Only update dimming PWM counter every fourth time through to reduce frequency below that of audible range
-		{
-			UiLcdHy28_BacklightEnable(lcd_dim >= ts.lcd_backlight_brightness);   // LCD backlight off or on
+	    if (lcd_dim == 0 )
+	    {
+	        dim_pattern = dimming_pattern_map[ts.lcd_backlight_brightness - LCD_DIMMING_LEVEL_MIN];
+	    }
 
-			lcd_dim++;
-			lcd_dim %= 4;   // limit brightness PWM count to 0-3
-		}
-		lcd_dim_prescale++;
-		lcd_dim_prescale %= 4;  // limit prescale count to 0-3
+	    // UiLcdHy28_BacklightEnable(lcd_dim >= dimming_map[ts.lcd_backlight_brightness - LCD_DIMMING_LEVEL_MIN]);   // LCD backlight off or on
+	    UiLcdHy28_BacklightEnable((dim_pattern & 0x001) == 1);   // LCD backlight off or on
+
+	    dim_pattern >>=1;
+	    lcd_dim++;
+	    lcd_dim %= LCD_DIMMING_PWM_COUNTS;   // limit brightness PWM count to 0-3
 	}
 	else if(!ts.menu_mode)
 	{ // LCD is to be blanked - if NOT in menu mode
