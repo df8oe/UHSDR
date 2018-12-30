@@ -839,7 +839,9 @@ typedef struct TransceiverState
     uint8_t dsp_inhibit;				// if != 0, DSP (NR, Notch) functions are inhibited.  Used during power-up and switching
 
 
-    uint8_t	lcd_backlight_brightness;	// LCD backlight brightness, 0-3:  0 = full, 3 = dimmest
+    uint8_t	lcd_backlight_brightness;	// LCD backlight dimming, 0-LCD_DIMMING_LEVEL_MAX:  0 = full, LCD_DIMMING_LEVEL_MAX = dimmest
+#define LCD_DIMMING_LEVEL_MAX 5
+#define LCD_DIMMING_LEVEL_MIN 0
 
 #define LCD_BLANKING_ENABLE 0x80
 #define LCD_BLANKING_TIMEMASK 0x0f
