@@ -253,13 +253,6 @@ struct mchf_waterfall
 // FreeDV USB LSB -  -  -  -
 
 
-
-#define RTC_OSC_FREQ			32768
-
-// Transverter oscillator adds shift
-#define		TRANSVT_FREQ_A	 	42000000
-
-//
 #define		MIN_FREQ_CAL		-1499		// Minimum and maximum range of frequency calibration in 10xppm
 #define		MAX_FREQ_CAL		1499
 //
