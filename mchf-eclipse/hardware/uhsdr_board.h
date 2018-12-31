@@ -256,11 +256,6 @@ struct mchf_waterfall
 
 #define RTC_OSC_FREQ			32768
 
-#define	TCXO_OFF				0		// TXCO temperature compensation off
-#define	TCXO_ON					1		// TCXO temperature compensation on
-#define	TCXO_STOP				2		// Stop reading of temperature sensor
-#define	TCXO_TEMP_STATE_MAX		2		// Maximum setting for TCXO setting state
-
 // Transverter oscillator adds shift
 #define		TRANSVT_FREQ_A	 	42000000
 

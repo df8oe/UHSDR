@@ -1970,14 +1970,15 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         temp_var_u8 = RadioManagement_TcxoGetMode();     // get current setting without upper nibble
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
                 0,
-                TCXO_TEMP_STATE_MAX,
-                                              TCXO_OFF,
+                TCXO_STATE_NUMBER-1,
+                                              TCXO_ON,
                                               1
                                              );
 
         if(lo.sensor_present == false)            // no sensor present
         {
             temp_var_u8 = TCXO_OFF; // force TCXO disabled
+            var_change = true;
         }
 
         RadioManagement_TcxoSetMode(temp_var_u8);   // overlay new temperature setting with old status of upper nibble
