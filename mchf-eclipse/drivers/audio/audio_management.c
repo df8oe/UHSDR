@@ -316,7 +316,7 @@ void AudioManagement_CalcSubaudibleGenFreq(void)
  */
 void AudioManagement_CalcSubaudibleDetFreq(void)
 {
-    const uint32_t size = BUFF_LEN/2;
+    const uint32_t size = AUDIO_SAMPLES_PER_BLOCK;
 
     ads.fm_conf.subaudible_tone_det_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select];       // look up tone frequency (in Hz)
 

@@ -31,11 +31,24 @@
 #define IQ_SAMPLE_RATE_F ((float32_t)IQ_SAMPLE_RATE)
 //const float32_t IQ_SAMPLE_RATE_F = ((float32_t)IQ_SAMPLE_RATE);
 
+typedef int16_t audio_data_t;
+
+#ifdef USE_24_BITS
+    typedef int32_t iq_data_t;
+#else
+    typedef int16_t iq_data_t;
+#endif
+
 
 typedef struct {
-    __packed int16_t l;
-    __packed int16_t r;
+    __packed audio_data_t l;
+    __packed audio_data_t r;
 } AudioSample_t;
+
+typedef struct {
+    __packed iq_data_t l;
+    __packed iq_data_t r;
+} IqSample_t;
 
 #ifdef USE_CONVOLUTION
 typedef struct {
@@ -53,12 +66,13 @@ typedef struct {
 #define SPEC_BUFF_LEN (FFT_IQ_BUFF_LEN/2)
 
 //
-// -----------------------------
-// Half of total buffer, since in each interrupte we get half of the total buffer filled
-#define	IQ_BUFSZ 	(BUFF_LEN/2)
+// we process one dma block of samples at once
+#define IQ_BLOCK_SIZE IQ_SAMPLES_PER_BLOCK
 
-// number of samples is half of size since we have 2 values (l/r or i/q) per sample.
-#define IQ_BLOCK_SIZE    (IQ_BUFSZ/2)
+
+// twice the number of samples in the each iq block buffer
+// (which is half of the total dma buffer, since in each interrupt we get half of the total dma buffer)
+#define	IQ_BUFSZ 	(2*IQ_BLOCK_SIZE)
 
 // Audio filter
 #define FIR_RXAUDIO_BLOCK_SIZE		IQ_BLOCK_SIZE
@@ -614,7 +628,7 @@ enum	{
 #define DSP_SWITCH_MODEMASK_ENABLE_DSPOFF           (1<<DSP_SWITCH_OFF)
 
 //
-#define	AUDIO_DELAY_BUFSIZE		(BUFF_LEN/2)*5	// Size of AGC delaying audio buffer - Must be a multiple of BUFF_LEN/2.
+#define	AUDIO_DELAY_BUFSIZE		(IQ_BUFSZ)*5	// Size of AGC delaying audio buffer - Must be a multiple of IQ_BUFSZ.
 // This is divided by the decimation rate so that the time delay is constant.
 
 #define CLOCKS_PER_DMA_CYCLE	10656			// Number of 16 MHz clock cycles per DMA cycle
@@ -640,11 +654,8 @@ float log10f_fast(float X);
 
 void RttyDecoder_Init();
 
-#ifdef USE_24_BITS
-void AudioDriver_I2SCallback(int32_t *src, int32_t *dst, int16_t size, uint16_t ht);
-#else
-void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t *audioDst, int16_t size);
-#endif
+
+void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t *audioDst, int16_t size);
 
 // Public Audio
 extern AudioDriverState	ads;

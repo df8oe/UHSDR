@@ -1607,7 +1607,7 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 
 
 #ifdef USE_FREEDV
-static bool AudioDriver_RxProcessorFreeDV (AudioSample_t * const src, float32_t * const dst, int16_t blockSize)
+static bool AudioDriver_RxProcessorFreeDV (IqSample_t * const src, float32_t * const dst, int16_t blockSize)
 {
     // Freedv Test DL2FW
     static int16_t outbuff_count = -3;  //set to -3 since we simulate that we start with history
@@ -2993,7 +2993,7 @@ void AudioDriver_SpectrumZoomProcessSamples(const uint16_t blockSize)
  * @returns: true if digital signal should be used (no analog processing should be done), false -> analog processing maybe used
  * since no digital signal was detected.
  */
-bool AudioDriver_RxProcessorDigital(AudioSample_t * const src, float32_t * const dst, const uint16_t blockSize)
+bool AudioDriver_RxProcessorDigital(IqSample_t * const src, float32_t * const dst, const uint16_t blockSize)
 {
     bool retval = false;
     switch(ts.dmod_mode)
@@ -3520,7 +3520,7 @@ void AudioDriver_RxProcessorNoiseReduction(uint16_t blockSizeDecim, float32_t* i
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void AudioDriver_RxProcessor(AudioSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
+static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize)
 {
     // this is the main RX audio function
 	// it is driven with 32 samples in the complex buffer scr, meaning 32 * I AND 32 * Q
@@ -4096,7 +4096,7 @@ static void AudioDriver_TxCompressor(float32_t* buffer, int16_t blockSize, float
  *
  */
 
-static void AudioDriver_TxIqProcessingFinal(float32_t scaling, bool swap, AudioSample_t* const dst, const uint16_t blockSize)
+static void AudioDriver_TxIqProcessingFinal(float32_t scaling, bool swap, IqSample_t* const dst, const uint16_t blockSize)
 {
     int16_t trans_idx;
 
@@ -4221,7 +4221,7 @@ static void AudioDriver_TxAudioBufferFill(AudioSample_t * const src, int16_t blo
  * audio samples should filtered before passed in here if necessary
  */
 
-static void AudioDriver_TxProcessorModulatorSSB(AudioSample_t * const dst, const uint16_t blockSize, const uint8_t iq_freq_mode, const bool is_lsb)
+static void AudioDriver_TxProcessorModulatorSSB(IqSample_t * const dst, const uint16_t blockSize, const uint8_t iq_freq_mode, const bool is_lsb)
 {
     // This is a phase-added 0-90 degree Hilbert transformer that also does low-pass and high-pass filtering
     // to the transmitted audio.  As noted above, it "clobbers" the low end, which is why we made up for it with the above filter.
@@ -4266,7 +4266,7 @@ static void AudioDriver_TxProcessorAMSideband(float32_t* i_buffer, float32_t* q_
  * @param dst IQ output (shifted according to translation frequency) ready for transmission
  * @param blockSize number of samples in src AND dst
  */
-static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t * const dst, uint16_t blockSize)
+static void AudioDriver_TxProcessorFM(AudioSample_t * const src, IqSample_t * const dst, uint16_t blockSize)
 {
     static float32_t    hpf_prev_a, hpf_prev_b;
     static uint32_t fm_mod_accum = 0;
@@ -4331,7 +4331,7 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, AudioSample_t *
 }
 
 #ifdef USE_FREEDV
-static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, AudioSample_t * const dst, int16_t blockSize)
+static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, IqSample_t * const dst, int16_t blockSize)
 {
     // Freedv Test DL2FW
     static int16_t outbuff_count = 0;
@@ -4480,7 +4480,7 @@ static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treb
 }
 
 
-static void AudioDriver_TxProcessorRtty(AudioSample_t * const dst, uint16_t blockSize)
+static void AudioDriver_TxProcessorRtty(IqSample_t * const dst, uint16_t blockSize)
 {
 
 	for (uint16_t idx =0; idx < blockSize; idx++)
@@ -4501,7 +4501,7 @@ static void AudioDriver_TxProcessorRtty(AudioSample_t * const dst, uint16_t bloc
 
 }
 
-static void AudioDriver_TxProcessorPsk(AudioSample_t * const dst, uint16_t blockSize)
+static void AudioDriver_TxProcessorPsk(IqSample_t * const dst, uint16_t blockSize)
 {
 
 	for (uint16_t idx =0; idx < blockSize; idx++)
@@ -4522,7 +4522,7 @@ static void AudioDriver_TxProcessorPsk(AudioSample_t * const dst, uint16_t block
 */
 }
 
-static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_t * const dst, AudioSample_t * const audioDst, uint16_t blockSize)
+static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t * const dst, AudioSample_t * const audioDst, uint16_t blockSize)
 {
     // we copy volatile variables which are used multiple times to local consts to let the compiler do its optimization magic
     // since we are in an interrupt, no one will change these anyway
@@ -4545,7 +4545,7 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
     if (tx_audio_source == TX_AUDIO_DIG || tx_audio_source == TX_AUDIO_DIGIQ)
     {
         // FIXME: change type of audio_out_fill_tx_buffer to use audio sample struct
-        audio_out_fill_tx_buffer((int16_t*)srcUSB,2*blockSize);
+        audio_out_fill_tx_buffer(srcUSB,blockSize);
     }
 
     if (tx_audio_source == TX_AUDIO_DIGIQ && dmod_mode != DEMOD_CW && !tune && !is_demod_psk())
@@ -4716,7 +4716,8 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
 
 #ifdef UI_BRD_OVI40
     // we code the sidetone to the audio codec, since we have one for audio and one for iq
-    if (audioDst != dst)
+    // TODO: Do we need the check? OVI40 always comes with 2 codecs
+    if ((void*)audioDst != (void*)dst)
     {
     	if (dmod_mode == DEMOD_CW)
     	{
@@ -4770,6 +4771,15 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
     }
 }
 
+static void AudioDriver_AudioFillSilence(AudioSample_t *s, size_t size)
+{
+    memset(s,0,size*sizeof(*s));
+}
+
+static void AudioDriver_IqFillSilence(IqSample_t *s, size_t size)
+{
+    memset(s,0,size*sizeof(*s));
+}
 
 //*----------------------------------------------------------------------------
 //* Function Name       : I2S_RX_CallBack
@@ -4779,18 +4789,12 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, AudioSample_
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-#ifdef USE_24_BITS
-void AudioDriver_I2SCallback(int32_t *src, int32_t *dst, int16_t size, uint16_t ht)
-#else
-void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int16_t size)
-#endif
+void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t *audioDst, int16_t blockSize)
 {
     static bool to_rx = false;	// used as a flag to clear the RX buffer
     static bool to_tx = false;	// used as a flag to clear the TX buffer
     static ulong tcount = 0;
     bool muted = false;
-
-    const int16_t blockSize = size/2;
 
     if(ts.show_debug_info)
     {
@@ -4802,7 +4806,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
         if((to_rx) || ts.audio_processor_input_mute_counter > 0)	 	// the first time back to RX, clear the buffers to reduce the "crash"
         {
             muted = true;
-            arm_fill_q15(0, src, size);
+            AudioDriver_IqFillSilence(iq, blockSize);
             if (to_rx)
             {
                 AudioDriver_ClearAudioDelayBuffer();
@@ -4821,9 +4825,9 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
 //            float agc_holder = ads.agc_val;
             bool dsp_inhibit_holder = ts.dsp_inhibit;
 #ifdef USE_CONVOLUTION
-            AudioDriver_RxProcessorConvolution((AudioSample_t*) src, (AudioSample_t*)dst,blockSize);
+            AudioDriver_RxProcessorConvolution(iq, audio, blockSize);
 #else
-            AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,blockSize);
+            AudioDriver_RxProcessor(iq, audio, blockSize);
 #endif
             //            ads.agc_val = agc_holder;
             ts.dsp_inhibit = dsp_inhibit_holder;
@@ -4831,9 +4835,9 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
         else
         {
 #ifdef USE_CONVOLUTION
-            AudioDriver_RxProcessorConvolution((AudioSample_t*) src, (AudioSample_t*)dst,blockSize);
+            AudioDriver_RxProcessorConvolution(iq, audio, blockSize);
 #else
-            AudioDriver_RxProcessor((AudioSample_t*) src, (AudioSample_t*)dst,blockSize);
+            AudioDriver_RxProcessor(iq, audio, blockSize);
 #endif
             if (ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT && (ts.cw_text_entry || ts.dmod_mode == DEMOD_CW)) // FIXME to call always when straight mode reworked
             {
@@ -4848,7 +4852,7 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
         if((to_tx) || (ts.audio_processor_input_mute_counter>0))	 	// the first time back to TX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
         {
             muted = true;
-            arm_fill_q15(0, src, size);
+            AudioDriver_AudioFillSilence(audio, blockSize);
             to_tx = false;                          // caused by the content of the buffers from TX - used on return from SSB TX
             if ( ts.audio_processor_input_mute_counter >0)
             {
@@ -4860,12 +4864,12 @@ void AudioDriver_I2SCallback(int16_t *src, int16_t *dst, int16_t* audioDst, int1
         {
             // muted input should not modify the ALC so we simply restore it after processing
             float alc_holder = ads.alc_val;
-            AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst, (AudioSample_t*)audioDst,blockSize);
+            AudioDriver_TxProcessor(audio, iq, audioDst,blockSize);
             ads.alc_val = alc_holder;
         }
         else
         {
-            AudioDriver_TxProcessor((AudioSample_t*) src, (AudioSample_t*)dst, (AudioSample_t*)audioDst, blockSize);
+            AudioDriver_TxProcessor(audio, iq, audioDst, blockSize);
         }
 
         to_rx = true;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode

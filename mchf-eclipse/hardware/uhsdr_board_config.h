@@ -50,10 +50,12 @@
 #define SI5351A_I2C				(&hi2c1)
 
 #define CODEC_I2C               (&hi2c2)
-#define CODEC_ANA_I2C               (&hi2c2)
-#define CODEC_IQ_I2C                (&hi2c2)
+#define CODEC_ANA_I2C           (&hi2c2)
+#define CODEC_IQ_I2C            (&hi2c2)
 
-#define SERIALEEPROM_I2C            (&hi2c2)
+#define CODEC_NUM               1
+
+#define SERIALEEPROM_I2C        (&hi2c2)
 
 // -----------------------------------------------------------------------------
 //						PORT PINS ALLOCATION
@@ -392,6 +394,8 @@
 
 #define CODEC_IQ_I2C                (&hi2c4)
 #define CODEC_IQ_SAI                SAI2
+
+#define CODEC_NUM               2
 
 #define SERIALEEPROM_I2C            (&hi2c2)
 
