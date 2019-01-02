@@ -1445,7 +1445,8 @@ bool RadioManagement_UpdatePowerAndVSWR()
         	{
         	RadioManagement_DisablePaBias();
         	swrm.high_vswr_detected = true;
-        	ts.tx_power_factor = 0.001;
+        	uint8_t tx_band = RadioManagement_GetBand(df.tune_new/TUNE_MULT);
+        	RadioManagement_PowerLevelChange(tx_band, PA_LEVEL_0_5W);
         	}
         }
 
