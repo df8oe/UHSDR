@@ -177,7 +177,7 @@ void UhsdrHwI2s_Codec_StartDMA()
     UhsdrHwI2s_SetBitWidth24();
 #endif
 #ifdef UI_BRD_MCHF
-    HAL_I2SEx_TransmitReceive_DMA(&hi2s3,(uint16_t*)dma.audio_buf.out,(uint16_t*)dma.audio_buf.in,sizeof(dma.audio_buf.in));
+    HAL_I2SEx_TransmitReceive_DMA(&hi2s3,(uint16_t*)dma.iq_buf.out,(uint16_t*)dma.iq_buf.in,sizeof(dma.iq_buf.in)/sizeof(dma.iq_buf.in[0].l));
 #endif
 #ifdef UI_BRD_OVI40
     // we clean the buffers since we don't know if we are in a "cleaned" memory segement
