@@ -5752,7 +5752,7 @@ static uint16_t fw_version_number_release = 0;
 static uint16_t fw_version_number_minor = 0;
 
 /**
- * @returns true if the firmware version is different from version in loaded configuraton settings.
+ * @returns true if the firmware version is different from version in loaded configuration settings.
  */
 static bool UiDriver_FirmwareVersionCheck()
 {

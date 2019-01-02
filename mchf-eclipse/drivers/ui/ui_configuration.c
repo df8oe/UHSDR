@@ -30,6 +30,10 @@
 #include "uhsdr_hw_i2c.h"
 #include "uhsdr_rtc.h"
 
+
+
+static int32_t UiConfiguration_CompareConfigBuildVersions(uint major, uint32_t minor, uint32_t release);
+
 // If more EEPROM variables are added, make sure that you add to this table - and the index to it in "eeprom.h"
 // and correct MAX_VAR_ADDR in uhsdr_board.h
 
@@ -494,6 +498,26 @@ static uint32_t UiConfiguration_LimitFrequency(const BandInfo* bandInfo, const u
 {
     uint32_t retval = freq;
 
+    // this code handles the migration of stored frequency settings from the older approach to/from the newer
+    // approach. We will have to introduce the newer approach with firmware 2.11.0 in order not to cause
+    // issues when using older firmware with this migration code already built in.
+    //
+    // we use the actual value of TUNE_MULT as indicator which dial frequency scaling our firmware needs
+    // this is kind of a workaround.
+    // stored configuration is equal or newer than 2.11.0, dial frequencies are stored as is
+    // we have to scale them up with our TUNE_MULT
+    if (UiConfiguration_CompareConfigBuildVersions(2,11,00) < 1 && TUNE_MULT != 1 )
+    {
+        retval *= 4;
+    }
+
+    // stored configuration is older than 2.11.0, dial frequencies are stored as multiples of 4 * dial frequency
+    // we have to scale them down with our old TUNE_MULT
+    if (UiConfiguration_CompareConfigBuildVersions(2,11,00) == 1 && TUNE_MULT == 1)
+    {
+        retval /= 4;
+    }
+
     if(set_to_default)
     {
         // Load default for this band
@@ -501,11 +525,7 @@ static uint32_t UiConfiguration_LimitFrequency(const BandInfo* bandInfo, const u
     }
     else
     {
-        if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) || RadioManagement_FreqIsInBand(bandInfo,freq))       // xxxx relax memory-save frequency restrictions and is it within the allowed range?
-        {
-            retval = freq;
-        }
-        else
+        if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) == 0 && RadioManagement_FreqIsInBand(bandInfo,retval) == false)       // xxxx relax memory-save frequency restrictions and is it within the allowed range?
         {
             // Load default for this band
             retval = bandInfo->tune + DEFAULT_FREQ_OFFSET;
@@ -613,11 +633,11 @@ void UiReadSettingEEPROM_Filter(bool load_default)
  * @param major range 0..255
  * @param minor range 0..255
  * @param release range 0..255
- * @return 0 if stored parameters have been saved by firmware identified by parameter, -1 if parameter were stored by older firmware, 1 if by newer
+ * @return 0 if stored parameters have been saved by firmware identified by parameter, 1 if parameter were stored by older firmware, -1 if by newer
  */
 
 
-int32_t UiConfiguration_CompareConfigBuildVersions(uint major, uint32_t minor, uint32_t release)
+static int32_t UiConfiguration_CompareConfigBuildVersions(uint major, uint32_t minor, uint32_t release)
 {
     int32_t retval = 0;
     static uint16_t config_major = 0, config_minor = 0, config_release = 0;
@@ -645,7 +665,7 @@ int32_t UiConfiguration_CompareConfigBuildVersions(uint major, uint32_t minor, u
     {
         retval = 1;
     }
-    else if (release > config_release)
+    else if (release < config_release)
     {
         retval = -1;
     } else if (release > config_release)
@@ -832,7 +852,7 @@ static int32_t UiConfiguration_NeedsDefaultIndex()
 void UiConfiguration_FixDefaultsNotLoadedIssue()
 {
     // we fix here an issue of our configuration approach which appears if you store int values and have the lower range below -1
-    if (UiConfiguration_CompareConfigBuildVersions(2,9,87) == -1 && ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
+    if (UiConfiguration_CompareConfigBuildVersions(2,9,87) == 1 && ts.configstore_in_use == CONFIGSTORE_IN_USE_I2C)
     {
         // values have been stored by older version of firmware
         uint32_t values[] = { IQ_20M, IQ_15M, IQ_10M_UP };
