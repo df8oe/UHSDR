@@ -94,6 +94,36 @@ inline bool RadioManagement_TcxoIsFahrenheit()
     return (df.temp_enabled & TCXO_UNIT_MASK) == TCXO_UNIT_F;
 }
 
+// Total bands supported
+//
+
+//  multiplier to convert between dial_freq and tune_freq
+#define TUNE_MULT               1
+
+#define DEFAULT_FREQ_OFFSET     3000*TUNE_MULT              // Amount of offset (at LO freq) when loading "default" frequency
+
+
+// this list MUST fit the order in the bandInfo structure defined in RadioManagement.h
+#define BAND_MODE_80            0
+#define BAND_MODE_60            1
+#define BAND_MODE_40            2
+#define BAND_MODE_30            3
+#define BAND_MODE_20            4
+#define BAND_MODE_17            5
+#define BAND_MODE_15            6
+#define BAND_MODE_12            7
+#define BAND_MODE_10            8
+#define BAND_MODE_6             9
+#define BAND_MODE_4             10
+#define BAND_MODE_2             11
+#define BAND_MODE_70            12
+#define BAND_MODE_23            13
+#define BAND_MODE_2200          14
+#define BAND_MODE_630           15
+#define BAND_MODE_160           16
+#define BAND_MODE_GEN           17          // General Coverage
+
+
 
 typedef enum
 {
@@ -119,7 +149,22 @@ typedef struct BandInfo
 } BandInfo;
 
 extern const BandInfo bandInfo[MAX_BAND_NUM];
-// FIXME: for technical reasons defined in ui_menu.c
+
+typedef struct band_regs_s
+{
+    VfoReg band[MAX_BAND_NUM];
+    bool enabled[MAX_BAND_NUM]; // we store which band is to be used (or ignored)
+} BandRegs;
+
+enum
+{
+    // VFO_WORK = 0
+    VFO_A = 0,
+    VFO_B,
+    VFO_MAX
+};
+// Working register plus VFO A and VFO B registers.
+extern BandRegs vfo[VFO_MAX];
 
 
 // SWR and RF power meter public
