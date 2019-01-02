@@ -1445,6 +1445,7 @@ bool RadioManagement_UpdatePowerAndVSWR()
         	{
         	RadioManagement_DisablePaBias();
         	swrm.high_vswr_detected = true;
+        	ts.tx_power_factor = 0.001;
         	}
         }
 
