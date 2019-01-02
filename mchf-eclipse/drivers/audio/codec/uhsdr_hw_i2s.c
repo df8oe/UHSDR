@@ -33,9 +33,6 @@ typedef struct
     IqSample_t out[2*IQ_SAMPLES_PER_BLOCK];
     IqSample_t in[2*IQ_SAMPLES_PER_BLOCK];
 } dma_iq_buffer_t;
-__UHSDR_DMAMEM dma_iq_buffer_t iq_buf;
-
-#if defined(UI_BRD_OVI40)
 
 typedef struct
 {
@@ -43,17 +40,28 @@ typedef struct
     AudioSample_t in[2*AUDIO_SAMPLES_PER_BLOCK];
 } dma_audio_buffer_t;
 
-__UHSDR_DMAMEM dma_audio_buffer_t audio_buf;
+
+// we do something tricky here:
+// if we have a single codec both buffers are in fact the same, so we use a union
+// if we have two codecs we use a struct hence two separate buffers
+
+typedef
+#if CODEC_NUM == 1
+    union
 #else
-
-#define audio_buf iq_buf
-
+    struct
 #endif
+    {
+        dma_iq_buffer_t iq_buf;
+        dma_audio_buffer_t audio_buf;
+    } I2S_DmaBuffers_t;
+
+static __UHSDR_DMAMEM I2S_DmaBuffers_t dma;
 
 
 void UhsdrHwI2s_Codec_ClearTxDmaBuffer()
 {
-    memset((void*)&iq_buf.out, 0, sizeof(iq_buf.out));
+    memset((void*)&dma.iq_buf.out, 0, sizeof(dma.iq_buf.out));
 }
 
 static void MchfHw_Codec_HandleBlock(uint16_t which)
@@ -83,16 +91,16 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 
     if (ts.txrx_mode != TRX_MODE_TX)
     {
-        iq = &iq_buf.in[offset];
-        audio = &audio_buf.out[offset];
+        iq = &dma.iq_buf.in[offset];
+        audio = &dma.audio_buf.out[offset];
     }
     else
     {
-        audio = &audio_buf.in[offset];
-        iq = &iq_buf.out[offset];
+        audio = &dma.audio_buf.in[offset];
+        iq = &dma.iq_buf.out[offset];
     }
 
-    AudioSample_t *audioDst = &audio_buf.out[offset];
+    AudioSample_t *audioDst = &dma.audio_buf.out[offset];
 
     // Handle
     AudioDriver_I2SCallback(audio, iq, audioDst, sz);
@@ -148,22 +156,39 @@ void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hi2s)
 }
 #endif
 
+#if defined(USE_24_BITS)
+static void UhsdrHwI2s_SetBitWidth24()
+{
+#ifdef UI_BRD_MCHF
+    hi2s3.Init.DataFormat = I2S_DATAFORMAT_24B;
+    HAL_I2S_Init(&hi2s3);
+#endif
+#ifdef UI_BRD_OVI40
+    HAL_SAI_InitProtocol(&hsai_BlockA2, SAI_I2S_STANDARD, SAI_PROTOCOL_DATASIZE_24BIT, 2);
+    HAL_SAI_InitProtocol(&hsai_BlockB2, SAI_I2S_STANDARD, SAI_PROTOCOL_DATASIZE_24BIT, 2);
+#endif
+}
+#endif
+
+
 void UhsdrHwI2s_Codec_StartDMA()
 {
-
+#if defined(USE_24_BITS)
+    UhsdrHwI2s_SetBitWidth24();
+#endif
 #ifdef UI_BRD_MCHF
-    HAL_I2SEx_TransmitReceive_DMA(&hi2s3,(uint16_t*)audio_buf.out,(uint16_t*)audio_buf.in,sizeof(audio_buf.in));
+    HAL_I2SEx_TransmitReceive_DMA(&hi2s3,(uint16_t*)dma.audio_buf.out,(uint16_t*)dma.audio_buf.in,sizeof(dma.audio_buf.in));
 #endif
 #ifdef UI_BRD_OVI40
     // we clean the buffers since we don't know if we are in a "cleaned" memory segement
-    memset((void*)&audio_buf,0,sizeof(audio_buf));
-    memset((void*)&iq_buf,0,sizeof(iq_buf));
+    memset((void*)&dma.audio_buf,0,sizeof(dma.audio_buf));
+    memset((void*)&dma.iq_buf,0,sizeof(dma.iq_buf));
 
-    HAL_SAI_Receive_DMA(&hsai_BlockA1,(uint8_t*)audio_buf.in,sizeof(audio_buf.in)/sizeof(audio_buf.in[0].l));
-    HAL_SAI_Transmit_DMA(&hsai_BlockB1,(uint8_t*)audio_buf.out,sizeof(audio_buf.out)/sizeof(audio_buf.out[0].l));
+    HAL_SAI_Receive_DMA(&hsai_BlockA1,(uint8_t*)dma.audio_buf.in,sizeof(dma.audio_buf.in)/sizeof(dma.audio_buf.in[0].l));
+    HAL_SAI_Transmit_DMA(&hsai_BlockB1,(uint8_t*)dma.audio_buf.out,sizeof(dma.audio_buf.out)/sizeof(dma.audio_buf.out[0].l));
 
-    HAL_SAI_Receive_DMA(&hsai_BlockA2,(uint8_t*)iq_buf.in,sizeof(iq_buf.in)/sizeof(iq_buf.in[0].l));
-    HAL_SAI_Transmit_DMA(&hsai_BlockB2,(uint8_t*)iq_buf.out,sizeof(iq_buf.out)/sizeof(iq_buf.out[0].l));
+    HAL_SAI_Receive_DMA(&hsai_BlockA2,(uint8_t*)dma.iq_buf.in,sizeof(dma.iq_buf.in)/sizeof(dma.iq_buf.in[0].l));
+    HAL_SAI_Transmit_DMA(&hsai_BlockB2,(uint8_t*)dma.iq_buf.out,sizeof(dma.iq_buf.out)/sizeof(dma.iq_buf.out[0].l));
 
 #endif
 }
