@@ -87,7 +87,7 @@ typedef struct
 } mchf_codec_t;
 
 
-__IO mchf_codec_t mchf_codecs[DMA_AUDIO_NUM];
+__IO mchf_codec_t mchf_codecs[CODEC_NUM];
 
 #ifdef UI_BRD_OVI40
 /**
