@@ -6605,6 +6605,16 @@ static void UiAction_MenuSetDefaultValue()
 	UiMenu_RenderMenu(MENU_PROCESS_VALUE_SETDEFAULT);
 }
 
+static void UiAction_MenuRenderPrevScreen()
+{
+    UiMenu_RenderPrevScreen();
+}
+
+static void UiAction_MenuRenderNextScreen()
+{
+    UiMenu_RenderNextScreen();
+}
+
 static void UiAction_StepPlusHold()
 {
 	if(UiDriver_IsButtonPressed(BUTTON_STEPM_PRESSED))	 	// was keyPin STEP- pressed at the same time?
@@ -6752,8 +6762,8 @@ static const keyaction_descr_t keyactions_normal[] =
 
 static const keyaction_descr_t keyactions_menu[] =
 {
-		{ BUTTON_F2_PRESSED, 	(void(*)())UiMenu_RenderPrevScreen, 		UiMenu_RenderFirstScreen },
-		{ BUTTON_F3_PRESSED, 	(void(*)())UiMenu_RenderNextScreen, 		UiMenu_RenderLastScreen },
+		{ BUTTON_F2_PRESSED, 	UiAction_MenuRenderPrevScreen, 		UiMenu_RenderFirstScreen },
+		{ BUTTON_F3_PRESSED, 	UiAction_MenuRenderNextScreen, 		UiMenu_RenderLastScreen },
 		{ BUTTON_F4_PRESSED, 	UiAction_MenuSetDefaultValue,				KEYACTION_NOP },
 };
 
