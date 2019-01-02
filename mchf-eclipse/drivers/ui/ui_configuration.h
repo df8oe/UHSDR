@@ -109,7 +109,7 @@ void		UiConfiguration_UpdateMacroCap(void);
 //
 
 #define XVERTER_MULT_MAX        10      // maximum LO multipler in xverter mode
-#define XVERTER_OFFSET_MAX      999000000   // Maximum transverter offset (999 MHz)
+#define XVERTER_OFFSET_MAX      1999000000   // Maximum transverter offset (1999 MHz)
 //
 #define AUTO_LSB_USB_OFF        0
 #define AUTO_LSB_USB_ON         1
