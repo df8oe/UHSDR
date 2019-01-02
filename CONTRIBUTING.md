@@ -93,7 +93,7 @@ No one will be happy with all rules, but as long as the rules are usable, please
   * __Single Line Conditional statements__: please, always use parentheses. C is not Python and indention is easily broken, makes code very hard to debug. 
    
 ```C
-	if 
+	if (c == 7)
 		a = 3;
 	else
 		b = 2;
@@ -102,7 +102,7 @@ No one will be happy with all rules, but as long as the rules are usable, please
   We use
   
 ```C
-	if 
+	if ( c == 7)
 	{
 		a = 3;
 	}
