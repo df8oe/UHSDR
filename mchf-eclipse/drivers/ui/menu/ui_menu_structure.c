@@ -1,7 +1,7 @@
 #include "ui_menu.h"
 #include "ui_menu_internal.h"
 #include "uhsdr_hmc1023.h"
-
+#include "radio_management.h"
 /*
  * How to create a new menu entry in an existing menu:
  * - Copy an existing entry of MENU_KIND and paste at the desired position

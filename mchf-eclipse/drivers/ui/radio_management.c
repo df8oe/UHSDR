@@ -13,8 +13,8 @@
  ************************************************************************************/
 
 // Common
-#include "radio_management.h"
 #include "uhsdr_board.h"
+#include "radio_management.h"
 #include "profiling.h"
 #include "adc.h"
 
@@ -78,29 +78,43 @@ SWRMeter                    swrm;
 // Frequency public
 DialFrequency               df;
 
+#define KHZ_MULT            (TUNE_MULT*1000)    // multiplier to convert oscillator frequency or band size to display kHz, used below
+//
+// Bands definition
+//
+//
+//
+//  Frequency limits for filters, in Hz, for bandpass filter selection - MODIFY AT YOUR OWN RISK!
+//
+#define BAND_FILTER_UPPER_160       2500000             // Upper limit for 160 meter filter
+#define BAND_FILTER_UPPER_80        4250000             // Upper limit for 80 meter filter
+#define BAND_FILTER_UPPER_40        8000000             // Upper limit for 40/60 meter filter
+#define BAND_FILTER_UPPER_20        16000000            // Upper limit for 20/30 meter filter
+#define BAND_FILTER_UPPER_10        32000000            // Upper limit for 10 meter filter
+#define BAND_FILTER_UPPER_6     40000000            // Upper limit for 6 meter filter
+#define BAND_FILTER_UPPER_4     70000000            // Upper limit for 4 meter filter
 
-#define BandInfoGenerate(BAND,SUFFIX,NAME) { BAND_FREQ_##BAND , BAND_SIZE_##BAND , NAME }
 
 const BandInfo bandInfo[] =
 {
-    BandInfoGenerate(80,M,"80m") ,
-    BandInfoGenerate(60,M,"60m"),
-    BandInfoGenerate(40,M,"40m"),
-    BandInfoGenerate(30,M,"30m"),
-    BandInfoGenerate(20,M,"20m"),
-    BandInfoGenerate(17,M,"17m"),
-    BandInfoGenerate(15,M,"15m"),
-    BandInfoGenerate(12,M,"12m"),
-    BandInfoGenerate(10,M,"10m"),
-    BandInfoGenerate(6,M,"6m"),
-    BandInfoGenerate(4,M,"4m"),
-    BandInfoGenerate(2,M,"2m"),
-    BandInfoGenerate(70,CM,"70cm"),
-    BandInfoGenerate(23,CM,"23cm"),
-    BandInfoGenerate(2200,M,"2200m"),
-    BandInfoGenerate(630,M,"630m"),
-    BandInfoGenerate(160,M,"160m"),
-    { 0, 0, "Gen" } // Generic Band
+    { .tune = 3500*KHZ_MULT, .size = 500*KHZ_MULT, .name = "80m"} , // Region 2
+    { .tune = 5250*KHZ_MULT, .size = 200*KHZ_MULT, .name = "60m"} , // should cover all regions
+    { .tune = 7000*KHZ_MULT, .size = 300*KHZ_MULT, .name = "40m"} , // Region 2
+    { .tune = 10100*KHZ_MULT, .size = 50*KHZ_MULT, .name = "30m"} ,
+    { .tune = 14000*KHZ_MULT, .size = 350*KHZ_MULT, .name = "20m"} ,
+    { .tune = 18068*KHZ_MULT, .size = 100*KHZ_MULT, .name = "17m"} ,
+    { .tune = 21000*KHZ_MULT, .size = 450*KHZ_MULT, .name = "15m"} ,
+    { .tune = 24890*KHZ_MULT, .size = 100*KHZ_MULT, .name = "12m"} ,
+    { .tune = 28000*KHZ_MULT, .size = 1700*KHZ_MULT, .name = "10m"} ,
+    { .tune = 50000*KHZ_MULT, .size = 2000*KHZ_MULT, .name = "6m"} , // Region 2
+    { .tune = 70000*KHZ_MULT, .size = 500*KHZ_MULT, .name = "4m"} ,
+    { .tune = 144000*KHZ_MULT, .size = 2000*KHZ_MULT, .name = "2m"} , // Region 1
+    { .tune = 430000*KHZ_MULT, .size = 10000*KHZ_MULT, .name = "70cm"} , // Region 1
+    { .tune = 1240000*KHZ_MULT, .size = 60000*KHZ_MULT, .name = "23cm"} , // Region 1
+    { .tune = 135.7*KHZ_MULT, .size = 2.1*KHZ_MULT, .name = "2200m"} , // Region 1
+    { .tune = 472*KHZ_MULT, .size = 7*KHZ_MULT, .name = "630m"} , // Region 1
+    { .tune = 1810*KHZ_MULT, .size = 190*KHZ_MULT, .name = "160m"} ,
+    { .tune = 0, .size = 0, .name = "Gen"} ,
 };
 
 

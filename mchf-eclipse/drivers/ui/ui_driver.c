@@ -2578,14 +2578,14 @@ void UiDriver_ChangeTuningStep(uchar is_up)
 	{
 		idx= (idx>=idx_limit)?0:idx+1;
 		// 9kHz step only on MW and LW
-		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old/4) > 1600001))
+		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old/TUNE_MULT) > 1600001))
 			idx ++;
 	}
 	else
 	{
 		idx= (idx==0)?idx_limit:idx-1;
 		// 9kHz step only on MW and LW
-		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old/4) > 1600001))
+		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old/TUNE_MULT) > 1600001))
 			idx --;
 	}
 
