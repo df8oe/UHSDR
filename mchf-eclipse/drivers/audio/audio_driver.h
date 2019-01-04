@@ -23,20 +23,22 @@
 #include "uhsdr_board.h"
 //#include "audio_convolution.h"
 
-// 16 or 24 bits from Codec
-// 24 bits are not supported anywhere in the recent code!
-//#define USE_24_BITS
 
 #define IQ_SAMPLE_RATE (48000)
 #define IQ_SAMPLE_RATE_F ((float32_t)IQ_SAMPLE_RATE)
 //const float32_t IQ_SAMPLE_RATE_F = ((float32_t)IQ_SAMPLE_RATE);
 
-typedef int16_t audio_data_t;
 
-#ifdef USE_24_BITS
+#if  defined(USE_32_IQ_BITS)
     typedef int32_t iq_data_t;
 #else
     typedef int16_t iq_data_t;
+#endif
+
+#if defined(USE_32_AUDIO_BITS)
+    typedef int32_t audio_data_t;
+#else
+    typedef int16_t audio_data_t;
 #endif
 
 

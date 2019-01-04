@@ -58,10 +58,10 @@
 #define W8731_ANLG_AU_PATH_CNTR_MICBBOOST   (0x01)
 #define W8731_DIGI_AU_INTF_FORMAT_PHILIPS 0x02
 #define W8731_DIGI_AU_INTF_FORMAT_PCM     0x00
-#define W8731_DIGI_AU_INTF_FORMAT_16B     (0x00 << 2)
-#define W8731_DIGI_AU_INTF_FORMAT_20B     (0x01 << 2)
-#define W8731_DIGI_AU_INTF_FORMAT_24B     (0x10 << 2)
-#define W8731_DIGI_AU_INTF_FORMAT_32B     (0x11 << 2)
+#define W8731_DIGI_AU_INTF_FORMAT_16B     (0x0 << 2)
+#define W8731_DIGI_AU_INTF_FORMAT_20B     (0x1 << 2)
+#define W8731_DIGI_AU_INTF_FORMAT_24B     (0x2 << 2)
+#define W8731_DIGI_AU_INTF_FORMAT_32B     (0x3 << 2)
 
 #define W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO W8731_DIGI_AU_INTF_FORMAT_PHILIPS
 
@@ -89,7 +89,24 @@ typedef struct
 
 __IO mchf_codec_t mchf_codecs[CODEC_NUM];
 
+// FIXME: for now we use 32bits transfer size, does not change the ADC/DAC resolution
+// which is 24 bits in any case. We should reduce finally to 24bits (which requires also the I2S/SAI peripheral to
+// use 24bits)
+
+#if defined(USE_32_IQ_BITS)
+    #define IQ_WORD_SIZE WORD_SIZE_32
+#else
+    #define IQ_WORD_SIZE WORD_SIZE_16
+#endif
+
+#if defined(USE_32_AUDIO_BITS)
+    #define AUDIO_WORD_SIZE WORD_SIZE_32
+#else
+    #define AUDIO_WORD_SIZE WORD_SIZE_16
+#endif
+
 #ifdef UI_BRD_OVI40
+
 /**
  * @brief controls volume on "external" PA via DAC
  * @param vol volume in range of 0 to CODEC_SPEAKER_MAX_VOLUME
@@ -127,7 +144,7 @@ static uint32_t Codec_WriteRegister(I2C_HandleTypeDef* hi2c, uint8_t RegisterAdd
     return MCHF_I2C_WriteRegister(hi2c, CODEC_ADDRESS, Byte1, 1, Byte2);
 }
 
-static uint32_t Codec_ResetCodec(I2C_HandleTypeDef* hi2c, uint32_t AudioFreq,uint32_t word_size)
+static uint32_t Codec_ResetCodec(I2C_HandleTypeDef* hi2c, uint32_t AudioFreq, CodecSampleWidth_t word_size)
 {
     uint32_t retval = HAL_OK;
 
@@ -166,7 +183,21 @@ static uint32_t Codec_ResetCodec(I2C_HandleTypeDef* hi2c, uint32_t AudioFreq,uin
 
 
         // Reg 07: Digital Audio Interface Format (i2s, 16/32 bit, slave)
-        uint16_t size_reg_val = word_size == WORD_SIZE_16? W8731_DIGI_AU_INTF_FORMAT_16B : W8731_DIGI_AU_INTF_FORMAT_32B;
+        uint16_t size_reg_val;
+
+        switch(word_size)
+        {
+            case WORD_SIZE_32:
+                size_reg_val = W8731_DIGI_AU_INTF_FORMAT_32B;
+                break;
+            case WORD_SIZE_24:
+                size_reg_val = W8731_DIGI_AU_INTF_FORMAT_24B;
+                break;
+            case WORD_SIZE_16:
+            default:
+                size_reg_val = W8731_DIGI_AU_INTF_FORMAT_16B;
+                break;
+        }
 
         Codec_WriteRegister(hi2c, W8731_DIGI_AU_INTF_FORMAT,W8731_DIGI_AU_INTF_FORMAT_I2S_PROTO|size_reg_val);
 
@@ -204,18 +235,18 @@ static uint32_t Codec_ResetCodec(I2C_HandleTypeDef* hi2c, uint32_t AudioFreq,uin
  * @param AudioFreq sample rate in Hertz
  * @param word_size should be set to WORD_SIZE_16, since we have not yet implemented any other word_size
  */
-uint32_t Codec_Reset(uint32_t AudioFreq,uint32_t word_size)
+uint32_t Codec_Reset(uint32_t AudioFreq)
 {
 
     uint32_t retval;
 #ifdef UI_BRD_MCHF
-    retval = Codec_ResetCodec(CODEC_I2C, AudioFreq,word_size);
+    retval = Codec_ResetCodec(CODEC_I2C, AudioFreq, IQ_WORD_SIZE);
 #else
-    retval = Codec_ResetCodec(CODEC_ANA_I2C, AudioFreq,word_size);
+    retval = Codec_ResetCodec(CODEC_ANA_I2C, AudioFreq, AUDIO_WORD_SIZE);
     if (retval == 0)
     {
         mchf_codecs[1].present = true;
-        retval = Codec_ResetCodec(CODEC_IQ_I2C, AudioFreq,word_size);
+        retval = Codec_ResetCodec(CODEC_IQ_I2C, AudioFreq, IQ_WORD_SIZE);
     }
 #endif
     if (retval == 0)
