@@ -766,6 +766,9 @@
 #define USE_HMC1023
 #endif
 
+#if defined(USE_32_IQ_BITS) && CODEC_NUM == 1
+    #define USE_32_AUDIO_BITS
+#endif
 
 /* CONFIGURATION LOGIC CHECKS */
 
@@ -787,4 +790,8 @@
 #error UI_BRD_MCHF does not permit USE_TWO_CHANNEL_AUDIO
 #endif
 
+
+#if CODEC_NUM == 1 && (defined(USE_32_IQ_BITS) &&  !defined(USE_32_AUDIO_BITS)) || (!defined(USE_32_IQ_BITS) &&  defined(USE_32_AUDIO_BITS))
+#error With only one codec bit width of iq and audio must match, either define both USE_32_IQ_BITS and USE_32_AUDIO_BITS or none
+#endif
 #endif

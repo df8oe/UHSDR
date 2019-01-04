@@ -710,7 +710,6 @@ void AudioDriver_LeakyLmsNr (float32_t *in_buff, float32_t *out_buff, int buff_s
 
 void AudioDriver_Init(void)
 {
-    const uint32_t word_size = WORD_SIZE_16;
 
     // CW module init
     CwGen_Init();
@@ -773,7 +772,7 @@ void AudioDriver_Init(void)
 #endif
 
 
-    ts.codec_present = Codec_Reset(ts.samp_rate,word_size) == HAL_OK;
+    ts.codec_present = Codec_Reset(ts.samp_rate) == HAL_OK;
 
     // Start DMA transfers
     UhsdrHwI2s_Codec_StartDMA();
@@ -3511,6 +3510,44 @@ void AudioDriver_RxProcessorNoiseReduction(uint16_t blockSizeDecim, float32_t* i
 }
 
 
+// FIXME: This is ugly: The STM32F4 returns 32bit reads from 16 bit peripherals such as the SPI/I2S
+// with the two half words in "mixed endian" instead of the wanted "little endian". This is documented in
+// the data sheet, so the only thing we can do is to swap the halfwords. This is in fact a single ror16 operation
+// if the compiler is smart enough to detect what we want.
+
+// we have to swap them only if we are having 32bit values from/to I2S and an STM32F4
+#if defined(STM32F4) && defined(USE_32_IQ_BITS)
+    static inline int32_t correctHalfWord(const int32_t word)
+    {
+        uint32_t uWord = (uint32_t)word;
+        return uWord >> 16 | uWord << 16;
+    }
+#else
+    #define correctHalfWord(a) (a)
+#endif
+
+// these constants are used to adjust the 32 bit integer samples to represent the same levels as if we sample 16 bit integers,
+// effectively "shifting" them down or up.
+// FIXME: switch to 16 bit extended mode for 16 bit samples  will eliminate the need for this at the expense of
+// using the same DMA memory (two times the memory true 16 bit values take, in our case this is 2*(2*(IQ_BLOCK_SIZE*2samples*2bytes) = 512 bytes)
+#ifdef USE_32_IQ_BITS
+    #define IQ_BIT_SHIFT 16
+    #define IQ_BIT_SCALE_DOWN (0.0000152587890625)
+#else
+    #define IQ_BIT_SHIFT 0
+    #define IQ_BIT_SCALE_DOWN (1.0)
+#endif
+#define IQ_BIT_SCALE_UP (1<<IQ_BIT_SHIFT)
+
+#ifdef USE_32_AUDIO_BITS
+    #define AUDIO_BIT_SHIFT 16
+    #define AUDIO_BIT_SCALE_DOWN (0.0000152587890625)
+#else
+    #define AUDIO_BIT_SHIFT 0
+    #define AUDIO_BIT_SCALE_DOWN (1.0)
+#endif
+#define AUDIO_BIT_SCALE_UP (1<<AUDIO_BIT_SHIFT)
+
 //
 //*----------------------------------------------------------------------------
 //* Function Name       : audio_rx_processor
@@ -3544,8 +3581,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
         {
             // 16 bit format - convert to float and increment
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
-            audio_in_put_buffer(src[i].l);
-            audio_in_put_buffer(src[i].r);
+            audio_in_put_buffer(correctHalfWord(src[i].l)>>IQ_BIT_SHIFT);
+            audio_in_put_buffer(correctHalfWord(src[i].r)>>IQ_BIT_SHIFT);
         }
     }
 
@@ -3553,28 +3590,32 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
     {
         // AudioDriver_NoiseBlanker(src, blockSize);     // do noise blanker function
         // ------------------------
-        // Split stereo channels
         for(uint32_t i = 0; i < blockSize; i++)
         {
-            if(src[i].l > ADC_CLIP_WARN_THRESHOLD/4)            // This is the release threshold for the auto RF gain
+            int32_t level = abs(correctHalfWord(src[i].l))>>IQ_BIT_SHIFT;
+
+            if(level > ADC_CLIP_WARN_THRESHOLD/4)            // This is the release threshold for the auto RF gain
             {
                 ads.adc_quarter_clip = 1;
-                if(src[i].l > ADC_CLIP_WARN_THRESHOLD/2)            // This is the trigger threshold for the auto RF gain
+                if(level > ADC_CLIP_WARN_THRESHOLD/2)            // This is the trigger threshold for the auto RF gain
                 {
                     ads.adc_half_clip = 1;
-                    if(src[i].l > ADC_CLIP_WARN_THRESHOLD)          // This is the threshold for the red clip indicator on S-meter
+                    if(level > ADC_CLIP_WARN_THRESHOLD)          // This is the threshold for the red clip indicator on S-meter
                     {
                         ads.adc_clip = 1;
                     }
                 }
             }
-            adb.i_buffer[i] = (float32_t)src[i].l;
-            adb.q_buffer[i] = (float32_t)src[i].r;
+
+            adb.i_buffer[i] = correctHalfWord(src[i].l);
+            adb.q_buffer[i] = correctHalfWord(src[i].r);
         }
 
-        // artificial amplitude imbalance for testing of the automatic IQ imbalance correction
-        //    arm_scale_f32 (adb.i_buffer, 0.6, adb.i_buffer, blockSize);
-
+        if (IQ_BIT_SCALE_DOWN != 1.0)
+        {
+            arm_scale_f32 (adb.i_buffer, IQ_BIT_SCALE_DOWN, adb.i_buffer, blockSize);
+            arm_scale_f32 (adb.q_buffer, IQ_BIT_SCALE_DOWN, adb.q_buffer, blockSize);
+        }
 
         AudioDriver_RxHandleIqCorrection(blockSize);
 
@@ -3608,7 +3649,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
                     && dmod_mode != DEMOD_FM
                     && dmod_mode != DEMOD_SAM
                     && dmod_mode != DEMOD_AM;
-            volatile const uint16_t blockSizeIQ = use_decimatedIQ? blockSizeDecim: blockSize;
+
+            const uint16_t blockSizeIQ = use_decimatedIQ? blockSizeDecim: blockSize;
 
             // ------------------------
             // In SSB and CW - Do 0-90 degree Phase-added Hilbert Transform
@@ -3986,6 +4028,17 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
         {
         	dst[i].l = adb.a_buffer[1][i];
         	dst[i].r = adb.a_buffer[0][i];
+
+        	// in case we have to scale up our values from 16 to 32 bit range. Yes, we don't use the lower bits from the float
+        	// but that probably does not make a difference and this way it is faster.
+        	// the halfword correction is required when we are running on a STM32F4 with 32bit IQ, which at the moment (!) implies a AUDIO_BIT_SHIFT
+        	// so we are safe FOR NOW! When we adjust everything to 32bit, the correction has to remain but can be moved to the float to int conversion
+
+        	if (AUDIO_BIT_SHIFT != 0)
+        	{
+        	    dst[i].l = correctHalfWord(dst[i].l << AUDIO_BIT_SHIFT);
+                dst[i].r = correctHalfWord(dst[i].r << AUDIO_BIT_SHIFT);
+        	}
         }
 
         // Unless this is DIGITAL I/Q Mode, we sent processed audio
@@ -4100,6 +4153,10 @@ static void AudioDriver_TxIqProcessingFinal(float32_t scaling, bool swap, IqSamp
 {
     int16_t trans_idx;
 
+    scaling *= IQ_BIT_SCALE_UP;
+    // this aligns resulting signal with 16 or 32 bit width integer MSB, see comment in
+    // the first part of AudioDriver_RxProcessor
+
     if (ts.dmod_mode == DEMOD_CW || ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF)
     {
         trans_idx = IQ_TRANS_OFF;
@@ -4135,8 +4192,8 @@ static void AudioDriver_TxIqProcessingFinal(float32_t scaling, bool swap, IqSamp
     for(int i = 0; i < blockSize; i++)
     {
         // Prepare data for DAC
-        dst[i].l = final_i_buffer[i]; // save left channel
-        dst[i].r = final_q_buffer[i]; // save right channel
+        dst[i].l = correctHalfWord((int32_t)final_i_buffer[i]); // save left channel
+        dst[i].r = correctHalfWord((int32_t)final_q_buffer[i]); // save right channel
     }
 
 }
@@ -4192,18 +4249,20 @@ static void AudioDriver_TxAudioBufferFill(AudioSample_t * const src, int16_t blo
         }
         }
 
+        gain_calc *= AUDIO_BIT_SCALE_DOWN;
+
         if(tx_audio_source == TX_AUDIO_LINEIN_R)         // Are we in LINE IN RIGHT CHANNEL mode?
         {
             // audio buffer with right sample channel
             for(int i = 0; i < blockSize; i++)
             {
-                adb.a_buffer[0][i] = src[i].r;
+                adb.a_buffer[0][i] = correctHalfWord(src[i].r);
             }
         } else {
             // audio buffer with left sample channel
             for(int i = 0; i < blockSize; i++)
             {
-                adb.a_buffer[0][i] = src[i].l;
+                adb.a_buffer[0][i] = correctHalfWord(src[i].l);
             }
         }
 

@@ -154,6 +154,10 @@
 #error USE_HIGH_PRIO_PTT requires USE_PENDSV_FOR_HIGHPRIO_TASKS
 #endif
 
+// OPTION: IQ signal path now use 24bit samples from/to the codecs instead of the default 16bit. Slightly increases RAM usage (+0.5 - 1k).
+// will finally work both on single and dual codec configurations.
+#define USE_32_IQ_BITS
+#define USE_32_AUDIO_BITS
 
 #include "uhsdr_mcu.h"
 // HW libs
