@@ -18,6 +18,8 @@
 # for example to build the bootloader in the build-bl folder inside this directory
 # make -f ../Makefile ROOTLOC=".." bootloader 
 
+# to invoke asserts into the build use make with DEBUG=1; -> make -f "../Makefile" ROOTLOC=".." DEBUG=1 all
+
 # you can set the MCU you want to build for here or via environment variable (F4 or F4-512KB or F7 or H7)
 ifndef BUILDFOR
   BUILDFOR=F4
@@ -30,6 +32,12 @@ ifeq ($(BUILDFOR),F4-512KB)
   CONFIGFLAGS +="-DIS_SMALL_BUILD"
 else
   FW_LINKERFILE_F4=arm-gcc-link_f4_flash1024k.ld
+endif
+
+ifdef DEBUG
+  CONFIGFLAGS += -DDEBUG -DUSE_FULL_ASSERT -DTRACE
+else
+  CONFIGFLAGS += -DNDEBUG
 endif
 
 ifeq ($(BUILDFOR),F7)
@@ -81,11 +89,8 @@ ifeq ($(OS),Darwin)
   SED = gsed
 endif
 
-
-
-COMPILEFLAGS := -DUSE_HAL_DRIVER -DDEBUG -DUSE_FULL_ASSERT -DTRACE -D_GNU_SOURCE \
-	  -DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" $(CONFIGFLAGS) \
-	  -ffunction-sections -fdata-sections -flto -Wall -Wuninitialized -Wextra -Wno-unused-parameter -Wno-unused-function -Wno-sign-compare -g3
+COMPILEFLAGS := -DUSE_HAL_DRIVER -D_GNU_SOURCE -DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" $(CONFIGFLAGS) \
+	-ffunction-sections -fdata-sections -flto -Wall -Wuninitialized -Wextra -Wno-unused-parameter -Wno-unused-function -Wno-sign-compare -g3
 
 # identifying of "official builds by DF8OE"
 ifneq (,$(wildcard ../DF8OE))
@@ -97,18 +102,18 @@ MACHFLAGS_F4 := -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -DARM
 MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32F767xx -D__FPU_PRESENT=1
 MACHFLAGS_H7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32H743xx -D__FPU_PRESENT=1
 
-BASECFLAGS_F4  = $(MACHFLAGS_F4)  $(COMPILEFLAGS)  $(EXTRACFLAGS)
+BASECFLAGS_F4  = $(MACHFLAGS_F4)  $(COMPILEFLAGS) $(EXTRACFLAGS)
 BASECFLAGS_F7  = $(MACHFLAGS_F7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
 BASECFLAGS_H7  = $(MACHFLAGS_H7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
 
 LINKERLOC=$(ROOTLOC)/linker
 
-LDFLAGS_BASE = -L$(LINKERLOC) -flto --specs=nano.specs -g3 $(CFLAGS) $(CXXFLAGS)
+LDFLAGS_BASE = -L$(LINKERLOC) -flto -g3 $(CFLAGS) $(CXXFLAGS)
 LDFLAGS_F4 = $(LDFLAGS_BASE) $(MACHFLAGS_F4)
 LDFLAGS_F7 = $(LDFLAGS_BASE) $(MACHFLAGS_F7) 
 LDFLAGS_H7 = $(LDFLAGS_BASE) $(MACHFLAGS_H7) 
 
-LIBS := -lm -lc -lnosys
+LIBS :=--specs=nosys.specs --specs=nano.specs
 
 # ------------- nothing to change below this line ---------------------- 
 
@@ -144,8 +149,6 @@ $(BOOTLOADER).elf : CFLAGS = ${BASECFLAGS_F4} -Os -DBOOTLOADER_BUILD
 $(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F4} -O2
 $(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F4} -T$(LINKERLOC)/arm-gcc-link-bootloader_f4.ld
 $(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F4} -T$(LINKERLOC)/$(FW_LINKERFILE_F4)
-	
-
 
 	# Every subdirectory with header files must be mentioned here
 	include $(ROOTLOC)/f4-include.mak
@@ -163,7 +166,6 @@ $(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_F7} -O2
 $(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_F7} -T$(LINKERLOC)/arm-gcc-link-bootloader_f7.ld
 $(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_F7} -T$(LINKERLOC)/arm-gcc-link_f7.ld
 
-
 	# Every subdirectory with header files must be mentioned here
 	include $(ROOTLOC)/f7-include.mak
 
@@ -179,7 +181,6 @@ $(BOOTLOADER).elf: CFLAGS = ${BASECFLAGS_H7} -Os -DBOOTLOADER_BUILD
 $(FIRMWARE).elf : CFLAGS = ${BASECFLAGS_H7} -O2
 $(BOOTLOADER).elf : LDFLAGS = ${LDFLAGS_H7} -T$(LINKERLOC)/arm-gcc-link-bootloader_h7.ld
 $(FIRMWARE).elf : LDFLAGS = ${LDFLAGS_H7} -T$(LINKERLOC)/arm-gcc-link_h7.ld
-
 
 	# Every subdirectory with header files must be mentioned here
 	include $(ROOTLOC)/h7-include.mak
