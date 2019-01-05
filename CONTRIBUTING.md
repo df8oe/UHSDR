@@ -157,19 +157,34 @@ You may add Author / Maintainer fields, if this is appropriate.
 The Eclipse feature could help you to follow these rules:
 1. Right click on the project and hit 'Properties' or just Alt+Enter
 2. Go to 'C/C++ General -> Formatter' and check 'Enable project specific settings'
-![](https://user-images.githubusercontent.com/23377892/50575339-b2c09b00-0dcb-11e9-8e9d-2987cb7c8cd6.jpg) 
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/23377892/50575339-b2c09b00-0dcb-11e9-8e9d-2987cb7c8cd6.jpg">
+</p>
+
 3. There is 'UHSDR [K&R modified]' presettings available in list. Choose it and hit 'Apply and CLose'
-![](https://user-images.githubusercontent.com/23377892/50575341-b2c09b00-0dcb-11e9-918b-37f97a403355.jpg)
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/23377892/50575341-b2c09b00-0dcb-11e9-918b-37f97a403355.jpg">
+</p>
+
 4. If there is no 'UHSDR [K&R modified]' settings you can import it from file UHSDR_Eclipse_formatting_settings.xml in the mchf-eclipse/.settings/ folder.
-![](https://user-images.githubusercontent.com/23377892/50575340-b2c09b00-0dcb-11e9-9372-ab9f07ddaac8.jpg)
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/23377892/50575340-b2c09b00-0dcb-11e9-9372-ab9f07ddaac8.jpg">
+</p>
+
 5. And finally you can select part of your code and press Ctrl+Shift+F
-![](https://user-images.githubusercontent.com/23377892/50575338-b2c09b00-0dcb-11e9-8bd1-86812416e632.jpg)
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/23377892/50575338-b2c09b00-0dcb-11e9-8bd1-86812416e632.jpg">
+</p>
+
 The selected code would been formatted accordingly the rules. Nice!
 
 ### Boy Scout Rule
 
 The Boy Scout Rule can be summarized as: **Leave your code better than you found it.**
-![](https://user-images.githubusercontent.com/23377892/50579382-8bd98780-0e12-11e9-940b-d78186df61e6.jpg)
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/23377892/50579382-8bd98780-0e12-11e9-940b-d78186df61e6.jpg">
+</p>
+
 Boy Scouts have a rule regarding camping, that they should leave the campground cleaner than they found it. They don’t take it upon themselves to ensure the entire campground is cleaned up, but neither do they simply trash the place but plan on coming back one week out of the year to do a proper cleanup job. By ensuring that the campground is cleaner when they leave than it was when they arrived, they can guarantee that they are doing no harm, at least when it comes to the cleanliness of the site. [read more...]()
 
 So, let's do the same with the code in conscious and constant manner. Thank you in advance!
