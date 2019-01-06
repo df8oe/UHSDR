@@ -3507,6 +3507,38 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         }
         else
         {
+            txt_ptr = "n/a";
+            uint8_t test = 0;
+            clr = White;
+            UiDriverMenuItemChangeUInt8(var, mode, &test,
+                                            0,
+                                            0,
+                                            10,
+                                            1
+                                           );
+            switch(test)
+            {
+              case 0:
+                txt_ptr = "press DEFLT";
+                break;
+              case 10:
+                UiMenu_DisplayValue("    Working",Red,pos);
+                // clear EEPROM
+                SerialEEPROM_Clear_Signature();
+                SerialEEPROM_Clear_AllVariables();
+                Board_Reboot();
+                break;
+            }
+        }
+        break;
+        case CONFIG_RESET_SER_EEPROM_SIGNATURE:
+        if(SerialEEPROM_24xx_Exists() == false)
+        {
+            txt_ptr = "   n/a";
+            clr = Red;
+        }
+        else
+        {
       		txt_ptr = "n/a";
 			uint8_t test = 0;
       		clr = White;
@@ -3524,7 +3556,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
       		  case 10:
           		UiMenu_DisplayValue("    Working",Red,pos);
           		// clear EEPROM
-          		SerialEEPROM_Clear_Signature();
+                SerialEEPROM_Clear_Signature();
           		Board_Reboot();
           		break;
       		}

@@ -531,14 +531,25 @@ uint8_t SerialEEPROM_Detect() {
 
 }
 
+static void SerialEEPROM_Clear_Variable(uint16_t addr)
+{
+        const uint8_t empty_var[2] = { 0xff, 0xff };
+        SerialEEPROM_24Cxx_WriteBulk(addr*2, empty_var,2, ts.ser_eeprom_type);
+}
+
+void  SerialEEPROM_Clear_AllVariables()
+{
+    // variable 0 is the reserved signature variable
+    for(uint16_t count=1; count <= MAX_VAR_ADDR; count++)
+    {
+        SerialEEPROM_Clear_Variable(count);
+    }
+}
+
 void  SerialEEPROM_Clear_Signature()
 {
-    for(uint16_t count=0; count <= MAX_VAR_ADDR; count++)
-    {
-        const uint8_t empty_var[2] = { 0xff, 0xff };
-        SerialEEPROM_24Cxx_WriteBulk(count*2, empty_var,2, 16);
-    }
-
+    // variable 0 is the reserved signature variable
+    SerialEEPROM_Clear_Variable(0);
 }
 
 

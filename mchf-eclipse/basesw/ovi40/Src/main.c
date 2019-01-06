@@ -220,6 +220,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLN = 432; //270;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 9;
+  RCC_OscInitStruct.PLL.PLLR = 2; // we have to set this to keep an assert in HAL_RCC_OscConfig from failing
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();

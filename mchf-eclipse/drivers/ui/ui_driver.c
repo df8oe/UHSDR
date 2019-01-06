@@ -1590,7 +1590,10 @@ static void UiDriver_DisplayMemoryLabel()
 	UiLcdHy28_PrintText(ts.Layout->MEMORYLABEL.x,  ts.Layout->MEMORYLABEL.y,txt,col,Black,0);
 }
 
-
+/**
+ * Display the ham or broadcast band name of the currently selected band
+ * @param band the band id, last band id is BAND_MODE_GEN, which is everything outside ham bands
+ */
 static void UiDriver_DisplayBand(uchar band)
 {
 	const char* bandName;
@@ -1599,8 +1602,9 @@ static void UiDriver_DisplayBand(uchar band)
 
 	if (band < MAX_BAND_NUM)
 	{
-		ulong col;
-		// Clear control
+		uint16_t col = Orange; // default color for non-bc band
+
+		// only if we are not in a ham band, we check the name of a broadcast band
 		if (band == BAND_MODE_GEN)
 		{
 			for (idx = 0; bandGenInfo[idx].start !=0; idx++)
@@ -1612,17 +1616,21 @@ static void UiDriver_DisplayBand(uchar band)
 			}
 
 			if (bandGenInfo[idx].start !=0)
+			{
 				// Print name of BC band in yellow, if frequency is within a broadcast band
 				col = Yellow;
-			else
-				col = Orange;
+			}
 
 			if  (bandGenInfo[idx].start == 26965000)
+			{
 				col = Blue;		// CB radio == blue
-
+			}
 
 			if (idx == ts.bc_band)
+			{
 				print_bc_name = false;
+			}
+
 			ts.bc_band =idx;
 
 			bandName = bandGenInfo[idx].name;
@@ -1630,7 +1638,6 @@ static void UiDriver_DisplayBand(uchar band)
 		else
 		{
 			print_bc_name = true;
-			col = Orange;
 			bandName = bandInfo[band].name;
 			ts.bc_band = 0xff;
 		}
@@ -1639,10 +1646,7 @@ static void UiDriver_DisplayBand(uchar band)
 			UiLcdHy28_DrawFullRect(ts.Layout->BAND_MODE_MASK.x,ts.Layout->BAND_MODE_MASK.y,ts.Layout->BAND_MODE_MASK.h,ts.Layout->BAND_MODE_MASK.w,Black);
 			UiLcdHy28_PrintTextRight(ts.Layout->BAND_MODE.x + 5*8,ts.Layout->BAND_MODE.y,bandName,col,Black,0);
 		}
-
 	}
-	// add indicator for broadcast bands here
-	// if Band = "Gen" AND frequency inside one of the broadcast bands, print name of the band
 }
 
 //*----------------------------------------------------------------------------
