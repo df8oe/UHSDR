@@ -1453,13 +1453,17 @@ bool RadioManagement_UpdatePowerAndVSWR()
 
         swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrtf(swrm.rev_pwr/swrm.fwd_pwr));
 
-        if (ts.debug_vswr_protection_threshold > 1)
+        if ( ts.debug_vswr_protection_threshold > 1 )
         {
-        	if(swrm.vswr > ts.debug_vswr_protection_threshold)
-        	{
-        	RadioManagement_DisablePaBias();
-        	swrm.high_vswr_detected = true;
-        	}
+            if ( swrm.vswr > ts.debug_vswr_protection_threshold )
+            {
+                RadioManagement_DisablePaBias ( );
+                swrm.high_vswr_detected = true;
+
+                // change output power to "PA_LEVEL_0_5W" when VSWR protection is active
+                uint8_t tx_band = RadioManagement_GetBand ( df.tune_new / TUNE_MULT );
+                RadioManagement_PowerLevelChange ( tx_band, PA_LEVEL_0_5W );
+            }
         }
 
         retval = true;
