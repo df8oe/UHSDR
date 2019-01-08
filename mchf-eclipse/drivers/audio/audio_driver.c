@@ -4009,10 +4009,14 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
 
     float32_t usb_audio_gain = ts.rx_gain[RX_AUDIO_DIG].value/31.0;
 
-    // we may have to play a key beep. We apply it to the left channel only (on mcHF etc this is the speakers channel, not line out)
+    // we may have to play a key beep. We apply it to the left and right channel in OVI40 (on mcHF etc on left only because it is the speakers channel, not line out)
     if((ts.beep_active) && (ads.beep.step))         // is beep active?
     {
+#ifdef USE_TWO_CHANNEL_AUDIO
+        softdds_addSingleToneToTwobuffers(&ads.beep, adb.a_buffer[0],adb.a_buffer[1], blockSize, ads.beep_loudness_factor);
+#else
         softdds_addSingleTone(&ads.beep, adb.a_buffer[1], blockSize, ads.beep_loudness_factor);
+#endif
     }
 
     // Transfer processed audio to DMA buffer
