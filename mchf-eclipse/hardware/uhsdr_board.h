@@ -13,159 +13,16 @@
 ************************************************************************************/
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
+
+#include "uhsdr_board_config.h"
 #include "uhsdr_mcu.h"
-/***
- * Please document all switches/parameters with what they are supposed to do and what values they can have.
- * Please use proper naming:
- * For capabilities of the software which can be enabled and disabled
- * use USE_<CAPABILITY/FEATURENAME>
- *
- * These should be defined using #define USE_CAPABILITY
- * or left undefined if not enabled so that these can be checked using #ifdef
- *
- * For related parameters DON'T USE USE_...
- *
- * In an ideal world please use PAR_<CAPABILITY/FEATURE>_<PARAMETERNAME> (we haven't done that yet)
- * Please don't define constant or local parameters here, only those a user (!) is supposed to change as part of
- * configuring a specific build variant.
- *
- */
 
-
-
-// Fast convolution filtering
-// experimental at the moment DD4WH, 2018_08_18
-//#define USE_CONVOLUTION
-
-// old LMS noise reduction
-// will probably never used any more
-//#define OBSOLETE_NR
-
-// this switches on the autonotch filter based on LMS algorithm
-// leave this switched on, until we have a new autonotch filter approach
-#define USE_LMS_AUTONOTCH
-
-// save processor time for the STM32F4
-// changes lowpass decimation filters to 89 taps instead of 199 taps
-// because they run at 48ksps, this is a considerable decrease in processing power
-#ifdef STM32F4
-//#define USE_SMALL_HILBERT_DECIMATION_FILTERS
-#endif
-
-// save processor time for the STM32F4
-// changes lowpass decimation filters to 89 taps instead of 199 taps
-// because they run at 48ksps, this is a considerable decrease in processing power
-// this is ONLY relevant for STM32F4 which has SPI !
-// in those machines when enabling NR and other features, ui slows down . . .
-// thus we should enable the small decimation filter in those machines
-
-
-/**
- * This parameter disables certain features / capabilites in order to achieve a minimum build size for
- * the 192k ram / 512k flash STM32F4 machines. Unless you have such a machine, leave this disabled.
- */
-// #define IS_SMALL_BUILD
-
-// some special switches
-//#define 	DEBUG_BUILD
-
-// if enabled the alternate (read new and better) noise reduction is active
-// this is the standard NR now (Febr 2018)
-#define USE_ALTERNATE_NR
-
-// you may optionally define the list of supported GFX drivers externally
-// if you just define EXTERNAL_USE_GFX_CONFIG and no USE_GFX_...
-// you will get a headless system using a dummy display driver
-#ifndef EXTERNAL_USE_GFX_CONFIG
-  #define USE_GFX_ILI932x
-  #define USE_GFX_ILI9486
-  // SSD1289 support is not yet working, also requires USE_GFX_ILI932x to be enabled for now.
-  // #define USE_GFX_SSD1289
-  #define USE_DISP_480_320
-#if defined(STM32F7) || defined(STM32H7)
-  #define USE_GFX_RA8875
-#endif
-#endif
-
-#if !defined(USE_GFX_ILI932x) && !defined(USE_GFX_ILI9486)
-#warning Both USE_GFX_ILI932x and USE_GFX_ILI9486 are disabled, no display driver will be available!
-#endif
-
-#define USE_FFT_1024
-
-#ifndef IS_SMALL_BUILD
-  #define USE_8bit_FONT
-  #define USE_PREDEFINED_WINDOW_DATA
-#endif
-
-// OPTION
-#define USE_RTTY_PROCESSOR
-
-// OPTION
-#define USE_USBHOST
-#ifdef USE_USBHOST
-// define additional USBHOST related "switches" only here!
-	// #define USE_USBDRIVE
-	#define USE_USBKEYBOARD
-#endif
-
-// OPTION
-// with IS_SMALL_BUILD we are not automatically including USE_FREEDV as it uses lot of memory both RAM and flash
-#ifndef IS_SMALL_BUILD
-    #define USE_FREEDV
-#endif
-// #define DEBUG_FREEDV
-// hardware specific switches
-
-
-// Unified the 3 graphics drivers.
-
-// OPTION
-
-// use the STM32 internal RTC with an external quartz and
-// M1 and F3 connected to PD14 and PD15 (D0 and D1 of LCD) instead of PC14 and PC15 (to which the 32768 Hz quartz has to be connected)
-#define USE_RTC_LSE
-
-// AT LEAST ONE GROUP START USE_OSC
-// multiple oscillators may be enabled, but only the first detected oscillator is issued
-// i.e. there is currently only support for a single oscillator in a TRX.
-// Support for LO based on SI570
-#define USE_OSC_SI570
-// Support for LO based on SI5351
-#define USE_OSC_SI5351A
-// AT LEAST ONE GROUP END USE_OSC
-
-#define USE_CONFIGSTORAGE_FLASH
-// OPTION TO USE FLASH BASED CONFIGURATION STORAGE
-
-// Option: If defined, high priority tasks are executed in the context of an PendSV interrupt
-// which gives finishing these tasks a priority over "normal", less real-time critical longer running user control tasks
-// such as display redraw.
-// In general this should be defined but in case of issues one may want to execute High Prio tasks not concurrently
-// to normal tasks, comment this in this case and see if the issue goes away. But this may cause other problems
-// of course.
-#define USE_PENDSV_FOR_HIGHPRIO_TASKS
-
-// OPTION: Enable handling of TX/RX switching in an interrupt. Provides very low latency switching
-// EXPERIMENTAL !!!
-#define USE_HIGH_PRIO_PTT
-
-#if !defined(USE_PENDSV_FOR_HIGHPRIO_TASKS) && defined(USE_HIGH_PRIO_PTT)
-#error USE_HIGH_PRIO_PTT requires USE_PENDSV_FOR_HIGHPRIO_TASKS
-#endif
-
-// OPTION: IQ signal path now use 24bit samples from/to the codecs instead of the default 16bit. Slightly increases RAM usage (+0.5 - 1k).
-// will finally work both on single and dual codec configurations.
-#define USE_32_IQ_BITS
-#define USE_32_AUDIO_BITS
-
-#include "uhsdr_mcu.h"
 // HW libs
 #ifdef STM32F7
 #include "stm32f7xx_hal_rcc.h"
 #include "stm32f7xx_hal_gpio.h"
-#include "stm32f7xx_hal_spi.h"
 #include "stm32f7xx_hal_dma.h"
+#include "stm32f7xx_hal_spi.h"
 #include "stm32f7xx_hal_i2c.h"
 #include "stm32f7xx_hal_i2s.h"
 #include "stm32f7xx_hal_adc.h"
@@ -174,12 +31,11 @@
 #include "stm32f7xx_hal_rtc.h"
 #include "stm32f7xx_hal_pwr.h"
 #include "stm32f7xx_hal_flash.h"
-#include "core_cm7.h"
 #elif defined(STM32H7)
 #include "stm32h7xx_hal_rcc.h"
 #include "stm32h7xx_hal_gpio.h"
-#include "stm32h7xx_hal_spi.h"
 #include "stm32h7xx_hal_dma.h"
+#include "stm32h7xx_hal_spi.h"
 #include "stm32h7xx_hal_i2c.h"
 #include "stm32h7xx_hal_i2s.h"
 #include "stm32h7xx_hal_adc.h"
@@ -188,12 +44,11 @@
 #include "stm32h7xx_hal_rtc.h"
 #include "stm32h7xx_hal_pwr.h"
 #include "stm32h7xx_hal_flash.h"
-#include "core_cm7.h"
 #else
 #include "stm32f4xx_hal_rcc.h"
 #include "stm32f4xx_hal_gpio.h"
-#include "stm32f4xx_hal_spi.h"
 #include "stm32f4xx_hal_dma.h"
+#include "stm32f4xx_hal_spi.h"
 #include "stm32f4xx_hal_i2c.h"
 #include "stm32f4xx_hal_adc.h"
 #include "stm32f4xx_hal_dac.h"
@@ -201,7 +56,6 @@
 #include "stm32f4xx_hal_rtc.h"
 #include "stm32f4xx_hal_pwr.h"
 #include "stm32f4xx_hal_flash.h"
-#include "core_cm4.h"
 #endif
 
 #include "freedv_api.h"
@@ -215,7 +69,6 @@
 #include "comp.h"
 #include "dac.h"
 
-#include "uhsdr_board_config.h"
 #include "ui_vkeybrd.h"
 
 struct mchf_waterfall

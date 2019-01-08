@@ -1,6 +1,7 @@
 SUBDIRS := \
 . \
 hardware \
+hardware/board_configs \
 drivers/freedv \
 drivers/audio \
 drivers/ui/oscillator \

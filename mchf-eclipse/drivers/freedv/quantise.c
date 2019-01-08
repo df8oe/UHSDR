@@ -1934,7 +1934,7 @@ void quantise_WoE(C2CONST *c2const, MODEL *model, float *e, float xq[])
   float Fs = c2const->Fs;
 
   /* VQ is only trained for Fs = 8000 Hz */
-
+  (void)(Fs); // makes compiler happy
   assert(Fs == 8000);
 
   x[0] = log10f((model->Wo/PI)*4000.0/50.0)/log10f(2);

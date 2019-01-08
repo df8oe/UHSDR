@@ -11,17 +11,19 @@
  **  Last Modified:                                                                 **
  **  Licence:		GNU GPLv3                                                      **
  ************************************************************************************/
+#include "uhsdr_board_config.h"
 
-#include "flash_if.h"
 #if defined(STM32F7)
-    #include "stm32f7xx_hal_flash_ex.h"
+    #include "stm32f7xx_hal_flash.h"
 #elif defined(STM32H7)
-    #include "stm32h7xx_hal_flash_ex.h"
+    #include "stm32h7xx_hal_flash.h"
 #elif defined(STM32F4)
-#include "stm32f4xx_hal_flash_ex.h"
+    #include "stm32f4xx_hal_flash.h"
 #else
     #error Unknown processor
 #endif
+
+#include "flash_if.h"
 
 
 #define FLASH_NO_SECTOR (0xFFFFFFFF)

@@ -74,6 +74,7 @@ int choose_interleaver_b(int Nbits)
     /* if we get it means a Nbits we dont have in our table so choke */
     
     assert(0);
+    return -1; // makes compiler happy
 }
 
 
