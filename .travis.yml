@@ -32,21 +32,21 @@ script:
     - mkdir -p mchf-eclipse/build-fw-h7
     - cd mchf-eclipse/build-fw-h7
     - cd ../build-bl-h7
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" bootloader 
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF" bootloader 
     - cd ../build-fw-h7
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" all 
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF" all 
     - cd ../build-fw-f4 
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." all
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF" all
     - cd ../build-bl-f4
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." bootloader
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF" bootloader
     - cd ../build-fw-f7
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" all	
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF" all	
     - cd ../build-bl-f7
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" bootloader
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF" bootloader
     - cd ../build-fw-f4-ili9486-480
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." CONFIGFLAGS="-DEXTERNAL_USE_GFX_CONFIG -DUSE_DISP_480_320 -DUSE_GFX_ILI9486" all 
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF -DEXTERNAL_USE_GFX_CONFIG -DUSE_DISP_480_320 -DUSE_GFX_ILI9486" all 
     - cd ../build-fw-f4-small
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR CONFIGFLAGS="-DIS_SMALL_BUILD" ROOTLOC=".." all
+    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF -DIS_SMALL_BUILD" ROOTLOC=".." all
     - cd ..
 before_deploy:
     - sudo apt-get install -y doxygen graphviz

@@ -12,20 +12,19 @@
  **  Licence:		GNU GPLv3                                                      **
  ************************************************************************************/
 
+#include <unistd.h>
+#include "dma.h"
+#include "spi.h"
+#include "gpio.h"
+
+#include "uhsdr_board.h"
 #include "flash_if.h"
 #include "uhsdr_boot_hw.h"
-#include "hardware/uhsdr_board.h"
 #include "command.h"
 #include "fatfs.h"
 #include "usb_host.h"
 #include "bootloader_main.h"
 #include "ui_lcd_hy28.h"
-
-#include "dma.h"
-#include "spi.h"
-#include "gpio.h"
-
-#include <unistd.h>
 
 
 FATFS USBDISKFatFs;           /* File system object for USB disk logical drive */

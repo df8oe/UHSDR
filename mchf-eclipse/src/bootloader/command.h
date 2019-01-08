@@ -28,6 +28,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "gpio.h" // dummy include for HAL
 #include "flash_if.h"
 #include "uhsdr_version.h"
 
