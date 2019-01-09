@@ -501,19 +501,10 @@ static uint32_t UiConfiguration_LimitFrequency(const BandInfo* bandInfo, const u
     // this code handles the migration of stored frequency settings from the older approach to/from the newer
     // approach. We will have to introduce the newer approach with firmware 2.11.0 in order not to cause
     // issues when using older firmware with this migration code already built in.
-    //
-    // we use the actual value of TUNE_MULT as indicator which dial frequency scaling our firmware needs
-    // this is kind of a workaround.
-    // stored configuration is equal or newer than 2.11.0, dial frequencies are stored as is
-    // we have to scale them up with our TUNE_MULT
-    if (UiConfiguration_CompareConfigBuildVersions(2,11,00) < 1 && TUNE_MULT != 1 )
-    {
-        retval *= 4;
-    }
 
     // stored configuration is older than 2.11.0, dial frequencies are stored as multiples of 4 * dial frequency
     // we have to scale them down with our old TUNE_MULT
-    if (UiConfiguration_CompareConfigBuildVersions(2,11,00) == 1 && TUNE_MULT == 1)
+    if (UiConfiguration_CompareConfigBuildVersions(2,11,00) == 1)
     {
         retval /= 4;
     }

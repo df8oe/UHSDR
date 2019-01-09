@@ -97,10 +97,7 @@ inline bool RadioManagement_TcxoIsFahrenheit()
 // Total bands supported
 //
 
-//  multiplier to convert between dial_freq and tune_freq
-#define TUNE_MULT               1
-
-#define DEFAULT_FREQ_OFFSET     3000*TUNE_MULT              // Amount of offset (at LO freq) when loading "default" frequency
+#define DEFAULT_FREQ_OFFSET     3000              // Amount of offset (at LO freq) when loading "default" frequency
 
 
 // this list MUST fit the order in the bandInfo structure defined in RadioManagement.h

@@ -782,7 +782,7 @@ bool CatDriver_BlockRecv(uint8_t num, uint8_t idx, uint8_t rpt, uint8_t* buf, si
         {
             // we simply set the dial frequency here just for the show!
             ft817_memory_t* mem = (ft817_memory_t*)&buf[1];
-            df.tune_new = __builtin_bswap32(mem[0].freq) * (10 * TUNE_MULT);
+            df.tune_new = __builtin_bswap32(mem[0].freq) * 10;
         }
         retval = true;
     }
@@ -1035,7 +1035,7 @@ static void CatDriver_HandleCommands()
 
             if(ts.xlat == 0)
             {
-                fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?AudioDriver_GetTranslateFreq()*TUNE_MULT:0;
+                fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?AudioDriver_GetTranslateFreq():0;
                 // If we are in DIGITAL IQ Output mode, use real tune frequency frequency instead
                 // translated RX frequency
             }
@@ -1050,7 +1050,7 @@ static void CatDriver_HandleCommands()
                 f *= 100;
                 f +=  (ft817.req[fidx] >> 4) * 10 + (ft817.req[fidx] & 0x0f);
             }
-            f *= TUNE_MULT*10;
+            f *= 10;
             df.tune_new = f - fdelta;
 
             resp[0] = 0;
@@ -1068,7 +1068,7 @@ static void CatDriver_HandleCommands()
 
             if(ts.xlat == 0)
             {
-                fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?AudioDriver_GetTranslateFreq()*TUNE_MULT:0;
+                fdelta = (ts.tx_audio_source == TX_AUDIO_DIGIQ)?AudioDriver_GetTranslateFreq():0;
                 // If we are in DIGITAL IQ Output mode, send real tune frequency frequency instead
                 // translated RX frequency
             }
@@ -1077,7 +1077,7 @@ static void CatDriver_HandleCommands()
                 fdelta = 0;
             }
 
-            ulong f = (df.tune_new + fdelta  + (TUNE_MULT*10/2))/ (TUNE_MULT*10);
+            ulong f = (df.tune_new + fdelta  + 5)/ 10;
             ulong fbcd = 0;
             int fidx;
             for (fidx = 0; fidx < 8; fidx++)
