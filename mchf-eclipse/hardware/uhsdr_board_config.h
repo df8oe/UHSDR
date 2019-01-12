@@ -28,12 +28,13 @@
 // so we don't tell the bootloader which one we have
     #if !defined(RF_BRD_OVI40) && !defined(RF_BRD_MCHF)
         #error At least one rf board must be selected: RF_BRD_MCHF, RF_BRD_OVI40
-    #elif defined(RF_BRD_OVI40)
-        #include "UHSDR_RF_ovi40_config.h"
-    #elif defined(RF_BRD_MCHF)
-        #include "UHSDR_RF_mchf_config.h"
     #else
-        #error One rf board has to be selected: RF_BRD_MCHF, RF_BRD_OVI40
+        #if defined(RF_BRD_OVI40)
+            #include "UHSDR_RF_ovi40_config.h"
+        #endif
+        #if defined(RF_BRD_MCHF)
+            #include "UHSDR_RF_mchf_config.h"
+        #endif
     #endif
 #endif
 
