@@ -23,14 +23,18 @@
     #error One ui board has to be selected: UI_BRD_MCHF, UI_BRD_OVI40
 #endif
 
-#if defined(RF_BRD_OVI40) && defined(RF_BRD_MCHF)
-    #error Only one rf board can be selected: RF_BRD_MCHF, RF_BRD_OVI40
-#elif defined(RF_BRD_OVI40)
-    #include "UHSDR_RF_ovi40_config.h"
-#elif defined(RF_BRD_MCHF)
-    #include "UHSDR_RF_mchf_config.h"
-#else
-    #error One rf board has to be selected: RF_BRD_MCHF, RF_BRD_OVI40
+#if !defined(BOOTLOADER_BUILD)
+// The rf boards we want to support, but the bootloader should compile for all if possible.
+// so we don't tell the bootloader which one we have
+    #if !defined(RF_BRD_OVI40) && !defined(RF_BRD_MCHF)
+        #error At least one rf board must be selected: RF_BRD_MCHF, RF_BRD_OVI40
+    #elif defined(RF_BRD_OVI40)
+        #include "UHSDR_RF_ovi40_config.h"
+    #elif defined(RF_BRD_MCHF)
+        #include "UHSDR_RF_mchf_config.h"
+    #else
+        #error One rf board has to be selected: RF_BRD_MCHF, RF_BRD_OVI40
+    #endif
 #endif
 
 #include "uhsdr_types.h"
