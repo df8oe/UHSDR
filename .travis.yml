@@ -43,7 +43,7 @@ script:
     - cd ../bl-f4
     - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC CONFIGFLAGS="-DUI_BRD_MCHF" bootloader
     - cd ../fw-f7
-    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF" -DRF_BRD_OVI40 all	
+    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF -DRF_BRD_OVI40" all	
     - cd ../bl-f7
     - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" CONFIGFLAGS="-DUI_BRD_OVI40" bootloader
     - cd ../fw-f4-ili9486-480
@@ -73,8 +73,8 @@ deploy:
   - build/bl-h7/bl-i40h7.dfu
   skip_cleanup: true
   on:
-    repo: db4ple/mchf-github
+    repo: db4ple/UHSDR
     tags: true
     branches: 
       only:
-      - ovi40h7
+      - active-devel 
