@@ -74,6 +74,14 @@
 #define W8731_POWER_DOWN_CNTR_MICPD     (0x02)
 #define W8731_POWER_DOWN_CNTR_LINEPD    (0x01)
 
+#define W8731_SAMPLING_CNTR_BOSR        (0x0002)
+
+#define W8731_SAMPLING_CNTR_96K         (0x0007 << 2)
+#define W8731_SAMPLING_CNTR_48K         (0x0000 << 2)
+#define W8731_SAMPLING_CNTR_32K         (0x0006 << 2)
+#define W8731_SAMPLING_CNTR_8K          (0x0003 << 2)
+
+
 #define W8731_VOL_MAX 0x50
 
 #define W8731_POWER_DOWN_CNTR_MCHF_ALL_ON    (W8731_POWER_DOWN_CNTR_CLKOUTPD|W8731_POWER_DOWN_CNTR_OSCPD)
@@ -106,7 +114,7 @@ __IO mchf_codec_t mchf_codecs[CODEC_NUM];
 #endif
 
 #ifdef UI_BRD_OVI40
-
+#include "dac.h"
 /**
  * @brief controls volume on "external" PA via DAC
  * @param vol volume in range of 0 to CODEC_SPEAKER_MAX_VOLUME
@@ -208,15 +216,18 @@ static uint32_t Codec_ResetCodec(I2C_HandleTypeDef* hi2c, uint32_t AudioFreq, Co
 
         switch (AudioFreq)
         {
-        case I2S_AUDIOFREQ_32K:
-            samp_reg_val = 0x0018;
+        case 32000:
+            samp_reg_val = W8731_SAMPLING_CNTR_32K;
             break;
-        case I2S_AUDIOFREQ_8K:
-            samp_reg_val = 0x000C;
+        case 8000:
+            samp_reg_val = W8731_SAMPLING_CNTR_8K;
             break;
-        case I2S_AUDIOFREQ_48K:
+        case 96000:
+            samp_reg_val = W8731_SAMPLING_CNTR_96K;
+            break;
+        case 48000:
         default:
-            samp_reg_val = 0x0000;
+            samp_reg_val = W8731_SAMPLING_CNTR_48K;
             break;
         }
 

@@ -17,58 +17,11 @@
 #include "uhsdr_board_config.h"
 #include "uhsdr_mcu.h"
 
-// HW libs
-#ifdef STM32F7
-#include "stm32f7xx_hal_rcc.h"
-#include "stm32f7xx_hal_gpio.h"
-#include "stm32f7xx_hal_dma.h"
-#include "stm32f7xx_hal_spi.h"
-#include "stm32f7xx_hal_i2c.h"
-#include "stm32f7xx_hal_i2s.h"
-#include "stm32f7xx_hal_adc.h"
-#include "stm32f7xx_hal_dac.h"
-#include "stm32f7xx_hal_tim.h"
-#include "stm32f7xx_hal_rtc.h"
-#include "stm32f7xx_hal_pwr.h"
-#include "stm32f7xx_hal_flash.h"
-#elif defined(STM32H7)
-#include "stm32h7xx_hal_rcc.h"
-#include "stm32h7xx_hal_gpio.h"
-#include "stm32h7xx_hal_dma.h"
-#include "stm32h7xx_hal_spi.h"
-#include "stm32h7xx_hal_i2c.h"
-#include "stm32h7xx_hal_i2s.h"
-#include "stm32h7xx_hal_adc.h"
-#include "stm32h7xx_hal_dac.h"
-#include "stm32h7xx_hal_tim.h"
-#include "stm32h7xx_hal_rtc.h"
-#include "stm32h7xx_hal_pwr.h"
-#include "stm32h7xx_hal_flash.h"
-#else
-#include "stm32f4xx_hal_rcc.h"
-#include "stm32f4xx_hal_gpio.h"
-#include "stm32f4xx_hal_dma.h"
-#include "stm32f4xx_hal_spi.h"
-#include "stm32f4xx_hal_i2c.h"
-#include "stm32f4xx_hal_adc.h"
-#include "stm32f4xx_hal_dac.h"
-#include "stm32f4xx_hal_tim.h"
-#include "stm32f4xx_hal_rtc.h"
-#include "stm32f4xx_hal_pwr.h"
-#include "stm32f4xx_hal_flash.h"
-#endif
-
-#include "freedv_api.h"
-
 #include "uhsdr_types.h"
 #include "audio_filter.h"
 #include "osc_interface.h"
 #include "ui_lcd_layouts.h"
 #include "ui_lcd_hy28.h"
-
-#include "comp.h"
-#include "dac.h"
-
 #include "ui_vkeybrd.h"
 
 struct mchf_waterfall
@@ -85,25 +38,25 @@ struct mchf_waterfall
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 
-#define POWER_BUTTON_HOLD_TIME	1000000
-
 #define TRX_MODE_RX				0
 #define TRX_MODE_TX				1
 
-#define DEMOD_USB				0
-#define DEMOD_LSB				1
-#define DEMOD_CW				2
-#define DEMOD_AM				3
-#define	DEMOD_SAM				4
-#define	DEMOD_FM				5
-#define DEMOD_DIGI				6
+typedef enum {
+    DEMOD_USB       =   0,
+    DEMOD_LSB       =   1,
+    DEMOD_CW        =   2,
+    DEMOD_AM        =   3,
+    DEMOD_SAM       =   4,
+    DEMOD_FM        =   5,
+    DEMOD_DIGI		=   6,
 #ifdef USE_TWO_CHANNEL_AUDIO
-#define DEMOD_SSBSTEREO			7
-#define DEMOD_IQ				8
-#define DEMOD_MAX_MODE			8
-#else
-#define DEMOD_MAX_MODE			6
+    DEMOD_SSBSTEREO =   7,
+    DEMOD_IQ        =   8,
 #endif
+    DEMOD_NUM_MODE
+} DemodModes_t;
+
+#define DEMOD_MAX_MODE (DEMOD_NUM_MODE-1)
 
 // codec x demod
 // analog USB LSB CW AM FM SAM
@@ -877,97 +830,9 @@ typedef enum {
     LED_STATE_TOGGLE = 2
 } ledstate_t;
 
-inline void Board_GreenLed(ledstate_t state)
-{
-    switch(state)
-    {
-    case LED_STATE_ON:
-        GPIO_SetBits(GREEN_LED_PIO, GREEN_LED);
-        break;
-    case LED_STATE_OFF:
-        GPIO_ResetBits(GREEN_LED_PIO, GREEN_LED);
-        break;
-    default:
-        GPIO_ToggleBits(GREEN_LED_PIO, GREEN_LED);
-        break;
-    }
-}
 
-inline void Board_RedLed(ledstate_t state)
-{
-    switch(state)
-    {
-    case LED_STATE_ON:
-        GPIO_SetBits(RED_LED_PIO, RED_LED);
-        break;
-    case LED_STATE_OFF:
-        GPIO_ResetBits(RED_LED_PIO, RED_LED);
-        break;
-    default:
-        GPIO_ToggleBits(RED_LED_PIO, RED_LED);
-        break;
-    }
-}
 
-#ifdef UI_BRD_OVI40
-inline void Board_BlueLed(ledstate_t state)
-{
-    switch(state)
-    {
-    case LED_STATE_ON:
-        GPIO_SetBits(BLUE_LED_PIO, BLUE_LED);
-        break;
-    case LED_STATE_OFF:
-        GPIO_ResetBits(BLUE_LED_PIO, BLUE_LED);
-        break;
-    default:
-        GPIO_ToggleBits(BLUE_LED_PIO, BLUE_LED);
-        break;
-    }
-}
-#endif
-/**
- * @brief sets the hw ptt line and by this switches the mcHF board signal path between rx and tx configuration
- * @param tx_enable true == TX Paths, false == RX Paths
- */
-inline void Board_EnableTXSignalPath(bool tx_enable)
-{
-    // to make switching as noiseless as possible, make sure the codec lineout is muted/produces zero output before switching
-    if (tx_enable)
-    {
-        GPIO_SetBits(PTT_CNTR_PIO,PTT_CNTR);     // TX on and switch CODEC audio paths
-        // Antenna Direction Output
-        // BPF Direction Output (U1,U2)
-        // PTT Optocoupler LED On (ACC Port) (U6)
-        // QSD Mixer Output Disable (U15)
-        // QSE Mixer Output Enable (U17)
-        // Codec LineIn comes from mcHF LineIn Socket (U3)
-        // Codec LineOut connected to QSE mixer (IQ Out) (U3a)
-    }
-    else
-    {
-        GPIO_ResetBits(PTT_CNTR_PIO,PTT_CNTR); // TX off
-        // Antenna Direction Input
-        // BPF Direction Input (U1,U2)
-        // PTT Optocoupler LED Off (ACC Port) (U6)
-        // QSD Mixer Output Enable (U15)
-        // QSE Mixer Output Disable (U17)
-        // Codec LineIn comes from RF Board QSD mixer (IQ In) (U3)
-        // Codec LineOut disconnected from QSE mixer  (IQ Out) (U3a)
-    }
-}
-
-/**
- * @brief set PA bias at the LM2931CDG (U18) using DAC Channel 2
- */
-inline void Board_SetPaBiasValue(uint16_t bias)
-{
-    // Set DAC Channel 1 DHR12L register
-    // DAC_SetChannel2Data(DAC_Align_8b_R,bias);
-    HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_8B_R, bias);
-
-}
-
+void Board_SetPaBiasValue(uint16_t bias);
 void Board_HandlePowerDown();
 
 void Board_SelectLpfBpf(uint8_t group);
@@ -978,20 +843,17 @@ void Board_PostInit();
 void Board_Reboot();
 void Board_Powerdown();
 
+void Board_EnableTXSignalPath(bool tx_enable);
 
-/**
- * Is the hardware contact named DAH pressed
- */
-inline bool Board_PttDahLinePressed() {
-    return  !HAL_GPIO_ReadPin(PADDLE_DAH_PIO,PADDLE_DAH);
-}
+void Board_GreenLed(ledstate_t state);
+void Board_RedLed(ledstate_t state);
 
-/**
- * Is the hardware contact named DIT pressed
- */
-inline bool Board_DitLinePressed() {
-    return  !HAL_GPIO_ReadPin(PADDLE_DIT_PIO,PADDLE_DIT);
-}
+#ifdef UI_BRD_OVI40
+void Board_BlueLed(ledstate_t state);
+#endif
+
+bool Board_PttDahLinePressed();
+bool Board_DitLinePressed();
 
 unsigned int Board_RamSizeGet();
 void Board_RamSizeDetection();
@@ -1002,26 +864,26 @@ void CriticalError(ulong error);
 
 bool is_vfo_b();
 
-inline bool is_ssb_tx_filter_enabled() {
+static inline bool is_ssb_tx_filter_enabled() {
 	return (ts.tx_filter != 0);
 	//    return (ts.flags1 & FLAGS1_SSB_TX_FILTER_DISABLE) == false;
 }
 
-inline bool is_ssb(const uint32_t dmod_mode) {
+static inline bool is_ssb(const uint32_t dmod_mode) {
     return (dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB);
 }
 
-inline bool is_splitmode()
+static inline bool is_splitmode()
 {
     return (ts.vfo_mem_mode & VFO_MEM_MODE_SPLIT) != 0;
 }
 
-inline bool is_scopemode()
+static inline bool is_scopemode()
 {
     return (ts.flags1 & FLAGS1_SCOPE_ENABLED) != 0;
 }
 
-inline bool is_waterfallmode()
+static inline bool is_waterfallmode()
 {
     return (ts.flags1 & FLAGS1_WFALL_ENABLED) != 0;
 }
