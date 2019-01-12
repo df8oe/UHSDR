@@ -1,3 +1,4 @@
 docs/
 mchf-eclipse/.settings/org.eclipse.cdt.managedbuilder.core.prefs
 .metadata
+build/

@@ -78,7 +78,6 @@ SWRMeter                    swrm;
 // Frequency public
 DialFrequency               df;
 
-#define KHZ_MULT            (TUNE_MULT*1000)    // multiplier to convert oscillator frequency or band size to display kHz, used below
 //
 // Bands definition
 //
@@ -97,23 +96,23 @@ DialFrequency               df;
 
 const BandInfo bandInfo[] =
 {
-    { .tune = 3500*KHZ_MULT, .size = 500*KHZ_MULT, .name = "80m"} , // Region 2
-    { .tune = 5250*KHZ_MULT, .size = 200*KHZ_MULT, .name = "60m"} , // should cover all regions
-    { .tune = 7000*KHZ_MULT, .size = 300*KHZ_MULT, .name = "40m"} , // Region 2
-    { .tune = 10100*KHZ_MULT, .size = 50*KHZ_MULT, .name = "30m"} ,
-    { .tune = 14000*KHZ_MULT, .size = 350*KHZ_MULT, .name = "20m"} ,
-    { .tune = 18068*KHZ_MULT, .size = 100*KHZ_MULT, .name = "17m"} ,
-    { .tune = 21000*KHZ_MULT, .size = 450*KHZ_MULT, .name = "15m"} ,
-    { .tune = 24890*KHZ_MULT, .size = 100*KHZ_MULT, .name = "12m"} ,
-    { .tune = 28000*KHZ_MULT, .size = 1700*KHZ_MULT, .name = "10m"} ,
-    { .tune = 50000*KHZ_MULT, .size = 2000*KHZ_MULT, .name = "6m"} , // Region 2
-    { .tune = 70000*KHZ_MULT, .size = 500*KHZ_MULT, .name = "4m"} ,
-    { .tune = 144000*KHZ_MULT, .size = 2000*KHZ_MULT, .name = "2m"} , // Region 1
-    { .tune = 430000*KHZ_MULT, .size = 10000*KHZ_MULT, .name = "70cm"} , // Region 1
-    { .tune = 1240000*KHZ_MULT, .size = 60000*KHZ_MULT, .name = "23cm"} , // Region 1
-    { .tune = 135.7*KHZ_MULT, .size = 2.1*KHZ_MULT, .name = "2200m"} , // Region 1
-    { .tune = 472*KHZ_MULT, .size = 7*KHZ_MULT, .name = "630m"} , // Region 1
-    { .tune = 1810*KHZ_MULT, .size = 190*KHZ_MULT, .name = "160m"} ,
+    { .tune = 3500000, .size = 500000, .name = "80m"} , // Region 2
+    { .tune = 5250000, .size = 200000, .name = "60m"} , // should cover all regions
+    { .tune = 7000000, .size = 300000, .name = "40m"} , // Region 2
+    { .tune = 10100000, .size = 50000, .name = "30m"} ,
+    { .tune = 14000000, .size = 350000, .name = "20m"} ,
+    { .tune = 18068000, .size = 100000, .name = "17m"} ,
+    { .tune = 21000000, .size = 450000, .name = "15m"} ,
+    { .tune = 24890000, .size = 100000, .name = "12m"} ,
+    { .tune = 28000000, .size = 1700000, .name = "10m"} ,
+    { .tune = 50000000, .size = 2000000, .name = "6m"} , // Region 2
+    { .tune = 70000000, .size = 500000, .name = "4m"} ,
+    { .tune = 144000000, .size = 2000000, .name = "2m"} , // Region 1
+    { .tune = 430000000, .size = 10000000, .name = "70cm"} , // Region 1
+    { .tune = 1240000000, .size = 60000000, .name = "23cm"} , // Region 1
+    { .tune = 135.7000, .size = 2.1000, .name = "2200m"} , // Region 1
+    { .tune = 472000, .size = 7000, .name = "630m"} , // Region 1
+    { .tune = 1810000, .size = 190000, .name = "160m"} ,
     { .tune = 0, .size = 0, .name = "Gen"} ,
 };
 
@@ -263,7 +262,7 @@ int32_t RadioManagement_GetCWDialOffset()
         }
     }
 
-    return retval * TUNE_MULT;
+    return retval;
 }
 
 /**
@@ -294,7 +293,7 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
     // Do "Icom" style frequency offset of the LO if in "CW OFFSET" mode.  (Display freq. is also offset!)
     if(ts.dmod_mode == DEMOD_CW)            // In CW mode?
     {
-        tune_freq += RadioManagement_GetCWDialOffset() / TUNE_MULT;
+        tune_freq += RadioManagement_GetCWDialOffset();
     }
 
 
@@ -403,7 +402,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
                 df.temp_factor_changed = false;
                 ts.tune_freq = ts.tune_freq_req;        // frequency change required - update change detector
                 // Save current freq
-                df.tune_old = dial_freq*TUNE_MULT;
+                df.tune_old = dial_freq;
             }
             else
             {
@@ -458,7 +457,7 @@ Oscillator_ResultCodes_t RadioManagement_ValidateFrequencyForTX(uint32_t dial_fr
 
 /**
  * @brief returns the current LO Tune Frequency for TX
- * @returns LO Frequency in Hz, needs to be dived by TUNE_MULT to get real Hz
+ * @returns LO Frequency in Hz
  */
 uint32_t RadioManagement_GetTXDialFrequency()
 {
@@ -491,7 +490,7 @@ uint32_t RadioManagement_GetTXDialFrequency()
 }
 /**
  * @brief returns the current LO Dial Frequency for RX
- * @returns LO Frequency in Hz, needs to be dived by TUNE_MULT to get real Hz
+ * @returns LO Frequency in Hz
  */
 uint32_t RadioManagement_GetRXDialFrequency()
 {
@@ -521,7 +520,7 @@ uint32_t RadioManagement_GetRXDialFrequency()
         baseval = df.tune_new;
     }
 
-    return baseval + (ts.rit_value*20)*TUNE_MULT;
+    return baseval + (ts.rit_value*20);
 }
 
 // globals used:
@@ -542,8 +541,8 @@ uint32_t RadioManagement_GetRXDialFrequency()
 // Board_RedLed(LED_STATE_ON); // TX
 // Board_GreenLed(LED_STATE_OFF);
 // Board_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
-// RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, txrx_mode_final);
-// uint8_t tx_band = RadioManagement_GetBand(tune_new/TUNE_MULT);
+// RadioManagement_ChangeFrequency(false,df.tune_new, txrx_mode_final);
+// uint8_t tx_band = RadioManagement_GetBand(tune_new);
 // RadioManagement_PowerLevelChange(tx_band,ts.power_level);
 // RadioManagement_SetBandPowerFactor(tx_band);
 // AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,txrx_mode_final == TRX_MODE_RX?false:tune_mode);
@@ -616,7 +615,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
     if(txrx_mode == TRX_MODE_TX)
     {
         // FIXME: Not very robust code, make sure Validate always returns TUNE_IMPOSSIBLE in case of issues
-        tx_ok = RadioManagement_ValidateFrequencyForTX(tune_new/TUNE_MULT) != OSC_TUNE_IMPOSSIBLE;
+        tx_ok = RadioManagement_ValidateFrequencyForTX(tune_new) != OSC_TUNE_IMPOSSIBLE;
 
 
         // this code handles the ts.tx_disable
@@ -688,13 +687,13 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         }
 
         df.tune_new = tune_new;
-        RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, txrx_mode_final);
+        RadioManagement_ChangeFrequency(false,df.tune_new, txrx_mode_final);
         // ts.audio_dac_muting_flag = true; // let the audio being muted initially as long as we need it
 
         // there might have been a band change between the modes, make sure to have the power settings fitting the mode
         if (txrx_mode_final == TRX_MODE_TX)
         {
-            uint8_t tx_band = RadioManagement_GetBand(tune_new/TUNE_MULT);
+            uint8_t tx_band = RadioManagement_GetBand(tune_new);
             RadioManagement_PowerLevelChange(tx_band,ts.power_level);
             RadioManagement_SetBandPowerFactor(tx_band);
         }
@@ -789,8 +788,8 @@ bool RadioManagement_CalculateCWSidebandMode()
     switch(RadioManagement_CWConfigValueToModeEntry(ts.cw_offset_mode)->sideband_mode)
     {
     case CW_SB_AUTO:                     // For "auto" modes determine if we are above or below threshold frequency
-        // if (RadioManagement_SSB_AutoSideBand(df.tune_new/TUNE_MULT) == DEMOD_USB)   // is the current frequency above the USB threshold?
-        retval = (df.tune_new/TUNE_MULT <= USB_FREQ_THRESHOLD && RadioManagement_GetBand(df.tune_new/TUNE_MULT) != BAND_MODE_60);
+        // if (RadioManagement_SSB_AutoSideBand(df.tune_new) == DEMOD_USB)   // is the current frequency above the USB threshold?
+        retval = (df.tune_new <= USB_FREQ_THRESHOLD && RadioManagement_GetBand(df.tune_new) != BAND_MODE_60);
         // is the current frequency below the USB threshold AND is it not 60m? -> LSB
         break;
     case CW_SB_LSB:
@@ -928,7 +927,7 @@ void RadioManagement_SetBandPowerFactor(uchar band)
         pf_bandvalue = (float)ts.pwr_adj[ts.power_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band];
     }
 
-    pf_bandvalue /= RadioManagement_IsPowerFactorReduce(df.tune_old/TUNE_MULT)? 400: 100;
+    pf_bandvalue /= RadioManagement_IsPowerFactorReduce(df.tune_old)? 400: 100;
 
 
     // now rescale to power levels <5 watts, is so-configured
@@ -1002,7 +1001,7 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
             // we come from a non-CW mode
             if (RadioManagement_UsesBothSidebands(ts.dmod_mode) == false)
             {
-                sidetone_mult = (RadioManagement_LSBActive(ts.dmod_mode)?-TUNE_MULT:TUNE_MULT);
+                sidetone_mult = RadioManagement_LSBActive(ts.dmod_mode) ? -1 : 1;
                 // if we have a sideband mode
                 // adjust dial frequency by side tone offset
                 // if the sidetone frequency is not change, we return exactly to the frequency we have been before
@@ -1043,7 +1042,7 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
 }
 
 /**
- * @param freq the frequency to check multiplied with TUNE_MULT
+ * @param freq the frequency to check
  */
 bool RadioManagement_FreqIsInBand(const BandInfo* bandinfo, const uint32_t freq)
 {
@@ -1054,10 +1053,6 @@ uint8_t RadioManagement_GetBand(uint32_t freq)
 {
     static uint8_t band_scan_old = 99;
     uchar   band_scan;
-
-    band_scan = 0;
-
-    freq *= TUNE_MULT;
 
     // first try the last band, and see if it is an match
     if (band_scan_old != 99 && freq >= bandInfo[band_scan_old].tune && freq <= (bandInfo[band_scan_old].tune + bandInfo[band_scan_old].size))
@@ -1193,7 +1188,7 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
     case DEMOD_USB:
         if((ts.lsb_usb_auto_select))       // is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
         {
-            retval = RadioManagement_SSB_AutoSideBand(df.tune_new / TUNE_MULT) == demod_mode;       // is this a voice mode, subject to "auto" LSB/USB select?
+            retval = RadioManagement_SSB_AutoSideBand(df.tune_new) == demod_mode;       // is this a voice mode, subject to "auto" LSB/USB select?
         }
         else
         {
@@ -1208,7 +1203,7 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
         if((ts.lsb_usb_auto_select) && retval == true)       // is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
         {
             // TODO: this is only true for FreeDV, but since we have only FreeDV...
-            ts.digi_lsb = RadioManagement_SSB_AutoSideBand(df.tune_new / TUNE_MULT) == DEMOD_LSB;
+            ts.digi_lsb = RadioManagement_SSB_AutoSideBand(df.tune_new) == DEMOD_LSB;
             // is this a voice mode, subject to "auto" LSB/USB select?
         }
         break;
@@ -1461,7 +1456,7 @@ bool RadioManagement_UpdatePowerAndVSWR()
                 swrm.high_vswr_detected = true;
 
                 // change output power to "PA_LEVEL_0_5W" when VSWR protection is active
-                uint8_t tx_band = RadioManagement_GetBand ( df.tune_new / TUNE_MULT );
+                uint8_t tx_band = RadioManagement_GetBand ( df.tune_new);
                 RadioManagement_PowerLevelChange ( tx_band, PA_LEVEL_0_5W );
             }
         }

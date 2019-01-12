@@ -703,11 +703,11 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcess
     adj_ptr = &ts.pwr_adj[pa_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band_mode];
 
     bool tchange = false;
-    if((band_mode == RadioManagement_GetBand(df.tune_old/TUNE_MULT)) && (ts.power_level == pa_level))
+    if((band_mode == RadioManagement_GetBand(df.tune_old)) && (ts.power_level == pa_level))
     {
         tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
                                               TX_POWER_FACTOR_MIN,
-                                              RadioManagement_IsPowerFactorReduce(df.tune_old/TUNE_MULT)?TX_POWER_FACTOR_MAX:TX_POWER_FACTOR_MAX/4,
+                                              RadioManagement_IsPowerFactorReduce(df.tune_old)?TX_POWER_FACTOR_MAX:TX_POWER_FACTOR_MAX/4,
                                               TX_POWER_FACTOR_MIN,
                                               1
                                              );

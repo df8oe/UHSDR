@@ -16,6 +16,7 @@
  ************************************************************************************/
 #include "uhsdr_board.h"
 
+#include "comp.h"
 
 #define FDV_BUFFER_SIZE     320
 #define FDV_RX_AUDIO_SIZE_MAX     360

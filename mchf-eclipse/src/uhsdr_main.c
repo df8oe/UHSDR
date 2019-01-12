@@ -94,11 +94,7 @@ void TransceiverStateInit(void)
 {
     // Defaults always
     ts.txrx_mode 		= TRX_MODE_RX;				// start in RX
-    ts.samp_rate		= I2S_AUDIOFREQ_48K;			// set sampling rate
-
-    ts.enc_one_mode 	= ENC_ONE_MODE_AUDIO_GAIN;
-    ts.enc_two_mode 	= ENC_TWO_MODE_RF_GAIN;
-    ts.enc_thr_mode		= ENC_THREE_MODE_RIT;
+    ts.samp_rate		= IQ_SAMPLE_RATE;			// set sampling rate
 
     ts.band		  		= BAND_MODE_20;			// band from eeprom
     ts.rx_temp_mute		= false;					// used in muting audio during band change

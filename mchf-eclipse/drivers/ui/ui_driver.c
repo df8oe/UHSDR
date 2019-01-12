@@ -140,6 +140,39 @@ static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
 static void UiDriver_DisplayPskSpeed(bool encoder_active);
 
+
+// encoder one
+typedef enum {
+    ENC_ONE_MODE_AUDIO_GAIN  = 0,
+    ENC_ONE_MODE_RTTY_SPEED,
+    ENC_ONE_MODE_ST_GAIN,
+    ENC_ONE_MODE_CMP_LEVEL,
+    ENC_ONE_NUM_MODES
+} EncoderOneModes;
+//
+// encoder two
+typedef enum {
+    ENC_TWO_MODE_RF_GAIN =      0,
+    ENC_TWO_MODE_RTTY_SHIFT,
+    ENC_TWO_MODE_SIG_PROC,
+    ENC_TWO_MODE_NR,
+    ENC_TWO_MODE_NOTCH_F,
+    ENC_TWO_MODE_PEAK_F,
+    ENC_TWO_MODE_BASS_GAIN,
+    ENC_TWO_MODE_TREBLE_GAIN,
+    ENC_TWO_NUM_MODES
+} EncoderTwoModes;
+//
+// encoder three
+typedef enum {
+    ENC_THREE_MODE_RIT =            0,
+    ENC_THREE_MODE_CW_SPEED,
+    ENC_THREE_MODE_INPUT_CTRL,
+    ENC_THREE_MODE_PSK_SPEED,
+    ENC_THREE_NUM_MODES
+} EncoderThreeModes;
+
+
 // Tuning steps
 const ulong tune_steps[T_STEP_MAX_STEPS] =
 {
@@ -803,6 +836,11 @@ static void UiDriver_PublicsInit()
 
 void UiDriver_Init()
 {
+    // set the encoders to their default values
+    ts.enc_one_mode     = ENC_ONE_MODE_AUDIO_GAIN;
+    ts.enc_two_mode     = ENC_TWO_MODE_RF_GAIN;
+    ts.enc_thr_mode     = ENC_THREE_MODE_RIT;
+
 	// Driver publics init
 	UiDriver_PublicsInit();
 	// Init frequency publics
@@ -1609,7 +1647,7 @@ static void UiDriver_DisplayBand(uchar band)
 		{
 			for (idx = 0; bandGenInfo[idx].start !=0; idx++)
 			{
-				if (df.tune_old/TUNE_MULT >= bandGenInfo[idx].start && df.tune_old/TUNE_MULT < bandGenInfo[idx].end)
+				if (df.tune_old >= bandGenInfo[idx].start && df.tune_old < bandGenInfo[idx].end)
 				{
 					break; // found match
 				}
@@ -2322,7 +2360,7 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 	if(mode == UFM_SMALL_TX)
 		// are we updating the TX frequency (small, lower display)?
 	{
-		dial_freq = RadioManagement_GetTXDialFrequency() / TUNE_MULT;
+		dial_freq = RadioManagement_GetTXDialFrequency();
 
 		// we check with the si570 code if the frequency is tunable, we do not tune to it.
 		lo_result = RadioManagement_ValidateFrequencyForTX(dial_freq);
@@ -2330,7 +2368,7 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 	}
 	else
 	{
-		dial_freq = df.tune_new/TUNE_MULT;
+		dial_freq = df.tune_new;
 
 		lo_change_not_pending =  RadioManagement_ChangeFrequency(force_update, dial_freq, ts.txrx_mode);
 		lo_result = ts.last_lo_result;   // use last ts.lo_result
@@ -2339,7 +2377,7 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 	if (mode == UFM_SMALL_RX && ts.txrx_mode == TRX_MODE_TX )
 		// we are not going to show the tx frequency here (aka dial_freq) so we cannot use dial_freq
 	{
-		dial_freq = RadioManagement_GetRXDialFrequency() / TUNE_MULT;
+		dial_freq = RadioManagement_GetRXDialFrequency();
 
 		// we check with the si570 code if the frequency is tunable, we do not tune to it.
 		// lo_result = RadioManagement_ValidateFrequencyForTX(dial_freq);
@@ -2357,7 +2395,7 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 				UiDriver_DisplayBandForFreq(dial_freq);
 				// check which band in which we are currently tuning and update the display
 
-				UiDriver_UpdateLcdFreq(RadioManagement_GetRXDialFrequency() / TUNE_MULT ,White, UFM_SECONDARY);
+				UiDriver_UpdateLcdFreq(RadioManagement_GetRXDialFrequency() ,White, UFM_SECONDARY);
 				// set mode parameter to UFM_SECONDARY to update secondary display (it shows real RX frequency if RIT is being used)
 				// color argument is not being used by secondary display
 			}
@@ -2582,14 +2620,14 @@ void UiDriver_ChangeTuningStep(uchar is_up)
 	{
 		idx= (idx>=idx_limit)?0:idx+1;
 		// 9kHz step only on MW and LW
-		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old/TUNE_MULT) > 1600001))
+		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old) > 1600001))
 			idx ++;
 	}
 	else
 	{
 		idx= (idx==0)?idx_limit:idx-1;
 		// 9kHz step only on MW and LW
-		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old/TUNE_MULT) > 1600001))
+		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old) > 1600001))
 			idx --;
 	}
 
@@ -3294,19 +3332,19 @@ static bool UiDriver_CheckFrequencyEncoder()
 
 		if(pot_diff>0)
 		{
-			df.tune_new += (df.tuning_step * TUNE_MULT * enc_multiplier);
+			df.tune_new += (df.tuning_step * enc_multiplier);
 			//itoa(enc_speed,num,6);
 			//UiSpectrumClearDisplay();			// clear display under spectrum scope
 			//UiLcdHy28_PrintText(110,156,num,Cyan,Black,0);
 		}
 		else
 		{
-			df.tune_new -= (df.tuning_step * TUNE_MULT * enc_multiplier);
+			df.tune_new -= (df.tuning_step * enc_multiplier);
 		}
 
 		if (enc_multiplier != 1)
 		{
-			df.tune_new = TUNE_MULT*enc_multiplier*df.tuning_step * div((df.tune_new/TUNE_MULT),enc_multiplier*df.tuning_step).quot;    // keep last digit to zero
+			df.tune_new = enc_multiplier*df.tuning_step * div((df.tune_new),enc_multiplier*df.tuning_step).quot;    // keep last digit to zero
 		}
 
 		retval = true;
@@ -6048,7 +6086,7 @@ void UiAction_ChangeSpectrumZoomLevelUp()
 
 void UiAction_ChangeFrequencyToNextKhz()
 {
-	df.tune_new = floor(df.tune_new / (TUNE_MULT*1000)) * (TUNE_MULT*1000);	// set last three digits to "0"
+	df.tune_new = floor(df.tune_new / 1000) * 1000;	// set last three digits to "0"
 	UiDriver_FrequencyUpdateLOandDisplay(true);
 }
 
@@ -6206,8 +6244,8 @@ void UiAction_ChangeFrequencyByTouch()
 			line=sd.marker_pos[0];
 		}*/
 
-		//uint32_t tunediff = ((IQ_SAMPLE_RATE/slayout.scope.w)/(1 << sd.magnify))*(ts.tp->hr_x-line)*TUNE_MULT;
-		int32_t tunediff = sd.hz_per_pixel*(ts.tp->hr_x-line)*TUNE_MULT;
+		//uint32_t tunediff = ((IQ_SAMPLE_RATE/slayout.scope.w)/(1 << sd.magnify))*(ts.tp->hr_x-line);
+		int32_t tunediff = sd.hz_per_pixel*(ts.tp->hr_x-line);
 		df.tune_new = lround((df.tune_new + tunediff)/step) * step;
 		UiDriver_FrequencyUpdateLOandDisplay(true);
 	}
@@ -6540,7 +6578,7 @@ static void UiAction_BandMinusHold()
     {
         if(ts.txrx_mode == TRX_MODE_RX)
         {
-            df.tune_new -= TUNE_MULT * (48000 / (1 << sd.magnify));
+            df.tune_new -= 48000 / (1 << sd.magnify);
         }
     }
 }
@@ -6562,7 +6600,7 @@ static void UiAction_BandPlusHold()
     {
         if(ts.txrx_mode == TRX_MODE_RX)
         {
-            df.tune_new += TUNE_MULT * (48000 / (1 << sd.magnify));
+            df.tune_new += 48000 / (1 << sd.magnify);
         }
     }
 }
@@ -7107,7 +7145,7 @@ void UiDriver_TaskHandler_MainTasks()
 				// this handles the cases where the dial frequency remains the same but the
 				// LO tune frequency needs adjustment, e.g. in CW mode  or if temp of LO changes
 			    RadioManagement_TxRxSwitching_Disable();
-				RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, ts.txrx_mode);
+				RadioManagement_ChangeFrequency(false,df.tune_new, ts.txrx_mode);
 				RadioManagement_TxRxSwitching_Enable();
 			}
 			break;
@@ -7119,7 +7157,7 @@ void UiDriver_TaskHandler_MainTasks()
 			{
 				if(ts.dmod_mode == DEMOD_SAM)
 				{
-					UiDriver_UpdateLcdFreq(df.tune_old/TUNE_MULT, Yellow, UFM_SECONDARY);
+					UiDriver_UpdateLcdFreq(df.tune_old, Yellow, UFM_SECONDARY);
 				}
 				else if (ts.dmod_mode == DEMOD_CW && cw_decoder_config.snap_enable)
 				{

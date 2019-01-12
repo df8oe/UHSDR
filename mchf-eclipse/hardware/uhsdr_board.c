@@ -31,6 +31,7 @@
 // Eeprom items
 #include "eeprom.h"
 #include "adc.h"
+#include "dac.h"
 
 #include "uhsdr_keypad.h"
 #include "osc_si5351a.h"
@@ -720,4 +721,109 @@ const char* Board_BootloaderVersion()
         }
     }
     return outs;
+}
+
+/**
+ * @brief set PA bias at the LM2931CDG (U18) using DAC Channel 2
+ */
+void Board_SetPaBiasValue(uint16_t bias)
+{
+    // Set DAC Channel 1 DHR12L register
+    // DAC_SetChannel2Data(DAC_Align_8b_R,bias);
+    HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_8B_R, bias);
+
+}
+
+void Board_GreenLed(ledstate_t state)
+{
+    switch(state)
+    {
+    case LED_STATE_ON:
+        GPIO_SetBits(GREEN_LED_PIO, GREEN_LED);
+        break;
+    case LED_STATE_OFF:
+        GPIO_ResetBits(GREEN_LED_PIO, GREEN_LED);
+        break;
+    default:
+        GPIO_ToggleBits(GREEN_LED_PIO, GREEN_LED);
+        break;
+    }
+}
+
+void Board_RedLed(ledstate_t state)
+{
+    switch(state)
+    {
+    case LED_STATE_ON:
+        GPIO_SetBits(RED_LED_PIO, RED_LED);
+        break;
+    case LED_STATE_OFF:
+        GPIO_ResetBits(RED_LED_PIO, RED_LED);
+        break;
+    default:
+        GPIO_ToggleBits(RED_LED_PIO, RED_LED);
+        break;
+    }
+}
+
+#ifdef UI_BRD_OVI40
+void Board_BlueLed(ledstate_t state)
+{
+    switch(state)
+    {
+    case LED_STATE_ON:
+        GPIO_SetBits(BLUE_LED_PIO, BLUE_LED);
+        break;
+    case LED_STATE_OFF:
+        GPIO_ResetBits(BLUE_LED_PIO, BLUE_LED);
+        break;
+    default:
+        GPIO_ToggleBits(BLUE_LED_PIO, BLUE_LED);
+        break;
+    }
+}
+#endif
+/**
+ * @brief sets the hw ptt line and by this switches the mcHF board signal path between rx and tx configuration
+ * @param tx_enable true == TX Paths, false == RX Paths
+ */
+void Board_EnableTXSignalPath(bool tx_enable)
+{
+    // to make switching as noiseless as possible, make sure the codec lineout is muted/produces zero output before switching
+    if (tx_enable)
+    {
+        GPIO_SetBits(PTT_CNTR_PIO,PTT_CNTR);     // TX on and switch CODEC audio paths
+        // Antenna Direction Output
+        // BPF Direction Output (U1,U2)
+        // PTT Optocoupler LED On (ACC Port) (U6)
+        // QSD Mixer Output Disable (U15)
+        // QSE Mixer Output Enable (U17)
+        // Codec LineIn comes from mcHF LineIn Socket (U3)
+        // Codec LineOut connected to QSE mixer (IQ Out) (U3a)
+    }
+    else
+    {
+        GPIO_ResetBits(PTT_CNTR_PIO,PTT_CNTR); // TX off
+        // Antenna Direction Input
+        // BPF Direction Input (U1,U2)
+        // PTT Optocoupler LED Off (ACC Port) (U6)
+        // QSD Mixer Output Enable (U15)
+        // QSE Mixer Output Disable (U17)
+        // Codec LineIn comes from RF Board QSD mixer (IQ In) (U3)
+        // Codec LineOut disconnected from QSE mixer  (IQ Out) (U3a)
+    }
+}
+
+/**
+ * Is the hardware contact named DAH pressed
+ */
+bool Board_PttDahLinePressed() {
+    return  !HAL_GPIO_ReadPin(PADDLE_DAH_PIO,PADDLE_DAH);
+}
+
+/**
+ * Is the hardware contact named DIT pressed
+ */
+bool Board_DitLinePressed() {
+    return  !HAL_GPIO_ReadPin(PADDLE_DIT_PIO,PADDLE_DIT);
 }

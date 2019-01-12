@@ -548,7 +548,7 @@ static void UiVk_FSetNumKeyUpdate()
 	UiVk_EnableFrequencySet=1;
 	if(UiVk_BandChangeEN==0)
 	{
-		if(!RadioManagement_FreqIsInBand(&bandInfo[ts.band],freq*TUNE_MULT))
+		if( RadioManagement_FreqIsInBand(&bandInfo[ts.band],freq) == false)
 		{
 			textColor=RGB(0xff,0xff,0x00);
 			UiVk_EnableFrequencySet=0;		//disable frequency setting because out of current band is not allowed
@@ -630,7 +630,7 @@ static void UiVk_FSetNumKeyVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 		if(UiVk_EnableFrequencySet)
 		{
 			uint32_t freq=atoi(UiVk_FreqEditText);
-			freq*=TUNE_MULT;
+
 			uint8_t band_scan=ts.band;
 
 			if(UiVk_BandChangeEN)

@@ -284,7 +284,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
         old_digital_mode = ts.digital_mode;
         old_rtty_shift = rtty_ctrl_config.shift_idx;
 
-        float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())/TUNE_MULT))/sd.hz_per_pixel;
+        float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())))/sd.hz_per_pixel;
 
         // FIXME: DOES NOT WORK PROPERLY IN SPLIT MODE
         sd.marker_num_prev = sd.marker_num;
@@ -1661,7 +1661,7 @@ static void UiSpectrum_DrawFrequencyBar()
         uint32_t  clr;
         UiMenu_MapColors(ts.spectrum_freqscale_colour,NULL, &clr);
 
-        float32_t freq_calc = (RadioManagement_GetRXDialFrequency() + (ts.dmod_mode == DEMOD_CW?RadioManagement_GetCWDialOffset():0))/TUNE_MULT;      // get current tune frequency in Hz
+        float32_t freq_calc = RadioManagement_GetRXDialFrequency() + (ts.dmod_mode == DEMOD_CW ? RadioManagement_GetCWDialOffset() : 0 );      // get current tune frequency in Hz
 
         if (sd.magnify == 0)
         {
@@ -1888,28 +1888,28 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
 		// in the CW decoder section
 		// OR if we are in AM/SAM/Digi BPSK mode
 	{
-		static float32_t freq_old = 10000000.0;
-	float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
-	// 1. lowpass filter all the relevant bins over 2 to 20 FFTs (?)
-	// lowpass filtering already exists in the spectrum/waterfall display driver
+	    static float32_t freq_old = 10000000.0;
+	    float32_t help_freq = df.tune_old;
+	    // 1. lowpass filter all the relevant bins over 2 to 20 FFTs (?)
+	    // lowpass filtering already exists in the spectrum/waterfall display driver
 
-// 2. determine bin with maximum value inside these samples
+	    // 2. determine bin with maximum value inside these samples
 
-    // look for maximum value and save the bin # for frequency delta calculation
-    float32_t maximum = 0.0;
-    float32_t maxbin = 1.0;
-    float32_t delta1 = 0.0;
-    float32_t delta2 = 0.0;
-    float32_t delta = 0.0;
+	    // look for maximum value and save the bin # for frequency delta calculation
+	    float32_t maximum = 0.0;
+	    float32_t maxbin = 1.0;
+	    float32_t delta1 = 0.0;
+	    float32_t delta2 = 0.0;
+	    float32_t delta = 0.0;
 
-    for (int c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
-    {
-        if (maximum < sd.FFT_Samples[c])
-        {
-            maximum = sd.FFT_Samples[c];
-            maxbin = c;
-        }
-    }
+	    for (int c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
+	    {
+	        if (maximum < sd.FFT_Samples[c])
+	        {
+	            maximum = sd.FFT_Samples[c];
+	            maxbin = c;
+	        }
+	    }
 
 // 3. first frequency carrier offset calculation
     // ok, we have found the maximum, now save first delta frequency
@@ -1959,7 +1959,6 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     help_freq = help_freq + delta;
     // do we need a lowpass filter?
     help_freq = 0.2 * help_freq + 0.8 * freq_old;
-    //help_freq = help_freq * ((float32_t)TUNE_MULT);
     ads.snap_carrier_freq = (ulong) (help_freq);
     freq_old = help_freq;
 
@@ -1976,7 +1975,7 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     	{
     		// tune to frequency
             // set frequency of Si570 with 4 * dialfrequency
-            df.tune_new = (help_freq * ((float32_t)TUNE_MULT));
+            df.tune_new = help_freq;
     		// reset counter
     		snap_counter = 0;
     		sc.snap = false;
