@@ -83,19 +83,6 @@ typedef enum {
 #define CW_KEYER_MODE_ULTIMATE			3
 #define CW_KEYER_MAX_MODE				3
 
-// PA power level setting enumeration
-typedef enum
-{
-    PA_LEVEL_FULL = 0,
-    PA_LEVEL_5W,
-    PA_LEVEL_2W,
-    PA_LEVEL_1W,
-    PA_LEVEL_0_5W,
-    PA_LEVEL_TUNE_KEEP_CURRENT
-} mchf_power_level_t;
-//
-#define	PA_LEVEL_DEFAULT		PA_LEVEL_2W		// Default power level
-
 #define	SSB_TUNE_FREQ			750	// Frequency at which the SSB TX IQ gain and phase adjustment is to be done
 //
 #define VOICE_TX2RX_DELAY_DEFAULT			450	// Delay for switching when going from TX to RX (this is 0.66uS units)
@@ -268,7 +255,6 @@ typedef struct
         int tau_hang_decay;
 } agc_wdsp_param_t;
 
-
 // Transceiver state public structure
 typedef struct TransceiverState
 {
@@ -323,7 +309,9 @@ typedef struct TransceiverState
 
     // Ham band public flag
     // index of bands table in Flash
-    uint8_t 	band;
+    uint8_t 	band; // this band idx does not relate to the real frequency, it is a "just" a memory index.
+    uint8_t     band_effective; // the band the currently selected frequency is in (which may be different from the band memory idx);
+
     bool	rx_temp_mute;
     uint8_t	filter_band;		// filter selection band:  1= 80, 2= 60/40, 3=30/20, 4=17/15/12/10 - used for selection of power detector coefficient selection.
     //
@@ -405,7 +393,9 @@ typedef struct TransceiverState
 
     ulong	audio_spkr_unmute_delay_count;
 
-    uint8_t	power_level;
+    uint8_t	power_level; // an abstract power level id
+    int32_t power; // the actual request power in mW
+    bool    power_modified; // the actual power is lower than the requested power_level, e.g. because of out side band.
 
     uint8_t 	tx_audio_source;
     ulong	tx_mic_gain_mult;
@@ -449,7 +439,7 @@ typedef struct TransceiverState
     //
     // Calibration factors for output power, in percent (100 = 1.00)
     //
-#define ADJ_5W 0
+#define ADJ_REF_PWR 0
 #define ADJ_FULL_POWER 1
     uint8_t	pwr_adj[2][MAX_BAND_NUM];
     //

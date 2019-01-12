@@ -171,12 +171,6 @@ void TransceiverStateInit(void)
     ts.refresh_freq_disp	= 1;					// TRUE if frequency/color display is to be refreshed when next called - NORMALLY LEFT AT 0 (FALSE)!!!
     // This is NOT reset by the LCD function, but must be enabled/disabled externally
 
-    for (int idx=0; idx<MAX_BANDS; idx++)
-    {
-        ts.pwr_adj[ADJ_5W][idx] = 1;
-        ts.pwr_adj[ADJ_FULL_POWER][idx] = 1;
-    }
-
     ts.filter_cw_wide_disable		= 0;			// TRUE if wide filters are to be disabled in CW mode
     ts.filter_ssb_narrow_disable	= 0;				// TRUE if narrow (CW) filters are to be disabled in SSB mode
     ts.demod_mode_disable			= 0;		// TRUE if AM mode is to be disabled
