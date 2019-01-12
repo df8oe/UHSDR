@@ -10,34 +10,8 @@
  ************************************************************************************/
 #ifndef __UHSDR_KEYPAD_H
 #define __UHSDR_KEYPAD_H
-#include "uhsdr_board.h"
-
-// Key map structure
-// represents a physical key which can be pressed (via GPIO)
-typedef struct
-{
-    GPIO_TypeDef    *keyPort;
-    uint16_t        keyPin;
-    uint16_t         button_id;
-    const char*     label;
-
-} Keypad_KeyPhys_t;
-
-// represents a logical button
-typedef struct
-{
-    uint16_t        button_id;
-    const char*     label;
-} UhsdrButtonLogical_t;
-
-typedef struct
-{
-    const Keypad_KeyPhys_t* map;
-    uint32_t num;
-} UhsdrHwKey_t;
 
 // Logical Button definitions
-//
 enum
 {
     BUTTON_M2_PRESSED = 0,  // 0
@@ -70,22 +44,22 @@ enum
     BUTTON_NOP // used for buttons with no function
 };
 
-extern UhsdrHwKey_t  hwKeys; // these buttons represent the gpio to logical button id mapping
-extern const UhsdrButtonLogical_t  buttons[]; // this array gives us the names of the available logical buttons
+void        Keypad_KeypadInit();
 
-const Keypad_KeyPhys_t* bm_set_normal;
 #ifdef UI_BRD_MCHF
-const Keypad_KeyPhys_t* bm_set_rtc;
+// this function invoked only on the MCHF with RTC as they have different buttons layout
+void        Keypad_SetLayoutRTC_MCHF();
 #endif
 
-bool Keypad_IsButtonPressed(uint32_t button_num);
-bool Keypad_IsAnyButtonPressed();
-bool Keypad_IsKeyPressed(uint32_t key_num);
-bool Keypad_IsAnyKeyPressed();
-uint32_t Keypad_KeyStates();
-uint32_t Keypad_ButtonStates();
-void Keypad_Scan();
+bool        Keypad_IsButtonPressed( uint32_t button_num );
+bool        Keypad_IsAnyButtonPressed();
+bool        Keypad_IsKeyPressed( uint32_t key_num );
+bool        Keypad_IsAnyKeyPressed();
 
-void Keypad_KeypadInit(UhsdrHwKey_t* keyMap);
+void        Keypad_Scan();
+
+uint32_t    Keypad_KeyStates();
+uint32_t    Keypad_ButtonStates();
+const char* Keypad_GetLabelOfButton( uint32_t id_button );
 
 #endif
