@@ -46,6 +46,7 @@
 #include "audio_driver.h"
 #include "rtty.h"
 #include "cw_gen.h"
+#include <stdio.h>
 
 Goertzel cw_goertzel;
 

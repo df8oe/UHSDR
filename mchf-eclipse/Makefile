@@ -25,19 +25,25 @@ ifndef BUILDFOR
   BUILDFOR=F4
 endif
 
+# We have to use "override" since we pass some of these things from
+# the commandline but then change / append to it
+# see https://www.gnu.org/software/make/manual/html_node/Override-Directive.html#Override-Directive
+# BUILDFOR, CONFIGFLAGS are affected by this
+
+
 # F4-512KB results in "small build for F4"
 ifeq ($(BUILDFOR),F4-512KB)
   FW_LINKERFILE_F4=arm-gcc-link_f4_flash512k.ld
-  BUILDFOR=F4
-  CONFIGFLAGS +="-DIS_SMALL_BUILD"
+  override BUILDFOR=F4
+  override CONFIGFLAGS +=-DIS_SMALL_BUILD
 else
   FW_LINKERFILE_F4=arm-gcc-link_f4_flash1024k.ld
 endif
 
 ifdef DEBUG
-  CONFIGFLAGS += -DDEBUG -DUSE_FULL_ASSERT -DTRACE
+  override CONFIGFLAGS += -DDEBUG -DUSE_FULL_ASSERT -DTRACE
 else
-  CONFIGFLAGS += -DNDEBUG
+  override CONFIGFLAGS += -DNDEBUG
 endif
 
 ifeq ($(BUILDFOR),F7)
@@ -76,9 +82,9 @@ endif
 # OPT_GCC_ARM=
 
 ifdef OPT_GCC_ARM
-  PREFIX = $(OPT_GCC_ARM)
+  PREFIX = $(OPT_GCC_ARM)/bin/
 else
-  PREFIX = /usr
+  PREFIX = 
 endif
 
 # Under MacOS we have to use gsed instead of sed
@@ -194,27 +200,17 @@ endif
 
 INC_DIRS = $(foreach d, $(SUBDIRS) $(HAL_SUBDIRS), -I$(ROOTLOC)/$d)
 
-CC = @${PREFIX}/bin/arm-none-eabi-gcc
-CXX = @${PREFIX}/bin/arm-none-eabi-g++
-OC = @${PREFIX}/bin/arm-none-eabi-objcopy
-OS = @${PREFIX}/bin/arm-none-eabi-size
-HEX2DFU = $(ROOTLOC)/support/hex2dfu/hex2dfu.py
-
-ifdef SystemRoot  # WINxx
-    HEX2DFU = python $(ROOTLOC)/support/hex2dfu/hex2dfu.py
-    CC = arm-none-eabi-gcc
-    CXX = arm-none-eabi-g++
-    OC = arm-none-eabi-objcopy
-    OS = arm-none-eabi-size
+ifdef VERBOSE
+	VPRE:=
+else
+	VPRE:=@
 endif
 
-ifdef MSYSTEM
-    HEX2DFU = python $(ROOTLOC)/support/hex2dfu/hex2dfu.py
-    CC = arm-none-eabi-gcc
-    CXX = arm-none-eabi-g++
-    OC = arm-none-eabi-objcopy
-    OS = arm-none-eabi-size
-endif
+CC      = $(VPRE)$(PREFIX)arm-none-eabi-gcc
+CXX     = $(VPRE)$(PREFIX)arm-none-eabi-g++
+OC      = $(VPRE)$(PREFIX)arm-none-eabi-objcopy
+SZ      = $(VPRE)$(PREFIX)arm-none-eabi-size
+HEX2DFU = $(VPRE)python $(ROOTLOC)/support/hex2dfu/hex2dfu.py
 
 
 ECHO = @echo
@@ -222,15 +218,6 @@ ECHO = @echo
 ifdef SystemRoot  # WINxx
     RM = del /Q
     FixPath = $(subst /,\,$1)
-else ifeq ($(shell uname), Linux)
-    RM = rm --force
-    FixPath = $1
-else ifeq ($(shell uname), Darwin)
-    RM = rm -f
-    FixPath = $1
-else ifeq ($(shell uname), CYGWIN_NT-10.0)
-    RM = rm -f
-    FixPath = $1
 else
     RM = rm -f
     FixPath = $1
@@ -248,6 +235,9 @@ basesw/%/usbh_mtp.o: CFLAGS += -Wno-implicit-fallthrough
 basesw/%/usbh_msc.o: CFLAGS += -Wno-implicit-fallthrough
 basesw/%/usbh_hid.o: CFLAGS += -Wno-implicit-fallthrough
 basesw/%stm32h7xx_hal_spi.o: CFLAGS += -Wno-strict-aliasing
+basesw/%stm32f4xx_ll_usb.o: CFLAGS += -Wno-attributes
+basesw/%stm32f7xx_ll_usb.o: CFLAGS += -Wno-attributes
+basesw/%stm32h7xx_ll_usb.o: CFLAGS += -Wno-attributes
 
 .S.o:
 	$(ECHO) "  [CC] $@"
@@ -270,17 +260,17 @@ basesw/%stm32h7xx_hal_spi.o: CFLAGS += -Wno-strict-aliasing
 
 %.bin: %.elf
 	$(ECHO) "  [OBJC] $@"
-	$(OS) $<
+	$(SZ) $<
 	$(OC) -v -O binary $< $@
 
 %.hex: %.elf
 	$(ECHO) "  [BIN] $@"
-	$(OS) $<
+	$(SZ) $<
 	$(OC) -v -O ihex $< $@
 
 %.dfu: %.hex
 	$(ECHO) "  [H2D] $@"
-	$(OS) $<
+	$(SZ) $<
 	$(HEX2DFU) $< $@
 
 # ---------------------------------------------------------
@@ -410,7 +400,7 @@ handy:
 
 release:  
 	# generate quick operating guide
-	@inkscape --export-png=$(ROOTLOC)/useful_manuals/mcHF-quick-manual.png $(ROOTLOC)/useful_manuals/mcHF-quick-manual.svg
+	/@inkscape --export-png=$(ROOTLOC)/useful_manuals/mcHF-quick-manual.png $(ROOTLOC)/useful_manuals/mcHF-quick-manual.svg
 	@inkscape --export-pdf=$(ROOTLOC)/useful_manuals/mcHF-quick-manual.pdf $(ROOTLOC)/useful_manuals/mcHF-quick-manual.svg
 
 # EOFILE

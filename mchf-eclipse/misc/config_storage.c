@@ -11,8 +11,11 @@
  **  Last Modified:                                                                 **
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
-#include "uhsdr_board_config.h"
-#include "stdint.h"
+#ifndef USE_HAL_DRIVER
+    #define USE_HAL_DRIVER
+#endif
+#include "uhsdr_board.h"
+#include <stdint.h>
 #include "config_storage.h"
 #include "ui_configuration.h"
 #include "serial_eeprom.h"
