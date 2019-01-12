@@ -21,32 +21,35 @@ install:
     - export GCC_ARCHIVE=$HOME/$GCC_BASE-linux.tar.bz2
     - export GCC_URL=https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/$GCC_SHORT/$GCC_BASE-linux.tar.bz2
     - if [ ! -e $GCC_DIR/bin/arm-none-eabi-g++ ]; then wget $GCC_URL -O $GCC_ARCHIVE; tar xfj $GCC_ARCHIVE -C $HOME; fi
+    - ROOTLOC="../.."
+    - BUILDLOC=mchf-eclipse/build
+    - export MAKEFLAGS=-j2 
 script:
-    - mkdir -p mchf-eclipse/build-bl-f4
-    - mkdir -p mchf-eclipse/build-fw-f4
-    - mkdir -p mchf-eclipse/build-bl-f7
-    - mkdir -p mchf-eclipse/build-bl-h7
-    - mkdir -p mchf-eclipse/build-fw-f7
-    - mkdir -p mchf-eclipse/build-fw-f4-ili9486-480
-    - mkdir -p mchf-eclipse/build-fw-f4-small
-    - mkdir -p mchf-eclipse/build-fw-h7
-    - cd mchf-eclipse/build-fw-h7
-    - cd ../build-bl-h7
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF" bootloader 
-    - cd ../build-fw-h7
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF" all 
-    - cd ../build-fw-f4 
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF" all
-    - cd ../build-bl-f4
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF" bootloader
-    - cd ../build-fw-f7
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF" all	
-    - cd ../build-bl-f7
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF" bootloader
-    - cd ../build-fw-f4-ili9486-480
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=".." CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF -DEXTERNAL_USE_GFX_CONFIG -DUSE_DISP_480_320 -DUSE_GFX_ILI9486" all 
-    - cd ../build-fw-f4-small
-    - make -f ../Makefile OPT_GCC_ARM=$GCC_DIR CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF -DIS_SMALL_BUILD" ROOTLOC=".." all
+    - mkdir -p mchf-eclipse/build/bl-f4
+    - mkdir -p mchf-eclipse/build/fw-f4
+    - mkdir -p mchf-eclipse/build/bl-f7
+    - mkdir -p mchf-eclipse/build/bl-h7
+    - mkdir -p mchf-eclipse/build/fw-f7
+    - mkdir -p mchf-eclipse/build/fw-f4-ili9486-480
+    - mkdir -p mchf-eclipse/build/fw-f4-small
+    - mkdir -p mchf-eclipse/build/fw-h7
+    - cd $BUILDLOC/fw-h7
+    - cd ../bl-h7
+    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" CONFIGFLAGS="-DUI_BRD_OVI40" bootloader 
+    - cd ../fw-h7
+    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF -DRF_BRD_OVI40" all 
+    - cd ../fw-f4 
+    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF" all
+    - cd ../bl-f4
+    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC CONFIGFLAGS="-DUI_BRD_MCHF" bootloader
+    - cd ../fw-f7
+    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF" -DRF_BRD_OVI40 all	
+    - cd ../bl-f7
+    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="F7" TRX_ID="ovi40" TRX_NAME="OVI40" CONFIGFLAGS="-DUI_BRD_OVI40" bootloader
+    - cd ../fw-f4-ili9486-480
+    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF -DEXTERNAL_USE_GFX_CONFIG -DUSE_DISP_480_320 -DUSE_GFX_ILI9486" all 
+    - cd ../fw-f4-small
+    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF -DIS_SMALL_BUILD" ROOTLOC=$ROOTLOC all
     - cd ..
 before_deploy:
     - sudo apt-get install -y doxygen graphviz
@@ -56,18 +59,18 @@ deploy:
   api_key:
     secure: "6kEbfOiJSR7FgDmmLNVTEg"
   file: 
-  - build-fw-f4/fw-mchf.bin
-  - build-fw-f7/fw-ovi40.bin
-  - build-fw-h7/fw-vi40h7.bin
-  - build-bl-f4/bl-mchf.bin
-  - build-bl-f7/bl-ovi40.bin
-  - build-bl-h7/bl-i40h7.bin  
-  - build-fw-f4/fw-mchf.dfu
-  - build-fw-f7/fw-ovi40.dfu
-  - build-fw-h7/fw-i40h7.dfu  
-  - build-bl-f4/bl-mchf.dfu
-  - build-bl-f7/bl-ovi40.dfu
-  - build-bl-h7/bl-i40h7.dfu
+  - build/fw-f4/fw-mchf.bin
+  - build/fw-f7/fw-ovi40.bin
+  - build/fw-h7/fw-vi40h7.bin
+  - build/bl-f4/bl-mchf.bin
+  - build/bl-f7/bl-ovi40.bin
+  - build/bl-h7/bl-i40h7.bin  
+  - build/fw-f4/fw-mchf.dfu
+  - build/fw-f7/fw-ovi40.dfu
+  - build/fw-h7/fw-i40h7.dfu  
+  - build/bl-f4/bl-mchf.dfu
+  - build/bl-f7/bl-ovi40.dfu
+  - build/bl-h7/bl-i40h7.dfu
   skip_cleanup: true
   on:
     repo: db4ple/mchf-github
