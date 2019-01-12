@@ -140,6 +140,39 @@ static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
 static void UiDriver_DisplayPskSpeed(bool encoder_active);
 
+
+// encoder one
+typedef enum {
+    ENC_ONE_MODE_AUDIO_GAIN  = 0,
+    ENC_ONE_MODE_RTTY_SPEED,
+    ENC_ONE_MODE_ST_GAIN,
+    ENC_ONE_MODE_CMP_LEVEL,
+    ENC_ONE_NUM_MODES
+} EncoderOneModes;
+//
+// encoder two
+typedef enum {
+    ENC_TWO_MODE_RF_GAIN =      0,
+    ENC_TWO_MODE_RTTY_SHIFT,
+    ENC_TWO_MODE_SIG_PROC,
+    ENC_TWO_MODE_NR,
+    ENC_TWO_MODE_NOTCH_F,
+    ENC_TWO_MODE_PEAK_F,
+    ENC_TWO_MODE_BASS_GAIN,
+    ENC_TWO_MODE_TREBLE_GAIN,
+    ENC_TWO_NUM_MODES
+} EncoderTwoModes;
+//
+// encoder three
+typedef enum {
+    ENC_THREE_MODE_RIT =            0,
+    ENC_THREE_MODE_CW_SPEED,
+    ENC_THREE_MODE_INPUT_CTRL,
+    ENC_THREE_MODE_PSK_SPEED,
+    ENC_THREE_NUM_MODES
+} EncoderThreeModes;
+
+
 // Tuning steps
 const ulong tune_steps[T_STEP_MAX_STEPS] =
 {
@@ -803,6 +836,11 @@ static void UiDriver_PublicsInit()
 
 void UiDriver_Init()
 {
+    // set the encoders to their default values
+    ts.enc_one_mode     = ENC_ONE_MODE_AUDIO_GAIN;
+    ts.enc_two_mode     = ENC_TWO_MODE_RF_GAIN;
+    ts.enc_thr_mode     = ENC_THREE_MODE_RIT;
+
 	// Driver publics init
 	UiDriver_PublicsInit();
 	// Init frequency publics

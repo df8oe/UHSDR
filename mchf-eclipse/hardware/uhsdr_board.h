@@ -70,37 +70,6 @@ typedef enum {
 #define MAX_BAND_NUM            (MAX_BANDS+1)       // Number of Bands
 
 
-// encoder one
-typedef enum {
-    ENC_ONE_MODE_AUDIO_GAIN	 = 0,
-    ENC_ONE_MODE_RTTY_SPEED,
-    ENC_ONE_MODE_ST_GAIN,
-    ENC_ONE_MODE_CMP_LEVEL,
-    ENC_ONE_NUM_MODES
-} EncoderOneModes;
-//
-// encoder two
-typedef enum {
-    ENC_TWO_MODE_RF_GAIN =		0,
-    ENC_TWO_MODE_RTTY_SHIFT,
-    ENC_TWO_MODE_SIG_PROC,
-    ENC_TWO_MODE_NR,
-    ENC_TWO_MODE_NOTCH_F,
-    ENC_TWO_MODE_PEAK_F,
-    ENC_TWO_MODE_BASS_GAIN,
-    ENC_TWO_MODE_TREBLE_GAIN,
-    ENC_TWO_NUM_MODES
-} EncoderTwoModes;
-//
-// encoder three
-typedef enum {
-    ENC_THREE_MODE_RIT =			0,
-    ENC_THREE_MODE_CW_SPEED,
-    ENC_THREE_MODE_INPUT_CTRL,
-	ENC_THREE_MODE_PSK_SPEED,
-    ENC_THREE_NUM_MODES
-} EncoderThreeModes;
-
 // opposed to the RF_BRD_MCHF / RF_BRD_OVI40 which are
 // compile time constants, the FOUND_RF_BOARD_xx is a runtime detected property
 typedef enum {
