@@ -94,32 +94,60 @@ inline bool RadioManagement_TcxoIsFahrenheit()
     return (df.temp_enabled & TCXO_UNIT_MASK) == TCXO_UNIT_F;
 }
 
-// Total bands supported
-//
+// PA power level setting enumeration
+// this order MUST match the order of entries in power_levels in radio_management.c !
+typedef enum
+{
+    PA_LEVEL_FULL = 0,
+    PA_LEVEL_5W,
+    PA_LEVEL_2W,
+    PA_LEVEL_1W,
+    PA_LEVEL_0_5W,
+    PA_LEVEL_TUNE_KEEP_CURRENT
+} power_level_t;
+
+
+typedef struct {
+    power_level_t id;
+    char* name;
+    float32_t power_factor;
+    int32_t   mW;
+} power_level_desc_t;
+
+typedef struct {
+    const power_level_desc_t* levels;
+    const uint32_t count;
+} pa_power_levels_info_t;
+
+extern const pa_power_levels_info_t mchf_power_levelsInfo;
+
+
+#define PA_LEVEL_DEFAULT        PA_LEVEL_2W     // Default power level
 
 #define DEFAULT_FREQ_OFFSET     3000              // Amount of offset (at LO freq) when loading "default" frequency
 
-
 // this list MUST fit the order in the bandInfo structure defined in RadioManagement.h
-#define BAND_MODE_80            0
-#define BAND_MODE_60            1
-#define BAND_MODE_40            2
-#define BAND_MODE_30            3
-#define BAND_MODE_20            4
-#define BAND_MODE_17            5
-#define BAND_MODE_15            6
-#define BAND_MODE_12            7
-#define BAND_MODE_10            8
-#define BAND_MODE_6             9
-#define BAND_MODE_4             10
-#define BAND_MODE_2             11
-#define BAND_MODE_70            12
-#define BAND_MODE_23            13
-#define BAND_MODE_2200          14
-#define BAND_MODE_630           15
-#define BAND_MODE_160           16
-#define BAND_MODE_GEN           17          // General Coverage
-
+typedef enum
+{
+    BAND_MODE_80 = 0,
+    BAND_MODE_60 = 1,
+    BAND_MODE_40 = 2,
+    BAND_MODE_30 = 3,
+    BAND_MODE_20 = 4,
+    BAND_MODE_17 = 5,
+    BAND_MODE_15 = 6,
+    BAND_MODE_12 = 7,
+    BAND_MODE_10 = 8,
+    BAND_MODE_6 =  9,
+    BAND_MODE_4 =  10,
+    BAND_MODE_2 =  11,
+    BAND_MODE_70 = 12,
+    BAND_MODE_23 = 13,
+    BAND_MODE_2200 = 14,
+    BAND_MODE_630 = 15,
+    BAND_MODE_160 = 16,
+    BAND_MODE_GEN = 17          // General Coverage
+} band_mode_t;
 
 
 typedef enum
@@ -263,9 +291,9 @@ inline bool RadioManagement_IsTxDisabledBy(uint8_t whom)
 }
 
 uint32_t RadioManagement_GetRealFreqTranslationMode(uint32_t txrx_mode, uint32_t dmod_mode, uint32_t iq_freq_mode);
-uint8_t RadioManagement_GetBand(ulong freq);
+band_mode_t RadioManagement_GetBand(ulong freq);
 bool RadioManagement_FreqIsInBand(const BandInfo* bandinfo, const uint32_t freq);
-bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level);
+bool RadioManagement_SetPowerLevel(band_mode_t band, power_level_t power_level);
 bool RadioManagement_Tune(bool tune);
 bool RadioManagement_UpdatePowerAndVSWR();
 void RadioManagement_SetHWFiltersForFrequency(ulong freq);
@@ -280,10 +308,8 @@ uint32_t RadioManagement_NextAlternativeDemodMode(uint32_t loc_mode);
 Oscillator_ResultCodes_t RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq);
 bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode);
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode);
-void RadioManagement_SetBandPowerFactor(uchar band);
 bool RadioManagement_LSBActive(uint16_t dmod_mode);
 bool RadioManagement_USBActive(uint16_t dmod_mode);
-void RadioManagement_SetBandPowerFactor(uchar band);
 void RadioManagement_SetPaBias();
 bool RadioManagement_CalculateCWSidebandMode(void);
 void RadioManagement_SetDemodMode(uint8_t new_mode);

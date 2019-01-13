@@ -699,8 +699,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 
 bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcessingMode_t mode, uint8_t band_mode, uint8_t pa_level, char* options, uint32_t* clr_ptr)
 {
-    volatile uint8_t* adj_ptr;
-    adj_ptr = &ts.pwr_adj[pa_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band_mode];
+     volatile uint8_t* adj_ptr = &ts.pwr_adj[pa_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_REF_PWR][band_mode];
 
     bool tchange = false;
     if((band_mode == RadioManagement_GetBand(df.tune_old)) && (ts.power_level == pa_level))
@@ -714,16 +713,15 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcess
 
         if(tchange)	 		// did something change?
         {
-            RadioManagement_SetBandPowerFactor(ts.band);	// yes, update the power factor
-            if(!ts.iq_freq_mode)	// Is translate mode *NOT* active?
-            {
-                Codec_TxSidetoneSetgain(ts.txrx_mode);				// adjust the sidetone gain
-            }
+            RadioManagement_SetPowerLevel(band_mode, pa_level);	// yes, update the power factor
         }
     }
-    else	// not enabled
+    else
+    {
+        // not enabled
         *clr_ptr = Orange;
-    //
+    }
+
     sprintf(options, "  %u", *adj_ptr);
     return tchange;
 }

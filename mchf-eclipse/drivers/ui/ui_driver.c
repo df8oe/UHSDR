@@ -87,7 +87,7 @@ static void 	UiDriver_ChangeBand(uchar is_up);
 static bool 	UiDriver_CheckFrequencyEncoder();
 
 static void     UiDriver_DisplayBand(uchar band);
-static uchar    UiDriver_DisplayBandForFreq(ulong freq);
+static void     UiDriver_DisplayBandForFreq(uint32_t freq);
 
 static void     UiDriver_DisplayEncoderOneMode();
 static void     UiDriver_DisplayEncoderTwoMode();
@@ -129,7 +129,7 @@ static bool	    UiDriver_TouchscreenCalibration();
 
 static void     UiDriver_PowerDownCleanup(bool saveConfiguration);
 
-static void UiDriver_HandlePowerLevelChange(uint8_t power_level);
+static void UiDriver_HandlePowerLevelChange(band_mode_t band, uint8_t power_level);
 static void UiDriver_HandleBandButtons(uint16_t button);
 
 static void UiDriver_KeyTestScreen();
@@ -754,11 +754,13 @@ void UiDriver_SpectrumChangeLayoutParameters()
 
 
 
-
-void UiDriver_HandlePowerLevelChange(uint8_t power_level)
+/**
+ * Sets a power level and updates the display accordingly.
+ * @param power_level
+ */
+void UiDriver_HandlePowerLevelChange(band_mode_t band, uint8_t power_level)
 {
-	//
-	if (RadioManagement_PowerLevelChange(ts.band,power_level))
+	if (RadioManagement_SetPowerLevel(band,power_level))
 	{
 		UiDriver_DisplayPowerLevel();
 		if (ts.menu_mode)
@@ -2310,17 +2312,17 @@ static void UiDriver_InitFrequency()
  * @returns band index (0 - (MAX_BANDS-1))
  */
 
-uchar UiDriver_DisplayBandForFreq(ulong freq)
+void UiDriver_DisplayBandForFreq(uint32_t freq)
 {
 	// here we maintain our local state of the last band shown
-	static uint8_t ui_band_scan_old = 99;
 	uint8_t band_scan = RadioManagement_GetBand(freq);
-	if(band_scan != ui_band_scan_old || band_scan == BAND_MODE_GEN)        // yes, did the band actually change?
+	if(band_scan != ts.band_effective || band_scan == BAND_MODE_GEN)        // yes, did the band actually change?
 	{
+
 		UiDriver_DisplayBand(band_scan);    // yes, update the display with the current band
+		UiDriver_HandlePowerLevelChange(band_scan, ts.power_level); // also validate power level if band changes
 	}
-	ui_band_scan_old = band_scan;
-	return band_scan;
+	ts.band_effective = band_scan;
 }
 
 
@@ -4379,29 +4381,47 @@ static void UiDriver_DisplayModulationType()
 
 static void UiDriver_DisplayPowerLevel()
 {
-	ushort color = White;
-	const char* txt;
+    uint16_t fg_clr = White;
+    char txt[5];
+    char* txt_ptr = txt;
 
-	switch(ts.power_level)
-	{
-	case PA_LEVEL_5W:
-		txt = "5W";
-		break;
-	case PA_LEVEL_2W:
-		txt = "2W";
-		break;
-	case PA_LEVEL_1W:
-		txt = "1W";
-		break;
-	case PA_LEVEL_0_5W:
-		txt = "0.5W";
-		break;
-	default:
-		txt = "FULL";
-		break;
-	}
-	// Draw top line
-	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->PW_IND.w,txt,color,Blue,0);
+    if (ts.power == 0 )
+    {
+        txt_ptr = "FULL";
+    }
+    else if (ts.power < 100)
+    {
+        snprintf(txt,sizeof(txt),"%ldmW",ts.power);
+    }
+    else if (ts.power < 1000)
+    {
+        snprintf(txt,sizeof(txt),"0.%ldW",ts.power/100);
+    }
+    else
+    {
+        snprintf(txt,sizeof(txt),"%ldW",ts.power/1000);
+    }
+
+    uint16_t bg_clr = Blue; // normal operation
+
+    if (RadioManagement_IsTxDisabled() == true)
+    {
+        // we'll not transmit, power is irrelevant
+        bg_clr = Grey;
+    }
+    else if (ts.tx_power_factor == 0)
+    {
+        // no output at all will be generate with power factor 0
+        // probably not calibrated PA
+        bg_clr = Red;
+    }
+    else if (ts.power_modified == true)
+    {
+        // transmit p, power is irrelevant
+        bg_clr = Orange;
+    }
+
+	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->PW_IND.w,txt_ptr,fg_clr,bg_clr,0);
 }
 
 static void UiDriver_DisplayDbm()
@@ -6124,7 +6144,10 @@ static void UiAction_ChangeDemodModeToAlternativeMode()
 
 void UiAction_ChangePowerLevel()
 {
-	UiDriver_HandlePowerLevelChange(ts.power_level+1);
+    uint8_t pl = ts.power_level;
+    incr_wrap_uint8(&pl,0,mchf_power_levelsInfo.count-1);
+	UiDriver_HandlePowerLevelChange(ts.band_effective, pl);
+
 }
 
 void UiAction_ChangeAudioSource()
