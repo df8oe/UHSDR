@@ -8,6 +8,9 @@
  **                                                                                 **
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
+#ifndef USE_HAL_DRIVER
+    #define USE_HAL_DRIVER
+#endif
 #include "uhsdr_board.h"
 #include "uhsdr_keypad.h"
 

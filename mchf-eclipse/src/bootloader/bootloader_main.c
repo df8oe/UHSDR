@@ -202,7 +202,7 @@ static int Bootloader_UsbMSCDevice_Application(void)
         {}
 
         /* Jumps to user application code located in the internal Flash memory */
-        COMMAND_ResetMCU(BOOT_FIRMWARE);
+        COMMAND_ResetMCU(BOOT_REBOOT);
     }
 
     // this below is a trick to get sbrk() linked in at the right time so that

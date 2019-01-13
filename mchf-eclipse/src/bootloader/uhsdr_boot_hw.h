@@ -18,6 +18,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "uhsdr_board_config.h"
 #include "uhsdr_board.h"
+#include "gpio.h"
 
 typedef enum
 {

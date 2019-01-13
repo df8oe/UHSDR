@@ -26,6 +26,9 @@
 
 
 // Common
+#ifndef USE_HAL_DRIVER
+    #define USE_HAL_DRIVER
+#endif
 #include "uhsdr_board.h"
 #ifdef STM32F7
 #include "stm32f7xx_hal_flash_ex.h"

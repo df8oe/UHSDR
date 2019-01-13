@@ -15,7 +15,8 @@
 #include "uhsdr_board.h"
 #include "ui_spectrum.h"
 #include "ui_driver.h"
-#include "stdlib.h"
+#include <stdlib.h>
+#include <stdio.h>
 #include "radio_management.h"
 
 #define Col_BtnForeCol RGB(0x90,0x90,0x90)
