@@ -50,6 +50,7 @@
 
 #define W8731_HEADPH_OUT_ZCEN     0x0080      // bit 7 W8731_LEFT_HEADPH_OUT / W8731_RIGHT_HEADPH_OUT
 #define W8731_HEADPH_OUT_HPBOTH   0x0100      // bit 8 W8731_LEFT_HEADPH_OUT / W8731_RIGHT_HEADPH_OUT
+#define W8731_LINE_IN_LRBOTH   0x0100      // bit 8 W8731_LEFT_LINE_IN_OUT / W8731_RIGHT_LINE_IN
 
 #define W8731_ANLG_AU_PATH_CNTR_DACSEL      (0x10)
 #define W8731_ANLG_AU_PATH_CNTR_INSEL_MIC       (0x04)
@@ -442,20 +443,24 @@ void Codec_TxSidetoneSetgain(uint8_t txrx_mode)
 
     if(txrx_mode == TRX_MODE_TX)  		// bail out if not in transmit mode
     {
-        float vcalc = 0;
+        float32_t vcalc = 0;
+
         if(ts.cw_sidetone_gain)	 	// calculate if the sidetone gain is non-zero
         {
-            vcalc = (float)ts.tx_power_factor;	// get TX scaling power factor
-            vcalc *= vcalc;
-            vcalc = 1/vcalc;		// invert it since we are calculating attenuation of the original signal (assuming normalization to 1.0)
-            vcalc = log10f(vcalc);	// get the log
-            vcalc *= 10;			// convert to deciBels and calibrate for the per-step value of the codec
+            const float32_t pf = ts.tx_power_factor;	// get TX scaling power factor
 
-            float vcalc1 = 6.0 *((float)ts.cw_sidetone_gain-5);
+            float32_t signal_level_db = 10* log10f(1/(pf*pf));
+            // we invert the square of power_factor (aka the signal energy)
+            // since we are calculating attenuation of the original signal (assuming normalization to 1.0)
+            // get the log
+            // and multiple with 10 to convert to deciBels
+
+            float32_t sidetone_level_db = 6.0 *((float32_t)ts.cw_sidetone_gain-5);
             // get the sidetone gain (level) setting
             // offset by # of dB the desired sidetone gain
 
-            vcalc += vcalc1;		// add the calculated gain to the desired sidetone gain
+            vcalc = signal_level_db + sidetone_level_db;		// add the calculated gain to the desired sidetone gain
+
             if(vcalc > 127)  			// enforce limits of calculation to range of attenuator
             {
                 vcalc = 127;
@@ -465,15 +470,15 @@ void Codec_TxSidetoneSetgain(uint8_t txrx_mode)
                 vcalc = 0;
             }
         }
+
         Codec_VolumeSpkr(vcalc/5); // divide by 5 to convert decibel to volume control steps
-        Codec_VolumeLineOut(txrx_mode);		// set the calculated sidetone volume
     }
 }
 
 
 /**
  * @brief audio volume control in TX and RX modes for speaker [left headphone]
- * @param vol speaker / headphone volume in range  [0 - CODEC_SPEAKER_MAX_VOLUME], unit is dB, 0 represents muting
+ * @param vol speaker / headphone volume in range  [0 - CODEC_SPEAKER_MAX_VOLUME], unit is dB, 0 represents muting, one increment represents 5db
  */
 
 void Codec_VolumeSpkr(uint8_t vol)
@@ -494,23 +499,25 @@ void Codec_VolumeSpkr(uint8_t vol)
 /**
  * @brief audio volume control in TX and RX modes for lineout [right headphone]
  *
- * At RX Lineout is always on with constant level
- * At TX only if no frequency translation is active AND TX lineout mute is not set
+ * At RX Lineout is always on with constant level (control via ts.lineout_gain)
+ * At TX only if no frequency translation is active AND TX lineout mute is not set OR in CW
+ * (because we send always without frequency translation in CW)
+ *
  * @param txrx_mode txrx for which volume is to be set
  */
-
 void Codec_VolumeLineOut(uint8_t txrx_mode)
 {
 
     uint16_t lov =  ts.lineout_gain + 0x2F;
+    // Selectively mute "Right Headphone" output (LINE OUT) depending on transceiver configuration
 
 #ifdef UI_BRD_MCHF
-    // FIXME: F7PORT -> CW Sidetone needs to be "generate" specifically by copying the IQ output to the lineout channel, not yet possible due to required SW changes
-    // Selectively mute "Right Headphone" output (LINE OUT) depending on transceiver configuration
+    // only needed if we have MCHF_UI which shares IQ and Audio on same codec
+    // we can only "listen to the transmit output if we are send
     if (
             (txrx_mode == TRX_MODE_TX)
             &&
-            ((ts.flags1& FLAGS1_MUTE_LINEOUT_TX) || (ts.iq_freq_mode && ts.dmod_mode != DEMOD_CW))
+            ((ts.flags1 & FLAGS1_MUTE_LINEOUT_TX) || (ts.iq_freq_mode && ts.dmod_mode != DEMOD_CW))
        )
     {
         // at CW we transmit without translation, no matter what the iq_freq_mode for RX is
@@ -522,7 +529,7 @@ void Codec_VolumeLineOut(uint8_t txrx_mode)
         Codec_WriteRegister(CODEC_ANA_I2C, W8731_RIGHT_HEADPH_OUT,lov);   // value selected for 0.5VRMS at AGC setting
     }
 #elif defined(UI_BRD_OVI40)
-    UNUSED(txrx_mode); // only needed if we have MCHF_UI
+    UNUSED(txrx_mode);
     // we have a special shared lineout/headphone on the OVI40.
     // And since we have a dedidacted IQ codec, there is no need to switch of the lineout or headphones here
     Codec_WriteRegister(CODEC_ANA_I2C, W8731_RIGHT_HEADPH_OUT, lov | W8731_HEADPH_OUT_ZCEN | W8731_HEADPH_OUT_HPBOTH );   // value selected for 0.5VRMS at AGC setting
@@ -535,13 +542,6 @@ void Codec_VolumeLineOut(uint8_t txrx_mode)
  */
 void Codec_MuteDAC(bool state)
 {
-    //
-    // Reg 05: Digital Audio Path Control(all filters disabled)
-    // De-emphasis control, bx11x - 48kHz
-    //                      bx00x - off
-    // DAC soft mute		b1xxx - mute on
-    //						b0xxx - mute off
-    //
     if(state)
     {
         Codec_WriteRegister(CODEC_ANA_I2C, W8731_DIGI_AU_PATH_CNTR,(W8731_DEEMPH_CNTR|0x08));	// mute
@@ -556,32 +556,26 @@ void Codec_MuteDAC(bool state)
  * @brief Sets the Codec WM8371 line input gain for both channels
  * @param gain in range of [0-255]
  */
-static void Codec_InGainAdj(I2C_HandleTypeDef* hi2c, uchar gain)
+static void Codec_InGainAdj(I2C_HandleTypeDef* hi2c, uint16_t gain)
 {
-    uint16_t l_gain;
-
-    l_gain = (uint16_t)gain;
-
-    // Use Reg 00: Left Line In, set MSB to adjust gain of both channels simultaneously
-    l_gain |= 0x100;    // set MSB of control word for "LRINBOTH" flag
-
-    Codec_WriteRegister(hi2c, W8731_LEFT_LINE_IN,l_gain);
+    // Use Reg 00: Left Line In, set flag to adjust gain of both channels simultaneously
+    Codec_WriteRegister(hi2c, W8731_LEFT_LINE_IN, gain | W8731_LINE_IN_LRBOTH);
 }
 
 /**
- * @brief Sets the Codec WM8371 line input gain for both channels
+ * @brief Sets the Codec WM8371 line input gain for both audio in channels
  * @param gain in range of [0-255]
  */
-void Codec_LineInGainAdj(uchar gain)
+void Codec_LineInGainAdj(uint8_t gain)
 {
     Codec_InGainAdj(CODEC_ANA_I2C, gain);
 }
 
 /**
- * @brief Sets the Codec WM8371 line input gain for both channels
+ * @brief Sets the Codec WM8371 line input gain for IQ in (both channels)
  * @param gain in range of [0-255]
  */
-void Codec_IQInGainAdj(uchar gain)
+void Codec_IQInGainAdj(uint8_t gain)
 {
     Codec_InGainAdj(CODEC_IQ_I2C, gain);
 }
