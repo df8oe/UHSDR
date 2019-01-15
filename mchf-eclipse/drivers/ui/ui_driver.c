@@ -5377,7 +5377,7 @@ static void UiDriver_KeyTestScreen()
 
 			if (idxFirstPressedButton < BUTTON_NUM)
 			{
-				txt = buttons[idxFirstPressedButton].label;
+				txt = Keypad_GetLabelOfButton( idxFirstPressedButton );
 			}
 			else
 			{

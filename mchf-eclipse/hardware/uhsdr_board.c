@@ -348,12 +348,12 @@ void Board_InitFull()
     // in order to know which one to use.
     if (ts.rtc_present)
     {
-        hwKeys.map = &bm_set_rtc[0];
+        Keypad_SetLayoutRTC_MCHF();
     }
 #endif
 
     // Init keypad hw based on button map bm
-    Keypad_KeypadInit(&hwKeys);
+    Keypad_KeypadInit();
 
     // Encoders init
     UiRotaryFreqEncoderInit();
