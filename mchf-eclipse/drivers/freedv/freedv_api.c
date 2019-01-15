@@ -1517,6 +1517,9 @@ static int freedv_comprx_700(struct freedv *f, COMP demod_in_8kHz[], int *valid)
                     break;
                 default:
                     assert(0);
+                    nspare = 0;
+                    // this is to silence the compiler
+                    // in case assert is not enabled.
                 }
 
                 for(k=0; k<nspare; k++)  {

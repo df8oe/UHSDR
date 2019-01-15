@@ -318,6 +318,7 @@ const cw_mode_map_entry_t* RadioManagement_CWConfigValueToModeEntry(uint8_t cw_o
 uint8_t RadioManagement_CWModeEntryToConfigValue(const cw_mode_map_entry_t* mode_entry);
 bool RadioManagement_UsesBothSidebands(uint16_t dmod_mode);
 bool RadioManagement_IsPowerFactorReduce(uint32_t freq);
+bool RadioManagement_UsesTxSidetone();
 void RadioManagement_ToggleVfoAB();
 
 bool RadioManagement_FmDevIs5khz();

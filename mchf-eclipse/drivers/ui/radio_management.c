@@ -282,6 +282,16 @@ static bool RadioManagement_SetBandPowerFactor(band_mode_t band)
     return ts.tx_power_factor != old_pf;
 }
 
+/**
+ * Is the currently active modulation / transceiver mode able to generate a side tone during transmit
+ * Can be called during RX and TX
+ *
+ * @return true if the selected modulation mode permits the use of a side tone
+ */
+bool RadioManagement_UsesTxSidetone()
+{
+    return ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || (ts.tune && !ts.iq_freq_mode);
+}
 
 /**
  * @brief API Function, implements application logic for changing the power level including filter changes
@@ -338,7 +348,8 @@ bool RadioManagement_SetPowerLevel(band_mode_t band, power_level_t power_level)
             ts.power_level = power_level;
             ts.power = power;
             ts.power_modified = power_modified;
-            if(ts.tune && !ts.iq_freq_mode)         // recalculate sidetone gain only if transmitting/tune mode
+
+            if (RadioManagement_UsesTxSidetone())
             {
                 Codec_TxSidetoneSetgain(ts.txrx_mode);
             }

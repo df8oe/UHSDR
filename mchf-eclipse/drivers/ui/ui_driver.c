@@ -3388,7 +3388,14 @@ static void UiDriver_CheckEncoderOne()
 			break;
 		case ENC_ONE_MODE_ST_GAIN:
 			ts.cw_sidetone_gain = change_and_limit_uint(ts.cw_sidetone_gain,pot_diff_step,0,SIDETONE_MAX_GAIN);
-			Codec_TxSidetoneSetgain(ts.txrx_mode);
+
+			// we only set a side tone if it would have an effect in the current mode
+			// TODO: Should we even disable changes or at least display the box differently if  side tone is not support in currently
+			// active mode?
+			if (RadioManagement_UsesTxSidetone())
+			{
+			    Codec_TxSidetoneSetgain(ts.txrx_mode);
+			}
 			UiDriver_DisplaySidetoneGain(true);
 			break;
 		case ENC_ONE_MODE_CMP_LEVEL:
