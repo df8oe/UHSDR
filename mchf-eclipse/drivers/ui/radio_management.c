@@ -223,11 +223,14 @@ float32_t RadioManagement_CalculatePowerFactorScale(float32_t powerMw)
     return retval;
 }
 
-/*
+/**
+ *
  * Depends on globals: ts.pwr_adj, ts.power_level, df.tune_new, ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE
  * Impacts globals:    ts.tx_power_factor
+ * @param band
+ * @return true if the power factor value differs from previous
  */
-void RadioManagement_SetBandPowerFactor(band_mode_t band)
+static bool RadioManagement_SetBandPowerFactor(band_mode_t band)
 {
     float32_t   pf_bandvalue;    // used as a holder for percentage of power output scaling
 
@@ -267,11 +270,16 @@ void RadioManagement_SetBandPowerFactor(band_mode_t band)
     float32_t power_factor = pf_bandvalue * power_factor_scale;
 
     // limit hard limit for power factor since it otherwise may overdrive the PA section
+
+    const float32_t old_pf = ts.tx_power_factor;
+
     ts.tx_power_factor =
             (power_factor > TX_POWER_FACTOR_MAX_INTERNAL) ?
             TX_POWER_FACTOR_MAX_INTERNAL : power_factor;
 
     ts.power_modified |=  (power_factor == 0 || ts.tx_power_factor != power_factor);
+
+    return ts.tx_power_factor != old_pf;
 }
 
 
@@ -321,7 +329,10 @@ bool RadioManagement_SetPowerLevel(band_mode_t band, power_level_t power_level)
         }
 
 
-        if (power != ts.power || ts.power_level != power_level || ts.power_modified != power_modified)
+        // Calculate TX power factor - see if power changed
+        bool pf_change = RadioManagement_SetBandPowerFactor(band);
+
+        if (pf_change == true || power != ts.power || ts.power_level != power_level || ts.power_modified != power_modified)
         {
             retval = true;
             ts.power_level = power_level;
@@ -331,8 +342,6 @@ bool RadioManagement_SetPowerLevel(band_mode_t band, power_level_t power_level)
             {
                 Codec_TxSidetoneSetgain(ts.txrx_mode);
             }
-            // Set TX power factor - to reflect changed power
-            RadioManagement_SetBandPowerFactor(band);
         }
     }
 
