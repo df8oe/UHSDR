@@ -5,6 +5,7 @@ misc/config_storage.c \
 misc/TestCPlusPlusBuild.cpp \
 misc/profiling.c \
 misc/serial_eeprom.c \
+misc/uhsdr_canary.c \
 hardware/uhsdr_board.c \
 hardware/uhsdr_hw_i2c.c \
 hardware/uhsdr_hmc1023.c \

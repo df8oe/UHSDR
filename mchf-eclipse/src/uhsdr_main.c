@@ -15,7 +15,6 @@
 // Common
 #include "uhsdr_board.h"
 #include <stdio.h>
-#include <malloc.h>
 #include "uhsdr_rtc.h"
 #include "ui_spectrum.h"
 
@@ -46,6 +45,7 @@
 #include "drivers/ui/oscillator/osc_si570.h"
 #include "drivers/audio/codec/codec.h"
 #include "misc/profiling.h"
+#include "uhsdr_canary.h"
 // Keyboard Driver
 // #include "keyb_driver.h"
 
@@ -379,29 +379,6 @@ void MiscInit(void)
     // Init Soft DDS
     float freq[2] = { 0.0, 0.0 };
     softdds_configRunIQ(freq,ts.samp_rate,0);
-}
-
-
-static const uint8_t canary_word[16] = { 'D', 'O',' ' ,'N', 'O', 'T', ' ', 'O', 'V', 'E', 'R' , 'W', 'R' , 'I', 'T','E' };
-uint8_t* canary_word_ptr;
-
-// in hex 44 4f 20 4e 4f 54 20 4f 56 45 52 57 52 49 54 45
-// this has to be called after all dynamic memory allocation has happened
-void Canary_Create()
-{
-    canary_word_ptr = (uint8_t*)malloc(sizeof(canary_word));
-    memcpy(canary_word_ptr,canary_word,16);
-}
-// in hex 44 4f 20 4e 4f 54 20 4f 56 45 52 57 52 49 54 45
-// this has to be called after all dynamic memory allocation has happened
-bool Canary_IsIntact()
-{
-    return memcmp(canary_word_ptr,canary_word,16) == 0;
-}
-
-uint8_t* Canary_GetAddr()
-{
-    return canary_word_ptr;
 }
 
 

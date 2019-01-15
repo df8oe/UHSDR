@@ -399,8 +399,7 @@ void Codec_SwitchTxRxMode(uint8_t txrx_mode)
     }
     else		// It is transmit
     {
-        if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || (ts.tune && !ts.iq_freq_mode))
-        // Turn sidetone on for CW or TUNE mode without freq translation
+        if(RadioManagement_UsesTxSidetone())
         {
             Codec_TxSidetoneSetgain(txrx_mode);	// set sidetone level
         }
