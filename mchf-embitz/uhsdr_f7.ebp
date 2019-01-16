@@ -49,7 +49,7 @@
 				</Cpp>
 				<Linker>
 					<Add option="-eb_lib=n" />
-					<Add option="-T..\mchf-eclipse\linker\arm-gcc-link_f4_flash1024k.ld" />
+					<Add option="-T..\mchf-eclipse\linker\arm-gcc-link_f7.ld" />
 					<Add library="bin\F7\Release\libstm32f7xxhal.a" />
 					<Add library="bin\F7\Release\libcmsisdsp.a" />
 				</Linker>
@@ -428,6 +428,9 @@
 		<Unit filename="..\mchf-eclipse\drivers\audio\freedv_uhsdr.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\audio\freq_shift.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="..\mchf-eclipse\drivers\audio\psk.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -663,6 +666,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\hardware\uhsdr_board.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\hardware\uhsdr_hmc1023.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\hardware\uhsdr_hw_i2c.c">

@@ -17,7 +17,6 @@
 					<Add option="-std=gnu11" />
 					<Add option="-O0" />
 					<Add option="-g2" />
-					<Add option="-mthumb" />
 				</Compiler>
 				<Cpp>
 					<Add option="-std=gnu++11" />
@@ -80,6 +79,7 @@
 		<Device>
 			<Add option="$device=cortex-m7" />
 			<Add option="$fpu=fpv5-d16" />
+			<Add option="$lscript=..\mchf-eclipse\linker\arm-gcc-link-bootloader_f7.ld" />
 		</Device>
 		<Compiler>
 			<Add option="-mfloat-abi=hard" />
@@ -87,7 +87,9 @@
 			<Add option="-Wall" />
 			<Add option="-fdata-sections" />
 			<Add option="-ffunction-sections" />
+			<Add option="-Os" />
 			<Add option="-Wno-unused-function" />
+			<Add option="-mthumb" />
 			<Add symbol="ARM_MATH_CM7" />
 			<Add symbol="_GNU_SOURCE" />
 			<Add symbol="CORTEX_M7" />
@@ -98,6 +100,7 @@
 			<Add symbol="TRACE" />
 			<Add symbol="__FPU_PRESENT=1" />
 			<Add symbol="BOOTLOADER_BUILD" />
+			<Add symbol="UI_BRD_OVI40" />
 			<Add directory="..\mchf-eclipse\basesw\ovi40\Drivers\STM32F7xx_HAL_Driver\Inc" />
 			<Add directory="..\mchf-eclipse\basesw\ovi40\Inc" />
 			<Add directory="..\mchf-eclipse\basesw\ovi40\Drivers\CMSIS\Device\ST\STM32F7xx\Include" />
@@ -134,10 +137,12 @@
 			<Add directory="..\mchf-eclipse\drivers\ui\encoder" />
 			<Add directory="..\mchf-eclipse\drivers\ui\menu" />
 			<Add directory="..\mchf-eclipse\drivers\usb\device\class\composite" />
+			<Add directory="..\mchf-eclipse\hardware\board_configs" />
 		</Compiler>
 		<Cpp>
 			<Add option="-mfloat-abi=hard" />
 			<Add option="-std=gnu++11" />
+			<Add option="-Wextra" />
 			<Add option="-Wall" />
 			<Add option="-fdata-sections" />
 			<Add option="-ffunction-sections" />
@@ -148,13 +153,7 @@
 			<Add option="-eb_start_files" />
 			<Add option="-Wl,--gc-sections" />
 			<Add option="-flto" />
-			<Add option="-lm" />
-			<Add option="-lc" />
-			<Add option="-lnosys" />
-			<Add option="-T..\mchf-eclipse\linker\arm-gcc-link-bootloader_f7.ld" />
-			<Add option="-Xlinker" />
-			<Add option="--gc-sections" />
-			<Add option="-Llibs" />
+			<Add option="--specs=nosys.specs" />
 		</Linker>
 		<Unit filename="..\mchf-eclipse\basesw\ovi40\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_core.c">
 			<Option compilerVar="CC" />
