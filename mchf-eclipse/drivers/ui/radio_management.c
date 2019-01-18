@@ -49,6 +49,7 @@
 
 #include "psk.h"
 #include "rtty.h"
+#include "uhsdr_digi_buffer.h"
 
 #define SWR_SAMPLES_SKP             1   //5000
 #define SWR_SAMPLES_CNT             5//10
@@ -1066,9 +1067,6 @@ bool RadioManagement_IsPowerFactorReduce(uint32_t freq)
  */
 void RadioManagement_SetDemodMode(uint8_t new_mode)
 {
-
-	DigiModes_TxBufferReset();
-
     ts.dsp_inhibit++;
     ads.af_disabled++;
 
