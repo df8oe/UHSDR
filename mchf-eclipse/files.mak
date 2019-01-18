@@ -129,6 +129,7 @@ drivers/audio/filters/iir_antialias.c \
 drivers/audio/filters/iq_rx_filter.c \
 drivers/audio/filters/iq_rx_filter_am.c \
 drivers/audio/filters/iq_tx_filter.c \
+drivers/audio/cw/uhsdr_digi_buffer.c \
 drivers/audio/cw/cw_gen.c \
 drivers/audio/cw/cw_decoder.c \
 drivers/audio/codec/codec.c \

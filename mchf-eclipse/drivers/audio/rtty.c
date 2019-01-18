@@ -22,6 +22,7 @@
 #include "ui_driver.h"
 #include "rtty.h"
 #include "radio_management.h"
+#include "uhsdr_digi_buffer.h"
 
 
 
@@ -733,62 +734,6 @@ rtty_tx_encoder_state_t  rtty_tx =
 
 };
 
-#define DIGIMODES_TX_BUFFER_SIZE  128
-
-static __IO uint8_t digimodes_tx_buffer[DIGIMODES_TX_BUFFER_SIZE];
-static __IO int32_t digimodes_tx_buffer_head = 0;
-static __IO int32_t digimodes_tx_tail = 0;
-
-uint8_t DigiModes_TxBufferHasData()
-{
-    int32_t len = digimodes_tx_buffer_head - digimodes_tx_tail;
-    return len < 0?len+DIGIMODES_TX_BUFFER_SIZE:len;
-}
-
-int DigiModes_TxBufferRemove(uint8_t* c_ptr)
-{
-	int ret = 0;
-
-    if (digimodes_tx_buffer_head != digimodes_tx_tail)
-    {
-        int c = digimodes_tx_buffer[digimodes_tx_tail];
-        digimodes_tx_tail = (digimodes_tx_tail + 1) % DIGIMODES_TX_BUFFER_SIZE;
-        *c_ptr = (uint8_t)c;
-        ret++;
-    }
-    return ret;
-}
-
-/* no room left in the buffer returns 0 */
-int DigiModes_TxBufferPutChar(uint8_t c)
-{
-	int ret = 0;
-    int32_t next_head = (digimodes_tx_buffer_head + 1) % DIGIMODES_TX_BUFFER_SIZE;
-
-    if (next_head != digimodes_tx_tail)
-    {
-        /* there is room */
-        digimodes_tx_buffer[digimodes_tx_buffer_head] = c;
-        digimodes_tx_buffer_head = next_head;
-        ret ++;
-    }
-    return ret;
-}
-
-void DigiModes_TxBufferPutSign(const char* s)
-{
-	DigiModes_TxBufferPutChar('<');
-	DigiModes_TxBufferPutChar(s[0]);
-	DigiModes_TxBufferPutChar(s[1]);
-	DigiModes_TxBufferPutChar('>');
-}
-
-void DigiModes_TxBufferReset()
-{
-    digimodes_tx_tail = digimodes_tx_buffer_head;
-}
-
-
 #define USE_RTTY_MSK
 #define RTTY_CODE_MODE_MASK (0b100000)
 #define RTTY_CODE_MODE_LETTER (RTTY_CODE_MODE_MASK)
@@ -862,20 +807,17 @@ int16_t Rtty_Modulator_GenSample()
 		if (rtty_tx.char_bit_idx == 0)
 		{
 			// load the character and add the stop bits;
-
 			bool bitsFilled = false;
-			while (DigiModes_TxBufferHasData() && bitsFilled == false)
+            uint8_t current_ascii;
+			while ( DigiModes_TxBufferRemove( &current_ascii, RTTY )
+			        && bitsFilled == false )
 			{
-			    uint8_t current_ascii;
-			    if (DigiModes_TxBufferRemove(&current_ascii))
-			    {
-			        uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
-			        if (current_baudot > 0)
-			        { // we have valid baudot code
-			            Rtty_Modulator_Code2Bits(current_baudot);
-			            bitsFilled = true;
-			        }
-			    }
+                uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
+                if (current_baudot > 0)
+                { // we have valid baudot code
+                    Rtty_Modulator_Code2Bits(current_baudot);
+                    bitsFilled = true;
+                }
 			}
 
 			if (bitsFilled == false)
@@ -886,7 +828,7 @@ int16_t Rtty_Modulator_GenSample()
 #if 0
 				for (uint8_t idx = 0; idx < sizeof(rtty_test_string); idx++)
 				{
-					DigiModes_TxBufferPutChar(rtty_test_string[idx]);
+					DigiModes_TxBufferPutChar( rtty_test_string[idx] , CW );
 				}
 #endif
 			}

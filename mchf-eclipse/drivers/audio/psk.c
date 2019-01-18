@@ -13,6 +13,7 @@
 #include "radio_management.h"
 #include "rtty.h"
 #include <stdlib.h>
+#include "uhsdr_digi_buffer.h"
 
 // table courtesy of fldigi pskvaricode.cxx
 static uint16_t psk_varicode[] = {
@@ -620,11 +621,11 @@ int16_t Psk_Modulator_GenSample()
 			    // normal characters don't have 2 zeros following each other
 				psk_state.tx_zeros++;
 			}
-			else if (DigiModes_TxBufferRemove(&psk_state.tx_char))
+			else if ( DigiModes_TxBufferRemove( &psk_state.tx_char, BPSK ))
 			{
 			    // if all zeros have been sent, look for new
 			    // input from input buffer
-				psk_state.tx_bits = Bpsk_FindCharReversed(psk_state.tx_char);
+				psk_state.tx_bits = Bpsk_FindCharReversed( psk_state.tx_char );
 				// reset counter for trailing/leading zeros
 				psk_state.tx_zeros = 0;
 				// reset counter for trailing zeros
