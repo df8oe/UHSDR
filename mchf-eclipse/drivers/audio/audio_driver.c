@@ -4393,6 +4393,23 @@ static void AudioDriver_TxProcessorFM(AudioSample_t * const src, IqSample_t * co
     AudioDriver_TxIqProcessingFinal(FM_MOD_AMPLITUDE_SCALING, swap, dst, blockSize);
 }
 
+#if defined(UI_BRD_OVI40)
+/*
+ * Used only on the OVI40, there is no way on the MCHF to add the sidetone.
+ * should be called the last in the chain.
+ * ( src buffer should be not cleared or tremendously modified by previous stages)
+ */
+static void AudioDriver_FillSideToneAudioBuffer( float32_t* const src, AudioSample_t* const dst,
+        int16_t blockSize, float32_t gain, bool is_signal_active )
+{
+    float32_t final_gain = ( is_signal_active ) ? gain * IQ_BIT_SCALE_UP : 0;
+    for( uint32_t i = 0; i < blockSize; i++ )
+    {
+        dst[i].r = dst[i].l = correctHalfWord((int32_t)src[i] * final_gain);
+    }
+}
+#endif
+
 #ifdef USE_FREEDV
 static void AudioDriver_TxProcessorDigital (AudioSample_t * const src, IqSample_t * const dst, int16_t blockSize)
 {
@@ -4543,25 +4560,29 @@ static inline void AudioDriver_TxFilterAudio(bool do_bandpass, bool do_bass_treb
 }
 
 
-static void AudioDriver_TxProcessorRtty(IqSample_t * const dst, uint16_t blockSize)
+static void AudioDriver_TxProcessorRtty ( IqSample_t * const dst, uint16_t blockSize )
 {
-
-	for (uint16_t idx =0; idx < blockSize; idx++)
-	{
-		adb.a_buffer[0][idx] = Rtty_Modulator_GenSample();
-	}
-    AudioDriver_TxFilterAudio(true,false, adb.a_buffer[0], adb.a_buffer[0], blockSize);
-    AudioDriver_TxProcessorModulatorSSB(dst, blockSize, ts.iq_freq_mode, ts.digi_lsb);
-
-    // remove noise if no CW is keyed
-    memset(adb.a_buffer[0],0,sizeof(adb.a_buffer[0][0])*blockSize);
-
-    if (ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+    for ( uint16_t idx = 0; idx < blockSize; idx++ )
     {
-    	CwGen_Process(adb.a_buffer[0], adb.a_buffer[0], blockSize);
-    	// we just misuse adb.a_buffer[0], and generate a CW side tone
+        adb.a_buffer[0][idx] = Rtty_Modulator_GenSample( );
     }
+    AudioDriver_TxFilterAudio ( true, false, adb.a_buffer[0], adb.a_buffer[0],
+            blockSize );
+    AudioDriver_TxProcessorModulatorSSB ( dst, blockSize, ts.iq_freq_mode, ts.digi_lsb );
 
+    if ( ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT )
+    {
+        // remove noise if no CW is keyed
+        memset ( adb.a_buffer[1], 0, sizeof( adb.a_buffer[1][0]) * blockSize );
+        CwGen_Process ( adb.a_buffer[1], adb.a_buffer[1], blockSize );
+
+        #if defined(UI_BRD_OVI40)
+        // FIXME if we leave two signals together, level of RTTY should be adjusted somehow.
+        // now it's scaled down to really low level.
+        arm_scale_f32 ( adb.a_buffer[0], 0.05, adb.a_buffer[0], blockSize );
+        arm_add_f32 ( adb.a_buffer[0], adb.a_buffer[1], adb.a_buffer[0], blockSize );
+        #endif // UI_BRD_OVI40
+    }
 }
 
 static void AudioDriver_TxProcessorPsk(IqSample_t * const dst, uint16_t blockSize)
@@ -4574,7 +4595,9 @@ static void AudioDriver_TxProcessorPsk(IqSample_t * const dst, uint16_t blockSiz
 
     AudioDriver_TxFilterAudio(true,false, adb.a_buffer[0], adb.a_buffer[0], blockSize);
 	AudioDriver_TxProcessorModulatorSSB(dst, blockSize, false, false);
+
 /*
+	// TODO There is a bug when CW enabled in BPSK, somehow affected the AGC struct and it crashes.
     memset(adb.a_buffer[0],0,sizeof(adb.a_buffer[0])*blockSize);
 
     if (ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
@@ -4638,13 +4661,13 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t *
 #endif
     	case DigitalMode_RTTY:
     	{
-            AudioDriver_TxProcessorRtty(dst,blockSize);
+            AudioDriver_TxProcessorRtty( dst, blockSize );
             signal_active = true;
     	}
     	break;
     	case DigitalMode_BPSK:
     	{
-    		AudioDriver_TxProcessorPsk(dst,blockSize);
+    		AudioDriver_TxProcessorPsk( dst, blockSize );
     		signal_active = true;
     	}
     	break;
@@ -4667,13 +4690,16 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t *
             	signal_active = cw_signal_active;
             }
         }
-
         if (signal_active)
         {
+            #if defined(UI_BRD_OVI40)
+            // copy not modified source for using later to filling audio buffer
+            arm_copy_f32( adb.i_buffer, adb.a_buffer[0], blockSize );
+            #endif // UI_BRD_OVI40
             // apply I/Q amplitude & phase adjustments
             // Wouldn't it be necessary to include IF conversion here? DD4WH June 16th, 2016
             // Answer: NO, in CW that is done be changing the Si570 frequency during TX/RX switching . . .
-            AudioDriver_TxIqProcessingFinal(1.0, ts.cw_lsb == 0, dst, blockSize);
+            AudioDriver_TxIqProcessingFinal( 1.0, ( ts.cw_lsb == 0 ), dst, blockSize );
         }
     }
     // SSB processor
@@ -4738,7 +4764,6 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t *
             float32_t  i2_buffer[blockSize];
             float32_t  q2_buffer[blockSize];
 
-
             arm_negate_f32(adb.i_buffer, q2_buffer, blockSize); // this becomes the q buffer for the upper  sideband
             arm_negate_f32(adb.q_buffer, i2_buffer, blockSize); // this becomes the i buffer for the upper  sideband
 
@@ -4777,28 +4802,18 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t *
         }
     }
 
-#ifdef UI_BRD_OVI40
-    // we code the sidetone to the audio codec, since we have one for audio and one for iq
+#if defined(UI_BRD_OVI40)
+    // we copy the sidetone to the audio codec, since we have one for audio and one for iq
     // TODO: Do we need the check? OVI40 always comes with 2 codecs
     if ((void*)audioDst != (void*)dst)
     {
-    	if (dmod_mode == DEMOD_CW)
-    	{
-    		for (uint16_t idx = 0; idx < blockSize; idx++)
-    		{
-    			audioDst[idx].r = audioDst[idx].l = dst[idx].l;
-    		}
-    	} else if (is_demod_rtty())
-    	{
-    		for (uint16_t idx = 0; idx < blockSize; idx++)
-    		{
-    			// we simulate the effect of the SSB tx iq processing to get a similar audio volume
-    			// as the CW sidetone
-    			audioDst[idx].r = audioDst[idx].l = adb.a_buffer[0][idx] * ts.tx_power_factor;
-    		}
-    	}
+        if ( RadioManagement_UsesTxSidetone())
+        {
+            // FIXME -> there is hard coded gain, should be defined or be adjustable.
+            AudioDriver_FillSideToneAudioBuffer( adb.a_buffer[0], audioDst, blockSize, 0.1, signal_active );
+        }
     }
-#endif
+#endif // UI_BRD_OVI40
 
     switch (ts.stream_tx_audio)
     {
@@ -4807,7 +4822,6 @@ static void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t *
     case STREAM_TX_AUDIO_DIGIQ:
         for(int i = 0; i < blockSize; i++)
         {
-
             // 16 bit format - convert to float and increment
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
             audio_in_put_buffer(dst[i].r);
