@@ -446,7 +446,11 @@ void Codec_TxSidetoneSetgain(uint8_t txrx_mode)
 
         if(ts.cw_sidetone_gain)	 	// calculate if the sidetone gain is non-zero
         {
-            const float32_t pf = ts.tx_power_factor;	// get TX scaling power factor
+            float32_t pf = ts.tx_power_factor;	// get TX scaling power factor
+            if ( pf == 0 )
+            {
+                pf = 0.001; // Almost zero but prevent from NoNe (1/0) in the next equation.
+            }
 
             float32_t signal_level_db = 10* log10f(1/(pf*pf));
             // we invert the square of power_factor (aka the signal energy)
