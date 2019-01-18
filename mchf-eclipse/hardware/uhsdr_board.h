@@ -640,10 +640,12 @@ typedef struct TransceiverState
 	// twinpeak_tested = 2 --> wait for system to warm up
     // twinpeak_tested = 0 --> go and test the IQ phase
     // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
+	// twinpeak_tested = 8 -> we are waiting for the main loop to execute I2S restart
 #define TWINPEAKS_WAIT 2
 #define TWINPEAKS_DONE 1
 #define TWINPEAKS_SAMPLING 0
-#define TWINPEAKS_UNCORRECTABLE 4
+#define TWINPEAKS_UNCORRECTABLE 3
+#define TWINPEAKS_CODEC_RESTART 4
 	uint8_t twinpeaks_tested;
 
 	agc_wdsp_param_t agc_wdsp_conf;

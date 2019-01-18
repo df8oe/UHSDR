@@ -7069,6 +7069,11 @@ void UiDriver_TaskHandler_MainTasks()
 #endif
 		RadioManagement_UpdatePowerAndVSWR();
 		RadioManagement_TxRxSwitching_Enable();
+		if (ts.twinpeaks_tested == TWINPEAKS_CODEC_RESTART)
+		{
+		    Codec_RestartI2S();
+		    ts.twinpeaks_tested = TWINPEAKS_WAIT;
+		}
 	}
 
 	UiSpectrum_Redraw();
