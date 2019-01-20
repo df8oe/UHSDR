@@ -223,6 +223,8 @@ static void TxProcessor_CwInputForDigitalModes(audio_block_t* a_blocks, uint16_t
         arm_scale_f32 ( a_blocks[0], 0.01, a_blocks[0], blockSize );
         arm_add_f32 ( a_blocks[0], a_blocks[1], a_blocks[0], blockSize );
     }
+#else
+    UNUSED(cw_input_active);
 #endif // UI_BRD_OVI40
 
 }
@@ -245,7 +247,6 @@ static void AudioDriver_TxIqProcessingFinal(float32_t scaling, bool swap, iq_buf
     // this aligns resulting signal with 16 or 32 bit width integer MSB, see comment in
     // the first part of AudioDriver_RxProcessor
 
-    // FIXME: This does not cover all modes which transmit at Zero IF, we need to concentrate this
     if (RadioManagement_IsTxAtZeroIF(ts.dmod_mode, ts.digital_mode) || ts.iq_freq_mode == FREQ_IQ_CONV_MODE_OFF)
     {
         trans_idx = IQ_TRANS_OFF;
@@ -261,12 +262,12 @@ static void AudioDriver_TxIqProcessingFinal(float32_t scaling, bool swap, iq_buf
     float32_t final_q_gain = ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].q * scaling;
 
     // Output I and Q as stereo data
-    if(swap == false)               // if is it "RX LO LOW" mode, save I/Q data without swapping, putting it in "upper" sideband (above the LO)
+    if(swap == false)               // the resulting iq is "identical" to the original iq
     {
         final_i_buffer = iq_buf_p->i_buffer;
         final_q_buffer = iq_buf_p->q_buffer;
     }
-    else        // it is "RX LO HIGH" - swap I/Q data while saving, putting it in the "lower" sideband (below the LO)
+    else        // the resulting output is mirrored at the center frequency (e.g. a signal 7 khz above center will be then 7khz below center AND mirrored, i.e. switch sidebands if it is not symmetrical)
     {
         final_i_buffer = iq_buf_p->q_buffer;
         final_q_buffer = iq_buf_p->i_buffer;
@@ -490,7 +491,7 @@ static void AudioDriver_TxProcessorFM(audio_block_t* a_blocks,  iq_buffer_t* iq_
 }
 
 #ifdef USE_FREEDV
-static void AudioDriver_TxProcessorDigital (audio_block_t a_block, iq_buffer_t* iq_buf_p, int16_t blockSize)
+static bool AudioDriver_TxProcessorDigital (audio_block_t a_block, iq_buffer_t* iq_buf_p, int16_t blockSize)
 {
     // Freedv DL2FW
     static int16_t outbuff_count = 0;
@@ -499,6 +500,7 @@ static void AudioDriver_TxProcessorDigital (audio_block_t a_block, iq_buffer_t* 
     static FDV_IQ_Buffer* out_buffer = NULL;
     static int16_t modulus_NF = 0, modulus_MOD = 0;
 
+    bool retval = false;
 
     // depending on the side band setting we switch the iq buffers accordingly to achieve the right sideband
     bool is_lsb = RadioManagement_LSBActive(ts.dmod_mode);
@@ -584,11 +586,11 @@ static void AudioDriver_TxProcessorDigital (audio_block_t a_block, iq_buffer_t* 
         // the samples are now in adb.iq.i_buffer and adb.iq.q_buffer, so lets filter them
         arm_fir_f32(&Fir_TxFreeDV_Interpolate_I, i_buffer, i_buffer,blockSize);
         arm_fir_f32(&Fir_TxFreeDV_Interpolate_Q, q_buffer, q_buffer, blockSize);
+        retval = true; // yes, we have a signal
     }
     else
     {
         profileEvent(FreeDVTXUnderrun);
-        // memset(dst,0,blockSize*sizeof(*dst));
     }
 
     if (outbuff_count >= FDV_BUFFER_SIZE)
@@ -597,6 +599,8 @@ static void AudioDriver_TxProcessorDigital (audio_block_t a_block, iq_buffer_t* 
         out_buffer = NULL;
         fdv_iq_buffer_remove(&out_buffer);
     }
+
+    return retval;
 }
 #endif
 
@@ -727,6 +731,11 @@ static bool AudioDriver_TxProcessorCW(audio_block_t a_block, iq_buffer_t* iq_buf
         arm_copy_f32(i_buffer, a_block, blockSize); // we copy the audio to the audio_buffer
         // used for sidetone (on UI_BRD_OVI40) and USB audio out (all devices)
     }
+    else
+    {
+        memset ( a_block, 0, sizeof( a_block[0]) * blockSize );
+    }
+
     return signal_active;
 }
 
@@ -789,9 +798,8 @@ void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t * const 
 #ifdef USE_FREEDV
         case DigitalMode_FreeDV:
             AudioDriver_TxProcessor_PrepareVoice(adb.a_buffer[0], src, blockSize, SSB_ALC_GAIN_CORRECTION, true);
-            AudioDriver_TxProcessorDigital(adb.a_buffer[0], &adb.iq_buf, blockSize);
+            signal_active = AudioDriver_TxProcessorDigital(adb.a_buffer[0], &adb.iq_buf, blockSize);
             iq_gain_comp = FREEDV_GAIN_COMP;
-            signal_active = true;
             break;
 #endif
         case DigitalMode_RTTY:
@@ -848,7 +856,8 @@ void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t * const 
 
     if (signal_active == false  || external_tx_mute )
     {
-        memset(dst,0,blockSize*sizeof(*dst));
+        memset(adb.iq_buf.i_buffer,0,blockSize*sizeof(adb.iq_buf.i_buffer[0]));
+        memset(adb.iq_buf.q_buffer,0,blockSize*sizeof(adb.iq_buf.q_buffer[0]));
         // Pause or inactivity
         if (ts.audio_dac_muting_buffer_count)
         {
@@ -874,8 +883,8 @@ void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t * const 
 
             // 16 bit format - convert to float and increment
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
-            audio_in_put_buffer(dst[i].r);
-            audio_in_put_buffer(dst[i].l);
+            audio_in_put_buffer(adb.iq_buf.q_buffer[i]);
+            audio_in_put_buffer(adb.iq_buf.i_buffer[i]);
         }
         break;
     case STREAM_TX_AUDIO_SRC:
