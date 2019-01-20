@@ -559,9 +559,6 @@ typedef struct TransceiverState
     uint16_t	version_number_minor;		// version number - minor - used to hold version number and detect change
     uint16_t	version_number_major;		// version number - build - used to hold version number and detect change
     uint16_t	version_number_release;		// version number - release - used to hold version number and detect change
-#ifdef OBSOLETE_AGC
-    uint8_t	nb_agc_time_const;			// used to calculate the AGC time constant
-#endif
     uint8_t	cw_offset_mode;				// CW offset mode (USB, LSB, etc.)
     bool	cw_lsb;					// flag used to indicate that CW is to operate in LSB when TRUE
     int32_t	iq_freq_mode;				// used to set/configure the I/Q frequency/conversion mode
@@ -640,10 +637,12 @@ typedef struct TransceiverState
 	// twinpeak_tested = 2 --> wait for system to warm up
     // twinpeak_tested = 0 --> go and test the IQ phase
     // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
+	// twinpeak_tested = 8 -> we are waiting for the main loop to execute I2S restart
 #define TWINPEAKS_WAIT 2
 #define TWINPEAKS_DONE 1
 #define TWINPEAKS_SAMPLING 0
-#define TWINPEAKS_UNCORRECTABLE 4
+#define TWINPEAKS_UNCORRECTABLE 3
+#define TWINPEAKS_CODEC_RESTART 4
 	uint8_t twinpeaks_tested;
 
 	agc_wdsp_param_t agc_wdsp_conf;

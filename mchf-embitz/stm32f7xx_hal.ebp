@@ -65,6 +65,9 @@
 				</Cpp>
 			</Target>
 		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="Debug;Release;ReleaseSmall;" />
+		</VirtualTargets>
 		<Device>
 			<Add option="$device=cortex-m7" />
 			<Add option="$fpu=fpv5-d16" />

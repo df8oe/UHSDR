@@ -26,7 +26,10 @@
 
 #define IQ_SAMPLE_RATE (48000)
 #define IQ_SAMPLE_RATE_F ((float32_t)IQ_SAMPLE_RATE)
-//const float32_t IQ_SAMPLE_RATE_F = ((float32_t)IQ_SAMPLE_RATE);
+
+#define AUDIO_SAMPLE_RATE (48000)
+#define AUDIO_SAMPLE_RATE_F ((float32_t)AUDIO_SAMPLE_RATE)
+
 
 
 #if  defined(USE_32_IQ_BITS)
@@ -70,11 +73,13 @@ typedef struct {
 //
 // we process one dma block of samples at once
 #define IQ_BLOCK_SIZE IQ_SAMPLES_PER_BLOCK
+#define AUDIO_BLOCK_SIZE AUDIO_SAMPLES_PER_BLOCK
 
 
 // twice the number of samples in the each iq block buffer
 // (which is half of the total dma buffer, since in each interrupt we get half of the total dma buffer)
 #define	IQ_BUFSZ 	(2*IQ_BLOCK_SIZE)
+#define AUDIO_BUFSZ    (2*AUDIO_BLOCK_SIZE)
 
 // Audio filter
 #define FIR_RXAUDIO_BLOCK_SIZE		IQ_BLOCK_SIZE
@@ -139,15 +144,23 @@ typedef struct
     float32_t               M_c2;
 } iq_correction_data_t;
 
+typedef  float32_t audio_block_t[AUDIO_BLOCK_SIZE];
+typedef  float32_t iq_block_t[IQ_BLOCK_SIZE];
+
+typedef struct
+{
+    iq_block_t               i_buffer;
+    iq_block_t               q_buffer;
+} iq_buffer_t;
+
+
 typedef struct
 {
     // Stereo buffers
-    float32_t               i_buffer[IQ_BLOCK_SIZE];
-    float32_t               q_buffer[IQ_BLOCK_SIZE];
+    iq_buffer_t     iq_buf;
+    float32_t       agc_valbuf[IQ_BLOCK_SIZE];   // holder for "running" AGC value
 
-    float32_t               agc_valbuf[IQ_BLOCK_SIZE];   // holder for "running" AGC value
-
-    float32_t               a_buffer[2][IQ_BLOCK_SIZE];
+    audio_block_t   a_buffer[2];
 
     demod_sam_param_t sam;
     iq_correction_data_t iq_corr;
@@ -194,28 +207,6 @@ typedef struct AudioDriverState
     //
     volatile bool					af_disabled;			// if TRUE, audio filtering is disabled (used during filter bandwidth changing, etc.)
     volatile bool					tx_filter_adjusting;	// used to disable TX I/Q filter during phase adjustment
-
-#ifdef OBSOLETE_AGC
-    // AGC and audio related variables
-    float 					agc_val;			// "live" receiver AGC value
-    float					agc_var;
-    float					agc_calc;
-    float					agc_holder;			// used to hold AGC value during transmit and tuning
-    float					agc_decay;			// decay rate (speed) of AGC
-    float					agc_rf_gain;		// manual RF gain (actual) - calculated from the value of "ts.rf_gain"
-    float					agc_knee;			// "knee" for AGC operation
-    float					agc_val_max;		// maximum AGC gain (at minimum signal)
-    float					am_fm_agc;			// Signal/AGC level in AM and FM demod mode
-    ulong                   agc_delay_buflen;       // AGC delay buffer length
-    float                   agc_decimation_scaling; // used to adjust AGC timing based on sample rate
-
-    float                   nb_agc_filt;            // used for the filtering/determination of the noise blanker AGC level
-    float                   nb_sig_filt;
-#endif
-#ifdef OBSOLETE_NR
-    ulong                   dsp_zero_count;         // used for detecting zero output from DSP which can occur if it crashes
-    float                   dsp_nr_sample;          // used for detecting a problem with the DSP (e.g. crashing)
-#endif
 
     float					codec_gain_calc;    // spectrum gain value
 
@@ -429,6 +420,8 @@ typedef struct SMeter
 //
 #define	AM_GAIN_COMP		1.133				// This compensates for slight differences in gain processing in the AM algorithm (empirically derived)
 //
+#define FREEDV_GAIN_COMP   (20*SSB_GAIN_COMP)
+
 // The following are calibration constants for AM (transmitter) modulation, carefully adjusted for proper D/A scaling to set
 // maximum possible 95-100% AM modulation depth.
 //
@@ -550,53 +543,6 @@ enum	{
 #define	DSP_NR_STRENGTH_MAX		200	// Maximum menu setting for DSP "Strength"
 #define DSP_NR_STRENGTH_STEP	5
 #define	DSP_NR_STRENGTH_DEFAULT	160	// Default setting
-#ifdef OBSOLETE_NR
-//
-// ************
-// DSP system parameters
-//
-// Noise reduction
-//
-#define	LMS_NR_DELAYBUF_SIZE_MAX		256 //512	// maximum size of LMS delay buffer for the noise reduction
-//
-//
-//
-#define	DSP_STRENGTH_YELLOW		25	// Threshold at and above which DSP number is yellow
-#define	DSP_STRENGTH_ORANGE		35	// Threshold at and above which DSP number is orange
-#define DSP_STRENGTH_RED		45	// Threshold at and above which DSP number is red
-//
-//
-#define	DSP_NR_BUFLEN_MIN		48		// minimum length of de-correlation buffer on the LMS NR DSP
-#define	DSP_NR_BUFLEN_MAX		LMS_NR_DELAYBUF_SIZE_MAX	// maximum length of de-correlation buffer on the LMS NR DSP
-#define	DSP_NR_BUFLEN_DEFAULT	192		// default length of de-correlation buffer on the LMS NR DSP
-//
-#define DSP_NR_NUMTAPS_MIN		32		// minimum number of FIR taps in the LMS NR DSP
-#define	DSP_NR_NUMTAPS_MAX		128		// maximum number of FIR taps in the LMS NR DSP
-#define	DSP_NR_NUMTAPS_DEFAULT	96		// default number of FIR taps in the LMS NR DSP
-//
-#define	MAX_DSP_ZERO_COUNT		2048
-#define	DSP_ZERO_COUNT_ERROR	512
-#define	DSP_ZERO_DET_MULT_FACTOR	10000000	// work-around because the stupid compiler wouldn't compare fractions!
-#define	DSP_OUTPUT_MINVAL		1		// minimum out level from DSP LMS NR, indicating "quiet" crash
-#define	DSP_HIGH_LEVEL			10000	// output level from DSP LMS NR, indicating "noisy" crash
-#define	DSP_CRASH_COUNT_THRESHOLD	35	// "hit" detector/counter for determining if the DSP has crashed
-
-//
-// Automatic Notch Filter
-//
-#define	LMS_NOTCH_DELAYBUF_SIZE_MAX	512
-//
-#define	DSP_NOTCH_NUMTAPS_MAX	128
-#define	DSP_NOTCH_NUMTAPS_MIN		32
-#define	DSP_NOTCH_NUMTAPS_DEFAULT	96
-//
-#define	DSP_NOTCH_BUFLEN_MIN	48		// minimum length of decorrelation buffer for the notch filter FIR
-#define	DSP_NOTCH_BUFLEN_MAX	192	// maximum decorrelation buffer length for the notch filter FIR
-#define	DSP_NOTCH_DELAYBUF_DEFAULT	104	// default decorrelation buffer length for the notch filter FIR
-//
-#define	DSP_NOTCH_MU_MAX		40		// maximum "strength" (convergence) setting for the notch
-#define	DSP_NOTCH_MU_DEFAULT	25		// default convergence setting for the notch
-#endif
 
 #ifdef USE_LMS_AUTONOTCH
 //
@@ -651,7 +597,6 @@ void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr);
 void AudioDriver_TxFilterInit(uint8_t dmod_mode);
 int32_t AudioDriver_GetTranslateFreq();
 void AudioDriver_SetSamPllParameters ();
-void AudioDriver_SetupAgcWdsp();
 float log10f_fast(float X);
 
 void RttyDecoder_Init();
@@ -711,5 +656,60 @@ typedef struct
 
 extern lLMS leakyLMS;
 #endif
+
+// FIXME: This is ugly: The STM32F4 returns 32bit reads from 16 bit peripherals such as the SPI/I2S
+// with the two half words in "mixed endian" instead of the wanted "little endian". This is documented in
+// the data sheet, so the only thing we can do is to swap the halfwords. This is in fact a single ror16 operation
+// if the compiler is smart enough to detect what we want.
+
+// we have to swap them only if we are having 32bit values from/to I2S and an STM32F4
+#if defined(STM32F4) && defined(USE_32_IQ_BITS)
+    static inline int32_t correctHalfWord(const int32_t word)
+    {
+        uint32_t uWord = (uint32_t)word;
+        return uWord >> 16 | uWord << 16;
+    }
+#else
+    #define correctHalfWord(a) (a)
+#endif
+
+// these constants are used to adjust the 32 bit integer samples to represent the same levels as if we sample 16 bit integers,
+// effectively "shifting" them down or up.
+// FIXME: switch to 16 bit extended mode for 16 bit samples  will eliminate the need for this at the expense of
+// using the same DMA memory (two times the memory true 16 bit values take, in our case this is 2*(2*(IQ_BLOCK_SIZE*2samples*2bytes) = 512 bytes)
+#ifdef USE_32_IQ_BITS
+    #define IQ_BIT_SHIFT 16
+    #define IQ_BIT_SCALE_DOWN (0.0000152587890625)
+#else
+    #define IQ_BIT_SHIFT 0
+    #define IQ_BIT_SCALE_DOWN (1.0)
+#endif
+#define IQ_BIT_SCALE_UP (1<<IQ_BIT_SHIFT)
+
+#ifdef USE_32_AUDIO_BITS
+    #define AUDIO_BIT_SHIFT 16
+    #define AUDIO_BIT_SCALE_DOWN (0.0000152587890625)
+#else
+    #define AUDIO_BIT_SHIFT 0
+    #define AUDIO_BIT_SCALE_DOWN (1.0)
+#endif
+#define AUDIO_BIT_SCALE_UP (1<<AUDIO_BIT_SHIFT)
+
+void AudioDriver_CalcLowShelf(float32_t coeffs[5], float32_t f0, float32_t S, float32_t gain, float32_t FS);
+void AudioDriver_CalcHighShelf(float32_t coeffs[5], float32_t f0, float32_t S, float32_t gain, float32_t FS);
+void AudioDriver_CalcBandpass(float32_t coeffs[5], float32_t f0, float32_t FS);
+void AudioDriver_SetBiquadCoeffs(float32_t* coeffsTo,const float32_t* coeffsFrom);
+float32_t AudioDriver_absmax(float32_t* buffer, int size);
+
+void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t * const dst, AudioSample_t * const audioDst, uint16_t blockSize);
+void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, float32_t* q_buffer, const uint16_t blockSize);
+
+void TxProcessor_Init();
+
+extern float32_t   audio_delay_buffer    [AUDIO_DELAY_BUFSIZE];
+
+// AGC
+void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t (*agcbuffer)[AUDIO_BLOCK_SIZE] );
+void AudioDriver_SetupAgcWdsp();
 
 #endif

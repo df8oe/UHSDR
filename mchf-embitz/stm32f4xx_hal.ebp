@@ -63,7 +63,7 @@
 			</Target>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="Release;ReleaseSmall;" />
+			<Add alias="All" targets="Debug;Release;ReleaseSmall;" />
 		</VirtualTargets>
 		<Device>
 			<Add option="$device=cortex-m4" />
