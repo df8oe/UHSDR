@@ -50,8 +50,8 @@ typedef struct
 	uint16_t tx_idx;
 	uint8_t tx_char;
 	uint16_t tx_bits;
-	int16_t tx_wave_sign;
-	int16_t tx_wave_prev;
+	int16_t tx_wave_sign_next;
+	int16_t tx_wave_sign_current;
 	uint16_t tx_bit_phase;
 	uint32_t tx_bit_len;
 	int16_t tx_zeros;

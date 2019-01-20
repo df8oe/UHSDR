@@ -924,7 +924,7 @@ void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t * const 
         case DigitalMode_BPSK:
             signal_active = AudioDriver_TxProcessorPsk(adb.a_buffer[0], &adb.iq_buf, blockSize);
             TxProcessor_CwInputForDigitalModes(adb.a_buffer, blockSize);
-            iq_gain_comp = SSB_GAIN_COMP;
+            iq_gain_comp = 1.0;
             break;
         }
     }
@@ -1009,7 +1009,7 @@ void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t * const 
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIG
             // TODO: certain modulation modes will destroy the "a_buffer" during IQ signal creation (FM does at least)
             audio_in_put_buffer(adb.a_buffer[0][i]);
-            audio_in_put_buffer(adb.a_buffer[0][i]);
+            audio_in_put_buffer(adb.a_buffer[1][i]);
         }
     }
 
