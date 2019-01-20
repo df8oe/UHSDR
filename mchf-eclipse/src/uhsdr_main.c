@@ -82,7 +82,10 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
         case PADDLE_DIT:
             if((ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || ts.cw_text_entry) && Board_DitLinePressed())
             {
-                RadioManagement_Request_TxOn();
+                if (ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+                {
+                    RadioManagement_Request_TxOn();
+                }
                 CwGen_DitIRQ();
             }
             break;
