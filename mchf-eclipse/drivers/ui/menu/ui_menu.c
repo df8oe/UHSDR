@@ -3605,16 +3605,19 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         switch(ts.stream_tx_audio)
         {
         case STREAM_TX_AUDIO_OFF:
-            txt_ptr = "     OFF";
+            txt_ptr = "         OFF";
             break;
         case STREAM_TX_AUDIO_SRC:
-            txt_ptr = "  Source";
+            txt_ptr = "      Source";
             break;
         case STREAM_TX_AUDIO_FILT:
-            txt_ptr = "Filtered";
+            txt_ptr = "    Filtered";
             break;
         case STREAM_TX_AUDIO_DIGIQ:
-            txt_ptr = "Final IQ";
+            txt_ptr = "    Final IQ";
+            break;
+        case STREAM_TX_AUDIO_GENIQ:
+            txt_ptr = "Generated IQ";
             break;
         }
         break;

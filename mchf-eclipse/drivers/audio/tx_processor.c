@@ -877,7 +877,7 @@ void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t * const 
     {
     case STREAM_TX_AUDIO_OFF:
         break;
-    case STREAM_TX_AUDIO_DIGIQ:
+    case STREAM_TX_AUDIO_GENIQ:
         for(int i = 0; i < blockSize; i++)
         {
 
@@ -908,4 +908,16 @@ void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t * const 
 
     // now do the final processing including adjusting the IQ according to the calibration data
     AudioDriver_TxIqProcessingFinal(iq_gain_comp, false, &adb.iq_buf, dst, blockSize);
+
+    if (ts.stream_tx_audio == STREAM_TX_AUDIO_DIGIQ)
+    {
+        for(int i = 0; i < blockSize; i++)
+        {
+            // 16 bit format - convert to float and increment
+            // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
+            audio_in_put_buffer(correctHalfWord(dst[i].r) >> IQ_BIT_SHIFT);
+            audio_in_put_buffer(correctHalfWord(dst[i].l) >> IQ_BIT_SHIFT);
+        }
+    }
+
 }

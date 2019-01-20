@@ -677,7 +677,8 @@ typedef struct TransceiverState
 #define STREAM_TX_AUDIO_SRC     1  // send source audio stream (from CODEC)
 #define STREAM_TX_AUDIO_FILT    2  // send processed audio stream (after filtering)
 #define STREAM_TX_AUDIO_DIGIQ   3  // send final IQ signal
-#define STREAM_TX_AUDIO_NUM   4  // how many choices
+#define STREAM_TX_AUDIO_GENIQ   4  // generated "clean" IQ signal before final scaling and IQ phase/balance adjust
+#define STREAM_TX_AUDIO_NUM     5  // how many choices
 
 	// Freedv Test DL2FW
 	bool	FDV_TX_encode_ready;
