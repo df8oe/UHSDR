@@ -267,9 +267,9 @@ static void FreqShift_QuarterFs(float32_t* I_buffer, float32_t* Q_buffer, int16_
  * @param I_buffer incoming i data
  * @param Q_buffer incoming q data
  * @param blockSize size of data to be processed
- * @param dir dir == SHIFT_UP moves receive frequency to the right in the spectrum, SHIFT_DOWN opposite direction
+ * @param shift  > 0 SHIFT_UP moves receive frequency to the right in the spectrum, SHIFT_DOWN opposite direction
  */
-void FreqShift(float32_t* i_buffer, float32_t* q_buffer, size_t blockSize, freq_shift_dir_t dir)
+void FreqShift(float32_t* i_buffer, float32_t* q_buffer, size_t blockSize, int32_t shift)
 {
     // keeps the generated data for frequency conversion
     static int32_t conversion_freq = 0;
@@ -282,7 +282,7 @@ void FreqShift(float32_t* i_buffer, float32_t* q_buffer, size_t blockSize, freq_
 
     assert(blockSize <= IQ_BLOCK_SIZE);
 
-    int32_t new_conversion_freq = abs(AudioDriver_GetTranslateFreq());
+    int32_t new_conversion_freq = abs(shift);
     if (conversion_freq != new_conversion_freq || single_osc_calc == false)
     {
         if (conversion_freq != new_conversion_freq)
@@ -312,6 +312,7 @@ void FreqShift(float32_t* i_buffer, float32_t* q_buffer, size_t blockSize, freq_
         }
     }
 
+    bool dir = shift > 0;
     if (is_quarter_of_fs == true)
     {
         FreqShift_QuarterFs(i_buffer, q_buffer, blockSize, dir);

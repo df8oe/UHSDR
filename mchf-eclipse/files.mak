@@ -133,6 +133,7 @@ drivers/audio/cw/cw_gen.c \
 drivers/audio/cw/cw_decoder.c \
 drivers/audio/codec/codec.c \
 drivers/audio/codec/uhsdr_hw_i2s.c \
+drivers/audio/audio_agc.c \
 drivers/audio/audio_driver.c \
 drivers/audio/audio_filter.c \
 drivers/audio/audio_convolution.c \
@@ -143,5 +144,6 @@ drivers/audio/freedv_test_data.c \
 drivers/audio/freq_shift.c \
 drivers/audio/rtty.c \
 drivers/audio/psk.c \
+drivers/audio/tx_processor.c \
 drivers/ui/lcd/ui_lcd_layouts.c \
 drivers/ui/ui_vkeybrd.c \

@@ -422,7 +422,7 @@ int32_t RadioManagement_GetCWDialOffset()
 /**
  * @brief returns true if the mode parameters tell us we will TX at zero if as opposed to offset frequency
  */
-static bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode)
+bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode)
 {
     return  (
                 dmod_mode == DEMOD_CW ||
@@ -433,8 +433,10 @@ static bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode
 #else
                             false
 #endif
-                            ||
-                            digital_mode == DigitalMode_BPSK
+                            || is_demod_psk()
+#ifdef USE_RTTY_PROCESSOR
+                            || is_demod_rtty()
+#endif
                     )
                 )
              );

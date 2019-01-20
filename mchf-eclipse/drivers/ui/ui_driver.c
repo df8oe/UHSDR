@@ -2849,9 +2849,6 @@ static void UiDriver_TimeScheduler()
 	static bool startup_done_flag = 0;
 	static bool	dsp_rx_reenable_flag = 0;
 	static ulong dsp_rx_reenable_timer = 0;
-#ifdef OBSOLETE_NR
-	static uchar dsp_crash_count = 0;
-#endif
 	static enum TRX_States_t last_state = TRX_STATE_RX; // we assume everything is
 	enum TRX_States_t state;
 
@@ -2947,32 +2944,6 @@ static void UiDriver_TimeScheduler()
 			old_tone_det = ads.fm_conf.subaudible_tone_detected;
 			old_tone_det_enable = (bool)ts.fm_subaudible_tone_det_select;
 		}
-
-#ifdef OBSOLETE_NR
-		// DSP crash detection
-		if(is_dsp_nr() && !is_dsp_nr_postagc() && !ads.af_disabled && !ts.dsp_inhibit)    // Do this if enabled and "Pre-AGC" DSP NR enabled
-		{
-
-			if((ads.dsp_nr_sample > DSP_HIGH_LEVEL) || (ads.dsp_nr_sample == -1))       // is the DSP output very high, or wrapped around to -1?
-			{
-				dsp_crash_count+=2;           // yes - increase detect count quickly
-			}
-			else                            // not high level
-			{
-				if(dsp_crash_count)           // decrease detect count more slowly
-				{
-					dsp_crash_count--;
-				}
-			}
-
-			if((ads.dsp_zero_count > DSP_ZERO_COUNT_ERROR) || (dsp_crash_count > DSP_CRASH_COUNT_THRESHOLD))        // is "zero" output count OR high level count exceeding threshold?
-			{
-				AudioDriver_SetRxAudioProcessing(ts.dmod_mode, true);   // update DSP settings
-				dsp_crash_count = 0;              // clear crash count flag
-			}
-		}
-
-#endif
 	}
 
 	/*** TX MODE ONLY ***/
@@ -3998,23 +3969,6 @@ static void UiDriver_DisplayCmpLevel(bool encoder_active)
 	UiDriver_EncoderDisplay(1,0,"CMP" , encoder_active, outs, color);
 }
 
-#ifdef OBSOLETE_NR
-uint32_t dsp_nr_color_map()
-{
-	uint32_t color = White;      // Make it white by default
-	//
-	if(ts.dsp_nr_strength >= DSP_STRENGTH_RED)
-		color = Red;
-	else if(ts.dsp_nr_strength >= DSP_STRENGTH_ORANGE)
-		color = Orange;
-	else if(ts.dsp_nr_strength >= DSP_STRENGTH_YELLOW)
-		color = Yellow;
-
-	return color;
-}
-
-#endif
-
 uint32_t UiDriver_GetActiveDSPFunctions()
 {
 	return ts.dsp_active & (DSP_NOTCH_ENABLE|DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE);
@@ -4043,10 +3997,6 @@ static void UiDriver_DisplayDSPMode(bool encoder_active)
 	case DSP_NR_ENABLE:
 		txt[0] = "NR";
 		snprintf(val_txt,7,"%5u", ts.dsp_nr_strength);
-#ifdef OBSOLETE_NR
-		clr_val = dsp_nr_color_map();
-
-#endif
 		txt[1] = val_txt;
 		txt_is_value = true;
 		break;
@@ -4056,10 +4006,6 @@ static void UiDriver_DisplayDSPMode(bool encoder_active)
 	case DSP_NOTCH_ENABLE|DSP_NR_ENABLE:
 	txt[0] = "NR+NOTC";
 	snprintf(val_txt,7,"%5u", ts.dsp_nr_strength);
-#ifdef OBSOLETE_NR
-	clr_val = dsp_nr_color_map();
-
-#endif
 	txt[1] = val_txt;
 	txt_is_value = true;
 	break;
