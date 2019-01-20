@@ -25,6 +25,11 @@ ifndef BUILDFOR
   BUILDFOR=F4
 endif
 
+# default value for building the mcHF UI board.
+ifndef CONFIGFLAGS
+  CONFIGFLAGS=-DUI_BRD_MCHF -DRF_BRD_MCHF
+endif
+
 # We have to use "override" since we pass some of these things from
 # the commandline but then change / append to it
 # see https://www.gnu.org/software/make/manual/html_node/Override-Directive.html#Override-Directive
