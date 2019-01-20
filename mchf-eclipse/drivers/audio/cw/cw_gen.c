@@ -579,7 +579,10 @@ static void CwGen_CheckKeyerState(void)
 
 	if (!ts.cw_text_entry && ps.cw_state == CW_IDLE)
 	{
-		if (ts.txrx_mode == TRX_MODE_TX && DigiModes_TxBufferHasData() && !ps.sending_char &&
+	    // FIXME: I am not sure how this is supposed to work, but without check for DEMOD_CW it happily eats
+	    // all keyboard input for modes such as RTTY or PSK...
+	    // it seems to be intended for transmitting morse via keyboard input...
+		if (ts.dmod_mode == DEMOD_CW && ts.txrx_mode == TRX_MODE_TX && DigiModes_TxBufferHasData() && !ps.sending_char &&
 				(! (ps.port_state & CW_END_PROC) && ps.space_timer < ps.space_time - ps.dah_time))
 		{
 			DigiModes_TxBufferRemove(&c);
@@ -809,7 +812,7 @@ void CwGen_AddChar(ulong code)
 
 			// FIXME: HACK HACK FOR RTTY TX TESTING
 			// We can use the same buffer for all digimodes
-			if ((ts.txrx_mode == TRX_MODE_TX && is_demod_rtty()) || ts.cw_text_entry) // Can rtty rely just on cw_text_entry here?
+			if ((ts.txrx_mode == TRX_MODE_TX && (is_demod_rtty() || is_demod_psk())) || ts.cw_text_entry) // Can rtty rely just on cw_text_entry here?
 			{
 				DigiModes_TxBufferPutChar(result);
 			}
