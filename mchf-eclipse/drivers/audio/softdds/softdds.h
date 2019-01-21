@@ -36,11 +36,13 @@ typedef struct
  */
 inline uint32_t softdds_nextSampleIndex(soft_dds_t* dds)
 {
+    uint32_t retval = (dds->acc >> SOFTDDS_ACC_SHIFT)%DDS_TBL_SIZE;
+
 	dds->acc += dds->step;
 
 	// now scale down precision and  make sure that
 	// index wraps around properly
-	return (dds->acc >> SOFTDDS_ACC_SHIFT)%DDS_TBL_SIZE;
+	return retval;
 }
 
 /*
