@@ -222,23 +222,20 @@ static void TxProcessor_CwInputForDigitalModes(audio_block_t* a_blocks, uint16_t
 {
     // remove noise if no CW is keyed
     memset ( a_blocks[1], 0, sizeof( a_blocks[1][0]) * blockSize );
-    bool cw_input_active = false;
     if ( ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT )
     {
-        cw_input_active = CwGen_Process ( a_blocks[1], a_blocks[1], blockSize );
-    }
+        CwGen_Process ( a_blocks[1], a_blocks[1], blockSize );
 #if defined(UI_BRD_OVI40)
-    // FIXME if we leave two signals together, level of RTTY should be adjusted somehow.
-    // now it's scaled down to really low level.
-    if (cw_input_active)
-    {
-        arm_scale_f32 ( a_blocks[0], 0.01, a_blocks[0], blockSize );
+        /*
+         * We are scaling down RTTY and BPSK "tone" do not shadow CW sidetone
+         * CW tone should has more volume than RTTY and BPSK
+         */
+        // FIXME if we leave two signals together, level of RTTY should be adjusted somehow.
+        // now it's scaled down to really low level.
+        arm_scale_f32 ( a_blocks[0], 0.05, a_blocks[0], blockSize );
         arm_add_f32 ( a_blocks[0], a_blocks[1], a_blocks[0], blockSize );
-    }
-#else
-    UNUSED(cw_input_active);
 #endif // UI_BRD_OVI40
-
+    }
 }
 
 /**
