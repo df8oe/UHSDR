@@ -3720,7 +3720,7 @@ static bool UiDriver_IsApplicableEncoderOneMode(uint8_t mode)
 		retval = is_demod_rtty();
 		break;
 	case ENC_ONE_MODE_ST_GAIN:
-		retval = ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK);
+		retval = RadioManagement_UsesTxSidetone();
 		break;
 	case ENC_ONE_MODE_CMP_LEVEL:
 		retval = ts.dmod_mode != DEMOD_CW && ts.dmod_mode != DEMOD_DIGI;
@@ -3749,18 +3749,18 @@ static void UiDriver_DisplayEncoderOneMode()
 		break;
 	default:
 		// what to display if lower box is not active
-		if (is_demod_rtty())
-		{
-			UiDriver_DisplayRttySpeed(0);
-		}
-		else if(ts.dmod_mode == DEMOD_CW || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK))
-		{
-			UiDriver_DisplaySidetoneGain(0);
-		}
-		else
-		{
-			UiDriver_DisplayCmpLevel(0);
-		}
+        if ( RadioManagement_UsesTxSidetone())
+        {
+            UiDriver_DisplaySidetoneGain( false );
+            if ( is_demod_rtty())
+            {
+                UiDriver_DisplayRttySpeed( false );
+            }
+        }
+        else
+        {
+            UiDriver_DisplayCmpLevel( false );
+        }
 	}
 }
 
