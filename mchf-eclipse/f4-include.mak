@@ -6,7 +6,6 @@ basesw/mcHF/Drivers/CMSIS/Include \
 basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Inc \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/AUDIO/Inc \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Inc \
-basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Inc \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MTP/Inc \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Inc \
