@@ -2950,8 +2950,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
                     arm_biquad_cascade_df1_f32 (&IIR_biquad_1[1], adb.a_buffer[1],adb.a_buffer[1], blockSizeDecim);
                 }
 #endif
-                // all of these only work with 8 khz Samplerate
-                if (sampleRateDecim == 8000)
+                // all of these only work with 12 khz Samplerate
+                if (sampleRateDecim == 12000)
                 {
 #ifdef USE_RTTY_PROCESSOR
                     if (is_demod_rtty()) // only works when decimation rate is 4 --> sample rate == 12ksps
