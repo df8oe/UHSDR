@@ -238,7 +238,7 @@ BL_HAL_OBJS := $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(BL_HAL_SRC:.c=.o)))
 $(DSPLIB_OBJS): EXTRA_CFLAGS:= -Wno-strict-aliasing
 basesw/%/usbh_mtp.o: CFLAGS += -Wno-implicit-fallthrough
 basesw/%/usbh_msc.o: CFLAGS += -Wno-implicit-fallthrough
-basesw/%/usbh_hid.o: CFLAGS += -Wno-implicit-fallthrough
+drivers/usb/%/usbh_hid.o: CFLAGS += -Wno-implicit-fallthrough
 basesw/%stm32h7xx_hal_spi.o: CFLAGS += -Wno-strict-aliasing
 basesw/%stm32f4xx_ll_usb.o: CFLAGS += -Wno-attributes
 basesw/%stm32f7xx_ll_usb.o: CFLAGS += -Wno-attributes

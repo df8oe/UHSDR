@@ -23,5 +23,6 @@ drivers/diag \
 drivers/usb/device/class/composite \
 drivers/usb/device/class/AUDIO/Inc \
 drivers/usb/device/class/CDC/Inc \
+drivers/usb/device/class/HID/Inc \
 drivers/usb/app \
 

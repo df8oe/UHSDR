@@ -15,6 +15,10 @@ drivers/usb/device/class/composite/usbd_composite.c \
 drivers/usb/device/class/composite/usbd_composite_desc.c \
 drivers/usb/device/class/CDC/Src/usbd_cdc.c \
 drivers/usb/device/class/AUDIO/Src/usbd_audio_cdc_comp.c \
+drivers/usb/device/class/HID/Src/usbh_hid.c \
+drivers/usb/device/class/HID/Src/usbh_hid_keybd.c \
+drivers/usb/device/class/HID/Src/usbh_hid_mouse.c \
+drivers/usb/device/class/HID/Src/usbh_hid_parser.c \
 drivers/usb/app/usb_device.c \
 drivers/usb/app/usbd_audio_if.c \
 drivers/usb/app/usbd_cdc_if.c \
@@ -129,6 +133,7 @@ drivers/audio/filters/iir_antialias.c \
 drivers/audio/filters/iq_rx_filter.c \
 drivers/audio/filters/iq_rx_filter_am.c \
 drivers/audio/filters/iq_tx_filter.c \
+drivers/audio/cw/uhsdr_digi_buffer.c \
 drivers/audio/cw/cw_gen.c \
 drivers/audio/cw/cw_decoder.c \
 drivers/audio/codec/codec.c \

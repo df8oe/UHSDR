@@ -51,6 +51,7 @@
 #include "config_storage.h"
 
 #include "cw_gen.h"
+#include "uhsdr_digi_buffer.h"
 
 #include "radio_management.h"
 #include "soft_tcxo.h"
@@ -535,6 +536,7 @@ void UiDriver_TextMsgClear()
 	}
 	ui_txt_msg_buffer[fillcnt]='\0';
 
+	// FIXME there is more affective way to clear space on the screen.
     UiLcdHy28_PrintText(ts.Layout->TextMsgLine.x,ts.Layout->TextMsgLine.y, ui_txt_msg_buffer,Yellow,Black,ts.Layout->TextMsg_font);
     ui_txt_msg_idx = 0;
     ui_txt_msg_update = true;
@@ -3039,6 +3041,7 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
 	};
 #endif
 
+	DigiModes_TxBufferReset();
 	switch(ts.dmod_mode)
 	{
 	case DEMOD_DIGI:
@@ -3046,6 +3049,7 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
 		switch(ts.digital_mode)
 		{
 		case DigitalMode_RTTY:
+		    DigiModes_Set_BufferConsumer( RTTY );
 			if (ts.enc_one_mode != ENC_ONE_MODE_AUDIO_GAIN)
 			{
 				ts.enc_one_mode = ENC_ONE_MODE_RTTY_SPEED;
@@ -3058,6 +3062,7 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
 			break;
 
 		case DigitalMode_BPSK:
+		    DigiModes_Set_BufferConsumer( BPSK );
 			if (ts.enc_thr_mode != ENC_THREE_MODE_RIT)
 			{
 				ts.enc_thr_mode = ENC_THREE_MODE_PSK_SPEED;
@@ -3069,6 +3074,7 @@ void UiDriver_SetDemodMode(uint8_t new_mode)
 
 	case DEMOD_CW:
 	{
+	    DigiModes_Set_BufferConsumer( CW );
 		if (ts.enc_one_mode != ENC_ONE_MODE_AUDIO_GAIN)
 		{
 			ts.enc_one_mode = ENC_ONE_MODE_ST_GAIN;
@@ -6370,46 +6376,53 @@ static void UiAction_ToggleTuneMode()
 
 static void UiAction_PlayKeyerBtnN(int8_t n)
 {
-	uint8_t *pmacro;
+	uint8_t* pmacro;
 	uint16_t c = 0;
 
 	if (ts.keyer_mode.button_recording == KEYER_BUTTON_NONE)
 	{
-		pmacro = (uint8_t *)ts.keyer_mode.macro[n];
+		pmacro = ( uint8_t* )ts.keyer_mode.macro[n];
 		if (*pmacro != '\0') // If there is a macro
 		{
 			while (*pmacro != '\0')
 			{
-				DigiModes_TxBufferPutChar(*pmacro++);
+				DigiModes_TxBufferPutChar( *pmacro++, UI );
 			}
 
-			if ((ts.dmod_mode == DEMOD_CW && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT) || is_demod_psk())
+			if ((ts.dmod_mode == DEMOD_CW
+			        && ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
+			        || is_demod_psk()
+			        || is_demod_rtty())
 			{
 				RadioManagement_Request_TxOn();
 			}
 		}
-
 		UiDriver_TextMsgPutChar('>');
 	}
 	else if (ts.keyer_mode.button_recording == n)
 	{
-		ts.cw_text_entry = false;
+		ts.cw_text_entry = false; // FIXME looks like we can remove cw_text_entry
 		pmacro = (uint8_t *)ts.keyer_mode.macro[n];
 		c = 0;
-		while (DigiModes_TxBufferHasData())
-		{
-			if (++c > KEYER_MACRO_LEN - 1) {
-				break;
-			}
-			DigiModes_TxBufferRemove(pmacro++);
-		}
+		/*
+		 * Kind of trick. It will not check second condition if first is the false,
+		 * so it keeps pointer to the last available element in array for macro
+		 * to put there terminator
+		 */
+		while (( ++c <= KEYER_MACRO_LEN - 1) && DigiModes_TxBufferRemove( pmacro++, UI ))
+		{}
 		*pmacro = '\0';
 
 		UiConfiguration_UpdateMacroCap();
 		UiDriver_TextMsgPutChar('<');
 		ts.keyer_mode.button_recording = KEYER_BUTTON_NONE;
+
+		// setup back the previous consumer of digi buffer
+		// as UI has higher priority we can be sure that
+		// it's not changed by changing modes
+		DigiModes_Restore_BufferConsumer();
 	}
-	UiDriver_CreateFunctionButtons(false);
+	UiDriver_CreateFunctionButtons( false );
 }
 
 static void UiAction_PlayKeyerBtn1()
@@ -6429,10 +6442,17 @@ static void UiAction_PlayKeyerBtn3()
 
 static void UiAction_RecordKeyerBtnN(int8_t n)
 {
-	if (ts.keyer_mode.button_recording == KEYER_BUTTON_NONE && ts.txrx_mode == TRX_MODE_RX && !ts.cw_text_entry && ts.dmod_mode == DEMOD_CW)
+	if (ts.keyer_mode.button_recording == KEYER_BUTTON_NONE
+	        && ts.txrx_mode == TRX_MODE_RX
+	        && !ts.cw_text_entry
+	        && ( ts.dmod_mode == DEMOD_CW
+	        || is_demod_psk()
+	        || is_demod_rtty()))
 	{
-		ts.cw_text_entry = true;
+		ts.cw_text_entry = true; // FIXME can be removed later
+
 		ts.keyer_mode.button_recording = n;
+		DigiModes_Set_BufferConsumer( UI );
 		DigiModes_TxBufferReset();
 		UiDriver_TextMsgPutChar(':');
 		UiDriver_CreateFunctionButtons(false);
@@ -6940,6 +6960,114 @@ void UiDriver_TaskHandler_HighPrioTasks()
 
 }
 
+static void UiDriver_HandleUSB_Keyboard()
+{
+#ifdef USE_USBKEYBOARD
+    if(USBH_HID_GetDeviceType(&hUsbHostHS) == HID_KEYBOARD)
+    {
+        HID_KEYBD_Info_TypeDef *k_pinfo = USBH_HID_GetKeybdInfo(&hUsbHostHS);
+
+        const uint32_t kb_buffer_size = (sizeof(k_pinfo->keys)/sizeof(k_pinfo->keys[0]));
+        static uint8_t keys_buffer[sizeof(k_pinfo->keys)/sizeof(k_pinfo->keys[0])] = { 0 };
+
+        /*
+         * Regarding -> https://www.usb.org/sites/default/files/documents/hid1_11.pdf 72p.
+         *
+         * The order of keycodes in array fields has no significance. Order determination
+         * is done by the host software comparing the contents of the previous report to
+         * the current report. If two or more keys are reported in one report, their order is
+         * indeterminate. Keyboards may buffer events that would have otherwise
+         * resulted in multiple event in a single report.
+         *
+         * So, the code below is keeping the previous report from the keyboard to compare
+         * with the next one and filter out multi-pressed keys. Later this could be used
+         * to determine long press key or repeat key if it's holding - for example:
+         *
+         * Start recording F1-button if F5 was pressed for 2 sec...
+         */
+        if(k_pinfo != NULL)
+        {
+            /*
+             * The discussion about code below was there
+             * -> https://github.com/df8oe/UHSDR/pull/1702
+             */
+            for( uint32_t idx = 0; idx < kb_buffer_size; idx++ )
+            {
+                bool is_exist_in_buffer = false;
+                for( uint32_t i = 0; i < kb_buffer_size; i++ )
+                {
+                    /*
+                     * Looking for the same symbol in prev. array by iterating over this array.
+                     */
+                    if ( keys_buffer[i] == k_pinfo->keys[idx])
+                    {
+                        /*
+                         * if symbol presents in both arrays that means
+                         * it's already handled and we need to ignore it.
+                         */
+                        is_exist_in_buffer = true;
+                        break;
+                    }
+                }
+                if ( is_exist_in_buffer == true )
+                {
+                    /*
+                     * The same character was found in previous report,
+                     * so, Ignoring this one
+                     */
+                    continue;
+                }
+                else
+                {
+                    switch(k_pinfo->keys[idx])
+                    {
+                    case KEY_ESCAPE:
+                      DigiModes_TxBufferReset();
+                      break;
+                    case KEY_BACKSPACE:
+                        UiDriver_TextMsgClear();
+                      break;
+                    case KEY_F1:
+                      RadioManagement_Request_TxOn();
+                      break;
+                    case KEY_F2:
+                      RadioManagement_Request_TxOff();
+                      break;
+                    case KEY_F5:
+                      RadioManagement_Request_TxOn();
+                      UiAction_PlayKeyerBtn1();
+                      break;
+                    case KEY_F6:
+                      RadioManagement_Request_TxOn();
+                      UiAction_PlayKeyerBtn2();
+                      break;
+                    case KEY_F7:
+                      RadioManagement_Request_TxOn();
+                      UiAction_PlayKeyerBtn3();
+                      break;
+                    }
+
+                    uint8_t kbdChar = USBH_HID_GetASCIICode( k_pinfo, idx );
+                    if (kbdChar != '\0')
+                    {
+                      // FIXME seems we can push only into Digi_buffer....
+                      if (is_demod_rtty() || is_demod_psk() || ts.dmod_mode == DEMOD_CW)
+                      {
+                          DigiModes_TxBufferPutChar( kbdChar, KeyBoard );
+                      }
+                      else
+                      {
+                          UiDriver_TextMsgPutChar( kbdChar );
+                      }
+                    }
+                }
+            }
+            memcpy( keys_buffer, k_pinfo->keys, sizeof(k_pinfo->keys));
+        }
+    }
+#endif // USE_USBKEYBOARD
+}
+
 void UiDriver_TaskHandler_MainTasks()
 {
 
@@ -6953,41 +7081,6 @@ void UiDriver_TaskHandler_MainTasks()
 	UiDriver_TaskHandler_HighPrioTasks();
 #endif
 
-#ifdef USE_USBHOST
-	MX_USB_HOST_Process();
-
-#ifdef USE_USBKEYBOARD
-	if(USBH_HID_GetDeviceType(&hUsbHostHS) == HID_KEYBOARD)
-	{
-
-		HID_KEYBD_Info_TypeDef *k_pinfo;
-		char kbdChar;
-		k_pinfo = USBH_HID_GetKeybdInfo(&hUsbHostHS);
-
-		if(k_pinfo != NULL)
-		{
-			kbdChar = USBH_HID_GetASCIICode(k_pinfo);
-			switch(k_pinfo->keys[0])
-			{
-			case KEY_F1:
-			    RadioManagement_Request_TxOn();
-				break;
-			case KEY_F2:
-			    RadioManagement_Request_TxOff();
-				break;
-			}
-			if (kbdChar != '\0')
-			{
-				if (is_demod_rtty() || is_demod_psk())
-				{
-					DigiModes_TxBufferPutChar(kbdChar);
-				}
-				UiDriver_TextMsgPutChar(kbdChar);
-			}
-		}
-	}
-#endif
-#endif
     // START CALLED AS OFTEN AS POSSIBLE
 #ifndef USE_HIGH_PRIO_PTT
 	if (ts.tx_stop_req == true  || ts.ptt_req == true)
@@ -6996,6 +7089,10 @@ void UiDriver_TaskHandler_MainTasks()
 	}
 #endif
 	// END CALLED AS OFTEN AS POSSIBLE
+
+#ifdef USE_USBHOST
+    MX_USB_HOST_Process();
+#endif // USE_USBHOST
 
 	// BELOW ALL CALLING IS BASED ON SYSCLOCK 10ms clock
 	if (UiDriver_TimerExpireAndRewind(SCTimer_ENCODER_KEYS,now,1))
@@ -7020,6 +7117,7 @@ void UiDriver_TaskHandler_MainTasks()
 		    Codec_RestartI2S();
 		    ts.twinpeaks_tested = TWINPEAKS_WAIT;
 		}
+        UiDriver_HandleUSB_Keyboard();
 	}
 
 	UiSpectrum_Redraw();
