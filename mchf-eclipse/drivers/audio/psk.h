@@ -23,7 +23,7 @@
 #define PSK_SHIFT_90 (PSK_BUF_LEN / 4)
 #define SAMPLE_MAX 32766
 #define PSK_COS_DDS_LEN 64
-#define PSK_MAX_SYMBOL_BUF 384 // Maximum for 12000 sample rate and 31.25; for higher sample rate should value be increased
+// #define PSK_MAX_SYMBOL_BUF 384 // Maximum for 12000 sample rate and 31.25; for higher sample rate should value be increased
 
 typedef enum {
     PSK_SPEED_31,
@@ -37,8 +37,8 @@ typedef struct
     psk_speed_t id;
     float32_t value;
     uint16_t zeros;
-    float32_t* bpf_b;
-    float32_t* bpf_a;
+    const float32_t* bpf_b;
+    const float32_t* bpf_a;
     uint16_t rate;
     char* label;
 } psk_speed_item_t;
@@ -69,7 +69,7 @@ typedef struct
 	float32_t rx_scmix[PSK_BUF_LEN];
 	int32_t rx_idx;
 	int8_t rx_last_bit;
-	float32_t rx_err;
+	// float32_t rx_err;
 	float32_t rx_last_symbol;
 	int16_t rx_symbol_len;
 	int16_t rx_symbol_idx;
