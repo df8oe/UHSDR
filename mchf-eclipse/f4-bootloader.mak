@@ -30,12 +30,9 @@ basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_core.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_ctlreq.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_ioreq.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Core/Src/usbh_pipes.c \
-basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MTP/Src/usbh_mtp.c \
-basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MTP/Src/usbh_mtp_ptp.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_bot.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_scsi.c \
-basesw/mcHF/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Src/usbh_cdc.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c \
 basesw/mcHF/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c \

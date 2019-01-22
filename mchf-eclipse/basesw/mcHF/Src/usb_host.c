@@ -46,11 +46,8 @@
 
 #include "usb_host.h"
 #include "usbh_core.h"
-#include "usbh_audio.h"
-#include "usbh_cdc.h"
 #include "usbh_msc.h"
 #include "usbh_hid.h"
-#include "usbh_mtp.h"
 #include "fatfs.h"
 #include "uhsdr_board.h"
 
@@ -83,19 +80,11 @@ void MX_USB_HOST_Init(void)
 {
 	/* Init Host Library,Add Supported Class and Start the library*/
 	USBH_Init(&hUsbHostHS, USBH_UserProcess, HOST_HS);
-#if 0
-	USBH_RegisterClass(&hUsbHostHS, USBH_AUDIO_CLASS);
-
-	USBH_RegisterClass(&hUsbHostHS, USBH_CDC_CLASS);
-#endif
 #if defined(USE_USBDRIVE) || defined(BOOTLOADER_BUILD)
 	USBH_RegisterClass(&hUsbHostHS, USBH_MSC_CLASS);
 #endif
 #if	defined(USE_USBKEYBOARD) && !defined(BOOTLOADER_BUILD)
 	USBH_RegisterClass(&hUsbHostHS, USBH_HID_CLASS);
-#endif
-#if 0
-	USBH_RegisterClass(&hUsbHostHS, USBH_MTP_CLASS);
 #endif
 	USBH_Start(&hUsbHostHS);
 }

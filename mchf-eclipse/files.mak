@@ -15,10 +15,10 @@ drivers/usb/device/class/composite/usbd_composite.c \
 drivers/usb/device/class/composite/usbd_composite_desc.c \
 drivers/usb/device/class/CDC/Src/usbd_cdc.c \
 drivers/usb/device/class/AUDIO/Src/usbd_audio_cdc_comp.c \
-drivers/usb/device/class/HID/Src/usbh_hid.c \
-drivers/usb/device/class/HID/Src/usbh_hid_keybd.c \
-drivers/usb/device/class/HID/Src/usbh_hid_mouse.c \
-drivers/usb/device/class/HID/Src/usbh_hid_parser.c \
+drivers/usb/host/class/HID/Src/usbh_hid.c \
+drivers/usb/host/class/HID/Src/usbh_hid_keybd.c \
+drivers/usb/host/class/HID/Src/usbh_hid_mouse.c \
+drivers/usb/host/class/HID/Src/usbh_hid_parser.c \
 drivers/usb/app/usb_device.c \
 drivers/usb/app/usbd_audio_if.c \
 drivers/usb/app/usbd_cdc_if.c \
