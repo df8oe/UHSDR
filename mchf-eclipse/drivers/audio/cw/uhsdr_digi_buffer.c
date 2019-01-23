@@ -9,9 +9,9 @@
  **  Description:   Please provide one                                             **
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
-#include "uhsdr_digi_buffer.h"
-#include "ui_driver.h" // for pushing into UI buffer
 #include <assert.h>
+#include "ui_driver.h" // for pushing into UI buffer
+#include "uhsdr_digi_buffer.h"
 
 #define DIGIMODES_TX_BUFFER_SIZE 128
 
@@ -35,10 +35,10 @@ void DigiModes_Restore_BufferConsumer()
 digi_buff_consumer_t DigiModes_Set_BufferConsumer( digi_buff_consumer_t consumer )
 {
     assert((consumer & RTTY) || (consumer & BPSK) || (consumer & CW) || (consumer & UI));
-    if ( prev_consumer == UI ) // <- UI has higher priority
+    if ( active_consumer == UI ) // <- UI has higher priority
     {
-        prev_consumer = active_consumer; // in case we change mode
-        return active_consumer;
+        prev_consumer = consumer; // in case we change mode
+        return prev_consumer;
     }
     prev_consumer = active_consumer;
     active_consumer = consumer;
@@ -127,3 +127,14 @@ void DigiModes_TxBufferReset()
 {
     digimodes_tx_tail = digimodes_tx_buffer_head;
 }
+
+#if defined(_UNIT_TEST_)
+uint32_t DigiModes_TxBufferGetCurrentConsumer( void )
+{
+    return active_consumer;
+}
+uint32_t DigiModes_TxBufferGetPrevConsumer( void )
+{
+    return prev_consumer;
+}
+#endif

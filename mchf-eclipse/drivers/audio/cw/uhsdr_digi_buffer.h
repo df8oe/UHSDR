@@ -51,6 +51,12 @@ int32_t  DigiModes_TxBufferPutChar( uint8_t c, digi_buff_consumer_t source );
 void     DigiModes_TxBufferPutSign( const char* s, digi_buff_consumer_t source );
 
 void     DigiModes_TxBufferReset( );
+
+#if defined(_UNIT_TEST_)
+    uint32_t DigiModes_TxBufferGetCurrentConsumer( void );
+    uint32_t DigiModes_TxBufferGetPrevConsumer( void );
+#endif
+
 #ifdef __cplusplus
 }
 #endif
