@@ -16,7 +16,7 @@
 #define 	UHSDR_VER_MINOR			"11"
 #define 	UHSDR_VER_RELEASE		"19"
 
-#define		UHSDR_BOOT_VERS			"5.0.3"
+#define		UHSDR_BOOT_VERS			"5.0.4"
 
 
 #ifdef SBLA									// Bootloader enables additional rf bands PCB
