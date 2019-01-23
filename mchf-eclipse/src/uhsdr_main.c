@@ -559,7 +559,7 @@ int mchfMain(void)
 
     // TODO: We need to set the digital mode once to make it active
     // if we just loaded the mode from EEPROM since we do not active ts.dvmode
-    if (ts.dmod_mode == DEMOD_DIGI)
+    if (ts.dmod_mode == DEMOD_DIGI || ts.dmod_mode == DEMOD_CW)
     {
     	UiDriver_SetDemodMode(ts.dmod_mode);
     }
