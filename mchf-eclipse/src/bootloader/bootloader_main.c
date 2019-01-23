@@ -250,12 +250,41 @@ bool uhsdrBl_IsValidApplication(uint32_t ApplicationAddress)
     return  APPLICATION_PTR[0] <= (linker_ram_start_addr + (1024 * 1024)) && ( APPLICATION_PTR[0] >= linker_ram_start_addr);
 }
 
+/**
+ * Jumps to new code using a reset vector,
+ * brings processor into the default state (almost like in reset state, except for peripherals and their clocks)
+ * set stackpointer and then jumps to the specific address. This function normally never returns unless
+ * the IsValidApplication check fails.
+ *
+ * @param ApplicationAddress the start address of the reset vector (not the start of the code itself!)
+ */
 void UhsdrBl_JumpToApplication(uint32_t ApplicationAddress)
 {
 
     if (uhsdrBl_IsValidApplication(ApplicationAddress))
     {
         uint32_t* const APPLICATION_PTR = (uint32_t*)ApplicationAddress;
+
+        // disable all interrupts
+        __disable_irq();
+
+        // disable systick irq
+        HAL_SuspendTick();
+
+        // set clocks to default state
+        HAL_RCC_DeInit();
+
+        // clear Interrupt Enable Register & Interrupt Pending Register
+        const size_t icer_count = sizeof(NVIC->ICER)/sizeof(NVIC->ICER[0]);
+
+        for (size_t i = 0; i <icer_count; i++)
+        {
+            NVIC->ICER[i]=0xFFFFFFFF;
+            NVIC->ICPR[i]=0xFFFFFFFF;
+        }
+
+        // enable all interrupts
+        __enable_irq();
 
         __set_MSP(APPLICATION_PTR[0]);
         /* Jump to user application */
@@ -328,7 +357,6 @@ int Bootloader_Main()
         // we had that and it is pain to debug, see #1610 in GitHub!
         if (uhsdrBl_IsValidApplication(APPLICATION_ADDRESS))
         {
-            HAL_SuspendTick();
             UhsdrBl_JumpToApplication(APPLICATION_ADDRESS);
         }
         else
