@@ -4,7 +4,7 @@
  **                               UHSDR FIRMWARE                                    **
  **                                                                                 **
  **---------------------------------------------------------------------------------**
- **  Licence:        GNU GPLv3, see LICENSE.md                                                      **
+ **  Licence:        GNU GPLv3, see LICENSE.md                                      **
  ************************************************************************************/
 
 // Common
@@ -16,15 +16,11 @@
 #include <math.h>
 #include <limits.h>
 
-#include "audio_driver.h"
-#include "audio_management.h"
-#include "ui_configuration.h"
-#include "ui_driver.h"
+#include "softdds.h"
 #include "rtty.h"
-#include "radio_management.h"
+#include "ui_driver.h" // only necessary because of UiDriver_TextMsgPutChar
+#include "radio_management.h" // only necessary because of RadioManagement_Request_TxOff
 #include "uhsdr_digi_buffer.h"
-
-
 
 // bits 0-4 -> baudot, bit 5 1 == LETTER, 0 == NUMBER/FIGURE
 const uint8_t Ascii2Baudot[128] =
@@ -385,7 +381,7 @@ static rtty_lpf_config_t rtty_lp_12khz_50 =
 static rtty_mode_config_t  rtty_mode_current_config;
 
 
-void RttyDecoder_Init()
+void Rtty_Modem_Init()
 {
 
 	// TODO: pass config as parameter and make it changeable via menu
@@ -625,7 +621,7 @@ static const char RTTYLetters[] = "<E\nA SIU\nDRJNFCKTZLWHYPQOBG^MXV^";
 static const char RTTYSymbols[] = "<3\n- ,87\n$4#,.:(5+)2.60197.^./=^";
 
 
-void RttyDecoder_ProcessSample(float32_t sample)
+void Rtty_Demodulator_ProcessSample(float32_t sample)
 {
 
 	switch(rttyDecoderData.state)
@@ -812,12 +808,19 @@ int16_t Rtty_Modulator_GenSample()
 			while ( DigiModes_TxBufferRemove( &current_ascii, RTTY )
 			        && bitsFilled == false )
 			{
-                uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
-                if (current_baudot > 0)
-                { // we have valid baudot code
-                    Rtty_Modulator_Code2Bits(current_baudot);
-                    bitsFilled = true;
-                }
+			    if (current_ascii == 0x04 ) //EOT
+			    {
+			        RadioManagement_Request_TxOff();
+			    }
+			    else
+			    {
+			        uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
+			        if (current_baudot > 0)
+			        { // we have valid baudot code
+			            Rtty_Modulator_Code2Bits(current_baudot);
+			            bitsFilled = true;
+			        }
+			    }
 			}
 
 			if (bitsFilled == false)

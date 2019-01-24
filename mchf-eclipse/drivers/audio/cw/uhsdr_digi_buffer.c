@@ -77,7 +77,7 @@ bool DigiModes_TxBufferRemove( uint8_t* c_ptr, digi_buff_consumer_t consumer )
 /* no room left in the buffer returns 0 */
 int32_t DigiModes_TxBufferPutChar( uint8_t c, digi_buff_consumer_t source )
 {
-    assert((source & CW) || (source & KeyBoard));
+    assert((source & CW) || (source & KeyBoard) || (source & UI));
 
     int32_t ret = 0;
     /*

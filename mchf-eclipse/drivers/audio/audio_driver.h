@@ -599,8 +599,6 @@ int32_t AudioDriver_GetTranslateFreq();
 void AudioDriver_SetSamPllParameters ();
 float log10f_fast(float X);
 
-void RttyDecoder_Init();
-
 
 void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t *audioDst, int16_t size);
 
