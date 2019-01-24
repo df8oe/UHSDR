@@ -9,10 +9,63 @@
 
 // Common
 #include "psk.h"
-#include "ui_driver.h"
-#include "radio_management.h"
+#include <math.h>
 #include <stdlib.h>
+#include "softdds.h"
 #include "uhsdr_digi_buffer.h"
+#include "ui_driver.h" // only necessary because of UiDriver_TextMsgPutChar
+#include "radio_management.h" // only necessary because of RadioManagement_Request_TxOff
+
+
+// RX,TX common constants
+#define PSK_SAMPLE_RATE 12000 // TODO This should come from elsewhere, to be fixed
+
+// RX constants
+#define PSK_BND_FLT_LEN 5
+#define PSK_BUF_LEN (PSK_SAMPLE_RATE / PSK_OFFSET)
+// this must be an integer result without remainder and must be a multiple of 4
+
+#define PSK_SHIFT_DIFF (1.0 * PSK_OFFSET / PSK_SAMPLE_RATE) // phase change between two samples of PSK_OFFSET Hz
+
+// TX constants
+#define SAMPLE_MAX 32766 // max amplitude of generated samples
+
+
+typedef struct
+{
+    uint16_t rate;
+
+    uint16_t tx_idx;
+    uint8_t tx_char;
+    uint16_t tx_bits;
+    int16_t tx_wave_sign_next;
+    int16_t tx_wave_sign_current;
+    uint16_t tx_bit_phase;
+    uint32_t tx_bit_len;
+    int16_t tx_zeros;
+    int16_t tx_ones;
+    bool tx_win;
+
+    float32_t rx_phase;
+    float32_t rx_samples_in[PSK_BND_FLT_LEN];
+    float32_t rx_samples[PSK_BND_FLT_LEN];
+    int16_t rx_bnd_idx;
+    float32_t rx_cos_prod[PSK_BUF_LEN];
+    float32_t rx_sin_prod[PSK_BUF_LEN];
+    float32_t rx_scmix[PSK_BUF_LEN];
+    int32_t rx_idx;
+    int8_t rx_last_bit;
+    float32_t rx_err; // could be of interest for tuning
+    float32_t rx_last_symbol;
+    int16_t rx_symbol_len; // how many buffers fit into one bit
+    int16_t rx_symbol_idx;
+    // float32_t rx_symbol_buf[PSK_MAX_SYMBOL_BUF];
+    uint32_t rx_word;
+    psk_modulator_t tx_mod_state;
+    float32_t rx_sum_sin;
+    float32_t rx_sum_cos;
+} PskState_Internal_t;
+
 
 // table courtesy of fldigi pskvaricode.cxx
 static const uint16_t psk_varicode[] = {
@@ -325,24 +378,10 @@ static const float32_t PskBndPassA_125[] = {
 		0.91159449659996006
 };
 
-static const float32_t PskCosDDS[] = { 6.123233995736766e-17, -0.09801714032956066, -0.1950903220161282,
-		-0.2902846772544622, -0.3826834323650897, -0.4713967368259977, -0.555570233019602,
-		-0.6343932841636453, -0.7071067811865475, -0.773010453362737, -0.8314696123025453,
-		-0.8819212643483549, -0.9238795325112867, -0.9569403357322088, -0.9807852804032304,
-		-0.9951847266721968, -1.0, -0.9951847266721969, -0.9807852804032304, -0.9569403357322089,
-		-0.9238795325112867, -0.881921264348355, -0.8314696123025455, -0.7730104533627371,
-		-0.7071067811865477, -0.6343932841636453, -0.5555702330196022, -0.47139673682599786,
-		-0.38268343236509034, -0.2902846772544624, -0.19509032201612866, -0.09801714032956045,
-		-1.8369701987210297e-16, 0.09801714032956009, 0.19509032201612828, 0.2902846772544621,
-		0.38268343236509, 0.4713967368259976, 0.5555702330196018, 0.6343932841636448, 0.7071067811865475,
-		0.7730104533627367, 0.8314696123025452, 0.8819212643483549, 0.9238795325112865, 0.9569403357322088,
-		0.9807852804032303, 0.9951847266721969, 1.0, 0.9951847266721969, 0.9807852804032304, 0.9569403357322089,
-		0.9238795325112867, 0.881921264348355, 0.8314696123025456, 0.7730104533627369, 0.7071067811865477,
-		0.634393284163646, 0.5555702330196023, 0.47139673682599803, 0.3826834323650905, 0.29028467725446255,
-		0.19509032201612878, 0.09801714032956058 }; // TODO to replace with soft_dds
-
 static soft_dds_t psk_dds;
 static soft_dds_t psk_bit_dds;
+static soft_dds_t psk_rx_dds;
+
 
 #if 0
 static void PskBufAdd(int len, float32_t buf[], float32_t v)
@@ -377,9 +416,9 @@ static float32_t Psk_IirNext(const float32_t bpf_b[], const float32_t bpf_a[], f
 
 const psk_speed_item_t psk_speeds[PSK_SPEED_NUM] =
 {
-		{ .id =PSK_SPEED_31, .value = 31.25, .zeros = 50, .bpf_b = PskBndPassB_31, .bpf_a = PskBndPassA_31, .rate = 384, .label = " 31" },
-		{ .id =PSK_SPEED_63, .value = 62.5, .zeros = 100, .bpf_b = PskBndPassB_63, .bpf_a = PskBndPassA_63, .rate = 192, .label = " 63"  },
-		{ .id =PSK_SPEED_125, .value = 125.0, .zeros = 200, .bpf_b = PskBndPassB_125, .bpf_a = PskBndPassA_125, .rate = 96, .label = "125" }
+		{ .id =PSK_SPEED_31, .value = 31.25,  .bpf_b = PskBndPassB_31, .bpf_a = PskBndPassA_31, .rate = 384, .label = " 31" },
+		{ .id =PSK_SPEED_63, .value = 62.5,   .bpf_b = PskBndPassB_63, .bpf_a = PskBndPassA_63, .rate = 192, .label = " 63"  },
+		{ .id =PSK_SPEED_125, .value = 125.0, .bpf_b = PskBndPassB_125, .bpf_a = PskBndPassA_125, .rate = 96, .label = "125" }
 };
 
 psk_ctrl_t psk_ctrl_config =
@@ -387,7 +426,7 @@ psk_ctrl_t psk_ctrl_config =
 		.speed_idx = PSK_SPEED_31
 };
 
-PskState  psk_state;
+PskState_Internal_t  psk_state;
 
 static void Bpsk_ResetWin() {
     // little trick, we just reset the acc
@@ -395,23 +434,12 @@ static void Bpsk_ResetWin() {
 	psk_bit_dds.acc = 0;
 }
 
-void Bpsk_ModulatorInit(void)
+void Psk_Modulator_PrepareTx()
 {
-	psk_state.tx_ones = 0;
-	psk_state.tx_win = true;
-	psk_state.tx_char = '\0';
-	psk_state.tx_bits = 0;
-	psk_state.tx_wave_sign_next = 1;
-	psk_state.tx_wave_sign_current = 1;
-	psk_state.tx_bit_phase = 0;
-	psk_state.tx_ending = false;
-
-	// we use a sine wave with a frequency of half of the bit rate
-	// as envelope generator
-    softdds_setFreqDDS(&psk_bit_dds, (float32_t)psk_speeds[psk_ctrl_config.speed_idx].value / 2.0, ts.samp_rate, false);
+	Psk_Modulator_SetState(PSK_MOD_PREAMBLE);
 }
 
-void Bpsk_DemodulatorInit(void)
+void Bpsk_Demodulator_Init()
 {
 	psk_state.rx_phase = 0;
 	psk_state.rx_bnd_idx = 0;
@@ -424,9 +452,8 @@ void Bpsk_DemodulatorInit(void)
 	
 	for (int i = 0; i < PSK_BUF_LEN; i++)
 	{
-		psk_state.rx_vco[i] = 0;
-		psk_state.rx_sin_prod[i] = 0;
 		psk_state.rx_cos_prod[i] = 0;
+		psk_state.rx_sin_prod[i] = 0;
 		psk_state.rx_scmix[i] = 0;
 	}
 
@@ -442,21 +469,24 @@ void Bpsk_DemodulatorInit(void)
 	// }
 
 	psk_state.rx_word = 0;
-	UiDriver_TextMsgPutChar('>');
 }
 
 
-void PskDecoder_Init(void)
+void Psk_Modem_Init(uint32_t output_sample_rate)
 {
 
 	psk_state.tx_idx = 0;
 
-	softdds_setFreqDDS(&psk_dds, PSK_OFFSET, ts.samp_rate, true);
-	psk_state.tx_bit_len = lround(ts.samp_rate / psk_speeds[psk_ctrl_config.speed_idx].value * 2); // 480000 / 31.25 * 2 = 3072
-	psk_state.tx_zeros = - psk_speeds[psk_ctrl_config.speed_idx].zeros; // 50
-	psk_state.rate = psk_speeds[psk_ctrl_config.speed_idx].rate; // 384
-	Bpsk_ModulatorInit();
-	Bpsk_DemodulatorInit();
+	softdds_setFreqDDS(&psk_dds,    PSK_OFFSET, output_sample_rate, true);
+	softdds_setFreqDDS(&psk_rx_dds, PSK_OFFSET, PSK_SAMPLE_RATE,    true);
+    // we use a sine wave with a frequency of half of the bit rate
+    // as envelope generator
+    softdds_setFreqDDS(&psk_bit_dds, (float32_t)psk_speeds[psk_ctrl_config.speed_idx].value / 2.0, output_sample_rate, false);
+
+	psk_state.tx_bit_len = lround(output_sample_rate / psk_speeds[psk_ctrl_config.speed_idx].value * 2); // 480000 / 31.25 * 2 = 3072
+	psk_state.rate = PSK_SAMPLE_RATE / psk_speeds[psk_ctrl_config.speed_idx].value;
+
+	Bpsk_Demodulator_Init();
 }
 
 
@@ -490,16 +520,33 @@ static uint16_t Bpsk_FindCharReversed(uint8_t c)
     return retval;
 }
 
+/**
+ *
+ * Basically samples the phase every bit length based on a sample which is one full sine wave
+ * of the carrier frequency. So it is not using multiple sampling points or anything.
+ * We throw away a lot of phase differences symbols
+ * using more of these should make the code more robust, shouldn't it?
+ *
+ * @param symbol_out averaged phase of the samples.
+ */
+
 static void BpskDecoder_NextSymbol(float32_t symbol_out)
 {
     int8_t bit;
+
+    static float32_t symbol_store = 0;
+
+    // if (psk_state.rx_symbol_len - psk_state.rx_symbol_idx < 6)
+    {
+        symbol_store = symbol_out;
+    }
 
     psk_state.rx_symbol_idx += 1;
     if (psk_state.rx_symbol_idx >= psk_state.rx_symbol_len)
     {
         psk_state.rx_symbol_idx = 0;
         // TODO here should come additional part to check if timing of sampling should be moved
-        if (psk_state.rx_last_symbol * symbol_out < 0)
+        if (psk_state.rx_last_symbol * symbol_store < 0)
         {
             bit = 0;
         }
@@ -508,7 +555,8 @@ static void BpskDecoder_NextSymbol(float32_t symbol_out)
             bit = 1;
         }
 
-        psk_state.rx_last_symbol = symbol_out;
+        psk_state.rx_last_symbol = symbol_store;
+        symbol_store = 0;
 
         // have we found 2 consecutive 0 bits? And previously at least one received bit == 1?
         // indicates an end of character
@@ -531,71 +579,95 @@ static void BpskDecoder_NextSymbol(float32_t symbol_out)
     }
 }
 
-void BpskDecoder_ProcessSample(float32_t sample)
+static float32_t BpskDecoder_Bandpass(float32_t sample)
 {
-	float32_t fsample, sum_sin = 0, sum_cos = 0, symbol_out, smax = 0;
+    // save original sample in bpf's input buffer
+    psk_state.rx_samples_in[psk_state.rx_bnd_idx] = sample;
+
+    // IIR bandpass for signal frequency range, implemented in a ring buffer
+    float32_t retval = Psk_IirNext(psk_speeds[psk_ctrl_config.speed_idx].bpf_b, psk_speeds[psk_ctrl_config.speed_idx].bpf_a, psk_state.rx_samples_in,
+        psk_state.rx_samples, psk_state.rx_bnd_idx, PSK_BND_FLT_LEN);
+
+    // save filtered sample in state buffer, used in next run;
+    psk_state.rx_samples[psk_state.rx_bnd_idx] = retval;
+
+    // increment our ring buffer index
+    psk_state.rx_bnd_idx++;
+    psk_state.rx_bnd_idx %= PSK_BND_FLT_LEN;
+
+    return retval;
+}
+
+/**
+ * Process an audio sample and decode signal.
+ *
+ * @param audio sample at PSK_SAMPLE_RATE
+ */
+void Psk_Demodulator_ProcessSample(float32_t sample)
+{
+    float32_t fsample = BpskDecoder_Bandpass(sample);
+
+	// VCO generates a sine/cosine wave "carrier" with PSK_OFFSET Hz as frequency
+    float32_t vco_sin, vco_cos;
+    // we have to use a different DDS as for TX (different sample rates), IQ gives us sin and cos waves of PSK_OFFSET Hz
+    softdds_genIQSingleTone(&psk_rx_dds, &vco_sin , &vco_cos, 1);
+
+	// we now multiple these carriers with our signal
+	// this allows us to compare phase differences
+    float32_t sin_mix = vco_sin * fsample;
+    float32_t cos_mix = vco_cos * fsample;
+
+    // update sums by differences between old and new value in ringbuffer
+    psk_state.rx_sum_sin += sin_mix - psk_state.rx_sin_prod[psk_state.rx_idx];
+    psk_state.rx_sum_cos += cos_mix - psk_state.rx_cos_prod[psk_state.rx_idx];
+
+    // store new value
+    psk_state.rx_sin_prod[psk_state.rx_idx] = sin_mix;
+    psk_state.rx_cos_prod[psk_state.rx_idx] = cos_mix;
+
+	// we now calculate an average
+	float32_t symbol_out = psk_state.rx_sum_sin / PSK_BUF_LEN;
+	float32_t cos_out    = psk_state.rx_sum_cos / PSK_BUF_LEN;
+
+    // GUESS: now try to estimate the frequency error of our VCO vs. the incoming signal
+	float32_t rx_scmix = symbol_out * cos_out;
+	psk_state.rx_err += rx_scmix - psk_state.rx_scmix[psk_state.rx_idx];
+	psk_state.rx_scmix[psk_state.rx_idx] = rx_scmix;
 
 
-	psk_state.rx_samples_in[psk_state.rx_bnd_idx] = sample;
-
-	fsample = Psk_IirNext(psk_speeds[psk_ctrl_config.speed_idx].bpf_b, psk_speeds[psk_ctrl_config.speed_idx].bpf_a, psk_state.rx_samples_in,
-		psk_state.rx_samples, psk_state.rx_bnd_idx, PSK_BND_FLT_LEN);
-
-	psk_state.rx_samples[psk_state.rx_bnd_idx] = fsample;
-
-	psk_state.rx_bnd_idx++;
-	psk_state.rx_bnd_idx %= PSK_BND_FLT_LEN;
-
-	psk_state.rx_vco[psk_state.rx_idx] = PskCosDDS[(int)(psk_state.rx_phase * PSK_COS_DDS_LEN)]; // TODO This shall be replaced with soft_dds
-	psk_state.rx_sin_prod[psk_state.rx_idx] = psk_state.rx_vco[(psk_state.rx_idx - PSK_SHIFT_90 + PSK_BUF_LEN) % PSK_BUF_LEN] * fsample;
-	psk_state.rx_cos_prod[psk_state.rx_idx] = psk_state.rx_vco[psk_state.rx_idx] * fsample;
+	float32_t smax = 0;
 
 	for (int i = 0; i < PSK_BUF_LEN; i++)
 	{
-		sum_sin += psk_state.rx_sin_prod[i]; // Could be optimized keeping the sum in memory
-		sum_cos += psk_state.rx_cos_prod[i]; //
-	}
-
-	symbol_out = sum_sin / PSK_BUF_LEN;
-	psk_state.rx_scmix[psk_state.rx_idx] = symbol_out * sum_cos / PSK_BUF_LEN;
-
-
-	float32_t rx_err = 0;
-	smax = 0;
-	for (int i = 0; i < PSK_BUF_LEN; i++)
-	{
-		rx_err += psk_state.rx_scmix[i]; // Could be optimized keeping the sum in memory
-		if (fabsf(psk_state.rx_sin_prod[i]) > smax)
-		{
-			smax = fabsf(psk_state.rx_sin_prod[i]);
-		}
 		if (fabsf(psk_state.rx_cos_prod[i]) > smax)
 		{
 			smax = fabsf(psk_state.rx_cos_prod[i]);
 		}
+		if (fabsf(psk_state.rx_sin_prod[i]) > smax)
+		{
+			smax = fabsf(psk_state.rx_sin_prod[i]);
+		}
 	}
 
-	if (smax != 0)
-	{
-		rx_err /= PSK_BUF_LEN * smax * 4;
-	}
-	else
-	{
-		rx_err /= PSK_BUF_LEN;
-	}
+	// calculate the final correction value from rx_err
+	// avoid division by zero if smax is 0
+	float32_t rx_err_corr = psk_state.rx_err/ (PSK_BUF_LEN * ((smax != 0) ? (smax * smax * 4.0) : 1.0));
 
 	// if the error is too large, we limit it to +/- 0.1
-	if(fabsf(rx_err) > 0.1)
+	if(fabsf(rx_err_corr) > 0.1)
 	{
-		rx_err = (rx_err > 0) ? 0.1 : -0.1;
+		rx_err_corr = (rx_err_corr > 0) ? 0.1 : -0.1;
 	}
+	rx_err_corr = 0;
 
 	// now advance our phase counter with our error correction
-    psk_state.rx_phase += PSK_SHIFT_DIFF + rx_err * PSK_SHIFT_DIFF;
+    psk_state.rx_phase += PSK_SHIFT_DIFF + rx_err_corr * PSK_SHIFT_DIFF;
 
 
-	// we just passed one "full" offset frequency wave?
-	// now decide if we have a 1 or 0
+	// we just passed one "full" offset frequency wave length?
+	// now see if we have enough symbols to decide if it is a 1 or 0
+    // the symbol is basically an averaged phase difference over the last PSK_BUF_LEN
+    // samples.
 	if (psk_state.rx_phase > 1)
 	{
 		psk_state.rx_phase -= 1;
@@ -607,10 +679,8 @@ void BpskDecoder_ProcessSample(float32_t sample)
 		psk_state.rx_phase += 1;
 	}
 
-
     // we prepare us for the next sample in our ring buffer
-    psk_state.rx_idx += 1;
-    psk_state.rx_idx %= PSK_BUF_LEN;
+    psk_state.rx_idx = (psk_state.rx_idx + 1) % PSK_BUF_LEN;
 }
 
 static bool bit_start(uint16_t tx_bit_phase)
@@ -636,104 +706,168 @@ static bool bit_middle(uint16_t tx_bit_phase)
 int16_t Psk_Modulator_GenSample()
 {
     // tx_bit_len / 4 -> start of a bit
-	// tx_bit_len / 0 -> middle of a bit
-	// tx_bit_len / 2 -> end of a bit
+    // tx_bit_len / 0 -> middle of a bit
+    // tx_bit_len / 2 -> end of a bit
 
-    // try to find out what to transmit next
-	if (bit_start(psk_state.tx_bit_phase))
-	{
-	    // check if we still have bits to transmit
-		if (psk_state.tx_bits == 0)
-		{
-		    // no, all bits have been transmitted
-			if (psk_state.tx_zeros < 2)
-			{
-			    // send spacing zeros
-			    // normal characters don't have 2 zeros following each other
-				psk_state.tx_zeros++;
-			}
-			else if ( DigiModes_TxBufferRemove( &psk_state.tx_char, BPSK ))
-			{
-			    // if all zeros have been sent, look for new
-			    // input from input buffer
-				psk_state.tx_bits = Bpsk_FindCharReversed(psk_state.tx_char);
-				// reset counter for spacing zeros
-				psk_state.tx_zeros = 0;
-				// reset counter for trailing ones (which conclude a transmission)
-				psk_state.tx_ones = 0;
-			}
-			else if (ts.buffered_tx)
-			{
-			    // this is for generating  trailing ones if the
-			    // input comes from a buffer
-				if (psk_state.tx_ones < psk_speeds[psk_ctrl_config.speed_idx].zeros)
-				{
-					psk_state.tx_ones++;
-				}
-				else
-				{
-					psk_state.tx_ending = true;
-				}
-			}
-		}
+    int32_t retval = 0; // by default we produce silence
 
-		// we test the current bit. If it is a zero, and we have no more ones to transmit
-		// we alternate the phase of our signal phase (180 degree shift)
-		if ((psk_state.tx_bits & 0x1) == 0 && psk_state.tx_ones == 0)
-		{
-			psk_state.tx_wave_sign_next *= -1;
-		}
+    // check if the modulator is supposed to be active...
+    if (Psk_Modulator_GetState() != PSK_MOD_OFF)
+    {
+        // try to find out what to transmit next
+        if (bit_start(psk_state.tx_bit_phase))
+        {
+            // check if we still have bits to transmit
+            if (psk_state.tx_bits == 0)
+            {
+                // no, all bits have been transmitted
+                if (psk_state.tx_zeros < 2 || (Psk_Modulator_GetState() == PSK_MOD_PREAMBLE))
+                {
+                    // send spacing zeros before anything else happens
+                    // normal characters don't have 2 zeros following each other
+                    psk_state.tx_zeros++;
 
-		// if it is a phase shift, which equals a zero to transmit or we transmit our last bit
-		if (psk_state.tx_wave_sign_next != psk_state.tx_wave_sign_current || psk_state.tx_ending)
-		{
-		    // we have to shape the signal
-			psk_state.tx_win = true;
-		}
-		else
-		{
-		    // it is a one and not the end, so we simply keep the full swing,
-		    // i.e. a constant amplitude signal
-			psk_state.tx_win = false;
-		}
+                    // are we sending a preamble and have transmitted enough zeroes?
+                    // we do this for roughly a second, i.e. we simply use the rate as "timer"
+                    if ((Psk_Modulator_GetState() == PSK_MOD_PREAMBLE) && psk_state.tx_zeros >= psk_speeds[psk_ctrl_config.speed_idx].value)
+                    {
+                        Psk_Modulator_SetState(PSK_MOD_ACTIVE);
+                    }
+                }
+                else if (DigiModes_TxBufferHasData())
+                {
+                    DigiModes_TxBufferRemove( &psk_state.tx_char, BPSK );
+                    Psk_Modulator_SetState(PSK_MOD_ACTIVE);
+                    if (psk_state.tx_char == 0x04) // EOT, stop tranmission
+                    {
+                        // we send from buffer, and nothing more is in the buffer
+                        // request sending the trailing sequence
+                        Psk_Modulator_SetState(PSK_MOD_POSTAMBLE);
+                    }
+                    else
+                    {
+                        // if all zeros have been sent, look for new
+                        // input from input buffer
+                        psk_state.tx_bits = Bpsk_FindCharReversed(psk_state.tx_char);
+                        // reset counter for spacing zeros
+                        psk_state.tx_zeros = 0;
+                        // reset counter for trailing postamble (which conclude a transmission)
+                        psk_state.tx_ones = 0;
+                    }
+                }
 
-		psk_state.tx_bits >>= 1; // remove "used" bit
-	}
+                if (Psk_Modulator_GetState() == PSK_MOD_POSTAMBLE)
+                {
+                    // this is for generating  trailing postamble if the
+                    // input comes from a buffer or if we are asked to
+                    // switch off,
+                    // we do this for roughly a second, i.e. we simply use the rate as "timer"
+                    if (psk_state.tx_ones < psk_speeds[psk_ctrl_config.speed_idx].value)
+                    {
+                        psk_state.tx_ones+=16;
+                        psk_state.tx_bits = 0xffff; // we add 16 bits of postamble
+                        // so we may send a few more postamble than request, but who cares...
+                    }
+                    else
+                    {
+                        Psk_Modulator_SetState(PSK_MOD_INACTIVE);
+                    }
+                }
+            }
 
-	//  here we are in the middle of bit
-	//  we move the next sign in, since it may indicate a phase shift
-	// in this case we are transmitting a zero
-	if (bit_middle(psk_state.tx_bit_phase))
-	{
+            // we test the current bit. If it is a zero, and we have no more postamble to transmit
+            // we alternate the phase of our signal phase (180 degree shift)
+            if ((psk_state.tx_bits & 0x1) == 0 && psk_state.tx_ones == 0)
+            {
+                psk_state.tx_wave_sign_next *= -1;
+            }
 
-		psk_state.tx_wave_sign_current = psk_state.tx_wave_sign_next;
+            // if it is a phase shift, which equals a zero to transmit or we transmit our last bit
+            if (psk_state.tx_wave_sign_next != psk_state.tx_wave_sign_current || Psk_Modulator_GetState() == PSK_MOD_INACTIVE)
+            {
+                // we have to shape the signal
+                psk_state.tx_win = true;
+            }
+            else
+            {
+                // it is a one and not the end, so we simply keep the full swing,
+                // i.e. a constant amplitude signal
+                psk_state.tx_win = false;
+            }
+
+            psk_state.tx_bits >>= 1; // remove "used" bit
+        }
+
+        //  here we are in the middle of bit
+        //  we move the next sign in, since it may indicate a phase shift
+        // in this case we are transmitting a zero
+        if (bit_middle(psk_state.tx_bit_phase))
+        {
+
+            psk_state.tx_wave_sign_current = psk_state.tx_wave_sign_next;
 
 
-		// if we are in the middle of a bit AND it is a zero bit
-		// we have to start our envelope from null
-		if (psk_state.tx_win)
-		{
-		    Bpsk_ResetWin(); // we start the envelope from 0 to max
-		}
-		if (psk_state.tx_ending)
-		{
-		    RadioManagement_Request_TxOff();
-		}
-	}
+            // if we are in the middle of a bit AND it is a zero bit
+            // we have to start our envelope from null
+            if (psk_state.tx_win)
+            {
+                Bpsk_ResetWin(); // we start the envelope from 0 to max
+            }
+            if (Psk_Modulator_GetState() == PSK_MOD_INACTIVE)
+            {
+                // now turn us off, we're done.
+                Psk_Modulator_SetState(PSK_MOD_OFF);
+            }
+        }
 
-	// if we are shaping the signal envelope
-	// we use the "slow" to generate our shape.
-	// we use abs so that we are getting only the gain
-	// not the phase from here
-	// otherwise we use the SAMPLE_MAX as coeff for constant amplitude
-    int32_t coeff = psk_state.tx_win ? abs(softdds_nextSample(&psk_bit_dds)) : SAMPLE_MAX;
+        // if we are shaping the signal envelope
+        // we use the "slow" to generate our shape.
+        // we use abs so that we are getting only the gain
+        // not the phase from here
+        // otherwise we use the SAMPLE_MAX as coeff for constant amplitude
+        int32_t coeff = psk_state.tx_win ? abs(softdds_nextSample(&psk_bit_dds)) : SAMPLE_MAX;
 
-	// the bit length counter is incremented after each sample
-	// and wraps around after one  bit length
-	psk_state.tx_bit_phase = (psk_state.tx_bit_phase + 1) % (psk_state.tx_bit_len / 2); // % 1576 == 1 bit length
+        // the bit length counter is incremented after each sample
+        // and wraps around after one  bit length
+        psk_state.tx_bit_phase = (psk_state.tx_bit_phase + 1) % (psk_state.tx_bit_len / 2); // % 1576 == 1 bit length
 
 
-	int32_t retval = (coeff * psk_state.tx_wave_sign_current * softdds_nextSample(&psk_dds)) / SAMPLE_MAX;
+        retval = (coeff * psk_state.tx_wave_sign_current * softdds_nextSample(&psk_dds)) / SAMPLE_MAX;
+    }
 
-	return retval;
+    return retval;
+}
+
+psk_modulator_t Psk_Modulator_GetState()
+{
+    return psk_state.tx_mod_state;
+}
+
+psk_modulator_t Psk_Modulator_SetState(psk_modulator_t newState)
+{
+    psk_modulator_t retval = psk_state.tx_mod_state;
+
+    switch(newState)
+    {
+    case PSK_MOD_PREAMBLE:
+        psk_state.tx_ones = 0;
+        psk_state.tx_win = true;
+        psk_state.tx_char = '\0';
+        psk_state.tx_bits = 0;
+        psk_state.tx_wave_sign_next = 1;
+        psk_state.tx_wave_sign_current = 1;
+        psk_state.tx_bit_phase = 0;
+        psk_state.tx_zeros = 0;
+        psk_state.tx_mod_state = newState;
+        break;
+    case PSK_MOD_OFF:
+        RadioManagement_Request_TxOff();
+        psk_state.tx_mod_state = newState;
+        break;
+    default:
+        psk_state.tx_mod_state = newState;
+        break;
+    }
+
+    return retval;
 }

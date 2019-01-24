@@ -76,8 +76,8 @@ typedef struct
 }  rtty_ctrl_t;
 
 extern rtty_ctrl_t rtty_ctrl_config;
-void RttyDecoder_Init();
-void RttyDecoder_ProcessSample(float32_t sample);
+void Rtty_Modem_Init();
+void Rtty_Demodulator_ProcessSample(float32_t sample);
 int16_t Rtty_Modulator_GenSample();
 
 #endif

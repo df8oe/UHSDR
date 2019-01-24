@@ -793,7 +793,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
         if (is_demod_psk())
         {
-        	Bpsk_ModulatorInit();
+        	Psk_Modulator_PrepareTx();
         }
     }
 
@@ -1246,14 +1246,18 @@ void RadioManagement_HandlePttOnOff()
         else if (CatDriver_CatPttActive() == false)
         {
             // When CAT driver "pressed" PTT skip auto return to RX
-        	if (ts.tx_stop_req && is_demod_psk() && !psk_state.tx_ending)
+        	if (ts.tx_stop_req == true && is_demod_psk() && Psk_Modulator_GetState() == PSK_MOD_ACTIVE)
         	{
-        		psk_state.tx_ending = true;
+        		Psk_Modulator_SetState(PSK_MOD_POSTAMBLE);
         		ts.tx_stop_req = false;
         	}
         	else if(!(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || ts.cw_text_entry) || ts.tx_stop_req == true)
             {
-                // If we are in TX and ...
+        	    // we get here either if there is an explicit request to stop transmission no matter which mode we are in
+        	    // or if the mode relies on us to switch off after PTT has been released (we defines this by exclusion
+        	    // of modes which control transmission state via paddles or keyboard)
+
+        	    // If we are in TX
                 if(ts.txrx_mode == TRX_MODE_TX)
                 {
                     // ... the PTT line is released ...

@@ -620,8 +620,8 @@ void AudioDriver_Init(void)
     // CW module init
     CwGen_Init();
 
-    RttyDecoder_Init();
-    PskDecoder_Init();
+    Rtty_Modem_Init();
+    Psk_Modem_Init(ts.samp_rate);
 
     // Audio filter disabled
     ts.dsp_inhibit = 1;
@@ -1677,7 +1677,7 @@ static void AudioDriver_RxProcessor_Rtty(float32_t * const src, int16_t blockSiz
 
     for (uint16_t idx = 0; idx < blockSize; idx++)
     {
-        RttyDecoder_ProcessSample(src[idx]);
+        Rtty_Demodulator_ProcessSample(src[idx]);
     }
 }
 #endif
@@ -1687,7 +1687,7 @@ static void AudioDriver_RxProcessor_Bpsk(float32_t * const src, int16_t blockSiz
 
     for (uint16_t idx = 0; idx < blockSize; idx++)
     {
-        BpskDecoder_ProcessSample(src[idx]);
+        Psk_Demodulator_ProcessSample(src[idx]);
     }
 }
 
