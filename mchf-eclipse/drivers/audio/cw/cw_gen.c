@@ -878,7 +878,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 					}
 				}
 
-				if (ps.break_timer > 0 && !ps.sending_char && !DigiModes_TxBufferHasData())
+				if (ps.break_timer > 0 && !ps.sending_char /*&& !DigiModes_TxBufferHasData()*/)
 				{
 					if (--ps.break_timer == 0)
 					{
