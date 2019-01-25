@@ -7040,17 +7040,46 @@ static void UiDriver_HandleUSB_Keyboard()
                       RadioManagement_Request_TxOff();
                       break;
                     case KEY_F5:
-                      RadioManagement_Request_TxOn();
-                      UiAction_PlayKeyerBtn1();
-                      break;
+                        if (k_pinfo->lshift)
+                        {
+                            UiAction_RecordKeyerBtn1();
+                        }
+                        else
+                        {
+                            UiAction_PlayKeyerBtn1();
+                        }
+                        break;
                     case KEY_F6:
-                      RadioManagement_Request_TxOn();
-                      UiAction_PlayKeyerBtn2();
-                      break;
+                        if (k_pinfo->lshift)
+                        {
+                            UiAction_RecordKeyerBtn2();
+                        }
+                        else
+                        {
+                            UiAction_PlayKeyerBtn2();
+                        }
+                        break;
                     case KEY_F7:
-                      RadioManagement_Request_TxOn();
-                      UiAction_PlayKeyerBtn3();
+                        if (k_pinfo->lshift)
+                        {
+                            UiAction_RecordKeyerBtn3();
+                        }
+                        else
+                        {
+                            UiAction_PlayKeyerBtn3();
+                        }
+                        break;
+                    case KEY_F8:
+                        if (k_pinfo->lshift)
+                        {
+                            UiAction_ToggleBufferedTXMode();
+                        }
+                        else
+                        {
+                            UiAction_ToggleKeyerMode();
+                        }
                       break;
+
                     }
 
                     uint8_t kbdChar = USBH_HID_GetASCIICode( k_pinfo, idx );

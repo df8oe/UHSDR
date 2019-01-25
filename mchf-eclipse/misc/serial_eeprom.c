@@ -297,24 +297,43 @@ uint16_t SerialEEPROM_24Cxx_ReadBulk(uint32_t Addr, uint8_t *buffer, uint16_t le
     return retVal;
 }
 
+/**
+ * Write a consecutive area of memory into the I2C eeprom starting with Addr.
+ * @param Addr  the location of the first byte in the eeprom. May have any value within the memory size of  the eeprom
+ * @param buffer memory to copy from
+ * @param length how many bytes to copy
+ * @param Mem_Type which eeprom type are we having
+ * @return 0 if success, I2C error code otherwise
+ */
 uint16_t SerialEEPROM_24Cxx_WriteBulk(uint32_t Addr, const uint8_t *buffer, uint16_t length, uint8_t Mem_Type)
 {
     uint16_t retVal = 0;
     if (Mem_Type < SERIAL_EEPROM_DESC_NUM) {
-        uint32_t page, count;
-        count = 0;
+        uint32_t count = 0;
 
-        page =SerialEEPROM_eepromTypeDescs[Mem_Type].pagesize;
+        const uint32_t page = SerialEEPROM_eepromTypeDescs[Mem_Type].pagesize;
+
 
         while(retVal == 0 && count < length)
         {
             SerialEEPROM_24Cxx_StartTransfer_Prep(Addr + count, Mem_Type,&serialEeprom_desc);
-            if (length - count < page)
+
+            uint32_t transfer_size = page;
+
+            // correct the transfer_size to keep inside a single page
+            // if the start address is not on a page boundary
+            // this will happen only for the first bulkd write (if at all)
+            // then the Addr + count will be aligned on page boundaries
+
+            transfer_size -= ((Addr+count) % page);
+
+            if (length - count < transfer_size)
             {
-                page = length - count;
+                transfer_size = length - count;
             }
-            retVal = MCHF_I2C_WriteBlock(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,serialEeprom_desc.addr,serialEeprom_desc.addr_size,&buffer[count],page);
-            count+=page;
+
+            retVal = MCHF_I2C_WriteBlock(SERIALEEPROM_I2C,serialEeprom_desc.devaddr,serialEeprom_desc.addr,serialEeprom_desc.addr_size,&buffer[count],transfer_size);
+            count+=transfer_size;
             if (retVal)
             {
                 break;

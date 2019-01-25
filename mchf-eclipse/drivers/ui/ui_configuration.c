@@ -56,11 +56,11 @@ static uint16_t number_of_entries_cur_fw; // we need this to be able to read con
 // from eeprom, we read -1 from the new location and leave it there. Unless -1 is the default value or the range of the int configuration parameter does not include -1
 // we will not automatically set the default value, which can be a problem.
 
-static uint16_t dummy_value16;
-
 const ConfigEntryDescriptor ConfigEntryInfo[] =
 {
-    { ConfigEntry_UInt16, EEPROM_ZERO_LOC,&dummy_value16,0,0,0xffff},
+    // { ConfigEntry_UInt16, EEPROM_ZERO_LOC,&dummy_value16,0,0,0xffff},
+    // disable since we don't want to handle the eeprom signature here.
+
     { ConfigEntry_UInt16, EEPROM_FLAGS2,&ts.flags2,0,0,0xff},
     { ConfigEntry_UInt8, EEPROM_SPEC_SCOPE_SPEED,&ts.scope_speed,SPECTRUM_SCOPE_SPEED_DEFAULT,0,SPECTRUM_SCOPE_SPEED_MAX},
     { ConfigEntry_UInt32_16, EEPROM_FREQ_STEP,&df.selected_idx,3,0,T_STEP_MAX_STEPS-2},
