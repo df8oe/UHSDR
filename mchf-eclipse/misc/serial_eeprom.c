@@ -549,6 +549,7 @@ void  SerialEEPROM_Clear_AllVariables()
 void  SerialEEPROM_Clear_Signature()
 {
     // variable 0 is the reserved signature variable
+    ts.ser_eeprom_type = SerialEEPROM_24Cxx_DetectProbeHardware();
     SerialEEPROM_Clear_Variable(0);
 }
 
