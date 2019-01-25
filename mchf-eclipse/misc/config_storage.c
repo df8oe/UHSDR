@@ -142,14 +142,26 @@ uint16_t ConfigStorage_WriteVariable(uint16_t addr, uint16_t value)
     }
     else if(ts.configstore_in_use == CONFIGSTORE_IN_USE_RAMCACHE)
     {
-        uint8_t lowbyte;
-        uint8_t highbyte;
+        /**
+         * Was found that during saving settings,
+         * first two cells was corrupted.
+         * Just temp. protection...
+         */
+        if ( addr == 0 )
+        {
+            status = HAL_ERROR;
+        }
+        else
+        {
+            uint8_t lowbyte;
+            uint8_t highbyte;
 
-        lowbyte = (uint8_t)((0x00FF)&value);
-        highbyte = (uint8_t)((0x00FF)&(value >> 8));
-        config_ramcache[addr*2] = highbyte;
-        config_ramcache[addr*2+1] = lowbyte;
-        status = HAL_OK;
+            lowbyte = (uint8_t)((0x00FF)&value);
+            highbyte = (uint8_t)((0x00FF)&(value >> 8));
+            config_ramcache[addr*2] = highbyte;
+            config_ramcache[addr*2+1] = lowbyte;
+            status = HAL_OK;
+        }
     }
     return status;
 }
