@@ -218,7 +218,8 @@ void ConfigStorage_CopySerial2RAMCache()
 
 uint16_t ConfigStorage_CopyRAMCache2Serial()
 {
-    uint16_t retval = SerialEEPROM_24Cxx_WriteBulk(0, config_ramcache, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+    // we start behind the signature, which we don't want to change
+    uint16_t retval = SerialEEPROM_24Cxx_WriteBulk(2, config_ramcache+2, MAX_VAR_ADDR*2, ts.ser_eeprom_type);
     if (retval == HAL_OK)
     {
         ts.configstore_in_use = CONFIGSTORE_IN_USE_I2C;
