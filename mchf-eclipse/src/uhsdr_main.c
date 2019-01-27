@@ -353,7 +353,6 @@ void TransceiverStateInit(void)
     ts.i2c_speed[I2C_BUS_1] = I2C1_SPEED_DEFAULT; // Si570, MCP9801
     ts.i2c_speed[I2C_BUS_2] = I2C2_SPEED_DEFAULT; // Codec, EEPROM
 
-    ts.rtty_atc_enable = true;
     ts.keyer_mode.active = false;
     ts.keyer_mode.button_recording = KEYER_BUTTON_NONE;
     for (int idx = 0; idx<KEYER_BUTTONS; idx++)
