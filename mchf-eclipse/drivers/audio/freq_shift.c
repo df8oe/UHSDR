@@ -9,7 +9,7 @@
 
 #include <assert.h>
 #include "freq_shift.h"
-#include "audio_driver.h"
+#include "audio_driver.h" // only for IQ_BLOCK_SIZE and IQ_SAMPLE_RATE_F
 #include <math.h>
 #include <stdlib.h>
 
@@ -263,7 +263,10 @@ static void FreqShift_QuarterFs(float32_t* I_buffer, float32_t* Q_buffer, int16_
 
 /**
  * Frequency shift using the best available algorithm. Handles changes to the shift frequency on the fly. This is
- * the front end for all the shift algorithms.
+ * the front end for all the shift algorithms. Sample rate is fixed to IQ_SAMPLE_RATE, max buffer is IQ_BLOCK_SIZE
+ * It cannot be called twice at the same time (i.e. must not be used in code running in different interrupt levels
+ * which may interrupt each other or mixed in normal code and interrupt code)
+ *
  * @param I_buffer incoming i data
  * @param Q_buffer incoming q data
  * @param blockSize size of data to be processed

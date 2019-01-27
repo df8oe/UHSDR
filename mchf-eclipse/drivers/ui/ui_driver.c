@@ -908,7 +908,8 @@ void UiDriver_Init()
 
 	AudioManagement_CalcTxCompLevel();      // calculate current settings for TX speech compressor
 
-	AudioFilter_InitRxHilbertFIR(ts.dmod_mode);
+	// FIXME: These are also called via AudioDriver_Init(), why call them here earlier?
+	AudioFilter_InitRxHilbertAndDecimationFIR(ts.dmod_mode);
 	AudioFilter_InitTxHilbertFIR();
 
 	AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,false);
