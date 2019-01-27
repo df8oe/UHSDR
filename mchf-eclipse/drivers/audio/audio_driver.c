@@ -2790,8 +2790,9 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
                 arm_fir_f32(&Fir_Rx_Hilbert_Q,adb.iq_buf.q_buffer, adb.iq_buf.q_buffer, blockSizeIQ);   // Hilbert lowpass -45 degrees
             }
 
-            if (RadioManagement_UsesBothSidebands(dmod_mode))
+            if (RadioManagement_UsesBothSidebands(dmod_mode) || dmod_mode == DEMOD_SAM  )
             {
+                // we must go here in DEMOD_SAM even if we effectively output only a single sideband
                 switch(dmod_mode)
                 {
                 case DEMOD_AM:
