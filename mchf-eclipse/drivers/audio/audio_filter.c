@@ -11,6 +11,7 @@
 **  Last Modified:                                                                 **
 **  Licence:        GNU GPLv3                                                      **
 ************************************************************************************/
+#include <assert.h>
 #include "uhsdr_board.h"
 #include "audio_filter.h"
 #include "audio_driver.h"
@@ -1107,15 +1108,13 @@ arm_fir_instance_f32    Fir_TxFreeDV_Interpolate_Q;
 static float   __MCHF_SPECIALMEM Fir_TxFreeDV_Interpolate_State_I[FIR_FREEDV_INTERPOLATE_STATE_SIZE];
 static float   __MCHF_SPECIALMEM Fir_TxFreeDV_Interpolate_State_Q[FIR_FREEDV_INTERPOLATE_STATE_SIZE];
 
+// Audio RX - Decimator
+arm_fir_decimate_instance_f32   DECIMATE_RX_I;
+float32_t           __MCHF_SPECIALMEM decimState_I[FIR_RXAUDIO_BLOCK_SIZE + IQ_RX_NUM_TAPS];
+// Audio RX - Decimator in Q-path
+arm_fir_decimate_instance_f32   DECIMATE_RX_Q;
+float32_t           __MCHF_SPECIALMEM decimState_Q[FIR_RXAUDIO_BLOCK_SIZE + IQ_RX_NUM_TAPS];
 
-// Audio RX - Decimator (numTaps+blockSize-1)
-arm_fir_decimate_instance_f32   FirDecim_RxSam_I;
-arm_fir_decimate_instance_f32   FirDecim_RxSam_Q;
-
-// FIXME: Needs comment and check!!!
-#define FIR_DECIM_SAM_STATE_SIZE (IQ_RX_NUM_TAPS + IQ_RX_BLOCK_SIZE)
-static float32_t __MCHF_SPECIALMEM FirDecim_RxSam_State_I[FIR_DECIM_SAM_STATE_SIZE];
-static float32_t __MCHF_SPECIALMEM FirDecim_RxSam_State_Q[FIR_DECIM_SAM_STATE_SIZE];
 
 typedef struct
 {
@@ -1131,9 +1130,9 @@ static IQFilterCoeffs_t   __MCHF_SPECIALMEM     fc;
 
 
 /*
- * @brief Initialize RX Hilbert filters
+ * @brief Initialize RX Hilbert and Decimation filters
  */
-void 	AudioFilter_InitRxHilbertFIR(uint8_t dmod_mode)
+void 	AudioFilter_InitRxHilbertAndDecimationFIR(uint8_t dmod_mode)
 {
     // always make a fresh copy of the original Q and I coefficients into fast RAM
     // this speeds up processing on the STM32F4
@@ -1142,6 +1141,8 @@ void 	AudioFilter_InitRxHilbertFIR(uint8_t dmod_mode)
     // new filter_path method
     // take all info from FilterPathInfo
     // phase adjustment is now done in audio_driver.c audio_rx_processor
+
+    assert(ads.af_disabled != 0);
 
     const uint32_t rx_iq_num_taps = FilterPathInfo[ts.filter_path].FIR_numTaps;
 
@@ -1156,32 +1157,69 @@ void 	AudioFilter_InitRxHilbertFIR(uint8_t dmod_mode)
     // Initialization of the FIR/Hilbert filters
     arm_fir_init_f32(&Fir_Rx_Hilbert_I, rx_iq_num_taps, fc.fir_rx_hilbert_taps_i, Fir_Rx_Hilbert_State_I, IQ_RX_BLOCK_SIZE); // load "I" with "I" coefficients
     arm_fir_init_f32(&Fir_Rx_Hilbert_Q, rx_iq_num_taps, fc.fir_rx_hilbert_taps_q, Fir_Rx_Hilbert_State_Q, IQ_RX_BLOCK_SIZE); // load "Q" with "Q" coefficients
-    //
+
+    // reset decimate filters
+    DECIMATE_RX_I.numTaps = 0;
+    DECIMATE_RX_I.pCoeffs = NULL;
+    DECIMATE_RX_Q.numTaps = 0;
+    DECIMATE_RX_Q.pCoeffs = NULL;
+
     // Set up RX SAM decimation/filter
     if (dmod_mode == DEMOD_SAM || dmod_mode == DEMOD_AM)
     {
         if (FilterPathInfo[ts.filter_path].FIR_numTaps != 0)
         {
-            FirDecim_RxSam_I.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
-            FirDecim_RxSam_Q.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;      // Number of taps in FIR filter
-            FirDecim_RxSam_I.pCoeffs = fc.fir_rx_hilbert_taps_i; //FilterPathInfo[ts.filter_path].FIR_I_coeff_file;       // Filter coefficients
-            FirDecim_RxSam_Q.pCoeffs = fc.fir_rx_hilbert_taps_q; //FilterPathInfo[ts.filter_path].FIR_Q_coeff_file;       // Filter coefficients
+            DECIMATE_RX_I.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;
+            DECIMATE_RX_Q.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;
+            DECIMATE_RX_I.pCoeffs = fc.fir_rx_hilbert_taps_i;
+            DECIMATE_RX_Q.pCoeffs = fc.fir_rx_hilbert_taps_q;
         }
-        else
-        {
-            FirDecim_RxSam_I.numTaps = 0;
-            FirDecim_RxSam_Q.numTaps = 0;
-            FirDecim_RxSam_I.pCoeffs = NULL;
-            FirDecim_RxSam_Q.pCoeffs = NULL;
-        }
+    }
+    else if (FilterPathInfo[ts.filter_path].dec != NULL)
+    {
+            const arm_fir_decimate_instance_f32* dec = FilterPathInfo[ts.filter_path].dec;
 
-        FirDecim_RxSam_I.M = ads.decimation_rate;
-        FirDecim_RxSam_Q.M = ads.decimation_rate;
-        FirDecim_RxSam_I.pState = FirDecim_RxSam_State_I;            // Filter state variables
-        FirDecim_RxSam_Q.pState = FirDecim_RxSam_State_Q;
+    #if defined(STM32F4) && defined(USE_LMS_AUTONOTCH)
+            // FIXME: Better solution (e.g. improve graphics performance, better data structures ... )
+            // this code is a hack to reduce processor load for STM32F4 && SPI display
+            // which causes UI lag
+            // in this case we simply use a less power-eating filter (lower number of taps)
+            // one problem is that we use the not so good filter
+            // even if the autonotch / nr is not active and we could use the good filter
+            if (dec == &FirRxDecimate_sideband_supp && ts.display->use_spi == true)
+            {
+                // TODO: this is wrong! For higher bandwidth filters this has to be
+                // changed, see filter list in audio_filter.c
+                dec = &FirRxDecimate;
+                //dec = &FirRxDecimate_sideband_supp;
+            }
+    #endif
+            DECIMATE_RX_I.numTaps = dec->numTaps;
+            DECIMATE_RX_Q.numTaps = dec->numTaps;;
+            DECIMATE_RX_I.pCoeffs = dec->pCoeffs;
+            DECIMATE_RX_Q.pCoeffs = dec->pCoeffs;
+    }
 
-        arm_fill_f32(0.0, FirDecim_RxSam_State_I, FIR_DECIM_SAM_STATE_SIZE);
-        arm_fill_f32(0.0, FirDecim_RxSam_State_Q, FIR_DECIM_SAM_STATE_SIZE);
+    assert(DECIMATE_RX_I.numTaps == DECIMATE_RX_Q.numTaps);
+
+    if (DECIMATE_RX_I.numTaps > 0)
+    {
+
+
+        arm_fir_decimate_init_f32(&DECIMATE_RX_I,
+
+                DECIMATE_RX_I.numTaps,      // Number of taps in FIR filter
+                ads.decimation_rate,
+                DECIMATE_RX_I.pCoeffs,       // Filter coefficients
+                decimState_I,            // Filter state variables
+                FIR_RXAUDIO_BLOCK_SIZE);
+
+        arm_fir_decimate_init_f32(&DECIMATE_RX_Q,
+                DECIMATE_RX_Q.numTaps,      // Number of taps in FIR filter
+                ads.decimation_rate,
+                DECIMATE_RX_Q.pCoeffs,       // Filter coefficients
+                decimState_Q,            // Filter state variables
+                FIR_RXAUDIO_BLOCK_SIZE);
     }
 }
 
