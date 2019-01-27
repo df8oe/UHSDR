@@ -381,7 +381,7 @@ static rtty_lpf_config_t rtty_lp_12khz_50 =
 static rtty_mode_config_t  rtty_mode_current_config;
 
 
-void Rtty_Modem_Init()
+void Rtty_Modem_Init(uint32_t output_sample_rate)
 {
 
 	// TODO: pass config as parameter and make it changeable via menu
@@ -425,8 +425,8 @@ void Rtty_Modem_Init()
 	}
 
 	// configure DDS for transmission
-	softdds_setFreqDDS(&rttyDecoderData.tx_dds[0], rttyDecoderData.bpfSpaceConfig->freq, ts.samp_rate, 0);
-	softdds_setFreqDDS(&rttyDecoderData.tx_dds[1], rttyDecoderData.bpfMarkConfig->freq, ts.samp_rate, 0);
+	softdds_setFreqDDS(&rttyDecoderData.tx_dds[0], rttyDecoderData.bpfSpaceConfig->freq, output_sample_rate, 0);
+	softdds_setFreqDDS(&rttyDecoderData.tx_dds[1], rttyDecoderData.bpfMarkConfig->freq, output_sample_rate, 0);
 
 }
 
@@ -457,7 +457,7 @@ static int RttyDecoder_demodulator(float32_t sample)
 	space_mag *= space_mag;
 	mark_mag *= mark_mag;
 
-    if(ts.rtty_atc_enable)
+    if(rtty_ctrl_config.atc_disable == false)
 	{   // RTTY decoding with ATC = automatic threshold correction
 		// FIXME: space & mark seem to be swapped in the following code
 		// dirty fix
@@ -521,7 +521,6 @@ static int RttyDecoder_demodulator(float32_t sample)
 
 		v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
 
-		// MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
 	}
 	else
 	{   // RTTY without ATC, which works very well too!
@@ -533,7 +532,6 @@ static int RttyDecoder_demodulator(float32_t sample)
 
 		// lowpass filtering the summed line
 		v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
-		// MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
 	}
 
 	return (v1 > 0)?0:1;

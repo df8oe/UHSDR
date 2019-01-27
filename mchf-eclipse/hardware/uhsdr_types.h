@@ -15,6 +15,7 @@
 #ifndef __MCHF_TYPES_H
 #define __MCHF_TYPES_H
 
+#include <stdint.h>
 #include "arm_math.h"
 // defines float32_t
 

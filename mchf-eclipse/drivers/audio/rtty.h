@@ -73,10 +73,11 @@ typedef struct
     rtty_shift_t shift_idx;
     rtty_speed_t speed_idx;
     rtty_stop_t stopbits_idx;
+    bool atc_disable; // should the automatic level control be turned off?
 }  rtty_ctrl_t;
 
 extern rtty_ctrl_t rtty_ctrl_config;
-void Rtty_Modem_Init();
+void Rtty_Modem_Init(uint32_t output_sample_rate);
 void Rtty_Demodulator_ProcessSample(float32_t sample);
 int16_t Rtty_Modulator_GenSample();
 

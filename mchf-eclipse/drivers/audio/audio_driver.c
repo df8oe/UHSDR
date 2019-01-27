@@ -620,7 +620,7 @@ void AudioDriver_Init(void)
     // CW module init
     CwGen_Init();
 
-    Rtty_Modem_Init();
+    Rtty_Modem_Init(ts.samp_rate);
     Psk_Modem_Init(ts.samp_rate);
 
     // Audio filter disabled

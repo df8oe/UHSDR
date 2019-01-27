@@ -58,7 +58,7 @@ static uint16_t number_of_entries_cur_fw; // we need this to be able to read con
 
 const ConfigEntryDescriptor ConfigEntryInfo[] =
 {
-    // { ConfigEntry_UInt16, EEPROM_ZERO_LOC,&dummy_value16,0,0,0xffff},
+    // { ConfigEntry_UInt16, EEPROM_ZERO_LOC,&dummy_value16,0xffff,0,0xffff},
     // disable since we don't want to handle the eeprom signature here.
 
     { ConfigEntry_UInt16, EEPROM_FLAGS2,&ts.flags2,0,0,0xff},

@@ -838,11 +838,23 @@ int16_t Psk_Modulator_GenSample()
     return retval;
 }
 
+/**
+ * Returns the operational state of the PSK modulator
+ * @return current state
+ */
 psk_modulator_t Psk_Modulator_GetState()
 {
     return psk_state.tx_mod_state;
 }
 
+/**
+ * Change the state of the psk modulator to a new operational state
+ * If necessary, checks if state can be changed and executes code
+ * for the state transistion such as resetting variables to a known etc.
+ *
+ * @param newState
+ * @return the previous state
+ */
 psk_modulator_t Psk_Modulator_SetState(psk_modulator_t newState)
 {
     psk_modulator_t retval = psk_state.tx_mod_state;

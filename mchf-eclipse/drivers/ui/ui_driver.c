@@ -3355,7 +3355,7 @@ static void UiDriver_CheckEncoderOne()
 		case ENC_ONE_MODE_RTTY_SPEED:
 			// Convert to Audio Gain incr/decr
 			rtty_ctrl_config.speed_idx = change_and_limit_int(rtty_ctrl_config.speed_idx,pot_diff_step,0,RTTY_SPEED_NUM-1);
-			Rtty_Modem_Init();
+			Rtty_Modem_Init(ts.samp_rate);
 			UiDriver_DisplayRttySpeed(true);
 			break;
 			// Update audio volume
@@ -3473,7 +3473,7 @@ static void UiDriver_CheckEncoderTwo()
 				{
 				case ENC_TWO_MODE_RTTY_SHIFT:
 					rtty_ctrl_config.shift_idx = change_and_limit_int(rtty_ctrl_config.shift_idx,pot_diff_step,0,RTTY_SHIFT_NUM-1);
-					Rtty_Modem_Init();
+					Rtty_Modem_Init(ts.samp_rate);
 					UiDriver_DisplayRttyShift(1);
 					break;
 				case ENC_TWO_MODE_RF_GAIN:
