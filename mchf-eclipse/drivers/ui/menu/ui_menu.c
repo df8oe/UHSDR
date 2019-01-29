@@ -39,6 +39,7 @@
 #include "osc_si570.h"
 
 #include "audio_nr.h"
+#include "audio_agc.h"
 
 #define CLR_OR_SET_BITMASK(cond,value,mask) ((value) = (((cond))? ((value) | (mask)): ((value) & ~(mask))))
 
@@ -787,11 +788,11 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
     {
     case MENU_DSP_NR_STRENGTH:  // DSP Noise reduction strength
     	nr_step = DSP_NR_STRENGTH_STEP;
-    	if(ts.dsp_nr_strength >= 190)
+    	if(ts.dsp.nr_strength >= 190)
     	{
     		nr_step = 1;
     	}
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_nr_strength,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp.nr_strength,
                                               DSP_NR_STRENGTH_MIN,
                                               DSP_NR_STRENGTH_MAX,
                                               DSP_NR_STRENGTH_DEFAULT,
@@ -799,36 +800,36 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                              );
         if(var_change)
         {
-        	if(ts.dsp_nr_strength == 189)
+        	if(ts.dsp.nr_strength == 189)
         	{
-        		ts.dsp_nr_strength = 185;
+        		ts.dsp.nr_strength = 185;
         	}
         	// did it change?
-            if(ts.dsp_active & DSP_NR_ENABLE)   // only change if DSP active
+            if(ts.dsp.active & DSP_NR_ENABLE)   // only change if DSP active
             {
 				// this causes considerable noise
 				//AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
 				// we do this instead
-			    ts.nr_alpha = 0.799 + ((float32_t)ts.dsp_nr_strength / 1000.0);
+			    nr_params.alpha = 0.799 + ((float32_t)ts.dsp.nr_strength / 1000.0);
             }
         }
 #ifdef OBSOLETE_NR
-        if(!(ts.dsp_active & DSP_NR_ENABLE))    // make red if DSP not active
+        if(!(ts.dsp.active & DSP_NR_ENABLE))    // make red if DSP not active
         {
             clr = Orange;
         }
         else
         {
-            if(ts.dsp_nr_strength >= DSP_STRENGTH_RED)
+            if(ts.dsp.nr_strength >= DSP_STRENGTH_RED)
                 clr = Red;
-            else if(ts.dsp_nr_strength >= DSP_STRENGTH_ORANGE)
+            else if(ts.dsp.nr_strength >= DSP_STRENGTH_ORANGE)
                 clr = Orange;
-            else if(ts.dsp_nr_strength >= DSP_STRENGTH_YELLOW)
+            else if(ts.dsp.nr_strength >= DSP_STRENGTH_YELLOW)
                 clr = Yellow;
         }
 #endif
         //
-        snprintf(options,32, "  %u", ts.dsp_nr_strength);
+        snprintf(options,32, "  %u", ts.dsp.nr_strength);
         break;
     case MENU_AM_DISABLE: // AM mode enable/disable
         UiMenu_HandleDemodModeDisable(var, mode, options, &clr, DEMOD_AM_DISABLE);
@@ -1083,13 +1084,13 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         break;
 #endif
     case MENU_AGC_WDSP_MODE: // AGC mode
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_conf.mode,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &agc_wdsp_conf.mode,
                                               0, //
                                               5,
                                               2,
                                               1
                                              );
-        switch(ts.agc_wdsp_conf.mode) {
+        switch(agc_wdsp_conf.mode) {
         case 0:
             txt_ptr = "very LONG";
             break;
@@ -1114,7 +1115,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         if(var_change)
         {
             // now set the AGC parameters
-            ts.agc_wdsp_conf.switch_mode = 1; // set flag to 1 for parameter change
+            agc_wdsp_conf.switch_mode = 1; // set flag to 1 for parameter change
             AudioDriver_SetupAgcWdsp();
             UiMenu_RenderMenu(MENU_RENDER_ONLY);
         }
@@ -1125,7 +1126,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         break;
 
     case MENU_AGC_WDSP_SLOPE:      //
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_conf.slope,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &agc_wdsp_conf.slope,
                                             0,
                                             200,
                                             40,
@@ -1135,11 +1136,11 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             AudioDriver_SetupAgcWdsp();
         }
-        snprintf(options, 32, "  %ddB", ts.agc_wdsp_conf.slope / 10);
+        snprintf(options, 32, "  %ddB", agc_wdsp_conf.slope / 10);
         break;
 
     case MENU_AGC_WDSP_THRESH:      //
-        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_conf.thresh,
+        var_change = UiDriverMenuItemChangeInt(var, mode, &agc_wdsp_conf.thresh,
                                             -20,
                                             120,
                                             40,
@@ -1149,11 +1150,11 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             AudioDriver_SetupAgcWdsp();
         }
-        snprintf(options, 32, "  %ddB", ts.agc_wdsp_conf.thresh);
+        snprintf(options, 32, "  %ddB", agc_wdsp_conf.thresh);
         break;
 
     case MENU_AGC_WDSP_HANG_THRESH:      //
-        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_conf.hang_thresh,
+        var_change = UiDriverMenuItemChangeInt(var, mode, &agc_wdsp_conf.hang_thresh,
                                             -20,
                                             120,
                                             40,
@@ -1163,11 +1164,11 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             AudioDriver_SetupAgcWdsp();
         }
-        snprintf(options, 32, "  %ddB", ts.agc_wdsp_conf.hang_thresh);
+        snprintf(options, 32, "  %ddB", agc_wdsp_conf.hang_thresh);
         break;
 
     case MENU_AGC_WDSP_TAU_DECAY:      //
-       var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_conf.tau_decay[ts.agc_wdsp_conf.mode],
+       var_change = UiDriverMenuItemChangeInt(var, mode, &agc_wdsp_conf.tau_decay[agc_wdsp_conf.mode],
                                            100,
                                            5000,
                                            1000,
@@ -1177,11 +1178,11 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
        {
            AudioDriver_SetupAgcWdsp();
        }
-       snprintf(options, 32, "  %ums", ts.agc_wdsp_conf.tau_decay[ts.agc_wdsp_conf.mode]);
+       snprintf(options, 32, "  %ums", agc_wdsp_conf.tau_decay[agc_wdsp_conf.mode]);
        break;
 
     case MENU_AGC_WDSP_TAU_HANG_DECAY:      //
-       var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_conf.tau_hang_decay,
+       var_change = UiDriverMenuItemChangeInt(var, mode, &agc_wdsp_conf.tau_hang_decay,
                                            100,
                                            5000,
                                            1000,
@@ -1191,7 +1192,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
        {
            AudioDriver_SetupAgcWdsp();
        }
-       snprintf(options, 32, "  %ums", ts.agc_wdsp_conf.tau_hang_decay);
+       snprintf(options, 32, "  %ums", agc_wdsp_conf.tau_hang_decay);
        break;
 
      case MENU_DBM_CALIBRATE:      //
@@ -1213,7 +1214,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
          break;
 
     case MENU_AGC_WDSP_HANG_TIME:      //
-        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.agc_wdsp_conf.hang_time,
+        var_change = UiDriverMenuItemChangeInt(var, mode, &agc_wdsp_conf.hang_time,
                                             10,
                                             5000,
                                             250,
@@ -1223,17 +1224,17 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             AudioDriver_SetupAgcWdsp();
         }
-        snprintf(options, 32, "  %dms", ts.agc_wdsp_conf.hang_time);
+        snprintf(options, 32, "  %dms", agc_wdsp_conf.hang_time);
         break;
 #if 0
         case MENU_AGC_WDSP_SWITCH:     // Enable/Disable wdsp AGC
-            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_conf,
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &agc_wdsp_conf,
                                                   0,
                                                   1,
                                                   0,
                                                   1
                                                  );
-            switch(ts.agc_wdsp_conf)
+            switch(agc_wdsp_conf)
             {
             case 1:       //
                 txt_ptr = "    WDSP AGC";        //
@@ -1244,13 +1245,13 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             break;
 #endif
             case MENU_AGC_WDSP_HANG_ENABLE:     //
-            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.agc_wdsp_conf.hang_enable,
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &agc_wdsp_conf.hang_enable,
                                                   0,
                                                   1,
                                                   0,
                                                   1
                                                  );
-            switch(ts.agc_wdsp_conf.hang_enable)
+            switch(agc_wdsp_conf.hang_enable)
             {
             case 1:       //
                 txt_ptr = "  ON";        //
@@ -1437,26 +1438,14 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         }
         break;
     case MENU_NOISE_BLANKER_SETTING:
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.nb_setting,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp.nb_setting,
                                               0,
                                               MAX_NB_SETTING,
                                               10,
                                               1
                                              );
-
-        if(ts.nb_setting >= NB_WARNING3_SETTING)
-        {
-            clr = Red;      // above this value, make it red
-        }
-        else if(ts.nb_setting >= NB_WARNING2_SETTING)
-        {
-            clr = Orange;       // above this value, make it orange
-        }
-        else if(ts.nb_setting >= NB_WARNING1_SETTING)
-        {
-            clr = Yellow;       // above this value, make it yellow
-        }
-        snprintf(options,32,"   %u", ts.nb_setting);
+        clr = UiDriver_GetNBColor();
+        snprintf(options,32,"   %u", ts.dsp.nb_setting);
 
         break;
     case MENU_RX_FREQ_CONV:     // Enable/Disable receive frequency conversion
@@ -3111,69 +3100,69 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         break;
 #ifdef OBSOLETE_NR
     case CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH:      // Adjustment of DSP noise reduction de-correlation delay buffer length
-        ts.dsp_nr_delaybuf_len &= 0xfff0;   // mask bottom nybble to enforce 16-count boundary
-        var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.dsp_nr_delaybuf_len,
+        ts.dsp.nr_delaybuf_len &= 0xfff0;   // mask bottom nybble to enforce 16-count boundary
+        var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.dsp.nr_delaybuf_len,
                                                DSP_NR_BUFLEN_MIN,
                                                DSP_NR_BUFLEN_MAX,
                                                DSP_NR_BUFLEN_DEFAULT,
                                                16);
 
-        if(ts.dsp_nr_delaybuf_len <= ts.dsp_nr_numtaps) // is buffer smaller/equal to number of taps?
-            ts.dsp_nr_delaybuf_len = ts.dsp_nr_numtaps + 16;    // yes - it must always be larger than number of taps!
+        if(ts.dsp.nr_delaybuf_len <= ts.dsp.nr_numtaps) // is buffer smaller/equal to number of taps?
+            ts.dsp.nr_delaybuf_len = ts.dsp.nr_numtaps + 16;    // yes - it must always be larger than number of taps!
 
         if(var_change)      // did something change?
         {
-            if(ts.dsp_active & DSP_NR_ENABLE)   // only update if DSP NR active
+            if(ts.dsp.active & DSP_NR_ENABLE)   // only update if DSP NR active
                 AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
         }
-        if(!(ts.dsp_active & DSP_NR_ENABLE))    // mark orange if DSP NR not active
+        if(!(ts.dsp.active & DSP_NR_ENABLE))    // mark orange if DSP NR not active
             clr = Orange;
-        if(ts.dsp_nr_numtaps >= ts.dsp_nr_delaybuf_len) // Warn if number of taps greater than/equal buffer length!
+        if(ts.dsp.nr_numtaps >= ts.dsp.nr_delaybuf_len) // Warn if number of taps greater than/equal buffer length!
             clr = Red;
-        snprintf(options,32, "  %u", (uint)ts.dsp_nr_delaybuf_len);
+        snprintf(options,32, "  %u", (uint)ts.dsp.nr_delaybuf_len);
         break;
     case CONFIG_DSP_NR_FFT_NUMTAPS:     // Adjustment of DSP noise reduction de-correlation delay buffer length
-        ts.dsp_nr_numtaps &= 0xf0;  // mask bottom nybble to enforce 16-count boundary
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_nr_numtaps,
+        ts.dsp.nr_numtaps &= 0xf0;  // mask bottom nybble to enforce 16-count boundary
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp.nr_numtaps,
                                               DSP_NR_NUMTAPS_MIN,
                                               DSP_NR_NUMTAPS_MAX,
                                               DSP_NR_NUMTAPS_DEFAULT,
                                               16);
-        if(ts.dsp_nr_numtaps >= ts.dsp_nr_delaybuf_len) // is number of taps equal or greater than buffer length?
+        if(ts.dsp.nr_numtaps >= ts.dsp.nr_delaybuf_len) // is number of taps equal or greater than buffer length?
         {
-            ts.dsp_nr_delaybuf_len = ts.dsp_nr_numtaps + 16;    // yes - make buffer larger
+            ts.dsp.nr_delaybuf_len = ts.dsp.nr_numtaps + 16;    // yes - make buffer larger
         }
 
         if(var_change)      // did something change?
         {
-            if(ts.dsp_active & DSP_NR_ENABLE)   // only update if DSP NR active
+            if(ts.dsp.active & DSP_NR_ENABLE)   // only update if DSP NR active
                 AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
         }
 
-        if(!(ts.dsp_active & DSP_NR_ENABLE))    // mark orange if DSP NR not active
+        if(!(ts.dsp.active & DSP_NR_ENABLE))    // mark orange if DSP NR not active
         {
             clr = Orange;
         }
-        if(ts.dsp_nr_numtaps >= ts.dsp_nr_delaybuf_len) // Warn if number of taps greater than/equal buffer length!
+        if(ts.dsp.nr_numtaps >= ts.dsp.nr_delaybuf_len) // Warn if number of taps greater than/equal buffer length!
         {
             clr = Red;
         }
-        snprintf(options,32, "  %u", ts.dsp_nr_numtaps);
+        snprintf(options,32, "  %u", ts.dsp.nr_numtaps);
         break;
     case CONFIG_DSP_NR_POST_AGC_SELECT:     // selection of location of DSP noise reduction - pre audio filter/AGC or post AGC/filter
-        temp_var_u8 = ts.dsp_active & DSP_NR_POSTAGC_ENABLE;
+        temp_var_u8 = ts.dsp.active & DSP_NR_POSTAGC_ENABLE;
         var_change = UiDriverMenuItemChangeEnableOnOff(var, mode, &temp_var_u8,0,options,&clr);
         if(var_change)      // did something change?
         {
-            CLR_OR_SET_BITMASK(temp_var_u8, ts.dsp_active, DSP_NR_POSTAGC_ENABLE);
+            CLR_OR_SET_BITMASK(temp_var_u8, ts.dsp.active, DSP_NR_POSTAGC_ENABLE);
 
-            if(ts.dsp_active & DSP_NR_ENABLE)   // only update if DSP NR active
+            if(ts.dsp.active & DSP_NR_ENABLE)   // only update if DSP NR active
             {
                 AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
 
-        if(!(ts.dsp_active & DSP_NR_ENABLE))    // mark orange if DSP NR not active
+        if(!(ts.dsp.active & DSP_NR_ENABLE))    // mark orange if DSP NR not active
         {
             clr = Orange;
         }
@@ -3181,7 +3170,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         break;
 
     case CONFIG_DSP_NOTCH_CONVERGE_RATE:        // Adjustment of DSP noise reduction de-correlation delay buffer length
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_mu,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp.notch_mu,
                                               0,
                                               DSP_NOTCH_MU_MAX,
                                               DSP_NOTCH_MU_DEFAULT,
@@ -3189,71 +3178,71 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 
         if(var_change)      // did something change?
         {
-            if(ts.dsp_active & DSP_NOTCH_ENABLE)    // only update if Notch DSP is active
+            if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if Notch DSP is active
             {
                 AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
-        if(!(ts.dsp_active & DSP_NOTCH_ENABLE)) // mark orange if Notch DSP not active
+        if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if Notch DSP not active
         {
             clr = Orange;
         }
-        snprintf(options,32, "  %u", ts.dsp_notch_mu);
+        snprintf(options,32, "  %u", ts.dsp.notch_mu);
         break;
     case CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH:       // Adjustment of DSP noise reduction de-correlation delay buffer length
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_delaybuf_len,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp.notch_delaybuf_len,
                                               DSP_NOTCH_BUFLEN_MIN,
                                               DSP_NOTCH_BUFLEN_MAX,
                                               DSP_NOTCH_DELAYBUF_DEFAULT,
                                               8);
 
 
-        if(ts.dsp_notch_delaybuf_len <= ts.dsp_notch_numtaps)       // did we try to decrease it smaller than FFT size?
+        if(ts.dsp.notch_delaybuf_len <= ts.dsp.notch_numtaps)       // did we try to decrease it smaller than FFT size?
         {
-            ts.dsp_notch_delaybuf_len = ts.dsp_notch_numtaps + 8;                       // yes - limit it to previous size
+            ts.dsp.notch_delaybuf_len = ts.dsp.notch_numtaps + 8;                       // yes - limit it to previous size
         }
         if(var_change)      // did something change?
         {
-            if(ts.dsp_active & DSP_NOTCH_ENABLE)    // only update if DSP Notch active
+            if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if DSP Notch active
             {
                 AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
-        if(!(ts.dsp_active & DSP_NOTCH_ENABLE)) // mark orange if DSP Notch not active
+        if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if DSP Notch not active
         {
             clr = Orange;
         }
-        if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)
+        if(ts.dsp.notch_numtaps >= ts.dsp.notch_delaybuf_len)
         {
             clr = Red;
         }
-        snprintf(options,32, "  %u", (uint)ts.dsp_notch_delaybuf_len);
+        snprintf(options,32, "  %u", (uint)ts.dsp.notch_delaybuf_len);
         break;
     case CONFIG_DSP_NOTCH_FFT_NUMTAPS:      // Adjustment of DSP noise reduction de-correlation delay buffer length
-        ts.dsp_notch_numtaps &= 0xf0;   // mask bottom nybble to enforce 16-count boundary
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_numtaps,
+        ts.dsp.notch_numtaps &= 0xf0;   // mask bottom nybble to enforce 16-count boundary
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp.notch_numtaps,
                                               0,
                                               DSP_NOTCH_NUMTAPS_MAX,
                                               DSP_NOTCH_NUMTAPS_DEFAULT,
                                               16);
-        if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)   // force buffer size to always be larger than number of taps
-            ts.dsp_notch_delaybuf_len = ts.dsp_notch_numtaps + 8;
+        if(ts.dsp.notch_numtaps >= ts.dsp.notch_delaybuf_len)   // force buffer size to always be larger than number of taps
+            ts.dsp.notch_delaybuf_len = ts.dsp.notch_numtaps + 8;
         if(var_change)      // did something change?
         {
-            if(ts.dsp_active & DSP_NOTCH_ENABLE)    // only update if DSP NR active
+            if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if DSP NR active
             {
                 AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
-        if(!(ts.dsp_active & DSP_NOTCH_ENABLE)) // mark orange if DSP NR not active
+        if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if DSP NR not active
         {
             clr = Orange;
         }
-        if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)   // Warn if number of taps greater than/equal buffer length!
+        if(ts.dsp.notch_numtaps >= ts.dsp.notch_delaybuf_len)   // Warn if number of taps greater than/equal buffer length!
         {
             clr = Red;
         }
-        snprintf(options,32, "  %u", ts.dsp_notch_numtaps);
+        snprintf(options,32, "  %u", ts.dsp.notch_numtaps);
         break;
 /*
     case CONFIG_AGC_TIME_CONSTANT:      // Adjustment of Noise Blanker AGC Time Constant
@@ -3274,7 +3263,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 
 #ifdef USE_LMS_AUTONOTCH
     case CONFIG_DSP_NOTCH_CONVERGE_RATE:        // Adjustment of DSP autonotch convergence rate
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_mu,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp.notch_mu,
                                               0,
                                               DSP_NOTCH_MU_MAX,
                                               DSP_NOTCH_MU_DEFAULT,
@@ -3282,71 +3271,71 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 
         if(var_change)      // did something change?
         {
-            if(ts.dsp_active & DSP_NOTCH_ENABLE)    // only update if Notch DSP is active
+            if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if Notch DSP is active
             {
                 AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
-        if(!(ts.dsp_active & DSP_NOTCH_ENABLE)) // mark orange if Notch DSP not active
+        if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if Notch DSP not active
         {
             clr = Orange;
         }
-        snprintf(options,32, "  %u", ts.dsp_notch_mu);
+        snprintf(options,32, "  %u", ts.dsp.notch_mu);
         break;
     case CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH:       // Adjustment of DSP noise reduction de-correlation delay buffer length
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_delaybuf_len,
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp.notch_delaybuf_len,
                                               DSP_NOTCH_BUFLEN_MIN,
                                               DSP_NOTCH_BUFLEN_MAX,
                                               DSP_NOTCH_DELAYBUF_DEFAULT,
                                               8);
 
 
-        if(ts.dsp_notch_delaybuf_len <= ts.dsp_notch_numtaps)       // did we try to decrease it smaller than FFT size?
+        if(ts.dsp.notch_delaybuf_len <= ts.dsp.notch_numtaps)       // did we try to decrease it smaller than FFT size?
         {
-            ts.dsp_notch_delaybuf_len = ts.dsp_notch_numtaps + 8;                       // yes - limit it to previous size
+            ts.dsp.notch_delaybuf_len = ts.dsp.notch_numtaps + 8;                       // yes - limit it to previous size
         }
         if(var_change)      // did something change?
         {
-            if(ts.dsp_active & DSP_NOTCH_ENABLE)    // only update if DSP Notch active
+            if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if DSP Notch active
             {
                 AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
-        if(!(ts.dsp_active & DSP_NOTCH_ENABLE)) // mark orange if DSP Notch not active
+        if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if DSP Notch not active
         {
             clr = Orange;
         }
-        if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)
+        if(ts.dsp.notch_numtaps >= ts.dsp.notch_delaybuf_len)
         {
             clr = Red;
         }
-        snprintf(options,32, "  %u", (uint)ts.dsp_notch_delaybuf_len);
+        snprintf(options,32, "  %u", (uint)ts.dsp.notch_delaybuf_len);
         break;
     case CONFIG_DSP_NOTCH_FFT_NUMTAPS:      // Adjustment of DSP noise reduction de-correlation delay buffer length
-        ts.dsp_notch_numtaps &= 0xf0;   // mask bottom nybble to enforce 16-count boundary
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp_notch_numtaps,
+        ts.dsp.notch_numtaps &= 0xf0;   // mask bottom nybble to enforce 16-count boundary
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.dsp.notch_numtaps,
                                               16,
                                               DSP_NOTCH_NUMTAPS_MAX,
                                               DSP_NOTCH_NUMTAPS_DEFAULT,
                                               16);
-//        if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)   // force buffer size to always be larger than number of taps
-//            ts.dsp_notch_delaybuf_len = ts.dsp_notch_numtaps + 8;
+//        if(ts.dsp.notch_numtaps >= ts.dsp.notch_delaybuf_len)   // force buffer size to always be larger than number of taps
+//            ts.dsp.notch_delaybuf_len = ts.dsp.notch_numtaps + 8;
         if(var_change)      // did something change?
         {
-            if(ts.dsp_active & DSP_NOTCH_ENABLE)    // only update if DSP NR active
+            if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if DSP NR active
             {
                 AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
             }
         }
-        if(!(ts.dsp_active & DSP_NOTCH_ENABLE)) // mark orange if DSP NR not active
+        if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if DSP NR not active
         {
             clr = Orange;
         }
-        if(ts.dsp_notch_numtaps >= ts.dsp_notch_delaybuf_len)   // Warn if number of taps greater than/equal buffer length!
+        if(ts.dsp.notch_numtaps >= ts.dsp.notch_delaybuf_len)   // Warn if number of taps greater than/equal buffer length!
         {
             clr = Red;
         }
-        snprintf(options,32, "  %u", ts.dsp_notch_numtaps);
+        snprintf(options,32, "  %u", ts.dsp.notch_numtaps);
         break;
 #endif
 
@@ -3858,9 +3847,9 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         break;
 #endif
 
-// this is now adjusted by ts.dsp_nr_strength
+// this is now adjusted by ts.dsp.nr_strength
 /*        case MENU_DEBUG_NR_ALPHA:      //
-            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_alpha_int,
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &nr_params.alpha_int,
                     700,
                     999,
                     920,
@@ -3868,20 +3857,20 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             );
             if(var_change)
             {
-            	ts.nr_alpha = (float32_t)ts.nr_alpha_int / 1000.0;
+            	nr_params.alpha = (float32_t)nr_params.alpha_int / 1000.0;
             }
-            snprintf(options, 32, " %3u",(unsigned int)ts.nr_alpha_int);
+            snprintf(options, 32, " %3u",(unsigned int)nr_params.alpha_int);
 
         break;
 */
         case MENU_DEBUG_NR_GAIN_SHOW:      //
-            var_change = UiDriverMenuItemChangeInt16(var, mode, &NR.gain_display,
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_gain_display,
                     0,
                     1,
                     0,
                     1
             );
-            switch(NR.gain_display)
+            switch(ts.nr_gain_display)
             {
             case 0:
                 txt_ptr = "        OFF";
@@ -3900,7 +3889,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         break;
 
         /*case MENU_DEBUG_NR_GAIN_SMOOTH_ALPHA:      //
-            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_gain_smooth_alpha_int,
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &nr_params.gain_smooth_alpha_int,
                     100,
                     990,
                     250,
@@ -3908,14 +3897,14 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             );
             if(var_change)
             {
-            	ts.nr_gain_smooth_alpha = (float32_t)ts.nr_gain_smooth_alpha_int / 1000.0;
+            	nr_params.gain_smooth_alpha = (float32_t)nr_params.gain_smooth_alpha_int / 1000.0;
             }
-            snprintf(options, 32, " %3u",(unsigned int)ts.nr_gain_smooth_alpha_int);
+            snprintf(options, 32, " %3u",(unsigned int)nr_params.gain_smooth_alpha_int);
 
         break;
 
         case MENU_DEBUG_NR_LONG_TONE_ALPHA:      //
-            var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.nr_long_tone_alpha_int,
+            var_change = UiDriverMenuItemChangeUInt32(var, mode, &nr_params.long_tone_alpha_int,
                     90000,
                     99999,
                     99900,
@@ -3923,13 +3912,13 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             );
             if(var_change)
             {
-            	ts.nr_long_tone_alpha = (float32_t)ts.nr_long_tone_alpha_int / 100000.0;
+            	nr_params.long_tone_alpha = (float32_t)nr_params.long_tone_alpha_int / 100000.0;
             }
-            snprintf(options, 32, " %5u",(unsigned int)ts.nr_long_tone_alpha_int);
+            snprintf(options, 32, " %5u",(unsigned int)nr_params.long_tone_alpha_int);
 
         break;
         case MENU_DEBUG_NR_LONG_TONE_THRESH:      //
-            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_long_tone_thresh,
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &nr_params.long_tone_thresh,
                     10,
                     16000,
                     600,
@@ -3937,14 +3926,14 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             );
             if(var_change)
             {
-            //	ts.nr_vad_thresh = (float32_t)ts.nr_vad_thresh_int / 1000.0;
+            //	nr_params.vad_thresh = (float32_t)nr_params.vad_thresh_int / 1000.0;
             }
-            snprintf(options, 32, " %5u",(unsigned int)ts.nr_long_tone_thresh);
+            snprintf(options, 32, " %5u",(unsigned int)nr_params.long_tone_thresh);
 
         break;
 
         case MENU_DEBUG_NR_THRESH:      //
-            var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.nr_vad_thresh_int,
+            var_change = UiDriverMenuItemChangeUInt32(var, mode, &nr_params.vad_thresh_int,
                     100,
                     20000,
                     1000,
@@ -3952,14 +3941,17 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             );
             if(var_change)
             {
-            	ts.nr_vad_thresh = (float32_t)ts.nr_vad_thresh_int / 1000.0;
+            	nr_params.vad_thresh = (float32_t)nr_params.vad_thresh_int / 1000.0;
             }
-            snprintf(options, 32, " %5u",(unsigned int)ts.nr_vad_thresh_int);
+            snprintf(options, 32, " %5u",(unsigned int)nr_params.vad_thresh_int);
 
         break;*/
 
         case MENU_DEBUG_NR_BETA:      //
-            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_beta_int,
+        {
+
+            int16_t beta_int = nr_params.beta * 1000;
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &beta_int,
                     700,
                     999,
                     960,
@@ -3967,20 +3959,20 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             );
             if(var_change)
             {
-            	ts.nr_beta = (float32_t)ts.nr_beta_int / 1000.0;
+            	nr_params.beta = (float32_t)beta_int / 1000.0;
             }
-            snprintf(options, 32, " %3u",(unsigned int)ts.nr_beta_int);
-
+            snprintf(options, 32, " %3u",(unsigned int)beta_int);
+        }
         break;
 
         /*case MENU_DEBUG_NR_Mode:      //
-            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_mode,
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &nr_params.mode,
                     0,
                     2,
                     0,
                     1
             );
-            switch(ts.nr_mode)
+            switch(nr_params.mode)
             {
 				case 0:
 					txt_ptr = "    Release";
@@ -3996,21 +3988,21 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 
             if(var_change)
 			{
-				switch(ts.nr_mode)
+				switch(nr_params.mode)
 				{
 				case 0:
-					ts.nr_beta = 0.850;
-					ts.nr_beta_int=850;
-					ts.nr_first_time = 1; //Restart the noisereduction
+					nr_params.beta = 0.850;
+					nr_params.beta_int=850;
+					nr_params.first_time = 1; //Restart the noisereduction
 					break;
 				case 1:
-					ts.nr_beta = 0.960;
-					ts.nr_beta_int=960;
-					ts.nr_first_time = 1; //Restart the noisereduction
+					nr_params.beta = 0.960;
+					nr_params.beta_int=960;
+					nr_params.first_time = 1; //Restart the noisereduction
 				case 2:
-					ts.nr_beta = 0.960;
-					ts.nr_beta_int=960;
-					ts.nr_first_time = 1; //Restart the noisereduction
+					nr_params.beta = 0.960;
+					nr_params.beta_int=960;
+					nr_params.first_time = 1; //Restart the noisereduction
 					break;
 				}
 			}
@@ -4024,7 +4016,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                                    1);
              if(var_change)      // did something change?
              {
-             	//ts.nr_first_time = 1;
+             	//nr_params.first_time = 1;
              }
              snprintf(options,32, "  %3u", (unsigned int)NR2.asnr);
              break;
@@ -4038,7 +4030,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                               1);
         if(var_change)      // did something change?
         {
-        	//ts.nr_first_time = 1;
+        	//nr_params.first_time = 1;
         }
         snprintf(options,32, "  %3u", (unsigned int)NR2.width);
         break;
@@ -4051,14 +4043,14 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                                       5);
                 if(var_change)      // did something change?
                 {
-                	//ts.nr_first_time = 1;
+                	//nr_params.first_time = 1;
                 }
                 snprintf(options,32, "  %3u", (unsigned int)NR2.power_threshold_int);
                 break;
 
 /*
         case MENU_DEBUG_NR_VAD_DELAY:      //
-            var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.nr_vad_delay,
+            var_change = UiDriverMenuItemChangeInt16(var, mode, &nr_params.vad_delay,
                     0,
                     20,
                     2,
@@ -4068,7 +4060,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             {
 
             }
-            snprintf(options, 32, " %2u",(unsigned int)ts.nr_vad_delay);
+            snprintf(options, 32, " %2u",(unsigned int)nr_params.vad_delay);
 
         break;
 */
@@ -4099,10 +4091,10 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         //         break;//
 //#if defined(STM32F7) || defined(STM32H7)
 /*     case MENU_DEBUG_NR_FFT_SIZE:
-                 var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_fft_256_enable,0,options,&clr);
+                 var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &nr_params.fft_256_enable,0,options,&clr);
                  ts.NR_FFT_L = 128;
                  ts.NR_FFT_LOOP_NO = 2;
-                 if(ts.nr_fft_256_enable)
+                 if(nr_params.fft_256_enable)
                  {
                 	 ts.NR_FFT_LOOP_NO = 1;
                 	 ts.NR_FFT_L = 256;
@@ -4113,13 +4105,13 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         break;
 //#endif
 //     case MENU_DEBUG_NR_ENABLE:
-//             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_enable,0,options,&clr);
+//             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &nr_params.enable,0,options,&clr);
 //         break;
      case MENU_DEBUG_NR_LONG_TONE_ENABLE:
-             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_long_tone_enable,0,options,&clr);
+             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &nr_params.long_tone_enable,0,options,&clr);
              if(var_change)
              {
-            	 ts.nr_long_tone_reset = true;
+            	 nr_params.long_tone_reset = true;
              }
          break;*/
 
@@ -4144,7 +4136,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
          break;
 
      case MENU_DEBUG_NR_GAIN_SMOOTH_ENABLE:
-             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.nr_gain_smooth_enable,0,options,&clr);
+             var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &nr_params.gain_smooth_enable,0,options,&clr);
          break;*/
 
 //     case MENU_DEBUG_RTTY_ATC:

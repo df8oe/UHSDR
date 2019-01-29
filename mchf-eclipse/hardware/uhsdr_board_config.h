@@ -193,6 +193,32 @@
 #define USE_32_IQ_BITS
 #define USE_32_AUDIO_BITS
 
+
+// for now: These are fixed.
+#define IQ_SAMPLE_RATE (48000)
+#define AUDIO_SAMPLE_RATE (48000)
+
+// a lot of code pieces assume that this frequency
+// is 1500 Hz, so don't change
+#define IQ_INTERRUPT_FREQ (1500)
+
+// we process one dma block of samples at once
+// block sizes should be a power of two
+// a lot of code process information in these blocks
+#define IQ_BLOCK_SIZE (IQ_SAMPLE_RATE/IQ_INTERRUPT_FREQ)
+#define AUDIO_BLOCK_SIZE (AUDIO_SAMPLE_RATE/IQ_INTERRUPT_FREQ)
+
+#if (IQ_SAMPLE_RATE) != 48000
+    #error Only 48k sample frequency supported (yet).
+#endif
+#if (IQ_BLOCK_SIZE * 1500) != IQ_SAMPLE_RATE
+    #error Audio Interrupt Frequency must be 1500.
+#endif
+#if (IQ_SAMPLE_RATE/IQ_BLOCK_SIZE) != (AUDIO_SAMPLE_RATE/AUDIO_BLOCK_SIZE)
+    #error IQ Interrupt frequency must be idential to Audio Interrupt Frequency
+#endif
+
+
 //******************************CONFIGURATION_LOGIC_CHECKS************************************//
 
 #if !defined(USE_OSC_SI570) && !defined(USE_OSC_SI5351A)

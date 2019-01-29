@@ -18,6 +18,7 @@
 #include "ui_driver.h"
 
 #include "audio_driver.h"
+#include "audio_agc.h"
 #include "cw_decoder.h"
 
 #include "ui_spectrum.h"
@@ -69,23 +70,23 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_AUDIO_GAIN,&ts.rx_gain[RX_AUDIO_SPKR].value,AUDIO_GAIN_DEFAULT,0,AUDIO_GAIN_MAX},
     { ConfigEntry_UInt8, EEPROM_RX_CODEC_GAIN,&ts.rf_codec_gain,DEFAULT_RF_CODEC_GAIN_VAL,0,MAX_RF_CODEC_GAIN_VAL},
 //    { ConfigEntry_Int32_16, EEPROM_RX_GAIN,&ts.rf_gain,DEFAULT_RF_GAIN,0,MAX_RF_GAIN},
-    { ConfigEntry_UInt8, EEPROM_NB_SETTING,&ts.nb_setting,0,0,MAX_NB_SETTING},
+    { ConfigEntry_UInt8, EEPROM_NB_SETTING,&ts.dsp.nb_setting,0,0,MAX_NB_SETTING},
     { ConfigEntry_UInt8, EEPROM_TX_POWER_LEVEL,&ts.power_level,PA_LEVEL_DEFAULT,0,PA_LEVEL_TUNE_KEEP_CURRENT},
     { ConfigEntry_UInt8, EEPROM_CW_KEYER_SPEED,&ts.cw_keyer_speed,CW_KEYER_SPEED_DEFAULT,CW_KEYER_SPEED_MIN, CW_KEYER_SPEED_MAX},
     { ConfigEntry_UInt8, EEPROM_CW_KEYER_MODE,&ts.cw_keyer_mode,CW_KEYER_MODE_IAM_B, 0, CW_KEYER_MAX_MODE},
     { ConfigEntry_UInt8, EEPROM_CW_KEYER_WEIGHT,&ts.cw_keyer_weight,CW_KEYER_WEIGHT_DEFAULT, CW_KEYER_WEIGHT_MIN, CW_KEYER_WEIGHT_MAX},
     { ConfigEntry_UInt8, EEPROM_CW_SIDETONE_GAIN,&ts.cw_sidetone_gain,DEFAULT_SIDETONE_GAIN,0, SIDETONE_MAX_GAIN},
     { ConfigEntry_Int32_16 | Calib_Val, EEPROM_FREQ_CAL,&ts.freq_cal,0,MIN_FREQ_CAL,MAX_FREQ_CAL}, // MINOR INT DEFAULT PROBLEM
-    { ConfigEntry_UInt8, EEPROM_AGC_WDSP_MODE,&ts.agc_wdsp_conf.mode, 2,0,5},
-    { ConfigEntry_UInt8, EEPROM_AGC_WDSP_HANG,&ts.agc_wdsp_conf.hang_enable, 0,0,1},
-    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_THRESH,&ts.agc_wdsp_conf.thresh, 20,-20,120}, // INT DEFAULT PROBLEM,see above
-    { ConfigEntry_UInt8, EEPROM_AGC_WDSP_SLOPE,&ts.agc_wdsp_conf.slope, 70,0,200},
-    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_DECAY_0,&ts.agc_wdsp_conf.tau_decay[0], 4000,100,5000}, // NO INT DEFAULT PROBLEM
-    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_DECAY_1,&ts.agc_wdsp_conf.tau_decay[1], 2000,100,5000}, // NO INT DEFAULT PROBLEM
-    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_DECAY_2,&ts.agc_wdsp_conf.tau_decay[2], 500,100,5000},  // NO INT DEFAULT PROBLEM
-    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_DECAY_3,&ts.agc_wdsp_conf.tau_decay[3], 250,100,5000},  // NO INT DEFAULT PROBLEM
-    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_DECAY_4,&ts.agc_wdsp_conf.tau_decay[4], 50,100,5000}, // NO INT DEFAULT PROBLEM
-    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_HANG_DECAY,&ts.agc_wdsp_conf.tau_hang_decay, 500,100,5000}, // NO INT DEFAULT PROBLEM
+    { ConfigEntry_UInt8, EEPROM_AGC_WDSP_MODE,&agc_wdsp_conf.mode, 2,0,5},
+    { ConfigEntry_UInt8, EEPROM_AGC_WDSP_HANG,&agc_wdsp_conf.hang_enable, 0,0,1},
+    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_THRESH,&agc_wdsp_conf.thresh, 20,-20,120}, // INT DEFAULT PROBLEM,see above
+    { ConfigEntry_UInt8, EEPROM_AGC_WDSP_SLOPE,&agc_wdsp_conf.slope, 70,0,200},
+    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_DECAY_0,&agc_wdsp_conf.tau_decay[0], 4000,100,5000}, // NO INT DEFAULT PROBLEM
+    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_DECAY_1,&agc_wdsp_conf.tau_decay[1], 2000,100,5000}, // NO INT DEFAULT PROBLEM
+    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_DECAY_2,&agc_wdsp_conf.tau_decay[2], 500,100,5000},  // NO INT DEFAULT PROBLEM
+    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_DECAY_3,&agc_wdsp_conf.tau_decay[3], 250,100,5000},  // NO INT DEFAULT PROBLEM
+    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_DECAY_4,&agc_wdsp_conf.tau_decay[4], 50,100,5000}, // NO INT DEFAULT PROBLEM
+    { ConfigEntry_Int32_16, EEPROM_AGC_WDSP_TAU_HANG_DECAY,&agc_wdsp_conf.tau_hang_decay, 500,100,5000}, // NO INT DEFAULT PROBLEM
     { ConfigEntry_UInt8, EEPROM_MIC_GAIN,&ts.tx_gain[TX_AUDIO_MIC],MIC_GAIN_DEFAULT,MIC_GAIN_MIN,MIC_GAIN_MAX},
     { ConfigEntry_UInt8, EEPROM_LINE_GAIN,&ts.tx_gain[TX_AUDIO_LINEIN_L],LINE_GAIN_DEFAULT,LINE_GAIN_MIN,LINE_GAIN_MAX},
     { ConfigEntry_UInt32_16, EEPROM_SIDETONE_FREQ,&ts.cw_sidetone_freq,CW_SIDETONE_FREQ_DEFAULT,CW_SIDETONE_FREQ_MIN,CW_SIDETONE_FREQ_MAX},
@@ -138,22 +139,22 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt32_16, EEPROM_ALC_DECAY_TIME,&ts.alc_decay,ALC_DECAY_DEFAULT,0,ALC_DECAY_MAX },
     { ConfigEntry_UInt32_16, EEPROM_ALC_POSTFILT_TX_GAIN,&ts.alc_tx_postfilt_gain,ALC_POSTFILT_GAIN_DEFAULT, ALC_POSTFILT_GAIN_MIN, ALC_POSTFILT_GAIN_MAX},
     { ConfigEntry_UInt16, EEPROM_STEP_SIZE_CONFIG,&ts.freq_step_config,0,0,255},
-    { ConfigEntry_UInt8, EEPROM_DSP_MODE,&ts.dsp_active,0,0,255},
-	{ ConfigEntry_UInt8, EEPROM_DSP_NR_STRENGTH,&ts.dsp_nr_strength,DSP_NR_STRENGTH_DEFAULT,0, DSP_NR_STRENGTH_MAX},
+    { ConfigEntry_UInt8, EEPROM_DSP_MODE,&ts.dsp.active,0,0,255},
+	{ ConfigEntry_UInt8, EEPROM_DSP_NR_STRENGTH,&ts.dsp.nr_strength,DSP_NR_STRENGTH_DEFAULT,0, DSP_NR_STRENGTH_MAX},
 
 #ifdef OBSOLETE_NR
-	{ ConfigEntry_UInt32_16, EEPROM_DSP_NR_DECOR_BUFLEN,&ts.dsp_nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT, DSP_NR_BUFLEN_MIN, DSP_NR_BUFLEN_MAX},
-    { ConfigEntry_UInt8, EEPROM_DSP_NR_FFT_NUMTAPS,&ts.dsp_nr_numtaps,DSP_NR_NUMTAPS_DEFAULT, DSP_NR_NUMTAPS_MIN, DSP_NOTCH_NUMTAPS_MAX},
+	{ ConfigEntry_UInt32_16, EEPROM_DSP_NR_DECOR_BUFLEN,&ts.dsp.nr_delaybuf_len,DSP_NR_BUFLEN_DEFAULT, DSP_NR_BUFLEN_MIN, DSP_NR_BUFLEN_MAX},
+    { ConfigEntry_UInt8, EEPROM_DSP_NR_FFT_NUMTAPS,&ts.dsp.nr_numtaps,DSP_NR_NUMTAPS_DEFAULT, DSP_NR_NUMTAPS_MIN, DSP_NOTCH_NUMTAPS_MAX},
 
-	{ ConfigEntry_UInt8, EEPROM_DSP_NOTCH_DECOR_BUFLEN,&ts.dsp_notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT,DSP_NOTCH_BUFLEN_MIN,DSP_NOTCH_BUFLEN_MAX},
-    { ConfigEntry_UInt8, EEPROM_DSP_NOTCH_FFT_NUMTAPS,&ts.dsp_notch_numtaps,DSP_NOTCH_NUMTAPS_DEFAULT, DSP_NOTCH_NUMTAPS_MIN,DSP_NOTCH_NUMTAPS_MAX},
-    { ConfigEntry_UInt8, EEPROM_DSP_NOTCH_CONV_RATE,&ts.dsp_notch_mu,DSP_NOTCH_MU_DEFAULT,0,DSP_NOTCH_MU_MAX},
+	{ ConfigEntry_UInt8, EEPROM_DSP_NOTCH_DECOR_BUFLEN,&ts.dsp.notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT,DSP_NOTCH_BUFLEN_MIN,DSP_NOTCH_BUFLEN_MAX},
+    { ConfigEntry_UInt8, EEPROM_DSP_NOTCH_FFT_NUMTAPS,&ts.dsp.notch_numtaps,DSP_NOTCH_NUMTAPS_DEFAULT, DSP_NOTCH_NUMTAPS_MIN,DSP_NOTCH_NUMTAPS_MAX},
+    { ConfigEntry_UInt8, EEPROM_DSP_NOTCH_CONV_RATE,&ts.dsp.notch_mu,DSP_NOTCH_MU_DEFAULT,0,DSP_NOTCH_MU_MAX},
 #endif
 
 #ifdef USE_LMS_AUTONOTCH
-	{ ConfigEntry_UInt8, EEPROM_DSP_NOTCH_DECOR_BUFLEN,&ts.dsp_notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT,DSP_NOTCH_BUFLEN_MIN,DSP_NOTCH_BUFLEN_MAX},
-    { ConfigEntry_UInt8, EEPROM_DSP_NOTCH_FFT_NUMTAPS,&ts.dsp_notch_numtaps,DSP_NOTCH_NUMTAPS_DEFAULT, DSP_NOTCH_NUMTAPS_MIN,DSP_NOTCH_NUMTAPS_MAX},
-    { ConfigEntry_UInt8, EEPROM_DSP_NOTCH_CONV_RATE,&ts.dsp_notch_mu,DSP_NOTCH_MU_DEFAULT,0,DSP_NOTCH_MU_MAX},
+	{ ConfigEntry_UInt8, EEPROM_DSP_NOTCH_DECOR_BUFLEN,&ts.dsp.notch_delaybuf_len,DSP_NOTCH_DELAYBUF_DEFAULT,DSP_NOTCH_BUFLEN_MIN,DSP_NOTCH_BUFLEN_MAX},
+    { ConfigEntry_UInt8, EEPROM_DSP_NOTCH_FFT_NUMTAPS,&ts.dsp.notch_numtaps,DSP_NOTCH_NUMTAPS_DEFAULT, DSP_NOTCH_NUMTAPS_MIN,DSP_NOTCH_NUMTAPS_MAX},
+    { ConfigEntry_UInt8, EEPROM_DSP_NOTCH_CONV_RATE,&ts.dsp.notch_mu,DSP_NOTCH_MU_DEFAULT,0,DSP_NOTCH_MU_MAX},
 #endif
 	//   { ConfigEntry_UInt8, EEPROM_MAX_RX_GAIN,&ts.max_rf_gain,MAX_RF_GAIN_DEFAULT,0,MAX_RF_GAIN_MAX},
     { ConfigEntry_Int16, EEPROM_TX_AUDIO_COMPRESS,&ts.tx_comp_level,TX_AUDIO_COMPRESSION_DEFAULT,TX_AUDIO_COMPRESSION_MIN,TX_AUDIO_COMPRESSION_MAX}, // NO INT DEFAULT PROBLEM
@@ -198,17 +199,17 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_BEEP_LOUDNESS,&ts.beep_loudness,DEFAULT_BEEP_LOUDNESS,0,MAX_BEEP_LOUDNESS},
     { ConfigEntry_UInt8, EEPROM_TUNE_POWER_LEVEL,&ts.tune_power_level,PA_LEVEL_TUNE_KEEP_CURRENT,PA_LEVEL_FULL,PA_LEVEL_TUNE_KEEP_CURRENT},
     { ConfigEntry_UInt8, EEPROM_CAT_XLAT,&ts.xlat,1,0,1},
-    { ConfigEntry_UInt32_16, EEPROM_MANUAL_NOTCH,&ts.notch_frequency,800,200,5000},
-    { ConfigEntry_UInt32_16, EEPROM_MANUAL_PEAK,&ts.peak_frequency,750,200,5000},
+    { ConfigEntry_UInt32_16, EEPROM_MANUAL_NOTCH,&ts.dsp.notch_frequency,800,200,5000},
+    { ConfigEntry_UInt32_16, EEPROM_MANUAL_PEAK,&ts.dsp.peak_frequency,750,200,5000},
     { ConfigEntry_UInt8, EEPROM_DISPLAY_DBM,&ts.display_dbm,0,0,2},
     { ConfigEntry_Int32_16 | Calib_Val, EEPROM_DBM_CALIBRATE,&ts.dbm_constant,0,-100,100}, // MINOR INT DEFAULT PROBLEM,see above
 //    { ConfigEntry_UInt8, EEPROM_S_METER,&ts.s_meter,0,0,2},
     { ConfigEntry_UInt8, EEPROM_DIGI_MODE_CONF,&ts.digital_mode,DigitalMode_None,0,DigitalMode_Num_Modes-1},
-	{ ConfigEntry_Int32_16, EEPROM_BASS_GAIN,&ts.bass_gain,2,-20,20}, // INT DEFAULT PROBLEM,see above
-    { ConfigEntry_Int32_16, EEPROM_TREBLE_GAIN,&ts.treble_gain,0,-20,20},  // MINOR INT DEFAULT PROBLEM,see above
+	{ ConfigEntry_Int32_16, EEPROM_BASS_GAIN,&ts.dsp.bass_gain,2,-20,20}, // INT DEFAULT PROBLEM,see above
+    { ConfigEntry_Int32_16, EEPROM_TREBLE_GAIN,&ts.dsp.treble_gain,0,-20,20},  // MINOR INT DEFAULT PROBLEM,see above
     { ConfigEntry_UInt8, EEPROM_TX_FILTER,&ts.tx_filter,0,0,TX_FILTER_BASS},
-	{ ConfigEntry_Int32_16, EEPROM_TX_BASS_GAIN,&ts.tx_bass_gain,4,-20,6}, // INT DEFAULT PROBLEM,see above
-    { ConfigEntry_Int32_16, EEPROM_TX_TREBLE_GAIN,&ts.tx_treble_gain,4,-20,6}, // INT DEFAULT PROBLEM,see above
+	{ ConfigEntry_Int32_16, EEPROM_TX_BASS_GAIN,&ts.dsp.tx_bass_gain,4,-20,6}, // INT DEFAULT PROBLEM,see above
+    { ConfigEntry_Int32_16, EEPROM_TX_TREBLE_GAIN,&ts.dsp.tx_treble_gain,4,-20,6}, // INT DEFAULT PROBLEM,see above
     { ConfigEntry_Int32_16, EEPROM_SAM_PLL_LOCKING_RANGE,&ads.pll_fmax_int,2500,50,8000}, // NO INT DEFAULT PROBLEM
     { ConfigEntry_Int32_16, EEPROM_SAM_PLL_STEP_RESPONSE,&ads.zeta_int,65,1,100},  // NO INT DEFAULT PROBLEM
     { ConfigEntry_Int32_16, EEPROM_SAM_PLL_BANDWIDTH,&ads.omegaN_int, 250,15,1000}, // NO INT DEFAULT PROBLEM
@@ -265,7 +266,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
 	{ ConfigEntry_Int32 | Calib_Val, EEPROM_TScal4_High,&mchf_touchscreen.cal[4], 74886,INT32_MIN,INT32_MAX}, // INT DEFAULT PROBLEM,see above
 	{ ConfigEntry_Int32 | Calib_Val, EEPROM_TScal5_High,&mchf_touchscreen.cal[5], -1630326,INT32_MIN,INT32_MAX}, // INT DEFAULT PROBLEM,see above
 	{ ConfigEntry_UInt16, EEPROM_NUMBER_OF_ENTRIES,&number_of_entries_cur_fw,EEPROM_FIRST_UNUSED,EEPROM_FIRST_UNUSED,EEPROM_FIRST_UNUSED},
-	{ ConfigEntry_UInt16, EEPROM_DSP_MODE_MASK,&ts.dsp_mode_mask,DSP_SWITCH_MODEMASK_ENABLE_DEFAULT,DSP_SWITCH_MODEMASK_ENABLE_DSPOFF,DSP_SWITCH_MODEMASK_ENABLE_MASK},
+	{ ConfigEntry_UInt16, EEPROM_DSP_MODE_MASK,&ts.dsp.mode_mask,DSP_SWITCH_MODEMASK_ENABLE_DEFAULT,DSP_SWITCH_MODEMASK_ENABLE_DSPOFF,DSP_SWITCH_MODEMASK_ENABLE_MASK},
     { ConfigEntry_UInt8, EEPROM_ENABLE_PTT_RTS,&ts.enable_ptt_rts,0,0,1},
 	{ ConfigEntry_Int32_16, EEPROM_CW_DECODER_THRESH,&cw_decoder_config.thresh,CW_DECODER_THRESH_DEFAULT,CW_DECODER_THRESH_MIN,CW_DECODER_THRESH_MAX}, // NO INT DEFAULT PROBLEM
 	{ ConfigEntry_Int32_16, EEPROM_CW_DECODER_BLOCKSIZE,&cw_decoder_config.blocksize,CW_DECODER_BLOCKSIZE_DEFAULT,CW_DECODER_BLOCKSIZE_MIN,CW_DECODER_BLOCKSIZE_MAX}, // NO INT DEFAULT PROBLEM
@@ -875,8 +876,8 @@ void UiConfiguration_FixDefaultsNotLoadedIssue()
  */
 void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_eeprom_defaults)
 {
-    bool dspmode = ts.dsp_inhibit;
-    ts.dsp_inhibit = 1;     // disable dsp while loading EEPROM data
+    bool dspmode = ts.dsp.inhibit;
+    ts.dsp.inhibit = 1;     // disable dsp while loading EEPROM data
 
     uint32_t value32;
 
@@ -935,7 +936,7 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
 
     AudioManagement_CalcTxCompLevel();
 
-    ts.dsp_inhibit = dspmode;       // restore setting
+    ts.dsp.inhibit = dspmode;       // restore setting
 }
 
 // ********************************************************************************************************************
@@ -959,7 +960,7 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     else
     {
         // disable DSP during write because it decreases speed tremendous
-        //  ts.dsp_active &= 0xfa;  // turn off DSP
+        //  ts.dsp.active &= 0xfa;  // turn off DSP
 
         const uint8_t dmod_mode = ts.dmod_mode;
 

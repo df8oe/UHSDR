@@ -239,21 +239,36 @@ typedef struct vfo_reg_s
 //    uint32_t filter_mode;
 } VfoReg;
 
-
 typedef struct
 {
-    uint8_t mode;
-        uint8_t slope;
-        uint8_t hang_enable;
-        int     thresh;
-        int     hang_thresh;
-        int hang_time;
-        uint8_t action;
-        uint8_t switch_mode;
-        uint8_t hang_action;
-        int tau_decay[6];
-        int tau_hang_decay;
-} agc_wdsp_param_t;
+#define DSP_NR_ENABLE           0x01    // DSP NR mode is on (| 1)
+#define DSP_NR_POSTAGC_ENABLE   0x02    // DSP NR is to occur post AGC (| 2)
+#define DSP_NOTCH_ENABLE        0x04    // DSP Notch mode is on (| 4)
+#define DSP_NB_ENABLE           0x08    // DSP is to be displayed on screen instead of NB (| 8)
+#define DSP_MNOTCH_ENABLE       0x10    // Manual Notch enabled
+#define DSP_MPEAK_ENABLE        0x20    // Manual Peak enabled
+
+    uint8_t active;                 // Used to hold various aspects of DSP mode selection
+    uint8_t mode;                   // holds the mode chosen in the DSP
+    uint16_t mode_mask;             // holds the DSP mode mask (to be chosen by virtual dsp keyboard)
+    uint8_t active_toggle;          // holder used on the press-hold of button G2 to "remember" the previous setting
+    uint8_t nr_strength;            // "Strength" of DSP Noise reduction - to be converted to "Mu" factor
+    ulong   nr_delaybuf_len;        // size of DSP noise reduction delay buffer
+    uint8_t nr_numtaps;             // Number of FFT taps on the DSP Noise reduction
+    uint8_t notch_numtaps;
+    uint8_t notch_mu;               // mu adjust of notch DSP LMS
+    uint8_t notch_delaybuf_len;     // size of DSP notch delay buffer
+    uint8_t inhibit;                // if != 0, DSP (NR, Notch) functions are inhibited.  Used during power-up and switching
+    uint8_t nb_setting;
+    ulong   notch_frequency;        // frequency of the manual notch filter
+    ulong   peak_frequency;         // frequency of the manual peak filter
+
+    int     bass_gain;              // gain of the low shelf EQ filter
+    int     treble_gain;            // gain of the high shelf EQ filter
+    int     tx_bass_gain;           // gain of the TX low shelf EQ filter
+    int     tx_treble_gain;         // gain of the TX high shelf EQ filter
+
+} dsp_params_t;
 
 // Transceiver state public structure
 typedef struct TransceiverState
@@ -277,7 +292,6 @@ typedef struct TransceiverState
 #define RF_CODEC_GAIN_AUTO   9       // Default RF gain setting (9 = AUTO mode)
 
     uint8_t	rf_codec_gain;		// gain for codec (A/D converter) in receive mode
-    uint8_t 	nb_setting;
     uint8_t	cw_sidetone_gain;
     uint8_t	pa_bias;
     uint8_t	pa_cw_bias;
@@ -344,7 +358,7 @@ typedef struct TransceiverState
     uint16_t   filter_path_mem[FILTER_MODE_MAX][FILTER_PATH_MEM_MAX];
 
     uint16_t  filter_path;
-    //
+    const FilterPathDescriptor *filters_p;
 
     uint8_t	filter_cw_wide_disable;		// TRUE if wide filters are disabled in CW mode
     uint8_t	filter_ssb_narrow_disable;	// TRUE if narrow filters are disabled in SSB modes
@@ -453,27 +467,9 @@ typedef struct TransceiverState
 #define FREQ_STEP_SHOW_MARKER   0x01
     uint16_t	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
 
-#define DSP_NR_ENABLE 	  		0x01	// DSP NR mode is on (| 1)
-#define DSP_NR_POSTAGC_ENABLE 	0x02	// DSP NR is to occur post AGC (| 2)
-#define DSP_NOTCH_ENABLE		0x04	// DSP Notch mode is on (| 4)
-#define DSP_NB_ENABLE			0x08	// DSP is to be displayed on screen instead of NB (| 8)
-#define DSP_MNOTCH_ENABLE		0x10	// Manual Notch enabled
-#define DSP_MPEAK_ENABLE		0x20	// Manual Peak enabled
+    uint8_t     digital_mode;               // holds actual digital mode
 
-    uint8_t	dsp_active;					// Used to hold various aspects of DSP mode selection
-    uint8_t	dsp_mode;					// holds the mode chosen in the DSP
-    uint16_t	dsp_mode_mask;				// holds the DSP mode mask (to be chosen by virtual dsp keyboard)
-	uint8_t	temp_nb;
-    uint8_t 	digital_mode;				// holds actual digital mode
-    uint8_t	dsp_active_toggle;			// holder used on the press-hold of button G2 to "remember" the previous setting
-    uint8_t	dsp_nr_strength;			// "Strength" of DSP Noise reduction - to be converted to "Mu" factor
-    ulong	dsp_nr_delaybuf_len;		// size of DSP noise reduction delay buffer
-    uint8_t	dsp_nr_numtaps;				// Number of FFT taps on the DSP Noise reduction
-    uint8_t	dsp_notch_numtaps;
-    uint8_t	dsp_notch_mu;				// mu adjust of notch DSP LMS
-    uint8_t	dsp_notch_delaybuf_len;		// size of DSP notch delay buffer
-    uint8_t dsp_inhibit;				// if != 0, DSP (NR, Notch) functions are inhibited.  Used during power-up and switching
-
+    dsp_params_t dsp;
 
     uint8_t	lcd_backlight_brightness;	// LCD backlight dimming, 0-LCD_DIMMING_LEVEL_MAX:  0 = full, LCD_DIMMING_LEVEL_MAX = dimmest
 #define LCD_DIMMING_LEVEL_MAX 5
@@ -618,12 +614,6 @@ typedef struct TransceiverState
     uint8_t	power_temp;				// temporary tx power if tune is different from actual tx power
     uint8_t	cat_band_index;			// buffered bandindex before first CAT command arrived
     uint8_t	xlat;					// CAT <> IQ-Audio
-    ulong	notch_frequency;		// frequency of the manual notch filter
-    ulong	peak_frequency;			// frequency of the manual peak filter
-    int		bass_gain;				// gain of the low shelf EQ filter
-    int		treble_gain;			// gain of the high shelf EQ filter
-    int		tx_bass_gain;			// gain of the TX low shelf EQ filter
-    int		tx_treble_gain;			// gain of the TX high shelf EQ filter
 
 //    bool	dBm_Hz_Test;			// for testing only
 //    ulong	dBm_count;				// timer for calculating RX dBm
@@ -645,7 +635,6 @@ typedef struct TransceiverState
 #define TWINPEAKS_CODEC_RESTART 4
 	uint8_t twinpeaks_tested;
 
-	agc_wdsp_param_t agc_wdsp_conf;
 
     int dbm_constant;
 
@@ -716,29 +705,7 @@ typedef struct TransceiverState
 #ifdef USE_LEAKY_LMS
 	bool enable_leaky_LMS;
 #endif
-	float32_t nr_alpha; // alpha smoothing constant for spectral noise reduction
-	int16_t nr_alpha_int;
-	float32_t nr_beta; // beta smoothing constant for spectral noise reduction
-	int16_t nr_beta_int;
-//	float32_t nr_vad_thresh; // threshold for voice activity detector in spectral noise reduction
-//	uint32_t nr_vad_thresh_int;
-	bool nr_enable; // enable spectral noise reduction
-	uint8_t nr_first_time; // set to 1 for initialization of the NR variables
-//	bool nr_gain_smooth_enable; // enable gain smoothing
-//	float32_t nr_gain_smooth_alpha; // smoothing constant for gain smoothing in the spectral noise reduction
-//	int16_t nr_gain_smooth_alpha_int;
-//	bool nr_long_tone_enable; // enable elimination of long tones in the spectral NR algorithm
-//	float32_t nr_long_tone_alpha; // time constant for long tone detection
-//	uint32_t nr_long_tone_alpha_int; // time constant for long tone detection
-//	int16_t nr_long_tone_thresh; // threshold for long tone detection
-//	bool nr_long_tone_reset; // used to reset gains of the long tone detection to 1.0
-//	int16_t nr_vad_delay; // how many frames to delay the noise estimate after VAD has detected NOISE
-//	int16_t nr_mode;
 
-	bool nr_fft_256_enable; // debugging: enable FFT256 instead of FFT128 for spectral NR
-	uint16_t NR_FFT_L; // resulting FFT length: 128 or 256
-	uint8_t NR_FFT_LOOP_NO;
-	bool NR_decimation_enable; // set to true, if we want to use another decimation step for the spectral NR leading to 6ksps sample rate
 	uint8_t debug_si5351a_pllreset;
 	uint16_t graticulePowerupYpos;	//initial (after powerup) position of graticule (frequency bar)
 	const LcdLayout* Layout;				//current lcd layout (set by lcd detection routine)
@@ -752,15 +719,14 @@ typedef struct TransceiverState
 	bool paddles_active; // setting this to false disables processing of external gpio interrupts (right now just the paddles/PTT)
 
 	uint8_t debug_vswr_protection_threshold; // 0 - protection OFF
+
+	// noise reduction gain display in spectrum
+    int16_t  nr_gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
+    //                                           3 = display bin gain multiplied with long_tone_gain
+
 } TransceiverState;
-//
+
 extern __IO TransceiverState ts;
-
-//DL2FW UGLY test for FREEDV - some globals :-(
-
-
-
-//end DL2FW UGLY test for FREEDV - some globals :-(
 
 #define	POWERDOWN_DELAY_COUNT	30	// Delay in main service loop for the "last second" before power-down - to allow EEPROM write to complete
 
@@ -846,6 +812,15 @@ static inline bool is_waterfallmode()
 {
     return (ts.flags1 & FLAGS1_WFALL_ENABLED) != 0;
 }
+
+bool is_dsp_nb_active();
+bool is_dsp_nb();
+bool is_dsp_nr();
+bool is_dsp_nr_postagc();
+bool is_dsp_notch();
+bool is_dsp_mnotch();
+bool is_dsp_mpeak();
+
 
 #ifdef USE_PENDSV_FOR_HIGHPRIO_TASKS
 extern void UiDriver_TaskHandler_HighPrioTasks();

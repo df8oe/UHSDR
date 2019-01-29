@@ -61,6 +61,7 @@
 #include "psk.h"
 
 #include "audio_convolution.h"
+#include "audio_agc.h"
 
 #define SPLIT_ACTIVE_COLOUR         		Yellow      // colour of "SPLIT" indicator when active
 #define SPLIT_INACTIVE_COLOUR           	Grey        // colour of "SPLIT" indicator when NOT active
@@ -299,7 +300,7 @@ bool UiDriver_CheckTouchRegion(const UiArea_t* tr_p)
 }
 
 
-inline int32_t change_and_limit_int(volatile int32_t val, int32_t change, int32_t min, int32_t max)
+int32_t change_and_limit_int(volatile int32_t val, int32_t change, int32_t min, int32_t max)
 {
 	val +=change;
 	if (val< min)
@@ -314,7 +315,7 @@ inline int32_t change_and_limit_int(volatile int32_t val, int32_t change, int32_
 }
 
 
-inline uint32_t change_and_limit_uint(volatile uint32_t val, int32_t change, uint32_t min, uint32_t max)
+uint32_t change_and_limit_uint(volatile uint32_t val, int32_t change, uint32_t min, uint32_t max)
 {
 	if (change < 0 && ( -change  > (val - min)))
 	{
@@ -331,7 +332,7 @@ inline uint32_t change_and_limit_uint(volatile uint32_t val, int32_t change, uin
 	return val;
 }
 
-inline uint32_t change_and_wrap_uint(volatile uint32_t val, int32_t change, uint32_t min, uint32_t max)
+uint32_t change_and_wrap_uint(volatile uint32_t val, int32_t change, uint32_t min, uint32_t max)
 {
 	if (change  > ((int32_t)max - (int32_t)val))
 	{
@@ -348,24 +349,27 @@ inline uint32_t change_and_wrap_uint(volatile uint32_t val, int32_t change, uint
 	return val;
 }
 
-inline void incr_wrap_uint8(volatile uint8_t* ptr, uint8_t min, uint8_t max )
+void incr_wrap_uint8(volatile uint8_t* ptr, uint8_t min, uint8_t max )
 {
 	*ptr = (change_and_wrap_uint(*ptr,+1,min,max))&0xff;
 }
-inline void incr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max )
+
+void incr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max )
 {
 	*ptr = (change_and_wrap_uint(*ptr,+1,min,max))&0xff;
 }
-inline void decr_wrap_uint8(volatile uint8_t* ptr, uint8_t min, uint8_t max )
-{
-	*ptr = (change_and_wrap_uint(*ptr,-1,min,max))&0xff;
-}
-inline void decr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max )
+
+void decr_wrap_uint8(volatile uint8_t* ptr, uint8_t min, uint8_t max )
 {
 	*ptr = (change_and_wrap_uint(*ptr,-1,min,max))&0xff;
 }
 
-inline bool is_touchscreen_pressed()
+void decr_wrap_uint16(volatile uint16_t* ptr, uint16_t min, uint16_t max )
+{
+	*ptr = (change_and_wrap_uint(*ptr,-1,min,max))&0xff;
+}
+
+bool is_touchscreen_pressed()
 {
 	return (ts.tp->state == TP_DATASETS_VALID);	// touchscreen data available
 }
@@ -375,35 +379,49 @@ bool is_vfo_b()
 	return (ts.vfo_mem_mode & VFO_MEM_MODE_VFO_B) != 0;
 }
 
-inline bool is_dsp_nb()
+// FIXME: The DSP stuff should go in a separate file
+/**
+ *
+ * @return true if the noise blanker is enabled (if if turned "off)
+ */
+bool is_dsp_nb()
 {
-	return (ts.dsp_active & DSP_NB_ENABLE) != 0;
+	return (ts.dsp.active & DSP_NB_ENABLE) != 0;
 //	return (ts.nb_setting > 0); // noise blanker ON
 }
 
-inline bool is_dsp_nr()
+/**
+ *
+ * @return true if the noise blanker settings indicate it should process things
+ */
+bool is_dsp_nb_active()
 {
-	return (ts.dsp_active & DSP_NR_ENABLE) != 0;
+    return is_dsp_nb_active() && (ts.dsp.nb_setting > 0);
 }
 
-inline bool is_dsp_nr_postagc()
+bool is_dsp_nr()
 {
-	return (ts.dsp_active & DSP_NR_POSTAGC_ENABLE) != 0;
+	return (ts.dsp.active & DSP_NR_ENABLE) != 0;
 }
 
-inline bool is_dsp_notch()
+bool is_dsp_nr_postagc()
 {
-	return (ts.dsp_active & DSP_NOTCH_ENABLE) != 0;
+	return (ts.dsp.active & DSP_NR_POSTAGC_ENABLE) != 0;
 }
 
-inline bool is_dsp_mnotch()
+bool is_dsp_notch()
 {
-	return (ts.dsp_active & DSP_MNOTCH_ENABLE) != 0;
+	return (ts.dsp.active & DSP_NOTCH_ENABLE) != 0;
 }
 
-inline bool is_dsp_mpeak()
+bool is_dsp_mnotch()
 {
-	return (ts.dsp_active & DSP_MPEAK_ENABLE) != 0;
+	return (ts.dsp.active & DSP_MNOTCH_ENABLE) != 0;
+}
+
+bool is_dsp_mpeak()
+{
+	return (ts.dsp.active & DSP_MPEAK_ENABLE) != 0;
 }
 
 #define KEYACTION_NOP    (NULL)				// This action for the pressed key is treated as being executed, but it is a no-operation
@@ -836,6 +854,29 @@ static void UiDriver_PublicsInit()
 
 }
 
+static void UiDriver_DspModeMaskInit()
+{
+    if(mchf_touchscreen.present)
+    {
+        //preventing DSP functions mask to have not proper value
+        if (ts.dsp.mode_mask == 0 || ts.dsp.mode_mask == 1)
+        {
+            // empty mask is invalid, set it to all entries enabled
+            ts.dsp.mode_mask = DSP_SWITCH_MODEMASK_ENABLE_DEFAULT;
+        }
+        else
+        {
+            // just make sure DSP OFF is always on the list
+            ts.dsp.mode_mask|=DSP_SWITCH_MODEMASK_ENABLE_DSPOFF;
+        }
+
+        ts.dsp.mode_mask&=DSP_SWITCH_MODEMASK_ENABLE_MASK;
+    }
+    else
+    {
+        ts.dsp.mode_mask=DSP_SWITCH_MODEMASK_ENABLE_DEFAULT;        //disable masking when no touchscreen controller detected
+    }
+}
 
 
 void UiDriver_Init()
@@ -905,6 +946,9 @@ void UiDriver_Init()
 	df.tune_old = 0;
 
 	ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();			// determine CW sideband mode from the restored frequency
+
+
+	UiDriver_DspModeMaskInit();
 
 	AudioManagement_CalcTxCompLevel();      // calculate current settings for TX speech compressor
 
@@ -2931,7 +2975,7 @@ static void UiDriver_TimeScheduler()
 		{
 			if(ts.sysclock > dsp_rx_reenable_timer)	 	// yes - is it time to re-enable DSP?
 			{
-				ts.dsp_inhibit = false;		// yes - re-enable DSP
+				ts.dsp.inhibit = false;		// yes - re-enable DSP
 				dsp_rx_reenable_flag = false;	// clear flag so we don't do this again
 			}
 		}
@@ -3000,7 +3044,7 @@ static void UiDriver_TimeScheduler()
 		//
 		UiDriver_DisplayEncoderTwoMode();
 
-		ts.dsp_inhibit = 0;                 // allow DSP to function
+		ts.dsp.inhibit = 0;                 // allow DSP to function
 
 
 
@@ -3459,11 +3503,11 @@ static void UiDriver_CheckEncoderTwo()
 				// used for notch and peak
 				float32_t MAX_FREQ = 5000.0;
 
-				if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
+				if (ts.filters_p->sample_rate_dec == RX_DECIMATION_RATE_24KHZ)
 				{
 					MAX_FREQ = 10000.0;
 				}
-				else if (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
+				else if (ts.filters_p->sample_rate_dec == RX_DECIMATION_RATE_12KHZ)
 				{
 					MAX_FREQ = 5000.0;
 				}
@@ -3481,7 +3525,7 @@ static void UiDriver_CheckEncoderTwo()
 					if(ts.dmod_mode != DEMOD_FM)	 	// is this *NOT* FM?  Change RF gain
 					{
 
-							ts.agc_wdsp_conf.thresh = change_and_limit_int(ts.agc_wdsp_conf.thresh,pot_diff_step,-20,120);
+							agc_wdsp_conf.thresh = change_and_limit_int(agc_wdsp_conf.thresh,pot_diff_step,-20,120);
 							AudioDriver_SetupAgcWdsp();
 					}
 					else	 		// it is FM - change squelch setting
@@ -3498,13 +3542,13 @@ static void UiDriver_CheckEncoderTwo()
 						// this is AGC setting OR noise blanker setting
 						if(is_dsp_nb()) // noise blanker is active (ts.nb_setting > 0)
 						{
-							ts.nb_setting = change_and_limit_uint(ts.nb_setting,pot_diff_step,0,MAX_NB_SETTING);
+							ts.dsp.nb_setting = change_and_limit_uint(ts.dsp.nb_setting,pot_diff_step,0,MAX_NB_SETTING);
 						}
 						else // AGC mode setting
 						{
 							//                    ts.agc_wdsp.tau_decay = change_and_limit_int(ts.agc_wdsp.tau_decay,pot_diff_step * 100,100,5000);
-							ts.agc_wdsp_conf.mode = change_and_limit_uint(ts.agc_wdsp_conf.mode,pot_diff_step,0,5);
-							ts.agc_wdsp_conf.switch_mode = 1; // set flag, so that mode switching really takes place in AGC_prep
+							agc_wdsp_conf.mode = change_and_limit_uint(agc_wdsp_conf.mode,pot_diff_step,0,5);
+							agc_wdsp_conf.switch_mode = 1; // set flag, so that mode switching really takes place in AGC_prep
 							AudioDriver_SetupAgcWdsp();
 						}
 					UiDriver_DisplayNoiseBlanker(1);
@@ -3513,20 +3557,20 @@ static void UiDriver_CheckEncoderTwo()
 					if (is_dsp_nr())        // only allow adjustment if DSP NR is active
 					{	//
 				    	uint8_t nr_step = DSP_NR_STRENGTH_STEP;
-				    	if(ts.dsp_nr_strength >= 190)
+				    	if(ts.dsp.nr_strength >= 190)
 				    	{
 				    		nr_step = 1;
 				    	}
-						ts.dsp_nr_strength = change_and_limit_uint(ts.dsp_nr_strength,pot_diff_step * nr_step,DSP_NR_STRENGTH_MIN,DSP_NR_STRENGTH_MAX);
-			        	if(ts.dsp_nr_strength == 189)
+						ts.dsp.nr_strength = change_and_limit_uint(ts.dsp.nr_strength,pot_diff_step * nr_step,DSP_NR_STRENGTH_MIN,DSP_NR_STRENGTH_MAX);
+			        	if(ts.dsp.nr_strength == 189)
 			        	{
-			        		ts.dsp_nr_strength = 185;
+			        		ts.dsp.nr_strength = 185;
 			        	}
 
 						// this causes considerable noise
 						//AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
 						// we do this instead
-					    ts.nr_alpha = 0.799 + ((float32_t)ts.dsp_nr_strength / 1000.0);
+					    nr_params.alpha = 0.799 + ((float32_t)ts.dsp.nr_strength / 1000.0);
 					}
 					// Signal processor setting
 					UiDriver_DisplayDSPMode(1);
@@ -3536,20 +3580,20 @@ static void UiDriver_CheckEncoderTwo()
 					{
 						if(pot_diff < 0)
 						{
-							ts.notch_frequency = ts.notch_frequency - 5.0 * enc_multiplier;
+							ts.dsp.notch_frequency = ts.dsp.notch_frequency - 5.0 * enc_multiplier;
 						}
 						if(pot_diff > 0)
 						{
-							ts.notch_frequency = ts.notch_frequency + 5.0 * enc_multiplier;
+							ts.dsp.notch_frequency = ts.dsp.notch_frequency + 5.0 * enc_multiplier;
 						}
 
-						if(ts.notch_frequency > MAX_FREQ)
+						if(ts.dsp.notch_frequency > MAX_FREQ)
 						{
-							ts.notch_frequency = MAX_FREQ;
+							ts.dsp.notch_frequency = MAX_FREQ;
 						}
-						if(ts.notch_frequency < MIN_PEAK_NOTCH_FREQ)
+						if(ts.dsp.notch_frequency < MIN_PEAK_NOTCH_FREQ)
 						{
-							ts.notch_frequency = MIN_PEAK_NOTCH_FREQ;
+							ts.dsp.notch_frequency = MIN_PEAK_NOTCH_FREQ;
 						}
 						// display notch frequency
 						// set notch filter instance
@@ -3558,14 +3602,14 @@ static void UiDriver_CheckEncoderTwo()
 					}
 					break;
 				case ENC_TWO_MODE_BASS_GAIN:
-					ts.bass_gain = change_and_limit_int(ts.bass_gain,pot_diff_step,MIN_BASS,MAX_BASS);
+					ts.dsp.bass_gain = change_and_limit_int(ts.dsp.bass_gain,pot_diff_step,MIN_BASS,MAX_BASS);
 					// set filter instance
 					AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
 					// display bass gain
 					UiDriver_DisplayTone(true);
 					break;
 				case ENC_TWO_MODE_TREBLE_GAIN:
-					ts.treble_gain = change_and_limit_int(ts.treble_gain,pot_diff_step,MIN_TREBLE,MAX_TREBLE);
+					ts.dsp.treble_gain = change_and_limit_int(ts.dsp.treble_gain,pot_diff_step,MIN_TREBLE,MAX_TREBLE);
 					// set filter instance
 					AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
 					// display treble gain
@@ -3577,19 +3621,19 @@ static void UiDriver_CheckEncoderTwo()
 					{
 						if(pot_diff < 0)
 						{
-							ts.peak_frequency = ts.peak_frequency - 5.0 * enc_multiplier;
+							ts.dsp.peak_frequency = ts.dsp.peak_frequency - 5.0 * enc_multiplier;
 						}
 						if(pot_diff > 0)
 						{
-							ts.peak_frequency = ts.peak_frequency + 5.0 * enc_multiplier;
+							ts.dsp.peak_frequency = ts.dsp.peak_frequency + 5.0 * enc_multiplier;
 						}
-						if(ts.peak_frequency > MAX_FREQ)
+						if(ts.dsp.peak_frequency > MAX_FREQ)
 						{
-							ts.peak_frequency = MAX_FREQ;
+							ts.dsp.peak_frequency = MAX_FREQ;
 						}
-						if(ts.peak_frequency < MIN_PEAK_NOTCH_FREQ)
+						if(ts.dsp.peak_frequency < MIN_PEAK_NOTCH_FREQ)
 						{
-							ts.peak_frequency = MIN_PEAK_NOTCH_FREQ;
+							ts.dsp.peak_frequency = MIN_PEAK_NOTCH_FREQ;
 						}
 						// set notch filter instance
 						AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
@@ -3607,14 +3651,14 @@ static void UiDriver_CheckEncoderTwo()
 				switch(ts.enc_two_mode)
 				{
 				case ENC_TWO_MODE_BASS_GAIN:
-					ts.tx_bass_gain = change_and_limit_int(ts.tx_bass_gain,pot_diff_step,MIN_TX_BASS,MAX_TX_BASS);
+					ts.dsp.tx_bass_gain = change_and_limit_int(ts.dsp.tx_bass_gain,pot_diff_step,MIN_TX_BASS,MAX_TX_BASS);
 					// set filter instance
 					AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
 					// display bass gain
 					UiDriver_DisplayTone(true);
 					break;
 				case ENC_TWO_MODE_TREBLE_GAIN:
-					ts.tx_treble_gain = change_and_limit_int(ts.tx_treble_gain,pot_diff_step,MIN_TX_TREBLE,MAX_TX_TREBLE);
+					ts.dsp.tx_treble_gain = change_and_limit_int(ts.dsp.tx_treble_gain,pot_diff_step,MIN_TX_TREBLE,MAX_TX_TREBLE);
 					// set filter instance
 					AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
 					// display treble gain
@@ -3978,7 +4022,7 @@ static void UiDriver_DisplayCmpLevel(bool encoder_active)
 
 uint32_t UiDriver_GetActiveDSPFunctions()
 {
-	return ts.dsp_active & (DSP_NOTCH_ENABLE|DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE);
+	return ts.dsp.active & (DSP_NOTCH_ENABLE|DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE);
 }
 
 static void UiDriver_DisplayDSPMode(bool encoder_active)
@@ -3990,7 +4034,7 @@ static void UiDriver_DisplayDSPMode(bool encoder_active)
 	bool txt_is_value = false;
 	const char* txt[2] = { "DSP", NULL };
 
-	//uint32_t dsp_functions_active = ts.dsp_active & (DSP_NOTCH_ENABLE|DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE);
+	//uint32_t dsp_functions_active = ts.dsp.active & (DSP_NOTCH_ENABLE|DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE);
 	uint32_t dsp_functions_active =UiDriver_GetActiveDSPFunctions();
 
 	UiVk_Redraw();			//virtual keypads call (refresh purpose)
@@ -4003,7 +4047,7 @@ static void UiDriver_DisplayDSPMode(bool encoder_active)
 		break;
 	case DSP_NR_ENABLE:
 		txt[0] = "NR";
-		snprintf(val_txt,7,"%5u", ts.dsp_nr_strength);
+		snprintf(val_txt,7,"%5u", ts.dsp.nr_strength);
 		txt[1] = val_txt;
 		txt_is_value = true;
 		break;
@@ -4012,19 +4056,19 @@ static void UiDriver_DisplayDSPMode(bool encoder_active)
 		break;
 	case DSP_NOTCH_ENABLE|DSP_NR_ENABLE:
 	txt[0] = "NR+NOTC";
-	snprintf(val_txt,7,"%5u", ts.dsp_nr_strength);
+	snprintf(val_txt,7,"%5u", ts.dsp.nr_strength);
 	txt[1] = val_txt;
 	txt_is_value = true;
 	break;
 	case DSP_MNOTCH_ENABLE:
 		txt[0] = "M-NOTCH";
-		snprintf(val_txt,7,"%5lu", ts.notch_frequency);
+		snprintf(val_txt,7,"%5lu", ts.dsp.notch_frequency);
 		txt[1] = val_txt;
 		txt_is_value = true;
 		break;
 	case DSP_MPEAK_ENABLE:
 		txt[0] = "PEAK";
-		snprintf(val_txt,7,"%5lu", ts.peak_frequency);
+		snprintf(val_txt,7,"%5lu", ts.dsp.peak_frequency);
 		txt[1] = val_txt;
 		txt_is_value = true;
 		break;
@@ -4123,7 +4167,7 @@ static void UiDriver_DisplayRfGain(bool encoder_active)
 	if(ts.dmod_mode != DEMOD_FM) // NOT FM
 	{
 		label = "AGC";
-		value = ts.agc_wdsp_conf.thresh;
+		value = agc_wdsp_conf.thresh;
 	}
 	else // use SQL for FM
 	{
@@ -4165,6 +4209,21 @@ static void UiDriver_DisplayRfGain(bool encoder_active)
 
 }
 
+uint32_t UiDriver_GetNBColor()
+{
+    uint32_t retval;
+
+    if(ts.dsp.nb_setting >= NB_WARNING3_SETTING)
+        retval = Red;        // above this value, make it red
+    else if(ts.dsp.nb_setting >= NB_WARNING2_SETTING)
+        retval = Orange;     // above this value, make it orange
+    else if(ts.dsp.nb_setting >= NB_WARNING1_SETTING)
+        retval = Yellow;     // above this value, make it yellow
+    else
+        retval = White;      // Otherwise, make it white
+
+    return retval;
+}
 //*----------------------------------------------------------------------------
 //* Function Name       : UiDriverChangeSigProc
 //* Object              : Display settings related to signal processing - DSP NR or Noise Blanker strength
@@ -4189,17 +4248,10 @@ static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
 		{
 			if(encoder_active)
 			{
-				if(ts.nb_setting >= NB_WARNING3_SETTING)
-					color = Red;		// above this value, make it red
-				else if(ts.nb_setting >= NB_WARNING2_SETTING)
-					color = Orange;		// above this value, make it orange
-				else if(ts.nb_setting >= NB_WARNING1_SETTING)
-					color = Yellow;		// above this value, make it yellow
-				else
-					color = White;		// Otherwise, make it white
+			    color = UiDriver_GetNBColor();
 			}
 			label = "NB";
-			value = ts.nb_setting;
+			value = ts.dsp.nb_setting;
 			snprintf(temp,5,"%3ld",value);
 			val_txt = temp;
 		}
@@ -4207,7 +4259,7 @@ static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
 		else
 		{
 //#endif
-			switch(ts.agc_wdsp_conf.mode)
+			switch(agc_wdsp_conf.mode)
 			{
 			case 0:
 				label = "vLO";
@@ -4231,7 +4283,7 @@ static void UiDriver_DisplayNoiseBlanker(bool encoder_active)
 				label = "???";
 				break;
 			}
-			value = (int32_t)(ts.agc_wdsp_conf.tau_decay[ts.agc_wdsp_conf.mode] / 10.0);
+			value = (int32_t)(agc_wdsp_conf.tau_decay[agc_wdsp_conf.mode] / 10.0);
 			snprintf(temp,5,"%3ld",value);
 			val_txt = temp;
 		}
@@ -4258,13 +4310,13 @@ static void UiDriver_DisplayTone(bool encoder_active)
 
 	if(ts.txrx_mode == TRX_MODE_TX) // if in TX_mode, display TX bass gain instead of RX_bass gain!
 	{
-		bas = ts.tx_bass_gain;
-		tre = ts.tx_treble_gain;
+		bas = ts.dsp.tx_bass_gain;
+		tre = ts.dsp.tx_treble_gain;
 	}
 	else
 	{
-		bas = ts.bass_gain;
-		tre = ts.treble_gain;
+		bas = ts.dsp.bass_gain;
+		tre = ts.dsp.treble_gain;
 	}
 
 	snprintf(temp,5,"%3d", bas);
@@ -5939,10 +5991,10 @@ static bool UiDriver_IsDspModePermitted(uint16_t dsp_mode)
     neg_retval |= ts.dmod_mode == DEMOD_CW && ( dsp_mode == DSP_SWITCH_NR_AND_NOTCH || dsp_mode == DSP_SWITCH_NOTCH);
 
     // prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
-    neg_retval |= (dsp_mode == DSP_SWITCH_NR_AND_NOTCH) && (ts.dmod_mode == DEMOD_AM) && (FilterPathInfo[ts.filter_path].sample_rate_dec == RX_DECIMATION_RATE_24KHZ);
+    neg_retval |= (dsp_mode == DSP_SWITCH_NR_AND_NOTCH) && (ts.dmod_mode == DEMOD_AM) && (ts.filters_p->sample_rate_dec == RX_DECIMATION_RATE_24KHZ);
 
     // prevent using a mode not enabled in the dsp mode selection (i.e. user configured it to be not used, although available)
-    neg_retval |= (ts.dsp_mode_mask&(1<<ts.dsp_mode)) == 0;
+    neg_retval |= (ts.dsp.mode_mask&(1<<ts.dsp.mode)) == 0;
 
     // not forbidden, so return true;
     return neg_retval == false;
@@ -5967,7 +6019,7 @@ void UiDriver_UpdateDSPmode(uint8_t new_dsp_mode)
 
 		if (UiDriver_IsDspModePermitted(new_dsp_mode))
 		{
-		    ts.dsp_mode = new_dsp_mode;
+		    ts.dsp.mode = new_dsp_mode;
 		    break;
 		}
 		else
@@ -5978,38 +6030,38 @@ void UiDriver_UpdateDSPmode(uint8_t new_dsp_mode)
 	}
 
 
-	switch (ts.dsp_mode)
+	switch (ts.dsp.mode)
 	{
 
 	case DSP_SWITCH_OFF: // switch off everything
-		ts.dsp_active =  (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+		ts.dsp.active =  (ts.dsp.active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
 		ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
 		break;
 	case DSP_SWITCH_NR:
-		ts.dsp_active =  DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+		ts.dsp.active =  DSP_NR_ENABLE | (ts.dsp.active & ~(DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
 		ts.enc_two_mode = ENC_TWO_MODE_NR;
 		break;
 	case DSP_SWITCH_NOTCH:
-		ts.dsp_active =  DSP_NOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+		ts.dsp.active =  DSP_NOTCH_ENABLE | (ts.dsp.active & ~(DSP_NR_ENABLE|DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
 		ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
 		break;
 	case DSP_SWITCH_NR_AND_NOTCH:
-		ts.dsp_active =  DSP_NOTCH_ENABLE | DSP_NR_ENABLE | (ts.dsp_active & ~(DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
+		ts.dsp.active =  DSP_NOTCH_ENABLE | DSP_NR_ENABLE | (ts.dsp.active & ~(DSP_MNOTCH_ENABLE|DSP_MPEAK_ENABLE));
 		ts.enc_two_mode = ENC_TWO_MODE_NR;
 		break;
 	case DSP_SWITCH_NOTCH_MANUAL:
-		ts.dsp_active =  DSP_MNOTCH_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MPEAK_ENABLE));
+		ts.dsp.active =  DSP_MNOTCH_ENABLE | (ts.dsp.active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MPEAK_ENABLE));
 		ts.enc_two_mode = ENC_TWO_MODE_NOTCH_F;
 		break;
 	case DSP_SWITCH_PEAK_FILTER:
-		ts.dsp_active =  DSP_MPEAK_ENABLE | (ts.dsp_active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE));
+		ts.dsp.active =  DSP_MPEAK_ENABLE | (ts.dsp.active & ~(DSP_NR_ENABLE|DSP_NOTCH_ENABLE|DSP_MNOTCH_ENABLE));
 		ts.enc_two_mode = ENC_TWO_MODE_PEAK_F;
 		break;
 	default:
 		break;
 	}
 
-	ts.dsp_active_toggle = ts.dsp_active;  // save update in "toggle" variable
+	ts.dsp.active_toggle = ts.dsp.active;  // save update in "toggle" variable
 	// reset DSP NR coefficients
 	AudioDriver_SetRxAudioProcessing(ts.dmod_mode, true);        // update DSP/filter settings
 	UiDriver_DisplayEncoderTwoMode();         // DSP control is mapped to column 2
@@ -6022,13 +6074,13 @@ static void UiAction_ChangeToNextDspMode()
 		//
 		// I think we should alter this to use a counter
 		// What do we want to switch here:
-		// NR ON/OFF		ts.dsp_active |= DSP_NR_ENABLE;	 // 	ts.dsp_active &= ~DSP_NR_ENABLE;
-		// NOTCH ON/OFF		ts.dsp_active |= DSP_NOTCH_ENABLE; // 	ts.dsp_active &= ~DSP_NOTCH_ENABLE;
-		// Manual Notch		ts.dsp_active |= DSP_MNOTCH_ENABLE
+		// NR ON/OFF		ts.dsp.active |= DSP_NR_ENABLE;	 // 	ts.dsp.active &= ~DSP_NR_ENABLE;
+		// NOTCH ON/OFF		ts.dsp.active |= DSP_NOTCH_ENABLE; // 	ts.dsp.active &= ~DSP_NOTCH_ENABLE;
+		// Manual Notch		ts.dsp.active |= DSP_MNOTCH_ENABLE
 		// BASS				ts.bass // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
 		// TREBLE			ts.treble // always "ON", gain ranges from -20 to +20 dB, "OFF" = 0dB
 
-		UiDriver_UpdateDSPmode(ts.dsp_mode + 1);
+		UiDriver_UpdateDSPmode(ts.dsp.mode + 1);
 	}
 }
 
@@ -6325,17 +6377,17 @@ static void UiAction_ToggleDspEnable()
 	{
 		if(is_dsp_nr()|| is_dsp_notch() || is_dsp_mnotch() || is_dsp_mpeak())	 			// is any DSP function active?
 		{
-			ts.dsp_active_toggle = ts.dsp_active;	// save setting for future toggling
+			ts.dsp.active_toggle = ts.dsp.active;	// save setting for future toggling
 
-			ts.dsp_active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE |DSP_MNOTCH_ENABLE | DSP_MPEAK_ENABLE);				// turn off NR and notch
+			ts.dsp.active &= ~(DSP_NR_ENABLE | DSP_NOTCH_ENABLE |DSP_MNOTCH_ENABLE | DSP_MPEAK_ENABLE);				// turn off NR and notch
 
 			ts.enc_two_mode = ENC_TWO_MODE_RF_GAIN;
 		}
 		else	 		// neither notch or NR was active
 		{
-			if(ts.dsp_active_toggle != 0xff)	 	// has this holder been used before?
+			if(ts.dsp.active_toggle != 0xff)	 	// has this holder been used before?
 			{
-				ts.dsp_active = ts.dsp_active_toggle;	// yes - load value
+				ts.dsp.active = ts.dsp.active_toggle;	// yes - load value
 			}
 		}
 		AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);	// update DSP settings
@@ -6364,7 +6416,7 @@ static void UiAction_ChangeRxFilterOrFmToneBurst()
 
 static void UiAction_ToggleNoiseblanker()
 {
-	ts.dsp_active ^= DSP_NB_ENABLE;	// toggle whether or not DSP or NB is to be displayed
+	ts.dsp.active ^= DSP_NB_ENABLE;	// toggle whether or not DSP or NB is to be displayed
 	UiDriver_DisplayEncoderTwoMode();
 }
 
@@ -6949,10 +7001,10 @@ void UiDriver_TaskHandler_HighPrioTasks()
 #endif // USE_FREEDV
 
 #ifdef USE_ALTERNATE_NR
-    if ((ts.nb_setting > 0 || (ts.dsp_active & DSP_NR_ENABLE)) && (ads.decimation_rate == 4))
+    if ((is_dsp_nb_active() || is_dsp_nr()) && (ads.decimation_rate == 4))
     {
 
-        alternateNR_handle();
+        AudioNr_HandleNoiseReduction();
     }
 #endif
 #ifdef USE_HIGH_PRIO_PTT
@@ -7290,7 +7342,7 @@ void UiDriver_TaskHandler_MainTasks()
 				uint16_t AGC_bg_clr = Black;
 				uint16_t AGC_fg_clr = Black;
 
-				if(ts.agc_wdsp_conf.hang_action == 1 && ts.agc_wdsp_conf.hang_enable == 1)
+				if(agc_wdsp_conf.hang_action == 1 && agc_wdsp_conf.hang_enable == 1)
 				{
 					AGC_bg_clr = White;
 					AGC_fg_clr = Black;
@@ -7300,7 +7352,7 @@ void UiDriver_TaskHandler_MainTasks()
 					AGC_bg_clr = Blue;
 					AGC_fg_clr = White;
 				}
-				if(ts.agc_wdsp_conf.action == 1)
+				if(agc_wdsp_conf.action == 1)
 				{
 					txt = "AGC";
 				}

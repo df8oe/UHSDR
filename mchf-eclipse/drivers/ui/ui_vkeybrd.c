@@ -243,13 +243,13 @@ void UiVk_Redraw()
 
 //DSP box VKeypad=================================================================
 uint32_t prev_dsp_functions_active;	//used for virtual DSP keys redraw detections
-//this array is needed because different bit definitions are used for ts.dsp_mode and ts.dsp_active, so we cannot simply pass the CallBackShort parameter
+//this array is needed because different bit definitions are used for ts.dsp.mode and ts.dsp.active, so we cannot simply pass the CallBackShort parameter
 const uint32_t dsp_functions[]={0, DSP_NR_ENABLE, DSP_NOTCH_ENABLE, DSP_NOTCH_ENABLE|DSP_NR_ENABLE, DSP_MNOTCH_ENABLE, DSP_MPEAK_ENABLE};
 
 static void UiVk_DSPVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 {
-    uint8_t new_dsp_mode = ts.dsp_mode;
-	if(((ts.dsp_mode_mask&(1<<KeyNum))!=0) || (KeyNum==0))
+    uint8_t new_dsp_mode = ts.dsp.mode;
+	if(((ts.dsp.mode_mask&(1<<KeyNum))!=0) || (KeyNum==0))
 	{
 		new_dsp_mode=param;
 	}
@@ -260,13 +260,13 @@ static void UiVk_DSPVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 
 static void UiVk_DSPVKeyCallBackLong(uint8_t KeyNum, uint32_t param)
 {
-	ts.dsp_mode_mask^=1<<KeyNum;
+	ts.dsp.mode_mask^=1<<KeyNum;
 	// mask out this dsp function, to make it no longer available
 	prev_dsp_functions_active=-1;
 	// now find a new valid mode starting from the current one
 	// this switches mode only if the current active mode is the
 	// one we just disabled
-	UiDriver_UpdateDSPmode(ts.dsp_mode);
+	UiDriver_UpdateDSPmode(ts.dsp.mode);
 }
 
 static uint8_t UiVk_DSPVKeyCallBackWarning(uint8_t KeyNum, uint32_t param)
@@ -283,7 +283,7 @@ static uint8_t UiVk_DSPVKeyInitTypeDraw(uint8_t KeyNum, uint32_t param)
 {
 	uint8_t Keystate=Vbtn_State_Normal;
 	uint32_t dsp_functions_active =UiDriver_GetActiveDSPFunctions();
-	if(((ts.dsp_mode_mask&(1<<KeyNum))==0) && (KeyNum>0))
+	if(((ts.dsp.mode_mask&(1<<KeyNum))==0) && (KeyNum>0))
 	{
 		Keystate=Vbtn_State_Disabled;
 	}
