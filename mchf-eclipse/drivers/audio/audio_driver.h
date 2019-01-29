@@ -24,10 +24,8 @@
 //#include "audio_convolution.h"
 
 
-#define IQ_SAMPLE_RATE (48000)
 #define IQ_SAMPLE_RATE_F ((float32_t)IQ_SAMPLE_RATE)
 
-#define AUDIO_SAMPLE_RATE (48000)
 #define AUDIO_SAMPLE_RATE_F ((float32_t)AUDIO_SAMPLE_RATE)
 
 
@@ -69,12 +67,6 @@ typedef struct {
 	#define FFT_IQ_BUFF_LEN		512
 #endif
 #define SPEC_BUFF_LEN (FFT_IQ_BUFF_LEN/2)
-
-//
-// we process one dma block of samples at once
-#define IQ_BLOCK_SIZE IQ_SAMPLES_PER_BLOCK
-#define AUDIO_BLOCK_SIZE AUDIO_SAMPLES_PER_BLOCK
-
 
 // twice the number of samples in the each iq block buffer
 // (which is half of the total dma buffer, since in each interrupt we get half of the total dma buffer)
@@ -706,8 +698,6 @@ void TxProcessor_Init();
 
 extern float32_t   audio_delay_buffer    [AUDIO_DELAY_BUFSIZE];
 
-// AGC
-void AudioDriver_RxAgcWdsp(int16_t blockSize, float32_t (*agcbuffer)[AUDIO_BLOCK_SIZE] );
 void AudioDriver_SetupAgcWdsp();
 
 #endif

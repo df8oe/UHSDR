@@ -51,6 +51,8 @@
 #include "rtty.h"
 #include "uhsdr_digi_buffer.h"
 
+#include "audio_nr.h"
+
 #define SWR_SAMPLES_SKP             1   //5000
 #define SWR_SAMPLES_CNT             5//10
 #define SWR_ADC_FULL_SCALE          4095    // full scale of A/D converter (4095 = 10 bits)
@@ -996,7 +998,7 @@ void RadioManagement_ChangeBandFilter(uchar band)
     default:
         break;
     }
-  ts.nr_first_time = 1; // in case of any Bandfilter change restart the NR routine
+  nr_params.first_time = 1; // in case of any Bandfilter change restart the NR routine
 }
 typedef struct BandFilterDescriptor
 {
@@ -1067,7 +1069,7 @@ bool RadioManagement_IsPowerFactorReduce(uint32_t freq)
  */
 void RadioManagement_SetDemodMode(uint8_t new_mode)
 {
-    ts.dsp_inhibit++;
+    ts.dsp.inhibit++;
     ads.af_disabled++;
 
     if (new_mode == DEMOD_DIGI)
@@ -1134,8 +1136,8 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
     ts.dmod_mode = new_mode;
 
     if  (ads.af_disabled) { ads.af_disabled--; }
-    if (ts.dsp_inhibit) { ts.dsp_inhibit--; }
-    ts.nr_first_time = 1; // re-initialize spectral noise reduction, when dmod_mode was changed
+    if (ts.dsp.inhibit) { ts.dsp.inhibit--; }
+    nr_params.first_time = 1; // re-initialize spectral noise reduction, when dmod_mode was changed
 
 }
 
@@ -1733,7 +1735,7 @@ void RadioManagement_ToggleVfoAB()
     {
         RadioManagement_SetDemodMode(vfo[vfo_new].band[ts.band].decod_mode);
     }
-    ts.nr_first_time = 1; // restart in case of VFO-Toggle
+    nr_params.first_time = 1; // restart in case of VFO-Toggle
 }
 
 /**

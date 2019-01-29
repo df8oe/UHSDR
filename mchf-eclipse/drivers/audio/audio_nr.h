@@ -15,7 +15,7 @@
 #ifndef __AUDIO_NR_H
 #define __AUDIO_NR_H
 
-#include "uhsdr_board.h"
+#include "uhsdr_board_config.h"
 
 #ifdef USE_ALTERNATE_NR
 // this contains our shared buffer structure, since FreeDV and NR are mutually exclusive
@@ -32,34 +32,13 @@
 //#define NR_FFT_L_2 (NR_FFT_SIZE) // for NR FFT size 128
 //#endif
 
-typedef struct NoiseReduction // declaration
-{
-	float32_t 					last_iFFT_result [NR_FFT_L_2 / 2];
-	float32_t 					last_sample_buffer_L [NR_FFT_L_2 / 2];
-	float32_t 					Hk[NR_FFT_L_2 / 2]; // gain factors
-	float32_t 					FFT_buffer[NR_FFT_L_2 * 2];
-	float32_t 					Nest[NR_FFT_L_2 / 2][2]; // noise estimates for the current and the last FFT frame
-	float32_t 					vk; // saved 0.24kbytes
-	float32_t 					SNR_prio[NR_FFT_L_2 / 2];
-	float32_t 					SNR_post[NR_FFT_L_2 / 2];
-	float32_t 					SNR_post_pos; // saved 0.24kbytes
-	float32_t 					Hk_old[NR_FFT_L_2 / 2];
-//	float32_t 					VAD;
-//	float32_t					VAD_Esch; // holds the VAD sum for the Esh & Vary 2009 type of VAD
-	int16_t						gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
-	//											 3 = display bin gain multiplied with long_tone_gain
-//	float32_t					notch1_f;
-//	bool						notch1_enable;
-//	float32_t					notch2_f;
-//	bool						notch2_enable;
-	//ulong						long_tone_counter;
-} NoiseReduction;
 
 
 // we need another struct, because of the need for strict allocation of memory for users of the
 // mcHF hardware with small RAM (192 kb)
 typedef struct NoiseReduction2 // declaration
 {
+    float32_t                   Hk[NR_FFT_L_2 / 2]; // gain factors
 	float32_t 					X[NR_FFT_L_2 / 2][2]; // magnitudes of the current and the last FFT bins
 	//float32_t 					X[NR_FFT_L/2]; // magnitudes of the current and the last FFT bins
 //	float32_t 					long_tone_gain[NR_FFT_L_2 / 2];
@@ -100,18 +79,41 @@ typedef struct NoiseReduction2 // declaration
 	int16_t						power_threshold_int;
 } NoiseReduction2;
 
-extern NoiseReduction  	NR; // declaration, definition is in audio_nr.c
 extern NoiseReduction2  NR2; // declaration, definition is in audio_nr.c
 
+typedef struct
+{
+    bool enable; // enable spectral noise reduction
+    uint8_t first_time; // set to 1 for initialization of the NR variables
 
-void alternateNR_handle();
+    float32_t alpha; // alpha smoothing constant for spectral noise reduction
+    float32_t beta; // beta smoothing constant for spectral noise reduction
 
-void do_alternate_NR();
-void alt_noise_blanking();
-//void spectral_noise_reduction();
-//void spectral_noise_reduction_2();
-void spectral_noise_reduction_3();
+    //  bool gain_smooth_enable; // enable gain smoothing
+    //  float32_t gain_smooth_alpha; // smoothing constant for gain smoothing in the spectral noise reduction
+    //  bool long_tone_enable; // enable elimination of long tones in the spectral NR algorithm
+    //  float32_t long_tone_alpha; // time constant for long tone detection
+    //  int16_t long_tone_thresh; // threshold for long tone detection
+    //  bool long_tone_reset; // used to reset gains of the long tone detection to 1.0
+    //  int16_t vad_delay; // how many frames to delay the noise estimate after VAD has detected NOISE
+    //  int16_t mode;
+    //  float32_t vad_thresh; // threshold for voice activity detector in spectral noise reduction
 
+    bool fft_256_enable; // debugging: enable FFT256 instead of FFT128 for spectral NR
+
+    uint16_t NR_FFT_L; // resulting FFT length: 128 or 256
+    uint8_t NR_FFT_LOOP_NO;
+    bool NR_decimation_enable; // set to true, if we want to use another decimation step for the spectral NR leading to 6ksps sample rate
+    bool NR_decimation_active; // set to true if the current buffer content is "double decimated" down to 6khz, set by the buffer producer
+
+} audio_nr_params_t;
+
+audio_nr_params_t nr_params;
+
+
+void NR_Init();
+
+void AudioNr_HandleNoiseReduction();
 void AudioNr_ActivateAutoNotch(uint8_t notch1_bin, bool notch1_active);
 
 

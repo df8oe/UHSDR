@@ -15,14 +15,7 @@
 #ifndef __MCHF_HW_I2S_H
 #define __MCHF_HW_I2S_H
 
-#define IQ_SAMPLES_PER_BLOCK 32
-#define AUDIO_SAMPLES_PER_BLOCK 32
-
-/*
- * BUFF_LEN is derived from 2* 32 LR Samples per Audio-Interrupt (== 64 * int16_t )
- * since we get half of the buffer in each DMA Interrupt for processing
- */
-// #define BUFF_LEN (4*IQ_SAMPLES_PER_BLOCK)
+#include "uhsdr_board_config.h"
 
 void UhsdrHwI2s_Codec_StartDMA();
 void UhsdrHwI2s_Codec_StopDMA();

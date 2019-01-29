@@ -105,11 +105,11 @@ void TxProcessor_Init()
 
     // coefficient calculation for TX bass & treble adjustment
     // the TX treble filter is in IIR_TX_biquad and works at 48000ksps
-    AudioDriver_CalcHighShelf(coeffs, 1700, 0.9, ts.tx_treble_gain, AUDIO_SAMPLE_RATE);
+    AudioDriver_CalcHighShelf(coeffs, 1700, 0.9, ts.dsp.tx_treble_gain, AUDIO_SAMPLE_RATE);
     AudioDriver_SetBiquadCoeffs(&IIR_TX_biquad.pCoeffs[0],coeffs);
 
     // the TX bass filter is in IIR_TX_biquad and works at 48000 sample rate
-    AudioDriver_CalcLowShelf(coeffs, 300, 0.7, ts.tx_bass_gain, AUDIO_SAMPLE_RATE);
+    AudioDriver_CalcLowShelf(coeffs, 300, 0.7, ts.dsp.tx_bass_gain, AUDIO_SAMPLE_RATE);
     AudioDriver_SetBiquadCoeffs(&IIR_TX_biquad.pCoeffs[5],coeffs);
 
     ads.tx_filter_adjusting = 0;        // enable TX filtering after adjustment

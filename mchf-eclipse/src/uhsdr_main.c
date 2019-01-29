@@ -46,6 +46,7 @@
 #include "drivers/audio/codec/codec.h"
 #include "misc/profiling.h"
 #include "uhsdr_canary.h"
+#include "audio_agc.h"
 // Keyboard Driver
 // #include "keyb_driver.h"
 
@@ -127,7 +128,6 @@ void TransceiverStateInit(void)
 
     ts.audio_spkr_unmute_delay_count		= VOICE_TX2RX_DELAY_DEFAULT;			// TX->RX delay turnaround
 
-    ts.nb_setting		= 0;					// Noise Blanker setting
     ts.tune_freq		= 0;
     //ts.tune_freq_old	= 0;
 
@@ -188,17 +188,6 @@ void TransceiverStateInit(void)
     //
     ts.freq_step_config		= 0;				// disabled both marker line under frequency and swapping of STEP buttons
     //
-    ts.dsp_active		= 0;					// TRUE if DSP noise reduction is to be enabled
-    //    ts.dsp_active		= 0;					// if this line is enabled win peaks issue is present when starting mcHF with activated NB
-    ts.digital_mode		= DigitalMode_None;					// digital modes OFF by default
-    ts.dsp_active_toggle	= 0xff;					// used to hold the button G2 "toggle" setting.
-    ts.dsp_nr_strength	= 50;					// "Strength" of DSP noise reduction (50 = medium)
-#ifdef USE_LMS_AUTONOTCH
-    ts.dsp_notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;		// default for number of FFT taps for notch filter
-    ts.dsp_notch_delaybuf_len =	DSP_NOTCH_DELAYBUF_DEFAULT;
-    ts.dsp_notch_mu = DSP_NOTCH_MU_DEFAULT;
-#endif
-    ts.dsp_inhibit		= 1;					// TRUE if DSP is to be inhibited - power up with DSP disabled
 
     ts.lcd_backlight_brightness = 0;			// = 0 full brightness
     ts.lcd_backlight_blanking = 0;				// MSB = 1 for auto-off of backlight, lower nybble holds time for auto-off in seconds
@@ -284,12 +273,27 @@ void TransceiverStateInit(void)
     ts.xlat = 0;							// 0 = report base frequency, 1 = report xlat-frequency;
     ts.audio_int_counter = 0;					// test DL2FW
     ts.cat_band_index =255;						// no CAT command arrived
-    ts.notch_frequency = 800;				// notch start frequency for manual notch filter
-    ts.peak_frequency = 750;				// peak start frequency
-    ts.bass_gain = 2;						// gain of the low shelf EQ filter
-    ts.treble_gain = 0;						// gain of the high shelf EQ filter
-    ts.tx_bass_gain = 4;					// gain of the TX low shelf EQ filter
-    ts.tx_treble_gain = 4;					// gain of the TX high shelf EQ filter
+
+    ts.dsp.active       = 0;                    // TRUE if DSP noise reduction is to be enabled
+    ts.digital_mode     = DigitalMode_None;                 // digital modes OFF by default
+    ts.dsp.active_toggle    = 0xff;                 // used to hold the button G2 "toggle" setting.
+    ts.dsp.nr_strength  = 50;                   // "Strength" of DSP noise reduction (50 = medium)
+#ifdef USE_LMS_AUTONOTCH
+    ts.dsp.notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;       // default for number of FFT taps for notch filter
+    ts.dsp.notch_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
+    ts.dsp.notch_mu = DSP_NOTCH_MU_DEFAULT;
+#endif
+    ts.dsp.inhibit      = 1;                    // TRUE if DSP is to be inhibited - power up with DSP disabled
+
+    ts.dsp.notch_frequency = 800;				// notch start frequency for manual notch filter
+    ts.dsp.peak_frequency = 750;				// peak start frequency
+    ts.dsp.nb_setting       = 0;                    // Noise Blanker setting
+
+    ts.dsp.bass_gain = 2;						// gain of the low shelf EQ filter
+    ts.dsp.treble_gain = 0;						// gain of the high shelf EQ filter
+    ts.dsp.tx_bass_gain = 4;					// gain of the TX low shelf EQ filter
+    ts.dsp.tx_treble_gain = 4;					// gain of the TX high shelf EQ filter
+
     ts.s_meter = 1;							// S-Meter configuration, 0 = old school, 1 = dBm-based, 2=dBm/Hz-based
     ts.display_dbm = 0;						// style of dBm display, 0=OFF, 1= dbm, 2= dbm/Hz
 //    ts.dBm_count = 0;						// timer start
@@ -297,23 +301,7 @@ void TransceiverStateInit(void)
     ts.iq_auto_correction = 1;              // disable/enable automatic IQ correction
     ts.twinpeaks_tested = TWINPEAKS_WAIT;
 
-    ts.agc_wdsp_conf.mode = 2;
-    ts.agc_wdsp_conf.slope = 70;
-    ts.agc_wdsp_conf.hang_enable = 0;
-    ts.agc_wdsp_conf.hang_time = 500;
-    ts.agc_wdsp_conf.hang_thresh = 45;
-    ts.agc_wdsp_conf.thresh = 60;
-    ts.agc_wdsp_conf.action = 0;
-    ts.agc_wdsp_conf.switch_mode = 1;
-    ts.agc_wdsp_conf.hang_action = 0;
-    ts.agc_wdsp_conf.tau_decay[0] = 4000;
-    ts.agc_wdsp_conf.tau_decay[1] = 2000;
-    ts.agc_wdsp_conf.tau_decay[2] = 500;
-    ts.agc_wdsp_conf.tau_decay[3] = 250;
-    ts.agc_wdsp_conf.tau_decay[4] = 50;
-    ts.agc_wdsp_conf.tau_decay[5] = 500;
-
-    ts.agc_wdsp_conf.tau_hang_decay = 200;
+    AudioAgc_InitAgcWdsp();
 
     ts.dbm_constant = 0;
 
@@ -322,33 +310,8 @@ void TransceiverStateInit(void)
     ts.FDV_TX_out_start_pt=0;
     ts.FDV_TX_in_start_pt=0;
 	ts.new_nb = false;	// new nb OFF at poweron
-	ts.nr_alpha = 0.94; // spectral noise reduction
-	ts.nr_alpha_int = 940;
-	ts.nr_beta = 0.96;
-	ts.nr_beta_int = 960;
-//	ts.nr_vad_thresh = 4.0;
-//	ts.nr_vad_thresh_int = 4000;
-	ts.nr_enable = false;
-	ts.NR_FFT_L = 256;
-	ts.NR_FFT_LOOP_NO = 1;
-//	ts.nr_gain_smooth_enable = false;
-//	ts.nr_gain_smooth_alpha = 0.25;
-//	ts.nr_gain_smooth_alpha_int = 250;
-//	ts.nr_long_tone_enable = false;
-//	ts.nr_long_tone_alpha_int = 99900;
-//	ts.nr_long_tone_alpha = 0.999;
-//	ts.nr_long_tone_thresh = 10000;
-//	ts.nr_long_tone_reset = true;
-	ts.nr_first_time = 1;
-//	ts.nr_vad_delay = 7;
-	ts.NR_decimation_enable = true;
-	ts.nr_fft_256_enable = true;
-	ts.special_functions_enabled = 0;
-	NR2.width = 4;
-	NR2.power_threshold = 0.40;
-	NR2.power_threshold_int = 40;
-	NR2.asnr = 30;
 
+	NR_Init();
 
     ts.i2c_speed[I2C_BUS_1] = I2C1_SPEED_DEFAULT; // Si570, MCP9801
     ts.i2c_speed[I2C_BUS_2] = I2C2_SPEED_DEFAULT; // Codec, EEPROM
@@ -481,30 +444,9 @@ int mchfMain(void)
 	}
 #endif
 
-    // UI HW init
     UiDriver_Init();
 
 
-    if(mchf_touchscreen.present)
-    {
-    	//preventing DSP functions mask to have not proper value
-        if (ts.dsp_mode_mask == 0 || ts.dsp_mode_mask == 1)
-        {
-            // empty mask is invalid, set it to all entries enabled
-            ts.dsp_mode_mask = DSP_SWITCH_MODEMASK_ENABLE_DEFAULT;
-        }
-        else
-        {
-            // just make sure DSP OFF is always on the list
-            ts.dsp_mode_mask|=DSP_SWITCH_MODEMASK_ENABLE_DSPOFF;
-        }
-
-    	ts.dsp_mode_mask&=DSP_SWITCH_MODEMASK_ENABLE_MASK;
-    }
-    else
-    {
-    	ts.dsp_mode_mask=DSP_SWITCH_MODEMASK_ENABLE_DEFAULT;		//disable masking when no touchscreen controller detected
-    }
 
     // we now reinit the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!
     mchf_hw_i2c1_init();
@@ -520,8 +462,11 @@ int mchfMain(void)
     hmc1023_init();
 #endif
 
-    // Audio HW init
+    // Audio Software Init
     AudioDriver_Init();
+
+    // Audio Driver Hardware Init
+    ts.codec_present = Codec_Reset(ts.samp_rate) == HAL_OK;
 
     UiDriver_StartupScreen_LogIfProblem(ts.codec_present == false,
             "Audiocodec WM8731 NOT detected!");
@@ -556,15 +501,16 @@ int mchfMain(void)
     UiDriver_StartUpScreenFinish(2000);
     Board_RedLed(LED_STATE_OFF);
 
-    // TODO: We need to set the digital mode once to make it active
-    // if we just loaded the mode from EEPROM since we do not active ts.dvmode
-    if (ts.dmod_mode == DEMOD_DIGI || ts.dmod_mode == DEMOD_CW)
-    {
-    	UiDriver_SetDemodMode(ts.dmod_mode);
-    }
+    // We initialize the requested demodulation mode
+    UiDriver_SetDemodMode(ts.dmod_mode);
+
+    // Finally, start DMA transfers to get everything going
+    UhsdrHwI2s_Codec_StartDMA();
+
 
     // now enable paddles/ptt, i.e. external input
     ts.paddles_active = true;
+
 
     // Transceiver main loop
     for(;;)

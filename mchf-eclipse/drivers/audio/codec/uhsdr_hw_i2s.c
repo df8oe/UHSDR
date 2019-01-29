@@ -13,7 +13,7 @@
 ************************************************************************************/
 
 // Common
-#include "uhsdr_board.h"
+#include "uhsdr_board_config.h"
 #include "profiling.h"
 #include "uhsdr_hw_i2s.h"
 
@@ -30,14 +30,14 @@
 
 typedef struct
 {
-    IqSample_t out[2*IQ_SAMPLES_PER_BLOCK];
-    IqSample_t in[2*IQ_SAMPLES_PER_BLOCK];
+    IqSample_t out[2*IQ_BLOCK_SIZE];
+    IqSample_t in[2*IQ_BLOCK_SIZE];
 } dma_iq_buffer_t;
 
 typedef struct
 {
-    AudioSample_t out[2*AUDIO_SAMPLES_PER_BLOCK];
-    AudioSample_t in[2*AUDIO_SAMPLES_PER_BLOCK];
+    AudioSample_t out[2*AUDIO_BLOCK_SIZE];
+    AudioSample_t in[2*AUDIO_BLOCK_SIZE];
 } dma_audio_buffer_t;
 
 
@@ -83,7 +83,7 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 
     // Transfer complete interrupt
     // Point to 2nd half of buffers
-    const size_t sz = IQ_SAMPLES_PER_BLOCK;
+    const size_t sz = IQ_BLOCK_SIZE;
     const uint16_t offset = which == 0?sz:0;
 
     AudioSample_t *audio;

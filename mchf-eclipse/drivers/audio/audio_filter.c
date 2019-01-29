@@ -1144,14 +1144,14 @@ void 	AudioFilter_InitRxHilbertAndDecimationFIR(uint8_t dmod_mode)
 
     assert(ads.af_disabled != 0);
 
-    const uint32_t rx_iq_num_taps = FilterPathInfo[ts.filter_path].FIR_numTaps;
+    const uint32_t rx_iq_num_taps = ts.filters_p->FIR_numTaps;
 
     // in FilterPathInfo, we have stored the coefficients already, so no if . . . necessary
     // also applicable for FM case !
     for(int i = 0; i < rx_iq_num_taps; i++)
     {
-        fc.fir_rx_hilbert_taps_i[i] = FilterPathInfo[ts.filter_path].FIR_I_coeff_file[i];
-        fc.fir_rx_hilbert_taps_q[i] = FilterPathInfo[ts.filter_path].FIR_Q_coeff_file[i];
+        fc.fir_rx_hilbert_taps_i[i] = ts.filters_p->FIR_I_coeff_file[i];
+        fc.fir_rx_hilbert_taps_q[i] = ts.filters_p->FIR_Q_coeff_file[i];
     }
 
     // Initialization of the FIR/Hilbert filters
@@ -1167,17 +1167,17 @@ void 	AudioFilter_InitRxHilbertAndDecimationFIR(uint8_t dmod_mode)
     // Set up RX SAM decimation/filter
     if (dmod_mode == DEMOD_SAM || dmod_mode == DEMOD_AM)
     {
-        if (FilterPathInfo[ts.filter_path].FIR_numTaps != 0)
+        if (ts.filters_p->FIR_numTaps != 0)
         {
-            DECIMATE_RX_I.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;
-            DECIMATE_RX_Q.numTaps = FilterPathInfo[ts.filter_path].FIR_numTaps;
+            DECIMATE_RX_I.numTaps = ts.filters_p->FIR_numTaps;
+            DECIMATE_RX_Q.numTaps = ts.filters_p->FIR_numTaps;
             DECIMATE_RX_I.pCoeffs = fc.fir_rx_hilbert_taps_i;
             DECIMATE_RX_Q.pCoeffs = fc.fir_rx_hilbert_taps_q;
         }
     }
-    else if (FilterPathInfo[ts.filter_path].dec != NULL)
+    else if (ts.filters_p->dec != NULL)
     {
-            const arm_fir_decimate_instance_f32* dec = FilterPathInfo[ts.filter_path].dec;
+            const arm_fir_decimate_instance_f32* dec = ts.filters_p->dec;
 
     #if defined(STM32F4) && defined(USE_LMS_AUTONOTCH)
             // FIXME: Better solution (e.g. improve graphics performance, better data structures ... )
