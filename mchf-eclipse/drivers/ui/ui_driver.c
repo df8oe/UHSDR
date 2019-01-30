@@ -396,7 +396,7 @@ bool is_dsp_nb()
  */
 bool is_dsp_nb_active()
 {
-    return is_dsp_nb_active() && (ts.dsp.nb_setting > 0);
+    return is_dsp_nb() && (ts.dsp.nb_setting > 0);
 }
 
 bool is_dsp_nr()
