@@ -12,8 +12,8 @@
  ************************************************************************************/
 #include <assert.h>
 #include "uhsdr_board_config.h"
-#include "audio_driver.h"
 #include "audio_agc.h"
+#include "audio_driver.h" // log10f_fast and ADC_CLIP_WARN_THRESHOLD
 
 #define AGC_WDSP_RB_SIZE ((AUDIO_SAMPLE_RATE/1000)*4) // max buffer size based on max sample rate to be supported
 // this translates to 192 at 48k SPS. We have FM using the AGC at full sampling speed
@@ -79,7 +79,7 @@ typedef struct
     float32_t hang_backmult;
     float32_t onemhang_backmult;
     float32_t hang_decay_mult;
-    bool      is_am;
+    bool      remove_dc;
     float32_t sample_rate;
     bool      initialised;
 } agc_variables_t;
@@ -111,9 +111,12 @@ void AudioAgc_InitAgcWdsp()
 }
 
 /**
- * Initializes the AGC data structures, has to be called when switching modes, filter changes
+ *  Initializes the AGC data structures, has to be called when switching modes, filter changes
+ *
+ * @param sample_rate audio sample rate
+ * @param remove_dc Should be set for AM demodulation (AM,SAM,DSB) If set to true, remove DC in output
  */
-void AudioAgc_SetupAgcWdsp(float32_t sample_rate, uint16_t dmod_mode)
+void AudioAgc_SetupAgcWdsp(float32_t sample_rate, bool remove_dc)
 {
     // this is a quick and dirty hack
     // it initialises the AGC variables once again,
@@ -123,7 +126,7 @@ void AudioAgc_SetupAgcWdsp(float32_t sample_rate, uint16_t dmod_mode)
     // in_index and out_index have a distance of 48 (sample rate 12000) or 96 (sample rate 24000)
     // so that has to be defined very well when filter from 4k8 to 5k0 (changing decimation rate from 4 to 2)
 
-    agc_wdsp.is_am = dmod_mode == DEMOD_AM || dmod_mode == DEMOD_SAM;
+    agc_wdsp.remove_dc = remove_dc;
 
     if(agc_wdsp.sample_rate != sample_rate)
     {
@@ -443,7 +446,7 @@ void AudioAgc_RunAgcWdsp(int16_t blockSize, float32_t (*agcbuffer)[AUDIO_BLOCK_S
                     if (agc_wdsp_conf.hang_enable  && (agc_wdsp.hang_backaverage > agc_wdsp.hang_level))
                     {
                         agc_wdsp.state = 2;
-                        agc_wdsp.hang_counter = (int)(agc_wdsp.hangtime * IQ_SAMPLE_RATE_F / ads.decimation_rate);
+                        agc_wdsp.hang_counter = (int)(agc_wdsp.hangtime * agc_wdsp.sample_rate);
                         agc_wdsp.decay_type = 1;
                     }
                     else
@@ -564,7 +567,7 @@ void AudioAgc_RunAgcWdsp(int16_t blockSize, float32_t (*agcbuffer)[AUDIO_BLOCK_S
         }
     }
 
-    if(agc_wdsp.is_am)
+    if(agc_wdsp.remove_dc)
     {
         static float32_t    wold[2] = { 0.0, 0.0 };
 
