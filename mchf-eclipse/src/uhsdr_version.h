@@ -19,6 +19,7 @@
 #define		UHSDR_BOOT_VERS			"5.0.4"
 
 
+
 #ifdef SBLA									// Bootloader enables additional rf bands PCB
   #define	UHSDR_BOOT_VER			UHSDR_BOOT_VERS"a"
 #elif SBLS									// Bootloader enables special debug capabilities
