@@ -23,7 +23,7 @@
 
 // serial EEPROM driver
 #include "uhsdr_hw_i2c.h"
-
+#include "uhsdr_hw_i2s.h"
 #include "uhsdr_hmc1023.h"
 
 // Audio Driver
@@ -274,33 +274,15 @@ void TransceiverStateInit(void)
     ts.audio_int_counter = 0;					// test DL2FW
     ts.cat_band_index =255;						// no CAT command arrived
 
-    ts.dsp.active       = 0;                    // TRUE if DSP noise reduction is to be enabled
-    ts.digital_mode     = DigitalMode_None;                 // digital modes OFF by default
-    ts.dsp.active_toggle    = 0xff;                 // used to hold the button G2 "toggle" setting.
-    ts.dsp.nr_strength  = 50;                   // "Strength" of DSP noise reduction (50 = medium)
-#ifdef USE_LMS_AUTONOTCH
-    ts.dsp.notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;       // default for number of FFT taps for notch filter
-    ts.dsp.notch_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
-    ts.dsp.notch_mu = DSP_NOTCH_MU_DEFAULT;
-#endif
-    ts.dsp.inhibit      = 1;                    // TRUE if DSP is to be inhibited - power up with DSP disabled
 
-    ts.dsp.notch_frequency = 800;				// notch start frequency for manual notch filter
-    ts.dsp.peak_frequency = 750;				// peak start frequency
-    ts.dsp.nb_setting       = 0;                    // Noise Blanker setting
-
-    ts.dsp.bass_gain = 2;						// gain of the low shelf EQ filter
-    ts.dsp.treble_gain = 0;						// gain of the high shelf EQ filter
-    ts.dsp.tx_bass_gain = 4;					// gain of the TX low shelf EQ filter
-    ts.dsp.tx_treble_gain = 4;					// gain of the TX high shelf EQ filter
-
-    ts.s_meter = 1;							// S-Meter configuration, 0 = old school, 1 = dBm-based, 2=dBm/Hz-based
-    ts.display_dbm = 0;						// style of dBm display, 0=OFF, 1= dbm, 2= dbm/Hz
-//    ts.dBm_count = 0;						// timer start
-    ts.tx_filter = 0;						// which TX filter has been chosen by the user
+    ts.s_meter = 1;                         // S-Meter configuration, 0 = old school, 1 = dBm-based, 2=dBm/Hz-based
+    ts.display_dbm = 0;                     // style of dBm display, 0=OFF, 1= dbm, 2= dbm/Hz
+    //    ts.dBm_count = 0;                     // timer start
+    ts.tx_filter = 0;                       // which TX filter has been chosen by the user
     ts.iq_auto_correction = 1;              // disable/enable automatic IQ correction
     ts.twinpeaks_tested = TWINPEAKS_WAIT;
 
+    AudioDriver_Dsp_Init(&ts.dsp);
     AudioAgc_InitAgcWdsp();
 
     ts.dbm_constant = 0;
@@ -496,10 +478,7 @@ int mchfMain(void)
     Canary_Create();
 #endif
 
-
-
     UiDriver_StartUpScreenFinish(2000);
-    Board_RedLed(LED_STATE_OFF);
 
     // We initialize the requested demodulation mode
     UiDriver_SetDemodMode(ts.dmod_mode);
@@ -510,6 +489,8 @@ int mchfMain(void)
 
     // now enable paddles/ptt, i.e. external input
     ts.paddles_active = true;
+
+    Board_RedLed(LED_STATE_OFF);
 
 
     // Transceiver main loop

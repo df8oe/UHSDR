@@ -14,6 +14,7 @@
 
 // Common
 #include "uhsdr_board_config.h"
+#include "uhsdr_board.h"
 #include "profiling.h"
 #include "uhsdr_hw_i2s.h"
 

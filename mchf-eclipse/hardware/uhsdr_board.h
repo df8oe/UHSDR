@@ -23,6 +23,7 @@
 #include "ui_lcd_layouts.h"
 #include "ui_lcd_hy28.h"
 #include "ui_vkeybrd.h"
+#include "audio_driver.h"
 
 struct mchf_waterfall
 {
@@ -200,17 +201,9 @@ typedef struct Gain_s
     float   active_value;
 } Gain;
 
-typedef enum {
-    IQ_TRANS_OFF = 0,
-    IQ_TRANS_ON,
-    IQ_TRANS_NUM
-} iq_trans_idx_t;
-
-
 typedef struct {
     int32_t value[IQ_TRANS_NUM];
-}
-iq_balance_data_t;
+} iq_balance_data_t;
 
 #define KEYER_BUTTONS 3
 #define KEYER_BUTTON_NONE -1
@@ -238,37 +231,6 @@ typedef struct vfo_reg_s
     uint8_t  digital_mode;
 //    uint32_t filter_mode;
 } VfoReg;
-
-typedef struct
-{
-#define DSP_NR_ENABLE           0x01    // DSP NR mode is on (| 1)
-#define DSP_NR_POSTAGC_ENABLE   0x02    // DSP NR is to occur post AGC (| 2)
-#define DSP_NOTCH_ENABLE        0x04    // DSP Notch mode is on (| 4)
-#define DSP_NB_ENABLE           0x08    // DSP is to be displayed on screen instead of NB (| 8)
-#define DSP_MNOTCH_ENABLE       0x10    // Manual Notch enabled
-#define DSP_MPEAK_ENABLE        0x20    // Manual Peak enabled
-
-    uint8_t active;                 // Used to hold various aspects of DSP mode selection
-    uint8_t mode;                   // holds the mode chosen in the DSP
-    uint16_t mode_mask;             // holds the DSP mode mask (to be chosen by virtual dsp keyboard)
-    uint8_t active_toggle;          // holder used on the press-hold of button G2 to "remember" the previous setting
-    uint8_t nr_strength;            // "Strength" of DSP Noise reduction - to be converted to "Mu" factor
-    ulong   nr_delaybuf_len;        // size of DSP noise reduction delay buffer
-    uint8_t nr_numtaps;             // Number of FFT taps on the DSP Noise reduction
-    uint8_t notch_numtaps;
-    uint8_t notch_mu;               // mu adjust of notch DSP LMS
-    uint8_t notch_delaybuf_len;     // size of DSP notch delay buffer
-    uint8_t inhibit;                // if != 0, DSP (NR, Notch) functions are inhibited.  Used during power-up and switching
-    uint8_t nb_setting;
-    ulong   notch_frequency;        // frequency of the manual notch filter
-    ulong   peak_frequency;         // frequency of the manual peak filter
-
-    int     bass_gain;              // gain of the low shelf EQ filter
-    int     treble_gain;            // gain of the high shelf EQ filter
-    int     tx_bass_gain;           // gain of the TX low shelf EQ filter
-    int     tx_treble_gain;         // gain of the TX high shelf EQ filter
-
-} dsp_params_t;
 
 // Transceiver state public structure
 typedef struct TransceiverState

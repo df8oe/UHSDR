@@ -39,7 +39,7 @@ typedef struct
 extern agc_wdsp_params_t agc_wdsp_conf;
 
 void AudioAgc_RunAgcWdsp(int16_t blockSize, float32_t (*agcbuffer)[AUDIO_BLOCK_SIZE], const bool use_stereo );
-void AudioAgc_SetupAgcWdsp(float32_t sample_rate, uint16_t dmod_mode);
+void AudioAgc_SetupAgcWdsp(float32_t sample_rate, bool remove_dc);
 void AudioAgc_InitAgcWdsp();
 
 
