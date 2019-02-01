@@ -1986,7 +1986,7 @@ static void AudioDriver_SpectrumZoomProcessSamples(iq_buffer_t* iq_buf_p,  const
             arm_fir_decimate_f32(&DECIMATE_ZOOM_FFT_Q, decim_iq_buf.q_buffer, decim_iq_buf.q_buffer, blockSize);
             // collect samples for spectrum display 256-point-FFT
 
-            AudioDriver_SpectrumCopyIqBuffers(iq_buf_p, blockSize/ (1<<sd.magnify));
+            AudioDriver_SpectrumCopyIqBuffers(&decim_iq_buf, blockSize/ (1<<sd.magnify));
             sd.FFT_frequency = ts.tune_freq + AudioDriver_GetTranslateFreq(); // spectrum shows center at translate frequency, LO + Translate Freq  is center frequency;
 
             // TODO: also insert sample collection for snap carrier here
