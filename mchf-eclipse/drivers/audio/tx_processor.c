@@ -112,6 +112,8 @@ void TxProcessor_Init()
     AudioDriver_CalcLowShelf(coeffs, 300, 0.7, ts.dsp.tx_bass_gain, AUDIO_SAMPLE_RATE);
     AudioDriver_SetBiquadCoeffs(&IIR_TX_biquad.pCoeffs[5],coeffs);
 
+    AudioFilter_InitTxHilbertFIR();
+
     ads.tx_filter_adjusting = 0;        // enable TX filtering after adjustment
 }
 
