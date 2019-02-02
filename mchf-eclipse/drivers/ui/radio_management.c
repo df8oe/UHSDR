@@ -1375,12 +1375,16 @@ uint32_t RadioManagement_NextAlternativeDemodMode(uint32_t loc_mode)
         break;
     case DEMOD_SAM:
         ads.sam_sideband ++;
+
         // stereo SAM is only switchable if you have stereo modes enabled
-        uint8_t minus = 0;
 #ifdef USE_TWO_CHANNEL_AUDIO
-        minus = !ts.stereo_enable;
+        if (ts.stereo_enable == false && ads.sam_sideband == SAM_SIDEBAND_STEREO)
+        {
+            // skip if we have stereo disabled
+            ads.sam_sideband ++;
+        }
 #endif
-        if (ads.sam_sideband > (SAM_SIDEBAND_MAX - minus))
+        if (ads.sam_sideband >= SAM_SIDEBAND_MAX)
         {
             ads.sam_sideband = SAM_SIDEBAND_BOTH;
             retval = DEMOD_AM;
