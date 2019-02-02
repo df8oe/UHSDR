@@ -220,8 +220,8 @@ void audio_out_fill_tx_buffer(AudioSample_t *buffer, uint32_t len)
     {
         for (uint32_t idx = len; idx; idx--)
         {
-            buffer->l = *pkt++;
-            buffer->r = *pkt++;
+            buffer->l = (*pkt++) << AUDIO_BIT_SHIFT;
+            buffer->r = (*pkt++) << AUDIO_BIT_SHIFT;
             buffer++;
         }
         audio_out_buffer_pop_pkt(pkt,2*len);

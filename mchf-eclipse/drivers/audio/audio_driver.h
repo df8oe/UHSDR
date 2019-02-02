@@ -384,55 +384,31 @@ typedef struct SMeter
 //
 #define	MAX_RF_GAIN_MAX		30		// Maximum setting for "Max RF gain"
 #define	MAX_RF_GAIN_DEFAULT	10
-//
+
 // Noise blanker constants
-//
-//#define	NBLANK_AGC_ATTACK	0.33	// Attack time multiplier for AGC
-//
-//#define NBLANK_AGC_DECAY	0.002	// Decay rate multiplier for "Fast" AGC
-//
 #define	MAX_NB_SETTING		15
 #define	NB_WARNING1_SETTING	7		// setting at or above which NB warning1 (yellow) is given
 #define	NB_WARNING2_SETTING	12		// setting at or above which NB warning2 (orange) is given
 #define	NB_WARNING3_SETTING	15		// setting at or above which NB warning3 (red) is given
-//#define	NB_DURATION			4
-//
-//#define	NB_AGC_FILT			0.999	// Component of IIR filter for recyling previous AGC value
-//#define	NB_SIG_FILT			0.001	// Component of IIR filter for present signal value's contribution to AGC
-//
-//#define	NB_AVG_WEIGHT		0.80	// Weighting applied to average based on past signal for NB2
-//#define	NB_SIG_WEIGHT		0.20	// Weighting applied to present signal for NB2
-//
-//
-//#define	NB_MAX_AGC_SETTING	35		// maximum setting for noise blanker setting
-//#define	NB_AGC_DEFAULT		20		// Default setting for noise blanker AGC time constant adjust
-//
+
 // Values used for "custom" AGC settings
-//
-//#define	MIN_CUST_AGC_VAL	10	// Minimum and maximum RF gain settings
-//#define	MAX_CUST_AGC_VAL	30
-//#define	CUST_AGC_OFFSET_VAL	30	// RF Gain offset value used in calculations
-//#define	CUST_AGC_VAL_DEFAULT	17.8	// Value for "medium" AGC value
-//
 #define	LINE_OUT_SCALING_FACTOR	10 // multiplication of audio for fixed LINE out level (nominally 1vpp)
 //
 #define	LINE_IN_GAIN_RESCALE	20		// multiplier for line input gain
 #define	MIC_GAIN_RESCALE	2	// divisor for microphone gain setting
-//
+
+
 // ALC (Auto Level Control) for transmitter, constants
-//
 #define	ALC_VAL_MAX			1		// Maximum ALC Value is 1 (e.g. it can NEVER amplify)
 #define	ALC_VAL_MIN			0.001	// Minimum ALC Value - it can provide up to 60dB of attenuation
 #define	ALC_ATTACK			0.1//0.033	// Attack time for the ALC's gain control
 #define	ALC_KNEE			30000	// The audio value threshold for the ALC operation
-//
+
 // Decay (release time) for ALC/Audio compressor
-//
 #define	ALC_DECAY_MAX		20		// Maximum (slowest) setting for ALC decay
 #define	ALC_DECAY_DEFAULT	10		// Default custom ALC setting (approx. equal to AGC "medium")
-//
+
 // Audio post-filter (pre-alc) gain adjust.  This effectively sets the min/max compression level.
-//
 #define	ALC_POSTFILT_GAIN_MIN	1
 #define	ALC_POSTFILT_GAIN_MAX	25
 #define	ALC_POSTFILT_GAIN_DEFAULT	1
@@ -453,90 +429,26 @@ typedef struct SMeter
 //
 // DO NOT change the above unless you know *EXACTLY* what you are doing!  If you screw with these numbers, you WILL wreck the
 // AM modulation!!!  (No, I'm not kidding!)
-//
-// FM Demodulator parameters
-//
-#define	FM_DEMOD_COEFF1		PI/4			// Factors used in arctan approximation used in FM demodulator
-#define	FM_DEMOD_COEFF2		PI*0.75
-//
-#define	FM_RX_SCALING_2K5	10000	// 33800			// Amplitude scaling factor of demodulated FM audio (normalized for +/- 2.5 kHz deviation at 1 kHZ)
-#define FM_RX_SCALING_5K	(FM_RX_SCALING_2K5/2)	// Amplitude scaling factor of demodulated FM audio (normalized for +/- 5 kHz deviation at 1 kHz)
-//
-#define FM_AGC_SCALING		2				// Scaling factor for AGC result when in FM (AGC used only for S-meter)
-//
-#define FM_RX_LPF_ALPHA		0.05			// For FM demodulator:  "Alpha" (low-pass) factor to result in -6dB "knee" at approx. 270 Hz
-//
-#define FM_RX_HPF_ALPHA		0.96			// For FM demodulator:  "Alpha" (high-pass) factor to result in -6dB "knee" at approx. 180 Hz
-//
-#define FM_RX_SQL_SMOOTHING	0.005			// Smoothing factor for IIR squelch noise averaging
-#define	FM_SQUELCH_HYSTERESIS	3			// Hysteresis for FM squelch
-#define FM_SQUELCH_PROC_DECIMATION	((uint32_t)(1/FM_RX_SQL_SMOOTHING))		// Number of times we go through the FM demod algorithm before we do a squelch calculation
-#define	FM_SQUELCH_MAX		20				// maximum setting for FM squelch
-#define	FM_SQUELCH_DEFAULT	12				// default setting for FM squelch
-//
-// FM Modulator parameters
-//
-#define FM_TX_HPF_ALPHA		0.05			// For FM modulator:  "Alpha" (high-pass) factor to pre-emphasis
-//
-// NOTE:  FM_MOD_SCALING_2K5 is rescaled (doubled) for 5 kHz deviation, as are modulation factors for subaudible tones and tone burst
-//
-#define	FM_MOD_SCALING_2K5		16				// For FM modulator:  Scaling factor for NCO, after all processing, to achieve 2.5 kHz with a 1 kHz tone
-//
-#define FM_MOD_SCALING	FM_MOD_SCALING_2K5		// For FM modulator - system deviation
-#define	FM_MOD_AMPLITUDE_SCALING	0.875		// For FM modulator:  Scaling factor for output of modulator to set proper output power
 
-// this value represents 2*PI, here 16 bit. It must be a power of two!
-// Otherwise a simpel shift does not work as conversion
-#define FM_MOD_ACC_BITS 16
-#define FM_MOD_ACC_MAX_VALUE (1 << FM_MOD_ACC_BITS)
+// FM TX/RX
+#define NUM_SUBAUDIBLE_TONES 56
+#define FM_SUBAUDIBLE_TONE_OFF  0
 
-// this is the generic formula for the conversion from the accumulator to the
-// table index
-// #define FM_MOD_ACC_DIV (FM_MOD_ACC_MAX_VALUE/DDS_TBL_SIZE)
-// but we simply state how many bits to shift to the right
-#define FM_MOD_DDS_ACC_SHIFT   (FM_MOD_ACC_BITS-DDS_TBL_BITS)
+// FM TX
 
-//
-#define	FM_ALC_GAIN_CORRECTION	0.95
-//
-// For subaudible and burst:  FM Tone word calculation:  freq / (sample rate/2^24) => freq / (IQ_SAMPLE_RATE/16777216) => freq * 349.52533333
-//
-#define FM_SUBAUDIBLE_TONE_AMPLITUDE_SCALING	0.00045	// Scaling factor for subaudible tone modulation - not pre-emphasized -to produce approx +/- 300 Hz deviation in 2.5kHz mode
+#define FM_TONE_BURST_MAX   2
+extern uint32_t fm_tone_burst_freq[FM_TONE_BURST_MAX+1];
 
-#define	NUM_SUBAUDIBLE_TONES 56
-#define FM_SUBAUDIBLE_TONE_OFF	0
+#define FM_TONE_BURST_OFF   0
 
-#define	FM_TONE_BURST_OFF	0
-#define	FM_TONE_BURST_1750_MODE	1
-#define	FM_TONE_BURST_2135_MODE	2
-#define	FM_TONE_BURST_MAX	2
+#define FM_TONE_BURST_DURATION  100         // duration, in 100ths of a second, of the tone burst
 
-#define FM_TONE_BURST_AMPLITUDE_SCALING (FM_MOD_SCALING/4266.0) // scale tone modulation (which is NOT pre-emphasized) for approx. 2/3rds of system modulation
-#define FM_TONE_BURST_DURATION	100			// duration, in 100ths of a second, of the tone burst
-//
-// FM RX bandwidth settings
-//
-/*
-enum	{
-	FM_RX_BANDWIDTH_7K2 = 0,
-	FM_RX_BANDWIDTH_10K,
-	FM_RX_BANDWIDTH_12K,
-//	FM_RX_BANDWIDTH_15K,		// 15K bandwidth has too much distortion with a "translation" frequency of + or - 6 kHz, likely due to the "Zero Hz Hole"
-	FM_RX_BANDWIDTH_MAX
-}; */
-//
-//#define	FM_BANDWIDTH_DEFAULT	FM_RX_BANDWIDTH_10K		// We will use the second-to-narrowest bandwidth as the "Default" FM RX bandwidth to be safe!
-//
-#define	FM_SUBAUDIBLE_GOERTZEL_WINDOW	400				// this sets the overall number of samples involved in the Goertzel decode windows (this value * "size/2")
-#define	FM_TONE_DETECT_ALPHA	0.9						// setting for IIR filtering of ratiometric result from frequency-differential tone detection
-//
-#define FM_SUBAUDIBLE_TONE_DET_THRESHOLD	1.75		// threshold of "smoothed" output of Goertzel, above which a tone is considered to be "provisionally" detected pending debounce
-#define FM_SUBAUDIBLE_DEBOUNCE_MAX			5			// maximum "detect" count in debounce
-#define FM_SUBAUDIBLE_TONE_DEBOUNCE_THRESHOLD	2		// number of debounce counts at/above which a tone detection is considered valid
-//
-#define	FM_GOERTZEL_HIGH	1.04		// ratio of "high" detect frequency with respect to center
-#define	FM_GOERTZEL_LOW		0.95		// ratio of "low" detect frequency with respect to center
-//
+// FM RX
+#define FM_SQUELCH_MAX      20              // maximum setting for FM squelch
+#define FM_SQUELCH_DEFAULT  12              // default setting for FM squelch
+#define FM_SUBAUDIBLE_GOERTZEL_WINDOW   400             // this sets the overall number of samples involved in the Goertzel decode windows (this value * "size/2")
+
+
 #define	BEEP_SCALING	20				// audio scaling of keyboard beep
 #define	BEEP_TONE_WORD_FACTOR			(65536/IQ_SAMPLE_RATE)	// scaling factor for beep frequency calculation
 //
@@ -614,20 +526,9 @@ enum	{
 #define	FREQ_IQ_CONV_MODE_DEFAULT	FREQ_IQ_CONV_M12KHZ		//FREQ_IQ_CONV_MODE_OFF
 #define	FREQ_IQ_CONV_MODE_MAX		4
 
-// Exports
-void AudioDriver_Init(void);
-void AudioDriver_SetRxAudioProcessing(uint8_t dmod_mode, bool reset_dsp_nr);
-void AudioDriver_TxFilterInit(uint8_t dmod_mode);
-int32_t AudioDriver_GetTranslateFreq();
-void AudioDriver_SetSamPllParameters ();
-float log10f_fast(float X);
-
-
-void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t *audioDst, int16_t size);
-
 // Public Audio
 extern AudioDriverState	ads;
-extern __IO SMeter       sm;
+extern SMeter       sm;
 
 extern AudioDriverBuffer adb;
 
@@ -716,20 +617,21 @@ extern lLMS leakyLMS;
 #endif
 #define AUDIO_BIT_SCALE_UP (1<<AUDIO_BIT_SHIFT)
 
+// Exports
+void AudioDriver_Init(void);
+void AudioDriver_SetProcessingChain(uint8_t dmod_mode, bool reset_dsp_nr);
+int32_t AudioDriver_GetTranslateFreq();
+void AudioDriver_SetSamPllParameters ();
+
+void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t *audioDst, int16_t size);
+
+
 void AudioDriver_CalcLowShelf(float32_t coeffs[5], float32_t f0, float32_t S, float32_t gain, float32_t FS);
 void AudioDriver_CalcHighShelf(float32_t coeffs[5], float32_t f0, float32_t S, float32_t gain, float32_t FS);
 void AudioDriver_CalcBandpass(float32_t coeffs[5], float32_t f0, float32_t FS);
 void AudioDriver_SetBiquadCoeffs(float32_t* coeffsTo,const float32_t* coeffsFrom);
-float32_t AudioDriver_absmax(float32_t* buffer, int size);
 
-void AudioDriver_TxProcessor(AudioSample_t * const srcCodec, IqSample_t * const dst, AudioSample_t * const audioDst, uint16_t blockSize);
 void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, float32_t* q_buffer, const uint16_t blockSize);
-void AudioDriver_Dsp_Init(volatile dsp_params_t* dsp_p);
-
-void TxProcessor_Init();
-
-extern float32_t   audio_delay_buffer    [AUDIO_DELAY_BUFSIZE];
-
-void AudioDriver_SetupAgcWdsp();
+void AudioDriver_AgcWdsp_Set();
 
 #endif

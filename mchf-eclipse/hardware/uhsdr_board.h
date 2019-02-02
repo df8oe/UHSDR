@@ -631,12 +631,6 @@ typedef struct TransceiverState
 #define STREAM_TX_AUDIO_GENIQ   4  // generated "clean" IQ signal before final scaling and IQ phase/balance adjust
 #define STREAM_TX_AUDIO_NUM     5  // how many choices
 
-	// Freedv Test DL2FW
-	bool	FDV_TX_encode_ready;
-	int	FDV_TX_samples_ready;
-	uint16_t FDV_TX_out_start_pt;
-	uint16_t FDV_TX_in_start_pt;
-
     bool    digi_lsb;                 // flag used to indicate that mcHF is to operate in LSB when TRUE
 
     bool dial_moved; // dial was moved, used to communicate with spectrum display code
@@ -651,7 +645,6 @@ typedef struct TransceiverState
     int16_t rtc_calib; // ppm variation value, unit 1 ppm
     bool vbat_present; // we detected a working vbat mod
     bool codec_present; // we detected a working codec
-	bool new_nb; // new noise blanker
 	bool rtty_atc_enable; // is ATC enabled for RTTY decoding? (for testing!)
 
 	uint8_t enable_rtty_decode; // new rtty encoder (experimental)

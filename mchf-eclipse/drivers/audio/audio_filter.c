@@ -1132,7 +1132,7 @@ static IQFilterCoeffs_t   __MCHF_SPECIALMEM     fc;
 /*
  * @brief Initialize RX Hilbert and Decimation filters
  */
-void 	AudioFilter_InitRxHilbertAndDecimationFIR(uint8_t dmod_mode)
+void 	AudioFilter_SetRxHilbertAndDecimationFIR(uint8_t dmod_mode)
 {
     // always make a fresh copy of the original Q and I coefficients into fast RAM
     // this speeds up processing on the STM32F4
@@ -1225,12 +1225,13 @@ void 	AudioFilter_InitRxHilbertAndDecimationFIR(uint8_t dmod_mode)
 
 
 /*
- * @brief Initialize TX Hilbert filters
+ * Sets the TX Hilbert filters according to selected voice profile, has to be called before
+ * going on TX.
  */
-void AudioFilter_InitTxHilbertFIR(void)
+void AudioFilter_SetTxHilbertFIR(void)
 {
 
-    ads.tx_filter_adjusting = 1;        // disable TX I/Q filter during adjustment
+    ads.tx_filter_adjusting++;        // disable TX I/Q filter during adjustment
     // always make a fresh copy of the original Q and I coefficients
     // NOTE:  We are assuming that the I and Q filters are of the same length!
     //
@@ -1257,7 +1258,7 @@ void AudioFilter_InitTxHilbertFIR(void)
     arm_fir_init_f32(&Fir_TxFreeDV_Interpolate_I, Fir_TxFreeDV_Interpolate.numTaps, Fir_TxFreeDV_Interpolate.pCoeffs, Fir_TxFreeDV_Interpolate_State_I, IQ_TX_BLOCK_SIZE);
     arm_fir_init_f32(&Fir_TxFreeDV_Interpolate_Q, Fir_TxFreeDV_Interpolate.numTaps, Fir_TxFreeDV_Interpolate.pCoeffs, Fir_TxFreeDV_Interpolate_State_Q, IQ_TX_BLOCK_SIZE);
 
-    ads.tx_filter_adjusting = 0;        // re-enable TX I/Q filter now that we are done
+    ads.tx_filter_adjusting--;        // re-enable TX I/Q filter now that we are done
 }
 
 void AudioFilter_GetNamesOfFilterPath(uint16_t filter_path,const char** filter_names)

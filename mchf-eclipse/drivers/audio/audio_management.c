@@ -9,17 +9,10 @@
 #include "fm_subaudible_tone_table.h"
 #include "radio_management.h"
 
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcALCDecay
-//* Object              : Calculate Decay timing for ALC (TRANSMIT!)
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-void AudioManagement_CalcALCDecay(void)
+/**
+ * Calculate the ALC Decay for the Tx Voice Compressor
+ */
+void AudioManagement_CalcALCDecay()
 {
     // calculate ALC decay (release) time constant - this needs to be moved to its own function (and the one in "ui_menu.c")
     ads.alc_decay = powf(10,-((((float32_t)ts.alc_decay_var)+35.0)/10.0));
@@ -305,26 +298,34 @@ void AudioManagement_CalcTxCompLevel()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void AudioManagement_CalcSubaudibleGenFreq(void)
+void AudioManagement_CalcSubaudibleGenFreq(float32_t freq)
 {
-    ads.fm_conf.subaudible_tone_gen_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_gen_select];       // look up tone frequency (in Hz)
+    ads.fm_conf.subaudible_tone_gen_freq = freq; // look up tone frequency (in Hz)
     softdds_setFreqDDS(&ads.fm_conf.subaudible_tone_dds, ads.fm_conf.subaudible_tone_gen_freq,ts.samp_rate,false);
 }
 
+
+#define FM_GOERTZEL_HIGH    1.04        // ratio of "high" detect frequency with respect to center
+#define FM_GOERTZEL_LOW     0.95        // ratio of "low" detect frequency with respect to center
 /**
  * @brief Calculate frequency word for subaudible tone, call after change of detection frequency  [KA7OEI October, 2015]
  */
-void AudioManagement_CalcSubaudibleDetFreq(void)
+void AudioManagement_CalcSubaudibleDetFreq(float32_t freq)
 {
     const uint32_t size = AUDIO_BLOCK_SIZE;
 
-    ads.fm_conf.subaudible_tone_det_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select];       // look up tone frequency (in Hz)
+    ads.fm_conf.subaudible_tone_det_freq = freq;       // look up tone frequency (in Hz)
 
-    // Calculate Goertzel terms for tone detector(s)
-    AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_HIGH], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_HIGH, IQ_SAMPLE_RATE);
-    AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_LOW], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_LOW, IQ_SAMPLE_RATE);
-    AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_CTR], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,1.0, IQ_SAMPLE_RATE);
+    if (freq > 0)
+    {
+        // Calculate Goertzel terms for tone detector(s)
+        AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_HIGH], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_HIGH, IQ_SAMPLE_RATE);
+        AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_LOW], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_LOW, IQ_SAMPLE_RATE);
+        AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_CTR], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,1.0, IQ_SAMPLE_RATE);
+    }
 }
+
+uint32_t fm_tone_burst_freq[FM_TONE_BURST_MAX+1] = { 0, 1750, 2135 };
 
 //
 //
@@ -339,20 +340,12 @@ void AudioManagement_LoadToneBurstMode()
 {
     uint16_t frequency = 0;
 
-    switch(ts.fm_tone_burst_mode)
+    if (ts.fm_tone_burst_mode <= FM_TONE_BURST_MAX)
     {
-    case FM_TONE_BURST_1750_MODE:
-        frequency = 1750;
-        break;
-    case FM_TONE_BURST_2135_MODE:
-        frequency = 2135;
-        break;
-    default:
-        frequency = 0;
-        break;
+        frequency = fm_tone_burst_freq[ts.fm_tone_burst_mode];
     }
 
-    softdds_setFreqDDS(&ads.fm_conf.tone_burst_dds, frequency,ts.samp_rate,false);
+    softdds_setFreqDDS(&ads.fm_conf.tone_burst_dds, frequency, ts.samp_rate, false);
 }
 
 /**

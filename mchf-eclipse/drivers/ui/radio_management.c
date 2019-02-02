@@ -1121,8 +1121,7 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
              df.tune_new -= sidetone_mult * ts.cw_sidetone_freq;
          }
     }
-    AudioDriver_SetRxAudioProcessing(new_mode, false);
-    AudioDriver_TxFilterInit(new_mode);
+    AudioDriver_SetProcessingChain(new_mode, false);
     AudioManagement_SetSidetoneForDemodMode(new_mode,false);
 
     if (new_mode == DEMOD_SAM)

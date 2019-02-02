@@ -41,6 +41,9 @@
 #include "audio_nr.h"
 #include "audio_agc.h"
 
+#include "fm_subaudible_tone_table.h"
+#include "tx_processor.h"
+
 #define CLR_OR_SET_BITMASK(cond,value,mask) ((value) = (((cond))? ((value) | (mask)): ((value) & ~(mask))))
 
 void float2fixedstr(char* buf, int maxchar, float32_t f, uint16_t digitsBefore, uint16_t digitsAfter)
@@ -874,7 +877,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                     );
             if (var_change)
             {
-                AudioManagement_CalcSubaudibleGenFreq();
+                AudioManagement_CalcSubaudibleGenFreq(fm_subaudible_tone_table[ts.fm_subaudible_tone_gen_select]);
             }
 
         if(ts.fm_subaudible_tone_gen_select != FM_SUBAUDIBLE_TONE_OFF)        // tone select not zero (tone activated
@@ -904,9 +907,10 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                      1
                                     );
 
+        AudioManagement_CalcSubaudibleDetFreq(fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select]);
         if(ts.fm_subaudible_tone_det_select)        // tone select not zero (tone activated
         {
-            AudioManagement_CalcSubaudibleDetFreq();        // calculate frequency word
+                  // calculate frequency word
             int a = (int)(ads.fm_conf.subaudible_tone_det_freq * 10);        // convert to integer, Hz*10
             snprintf(options,32, "%d.%01dHz", a/10, a%10);
         }
@@ -935,15 +939,12 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         ads.fm_conf.tone_burst_active = 0;           // make sure it is turned off
         AudioManagement_LoadToneBurstMode();    // activate setting
 
-        switch(ts.fm_tone_burst_mode)
+        if (ts.fm_tone_burst_mode != FM_TONE_BURST_OFF)
         {
-        case FM_TONE_BURST_1750_MODE:           // if it was 1750 Hz mode, load parameters
-            txt_ptr = "1750 Hz";
-            break;
-        case FM_TONE_BURST_2135_MODE:           // if it was 2135 Hz mode, load information
-            txt_ptr = "2135 Hz";
-            break;
-        default:                                // anything else, turn it off
+            snprintf(options, 32, "  %lu Hz", fm_tone_burst_freq[ts.fm_tone_burst_mode]);
+        }
+        else
+        {
             txt_ptr = "    OFF";
         }
 
@@ -953,38 +954,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         }
         break;
 
-    /*  case MENU_FM_RX_BANDWIDTH:
-            fchange = UiDriverMenuItemChangeUInt8(var, mode, &ts.fm_rx_bandwidth,
-                            0,
-                            FM_RX_BANDWIDTH_MAX,
-                            FM_BANDWIDTH_DEFAULT,
-                            1
-                            );
-                    //
-            if(ts.fm_rx_bandwidth == FM_RX_BANDWIDTH_7K2)   {       // if it is 7.2 kHz FM RX bandwidth
-                strcpy(options, "7.5kHz");
-            }
-            else if(ts.fm_rx_bandwidth == FM_RX_BANDWIDTH_12K)  {   // if it was 12 kHz bandwidth
-                strcpy(options, "12 kHz");
-            }
-    //      else if(ts.fm_rx_bandwidth == FM_RX_BANDWIDTH_15K)  {   // if it was 15 kHz bandwidth
-    //          strcpy(options, "15 kHz");
-    //      }
-            else    {                <       // it was anything else (10 kHz - hope!)
-                strcpy(options, "10 kHz");
-            }
-            //
-            if(fchange) {           // was the bandwidth changed?
-                AudioFilter_InitRxHilbertFIR();
-    //          AudioFilter_CalcRxPhaseAdj();           // yes - update the filters!
-                UiDriverChangeFilterDisplay();  // update display of filter bandwidth (numerical) on screen only
-            }
-            //
-            if(ts.dmod_mode != DEMOD_FM)    // make orange if we are NOT in FM
-                clr = Orange;
-            break;
-*/  //
-    case MENU_FM_DEV_MODE:  // Select +/- 2.5 or 5 kHz deviation on RX and TX
+      case MENU_FM_DEV_MODE:  // Select +/- 2.5 or 5 kHz deviation on RX and TX
         if(ts.iq_freq_mode)
         {
             temp_var_u8 = RadioManagement_FmDevIs5khz();
@@ -1116,7 +1086,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             // now set the AGC parameters
             agc_wdsp_conf.switch_mode = 1; // set flag to 1 for parameter change
-            AudioDriver_SetupAgcWdsp();
+            AudioDriver_AgcWdsp_Set();
             UiMenu_RenderMenu(MENU_RENDER_ONLY);
         }
         if(ts.txrx_mode == TRX_MODE_TX) // Orange if in TX mode
@@ -1134,7 +1104,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                            );
         if(var_change)
         {
-            AudioDriver_SetupAgcWdsp();
+            AudioDriver_AgcWdsp_Set();
         }
         snprintf(options, 32, "  %ddB", agc_wdsp_conf.slope / 10);
         break;
@@ -1148,7 +1118,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                            );
         if(var_change)
         {
-            AudioDriver_SetupAgcWdsp();
+            AudioDriver_AgcWdsp_Set();
         }
         snprintf(options, 32, "  %ddB", agc_wdsp_conf.thresh);
         break;
@@ -1162,7 +1132,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                            );
         if(var_change)
         {
-            AudioDriver_SetupAgcWdsp();
+            AudioDriver_AgcWdsp_Set();
         }
         snprintf(options, 32, "  %ddB", agc_wdsp_conf.hang_thresh);
         break;
@@ -1176,7 +1146,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                           );
        if(var_change)
        {
-           AudioDriver_SetupAgcWdsp();
+           AudioDriver_AgcWdsp_Set();
        }
        snprintf(options, 32, "  %ums", agc_wdsp_conf.tau_decay[agc_wdsp_conf.mode]);
        break;
@@ -1190,7 +1160,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                           );
        if(var_change)
        {
-           AudioDriver_SetupAgcWdsp();
+           AudioDriver_AgcWdsp_Set();
        }
        snprintf(options, 32, "  %ums", agc_wdsp_conf.tau_hang_decay);
        break;
@@ -1222,7 +1192,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                            );
         if(var_change)
         {
-            AudioDriver_SetupAgcWdsp();
+            AudioDriver_AgcWdsp_Set();
         }
         snprintf(options, 32, "  %dms", agc_wdsp_conf.hang_time);
         break;
@@ -1758,7 +1728,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 
             softdds_configRunIQ(freq,ts.samp_rate,0);
             UiDriver_FrequencyUpdateLOandDisplay(false);
-            CwDecode_FilterInit();
+            CwDecode_Filter_Set();
         }
         snprintf(options,32, "  %uHz", (uint)ts.cw_sidetone_freq);
         break;
@@ -1893,7 +1863,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                               8
                                              );
             snprintf(options,32, "  %u", cw_decoder_config.blocksize);
-            CwDecode_FilterInit();
+            CwDecode_Filter_Set();
         break;
 
 #if 0
@@ -3113,7 +3083,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         if(var_change)      // did something change?
         {
             if(ts.dsp.active & DSP_NR_ENABLE)   // only update if DSP NR active
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+                AudioDriver_SetProcessingChain(ts.dmod_mode, false);
         }
         if(!(ts.dsp.active & DSP_NR_ENABLE))    // mark orange if DSP NR not active
             clr = Orange;
@@ -3136,7 +3106,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         if(var_change)      // did something change?
         {
             if(ts.dsp.active & DSP_NR_ENABLE)   // only update if DSP NR active
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+                AudioDriver_SetProcessingChain(ts.dmod_mode, false);
         }
 
         if(!(ts.dsp.active & DSP_NR_ENABLE))    // mark orange if DSP NR not active
@@ -3158,7 +3128,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 
             if(ts.dsp.active & DSP_NR_ENABLE)   // only update if DSP NR active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+                AudioDriver_SetProcessingChain(ts.dmod_mode, false);
             }
         }
 
@@ -3180,7 +3150,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if Notch DSP is active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+                AudioDriver_SetProcessingChain(ts.dmod_mode, false);
             }
         }
         if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if Notch DSP not active
@@ -3205,7 +3175,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if DSP Notch active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+                AudioDriver_SetProcessingChain(ts.dmod_mode, false);
             }
         }
         if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if DSP Notch not active
@@ -3231,7 +3201,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if DSP NR active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+                AudioDriver_SetProcessingChain(ts.dmod_mode, false);
             }
         }
         if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if DSP NR not active
@@ -3273,7 +3243,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if Notch DSP is active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+                AudioDriver_SetProcessingChain(ts.dmod_mode, false);
             }
         }
         if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if Notch DSP not active
@@ -3298,7 +3268,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if DSP Notch active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+                AudioDriver_SetProcessingChain(ts.dmod_mode, false);
             }
         }
         if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if DSP Notch not active
@@ -3324,7 +3294,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             if(ts.dsp.active & DSP_NOTCH_ENABLE)    // only update if DSP NR active
             {
-                AudioDriver_SetRxAudioProcessing(ts.dmod_mode, false);
+                AudioDriver_SetProcessingChain(ts.dmod_mode, false);
             }
         }
         if(!(ts.dsp.active & DSP_NOTCH_ENABLE)) // mark orange if DSP NR not active
@@ -3392,10 +3362,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         }
         if(var_change)
         {
-            // switch FIR Hilberts
-            AudioFilter_InitTxHilbertFIR();
-            // switch IIR Filters
-            AudioDriver_TxFilterInit(ts.dmod_mode);
+            TxProcessor_Set(ts.dmod_mode);
         }
         break;
 
