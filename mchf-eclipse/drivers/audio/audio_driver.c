@@ -3033,21 +3033,29 @@ void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t
         ks.debounce_time++;   // keyboard debounce timer
     }
 
+    // UiDriver_Callback_AudioISR();
+
     // Perform LCD backlight PWM brightness function
     UiDriver_BacklightDimHandler();
 
-    tcount+=CLOCKS_PER_DMA_CYCLE;		// add the number of clock cycles that would have passed between DMA cycles
-    if(tcount > CLOCKS_PER_CENTISECOND)	 	// has enough clock cycles for 0.01 second passed?
+    tcount+= SAMPLES_PER_DMA_CYCLE;        // add the number of samples that have passed in DMA cycle
+    if(tcount >= SAMPLES_PER_CENTISECOND)  // enough samples for 0.01 second passed?
     {
-        tcount -= CLOCKS_PER_CENTISECOND;	// yes - subtract that many clock cycles
+        tcount -= SAMPLES_PER_CENTISECOND;  // yes - subtract that many samples
         ts.sysclock++;	// this clock updates at PRECISELY 100 Hz over the long term
-        //
-        // Has the timing for the keyboard beep expired?
 
-        if(ts.sysclock > ts.beep_timing)
+        // Has the timing for the keyboard beep expired?
+        if(ts.beep_timing > 0 || ts.beep_active != false)
         {
-            ts.beep_active = 0;				// yes, turn the tone off
-            ts.beep_timing = 0;
+            // we kill any beep_active even if we have previously no timing set.
+            if (ts.beep_timing == 0)
+            {
+                ts.beep_active = false;				// yes, turn the tone off
+            }
+            else
+            {
+                ts.beep_timing--;
+            }
         }
     }
 

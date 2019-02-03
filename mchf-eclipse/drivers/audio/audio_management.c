@@ -374,7 +374,7 @@ void AudioManagement_KeyBeep()
     {
         AudioManagement_KeyBeepPrepare();       // load and calculate beep frequency
         ads.beep.acc = 0; // force reset of accumulator to start at zero to minimize "click" caused by an abrupt voltage transition at startup
-        ts.beep_timing = ts.sysclock + BEEP_DURATION;       // set duration of beep
+        ts.beep_timing = BEEP_DURATION;       // set duration of beep
         ts.beep_active = 1;                                 // activate tone
     }
 }
