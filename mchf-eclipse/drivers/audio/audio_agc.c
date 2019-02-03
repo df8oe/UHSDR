@@ -93,22 +93,28 @@ agc_variables_t agc_wdsp;
  */
 void AudioAgc_AgcWdsp_Init()
 {
-    agc_wdsp_conf.mode = 2;
-    agc_wdsp_conf.slope = 70;
-    agc_wdsp_conf.hang_enable = 0;
+    // the values below are all loaded from
+    // EEPROM, which happens BEFORE we get here
+    // so there is no point in setting these.
+    // agc_wdsp_conf.mode = 2;
+    // agc_wdsp_conf.slope = 70;
+    // agc_wdsp_conf.hang_enable = 0;
+    // agc_wdsp_conf.tau_decay[0] = 4000;
+    // agc_wdsp_conf.tau_decay[1] = 2000;
+    // agc_wdsp_conf.tau_decay[2] = 500;
+    // agc_wdsp_conf.tau_decay[3] = 250;
+    // agc_wdsp_conf.tau_decay[4] = 50;
+    // agc_wdsp_conf.thresh = 20;
+    // agc_wdsp_conf.tau_hang_decay = 500;
+
+    // these are not stored in volatile memory
+    // so let us initialize them here.
     agc_wdsp_conf.hang_time = 500;
     agc_wdsp_conf.hang_thresh = 45;
-    agc_wdsp_conf.thresh = 60;
     agc_wdsp_conf.action = 0;
     agc_wdsp_conf.switch_mode = 1;
     agc_wdsp_conf.hang_action = 0;
-    agc_wdsp_conf.tau_decay[0] = 4000;
-    agc_wdsp_conf.tau_decay[1] = 2000;
-    agc_wdsp_conf.tau_decay[2] = 500;
-    agc_wdsp_conf.tau_decay[3] = 250;
-    agc_wdsp_conf.tau_decay[4] = 50;
-    agc_wdsp_conf.tau_decay[5] = 500;
-    agc_wdsp_conf.tau_hang_decay = 200;
+    agc_wdsp_conf.tau_decay[5] = 1; // this is the OFF-Mode
 }
 
 /**
