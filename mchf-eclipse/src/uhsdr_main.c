@@ -129,9 +129,6 @@ void TransceiverStateInit(void)
     ts.audio_spkr_unmute_delay_count		= VOICE_TX2RX_DELAY_DEFAULT;			// TX->RX delay turnaround
 
     ts.tune_freq		= 0;
-    //ts.tune_freq_old	= 0;
-
-    //	ts.calib_mode		= 0;					// calibrate mode
 
     ts.menu_mode		= 0;					// menu mode
     ts.menu_item		= 0;					// menu item selection
@@ -142,8 +139,8 @@ void TransceiverStateInit(void)
     ts.tx_mic_gain_mult	= MIC_GAIN_DEFAULT;			// actual operating value for microphone gain
 
     ts.tx_gain[TX_AUDIO_MIC]		= MIC_GAIN_DEFAULT;	// default line gain
-    ts.tx_gain[TX_AUDIO_LINEIN_L]		= LINE_GAIN_DEFAULT;	// default line gain
-    ts.tx_gain[TX_AUDIO_LINEIN_R]		= LINE_GAIN_DEFAULT;	// default line gain
+    ts.tx_gain[TX_AUDIO_LINEIN_L]	= LINE_GAIN_DEFAULT;	// default line gain
+    ts.tx_gain[TX_AUDIO_LINEIN_R]	= LINE_GAIN_DEFAULT;	// default line gain
     ts.tx_gain[TX_AUDIO_DIG]		= LINE_GAIN_DEFAULT;	// default line gain
     ts.tx_gain[TX_AUDIO_DIGIQ]		= LINE_GAIN_DEFAULT;	// default line gain
 
@@ -155,16 +152,9 @@ void TransceiverStateInit(void)
     ts.pa_cw_bias		= PA_BIAS_DEFAULT;			// Use lowest possible voltage as default (nonzero sets separate bias for CW mode)
     ts.freq_cal			= 0;				// Initial setting for frequency calibration
     ts.power_level		= PA_LEVEL_DEFAULT;			// See uhsdr_board.h for setting
-    //
-    //	ts.codec_vol		= 0;					// Holder for codec volume
-    //	ts.codec_mute_state	= 0;					// Holder for codec mute state
-    //	ts.codec_was_muted = 0;						// Indicator that codec *was* muted
-    //
-    ts.powering_down	= 0;						// TRUE if powering down
-    //
 
-    //
-    ts.menu_item		= 0;					// start out with a reasonable menu item
+    ts.powering_down	= 0;						// TRUE if powering down
+
     //
     ts.radio_config_menu_enable = 0;				// TRUE if radio configuration menu is to be enabled
     //
@@ -177,29 +167,29 @@ void TransceiverStateInit(void)
     ts.filter_cw_wide_disable		= 0;			// TRUE if wide filters are to be disabled in CW mode
     ts.filter_ssb_narrow_disable	= 0;				// TRUE if narrow (CW) filters are to be disabled in SSB mode
     ts.demod_mode_disable			= 0;		// TRUE if AM mode is to be disabled
-    //
+
     ts.tx_meter_mode	= METER_SWR;
-    //
+
     ts.alc_decay		= ALC_DECAY_DEFAULT;			// ALC Decay (release) default value
     ts.alc_decay_var	= ALC_DECAY_DEFAULT;			// ALC Decay (release) default value
     ts.alc_tx_postfilt_gain		= ALC_POSTFILT_GAIN_DEFAULT;	// Post-filter added gain default (used for speech processor/ALC)
     ts.alc_tx_postfilt_gain_var	= ALC_POSTFILT_GAIN_DEFAULT;	// Post-filter added gain default (used for speech processor/ALC)
     ts.tx_comp_level	= 0;					// 0=Release Time/Pre-ALC gain manually adjusted, >=1:  Value calculated by this parameter
-    //
+
     ts.freq_step_config		= 0;				// disabled both marker line under frequency and swapping of STEP buttons
-    //
 
     ts.lcd_backlight_brightness = 0;			// = 0 full brightness
     ts.lcd_backlight_blanking = 0;				// MSB = 1 for auto-off of backlight, lower nybble holds time for auto-off in seconds
     ts.low_power_config = LOW_POWER_THRESHOLD_DEFAULT; // add LOW_POWER_THRESHOLD_OFFSET for voltage value
-    //
+
     ts.tune_step		= 0;					// Used for press-and-hold step size changing mode
     ts.frequency_lock	= 0;					// TRUE if frequency knob is locked
-    //
+
     ts.tx_disable		= TX_DISABLE_OFF;	    // > 0 if transmitter is to be disabled
     ts.flags1			= 0;					// Used to hold individual status flags, stored in EEPROM location "EEPROM_FLAGS1"
     ts.flags2			= 0;					// Used to hold individual status flags, stored in EEPROM location "EEPROM_FLAGS2"
     ts.sysclock			= 0;					// This counts up from zero when the unit is powered up at precisely 100 Hz over the long term.  This
+
     // is NEVER reset and is used for timing certain events.
     ts.version_number_release	= 0;			// version release - used to detect firmware change
     ts.version_number_major = 0;				// version build - used to detect firmware change
@@ -229,20 +219,12 @@ void TransceiverStateInit(void)
     ts.scope_speed      = SPECTRUM_SCOPE_SPEED_DEFAULT;     // default rate of spectrum scope update
     ts.scope_scheduler = 0;             // timer for scheduling the next update of the spectrum update
 
-    // ts.spectrum_scope_nosig_adjust = SPECTRUM_SCOPE_NOSIG_ADJUST_DEFAULT;   // Adjustment for no signal adjustment conditions for spectrum scope
-
     ts.waterfall.speed  = WATERFALL_SPEED_DEFAULT;      // default speed of update of the waterfall
     ts.waterfall.color_scheme = WATERFALL_COLOR_DEFAULT;		// color scheme for waterfall display
     ts.waterfall.vert_step_size = WATERFALL_STEP_SIZE_DEFAULT;	// step size in waterfall display
-#if 0
-    ts.waterfall.offset = WATERFALL_OFFSET_DEFAULT;			// Offset for waterfall display (brightness)
-#endif
     ts.waterfall.contrast = WATERFALL_CONTRAST_DEFAULT;		// contrast setting for waterfall display
     ts.waterfall.scheduler=0;
 
-#if 0
-    ts.waterfall.nosig_adjust = WATERFALL_NOSIG_ADJUST_DEFAULT;	// Adjustment for no signal adjustment conditions for waterfall
-#endif
 //    ts.fft_window_type = FFT_WINDOW_DEFAULT;			// FFT Windowing type
     ts.dvmode = false;							        // disable "DV" mode RX/TX functions by default
 
@@ -258,6 +240,7 @@ void TransceiverStateInit(void)
     ts.fm_tone_burst_timing = 0;					// used to time the duration of the tone burst
     ts.fm_sql_threshold = FM_SQUELCH_DEFAULT;			// squelch threshold
     ts.fm_subaudible_tone_det_select = 0;				// lookup ("tone number") used to index the table for tone detection (0 corresponds to "tone disabled")
+
     ts.beep_active = 1;						// TRUE if beep is active
     ts.beep_frequency = DEFAULT_BEEP_FREQUENCY;			// beep frequency, in Hz
     ts.beep_loudness = DEFAULT_BEEP_LOUDNESS;			// loudness of keyboard/CW sidetone test beep
@@ -282,18 +265,7 @@ void TransceiverStateInit(void)
     ts.iq_auto_correction = 1;              // disable/enable automatic IQ correction
     ts.twinpeaks_tested = TWINPEAKS_WAIT;
 
-    AudioDriver_Dsp_Init(&ts.dsp);
-    AudioAgc_InitAgcWdsp();
-
     ts.dbm_constant = 0;
-
-    ts.FDV_TX_encode_ready = false;		// FREEDV handshaking test DL2FW
-    ts.FDV_TX_samples_ready = 0;	// FREEDV handshaking test DL2FW
-    ts.FDV_TX_out_start_pt=0;
-    ts.FDV_TX_in_start_pt=0;
-	ts.new_nb = false;	// new nb OFF at poweron
-
-	NR_Init();
 
     ts.i2c_speed[I2C_BUS_1] = I2C1_SPEED_DEFAULT; // Si570, MCP9801
     ts.i2c_speed[I2C_BUS_2] = I2C2_SPEED_DEFAULT; // Codec, EEPROM
@@ -309,6 +281,7 @@ void TransceiverStateInit(void)
     }
     ts.buffered_tx = false;
     ts.cw_text_entry = false;
+
     ts.debug_si5351a_pllreset = 2;		//start with "reset on IQ Divider"
 
     ts.debug_vswr_protection_threshold = 0; // OFF
@@ -460,12 +433,6 @@ int mchfMain(void)
 
                 "Upgrade bootloader to 5.0.1 or newer");
 
-
-    AudioManagement_CalcSubaudibleGenFreq();		// load/set current FM subaudible tone settings for generation
-    AudioManagement_CalcSubaudibleDetFreq();		// load/set current FM subaudible tone settings	for detection
-    AudioManagement_LoadToneBurstMode();	// load/set tone burst frequency
-    AudioManagement_KeyBeepPrepare();		// load/set beep frequency
-
     AudioFilter_SetDefaultMemories();
 
 
@@ -481,6 +448,7 @@ int mchfMain(void)
     UiDriver_StartUpScreenFinish(2000);
 
     // We initialize the requested demodulation mode
+    // and update the screen accordingly
     UiDriver_SetDemodMode(ts.dmod_mode);
 
     // Finally, start DMA transfers to get everything going

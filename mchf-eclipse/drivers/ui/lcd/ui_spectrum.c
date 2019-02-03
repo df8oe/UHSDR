@@ -26,7 +26,7 @@
 #include "cw_decoder.h"
 #include "audio_nr.h"
 #include "psk.h"
-
+#include "uhsdr_math.h"
 /*
 #if defined(USE_DISP_480_320) || defined(USE_EXPERIMENTAL_MULTIRES)
 #define USE_DISP_480_320_SPEC
@@ -1257,7 +1257,7 @@ static void UiSpectrum_DrawWaterfall()
 
 static float32_t  UiSpectrum_ScaleFFTValue(const float32_t value, float32_t* min_p)
 {
-    float32_t sig = sd.display_offset + log10f_fast(value) * sd.db_scale;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+    float32_t sig = sd.display_offset + Math_log10f_fast(value) * sd.db_scale;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
     // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
 
     if (sig < *min_p)
@@ -2120,8 +2120,8 @@ static void UiSpectrum_CalculateDBm()
 
         if (sum_db > 0)
         {
-            sm.dbm_cur = slope * log10f_fast (sum_db) + cons;
-            sm.dbmhz_cur = sm.dbm_cur -  10 * log10f_fast ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) ;
+            sm.dbm_cur = slope * Math_log10f_fast (sum_db) + cons;
+            sm.dbmhz_cur = sm.dbm_cur -  10 * Math_log10f_fast ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) ;
         }
         else
         {

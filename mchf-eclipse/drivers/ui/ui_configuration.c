@@ -876,8 +876,7 @@ void UiConfiguration_FixDefaultsNotLoadedIssue()
  */
 void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_eeprom_defaults)
 {
-    bool dspmode = ts.dsp.inhibit;
-    ts.dsp.inhibit = 1;     // disable dsp while loading EEPROM data
+    ts.dsp.inhibit++;     // disable dsp while loading EEPROM data
 
     uint32_t value32;
 
@@ -936,7 +935,7 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
 
     AudioManagement_CalcTxCompLevel();
 
-    ts.dsp.inhibit = dspmode;       // restore setting
+    if (ts.dsp.inhibit) { ts.dsp.inhibit--; } // restore setting
 }
 
 // ********************************************************************************************************************

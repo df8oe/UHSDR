@@ -28,8 +28,8 @@ void    AudioManagement_CalcAGCDecay();
 void    AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode);
 
 void    AudioManagement_LoadToneBurstMode();
-void    AudioManagement_CalcSubaudibleGenFreq();        // load/set current FM subaudible tone settings for generation
-void    AudioManagement_CalcSubaudibleDetFreq();
+void    AudioManagement_CalcSubaudibleGenFreq(float32_t freq);        // load/set current FM subaudible tone settings for generation
+void    AudioManagement_CalcSubaudibleDetFreq(float32_t freq);
 
 void    AudioManagement_KeyBeep();
 void    AudioManagement_KeyBeepPrepare();

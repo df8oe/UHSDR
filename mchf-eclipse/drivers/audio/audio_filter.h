@@ -35,8 +35,8 @@ extern arm_fir_decimate_instance_f32 DECIMATE_RX_I;
 extern arm_fir_decimate_instance_f32 DECIMATE_RX_Q;
 
 
-void 	AudioFilter_InitRxHilbertAndDecimationFIR(uint8_t dmod_mode);
-void 	AudioFilter_InitTxHilbertFIR(void);
+void 	AudioFilter_SetRxHilbertAndDecimationFIR(uint8_t dmod_mode);
+void 	AudioFilter_SetTxHilbertFIR(void);
 
 enum
 {

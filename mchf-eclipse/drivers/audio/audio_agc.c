@@ -13,7 +13,8 @@
 #include <assert.h>
 #include "uhsdr_board_config.h"
 #include "audio_agc.h"
-#include "audio_driver.h" // log10f_fast and ADC_CLIP_WARN_THRESHOLD
+#include "audio_driver.h" // ADC_CLIP_WARN_THRESHOLD
+#include "uhsdr_math.h"
 
 #define AGC_WDSP_RB_SIZE ((AUDIO_SAMPLE_RATE/1000)*4) // max buffer size based on max sample rate to be supported
 // this translates to 192 at 48k SPS. We have FM using the AGC at full sampling speed
@@ -90,7 +91,7 @@ agc_variables_t agc_wdsp;
  * Sets the basic initial values for the WDSP AGC
  * Call only once at startup!
  */
-void AudioAgc_InitAgcWdsp()
+void AudioAgc_AgcWdsp_Init()
 {
     agc_wdsp_conf.mode = 2;
     agc_wdsp_conf.slope = 70;
@@ -553,7 +554,7 @@ void AudioAgc_RunAgcWdsp(int16_t blockSize, float32_t (*agcbuffer)[AUDIO_BLOCK_S
             agc_wdsp_conf.action = 1;
         }
 
-        float32_t vo =  log10f_fast(agc_wdsp.inv_max_input * agc_wdsp.volts);
+        float32_t vo =  Math_log10f_fast(agc_wdsp.inv_max_input * agc_wdsp.volts);
         if(vo > 0.0)
         {
             vo = 0.0;
