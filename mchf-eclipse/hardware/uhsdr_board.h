@@ -30,7 +30,7 @@ struct mchf_waterfall
     uint8_t	color_scheme;			// stores waterfall color scheme
     uint8_t	vert_step_size;		// vertical step size in waterfall mode
     // int32_t	offset;			// offset for waterfall display
-    ulong	contrast;			// contrast setting for waterfall display
+    uint32_t	contrast;			// contrast setting for waterfall display
 	uint8_t	speed;	// speed of update of the waterfall
 	// uint8_t	nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
 	uint16_t scheduler;
@@ -198,7 +198,7 @@ typedef struct Gain_s
     uint8_t value;
     uint8_t max;
     uint8_t value_old;
-    float   active_value;
+    float32_t   active_value;
 } Gain;
 
 typedef struct {
@@ -236,16 +236,16 @@ typedef struct vfo_reg_s
 typedef struct TransceiverState
 {
     // Sampling rate public flag
-    ulong 	samp_rate;
+    uint32_t 	samp_rate;
 
     // Virtual pots public values
-    short  	rit_value;
+    int16_t  	rit_value;
 
 #define RX_AUDIO_SPKR 0
 #define RX_AUDIO_DIG  1
     Gain    rx_gain[2]; //ts.rx_gain[RX_AUDIO_SPKR].value
 
-    int 	rf_gain;			// RF gain control
+    int32_t 	rf_gain;			// RF gain control
     uint8_t lineout_gain;            // lineout gain to control lineout level
 
 
@@ -271,11 +271,11 @@ typedef struct TransceiverState
     int	freq_cal;				// frequency calibration
 
     // Frequency synthesizer
-    ulong	tune_freq;			// main synthesizer frequency
-    ulong	tune_freq_req;		// used to detect change of main synthesizer frequency
+    uint32_t	tune_freq;			// main synthesizer frequency
+    uint32_t	tune_freq_req;		// used to detect change of main synthesizer frequency
 
     // Transceiver calibration mode flag
-    //uchar	calib_mode;
+    //uint8_t	calib_mode;
 
     // Transceiver menu mode variables
     uint8_t	menu_mode;		// TRUE if in menu mode
@@ -311,7 +311,7 @@ typedef struct TransceiverState
     uint8_t	tx_meter_mode;				// meter mode
 
     // Audio filter ID
-    // uchar	filter_id;
+    // uint8_t	filter_id;
     //
     uint8_t   filter_select[AUDIO_FILTER_NUM];
 
@@ -367,14 +367,14 @@ typedef struct TransceiverState
 #define CW_SIDETONE_FREQ_MIN        400
 #define CW_SIDETONE_FREQ_MAX        1000
 
-    ulong	audio_spkr_unmute_delay_count;
+    uint32_t	audio_spkr_unmute_delay_count;
 
     uint8_t	power_level; // an abstract power level id
     int32_t power; // the actual request power in mW
     bool    power_modified; // the actual power is lower than the requested power_level, e.g. because of out side band.
 
     uint8_t 	tx_audio_source;
-    ulong	tx_mic_gain_mult;
+    uint32_t	tx_mic_gain_mult;
     uint8_t	tx_gain[TX_AUDIO_NUM];
     int16_t	tx_comp_level;			// Used to hold compression level which is used to calculate other values for compression.  0 = manual.
 
@@ -409,7 +409,7 @@ typedef struct TransceiverState
     bool	radio_config_menu_enable;	// TRUE if radio configuration menu is to be visible
     //
     uint8_t	xverter_mode;		// TRUE if transverter mode active
-    ulong	xverter_offset;		// frequency offset for transverter (added to frequency display)
+    uint32_t	xverter_offset;		// frequency offset for transverter (added to frequency display)
 
     bool	refresh_freq_disp;		// TRUE if frequency display display is to be refreshed
     //
@@ -419,10 +419,10 @@ typedef struct TransceiverState
 #define ADJ_FULL_POWER 1
     uint8_t	pwr_adj[2][MAX_BAND_NUM];
     //
-    ulong	alc_decay;					// adjustable ALC release time - EEPROM read/write version
-    ulong	alc_decay_var;				// adjustable ALC release time - working variable version
-    ulong	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering - EEPROM read/write version
-    ulong	alc_tx_postfilt_gain_var;	// amount of gain after the TX audio filtering - working variable version
+    uint32_t	alc_decay;					// adjustable ALC release time - EEPROM read/write version
+    uint32_t	alc_decay_var;				// adjustable ALC release time - working variable version
+    uint32_t	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering - EEPROM read/write version
+    uint32_t	alc_tx_postfilt_gain_var;	// amount of gain after the TX audio filtering - working variable version
 
 // we can use AT least the upper 8 bits of freq_step_config for other purpose since these have not been used and are all initialized with 0)
 #define FREQ_STEP_SWAP_BTN	    0x10
@@ -455,10 +455,10 @@ typedef struct TransceiverState
 
 
     uint8_t   low_power_config;        // for voltage colours and auto shutdown
-    ulong   low_power_shutdown_time;    // earliest time when auto shutdown can be executed
+    uint32_t   low_power_shutdown_time;    // earliest time when auto shutdown can be executed
     //
     uint8_t	tune_step;					// Used for press-and-hold tune step adjustment
-    ulong	tune_step_idx_holder;		// used to hold the original step size index during the press-and-hold
+    uint32_t	tune_step_idx_holder;		// used to hold the original step size index during the press-and-hold
     //
     bool	frequency_lock;				// TRUE if frequency knob is locked
     //
@@ -522,8 +522,8 @@ typedef struct TransceiverState
     int32_t	iq_freq_mode;				// used to set/configure the I/Q frequency/conversion mode
     uint8_t	lsb_usb_auto_select;			// holds setting of LSB/USB auto-select above/below 10 MHz
     bool	conv_sine_flag;				// FALSE until the sine tables for the frequency conversion have been built (normally zero, force 0 to rebuild)
-    ulong	last_tuning;				// this is a timer used to prevent too fast tuning per second
-    ulong	lcd_blanking_time;			// this holds the system time after which the LCD is blanked - if blanking is enabled
+    uint32_t	last_tuning;				// this is a timer used to prevent too fast tuning per second
+    uint32_t	lcd_blanking_time;			// this holds the system time after which the LCD is blanked - if blanking is enabled
     bool	lcd_blanking_flag;			// if TRUE, the LCD is blanked completely (e.g. backlight is off)
     bool	xvtr_adjust_flag;			// set TRUE if transverter offset adjustment is in process
     bool	SpectrumResize_flag;		// set TRUE if waterfall/spectrum resize request from touchscreen action
@@ -532,10 +532,10 @@ typedef struct TransceiverState
     uint32_t SpectrumResize_timer;		//
 #define VFO_MEM_MODE_SPLIT 0x80
 #define VFO_MEM_MODE_VFO_B 0x40
-    ulong	vfo_mem_mode;				// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
+    uint32_t	vfo_mem_mode;				// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
     // LSB+6 (0x40):  0 = VFO A, 1 = VFO B
     // LSB+7 (0x80): 0 = normal mode, 1 = Split mode (e.g. LSB=0:  RX=A, TX=B;  LSB=1:  RX=B, TX=A)
-    ulong	voltmeter_calibrate;			// used to calibrate the voltmeter
+    uint32_t	voltmeter_calibrate;			// used to calibrate the voltmeter
 
 
     bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
@@ -546,15 +546,15 @@ typedef struct TransceiverState
     bool	audio_dac_muting_flag;			// when TRUE, audio is to be muted after PTT/keyup
     bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
     bool	mem_disp;				// when TRUE, memory display is enabled
-    ulong	fm_subaudible_tone_gen_select;		// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
+    uint32_t	fm_subaudible_tone_gen_select;		// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
     uint8_t	fm_tone_burst_mode;			// this is the setting for the tone burst generator
-    ulong	fm_tone_burst_timing;			// this is used to time/schedule the duration of a tone burst
+    uint32_t	fm_tone_burst_timing;			// this is used to time/schedule the duration of a tone burst
     uint8_t	fm_sql_threshold;			// squelch threshold "dial" setting
-//	uchar	fm_rx_bandwidth;			// bandwidth setting for FM reception
-    ulong	fm_subaudible_tone_det_select;		// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
+//	uint8_t	fm_rx_bandwidth;			// bandwidth setting for FM reception
+    uint32_t	fm_subaudible_tone_det_select;		// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
     bool	beep_active;				// TRUE if beep is active
-    ulong	beep_frequency;				// beep frequency, in Hz
-    ulong	beep_timing;				// used to time/schedule the duration of a keyboard beep
+    uint32_t	beep_frequency;				// beep frequency, in Hz
+    uint32_t	beep_timing;				// used to time/schedule the duration of a keyboard beep
     uint8_t	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
 
 #define EEPROM_SER_NONE 0
@@ -578,7 +578,7 @@ typedef struct TransceiverState
     uint8_t	xlat;					// CAT <> IQ-Audio
 
 //    bool	dBm_Hz_Test;			// for testing only
-//    ulong	dBm_count;				// timer for calculating RX dBm
+//    uint32_t	dBm_count;				// timer for calculating RX dBm
     uint8_t 	display_dbm;			// display dbm or dbm/Hz or OFF
     uint8_t	s_meter;				// defines S-Meter style/configuration
 	uint8_t	meter_colour_up;
@@ -598,7 +598,7 @@ typedef struct TransceiverState
 	uint8_t twinpeaks_tested;
 
 
-    int dbm_constant;
+    int32_t dbm_constant;
 
 //#define DISPLAY_S_METER_STD   0
 #define DISPLAY_S_METER_DBM   1
@@ -615,7 +615,7 @@ typedef struct TransceiverState
 
     uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
     bool encoder3state;
-    int bc_band;
+    int32_t bc_band;
 
     Oscillator_ResultCodes_t last_lo_result;			// used in dynamic tuning to hold frequency color
 
@@ -696,7 +696,7 @@ extern __IO TransceiverState ts;
 
 #define non_os_delay()						\
 do {							\
-  register unsigned int i;				\
+  register uint32_t i;				\
   for (i = 0; i < 1000000; ++i)				\
     __asm__ __volatile__ ("nop\n\t":::"memory");	\
 } while (0)
@@ -735,12 +735,12 @@ void Board_BlueLed(ledstate_t state);
 bool Board_PttDahLinePressed();
 bool Board_DitLinePressed();
 
-unsigned int Board_RamSizeGet();
+uint32_t Board_RamSizeGet();
 void Board_RamSizeDetection();
 void Board_TouchscreenInit();
 const char* Board_BootloaderVersion();
 // in main.c
-void CriticalError(ulong error);
+void CriticalError(uint32_t error);
 
 bool is_vfo_b();
 
