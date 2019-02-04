@@ -552,10 +552,11 @@ typedef struct TransceiverState
     uint8_t	fm_sql_threshold;			// squelch threshold "dial" setting
 //	uint8_t	fm_rx_bandwidth;			// bandwidth setting for FM reception
     uint32_t	fm_subaudible_tone_det_select;		// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
-    bool	beep_active;				// TRUE if beep is active
-    uint32_t	beep_frequency;				// beep frequency, in Hz
-    uint32_t	beep_timing;				// used to time/schedule the duration of a keyboard beep
-    uint8_t	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
+
+    // key beep. Enabled via FLAGS2 !
+    uint32_t    beep_frequency;				// beep frequency, in Hz
+    uint8_t     beep_loudness;				// loudness of the key beep
+    uint32_t    beep_timing;                // countdown timer, used to activate beep and time the duration of a keyboard beep, in 1/100 ms
 
 #define EEPROM_SER_NONE 0
 #define EEPROM_SER_WRONG_SIG 1
