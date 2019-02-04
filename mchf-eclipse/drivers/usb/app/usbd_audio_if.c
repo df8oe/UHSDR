@@ -220,8 +220,12 @@ void audio_out_fill_tx_buffer(AudioSample_t *buffer, uint32_t len)
     {
         for (uint32_t idx = len; idx; idx--)
         {
-            buffer->l = (*pkt++) << AUDIO_BIT_SHIFT;
-            buffer->r = (*pkt++) << AUDIO_BIT_SHIFT;
+            // the purpose is to place the USB input exactly as the I2S does
+            // which is weird if on F4 and 32 Bit transfers are done. (mixed endian)
+            // for all other systems we scale 16bit USB audio to 32bit
+            // on 16 bit audio nothing at  all happens here.
+            buffer->l = correctHalfWord((*pkt++) << AUDIO_BIT_SHIFT);
+            buffer->r = correctHalfWord((*pkt++) << AUDIO_BIT_SHIFT);
             buffer++;
         }
         audio_out_buffer_pop_pkt(pkt,2*len);
