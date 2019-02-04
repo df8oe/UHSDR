@@ -2874,7 +2874,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
     float32_t usb_audio_gain = ts.rx_gain[RX_AUDIO_DIG].value/31.0;
 
     // we may have to play a key beep. We apply it to the left and right channel in OVI40 (on mcHF etc on left only because it is the speakers channel, not line out)
-    if((ts.beep_active) && (ads.beep.step))         // is beep active?
+    if((ts.beep_timing > 0))         // is beep active?
     {
 #ifdef USE_TWO_CHANNEL_AUDIO
         softdds_addSingleToneToTwobuffers(&ads.beep, adb.a_buffer[0],adb.a_buffer[1], blockSize, ads.beep_loudness_factor);
@@ -3043,20 +3043,12 @@ void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t
     {
         tcount -= SAMPLES_PER_CENTISECOND;  // yes - subtract that many samples
         ts.sysclock++;	// this clock updates at PRECISELY 100 Hz over the long term
+    }
 
-        // Has the timing for the keyboard beep expired?
-        if(ts.beep_timing > 0 || ts.beep_active != false)
-        {
-            // we kill any beep_active even if we have previously no timing set.
-            if (ts.beep_timing == 0)
-            {
-                ts.beep_active = false;				// yes, turn the tone off
-            }
-            else
-            {
-                ts.beep_timing--;
-            }
-        }
+    // Has the timing for the keyboard beep expired?
+    if(ts.beep_timing > 0)
+    {
+        ts.beep_timing--;
     }
 
     if(ts.scope_scheduler)		// update thread timer if non-zero

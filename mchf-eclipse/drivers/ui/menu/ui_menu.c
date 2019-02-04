@@ -2655,6 +2655,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                                    25);
             if(var_change)
             {
+                AudioManagement_KeyBeepPrepare();
                 AudioManagement_KeyBeep();      // make beep to demonstrate frequency
             }
         }
@@ -2671,25 +2672,26 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                               1);
         if(var_change)
         {
-      		if(ts.beep_loudness)
-      		{
-      		  ts.flags2 |= FLAGS2_KEY_BEEP_ENABLE;
-          	  AudioManagement_KeyBeep();      // make beep to demonstrate loudness
-          	}
-          	else
-          	{
-      		  ts.flags2 &= ~FLAGS2_KEY_BEEP_ENABLE;
-          	}
+            if(ts.beep_loudness)
+            {
+                ts.flags2 |= FLAGS2_KEY_BEEP_ENABLE;
+                AudioManagement_KeyBeepPrepare();
+                AudioManagement_KeyBeep();      // make beep to demonstrate loudness
+            }
+            else
+            {
+                ts.flags2 &= ~FLAGS2_KEY_BEEP_ENABLE;
+            }
         }
 
-      	if(ts.beep_loudness)
-      	{
-    	  snprintf(options,32, "    %u", ts.beep_loudness);
-    	}
-    	else
-    	{
-    	  snprintf(options,32, "%s", "OFF");
-    	}
+        if(ts.beep_loudness)
+        {
+            snprintf(options,32, "    %u", ts.beep_loudness);
+        }
+        else
+        {
+            snprintf(options,32, "%s", "OFF");
+        }
         break;
     case CONFIG_FREQUENCY_CALIBRATE:        // Frequency Calibration
         if(var >= 1)        // setting increase?

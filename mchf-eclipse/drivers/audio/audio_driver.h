@@ -449,18 +449,15 @@ extern uint32_t fm_tone_burst_freq[FM_TONE_BURST_MAX+1];
 #define FM_SUBAUDIBLE_GOERTZEL_WINDOW   400             // this sets the overall number of samples involved in the Goertzel decode windows (this value * "size/2")
 
 
-#define	BEEP_SCALING	20				// audio scaling of keyboard beep
-#define	BEEP_TONE_WORD_FACTOR			(65536/IQ_SAMPLE_RATE)	// scaling factor for beep frequency calculation
-//
 #define	MIN_BEEP_FREQUENCY	200			// minimum beep frequency in Hz
 #define	MAX_BEEP_FREQUENCY	3000		// maximum beep frequency in Hz
 #define	DEFAULT_BEEP_FREQUENCY	1000	// default beep frequency in Hz
+
 #define	BEEP_DURATION		2			// duration of beep in 100ths of a second
-#define	SIDETONE_REF_BEEP_DURATION	50	// duration of "Sidetone Reference Beep" (press-and-hold) in 100ths of a second
-//
+
 #define MAX_BEEP_LOUDNESS		21		// maximum setting for beep loudness
-#define DEFAULT_BEEP_LOUDNESS	10		// default loudness for the keyboard/CW sidetone test beep
-//
+#define DEFAULT_BEEP_LOUDNESS	10		// default loudness for the keyboard beep
+
 // Factors used in audio compressor adjustment limits
 //
 #define	TX_AUDIO_COMPRESSION_MIN		-1	// -1 = OFF

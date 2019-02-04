@@ -241,8 +241,6 @@ void TransceiverStateInit(void)
     ts.fm_sql_threshold = FM_SQUELCH_DEFAULT;			// squelch threshold
     ts.fm_subaudible_tone_det_select = 0;				// lookup ("tone number") used to index the table for tone detection (0 corresponds to "tone disabled")
 
-    ts.beep_active = false;	// TRUE if beep is active, we don't beep at start so it must be 0
-
     ts.ser_eeprom_type = 0;						// serial eeprom not present
     ts.configstore_in_use = CONFIGSTORE_IN_USE_FLASH;					// serial eeprom not in use
 
