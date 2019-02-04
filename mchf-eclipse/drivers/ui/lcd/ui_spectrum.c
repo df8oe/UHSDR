@@ -2012,16 +2012,16 @@ static void UiSpectrum_CalculateDBm()
         // correct bin bandwidth is determined by the Zoom FFT display setting
         const float32_t bin_BW = IQ_SAMPLE_RATE_F * 2.0 / (buff_len * (1 << sd.magnify)) ;
 
-        float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-        float32_t offset = FilterPathInfo[ts.filter_path].offset;
+        float32_t width = FilterInfo[ts.filters_p->id].width;
+        float32_t offset = ts.filters_p->offset;
 
         if (offset == 0)
         {
             offset = width/2;
         }
 
-        float32_t lf_freq = offset - width/2;
-        float32_t uf_freq = offset + width/2;
+        const float32_t lf_freq = offset - width/2;
+        const float32_t uf_freq = offset + width/2;
 
         //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
         //	= determine bandwith separately for lower and upper sideband
@@ -2039,7 +2039,7 @@ static void UiSpectrum_CalculateDBm()
             bw_UPPER = -lf_freq;
             bw_LOWER = -uf_freq;
         }
-        else if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)
+        else if (is_demod_psk())
         { // this is for experimental SNAP of BPSK carriers
             bw_LOWER = PSK_OFFSET - PSK_SNAP_RANGE;
             bw_UPPER = PSK_OFFSET + PSK_SNAP_RANGE;
@@ -2056,15 +2056,8 @@ static void UiSpectrum_CalculateDBm()
         // frequency translation off, IF = 0 Hz OR
         // in all magnify cases (2x up to 32x) the posbin is in the centre of the spectrum display
 
-        int bin_offset = 0;
-
-
-        if(sd.magnify == 0)
-        {
-            bin_offset = - (buff_len_int * AudioDriver_GetTranslateFreq( )) / (2 * IQ_SAMPLE_RATE);
-        }
-
-        int posbin = buff_len_int / 4 + bin_offset;  // right in the middle!
+        const int32_t bin_offset = sd.magnify != 0 ? 0 : (- (buff_len_int * AudioDriver_GetTranslateFreq( )) / (2 * IQ_SAMPLE_RATE));
+        const int32_t posbin = buff_len_int / 4 + bin_offset;  // right in the middle!
 
 
         // calculate upper and lower limit for determination of signal strength
@@ -2072,7 +2065,7 @@ static void UiSpectrum_CalculateDBm()
         float32_t Lbin = (float32_t)posbin + roundf(bw_LOWER / bin_BW);
         float32_t Ubin = (float32_t)posbin + roundf(bw_UPPER / bin_BW); // the bin on the upper sideband side
 
-        if(ts.dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_USB) // workaround to make SNAP and carrier offaet display work with sideband-selected SAM
+        if(ts.dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_USB) // workaround to make SNAP and carrier offset display work with sideband-selected SAM
         {
             Lbin = Lbin - 1.0;
         }
@@ -2082,10 +2075,9 @@ static void UiSpectrum_CalculateDBm()
         {
             Lbin = 0;
         }
-        //if (Ubin > 255)
+
         if (Ubin > (sd.spec_len-1))
         {
-            //Ubin = 255;
             Ubin = sd.spec_len-1;
         }
 
@@ -2102,12 +2094,11 @@ static void UiSpectrum_CalculateDBm()
         if(cw_decoder_config.snap_enable && (ts.dmod_mode == DEMOD_CW || ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)))
         {
             UiSpectrum_CalculateSnap(Lbin, Ubin, posbin, bin_BW);
-
         }
 
         float32_t sum_db = 0.0;
         // determine the sum of all the bin values in the passband
-        for (int c = (int)Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
+        for (int c = Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
         {
             sum_db = sum_db + sd.FFT_Samples[c]; // / (float32_t)(1<<sd.magnify);
         }
