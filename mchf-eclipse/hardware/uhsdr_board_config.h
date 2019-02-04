@@ -208,6 +208,11 @@
 #define IQ_BLOCK_SIZE (IQ_SAMPLE_RATE/IQ_INTERRUPT_FREQ)
 #define AUDIO_BLOCK_SIZE (AUDIO_SAMPLE_RATE/IQ_INTERRUPT_FREQ)
 
+// use for clocking based on DMA IRQ
+#define SAMPLES_PER_DMA_CYCLE   (IQ_BLOCK_SIZE)
+#define SAMPLES_PER_CENTISECOND (IQ_SAMPLE_RATE/100)
+
+
 #if (IQ_SAMPLE_RATE) != 48000
     #error Only 48k sample frequency supported (yet).
 #endif

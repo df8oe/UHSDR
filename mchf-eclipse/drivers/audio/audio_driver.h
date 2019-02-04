@@ -514,8 +514,6 @@ extern uint32_t fm_tone_burst_freq[FM_TONE_BURST_MAX+1];
 #define	AUDIO_DELAY_BUFSIZE		(IQ_BUFSZ)*5	// Size of AGC delaying audio buffer - Must be a multiple of IQ_BUFSZ.
 // This is divided by the decimation rate so that the time delay is constant.
 
-#define CLOCKS_PER_DMA_CYCLE	10656			// Number of 16 MHz clock cycles per DMA cycle
-#define	CLOCKS_PER_CENTISECOND	160000			// Number of 16 MHz clock cycles per 0.01 second timing cycle
 
 #define	FREQ_IQ_CONV_MODE_OFF		0	// No frequency conversion
 #define FREQ_IQ_CONV_P6KHZ		1	// LO is 6KHz above receive frequency in RX mode

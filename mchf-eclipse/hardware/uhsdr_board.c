@@ -516,7 +516,7 @@ __attribute__ ((noinline)) bool is_ram_at(volatile uint32_t* where) {
     return retval;
 }
 
-unsigned int Board_RamSizeGet() {
+uint32_t Board_RamSizeGet() {
     uint32_t retval = 0;
     // we enable the bus fault
     // we now get bus faults if we access not  available  memory

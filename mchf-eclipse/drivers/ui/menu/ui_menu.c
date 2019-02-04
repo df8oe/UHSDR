@@ -1166,13 +1166,13 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
        break;
 
      case MENU_DBM_CALIBRATE:      //
-        var_change = UiDriverMenuItemChangeInt(var, mode, &ts.dbm_constant,
+        var_change = UiDriverMenuItemChangeInt32(var, mode, &ts.dbm_constant,
                                             -100,
                                             100,
                                             0,
                                             1
                                            );
-        snprintf(options, 32, "  %ddB", ts.dbm_constant);
+        snprintf(options, 32, "  %lddB", ts.dbm_constant);
         break;
 
      case MENU_UI_INVERSE_SCROLLING:      //

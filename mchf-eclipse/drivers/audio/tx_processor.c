@@ -1050,8 +1050,20 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
         {
             // 16 bit format - convert to float and increment
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
-            audio_in_put_buffer(src[i].r);
-            audio_in_put_buffer(src[i].l);
+            if (srcUSB == src)
+            {
+                // we can use the USB data as is (no need to convert back/to
+                // the weird format the F4 delivers us 32bit I2S
+                audio_in_put_buffer(src[i].r);
+                audio_in_put_buffer(src[i].l);
+            }
+            else
+            {
+                // get audio from I2S and need to convert back/to
+                // the weird format the F4 delivers us 32bit I2S (no conversion happens on F7/H7)
+                audio_in_put_buffer(correctHalfWord(src[i].r) >> IQ_BIT_SHIFT);
+                audio_in_put_buffer(correctHalfWord(src[i].l) >> IQ_BIT_SHIFT);
+            }
         }
         break;
     case STREAM_TX_AUDIO_FILT:
