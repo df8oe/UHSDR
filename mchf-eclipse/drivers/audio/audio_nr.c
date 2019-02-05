@@ -76,24 +76,27 @@ void NR_Init()
 {
     nr_params.alpha = 0.94; // spectral noise reduction
     nr_params.beta = 0.96;
-//  nr_params.vad_thresh = 4.0;
     nr_params.enable = false;
     nr_params.NR_FFT_L = 256;
     nr_params.NR_FFT_LOOP_NO = 1;
-//  nr_params.gain_smooth_enable = false;
-//  nr_params.gain_smooth_alpha = 0.25;
-//  nr_params.long_tone_enable = false;
-//  nr_params.long_tone_alpha = 0.999;
-//  nr_params.long_tone_thresh = 10000;
-//  nr_params.long_tone_reset = true;
+
     nr_params.first_time = 1;
-//  nr_params.vad_delay = 7;
     nr_params.NR_decimation_enable = true;
     nr_params.fft_256_enable = true;
     ts.special_functions_enabled = 0;
     NR2.width = 4;
     NR2.power_threshold = 0.40;
     NR2.asnr = 30;
+
+    // TODO: Decide to through out these unused parameters
+    //  nr_params.gain_smooth_enable = false;
+    //  nr_params.gain_smooth_alpha = 0.25;
+    //  nr_params.long_tone_enable = false;
+    //  nr_params.long_tone_alpha = 0.999;
+    //  nr_params.long_tone_thresh = 10000;
+    //  nr_params.long_tone_reset = true;
+    //  nr_params.vad_thresh = 4.0;
+    //  nr_params.vad_delay = 7;
 }
 
 #if 0
