@@ -582,23 +582,25 @@ void AudioDriver_LeakyLmsNr (float32_t *in_buff, float32_t *out_buff, int buff_s
 
 static void AudioDriver_Dsp_Init(volatile dsp_params_t* dsp_p)
 {
-    dsp_p->active       = 0;                    // TRUE if DSP noise reduction is to be enabled
-    ts.digital_mode     = DigitalMode_None;                 // digital modes OFF by default
-    dsp_p->active_toggle    = 0xff;                 // used to hold the button G2 "toggle" setting.
-    dsp_p->nr_strength  = 50;                   // "Strength" of DSP noise reduction (50 = medium)
-#ifdef USE_LMS_AUTONOTCH
-    dsp_p->notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;       // default for number of FFT taps for notch filter
-    dsp_p->notch_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
-    dsp_p->notch_mu = DSP_NOTCH_MU_DEFAULT;
-#endif
-    dsp_p->notch_frequency = 800;               // notch start frequency for manual notch filter
-    dsp_p->peak_frequency = 750;                // peak start frequency
-    dsp_p->nb_setting       = 0;                    // Noise Blanker setting
 
-    dsp_p->bass_gain = 2;                       // gain of the low shelf EQ filter
-    dsp_p->treble_gain = 0;                     // gain of the high shelf EQ filter
-    dsp_p->tx_bass_gain = 4;                    // gain of the TX low shelf EQ filter
-    dsp_p->tx_treble_gain = 4;                  // gain of the TX high shelf EQ filter
+    dsp_p->active_toggle    = 0xff;                 // used to hold the button G2 "toggle" setting.
+
+    // Commented settings below are read from configuration store, no need to initialize them
+    // dsp_p->active       = 0;                    // TRUE if DSP noise reduction is to be enabled
+    // dsp_p->nr_strength  = 50;                   // "Strength" of DSP noise reduction (50 = medium)
+#ifdef USE_LMS_AUTONOTCH
+    // dsp_p->notch_numtaps = DSP_NOTCH_NUMTAPS_DEFAULT;       // default for number of FFT taps for notch filter
+    // dsp_p->notch_delaybuf_len = DSP_NOTCH_DELAYBUF_DEFAULT;
+    // dsp_p->notch_mu = DSP_NOTCH_MU_DEFAULT;
+#endif
+    // dsp_p->notch_frequency = 800;               // notch start frequency for manual notch filter
+    // dsp_p->peak_frequency = 750;                // peak start frequency
+    // dsp_p->nb_setting       = 0;                    // Noise Blanker setting
+
+    // dsp_p->bass_gain = 2;                       // gain of the low shelf EQ filter
+    // dsp_p->treble_gain = 0;                     // gain of the high shelf EQ filter
+    // dsp_p->tx_bass_gain = 4;                    // gain of the TX low shelf EQ filter
+    // dsp_p->tx_treble_gain = 4;                  // gain of the TX high shelf EQ filter
 }
 /**
  * One-time init of FreeDV codec's audio driver part, mostly filters
