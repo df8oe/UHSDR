@@ -45,9 +45,9 @@ typedef struct DialFrequency
     bool    temp_factor_changed;
     uchar   temp_enabled;
 #define TCXO_MODE_MASK 0x0f
-#define TCXO_UNIT_MASK 0xf0
+#define TCXO_UNIT_MASK 0x10
 #define TCXO_UNIT_C 0x00
-#define TCXO_UNIT_F 0xf0
+#define TCXO_UNIT_F 0x10
 
 
     // Virtual segments

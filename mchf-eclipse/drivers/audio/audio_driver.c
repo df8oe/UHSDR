@@ -100,7 +100,7 @@ static arm_iir_lattice_instance_f32    IIR_FreeDV_RX_Filter;  //DL2FW: temporary
 
 // static float32_t Koeff[20];
 // variables for RX manual notch, manual peak & bass shelf IIR biquad filter
-arm_biquad_casd_df1_inst_f32 IIR_biquad_1[NUM_AUDIO_CHANNELS] =
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_1[NUM_AUDIO_CHANNELS] =
 {
         {
                 .numStages = 4,
@@ -132,7 +132,7 @@ arm_biquad_casd_df1_inst_f32 IIR_biquad_1[NUM_AUDIO_CHANNELS] =
 
 
 // variables for RX treble shelf IIR biquad filter
-arm_biquad_casd_df1_inst_f32 IIR_biquad_2[NUM_AUDIO_CHANNELS] =
+static arm_biquad_casd_df1_inst_f32 IIR_biquad_2[NUM_AUDIO_CHANNELS] =
 {
         {
                 .numStages = 1,
@@ -364,8 +364,8 @@ static float32_t* mag_coeffs[MAGNIFY_NUM] =
         }
 };
 
-//******* From here 2 set of filters for the I/Q FreeDV aliasing filter**********
 
+//******* From here 2 set of filters for the I/Q FreeDV aliasing filter**********
 // I- and Q- Filter instances for FreeDV downsampling aliasing filters
 
 static arm_biquad_casd_df1_inst_f32 IIR_biquad_FreeDV_I =
@@ -426,7 +426,7 @@ static float32_t* FreeDV_coeffs[1] =
 static float32_t		iir_FreeDV_RX_state[IIR_RX_STATE_ARRAY_SIZE];
 
 // S meter public
-SMeter					sm;
+SMeter	sm;
 
 // ATTENTION: These data structures have been placed in CCM Memory (64k)
 // IF THE SIZE OF  THE DATA STRUCTURE GROWS IT WILL QUICKLY BE OUT OF SPACE IN CCM
@@ -981,7 +981,7 @@ static const float32_t biquad_passthrough[] = { 1, 0, 0, 0, 0 };
 
 
 /**
- * @brief Biquad Filter Init used for processing audio for RX and TX
+ * @brief Filter Init used for processing audio for RX and TX
  */
 static void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
 {
@@ -1755,7 +1755,6 @@ demod_fm_data_t fm_data;
 			ads.fm_conf.subaudible_tone_detected = 1;// always signal that a tone is being detected if detection is disabled to enable audio gate
 		}
 	}
-
 	return ads.fm_conf.squelched == false;
 }
 
@@ -1824,7 +1823,10 @@ void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, float32_
 }
 
 /**
- * Takes an iq_buffer and puts the samples into a single interleaved
+ * Takes an iq_buffer and puts the samples into a single interleaved spectrum ringbuffer
+ * To be called from the audio interrupt side of things. Do not call otherwise as the code is not
+ * reentrant will screw up things.
+
  * @param iq_puf_b pair of i/q buffers
  * @param blockSize how many samples in a single iq buffer, target gets 2*blockSize samples
  */
@@ -1832,19 +1834,28 @@ static void AudioDriver_SpectrumCopyIqBuffers(iq_buffer_t* iq_puf_b, const size_
 {
     for(int i = 0; i < blockSize; i++)
     {
-        // Collect I/Q samples // why are the I & Q buffers filled with I & Q, the FFT buffers are filled with Q & I?
+        // Collect I/Q samples
         sd.FFT_RingBuffer[sd.samp_ptr] = iq_puf_b->q_buffer[i];    // get floating point data for FFT for spectrum scope/waterfall display
         sd.samp_ptr++;
         sd.FFT_RingBuffer[sd.samp_ptr] = iq_puf_b->i_buffer[i];
         sd.samp_ptr++;
 
-        // On obtaining enough samples for spectrum scope/waterfall, update state machine, reset pointer and wait until we process what we have
-        if(sd.samp_ptr >= sd.fft_iq_len-1) //*2)
+        if(sd.samp_ptr >= sd.fft_iq_len-1)
         {
             sd.samp_ptr = 0;
         }
     }
 }
+
+/**
+ * Places IQ data in the spectrums IQ ringbuffer if no zoom level has been set. Otherwise does nothing
+ * To be called from the audio interrupt side of things. Do not call otherwise as the code is not
+ * reentrant and may screw up things.
+ * Will place blockSize / 2^sd.magnify samples in ring buffer
+ *
+ * @param iq_buf_p iq data before frequency shift at IQ_SAMEPLE_RATE
+ * @param blockSize IQ sample count
+ */
 
 static void AudioDriver_SpectrumNoZoomProcessSamples(iq_buffer_t* iq_puf_b, const uint16_t blockSize)
 {
@@ -1858,6 +1869,16 @@ static void AudioDriver_SpectrumNoZoomProcessSamples(iq_buffer_t* iq_puf_b, cons
         }
     }
 }
+
+/**
+ * Places IQ data in the spectrums IQ ringbuffer if a zoom level has been set. Otherwise does nothing
+ * To be called from the audio interrupt side of things. Do not call otherwise as the code is not
+ * reentrant will screw up things.
+ * Will place blockSize / 2^sd.magnify samples in ring buffer
+ *
+ * @param iq_buf_p iq data with frequency of interest centered! (after frequency shift) at IQ_SAMEPLE_RATE
+ * @param blockSize IQ sample count
+ */
 static void AudioDriver_SpectrumZoomProcessSamples(iq_buffer_t* iq_buf_p,  const uint16_t blockSize)
 {
     if(sd.reading_ringbuffer == false && sd.fft_iq_len > 0)
@@ -1923,14 +1944,6 @@ static float32_t AudioDriver_FadeLeveler(int chan, float32_t audio, float32_t co
     return audio;
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : SAM_demodulation [DD4WH, december 2016]
-//* Object              : real synchronous AM demodulation with phase detector and PLL
-//* Object              :
-//* Input Parameters    : adb.iq.i_buffer, adb.iq.q_buffer
-//* Output Parameters   : adb.a_buffer[0]
-//* Functions called    :
-//*----------------------------------------------------------------------------
 typedef struct
 {
     const float32_t               c0[SAM_PLL_HILBERT_STAGES];          // Filter coefficients - path 0
@@ -1986,6 +1999,10 @@ demod_sam_data_t sam_data;
 
 /**
  * Demodulate IQ carrying AM into audio, expects input to be at decimated input rate.
+ * Can do real synchronous AM demodulation with phase detector and PLL
+ *
+ * @author DD4WH
+ * @date December 2016
  *
  * @param i_buffer
  * @param q_buffer
@@ -2585,15 +2602,16 @@ static void RxProcessor_DemodAudioPostprocessing(float32_t (*a_buffer)[AUDIO_BLO
     }
 
 }
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : audio_rx_processor
-//* Object              :
-//* Object              : audio sample processor
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
+
+/**
+ * Gets IQ data as input, runs the rx processing on the input signal, leaves audio data in DMA buffer
+ *
+ * @param src iq input DMA buffer
+ * @param dst audio output DMA buffer
+ * @param blockSize number of input and output samples
+ * @param external_mute request to produce silence
+ */
 static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * const dst, const uint16_t blockSize, bool external_mute)
 {
     // this is the main RX audio function

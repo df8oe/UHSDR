@@ -546,12 +546,12 @@ typedef struct TransceiverState
     bool	audio_dac_muting_flag;			// when TRUE, audio is to be muted after PTT/keyup
     bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
     bool	mem_disp;				// when TRUE, memory display is enabled
-    uint32_t	fm_subaudible_tone_gen_select;		// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
-    uint8_t	fm_tone_burst_mode;			// this is the setting for the tone burst generator
-    uint32_t	fm_tone_burst_timing;			// this is used to time/schedule the duration of a tone burst
-    uint8_t	fm_sql_threshold;			// squelch threshold "dial" setting
-//	uint8_t	fm_rx_bandwidth;			// bandwidth setting for FM reception
-    uint32_t	fm_subaudible_tone_det_select;		// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
+
+    uint32_t    fm_subaudible_tone_gen_select;		// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
+    uint8_t     fm_tone_burst_mode;			// this is the setting for the tone burst generator
+    uint32_t    fm_tone_burst_timing;			// this is used to time/schedule the duration of a tone burst
+    uint8_t     fm_sql_threshold;			// squelch threshold "dial" setting
+    uint32_t    fm_subaudible_tone_det_select;		// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
 
     // key beep. Enabled via FLAGS2 !
     uint32_t    beep_frequency;				// beep frequency, in Hz
