@@ -95,11 +95,6 @@ static const float	fdco_min	= FDCO_MIN;
 
 OscillatorState os;
 
-/**
- * @returns true if an Si570 was detected
- */
-bool   Si570_IsPresent() { return os.present == true; }
-
 /*
  * @brief Returns startup frequency value of Si570, call only after init of Si570
  *
@@ -503,7 +498,7 @@ uint8_t   Si570_GetI2CAddress()
  * @brief Sets a new PPM value AND corrects the internally used xtal frequency accordingly
  * @param ppm ppm value
  */
-void Si570_SetPPM(float32_t ppm)
+static void Si570_SetPPM(float32_t ppm)
 {
     os.fxtal_ppm = ppm;
     os.fxtal_calc = os.fxtal + (os.fxtal / (float64_t)1000000.0) * os.fxtal_ppm;
@@ -513,7 +508,7 @@ void Si570_SetPPM(float32_t ppm)
     }
 }
 
-uint8_t Si570_ResetConfiguration()
+static uint8_t Si570_ResetConfiguration()
 {
     uint8_t retval = 0;
 
@@ -605,15 +600,22 @@ bool Si570_ReadyForIrqCall()
     return (SI570_I2C->Lock == HAL_UNLOCKED);
 }
 
+static bool Oscillator_IsPresent()
+{
+    return os.present;
+}
+
 const OscillatorInterface_t osc_si570 =
 {
 		.init = Si570_Init,
-		.isPresent = Si570_IsPresent,
+		.isPresent = Oscillator_IsPresent,
 		.setPPM = Si570_SetPPM,
 		.prepareNextFrequency = Si570_PrepareNextFrequency,
 		.changeToNextFrequency = Si570_ChangeToNextFrequency,
 		.isNextStepLarge = Si570_IsNextStepLarge,
 		.readyForIrqCall = Si570_ReadyForIrqCall,
+		.name = "Si570",
+		.type = OSC_SI570,
 };
 
 
@@ -683,7 +685,7 @@ void Si570_Init()
 		HAL_Delay(40);
 		Si570_ResetConfiguration();
 	}
-	osc = Si570_IsPresent()?&osc_si570:NULL;
+	osc = os.present?&osc_si570:NULL;
 }
 
 /**

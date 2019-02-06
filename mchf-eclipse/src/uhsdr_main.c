@@ -338,16 +338,6 @@ int mchfMain(void)
         Board_GreenLed(LED_STATE_ON);
     }
 
-	if(Si570_IsPresent())
-	{
-	  ts.si570_is_present = true;
-	}
-	else
-	{
-	  ts.si570_is_present = false;
-	}
-
-
     Board_InitFull();
 
     ConfigStorage_Init();

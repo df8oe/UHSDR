@@ -422,6 +422,8 @@ const OscillatorInterface_t osc_si5351a =
 		.changeToNextFrequency = Si5351a_ChangeToNextFrequency,
 		.isNextStepLarge = Si5351a_IsNextStepLarge,
 		.readyForIrqCall = Si5351a_ReadyForIrqCall,
+        .name = "Si5351a",
+        .type = OSC_SI5351A,
 };
 
 void Si5351a_Init()

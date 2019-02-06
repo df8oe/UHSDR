@@ -1836,11 +1836,7 @@ static void UiDriver_CreateDesktop()
 
 	UiDriver_CreateVoltageDisplay();
 
-	// Create temperature if SI570 is in use
-	if(ts.si570_is_present)
-	{
-	  UiDriver_CreateTemperatureDisplay();
-	}
+	UiDriver_CreateTemperatureDisplay();
 
 	// Set correct frequency
 	UiDriver_FrequencyUpdateLOandDisplay(true);

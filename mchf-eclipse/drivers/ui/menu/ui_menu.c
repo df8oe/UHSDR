@@ -519,7 +519,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 #ifdef USE_OSC_SI570
     case INFO_SI570:
     {
-        if (Si570_IsPresent()) {
+        if (osc->type == OSC_SI570) {
             float suf = Si570_GetStartupFrequency();
             int vorkomma = (int)(suf);
             int nachkomma = (int) roundf((suf-vorkomma)*10000);
@@ -527,7 +527,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         }
         else
         {
-            outs = "Not found!";
+            outs = "Not applicable";
             if (osc == NULL)
             {
             	*m_clr_ptr = Red;
@@ -536,23 +536,18 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     }
     break;
 #endif
-#ifdef USE_OSC_SI5351A
-    case INFO_SI5351A:
+    case INFO_OSC_NAME:
     {
-        if (Si5351a_IsPresent()) {
-        	outs = "Detected";
+        if (osc->isPresent) {
+        	outs = osc->name;
         }
         else
         {
-            outs = "Not found!";
-            if (osc == NULL)
-            {
-            	*m_clr_ptr = Red;
-            }
+            outs = "Not present";
+            *m_clr_ptr = Red;
         }
     }
     break;
-#endif
     case INFO_TP:
         outs = (ts.tp->present == 0)?"n/a":"XPT2046";
         break;

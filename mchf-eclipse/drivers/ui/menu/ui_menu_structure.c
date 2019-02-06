@@ -2,6 +2,7 @@
 #include "ui_menu_internal.h"
 #include "uhsdr_hmc1023.h"
 #include "radio_management.h"
+#include "soft_tcxo.h"
 /*
  * How to create a new menu entry in an existing menu:
  * - Copy an existing entry of MENU_KIND and paste at the desired position
@@ -98,7 +99,7 @@ const MenuDescriptor baseGroup[] =
     { MENU_BASE, MENU_ITEM, MENU_NOISE_BLANKER_SETTING, NULL, "RX NB Setting", UiMenuDesc("Set the Noise Blanker strength. Higher values mean more agressive blanking. Also changeable using Encoder 2 if Noise Blanker is active.") },
     { MENU_BASE, MENU_ITEM, MENU_DSP_NR_STRENGTH, NULL, "DSP NR Strength", UiMenuDesc("Set the Noise Reduction Strength. Higher values mean more agressive noise reduction but also higher CPU load. Use with extreme care. Also changeable using Encoder 2 if DSP is active.") }, // via knob
     { MENU_BASE, MENU_ITEM, MENU_TCXO_MODE, NULL, "TCXO Off/On/Stop", UiMenuDesc("The software TCXO can be turned ON (set frequency is adjusted so that generated frequency matches the wanted frequency); OFF (no correction or measurement done); or STOP (no correction but measurement).") },
-    { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F, &ts.si570_is_present, "TCXO Temp. (C/F)", UiMenuDesc("Show the measure TCXO temperature in Celsius or Fahrenheit.") },
+    { MENU_BASE, MENU_ITEM, MENU_TCXO_C_F, &lo.sensor_present, "TCXO Temp. (C/F)", UiMenuDesc("Show the measure TCXO temperature in Celsius or Fahrenheit.") },
 #ifdef USE_CONFIGSTORAGE_FLASH
     { MENU_BASE, MENU_ITEM, MENU_BACKUP_CONFIG, NULL, "Backup Config", UiMenuDesc("Backup your I2C Configuration to flash. If you don't have suitable I2C EEPROM installed this function is not available.") },
 #endif
@@ -373,11 +374,9 @@ const MenuDescriptor infoGroup[] =
 {
     { MENU_SYSINFO, MENU_INFO, INFO_DISPLAY, NULL,"Display", UiMenuDesc("Displays working mode (SPI/parallel") },
     { MENU_SYSINFO, MENU_INFO, INFO_DISPLAY_CTRL, NULL,"Disp. Controller", UiMenuDesc("identified LCD controller chip") },
+    { MENU_SYSINFO, MENU_INFO, INFO_OSC_NAME, NULL,"Oscillator", UiMenuDesc("Local oscillator type") },
 #ifdef USE_OSC_SI570
     { MENU_SYSINFO, MENU_INFO, INFO_SI570, NULL,"SI570", UiMenuDesc("Startup frequency and I2C address of local oscillator Type SI570") },
-#endif
-#ifdef USE_OSC_SI5351A
-    { MENU_SYSINFO, MENU_INFO, INFO_SI5351A, NULL,"SI5351A", UiMenuDesc("Local oscillator type SI5351A detected.") },
 #endif
     { MENU_SYSINFO, MENU_INFO, INFO_EEPROM, NULL,"EEPROM", UiMenuDesc("type of serial EEPROM and its capacity") },
     { MENU_SYSINFO, MENU_INFO, INFO_TP, NULL,"Touchscreen", UiMenuDesc("touchscreen state") },

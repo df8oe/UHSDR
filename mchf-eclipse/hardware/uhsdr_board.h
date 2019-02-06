@@ -660,7 +660,6 @@ typedef struct TransceiverState
 	uint8_t FreqDisplayFont;		//0= old thin font, 1=new bold 8 bit (if available)
 
 	RfBoard_t rf_board; // the detected rf board connected to the control logic
-	bool si570_is_present;
 	uint8_t special_functions_enabled;
 	bool txrx_switching_enabled;
 
