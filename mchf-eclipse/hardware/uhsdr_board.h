@@ -729,8 +729,8 @@ bool Board_DitLinePressed();
 
 uint32_t Board_RamSizeGet();
 void Board_RamSizeDetection();
-void Board_TouchscreenInit();
 const char* Board_BootloaderVersion();
+
 // in main.c
 void CriticalError(uint32_t error);
 

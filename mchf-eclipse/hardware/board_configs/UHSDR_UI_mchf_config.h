@@ -131,8 +131,8 @@
 #define BUTTON_BNDM             GPIO_PIN_0
 #define BUTTON_BNDM_PIO         GPIOB
 // pin 1
-#define PTT_CNTR                GPIO_PIN_1
-#define PTT_CNTR_PIO            GPIOB
+#define TXRX_CNTR                GPIO_PIN_1
+#define TXRX_CNTR_PIO            GPIOB
 // pin 2
 #define BUTTON_BNDP             GPIO_PIN_2
 #define BUTTON_BNDP_PIO         GPIOB
