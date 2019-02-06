@@ -141,7 +141,7 @@ $(eval  $(shell $(SED) -n -e 's/"//g' -e '/UHSDR_VER_MINOR/{s!#define\s*!!;   s!
 $(eval  $(shell $(SED) -n -e 's/"//g' -e '/UHSDR_VER_RELEASE/{s!#define\s*!!; s!\s\s*!=!p}' $(PROJECT_VERSION_FILE) ))
 endif
 
-UHSDR_VER_TAINT := $(shell  git status . | grep --quiet 'working directory clean' && echo "" || echo "+")
+UHSDR_VER_TAINT := $(shell  git status . | grep -q 'working directory clean' && echo "" || echo "+")
 
 BOOTLOADER=bl-$(TRX_ID)
 FIRMWARE=fw-$(TRX_ID)
