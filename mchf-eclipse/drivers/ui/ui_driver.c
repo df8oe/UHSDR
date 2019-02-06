@@ -4146,35 +4146,6 @@ static void UiDriver_DisplayRfGain(bool encoder_active)
 		label = "SQL";
 		value = ts.fm_sql_threshold;
 	}
-
-	/*
-    if(ts.dmod_mode != DEMOD_FM) // && !ts.agc_wdsp)	 	// If not FM, use RF gain
-    {
-        if()
-        if(encoder_active)
-        {
-            //
-            // set color as warning that RX sensitivity is reduced
-            //
-            if(ts.rf_gain < 20)
-                color = Red;
-            else if(ts.rf_gain < 30)
-                color = Orange;
-            else if(ts.rf_gain < 40)
-                color = Yellow;
-        }
-        value = ts.rf_gain;
-    }
-    else if(!ts.agc_wdsp)	 						// it is FM, display squelch instead
-    {
-        value = ts.fm_sql_threshold;
-    }
-    else // it is WDSP AGC and NOT FM
-    {
-        value = ts.agc_wdsp.thresh;
-    }
-
-	 */
 	snprintf(temp,5," %02ld",value);
 
 	UiDriver_EncoderDisplay(0,1,label, encoder_active, temp, color);

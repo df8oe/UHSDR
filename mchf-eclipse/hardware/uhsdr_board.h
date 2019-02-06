@@ -245,7 +245,6 @@ typedef struct TransceiverState
 #define RX_AUDIO_DIG  1
     Gain    rx_gain[2]; //ts.rx_gain[RX_AUDIO_SPKR].value
 
-    int32_t 	rf_gain;			// RF gain control
     uint8_t lineout_gain;            // lineout gain to control lineout level
 
 
@@ -322,9 +321,6 @@ typedef struct TransceiverState
     uint16_t  filter_path;
     const FilterPathDescriptor *filters_p;
 
-    uint8_t	filter_cw_wide_disable;		// TRUE if wide filters are disabled in CW mode
-    uint8_t	filter_ssb_narrow_disable;	// TRUE if narrow filters are disabled in SSB modes
-    //
     uint16_t	demod_mode_disable;			// TRUE if AM mode is to be disabled
 #define DEMOD_AM_DISABLE    (0x0001)
 #define DEMOD_CW_DISABLE    (0x0002)
@@ -405,9 +401,6 @@ typedef struct TransceiverState
 
     struct mchf_waterfall waterfall;
 
-    //
-    bool	radio_config_menu_enable;	// TRUE if radio configuration menu is to be visible
-    //
     uint8_t	xverter_mode;		// TRUE if transverter mode active
     uint32_t	xverter_offset;		// frequency offset for transverter (added to frequency display)
 
@@ -521,7 +514,6 @@ typedef struct TransceiverState
     bool	cw_lsb;					// flag used to indicate that CW is to operate in LSB when TRUE
     int32_t	iq_freq_mode;				// used to set/configure the I/Q frequency/conversion mode
     uint8_t	lsb_usb_auto_select;			// holds setting of LSB/USB auto-select above/below 10 MHz
-    bool	conv_sine_flag;				// FALSE until the sine tables for the frequency conversion have been built (normally zero, force 0 to rebuild)
     uint32_t	last_tuning;				// this is a timer used to prevent too fast tuning per second
     uint32_t	lcd_blanking_time;			// this holds the system time after which the LCD is blanked - if blanking is enabled
     bool	lcd_blanking_flag;			// if TRUE, the LCD is blanked completely (e.g. backlight is off)

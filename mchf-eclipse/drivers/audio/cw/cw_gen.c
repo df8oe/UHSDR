@@ -417,6 +417,10 @@ static void CwGen_SetBreakTime()
  */
 void CwGen_Init(void)
 {
+    // Init Soft DDS
+    float freq[2] = { 0.0, 0.0 };
+    softdds_configRunIQ(freq,ts.samp_rate,0);
+
 	CwGen_SetSpeed();
 
 	if (ts.txrx_mode != TRX_MODE_TX  ||  ts.dmod_mode != DEMOD_CW) //FIXME No point doing this check as the function is called during board init, the rest of initialization would fail anyway if called anywhere else
