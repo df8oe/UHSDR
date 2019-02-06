@@ -266,7 +266,7 @@ typedef struct {
 
 static volatile audio_buffer_t in;
 
-void audio_in_put_buffer(int16_t sample)
+void UsbdAudio_PutSample(int16_t sample)
 {
     in.buffer[in.buffer_head] = sample;
     in.buffer_head=  (in.buffer_head + 1) %USB_AUDIO_IN_BUF_SIZE;

@@ -6967,6 +6967,56 @@ void UiDriver_TaskHandler_HighPrioTasks()
 
 }
 
+/**
+ * Handles the regular updating and running of some real-time activities in the UI domain
+ * mostly timers, do not place long running code in here. This is running the highest prio
+ * interrupt context we have. So don't place anything in here unless you know what you are doing
+ * and there is no other way to do it.
+ *
+ * Called with IQ_INTERRUPT_FREQ (i.e. 1500 Hz at the moment).
+ */
+void UiDriver_Callback_AudioISR()
+{
+    static uint32_t tcount = 0;
+
+    // Perform LCD backlight PWM brightness function
+    UiDriver_BacklightDimHandler();
+
+    tcount+= SAMPLES_PER_DMA_CYCLE;        // add the number of samples that have passed in DMA cycle
+    if(tcount >= SAMPLES_PER_CENTISECOND)  // enough samples for 0.01 second passed?
+    {
+        tcount -= SAMPLES_PER_CENTISECOND;  // yes - subtract that many samples
+        ts.sysclock++;  // this clock updates at PRECISELY 100 Hz over the long term
+    }
+
+    // Has the timing for the keyboard beep expired?
+    if(ts.beep_timing > 0)
+    {
+        ts.beep_timing--;
+    }
+
+    if(ts.scope_scheduler)      // update thread timer if non-zero
+    {
+        ts.scope_scheduler--;
+    }
+
+    if(ts.waterfall.scheduler)      // update thread timer if non-zero
+    {
+        ts.waterfall.scheduler--;
+    }
+
+    if(ts.audio_spkr_unmute_delay_count)        // this updates at 1.5 kHz - used to time TX->RX delay
+    {
+        ts.audio_spkr_unmute_delay_count--;
+    }
+
+    if(ks.debounce_time < DEBOUNCE_TIME_MAX)
+    {
+        ks.debounce_time++;   // keyboard debounce timer
+    }
+
+}
+
 static void UiDriver_HandleUSB_Keyboard()
 {
 #ifdef USE_USBKEYBOARD

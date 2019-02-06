@@ -211,7 +211,7 @@ static void audio_out_buffer_pop_pkt(volatile int16_t* ptr, uint32_t len)
 }
 
 /* len is length in  stereo  samples */
-void audio_out_fill_tx_buffer(AudioSample_t *buffer, uint32_t len)
+void UsbdAudio_FillTxBuffer(AudioSample_t *buffer, uint32_t len)
 {
     volatile int16_t *pkt = audio_out_buffer_next_pkt(2*len);
 
@@ -224,8 +224,8 @@ void audio_out_fill_tx_buffer(AudioSample_t *buffer, uint32_t len)
             // which is weird if on F4 and 32 Bit transfers are done. (mixed endian)
             // for all other systems we scale 16bit USB audio to 32bit
             // on 16 bit audio nothing at  all happens here.
-            buffer->l = correctHalfWord((*pkt++) << AUDIO_BIT_SHIFT);
-            buffer->r = correctHalfWord((*pkt++) << AUDIO_BIT_SHIFT);
+            buffer->l = I2S_Int16_2_AudioSample(*pkt++);
+            buffer->r = I2S_Int16_2_AudioSample(*pkt++);
             buffer++;
         }
         audio_out_buffer_pop_pkt(pkt,2*len);
