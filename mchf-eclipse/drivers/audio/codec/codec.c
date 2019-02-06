@@ -150,7 +150,7 @@ static uint32_t Codec_WriteRegister(I2C_HandleTypeDef* hi2c, uint8_t RegisterAdd
     // Assemble 2-byte data in WM8731 format
     uint8_t Byte1 = ((RegisterAddr<<1)&0xFE) | ((RegisterValue>>8)&0x01);
     uint8_t Byte2 = RegisterValue&0xFF;
-    return MCHF_I2C_WriteRegister(hi2c, CODEC_ADDRESS, Byte1, 1, Byte2);
+    return UhsdrHw_I2C_WriteRegister(hi2c, CODEC_ADDRESS, Byte1, 1, Byte2);
 }
 
 static uint32_t Codec_ResetCodec(I2C_HandleTypeDef* hi2c, uint32_t AudioFreq, CodecSampleWidth_t word_size)

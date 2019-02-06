@@ -3574,7 +3574,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             break;
         }
         break;
-
+#ifdef STM32F4
     case CONFIG_I2C1_SPEED:      //
         var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.i2c_speed[I2C_BUS_1],
                 1,
@@ -3584,7 +3584,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         );
         if(var_change)
         {
-            mchf_hw_i2c1_init();
+            UhsdrHw_I2C_ChangeSpeed(&hi2c1);
         }
         snprintf(options, 32, " %3dkHz",(unsigned int)(ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 );
 		if((ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 < 50 || (ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 > 250)
@@ -3609,7 +3609,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         );
         if(var_change)
         {
-            mchf_hw_i2c2_init();
+            UhsdrHw_I2C_ChangeSpeed(&hi2c2);
         }
         snprintf(options, 32, " %3ukHz",(unsigned int)(ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 );
 		if((ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 < 50 || (ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 > 250)
@@ -3625,7 +3625,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 		  clr = Green;
 		}
         break;
-
+#endif
     case CONFIG_RTC_HOUR:
     {
         RTC_TimeTypeDef rtc;

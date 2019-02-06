@@ -312,14 +312,8 @@ void Board_InitMinimal()
     // TODO: Move to CubeMX Config
     Board_TouchscreenInit();
 
-    // I2C init
-    mchf_hw_i2c1_init();
-
     // Initialize LO
     Osc_Init();
-
-    // Codec control interface
-    mchf_hw_i2c2_init();
 
     // TO HERE: Code be moved to init_full() if we figure out what causes the white screen @MiniTRX SPI
 
