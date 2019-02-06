@@ -6,29 +6,52 @@
  **                                                                                **
  **--------------------------------------------------------------------------------**
  **                                                                                **
- **  Description:   Please provide one                                             **
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
 #include <assert.h>
-#include "ui_driver.h" // for pushing into UI buffer
+#include "uhsdr_board_config.h"
+#include "ui_driver.h" /**> for UiDriver_TextMsgPutChar() */
 #include "uhsdr_digi_buffer.h"
+#include "uhsdr_ring_buffer.h"
 
-#define DIGIMODES_TX_BUFFER_SIZE 128
+/**
+ * If this module is using with UHSDR
+ * change this defines in config files.
+ *
+ * Values above is default ones
+ * if others are not defined in config files.
+ */
+#if !defined(DIGIMODES_TX_BUFFER_SIZE)
+/** @todo-> Add into config files. */
+    #define DIGIMODES_TX_BUFFER_SIZE 128
+#endif
 
-static __IO uint8_t digimodes_tx_buffer[DIGIMODES_TX_BUFFER_SIZE];
-static __IO int32_t digimodes_tx_buffer_head = 0;
-static __IO int32_t digimodes_tx_tail = 0;
-static __IO uint32_t active_consumer = 0;
+/** @todo -  */
+typedef enum
+{
+    TXT_MSG_NONE = 0,
+    TXT_MSG_UPDATE_SCREEN = 1,
+    TXT_MSG_CLEAN_SCREEN  = 2,
+}txt_msg_actions_requested_t;
 
 // keeps prev consumer to restore it by calling DigiModes_Restore_BufferConsumer();
+static __IO uint32_t active_consumer = 0;
 static __IO uint32_t prev_consumer = CW;
+
+static uint8_t buf[ DIGIMODES_TX_BUFFER_SIZE ];
+static uhsdr_ring_buffer_t digi_buffer;
+
+inline void DigiModes_DigiBufferInit()
+{
+    uhsdr_ring_buffer_init( &digi_buffer, buf, DIGIMODES_TX_BUFFER_SIZE );
+}
 
 void DigiModes_Restore_BufferConsumer()
 {
     active_consumer = prev_consumer;
 }
 
-/*
+/**
  * The UI consumer has higher priority to protect it by changing modes.
  * UI should release buffer by calling DigiModes_Restore_BufferConsumer()
  */
@@ -45,12 +68,6 @@ digi_buff_consumer_t DigiModes_Set_BufferConsumer( digi_buff_consumer_t consumer
     return prev_consumer;
 }
 
-uint8_t DigiModes_TxBufferHasData()
-{
-    int32_t len = digimodes_tx_buffer_head - digimodes_tx_tail;
-    return len < 0 ? ( len + DIGIMODES_TX_BUFFER_SIZE ) : len;
-}
-
 bool DigiModes_TxBufferRemove( uint8_t* c_ptr, digi_buff_consumer_t consumer )
 {
     assert( c_ptr );
@@ -58,13 +75,12 @@ bool DigiModes_TxBufferRemove( uint8_t* c_ptr, digi_buff_consumer_t consumer )
 
     bool retval = false;
 
-    if ( consumer == active_consumer && digimodes_tx_buffer_head != digimodes_tx_tail)
+    if ( consumer == active_consumer && uhsdr_ring_buffer_get( &digi_buffer, c_ptr ))
     {
-        *c_ptr = digimodes_tx_buffer[digimodes_tx_tail];
-        digimodes_tx_tail = (digimodes_tx_tail + 1) % DIGIMODES_TX_BUFFER_SIZE;
-
-        // push removed char to UI buffer to display it on the screen.
-        // characters for UI and CW prints when they add to digi_buffer
+        /**
+         * Push the removed char into UI buffer to display it on the screen.
+         * Characters for UI and CW prints when they add into digi_buffer.
+         */
         if ( active_consumer == RTTY || active_consumer == BPSK )
         {
             UiDriver_TextMsgPutChar( *c_ptr );
@@ -74,13 +90,13 @@ bool DigiModes_TxBufferRemove( uint8_t* c_ptr, digi_buff_consumer_t consumer )
     return retval;
 }
 
-/* no room left in the buffer returns 0 */
+/** no room left in the buffer returns 0 */
 int32_t DigiModes_TxBufferPutChar( uint8_t c, digi_buff_consumer_t source )
 {
     assert((source & CW) || (source & KeyBoard) || (source & UI));
 
     int32_t ret = 0;
-    /*
+    /**
      * In case when source and consumer are equal we just
      * print on the screen without putting into digi_buffer
      * to prevent from infinite loop
@@ -92,30 +108,20 @@ int32_t DigiModes_TxBufferPutChar( uint8_t c, digi_buff_consumer_t source )
     }
     else
     {
-        int32_t next_head = (digimodes_tx_buffer_head + 1) % DIGIMODES_TX_BUFFER_SIZE;
-        if (next_head != digimodes_tx_tail)
+        if ( uhsdr_ring_buffer_put( &digi_buffer, c ) && active_consumer == UI)
         {
-            /* there is room */
-            digimodes_tx_buffer[digimodes_tx_buffer_head] = c;
-            digimodes_tx_buffer_head = next_head;
-            /*
-             * If the consumer is UI we print on the screen
-             * right the way on the inputing text into buffer
-             */
-            if ( active_consumer == UI )
-            {
-                UiDriver_TextMsgPutChar( c );
-            }
+            UiDriver_TextMsgPutChar( c );
             ret ++;
         }
     }
     return ret;
 }
 
+/** @todo-> Reimplement to have ability to push n-byte into buffer.  */
 void DigiModes_TxBufferPutSign( const char* s, digi_buff_consumer_t source )
 {
     assert( s );
-    assert((source & CW) || (source & KeyBoard));
+    assert((source & CW) || (source & KeyBoard) || (source & UI));
 
     DigiModes_TxBufferPutChar( '<', source );
     DigiModes_TxBufferPutChar( s[0], source );
@@ -125,8 +131,9 @@ void DigiModes_TxBufferPutSign( const char* s, digi_buff_consumer_t source )
 
 void DigiModes_TxBufferReset()
 {
-    digimodes_tx_tail = digimodes_tx_buffer_head;
+    uhsdr_ring_buffer_flush( &digi_buffer );
 }
+
 
 #if defined(_UNIT_TEST_)
 uint32_t DigiModes_TxBufferGetCurrentConsumer( void )

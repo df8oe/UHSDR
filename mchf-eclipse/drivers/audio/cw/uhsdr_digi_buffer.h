@@ -6,9 +6,12 @@
  **                                                                                **
  **--------------------------------------------------------------------------------**
  **                                                                                **
- **  Description:   Please provide one                                             **
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
+
+/**
+ * @file uhsdr_digi_buffer.h
+ */
 
 #ifndef __UHSDR_DIGI_BUFFER_H
 #define __UHSDR_DIGI_BUFFER_H
@@ -28,9 +31,9 @@ typedef enum
 extern "C" {
 #endif
 
-uint8_t DigiModes_TxBufferHasData();
+void DigiModes_DigiBufferInit( void );
 
-/*
+/**
  * The Digi buffer has multi consumers, some of them trying to get an entry
  * from the buffer at the same time.
  * to organize it, the allowed consumer for buffer should be set before using it.
@@ -40,7 +43,7 @@ uint8_t DigiModes_TxBufferHasData();
 digi_buff_consumer_t DigiModes_Set_BufferConsumer( digi_buff_consumer_t consumer );
 void                 DigiModes_Restore_BufferConsumer();
 
-/*
+/**
  * @return - true if element was removed from buffer and available in c_ptr
  *           false if there is no elements in buffer or this consumer not
  *           allowed to remove elements from buffer.
@@ -51,6 +54,7 @@ int32_t  DigiModes_TxBufferPutChar( uint8_t c, digi_buff_consumer_t source );
 void     DigiModes_TxBufferPutSign( const char* s, digi_buff_consumer_t source );
 
 void     DigiModes_TxBufferReset( );
+
 
 #if defined(_UNIT_TEST_)
     uint32_t DigiModes_TxBufferGetCurrentConsumer( void );

@@ -886,6 +886,8 @@ void UiDriver_Init()
     ts.enc_two_mode     = ENC_TWO_MODE_RF_GAIN;
     ts.enc_thr_mode     = ENC_THREE_MODE_RIT;
 
+    DigiModes_DigiBufferInit();
+
 	// Driver publics init
 	UiDriver_PublicsInit();
 	// Init frequency publics

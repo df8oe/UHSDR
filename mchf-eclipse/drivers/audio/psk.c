@@ -331,51 +331,51 @@ static const uint16_t psk_varicode[] = {
 
 
 static const float32_t PskBndPassB_31[] = {
-		6.6165543533213894e-05,
-		0.0,
-		-0.00013233108706642779,
-		0.0,
-		6.6165543533213894e-05
+        6.6165543533213894e-05,
+        0.0,
+        -0.00013233108706642779,
+        0.0,
+        6.6165543533213894e-05
 };
 
 static const float32_t PskBndPassA_31[] = {
-		1.0,
-		-3.8414813063247664,
-		5.6662277107033248,
-		-3.7972899991488904,
-		0.9771256616899302
+        1.0,
+        -3.8414813063247664,
+        5.6662277107033248,
+        -3.7972899991488904,
+        0.9771256616899302
 };
 
 static const float32_t PskBndPassB_63[] = {
-		0.0002616526950658905,
-		0.0,
-		-0.000523305390131781,
-		0.0,
-		0.0002616526950658905
+        0.0002616526950658905,
+        0.0,
+        -0.000523305390131781,
+        0.0,
+        0.0002616526950658905
 };
 
 static const float32_t PskBndPassA_63[] = {
-		1.0,
-		-3.8195192250239174,
-		5.6013869366249818,
-		-3.7321386869273105,
-		0.95477455992103932
+        1.0,
+        -3.8195192250239174,
+        5.6013869366249818,
+        -3.7321386869273105,
+        0.95477455992103932
 };
 
 static const float32_t PskBndPassB_125[] = {
-		0.0010232176384709002,
-		0.0,
-		-0.0020464352769418003,
-		0.0,
-		0.0010232176384709002
+        0.0010232176384709002,
+        0.0,
+        -0.0020464352769418003,
+        0.0,
+        0.0010232176384709002
 };
 
 static const float32_t PskBndPassA_125[] = {
-		1.0,
-		-3.7763786572915334,
-		5.4745855184361272,
-		-3.6055008493327723,
-		0.91159449659996006
+        1.0,
+        -3.7763786572915334,
+        5.4745855184361272,
+        -3.6055008493327723,
+        0.91159449659996006
 };
 
 static soft_dds_t psk_dds;
@@ -386,29 +386,29 @@ static soft_dds_t psk_rx_dds;
 #if 0
 static void PskBufAdd(int len, float32_t buf[], float32_t v)
 {
-	for (int i = len - 1; i > 0; i--)
-	{
-		buf[i] = buf[i-1];
-	}
-	buf[0] = v;
+    for (int i = len - 1; i > 0; i--)
+    {
+        buf[i] = buf[i-1];
+    }
+    buf[0] = v;
 }
 #endif
 
 static float32_t Psk_IirNext(const float32_t bpf_b[], const float32_t bpf_a[], float32_t x[], float32_t y[], int idx, int taps)
 {
-	float32_t resp = 0;
-	int iidx; 
+    float32_t resp = 0;
+    int iidx;
 
-	for (int i = 0; i < taps; i++)
-	{
-		iidx = (idx - i + taps) % taps;
-		resp += bpf_b[i] * x[iidx];
-		if (i>0)
-		{
-			resp -= bpf_a[i] * y[iidx];
-		}
-	}
-	return resp / bpf_a[0];
+    for (int i = 0; i < taps; i++)
+    {
+        iidx = (idx - i + taps) % taps;
+        resp += bpf_b[i] * x[iidx];
+        if (i>0)
+        {
+            resp -= bpf_a[i] * y[iidx];
+        }
+    }
+    return resp / bpf_a[0];
 }
 
 
@@ -416,14 +416,14 @@ static float32_t Psk_IirNext(const float32_t bpf_b[], const float32_t bpf_a[], f
 
 const psk_speed_item_t psk_speeds[PSK_SPEED_NUM] =
 {
-		{ .id =PSK_SPEED_31, .value = 31.25,  .bpf_b = PskBndPassB_31, .bpf_a = PskBndPassA_31, .rate = 384, .label = " 31" },
-		{ .id =PSK_SPEED_63, .value = 62.5,   .bpf_b = PskBndPassB_63, .bpf_a = PskBndPassA_63, .rate = 192, .label = " 63"  },
-		{ .id =PSK_SPEED_125, .value = 125.0, .bpf_b = PskBndPassB_125, .bpf_a = PskBndPassA_125, .rate = 96, .label = "125" }
+        { .id =PSK_SPEED_31, .value = 31.25,  .bpf_b = PskBndPassB_31, .bpf_a = PskBndPassA_31, .rate = 384, .label = " 31" },
+        { .id =PSK_SPEED_63, .value = 62.5,   .bpf_b = PskBndPassB_63, .bpf_a = PskBndPassA_63, .rate = 192, .label = " 63"  },
+        { .id =PSK_SPEED_125, .value = 125.0, .bpf_b = PskBndPassB_125, .bpf_a = PskBndPassA_125, .rate = 96, .label = "125" }
 };
 
 psk_ctrl_t psk_ctrl_config =
 {
-		.speed_idx = PSK_SPEED_31
+        .speed_idx = PSK_SPEED_31
 };
 
 PskState_Internal_t  psk_state;
@@ -431,76 +431,76 @@ PskState_Internal_t  psk_state;
 static void Bpsk_ResetWin() {
     // little trick, we just reset the acc
     // which brings us back to the first sample
-	psk_bit_dds.acc = 0;
+    psk_bit_dds.acc = 0;
 }
 
 void Psk_Modulator_PrepareTx()
 {
-	Psk_Modulator_SetState(PSK_MOD_PREAMBLE);
+    Psk_Modulator_SetState(PSK_MOD_PREAMBLE);
 }
 
 void Bpsk_Demodulator_Init()
 {
-	psk_state.rx_phase = 0;
-	psk_state.rx_bnd_idx = 0;
-	
-	for (int i = 0; i < PSK_BND_FLT_LEN; i++)
-	{
-		psk_state.rx_samples_in[i] = 0;
-		psk_state.rx_samples[i] = 0;
-	}
-	
-	for (int i = 0; i < PSK_BUF_LEN; i++)
-	{
-		psk_state.rx_cos_prod[i] = 0;
-		psk_state.rx_sin_prod[i] = 0;
-		psk_state.rx_scmix[i] = 0;
-	}
+    psk_state.rx_phase = 0;
+    psk_state.rx_bnd_idx = 0;
 
-	psk_state.rx_idx = 0;
-	psk_state.rx_last_bit = 0;
-	psk_state.rx_last_symbol = 0;
-	psk_state.rx_symbol_len = psk_state.rate / PSK_BUF_LEN;
-	psk_state.rx_symbol_idx = 0;
-	
-	// for (int i = 0; i < psk_state.rx_symbol_len; i ++)
-	// {
-	// 	psk_state.rx_symbol_buf[i];
-	// }
+    for (int i = 0; i < PSK_BND_FLT_LEN; i++)
+    {
+        psk_state.rx_samples_in[i] = 0;
+        psk_state.rx_samples[i] = 0;
+    }
 
-	psk_state.rx_word = 0;
+    for (int i = 0; i < PSK_BUF_LEN; i++)
+    {
+        psk_state.rx_cos_prod[i] = 0;
+        psk_state.rx_sin_prod[i] = 0;
+        psk_state.rx_scmix[i] = 0;
+    }
+
+    psk_state.rx_idx = 0;
+    psk_state.rx_last_bit = 0;
+    psk_state.rx_last_symbol = 0;
+    psk_state.rx_symbol_len = psk_state.rate / PSK_BUF_LEN;
+    psk_state.rx_symbol_idx = 0;
+
+    // for (int i = 0; i < psk_state.rx_symbol_len; i ++)
+    // {
+    //     psk_state.rx_symbol_buf[i];
+    // }
+
+    psk_state.rx_word = 0;
 }
 
 
 void Psk_Modem_Init(uint32_t output_sample_rate)
 {
 
-	psk_state.tx_idx = 0;
+    psk_state.tx_idx = 0;
 
-	softdds_setFreqDDS(&psk_dds,    PSK_OFFSET, output_sample_rate, true);
-	softdds_setFreqDDS(&psk_rx_dds, PSK_OFFSET, PSK_SAMPLE_RATE,    true);
+    softdds_setFreqDDS(&psk_dds,    PSK_OFFSET, output_sample_rate, true);
+    softdds_setFreqDDS(&psk_rx_dds, PSK_OFFSET, PSK_SAMPLE_RATE,    true);
     // we use a sine wave with a frequency of half of the bit rate
     // as envelope generator
     softdds_setFreqDDS(&psk_bit_dds, (float32_t)psk_speeds[psk_ctrl_config.speed_idx].value / 2.0, output_sample_rate, false);
 
-	psk_state.tx_bit_len = lround(output_sample_rate / psk_speeds[psk_ctrl_config.speed_idx].value * 2); // 480000 / 31.25 * 2 = 3072
-	psk_state.rate = PSK_SAMPLE_RATE / psk_speeds[psk_ctrl_config.speed_idx].value;
+    psk_state.tx_bit_len = lround(output_sample_rate / psk_speeds[psk_ctrl_config.speed_idx].value * 2); // 480000 / 31.25 * 2 = 3072
+    psk_state.rate = PSK_SAMPLE_RATE / psk_speeds[psk_ctrl_config.speed_idx].value;
 
-	Bpsk_Demodulator_Init();
+    Bpsk_Demodulator_Init();
 }
 
 
 static char Bpsk_DecodeVaricode(uint16_t code)
 {
-	char result = '*';
-	for (int i = 0; i<PSK_VARICODE_NUM; i++) {
-		if (psk_varicode[i] == code)
-		{
-			result = i;
-			break;
-		}
-	}
-	return result;
+    char result = '*';
+    for (int i = 0; i<PSK_VARICODE_NUM; i++) {
+        if (psk_varicode[i] == code)
+        {
+            result = i;
+            break;
+        }
+    }
+    return result;
 }
 
 static uint16_t Bpsk_FindCharReversed(uint8_t c)
@@ -607,13 +607,13 @@ void Psk_Demodulator_ProcessSample(float32_t sample)
 {
     float32_t fsample = BpskDecoder_Bandpass(sample);
 
-	// VCO generates a sine/cosine wave "carrier" with PSK_OFFSET Hz as frequency
+    // VCO generates a sine/cosine wave "carrier" with PSK_OFFSET Hz as frequency
     float32_t vco_sin, vco_cos;
     // we have to use a different DDS as for TX (different sample rates), IQ gives us sin and cos waves of PSK_OFFSET Hz
     softdds_genIQSingleTone(&psk_rx_dds, &vco_sin , &vco_cos, 1);
 
-	// we now multiple these carriers with our signal
-	// this allows us to compare phase differences
+    // we now multiple these carriers with our signal
+    // this allows us to compare phase differences
     float32_t sin_mix = vco_sin * fsample;
     float32_t cos_mix = vco_cos * fsample;
 
@@ -625,59 +625,59 @@ void Psk_Demodulator_ProcessSample(float32_t sample)
     psk_state.rx_sin_prod[psk_state.rx_idx] = sin_mix;
     psk_state.rx_cos_prod[psk_state.rx_idx] = cos_mix;
 
-	// we now calculate an average
-	float32_t symbol_out = psk_state.rx_sum_sin / PSK_BUF_LEN;
-	float32_t cos_out    = psk_state.rx_sum_cos / PSK_BUF_LEN;
+    // we now calculate an average
+    float32_t symbol_out = psk_state.rx_sum_sin / PSK_BUF_LEN;
+    float32_t cos_out    = psk_state.rx_sum_cos / PSK_BUF_LEN;
 
     // GUESS: now try to estimate the frequency error of our VCO vs. the incoming signal
-	float32_t rx_scmix = symbol_out * cos_out;
-	psk_state.rx_err += rx_scmix - psk_state.rx_scmix[psk_state.rx_idx];
-	psk_state.rx_scmix[psk_state.rx_idx] = rx_scmix;
+    float32_t rx_scmix = symbol_out * cos_out;
+    psk_state.rx_err += rx_scmix - psk_state.rx_scmix[psk_state.rx_idx];
+    psk_state.rx_scmix[psk_state.rx_idx] = rx_scmix;
 
 
-	float32_t smax = 0;
+    float32_t smax = 0;
 
-	for (int i = 0; i < PSK_BUF_LEN; i++)
-	{
-		if (fabsf(psk_state.rx_cos_prod[i]) > smax)
-		{
-			smax = fabsf(psk_state.rx_cos_prod[i]);
-		}
-		if (fabsf(psk_state.rx_sin_prod[i]) > smax)
-		{
-			smax = fabsf(psk_state.rx_sin_prod[i]);
-		}
-	}
+    for (int i = 0; i < PSK_BUF_LEN; i++)
+    {
+        if (fabsf(psk_state.rx_cos_prod[i]) > smax)
+        {
+            smax = fabsf(psk_state.rx_cos_prod[i]);
+        }
+        if (fabsf(psk_state.rx_sin_prod[i]) > smax)
+        {
+            smax = fabsf(psk_state.rx_sin_prod[i]);
+        }
+    }
 
-	// calculate the final correction value from rx_err
-	// avoid division by zero if smax is 0
-	float32_t rx_err_corr = psk_state.rx_err/ (PSK_BUF_LEN * ((smax != 0) ? (smax * smax * 4.0) : 1.0));
+    // calculate the final correction value from rx_err
+    // avoid division by zero if smax is 0
+    float32_t rx_err_corr = psk_state.rx_err/ (PSK_BUF_LEN * ((smax != 0) ? (smax * smax * 4.0) : 1.0));
 
-	// if the error is too large, we limit it to +/- 0.1
-	if(fabsf(rx_err_corr) > 0.1)
-	{
-		rx_err_corr = (rx_err_corr > 0) ? 0.1 : -0.1;
-	}
-	rx_err_corr = 0;
+    // if the error is too large, we limit it to +/- 0.1
+    if(fabsf(rx_err_corr) > 0.1)
+    {
+        rx_err_corr = (rx_err_corr > 0) ? 0.1 : -0.1;
+    }
+    rx_err_corr = 0;
 
-	// now advance our phase counter with our error correction
+    // now advance our phase counter with our error correction
     psk_state.rx_phase += PSK_SHIFT_DIFF + rx_err_corr * PSK_SHIFT_DIFF;
 
 
-	// we just passed one "full" offset frequency wave length?
-	// now see if we have enough symbols to decide if it is a 1 or 0
+    // we just passed one "full" offset frequency wave length?
+    // now see if we have enough symbols to decide if it is a 1 or 0
     // the symbol is basically an averaged phase difference over the last PSK_BUF_LEN
     // samples.
-	if (psk_state.rx_phase > 1)
-	{
-		psk_state.rx_phase -= 1;
-		BpskDecoder_NextSymbol(symbol_out);
-	}
+    if (psk_state.rx_phase > 1)
+    {
+        psk_state.rx_phase -= 1;
+        BpskDecoder_NextSymbol(symbol_out);
+    }
 
-	if (psk_state.rx_phase < 0)
-	{
-		psk_state.rx_phase += 1;
-	}
+    if (psk_state.rx_phase < 0)
+    {
+        psk_state.rx_phase += 1;
+    }
 
     // we prepare us for the next sample in our ring buffer
     psk_state.rx_idx = (psk_state.rx_idx + 1) % PSK_BUF_LEN;
@@ -734,9 +734,8 @@ int16_t Psk_Modulator_GenSample()
                         Psk_Modulator_SetState(PSK_MOD_ACTIVE);
                     }
                 }
-                else if (DigiModes_TxBufferHasData())
+                else if ( DigiModes_TxBufferRemove( &psk_state.tx_char, BPSK ))
                 {
-                    DigiModes_TxBufferRemove( &psk_state.tx_char, BPSK );
                     Psk_Modulator_SetState(PSK_MOD_ACTIVE);
                     if (psk_state.tx_char == 0x04) // EOT, stop tranmission
                     {
