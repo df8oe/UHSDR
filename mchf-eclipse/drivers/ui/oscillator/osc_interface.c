@@ -67,6 +67,8 @@ const OscillatorInterface_t osc_dummy =
 		.changeToNextFrequency = OscDummy_ChangeToNextFrequency,
 		.isNextStepLarge = OscDummy_IsNextStepLarge,
 		.readyForIrqCall = OscDummy_ReadyForIrqCall,
+        .name = "Dummy",
+        .type = OSC_DUMMY,
 };
 
 static void OscDummy_Init()

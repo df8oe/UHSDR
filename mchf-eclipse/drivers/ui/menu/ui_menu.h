@@ -48,9 +48,7 @@ enum MENU_INFO_ITEM
 #ifdef USE_OSC_SI570
     INFO_SI570,
 #endif
-#ifdef USE_OSC_SI5351A
-	INFO_SI5351A,
-#endif
+	INFO_OSC_NAME,
     INFO_TP,
     INFO_RFBOARD,
     INFO_CPU,

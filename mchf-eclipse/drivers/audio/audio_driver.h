@@ -574,21 +574,13 @@ typedef struct
 extern lLMS leakyLMS;
 #endif
 
+// TODO: Discuss to drop 16 bit I2S support. Would simplify the incoming/outgoing data handling. We could
+// align all scalings accordingly and would not have most of the ugly stuff below
 // FIXME: This is ugly: The STM32F4 returns 32bit reads from 16 bit peripherals such as the SPI/I2S
 // with the two half words in "mixed endian" instead of the wanted "little endian". This is documented in
 // the data sheet, so the only thing we can do is to swap the halfwords. This is in fact a single ror16 operation
 // if the compiler is smart enough to detect what we want.
 
-// we have to swap them only if we are having 32bit values from/to I2S and an STM32F4
-#if defined(STM32F4) && defined(USE_32_IQ_BITS)
-    static inline int32_t correctHalfWord(const int32_t word)
-    {
-        uint32_t uWord = (uint32_t)word;
-        return uWord >> 16 | uWord << 16;
-    }
-#else
-    #define correctHalfWord(a) (a)
-#endif
 
 // these constants are used to adjust the 32 bit integer samples to represent the same levels as if we sample 16 bit integers,
 // effectively "shifting" them down or up.
@@ -611,6 +603,39 @@ extern lLMS leakyLMS;
     #define AUDIO_BIT_SCALE_DOWN (1.0)
 #endif
 #define AUDIO_BIT_SCALE_UP (1<<AUDIO_BIT_SHIFT)
+
+// we have to swap them only if we are having 32bit values from/to I2S and an STM32F4
+#if defined(STM32F4) && defined(USE_32_IQ_BITS)
+    static inline int32_t I2S_correctHalfWord(const int32_t word)
+    {
+        uint32_t uWord = (uint32_t)word;
+        return uWord >> 16 | uWord << 16;
+    }
+
+    static inline int16_t I2S_IqSample_2_Int16(const iq_data_t sample) { return (I2S_correctHalfWord(sample))  >> IQ_BIT_SHIFT; }
+    static inline int16_t I2S_AudioSample_2_Int16(const iq_data_t sample) { return (I2S_correctHalfWord(sample))  >> IQ_BIT_SHIFT; }
+    static inline iq_data_t I2S_Int16_2_IqSample(const int16_t sample) { return (I2S_correctHalfWord(sample  << IQ_BIT_SHIFT)); }
+    static inline iq_data_t I2S_Int16_2_AudioSample(const int16_t sample) { return (I2S_correctHalfWord(sample  << IQ_BIT_SHIFT)); }
+
+#else
+    #define I2S_correctHalfWord(a) (a)
+
+    #if defined(USE_32_IQ_BITS)
+        static inline int16_t I2S_IqSample_2_Int16(const iq_data_t sample) { return sample  >> 16; }
+        static inline iq_data_t I2S_Int16_2_IqSample(const int16_t sample) { return sample  << 16; }
+    #else
+        static inline int16_t I2S_IqSample_2_Int16(const iq_data_t sample) { return sample; }
+        static inline iq_data_t I2S_Int16_2_IqSample(const int16_t sample) { return sample; }
+    #endif
+    #if defined(USE_32_AUDIO_BITS)
+        static inline int16_t I2S_AudioSample_2_Int16(const iq_data_t sample) { return sample  >> 16; }
+        static inline iq_data_t I2S_Int16_2_AudioSample(const int16_t sample) { return sample  << 16; }
+    #else
+        static inline int16_t I2S_AudioSample_2_Int16(const iq_data_t sample) { return sample; }
+        static inline iq_data_t I2S_Int16_2_AudioSample(const int16_t sample) { return sample; }
+     #endif
+#endif
+
 
 // Exports
 void AudioDriver_Init(void);

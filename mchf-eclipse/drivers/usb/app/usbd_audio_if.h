@@ -124,8 +124,8 @@
   void HalfTransfer_CallBack_FS(void);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
-  extern void audio_in_put_buffer(int16_t sample);
-  void audio_out_fill_tx_buffer(AudioSample_t *buffer, uint32_t len);
+  extern void UsbdAudio_PutSample(int16_t sample);
+  void UsbdAudio_FillTxBuffer(AudioSample_t *buffer, uint32_t len);
 /* USER CODE END EXPORTED_FUNCTIONS */
 /**
   * @}

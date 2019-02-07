@@ -2638,8 +2638,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
         {
             // 16 bit format - convert to float and increment
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
-            audio_in_put_buffer(correctHalfWord(src[i].l)>>IQ_BIT_SHIFT);
-            audio_in_put_buffer(correctHalfWord(src[i].r)>>IQ_BIT_SHIFT);
+            UsbdAudio_PutSample(I2S_IqSample_2_Int16(src[i].l));
+            UsbdAudio_PutSample(I2S_IqSample_2_Int16(src[i].r));
         }
     }
 
@@ -2654,7 +2654,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
 
         for(uint32_t i = 0; i < blockSize; i++)
         {
-            int32_t level = abs(correctHalfWord(src[i].l))>>IQ_BIT_SHIFT;
+            int32_t level = abs(I2S_correctHalfWord(src[i].l))>>IQ_BIT_SHIFT;
 
             if(level > ADC_CLIP_WARN_THRESHOLD/4)            // This is the release threshold for the auto RF gain
             {
@@ -2669,8 +2669,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
                 }
             }
 
-            adb.iq_buf.i_buffer[i] = correctHalfWord(src[i].l);
-            adb.iq_buf.q_buffer[i] = correctHalfWord(src[i].r);
+            adb.iq_buf.i_buffer[i] = I2S_correctHalfWord(src[i].l);
+            adb.iq_buf.q_buffer[i] = I2S_correctHalfWord(src[i].r);
         }
 
         if (IQ_BIT_SCALE_DOWN != 1.0)
@@ -2924,8 +2924,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
 
         	if (AUDIO_BIT_SHIFT != 0)
         	{
-        	    dst[i].l = correctHalfWord(dst[i].l << AUDIO_BIT_SHIFT);
-                dst[i].r = correctHalfWord(dst[i].r << AUDIO_BIT_SHIFT);
+        	    dst[i].l = I2S_correctHalfWord(dst[i].l << AUDIO_BIT_SHIFT);
+                dst[i].r = I2S_correctHalfWord(dst[i].r << AUDIO_BIT_SHIFT);
         	}
         }
 
@@ -2941,8 +2941,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const src, AudioSample_t * cons
         	vals[0] = vals[1] = adb.a_buffer[0][i] * usb_audio_gain;
 #endif
 
-        	audio_in_put_buffer(vals[0]);
-            audio_in_put_buffer(vals[1]);
+        	UsbdAudio_PutSample(vals[0]);
+            UsbdAudio_PutSample(vals[1]);
         }
     }
 }
@@ -2969,7 +2969,6 @@ void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t
 {
     static bool to_rx = false;	// used as a flag to clear the RX buffer
     static bool to_tx = false;	// used as a flag to clear the TX buffer
-    static ulong tcount = 0;
     bool muted = false;
 
     if(ts.show_debug_info)
@@ -3020,12 +3019,12 @@ void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t
         {
             TxProcessor_PrepareRun(); // last actions before we go live
         }
-        if((to_tx) || (ts.audio_processor_input_mute_counter>0) || ts.audio_dac_muting_flag || ts.audio_dac_muting_buffer_count > 0)	 	// the first time back to TX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
+        if((to_tx) || (ts.audio_processor_input_mute_counter > 0) || ts.audio_dac_muting_flag || ts.audio_dac_muting_buffer_count > 0)	 	// the first time back to TX, or TX audio muting timer still active - clear the buffers to reduce the "crash"
         {
             muted = true;
             AudioDriver_AudioFillSilence(audio, blockSize);
             to_tx = false;                          // caused by the content of the buffers from TX - used on return from SSB TX
-            if ( ts.audio_processor_input_mute_counter >0)
+            if (ts.audio_processor_input_mute_counter > 0)
             {
                 ts.audio_processor_input_mute_counter--;
             }
@@ -3034,52 +3033,15 @@ void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t
         TxProcessor_Run(audio, iq, audioDst,blockSize, muted);
 
         // Pause or inactivity
-         if (ts.audio_dac_muting_buffer_count)
-         {
-             ts.audio_dac_muting_buffer_count--;
-         }
-
+        if (ts.audio_dac_muting_buffer_count)
+        {
+            ts.audio_dac_muting_buffer_count--;
+        }
 
         to_rx = true;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
     }
 
-    if(ts.audio_spkr_unmute_delay_count)		// this updates at 1.5 kHz - used to time TX->RX delay
-    {
-        ts.audio_spkr_unmute_delay_count--;
-    }
-
-    if(ks.debounce_time < DEBOUNCE_TIME_MAX)
-    {
-        ks.debounce_time++;   // keyboard debounce timer
-    }
-
-    // UiDriver_Callback_AudioISR();
-
-    // Perform LCD backlight PWM brightness function
-    UiDriver_BacklightDimHandler();
-
-    tcount+= SAMPLES_PER_DMA_CYCLE;        // add the number of samples that have passed in DMA cycle
-    if(tcount >= SAMPLES_PER_CENTISECOND)  // enough samples for 0.01 second passed?
-    {
-        tcount -= SAMPLES_PER_CENTISECOND;  // yes - subtract that many samples
-        ts.sysclock++;	// this clock updates at PRECISELY 100 Hz over the long term
-    }
-
-    // Has the timing for the keyboard beep expired?
-    if(ts.beep_timing > 0)
-    {
-        ts.beep_timing--;
-    }
-
-    if(ts.scope_scheduler)		// update thread timer if non-zero
-    {
-        ts.scope_scheduler--;
-    }
-
-    if(ts.waterfall.scheduler)      // update thread timer if non-zero
-    {
-        ts.waterfall.scheduler--;
-    }
+    UiDriver_Callback_AudioISR();
 
     if(ts.show_debug_info)
     {

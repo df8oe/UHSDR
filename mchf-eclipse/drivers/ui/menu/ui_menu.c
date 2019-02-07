@@ -519,7 +519,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 #ifdef USE_OSC_SI570
     case INFO_SI570:
     {
-        if (Si570_IsPresent()) {
+        if (osc->type == OSC_SI570) {
             float suf = Si570_GetStartupFrequency();
             int vorkomma = (int)(suf);
             int nachkomma = (int) roundf((suf-vorkomma)*10000);
@@ -527,7 +527,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         }
         else
         {
-            outs = "Not found!";
+            outs = "Not applicable";
             if (osc == NULL)
             {
             	*m_clr_ptr = Red;
@@ -536,23 +536,18 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     }
     break;
 #endif
-#ifdef USE_OSC_SI5351A
-    case INFO_SI5351A:
+    case INFO_OSC_NAME:
     {
-        if (Si5351a_IsPresent()) {
-        	outs = "Detected";
+        if (osc->isPresent) {
+        	outs = osc->name;
         }
         else
         {
-            outs = "Not found!";
-            if (osc == NULL)
-            {
-            	*m_clr_ptr = Red;
-            }
+            outs = "Not present";
+            *m_clr_ptr = Red;
         }
     }
     break;
-#endif
     case INFO_TP:
         outs = (ts.tp->present == 0)?"n/a":"XPT2046";
         break;
@@ -3579,7 +3574,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             break;
         }
         break;
-
+#ifdef STM32F4
     case CONFIG_I2C1_SPEED:      //
         var_change = UiDriverMenuItemChangeUInt32(var, mode, &ts.i2c_speed[I2C_BUS_1],
                 1,
@@ -3589,7 +3584,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         );
         if(var_change)
         {
-            mchf_hw_i2c1_init();
+            UhsdrHw_I2C_ChangeSpeed(&hi2c1);
         }
         snprintf(options, 32, " %3dkHz",(unsigned int)(ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 );
 		if((ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 < 50 || (ts.i2c_speed[I2C_BUS_1]*I2C_BUS_SPEED_MULT) / 1000 > 250)
@@ -3614,7 +3609,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         );
         if(var_change)
         {
-            mchf_hw_i2c2_init();
+            UhsdrHw_I2C_ChangeSpeed(&hi2c2);
         }
         snprintf(options, 32, " %3ukHz",(unsigned int)(ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 );
 		if((ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 < 50 || (ts.i2c_speed[I2C_BUS_2]*I2C_BUS_SPEED_MULT) / 1000 > 250)
@@ -3630,7 +3625,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 		  clr = Green;
 		}
         break;
-
+#endif
     case CONFIG_RTC_HOUR:
     {
         RTC_TimeTypeDef rtc;

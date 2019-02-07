@@ -338,16 +338,6 @@ int mchfMain(void)
         Board_GreenLed(LED_STATE_ON);
     }
 
-	if(Si570_IsPresent())
-	{
-	  ts.si570_is_present = true;
-	}
-	else
-	{
-	  ts.si570_is_present = false;
-	}
-
-
     Board_InitFull();
 
     ConfigStorage_Init();
@@ -388,10 +378,13 @@ int mchfMain(void)
     UiDriver_Init();
 
 
-
-    // we now reinit the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!
-    mchf_hw_i2c1_init();
-    mchf_hw_i2c2_init();
+#ifdef STM32F4
+    // we now re-init the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!
+    // we can do this only on the STM32F4 as we are not able to change
+    // the speed on the STM32F7/H7 easily via HAL in a portable way
+    UhsdrHw_I2C_ChangeSpeed(&hi2c1);
+    UhsdrHw_I2C_ChangeSpeed(&hi2c2);
+#endif
 
 	profileTimedEventInit();
 

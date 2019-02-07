@@ -68,6 +68,7 @@
 
 #define SI570_I2C               (&hi2c1)
 #define SI5351A_I2C             (&hi2c1)
+#define MCP_I2C                 (&hi2c1)
 
 #define CODEC_ANA_I2C               (&hi2c2)
 #define CODEC_ANA_SAI               SAI1
@@ -140,8 +141,8 @@
 #define BUTTON_BNDM             GPIO_PIN_0
 #define BUTTON_BNDM_PIO         GPIOB
 // pin 1
-#define PTT_CNTR                GPIO_PIN_1
-#define PTT_CNTR_PIO            GPIOB
+#define TXRX_CNTR                GPIO_PIN_1
+#define TXRX_CNTR_PIO            GPIOB
 // pin 2
 #define BUTTON_BNDP             GPIO_PIN_2
 #define BUTTON_BNDP_PIO         GPIOB

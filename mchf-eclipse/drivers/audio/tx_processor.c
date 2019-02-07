@@ -322,8 +322,8 @@ static void TxProcessor_IqFinalProcessing(float32_t scaling, bool swap, iq_buffe
     for(int i = 0; i < blockSize; i++)
     {
         // Prepare data for DAC
-        dst[i].l = correctHalfWord((int32_t)final_i_buffer[i]); // save left channel
-        dst[i].r = correctHalfWord((int32_t)final_q_buffer[i]); // save right channel
+        dst[i].l = I2S_correctHalfWord(final_i_buffer[i]); // save left channel
+        dst[i].r = I2S_correctHalfWord(final_q_buffer[i]); // save right channel
     }
 
 }
@@ -380,13 +380,13 @@ static void TxProcessor_AudioBufferFill(audio_block_t a_block, AudioSample_t * c
             // audio buffer with right sample channel
             for(int i = 0; i < blockSize; i++)
             {
-                a_block[i] = correctHalfWord(src[i].r);
+                a_block[i] = I2S_correctHalfWord(src[i].r);
             }
         } else {
             // audio buffer with left sample channel
             for(int i = 0; i < blockSize; i++)
             {
-                a_block[i] = correctHalfWord(src[i].l);
+                a_block[i] = I2S_correctHalfWord(src[i].l);
             }
         }
 
@@ -491,7 +491,6 @@ static bool TxProcessor_SSB(audio_block_t a_block, iq_buffer_t* iq_buf_p, const 
 // NOTE:  FM_MOD_SCALING_2K5 is rescaled (doubled) for 5 kHz deviation, as are modulation factors for subaudible tones and tone burst
 
 #define FM_MOD_SCALING_2K5      16              // For FM modulator:  Scaling factor for NCO, after all processing, to achieve 2.5 kHz with a 1 kHz tone
-//
 #define FM_MOD_SCALING  FM_MOD_SCALING_2K5      // For FM modulator - system deviation
 #define FM_MOD_AMPLITUDE_SCALING    0.875       // For FM modulator:  Scaling factor for output of modulator to set proper output power
 
@@ -945,7 +944,7 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
         // iq sample rate must match the sample rate of USB IQ audio if we read from USB
         assert(tx_audio_source != TX_AUDIO_DIGIQ || IQ_SAMPLE_RATE == USBD_AUDIO_FREQ);
 
-        audio_out_fill_tx_buffer(srcUSB,blockSize);
+        UsbdAudio_FillTxBuffer(srcUSB,blockSize);
     }
 
     if (external_mute)
@@ -1034,34 +1033,36 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     switch (ts.stream_tx_audio)
     {
     case STREAM_TX_AUDIO_OFF:
+        // no usb output if not streaming tx output
         break;
     case STREAM_TX_AUDIO_GENIQ:
         for(int i = 0; i < blockSize; i++)
         {
 
-            // 16 bit format - convert to float and increment
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
-            audio_in_put_buffer(adb.iq_buf.q_buffer[i]);
-            audio_in_put_buffer(adb.iq_buf.i_buffer[i]);
+            UsbdAudio_PutSample(adb.iq_buf.q_buffer[i]);
+            UsbdAudio_PutSample(adb.iq_buf.i_buffer[i]);
         }
         break;
     case STREAM_TX_AUDIO_SRC:
         for(int i = 0; i < blockSize; i++)
         {
-            // scale down 32bit to 16bit USB audio
+            // Native sample format to USB 16 bit format
+            // scale down 32bit to 16bit USB audio (if using 32bits)
             // on F4 only:
             // back convert the weird format the F4 wants us to deliver 32bit I2S in (mixed endian)
-            audio_in_put_buffer(correctHalfWord(src[i].r) >> IQ_BIT_SHIFT);
-            audio_in_put_buffer(correctHalfWord(src[i].l) >> IQ_BIT_SHIFT);
+            UsbdAudio_PutSample(I2S_AudioSample_2_Int16(src[i].r));
+            UsbdAudio_PutSample(I2S_AudioSample_2_Int16(src[i].l));
         }
         break;
     case STREAM_TX_AUDIO_FILT:
         for(int i = 0; i < blockSize; i++)
         {
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIG
-            // TODO: certain modulation modes will destroy the "a_buffer" during IQ signal creation (FM does at least)
-            audio_in_put_buffer(adb.a_buffer[0][i]);
-            audio_in_put_buffer(adb.a_buffer[1][i]);
+            // Certain modulation modes will use both buffers, hence we send out both
+            // normally only the left buffer is of interest (adb.a_buffer[1]) goes there)
+            UsbdAudio_PutSample(adb.a_buffer[0][i]);
+            UsbdAudio_PutSample(adb.a_buffer[1][i]);
         }
     }
 
@@ -1072,10 +1073,10 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     {
         for(int i = 0; i < blockSize; i++)
         {
-            // 16 bit format - convert to float and increment
+            // Native sample format to USB 16 bit format
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
-            audio_in_put_buffer(correctHalfWord(dst[i].r) >> IQ_BIT_SHIFT);
-            audio_in_put_buffer(correctHalfWord(dst[i].l) >> IQ_BIT_SHIFT);
+            UsbdAudio_PutSample(I2S_IqSample_2_Int16(dst[i].r));
+            UsbdAudio_PutSample(I2S_IqSample_2_Int16(dst[i].l));
         }
     }
 }

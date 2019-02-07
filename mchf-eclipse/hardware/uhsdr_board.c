@@ -40,7 +40,7 @@
 __IO __MCHF_SPECIALMEM TransceiverState ts;
 
 
-static void mchf_board_led_init(void)
+static void Board_Led_Init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
 
@@ -103,7 +103,7 @@ static void mchf_board_debug_init(void)
 #endif
 
 
-static void mchf_board_ptt_init(void)
+static void Board_TxRxCntrPin_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -113,72 +113,11 @@ static void mchf_board_ptt_init(void)
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 
     // RX/TX control pin init
-    GPIO_InitStructure.Pin = PTT_CNTR;
-    HAL_GPIO_Init(PTT_CNTR_PIO, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = TXRX_CNTR;
+    HAL_GPIO_Init(TXRX_CNTR_PIO, &GPIO_InitStructure);
 }
 
-static void mchf_board_keyer_irq_init(void)
-{
-#if 0
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-    // Configure PADDLE_DASH pin as input
-    GPIO_InitStructure.Mode  = GPIO_MODE_IT_FALLING;
-    GPIO_InitStructure.Pull  = GPIO_PULLUP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
-
-    GPIO_InitStructure.Pin   = PADDLE_DAH;
-    HAL_GPIO_Init(PADDLE_DAH_PIO, &GPIO_InitStructure);
-
-
-    GPIO_InitStructure.Pin   = PADDLE_DIT;
-    HAL_GPIO_Init(PADDLE_DIT_PIO, &GPIO_InitStructure);
-
-    HAL_NVIC_SetPriority(EXTI0_IRQn, 15, 0);
-    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-#endif
-}
-
-static void mchf_board_power_button_irq_init(void)
-{
-    GPIO_InitTypeDef GPIO_InitStructure;
-    ///EXTI_InitTypeDef EXTI_InitStructure;
-    ///NVIC_InitTypeDef NVIC_InitStructure;
-
-    // Enable the BUTTON Clock
-    ///RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
-
-    // Configure pin as input
-    GPIO_InitStructure.Pin   = BUTTON_PWR;
-    GPIO_InitStructure.Mode  = GPIO_MODE_IT_FALLING;
-    GPIO_InitStructure.Pull  = GPIO_PULLUP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(BUTTON_PWR_PIO, &GPIO_InitStructure);
-
-    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 14, 0);
-    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-
-    /*
-    // Connect Button EXTI Line to GPIO Pin
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC,EXTI_PinSource13);
-
-    // Configure PADDLE_DASH EXTI line
-    EXTI_InitStructure.EXTI_Line    = EXTI_Line13;
-    EXTI_InitStructure.EXTI_Mode    = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
-
-    // Enable and set PADDLE_DASH EXTI Interrupt to the lowest priority
-    NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
-    */
-}
-
-static void mchf_board_dac_init(void)
+static void Board_Dac_Init(void)
 {
 
 #ifdef UI_BRD_OVI40
@@ -190,39 +129,20 @@ static void mchf_board_dac_init(void)
     HAL_DAC_SetValue(&hdac,DAC_CHANNEL_2,DAC_ALIGN_8B_R,0);
 
 }
-/**
- * @brief ADC init for Input Voltage readings
- */
-static void mchf_board_adc1_init(void)
+
+
+static void Board_Adc_Init(void)
 {
+    // ADC init for Input Voltage readings
     HAL_ADC_Start(&hadc1);
-}
-
-/**
- * @brief ADC init for antenna forward power readings
- */
-static void mchf_board_adc2_init(void)
-{
+    // ADC init for antenna forward power readings
     HAL_ADC_Start(&hadc2);
-}
-
-/**
- * @brief ADC init for antenna return power readings
- */
-static void mchf_board_adc3_init(void)
-{
+    // ADC init for antenna return power readings
     HAL_ADC_Start(&hadc3);
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_power_down_init
-//* Object              :
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-static void mchf_board_power_down_init(void)
+
+static void Board_PowerDown_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -249,7 +169,7 @@ static void mchf_board_power_down_init(void)
 //
 // -------------------------------------------
 //
-static void mchf_board_band_cntr_init(void)
+static void Board_BandCntr_Init(void)
 {
 #ifdef UI_BRD_MCHF
     // FIXME: USE HAL Init here as well, this handles also the multiple Ports case
@@ -270,7 +190,7 @@ static void mchf_board_band_cntr_init(void)
     GPIO_SetBits(BAND2_PIO,BAND2);
 }
 
-void Board_TouchscreenInit()
+static void Board_Touchscreen_Init()
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -289,6 +209,10 @@ void Board_TouchscreenInit()
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 }
 
+/**
+ * Get us to a state where display and touch (and some other stuff) works, we have an idea about the
+ * rf hardware connected to us and then let the application do their thing
+ */
 void Board_InitMinimal()
 {
     // Enable clock on all ports
@@ -299,27 +223,22 @@ void Board_InitMinimal()
     __GPIOE_CLK_ENABLE();
 
     // LED init
-    mchf_board_led_init();
+    Board_Led_Init();
     Board_RedLed(LED_STATE_ON);
+
     // Power up hardware
-    mchf_board_power_down_init();
+    Board_PowerDown_Init();
 
   // FROM HERE
     // Filter control lines
-    mchf_board_band_cntr_init();
+    Board_BandCntr_Init();
 
     // Touchscreen SPI Control Signals Init
     // TODO: Move to CubeMX Config
-    Board_TouchscreenInit();
-
-    // I2C init
-    mchf_hw_i2c1_init();
+    Board_Touchscreen_Init();
 
     // Initialize LO
     Osc_Init();
-
-    // Codec control interface
-    mchf_hw_i2c2_init();
 
     // TO HERE: Code be moved to init_full() if we figure out what causes the white screen @MiniTRX SPI
 
@@ -332,6 +251,9 @@ void Board_InitMinimal()
 
 }
 
+/*
+ * This initializes non-essential hardware for later use by the application
+ */
 void Board_InitFull()
 {
 
@@ -362,16 +284,10 @@ void Board_InitFull()
     UiRotaryEncoderThreeInit();
 
     // Init DACs
-    mchf_board_dac_init();
+    Board_Dac_Init();
 
     // Enable all ADCs
-    mchf_board_adc1_init();
-    mchf_board_adc2_init();
-    mchf_board_adc3_init();
-
-    // Init watchdog - not working
-    //mchf_board_watchdog_init();
-
+    Board_Adc_Init();
 }
 
 /*
@@ -411,7 +327,29 @@ void Board_Powerdown()
     GPIO_InitStructure.Pin = POWER_DOWN;
     HAL_GPIO_Init(POWER_DOWN_PIO, &GPIO_InitStructure);
 
+    // disable all interrupts
+    __disable_irq();
+
+    // disable systick irq
+    HAL_SuspendTick();
+
+    // set clocks to default state
+    HAL_RCC_DeInit();
+
+    // clear Interrupt Enable Register & Interrupt Pending Register
+    const size_t icer_count = sizeof(NVIC->ICER)/sizeof(NVIC->ICER[0]);
+
+    for (size_t i = 0; i <icer_count; i++)
+    {
+        NVIC->ICER[i]=0xFFFFFFFF;
+        NVIC->ICPR[i]=0xFFFFFFFF;
+    }
+
+    Board_GreenLed(LED_STATE_OFF);
+    UiLcdHy28_BacklightEnable(false);
+
     for(;;) { asm("nop"); }
+    // there is no coming back from here...
 }
 //*----------------------------------------------------------------------------
 //* Function Name       : mchf_board_post_init
@@ -427,20 +365,15 @@ void Board_PostInit(void)
     // Currently used for UI driver processing only
     ///mchf_board_set_system_tick_value();
 
-    // Init power button IRQ
-    mchf_board_power_button_irq_init();
-
     // PTT control
-    mchf_board_ptt_init();
-
-    // Init keyer interface
-    mchf_board_keyer_irq_init();
+    Board_TxRxCntrPin_Init();
 
     if (ts.rtc_present)
     {
         MchfRtc_SetPpm(ts.rtc_calib);
     }
 }
+
 void Board_Reboot()
 {
     ///Si570_ResetConfiguration();       // restore SI570 to factory default
@@ -792,7 +725,7 @@ void Board_EnableTXSignalPath(bool tx_enable)
     // to make switching as noiseless as possible, make sure the codec lineout is muted/produces zero output before switching
     if (tx_enable)
     {
-        GPIO_SetBits(PTT_CNTR_PIO,PTT_CNTR);     // TX on and switch CODEC audio paths
+        GPIO_SetBits(TXRX_CNTR_PIO,TXRX_CNTR);     // TX on and switch CODEC audio paths
         // Antenna Direction Output
         // BPF Direction Output (U1,U2)
         // PTT Optocoupler LED On (ACC Port) (U6)
@@ -803,7 +736,7 @@ void Board_EnableTXSignalPath(bool tx_enable)
     }
     else
     {
-        GPIO_ResetBits(PTT_CNTR_PIO,PTT_CNTR); // TX off
+        GPIO_ResetBits(TXRX_CNTR_PIO,TXRX_CNTR); // TX off
         // Antenna Direction Input
         // BPF Direction Input (U1,U2)
         // PTT Optocoupler LED Off (ACC Port) (U6)
