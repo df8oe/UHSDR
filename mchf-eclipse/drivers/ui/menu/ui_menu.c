@@ -3629,7 +3629,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
     case CONFIG_RTC_HOUR:
     {
         RTC_TimeTypeDef rtc;
-        MchfRtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        Rtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
         rtc.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
         rtc.StoreOperation = RTC_STOREOPERATION_SET;
 
@@ -3648,7 +3648,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
     case CONFIG_RTC_MIN:
     {
         RTC_TimeTypeDef rtc;
-        MchfRtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        Rtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
         rtc.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
         rtc.StoreOperation = RTC_STOREOPERATION_SET;
 
@@ -3667,7 +3667,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
     case CONFIG_RTC_SEC:
     {
         RTC_TimeTypeDef rtc;
-        MchfRtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
+        Rtc_GetTime(&hrtc, &rtc, RTC_FORMAT_BIN);
         rtc.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
         rtc.StoreOperation = RTC_STOREOPERATION_SET;
 
@@ -3693,7 +3693,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                                1);
          if(var_change)      // did something change?
          {
-             MchfRtc_SetPpm(ts.rtc_calib);
+             Rtc_SetPpm(ts.rtc_calib);
          }
          snprintf(options,32, "%4dppm", ts.rtc_calib);
          break;
@@ -3704,7 +3704,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         clr = White;
         if(var>=1)
         {
-            MchfRtc_Start();
+            Rtc_Start();
             Board_Reboot();
             // TODO: we will not reach this but in future we may switch the keyboard dynamically...
             txt_ptr = " Done!";
@@ -3717,7 +3717,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         clr = White;
         if(var>=1)
         {
-            MchfRtc_FullReset();
+            Rtc_FullReset();
 
             txt_ptr = " Done!";
             clr = Green;

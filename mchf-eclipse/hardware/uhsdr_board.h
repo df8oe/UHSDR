@@ -273,9 +273,6 @@ typedef struct TransceiverState
     uint32_t	tune_freq;			// main synthesizer frequency
     uint32_t	tune_freq_req;		// used to detect change of main synthesizer frequency
 
-    // Transceiver calibration mode flag
-    //uint8_t	calib_mode;
-
     // Transceiver menu mode variables
     uint8_t	menu_mode;		// TRUE if in menu mode
     int16_t	menu_item;		// Used to indicate specific menu item
@@ -310,8 +307,6 @@ typedef struct TransceiverState
     uint8_t	tx_meter_mode;				// meter mode
 
     // Audio filter ID
-    // uint8_t	filter_id;
-    //
     uint8_t   filter_select[AUDIO_FILTER_NUM];
 
 

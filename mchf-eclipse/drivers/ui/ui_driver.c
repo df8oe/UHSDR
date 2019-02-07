@@ -7277,7 +7277,7 @@ void UiDriver_TaskHandler_MainTasks()
 					RTC_TimeTypeDef sTime;
 
 
-					MchfRtc_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+					Rtc_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
 
 					char str[20];
 					snprintf(str,20,"%2u:%02u:%02u",sTime.Hours,sTime.Minutes,sTime.Seconds);
