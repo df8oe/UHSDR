@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2019-01-23T05:29:39  by "./ui_menu_structure_graph.py"
+#  generated at  2019-02-07T07:58:37  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2019-01-23T05:29:39  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2019-02-07T07:58:37  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1112,13 +1112,13 @@
              shape = record
              ];
         
-        "INFO_SI570" [
-             label = "INFO_SI570 | SI570"
+        "INFO_OSC_NAME" [
+             label = "INFO_OSC_NAME | Oscillator"
              shape = record
              ];
         
-        "INFO_SI5351A" [
-             label = "INFO_SI5351A | SI5351A"
+        "INFO_SI570" [
+             label = "INFO_SI570 | SI570"
              shape = record
              ];
         
@@ -1877,9 +1877,9 @@
             
             MENU_SYSINFO -> INFO_DISPLAY_CTRL
             
-            MENU_SYSINFO -> INFO_SI570
+            MENU_SYSINFO -> INFO_OSC_NAME
             
-            MENU_SYSINFO -> INFO_SI5351A
+            MENU_SYSINFO -> INFO_SI570
             
             MENU_SYSINFO -> INFO_EEPROM
             

@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2019-01-23T05:29:44  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2019-02-07T07:58:46  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2019-01-23T05:29:44  by "./ui_menu_structure_mdtable.py"
+generated at  2019-02-07T07:58:46  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -256,8 +256,8 @@ generated at  2019-01-23T05:29:44  by "./ui_menu_structure_mdtable.py"
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
 | **Display**                   (                               INFO_DISPLAY) | Displays working mode (SPI/parallel            | 
 | **Disp. Controller**          (                          INFO_DISPLAY_CTRL) | identified LCD controller chip                 | 
+| **Oscillator**                (                              INFO_OSC_NAME) | Local oscillator type                          | 
 | **SI570**                     (                                 INFO_SI570) | Startup frequency and I2C address of local oscillator Type SI570 | 
-| **SI5351A**                   (                               INFO_SI5351A) | Local oscillator type SI5351A detected.        | 
 | **EEPROM**                    (                                INFO_EEPROM) | type of serial EEPROM and its capacity         | 
 | **Touchscreen**               (                                    INFO_TP) | touchscreen state                              | 
 | **CPU**                       (                                   INFO_CPU) | identification of fitted MCU                   | 

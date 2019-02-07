@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-13316.2696 752,-13316.2696 752,4 -4,4"/>
 <text text-anchor="middle" x="374" y="-22.8" font-family="Times,serif" font-size="14.00" fill="#000000">mcHF v.. &#45; Menus Overview</text>
-<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00" fill="#000000">generated at &#160;2019&#45;01&#45;23T05:29:39 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00" fill="#000000">generated at &#160;2019&#45;02&#45;07T07:58:37 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node">
 <title>MENU_TOP</title>
@@ -3030,33 +3030,33 @@
 <path fill="none" stroke="#000000" d="M247.0278,-2575.7749C261.6042,-2647.4256 309.4885,-2864.4348 363,-2908.7696 391.9795,-2932.7793 432.2393,-2940.9948 468.4528,-2942.6202"/>
 <polygon fill="#000000" stroke="#000000" points="468.45,-2946.1215 478.5469,-2942.9115 468.652,-2939.1244 468.45,-2946.1215"/>
 </g>
-<!-- INFO_SI570 -->
+<!-- INFO_OSC_NAME -->
 <g id="node216" class="node">
+<title>INFO_OSC_NAME</title>
+<polygon fill="none" stroke="#000000" points="491.5,-2861.7696 491.5,-2907.7696 619.5,-2907.7696 619.5,-2861.7696 491.5,-2861.7696"/>
+<text text-anchor="middle" x="555.5" y="-2892.5696" font-family="Times,serif" font-size="14.00" fill="#000000">INFO_OSC_NAME</text>
+<polyline fill="none" stroke="#000000" points="491.5,-2884.7696 619.5,-2884.7696 "/>
+<text text-anchor="middle" x="555.5" y="-2869.5696" font-family="Times,serif" font-size="14.00" fill="#000000">Oscillator</text>
+</g>
+<!-- MENU_SYSINFO&#45;&gt;INFO_OSC_NAME -->
+<g id="edge174" class="edge">
+<title>MENU_SYSINFO&#45;&gt;INFO_OSC_NAME</title>
+<path fill="none" stroke="#000000" d="M244.0611,-2576.0892C249.2989,-2634.1633 271.5188,-2785.7472 363,-2857.7696 395.8599,-2883.6399 442.0159,-2890.7904 480.8949,-2891.2828"/>
+<polygon fill="#000000" stroke="#000000" points="481.1352,-2894.7824 491.1287,-2891.2639 481.1222,-2887.7825 481.1352,-2894.7824"/>
+</g>
+<!-- INFO_SI570 -->
+<g id="node217" class="node">
 <title>INFO_SI570</title>
-<polygon fill="none" stroke="#000000" points="512,-2861.7696 512,-2907.7696 599,-2907.7696 599,-2861.7696 512,-2861.7696"/>
-<text text-anchor="middle" x="555.5" y="-2892.5696" font-family="Times,serif" font-size="14.00" fill="#000000">INFO_SI570</text>
-<polyline fill="none" stroke="#000000" points="512,-2884.7696 599,-2884.7696 "/>
-<text text-anchor="middle" x="555.5" y="-2869.5696" font-family="Times,serif" font-size="14.00" fill="#000000">SI570</text>
+<polygon fill="none" stroke="#000000" points="512,-2810.7696 512,-2856.7696 599,-2856.7696 599,-2810.7696 512,-2810.7696"/>
+<text text-anchor="middle" x="555.5" y="-2841.5696" font-family="Times,serif" font-size="14.00" fill="#000000">INFO_SI570</text>
+<polyline fill="none" stroke="#000000" points="512,-2833.7696 599,-2833.7696 "/>
+<text text-anchor="middle" x="555.5" y="-2818.5696" font-family="Times,serif" font-size="14.00" fill="#000000">SI570</text>
 </g>
 <!-- MENU_SYSINFO&#45;&gt;INFO_SI570 -->
-<g id="edge174" class="edge">
-<title>MENU_SYSINFO&#45;&gt;INFO_SI570</title>
-<path fill="none" stroke="#000000" d="M244.0611,-2576.0892C249.2989,-2634.1633 271.5188,-2785.7472 363,-2857.7696 401.9487,-2888.4335 459.5775,-2892.7977 501.6267,-2890.9474"/>
-<polygon fill="#000000" stroke="#000000" points="501.9062,-2894.4372 511.6909,-2890.3742 501.5081,-2887.4486 501.9062,-2894.4372"/>
-</g>
-<!-- INFO_SI5351A -->
-<g id="node217" class="node">
-<title>INFO_SI5351A</title>
-<polygon fill="none" stroke="#000000" points="503.5,-2810.7696 503.5,-2856.7696 607.5,-2856.7696 607.5,-2810.7696 503.5,-2810.7696"/>
-<text text-anchor="middle" x="555.5" y="-2841.5696" font-family="Times,serif" font-size="14.00" fill="#000000">INFO_SI5351A</text>
-<polyline fill="none" stroke="#000000" points="503.5,-2833.7696 607.5,-2833.7696 "/>
-<text text-anchor="middle" x="555.5" y="-2818.5696" font-family="Times,serif" font-size="14.00" fill="#000000">SI5351A</text>
-</g>
-<!-- MENU_SYSINFO&#45;&gt;INFO_SI5351A -->
 <g id="edge175" class="edge">
-<title>MENU_SYSINFO&#45;&gt;INFO_SI5351A</title>
-<path fill="none" stroke="#000000" d="M246.0506,-2576.0012C255.1816,-2627.0681 284.5273,-2749.1213 363,-2806.7696 400.1071,-2834.0295 452.3398,-2839.9018 493.0354,-2839.4409"/>
-<polygon fill="#000000" stroke="#000000" points="493.2047,-2842.9379 503.1169,-2839.1964 493.0349,-2835.94 493.2047,-2842.9379"/>
+<title>MENU_SYSINFO&#45;&gt;INFO_SI570</title>
+<path fill="none" stroke="#000000" d="M246.0506,-2576.0012C255.1816,-2627.0681 284.5273,-2749.1213 363,-2806.7696 402.7397,-2835.9635 459.8273,-2840.6274 501.5132,-2839.2525"/>
+<polygon fill="#000000" stroke="#000000" points="501.9298,-2842.7372 511.7595,-2838.7841 501.6101,-2835.7445 501.9298,-2842.7372"/>
 </g>
 <!-- INFO_EEPROM -->
 <g id="node218" class="node">
