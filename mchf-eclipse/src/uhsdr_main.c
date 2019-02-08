@@ -53,9 +53,7 @@
 // Misc
 #include "drivers/audio/softdds/softdds.h"
 
-// Eeprom
-#include "misc/v_eprom/eeprom.h"
-//
+#include "uhsdr_flash.h" // only for EEPROM_START_ADDRESS
 #include "drivers/ui/radio_management.h"
 //
 

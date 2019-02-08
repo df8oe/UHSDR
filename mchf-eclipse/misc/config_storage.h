@@ -14,6 +14,8 @@
 #ifndef __CONFIG_STORAGE_H
 #define __CONFIG_STORAGE_H
 
+/* Max variables number */
+#define NB_OF_VAR               (0x1ff)
 
 
 void ConfigStorage_Init();

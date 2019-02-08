@@ -26,11 +26,12 @@
 #include "audio_management.h"
 #include "ui.h" // bandInfo
 
-// Virtual eeprom
-#include "eeprom.h"
 #include "uhsdr_hw_i2c.h"
 #include "uhsdr_rtc.h"
 
+#if (MAX_VAR_ADDR > NB_OF_VAR)
+    #error "Too many eeprom variables defined in ui_configuration.h (MAX_VAR_ADDR > NB_OF_VAR ). Please change maximum number of vars in eeprom.h"
+#endif
 
 
 static int32_t UiConfiguration_CompareConfigBuildVersions(uint major, uint32_t minor, uint32_t release);

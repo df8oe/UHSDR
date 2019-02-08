@@ -29,7 +29,7 @@
 #include "soft_tcxo.h"
 //
 // Eeprom items
-#include "eeprom.h"
+#include "uhsdr_flash.h"
 #include "adc.h"
 #include "dac.h"
 

@@ -15,7 +15,6 @@
 #ifndef DRIVERS_UI_UI_CONFIGURATION_H_
 #define DRIVERS_UI_UI_CONFIGURATION_H_
 #include "uhsdr_board.h"
-#include "eeprom.h"
 
 enum
 {
@@ -610,11 +609,6 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_FIRST_UNUSED 				426		// change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
-
-
-#if (MAX_VAR_ADDR > NB_OF_VAR)
-    #error "Too many eeprom variables defined in ui_configuration.h (MAX_VAR_ADDR > NB_OF_VAR ). Please change maximum number of vars in eeprom.h"
-#endif
 
 // Note: EEPROM addresses up to 383 are currently defined. If this value is passed you
 // need to modify virtual EEPROM routines otherwise system may crash

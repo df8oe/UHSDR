@@ -24,6 +24,41 @@
   * @{
   */
 
+/* Includes ------------------------------------------------------------------*/
+#include "uhsdr_mcu.h"
+#include "config_storage.h"
+/* Device voltage range supposed to be [2.7V to 3.6V], the operation will
+       be done by word  */
+#define VOLTAGE_RANGE           VOLTAGE_RANGE_3
+
+/* Pages 0 and 1 base and end addresses */
+#define PAGE0_BASE_ADDRESS    ((uint32_t)(EEPROM_START_ADDRESS + 0x0000))
+#define PAGE0_END_ADDRESS     ((uint32_t)(EEPROM_START_ADDRESS + (PAGE_SIZE - 1)))
+
+#define PAGE1_BASE_ADDRESS    ((uint32_t)(EEPROM_START_ADDRESS + PAGE_SIZE))
+#define PAGE1_END_ADDRESS     ((uint32_t)(EEPROM_START_ADDRESS + (2 * PAGE_SIZE - 1)))
+
+/* Used Flash pages for EEPROM emulation */
+#define PAGE0                  ((uint16_t)0x0000)
+#define PAGE1                 ((uint16_t)0x0001)
+
+/* No valid page define */
+#define NO_VALID_PAGE         ((uint16_t)0x00AB)
+
+/* Page status definitions */
+#define ERASED                ((uint16_t)0xFFFF)     /* Page is empty */
+#define RECEIVE_DATA          ((uint16_t)0xEEEE)     /* Page is marked to receive data */
+#define VALID_PAGE            ((uint16_t)0x0000)     /* Page containing valid data */
+
+/* Valid pages in read and write defines */
+#define READ_FROM_VALID_PAGE  ((uint8_t)0x00)
+#define RECEIVE_WRITE_PAGE   ((uint8_t)0x01)
+#define WRITE_TO_VALID_PAGE   ((uint8_t)0x02)
+
+
+/* Page full define */
+#define PAGE_FULL             ((uint8_t)0x80)
+
 
 // Common
 #ifndef USE_HAL_DRIVER
@@ -38,7 +73,7 @@
 #include "stm32f4xx_hal_flash_ex.h"
 #endif
 /* Includes ------------------------------------------------------------------*/
-#include "eeprom.h"
+#include "uhsdr_flash.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

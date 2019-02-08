@@ -1,6 +1,6 @@
 SRC := \
 src/uhsdr_main.c \
-misc/v_eprom/eeprom.c \
+misc/v_eprom/uhsdr_flash.c \
 misc/config_storage.c \
 misc/TestCPlusPlusBuild.cpp \
 misc/profiling.c \

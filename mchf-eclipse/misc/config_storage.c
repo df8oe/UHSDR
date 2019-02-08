@@ -19,6 +19,7 @@
 #include "config_storage.h"
 #include "ui_configuration.h"
 #include "serial_eeprom.h"
+#include "uhsdr_flash.h"
 
 static uint8_t config_ramcache[MAX_VAR_ADDR*2+2];
 
