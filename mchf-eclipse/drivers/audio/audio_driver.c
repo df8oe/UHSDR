@@ -2430,6 +2430,10 @@ static void AudioDriver_RxProcessorNoiseReduction(uint16_t blockSizeDecim, float
             NR_out_buffer_peek(&out_buffer);
         }
     }
+    else
+    {
+        memset(NR_dec_buffer,0,sizeof(NR_dec_buffer));
+    }
 
 
     // interpolation of a_buffer from 6ksps to 12ksps!
