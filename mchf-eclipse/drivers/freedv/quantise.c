@@ -617,7 +617,6 @@ float lspmelvq_mbest_encode(int *indexes, float *x, float *xq, int ndim, int mbe
   mbest_search(codebook1, x, w, ndim, lspmelvq_cb[0].m, mbest_stage1, index);
   MBEST_PRINT("Stage 1:", mbest_stage1);
 
-
   /* Stage 2 */
 
   for (j=0; j<mbest_entries; j++) {
@@ -1934,7 +1933,7 @@ void quantise_WoE(C2CONST *c2const, MODEL *model, float *e, float xq[])
   float Fs = c2const->Fs;
 
   /* VQ is only trained for Fs = 8000 Hz */
-  (void)(Fs); // makes compiler happy
+
   assert(Fs == 8000);
 
   x[0] = log10f((model->Wo/PI)*4000.0/50.0)/log10f(2);

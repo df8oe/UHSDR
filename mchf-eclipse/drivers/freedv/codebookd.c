@@ -1,13 +1,13 @@
 /* THIS IS A GENERATED FILE. Edit generate_codebook.c and its input */
 
 /*
- * This intermediary file and the files that used to create it are under
+ * This intermediary file and the files that used to create it are under 
  * The LGPL. See the file COPYING.
  */
 
 #include "defines.h"
 
-  /* codebook/dlsp1.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp1.txt */
 static const float codes0[] = {
   25,
   50,
@@ -42,7 +42,7 @@ static const float codes0[] = {
   775,
   800
 };
-  /* codebook/dlsp2.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp2.txt */
 static const float codes1[] = {
   25,
   50,
@@ -77,7 +77,7 @@ static const float codes1[] = {
   775,
   800
 };
-  /* codebook/dlsp3.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp3.txt */
 static const float codes2[] = {
   25,
   50,
@@ -112,7 +112,7 @@ static const float codes2[] = {
   775,
   800
 };
-  /* codebook/dlsp4.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp4.txt */
 static const float codes3[] = {
   25,
   50,
@@ -147,7 +147,7 @@ static const float codes3[] = {
   1350,
   1400
 };
-  /* codebook/dlsp5.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp5.txt */
 static const float codes4[] = {
   25,
   50,
@@ -182,7 +182,7 @@ static const float codes4[] = {
   1350,
   1400
 };
-  /* codebook/dlsp6.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp6.txt */
 static const float codes5[] = {
   25,
   50,
@@ -217,7 +217,7 @@ static const float codes5[] = {
   1350,
   1400
 };
-  /* codebook/dlsp7.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp7.txt */
 static const float codes6[] = {
   25,
   50,
@@ -252,7 +252,7 @@ static const float codes6[] = {
   775,
   800
 };
-  /* codebook/dlsp8.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp8.txt */
 static const float codes7[] = {
   25,
   50,
@@ -287,7 +287,7 @@ static const float codes7[] = {
   775,
   800
 };
-  /* codebook/dlsp9.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp9.txt */
 static const float codes8[] = {
   25,
   50,
@@ -322,7 +322,7 @@ static const float codes8[] = {
   775,
   800
 };
-  /* codebook/dlsp10.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp10.txt */
 static const float codes9[] = {
   25,
   50,
@@ -359,70 +359,70 @@ static const float codes9[] = {
 };
 
 const struct lsp_codebook lsp_cbd[] = {
-  /* codebook/dlsp1.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp1.txt */
   {
     1,
     5,
     32,
     codes0
   },
-  /* codebook/dlsp2.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp2.txt */
   {
     1,
     5,
     32,
     codes1
   },
-  /* codebook/dlsp3.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp3.txt */
   {
     1,
     5,
     32,
     codes2
   },
-  /* codebook/dlsp4.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp4.txt */
   {
     1,
     5,
     32,
     codes3
   },
-  /* codebook/dlsp5.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp5.txt */
   {
     1,
     5,
     32,
     codes4
   },
-  /* codebook/dlsp6.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp6.txt */
   {
     1,
     5,
     32,
     codes5
   },
-  /* codebook/dlsp7.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp7.txt */
   {
     1,
     5,
     32,
     codes6
   },
-  /* codebook/dlsp8.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp8.txt */
   {
     1,
     5,
     32,
     codes7
   },
-  /* codebook/dlsp9.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp9.txt */
   {
     1,
     5,
     32,
     codes8
   },
-  /* codebook/dlsp10.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/dlsp10.txt */
   {
     1,
     5,

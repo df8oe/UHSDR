@@ -18,12 +18,12 @@
 
 #include "comp.h"
 
-#define FDV_BUFFER_SIZE     320
-#define FDV_RX_AUDIO_SIZE_MAX     360
+#define FDV_BUFFER_SIZE     (4*40*8)  // (40*8) 320
+#define FDV_RX_AUDIO_SIZE_MAX   (4*45*8) // 360
 
 // this is kind of variable unfortunately, see freedv_api.h/.c for FREEDV1600 it is 360
-#define FDV_BUFFER_AUDIO_NUM   3
-#define FDV_BUFFER_IQ_NUM  3 // 3*320*8 = 7680
+#define FDV_BUFFER_AUDIO_NUM   (3)
+#define FDV_BUFFER_IQ_NUM  (3) // 3*320*8 = 7680
 
 #define NR_BUFFER_NUM  4
 #define NR_BUFFER_SIZE     256 // 4*256*8 -> 8192

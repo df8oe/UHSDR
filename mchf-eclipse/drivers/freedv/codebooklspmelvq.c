@@ -7,7 +7,7 @@
 
 #include "defines.h"
 
-  /* /home/danilo/xxxx/freetel-code/codec2/tags/0.5.1/src/codebook/lspmelvq1.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspmelvq1.txt */
 static const float codes0[] = {
   640.185,  893.139,  1393.85,  1494.06,  1656.26,  1700.82,
   558.516,  716.906,  1057.36,  1182.62,  1503.8,  1610.03,
@@ -74,7 +74,7 @@ static const float codes0[] = {
   691.228,  788.141,  1202.12,  1294.89,  1626.97,  1681.77,
   699.08,  886.655,  1300.9,  1399.28,  1579.94,  1646.79
 };
-  /* /home/danilo/xxxx/freetel-code/codec2/tags/0.5.1/src/codebook/lspmelvq2.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspmelvq2.txt */
 static const float codes1[] = {
   4.44342,  51.1708,  7.45726,  -27.4373,  -18.5056,  -18.1989,
   51.58,  63.3166,  57.7796,  -44.1591,  -18.4834,  -6.93392,
@@ -141,7 +141,7 @@ static const float codes1[] = {
   -3.80758,  -39.1425,  28.8305,  -3.09285,  -42.7534,  -25.1803,
   45.2559,  28.8742,  60.0723,  64.461,  3.51203,  -27.883
 };
-  /* /home/danilo/xxxx/freetel-code/codec2/tags/0.5.1/src/codebook/lspmelvq3.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspmelvq3.txt */
 static const float codes2[] = {
   -9.63558,  27.5501,  15.4445,  -4.34872,  -1.8587,  1.27054,
   -15.5343,  23.0515,  -15.4436,  -2.01887,  -6.19433,  -13.5085,
@@ -210,21 +210,21 @@ static const float codes2[] = {
 };
 
 const struct lsp_codebook lspmelvq_cb[] = {
-  /* /home/danilo/xxxx/freetel-code/codec2/tags/0.5.1/src/codebook/lspmelvq1.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspmelvq1.txt */
   {
     6,
     6,
     64,
     codes0
   },
-  /* /home/danilo/xxxx/freetel-code/codec2/tags/0.5.1/src/codebook/lspmelvq2.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspmelvq2.txt */
   {
     6,
     6,
     64,
     codes1
   },
-  /* /home/danilo/xxxx/freetel-code/codec2/tags/0.5.1/src/codebook/lspmelvq3.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspmelvq3.txt */
   {
     6,
     6,

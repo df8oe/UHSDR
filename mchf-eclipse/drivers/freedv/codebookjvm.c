@@ -1,13 +1,13 @@
 /* THIS IS A GENERATED FILE. Edit generate_codebook.c and its input */
 
 /*
- * This intermediary file and the files that used to create it are under
+ * This intermediary file and the files that used to create it are under 
  * The LGPL. See the file COPYING.
  */
 
 #include "defines.h"
 
-  /* codebook/lspjvm1.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspjvm1.txt */
 static const float codes0[] = {
   0.435217,  0.668864,  1.0103,  1.22042,  1.50398,  1.78468,  2.13546,  2.35747,  2.61891,  2.73804,
   0.179285,  0.33316,  0.500638,  0.79695,  1.03999,  1.23497,  1.6523,  1.84823,  2.62556,  2.80497,
@@ -522,7 +522,7 @@ static const float codes0[] = {
   0.427795,  0.519003,  0.771284,  0.93724,  1.08662,  1.60988,  1.87875,  2.05279,  2.53412,  2.65715,
   0.22437,  0.317969,  0.439666,  0.812931,  1.3985,  1.62663,  1.79418,  2.114,  2.30916,  2.49684
 };
-  /* codebook/lspjvm2.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspjvm2.txt */
 static const float codes1[] = {
   0.005167,  -0.03731,  -0.002159,  0.016849,  0.130396,
   0.039445,  0.03168,  -0.074412,  -0.031499,  0.060536,
@@ -1037,7 +1037,7 @@ static const float codes1[] = {
   -0.033256,  -0.053774,  0.049001,  -0.002339,  0.013545,
   -0.006432,  -0.012089,  -0.086842,  0.104105,  0.061991
 };
-  /* codebook/lspjvm3.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspjvm3.txt */
 static const float codes2[] = {
   0.007066,  0.075781,  -0.070082,  -0.092014,  -0.066477,
   0.09051,  0.106622,  0.025911,  -0.01676,  0.003724,
@@ -1554,21 +1554,21 @@ static const float codes2[] = {
 };
 
 const struct lsp_codebook lsp_cbjvm[] = {
-  /* codebook/lspjvm1.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspjvm1.txt */
   {
     10,
     9,
     512,
     codes0
   },
-  /* codebook/lspjvm2.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspjvm2.txt */
   {
     5,
     9,
     512,
     codes1
   },
-  /* codebook/lspjvm3.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/lspjvm3.txt */
   {
     5,
     9,

@@ -56,6 +56,8 @@
 #include "os.h"
 #include "machdep.h"
 
+#include "debug_alloc.h"
+
 static int sync_uw[] = {1,-1,1,-1,1,-1};
 #ifdef __EMBEDDED__
 #define printf gdb_stdio_printf
@@ -94,7 +96,7 @@ struct FDMDV * fdmdv_create(int Nc)
     assert(FDMDV_NOM_SAMPLES_PER_FRAME == M_FAC);
     assert(FDMDV_MAX_SAMPLES_PER_FRAME == (M_FAC+M_FAC/P));
 
-    f = (struct FDMDV*)malloc(sizeof(struct FDMDV));
+    f = (struct FDMDV*)MALLOC(sizeof(struct FDMDV));
     if (f == NULL)
 	return NULL;
 
@@ -102,7 +104,7 @@ struct FDMDV * fdmdv_create(int Nc)
 
     f->ntest_bits = Nc*NB*4;
     f->current_test_bit = 0;
-    f->rx_test_bits_mem = (int*)malloc(sizeof(int)*f->ntest_bits);
+    f->rx_test_bits_mem = (int*)MALLOC(sizeof(int)*f->ntest_bits);
     assert(f->rx_test_bits_mem != NULL);
     for(i=0; i<f->ntest_bits; i++)
 	f->rx_test_bits_mem[i] = 0;
@@ -219,8 +221,8 @@ void fdmdv_destroy(struct FDMDV *fdmdv)
 {
     assert(fdmdv != NULL);
     codec2_fft_free(fdmdv->fft_pilot_cfg);
-    free(fdmdv->rx_test_bits_mem);
-    free(fdmdv);
+    FREE(fdmdv->rx_test_bits_mem);
+    FREE(fdmdv);
 }
 
 
@@ -1849,7 +1851,7 @@ void fdmdv_8_to_16_short(short out16k[], short in8k[], int n)
   Changes the sample rate of a signal from 16 to 8 kHz.
 
   n is the number of samples at the 8 kHz rate, there are FDMDV_OS*n
-  samples at the 48 kHz rate.  As above however a memory of
+  samples at the 16 kHz rate.  As above however a memory of
   FDMDV_OS_TAPS samples is reqd for in16k[] (see t16_8.c unit test as example).
 
   Low pass filter the 16 kHz signal at 4 kHz using the same filter as

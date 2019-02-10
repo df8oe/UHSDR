@@ -35,16 +35,18 @@
 
 #include <codec2/version.h>
 
-#define CODEC2_MODE_3200 0
-#define CODEC2_MODE_2400 1
-#define CODEC2_MODE_1600 2
-#define CODEC2_MODE_1400 3
-#define CODEC2_MODE_1300 4
-#define CODEC2_MODE_1200 5
-#define CODEC2_MODE_700  6
-#define CODEC2_MODE_700B 7
-#define CODEC2_MODE_700C 8
-#define CODEC2_MODE_WB 9
+#define CODEC2_MODE_3200 	0
+#define CODEC2_MODE_2400 	1
+#define CODEC2_MODE_1600 	2
+#define CODEC2_MODE_1400 	3
+#define CODEC2_MODE_1300 	4
+#define CODEC2_MODE_1200 	5
+#define CODEC2_MODE_700  	6
+#define CODEC2_MODE_700B 	7
+#define CODEC2_MODE_700C 	8
+#define CODEC2_MODE_WB 		9
+#define CODEC2_MODE_450 	10
+#define CODEC2_MODE_450PWB 	11
 
 struct CODEC2;
 
@@ -63,6 +65,7 @@ void codec2_set_natural_or_gray(struct CODEC2 *codec2_state, int gray);
 void codec2_set_softdec(struct CODEC2 *c2, float *softdec);
 float codec2_get_energy(struct CODEC2 *codec2_state, const unsigned char *bits);
 
+void codec2_open_lspEWov(struct CODEC2 *codec2_state, char *filename);
 
 #endif
 

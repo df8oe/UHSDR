@@ -460,7 +460,7 @@ void  FreeDV_mcHF_init()
 {
     // Freedv Test DL2FW
 
-    f_FREEDV = freedv_open(FREEDV_MODE_1600);
+    f_FREEDV = freedv_open(FREEDV_MODE_700D);
     if( ts.special_functions_enabled == 1 )
     {
         sprintf(my_cb_state.tx_str, FREEDV_TX_DF8OE_MESSAGE);

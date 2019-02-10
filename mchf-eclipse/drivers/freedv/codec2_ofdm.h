@@ -14,7 +14,7 @@
   All rights reserved.
 
   This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU Lesser General Public License version 2, as
+  it under the terms of the GNU Lesser General Public License version 2.1, as
   published by the Free Software Foundation.  This program is
   distributed in the hope that it will be useful, but WITHOUT ANY
   WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -48,10 +48,8 @@ extern "C" {
 #define OFDM_SYNC_AUTO   1                 /* falls out of sync automatically */
 #define OFDM_SYNC_MANUAL 2                 /* fall out of sync only under operator control */
     
+struct OFDM_CONFIG;
 struct OFDM;
-
-/* Default configuration for '700D' mode */
-const struct OFDM_CONFIG * OFDM_CONFIG_700D;
 
 /* create and destroy modem states */
 
@@ -62,15 +60,18 @@ void ofdm_destroy(struct OFDM *);
 
 void ofdm_mod(struct OFDM *, COMP *, const int *);
 void ofdm_demod(struct OFDM *, int *, COMP *);
+void ofdm_demod_shorts(struct OFDM *ofdm, int *rx_bits, short *rxbuf_in, float gain);
 int  ofdm_sync_search(struct OFDM *ofdm, COMP *rxbuf_in);
+int  ofdm_sync_search_shorts(struct OFDM *ofdm, short *rxbuf_in, float gain);
 void ofdm_sync_state_machine(struct OFDM *ofdm, int *rx_uw);
 
 /* getters */
     
+struct OFDM_CONFIG *ofdm_get_config_param(void);
 int ofdm_get_nin(struct OFDM *);
 int ofdm_get_samples_per_frame(void);
 int ofdm_get_max_samples_per_frame(void);
-int ofdm_get_bits_per_frame(struct OFDM *);
+int ofdm_get_bits_per_frame();
 void ofdm_get_demod_stats(struct OFDM *ofdm, struct MODEM_STATS *stats);
 
 /* option setters */
@@ -81,6 +82,9 @@ void ofdm_set_foff_est_enable(struct OFDM *, bool);
 void ofdm_set_phase_est_enable(struct OFDM *, bool);
 void ofdm_set_off_est_hz(struct OFDM *, float);
 void ofdm_set_sync(struct OFDM *ofdm, int sync_cmd);
+void ofdm_set_tx_bpf(struct OFDM *ofdm, bool);
+
+void ofdm_print_info(struct OFDM *ofdm);
 
 #ifdef __cplusplus
 }
