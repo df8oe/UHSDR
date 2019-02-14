@@ -83,7 +83,6 @@ drivers/freedv/mpdecode_core.c \
 drivers/freedv/newamp1.c \
 drivers/freedv/newamp2.c \
 drivers/freedv/nlp.c \
-drivers/freedv/octave.c \
 drivers/freedv/ofdm.c \
 drivers/freedv/pack.c \
 drivers/freedv/phase.c \
@@ -154,6 +153,7 @@ drivers/audio/freedv_test_data.c \
 drivers/audio/freq_shift.c \
 drivers/audio/rtty.c \
 drivers/audio/psk.c \
+drivers/audio/rb.c \
 drivers/audio/tx_processor.c \
 drivers/ui/lcd/ui_lcd_layouts.c \
 drivers/ui/ui_vkeybrd.c \

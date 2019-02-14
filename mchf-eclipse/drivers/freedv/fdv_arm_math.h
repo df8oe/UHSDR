@@ -1,14 +1,13 @@
 /*---------------------------------------------------------------------------*\
 
-  FILE........: octave.h
+  FILE........: fdv_arm_math.h
   AUTHOR......: David Rowe
-  DATE CREATED: April 28 2012
+  DATE CREATED: Feb 13 2019
 
-  Functions to save C arrays in Octave matrix format.  the output text
-  file can be directly read into octave using "load filename".
+  Bundles access to ARM CORTEX M specific functions which are enabled by
+  defining FDV_ARM_MATH
 
 \*---------------------------------------------------------------------------*/
-
 
 /*
   Copyright (C) 2012 David Rowe
@@ -27,13 +26,16 @@
   along with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __OCTAVE__
-#define __OCTAVE__
+#ifndef __FDV_ARM_MATH__
+#define __FDV_ARM_MATH__
 
-#include "comp.h"
-
-void octave_save_int(FILE *f, char name[], int data[], int rows, int cols);
-void octave_save_float(FILE *f, char name[], float data[], int rows, int cols, int col_len);
-void octave_save_complex(FILE *f, char name[], COMP data[], int rows, int cols, int col_len);
+#ifdef FDV_ARM_MATH
+    #include "arm_const_structs.h"
+    #define SINF(a) arm_sin_f32(a)
+    #define COSF(a) arm_cos_f32(a)
+#else
+    #define SINF(a) sinf(a)
+    #define COSF(a) cosf(a)
+#endif
 
 #endif

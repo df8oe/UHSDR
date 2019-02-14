@@ -1326,14 +1326,9 @@ static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * co
     bool retval = false;
 
     // Freedv Test DL2FW
-    static int16_t outbuff_count = -3;  //set to -3 since we simulate that we start with history
-    static int16_t trans_count_in = 0;
-    static int16_t FDV_TX_fill_in_pt = 0;
-    static FDV_Audio_Buffer* out_buffer = NULL;
     static int16_t modulus_NF = 0, mod_count=0;
     bool lsb_active = RadioManagement_LSBActive(ts.dmod_mode);
-
-
+    static bool bufferFilled;
     static float32_t History[3]={0.0,0.0,0.0};
 
     // If source is digital usb in, pull from USB buffer, discard line or mic audio and
@@ -1367,37 +1362,29 @@ static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * co
     {
         if (k % 6 == modulus_NF)  //every 6th sample has to be catched -> downsampling by 6
         {
-            mmb.fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].real = real[k];
-            mmb.fdv_iq_buff[FDV_TX_fill_in_pt].samples[trans_count_in].imag = imag[k];
-            trans_count_in++;
+            COMP sample;
+            sample.real = real[k];
+            sample.imag = imag[k];
+            RingBuffer_PutSamples(&fdv_iq_rb, &sample, 1);
         }
     }
 
     modulus_NF += 4; //  shift modulus to not loose any data while overlapping
     modulus_NF %= 6;//  reset modulus to 0 at modulus = 12
 
-    if (trans_count_in == FDV_BUFFER_SIZE) //yes, we really hit exactly 320 - don't worry
-    {
-        //we have enough samples ready to start the FreeDV encoding
-
-        fdv_iq_buffer_add(&mmb.fdv_iq_buff[FDV_TX_fill_in_pt]);
-        //handshake to external function in ui.driver_thread
-        trans_count_in = 0;
-
-        FDV_TX_fill_in_pt++;
-        FDV_TX_fill_in_pt %= FDV_BUFFER_IQ_NUM;
-    }
 
     // if we run out  of buffers lately
     // we wait for availability of at least 2 buffers
     // so that in theory we have uninterrupt flow of audio
     // albeit with a delay of 80ms
-    if (out_buffer == NULL && fdv_audio_has_data() > 1)
+    // we wait for at least two frames being processed until we start transmitting
+    // we could switch to frame plus 1 block to minimize delay
+    if (bufferFilled == false && RingBuffer_GetData(&fdv_audio_rb) > freedv_get_n_nom_modem_samples(f_FREEDV))
     {
-        fdv_audio_buffer_peek(&out_buffer);
+        bufferFilled = true;
     }
 
-    if (out_buffer != NULL) // freeDV encode has finished (running in ui_driver.c)?
+    if (bufferFilled == true && RingBuffer_GetData(&fdv_audio_rb) >= (mod_count != 0?5:6)) // freeDV encode has finished (running in ui_driver.c)?
     {
         // Best thing here would be to use the arm_fir_decimate function! Why?
         // --> we need phase linear filters, because we have to filter I & Q and preserve their phase relationship
@@ -1412,51 +1399,23 @@ static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * co
         for (int j=0; j < blockSize; j++) //upsampling with integrated interpolation-filter for M=6
             // avoiding multiplications by zero within the arm_iir_filter
         {
-            if (outbuff_count >=0)  // here we are not at an block-overlapping region
+            static int16_t sample;
+            if (mod_count == 0)
             {
-                dst[j]=
-                        Fir_Rx_FreeDV_Interpolate_Coeffs[5-mod_count]*out_buffer->samples[outbuff_count] +
-                        Fir_Rx_FreeDV_Interpolate_Coeffs[11-mod_count]*out_buffer->samples[outbuff_count+1]+
-                        Fir_Rx_FreeDV_Interpolate_Coeffs[17-mod_count]*out_buffer->samples[outbuff_count+2]+
-                        Fir_Rx_FreeDV_Interpolate_Coeffs[23-mod_count]*out_buffer->samples[outbuff_count+3];
-                // here we are actually calculation the interpolation for the current "up"-sample
+                RingBuffer_GetSamples(&fdv_audio_rb, &sample, 1);
             }
-            else
-            {
-                //we are at an overlapping region and have to take care of history
-                if (outbuff_count == -3)
-                {
-                    dst[j] =
-                            Fir_Rx_FreeDV_Interpolate_Coeffs[5-mod_count] * History[0] +
-                            Fir_Rx_FreeDV_Interpolate_Coeffs[11-mod_count] * History[1] +
-                            Fir_Rx_FreeDV_Interpolate_Coeffs[17-mod_count] * History[2] +
-                            Fir_Rx_FreeDV_Interpolate_Coeffs[23-mod_count] * out_buffer->samples[0];
-                }
-                else
-                {
-                    if (outbuff_count == -2)
-                    {
-                        dst[j] =
-                                Fir_Rx_FreeDV_Interpolate_Coeffs[5-mod_count] * History[1] +
-                                Fir_Rx_FreeDV_Interpolate_Coeffs[11-mod_count] * History[2] +
-                                Fir_Rx_FreeDV_Interpolate_Coeffs[17-mod_count] * out_buffer->samples[0] +
-                                Fir_Rx_FreeDV_Interpolate_Coeffs[23-mod_count] * out_buffer->samples[1];
-                    }
-                    else
-                    {
-                        dst[j] =
-                                Fir_Rx_FreeDV_Interpolate_Coeffs[5-mod_count] * History[2] +
-                                Fir_Rx_FreeDV_Interpolate_Coeffs[11-mod_count] * out_buffer->samples[0] +
-                                Fir_Rx_FreeDV_Interpolate_Coeffs[17-mod_count] * out_buffer->samples[1] +
-                                Fir_Rx_FreeDV_Interpolate_Coeffs[23-mod_count] * out_buffer->samples[2];
-                    }
-                }
-            }
+            dst[j] =
+                                        Fir_Rx_FreeDV_Interpolate_Coeffs[5-mod_count] * History[0] +
+                                        Fir_Rx_FreeDV_Interpolate_Coeffs[11-mod_count] * History[1] +
+                                        Fir_Rx_FreeDV_Interpolate_Coeffs[17-mod_count] * History[2] +
+                                        Fir_Rx_FreeDV_Interpolate_Coeffs[23-mod_count] * sample;
+            History[0] = History[1];
+            History[1] = History[2];
+            History[2] = sample;
 
             mod_count++;
             if (mod_count==6)
             {
-                outbuff_count++;
                 mod_count=0;
             }
         }
@@ -1465,24 +1424,8 @@ static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * co
     }
     else
     {
+        bufferFilled = false;
         profileEvent(FreeDVTXUnderrun);
-        // in case of underrun -> produce silence
-        arm_fill_f32(0, dst, blockSize);
-    }
-
-    // we used now FDV_BUFFER_SIZE samples (3 from History[], plus FDV_BUFFER_SIZE -3 from out_buffer->samples[])
-    if (outbuff_count == (FDV_BUFFER_SIZE-3))//  -3???
-    {
-        outbuff_count=-3;
-
-        History[0] = out_buffer->samples[FDV_BUFFER_SIZE-3]; // here we have to save historic samples
-        History[1] = out_buffer->samples[FDV_BUFFER_SIZE-2]; // to calculate the interpolation in the
-        History[2] = out_buffer->samples[FDV_BUFFER_SIZE-1]; // block overlapping region
-
-        // ok, let us free the old buffer
-        fdv_audio_buffer_remove(&out_buffer);
-        out_buffer = NULL;
-        fdv_audio_buffer_peek(&out_buffer);
     }
 
     return retval;

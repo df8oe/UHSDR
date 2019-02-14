@@ -39,21 +39,14 @@ extern "C"
 
 #include "codec2_ofdm.h"
 #include "filter.h"
-
+#include "fdv_arm_math.h"
+    
 #ifndef M_PI
 #define M_PI        3.14159265358979323846f
 #endif
 
 #define TAU         (2.0f * M_PI)
-
-#ifndef ARM_MATH_CM4
-  #define SINF(a) sinf(a)
-  #define COSF(a) cosf(a)
-#else
-  #include <arm_math.h>
-  #define SINF(a) arm_sin_f32(a)
-  #define COSF(a) arm_cos_f32(a)
-#endif
+#define ROT45       (M_PI / 4.0f)
 
 #define cmplx(value) (COSF(value) + SINF(value) * I)
 #define cmplxconj(value) (COSF(value) + SINF(value) * -I)
@@ -75,7 +68,6 @@ struct OFDM_CONFIG {
     int ns;  /* Number of Symbol frames */
     int bps;   /* Bits per Symbol */
     int txtbits; /* number of auxiliary data bits */
-    int state_str; /* state string length */
     int ftwindowwidth;
 };
 
@@ -91,10 +83,12 @@ struct OFDM {
 
     int *tx_uw;
     
-    char *sync_state;
-    char *last_sync_state;
-    char *sync_state_interleaver;
-    char *last_sync_state_interleaver;
+    State sync_state;
+    State last_sync_state;
+    State sync_state_interleaver;
+    State last_sync_state_interleaver;
+
+    Sync sync_mode;
 
     struct quisk_cfFilter * ofdm_tx_bpf;
     
@@ -118,11 +112,11 @@ struct OFDM {
     int uw_errors;
     int sync_counter;
     int frame_count;
-    int sync_start;
-    int sync_end;
-    int sync_mode;
+
     int frame_count_interleaver;
-    
+
+    bool sync_start;
+    bool sync_end;
     bool timing_en;
     bool foff_est_en;
     bool phase_est_en;

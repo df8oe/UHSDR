@@ -18,12 +18,17 @@
 
 #include "comp.h"
 
-#define FDV_BUFFER_SIZE     (4*40*8)  // (40*8) 320
+#define FDV_MAX_IQ_FRAME_LEN_MS 160
+// one need to set this to the highest frame length to be intended to use
+// FreeDV 700D requires 1280 samples for the 160ms frame, the audio size may be larger depending
+// on the algorithm
+// TODO: Explicitly list the variables in FreeDV to look at.
+
+#define FDV_BUFFER_SIZE     (FDV_MAX_IQ_FRAME_LEN_MS*8)  // (160ms*8samples per ms)
 #define FDV_RX_AUDIO_SIZE_MAX   (4*45*8) // 360
 
-// this is kind of variable unfortunately, see freedv_api.h/.c for FREEDV1600 it is 360
 #define FDV_BUFFER_AUDIO_NUM   (3)
-#define FDV_BUFFER_IQ_NUM  (3) // 3*320*8 = 7680
+#define FDV_BUFFER_IQ_NUM  (3) // we have room for 3 frames, we may be able to reduce this to two frames plus 1 IQ BLOCK
 
 #define NR_BUFFER_NUM  4
 #define NR_BUFFER_SIZE     256 // 4*256*8 -> 8192
@@ -33,16 +38,12 @@ typedef struct {
 }  FDV_Audio_Buffer;
 
 typedef struct {
-   COMP samples[FDV_BUFFER_SIZE];
-}  FDV_IQ_Buffer;
-
-typedef struct {
    COMP samples[NR_BUFFER_SIZE];
 }  NR_Buffer;
 
 typedef union
 {
-    FDV_IQ_Buffer fdv_iq_buff[FDV_BUFFER_IQ_NUM];
+    COMP fdv_iq_buff[(FDV_BUFFER_SIZE * FDV_BUFFER_IQ_NUM) + IQ_BLOCK_SIZE];
     NR_Buffer nr_audio_buff[NR_BUFFER_NUM];
 } MultiModeBuffer_t;
 
@@ -58,28 +59,16 @@ typedef union
 #define FREEDV_TX_DF8OE_MESSAGE	" DF8OE JO42jr using UHSDR " TRX_NAME " SDR with integrated FreeDV codec"
 
 void FreeDv_HandleFreeDv();
-void FreeDV_mcHF_init();
+void FreeDV_Init();
+
+int32_t FreeDV_Iq_Get_FrameLen();
+int32_t FreeDV_Audio_Get_FrameLen();
+
 
 void FreeDv_DisplayClear();
 void FreeDv_DisplayPrepare();
 void FreeDv_DisplayUpdate();
 
-int fdv_iq_buffer_peek(FDV_IQ_Buffer** c_ptr);
-int fdv_iq_buffer_remove(FDV_IQ_Buffer** c_ptr);
-/* no room left in the buffer returns 0 */
-int fdv_iq_buffer_add(FDV_IQ_Buffer* c);
-void fdv_iq_buffer_reset();
-int32_t fdv_iq_has_data();
-int32_t fdv_iq_has_room();
-
-
-int fdv_audio_buffer_peek(FDV_Audio_Buffer** c_ptr);
-int fdv_audio_buffer_remove(FDV_Audio_Buffer** c_ptr);
-/* no room left in the buffer returns 0 */
-int fdv_audio_buffer_add(FDV_Audio_Buffer* c);
-void fdv_audio_buffer_reset();
-int32_t fdv_audio_has_data();
-int32_t fdv_audio_has_room();
 
 #endif
 #if defined(USE_FREEDV) || defined(USE_ALTERNATE_NR)
@@ -90,11 +79,15 @@ extern MultiModeBuffer_t mmb;
 // we allow for one more pointer to a buffer as we have buffers
 // why? because our implementation will only fill up the fifo only to N-1 elements
 #define FDV_BUFFER_IQ_FIFO_SIZE (FDV_BUFFER_IQ_NUM+1)
+
 #define NR_BUFFER_FIFO_SIZE (NR_BUFFER_NUM+1)
 
 
-extern FDV_Audio_Buffer fdv_audio_buff[FDV_BUFFER_AUDIO_NUM];
+#include "rb.h"
 
+extern RingBuffer_data_t fdv_iq_rb;
+extern RingBuffer_data_t fdv_audio_rb;
+extern struct freedv *f_FREEDV;
 
 // we allow for one more pointer to a buffer as we have buffers
 // why? because our implementation will only fill up the fifo only to N-1 elements
