@@ -9,6 +9,8 @@
 #define IQ_RX_NUM_TAPS          89
 
 #define IQ_RX_NUM_TAPS_HI      199
+#define IQ_RX_NUM_TAPS_LO       31
+
 //#define IQ_RX_NUM_TAPS_HI      121
 //#define IQ_RX_NUM_TAPS_MAX     121
 #define IQ_RX_NUM_TAPS_MAX     199
