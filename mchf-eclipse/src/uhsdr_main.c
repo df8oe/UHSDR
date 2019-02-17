@@ -284,6 +284,10 @@ void TransceiverStateInit(void)
 
     ts.band_effective = 255; // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
 
+    // DEBUG !!!
+    ts.stream_tx_audio = STREAM_TX_AUDIO_GENIQ;
+    ts.rx_iq_source = RX_IQ_DIGIQ;
+
 }
 
 // #include "Trace.h"
@@ -412,7 +416,7 @@ int mchfMain(void)
     ts.rx_gain[RX_AUDIO_SPKR].value_old = 0;		// Force update of volume control
 
 #ifdef USE_FREEDV
-    FreeDV_mcHF_init();
+    FreeDV_Init();
     // we now try to place a marker after last dynamically
     // allocated memory
     Canary_Create();

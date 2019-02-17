@@ -212,6 +212,9 @@
 #define SAMPLES_PER_DMA_CYCLE   (IQ_BLOCK_SIZE)
 #define SAMPLES_PER_CENTISECOND (IQ_SAMPLE_RATE/100)
 
+// alternative settings
+//#define USE_FREEDV_1600
+#define USE_FREEDV_700D
 
 #if (IQ_SAMPLE_RATE) != 48000
     #error Only 48k sample frequency supported (yet).

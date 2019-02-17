@@ -15,20 +15,22 @@
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
 #include "uhsdr_board.h"
-
+#include "uhsdr_board_config.h"
 #include "comp.h"
-
-#define FDV_MAX_IQ_FRAME_LEN_MS 160
+#define USE_FREEDV_1600
+#if defined(USE_FREEDV_1600)
+    #define FDV_MAX_IQ_FRAME_LEN_MS 40
+    #define FREEDV_MODE_UHSDR FREEDV_MODE_1600
+#elif defined(USE_FREEDV_700D)
+    #define FDV_MAX_IQ_FRAME_LEN_MS 160
+    #define FREEDV_MODE_UHSDR FREEDV_MODE_700D
+#endif
 // one need to set this to the highest frame length to be intended to use
 // FreeDV 700D requires 1280 samples for the 160ms frame, the audio size may be larger depending
 // on the algorithm
 // TODO: Explicitly list the variables in FreeDV to look at.
 
 #define FDV_BUFFER_SIZE     (FDV_MAX_IQ_FRAME_LEN_MS*8)  // (160ms*8samples per ms)
-#define FDV_RX_AUDIO_SIZE_MAX   (4*45*8) // 360
-
-#define FDV_BUFFER_AUDIO_NUM   (3)
-#define FDV_BUFFER_IQ_NUM  (3) // we have room for 3 frames, we may be able to reduce this to two frames plus 1 IQ BLOCK
 
 #define NR_BUFFER_NUM  4
 #define NR_BUFFER_SIZE     256 // 4*256*8 -> 8192
@@ -43,7 +45,8 @@ typedef struct {
 
 typedef union
 {
-    COMP fdv_iq_buff[(FDV_BUFFER_SIZE * FDV_BUFFER_IQ_NUM) + IQ_BLOCK_SIZE];
+    int16_t fdv_demod_buff[(FDV_BUFFER_SIZE * 3) + IQ_BLOCK_SIZE];
+    COMP fdv_iq_buff[(FDV_BUFFER_SIZE * 2) + IQ_BLOCK_SIZE];
     NR_Buffer nr_audio_buff[NR_BUFFER_NUM];
 } MultiModeBuffer_t;
 
@@ -85,9 +88,9 @@ extern MultiModeBuffer_t mmb;
 
 #include "rb.h"
 
+extern RingBuffer_data_t fdv_demod_rb;
 extern RingBuffer_data_t fdv_iq_rb;
 extern RingBuffer_data_t fdv_audio_rb;
-extern struct freedv *f_FREEDV;
 
 // we allow for one more pointer to a buffer as we have buffers
 // why? because our implementation will only fill up the fifo only to N-1 elements

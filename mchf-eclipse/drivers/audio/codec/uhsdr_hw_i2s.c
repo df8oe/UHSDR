@@ -70,8 +70,8 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 #ifdef PROFILE_EVENTS
     // we stop during interrupt
     // at the end we start again
-    // profileCycleCount_stop();
-    profileTimedEventStart(ProfileAudioInterrupt);
+    profileCycleCount_stop();
+    // profileTimedEventStart(ProfileAudioInterrupt);
 #endif
 
 
@@ -113,8 +113,8 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 #ifdef PROFILE_EVENTS
     // we stopped during interrupt
     // now we start again
-    // profileCycleCount_start();
-    profileTimedEventStop(ProfileAudioInterrupt);
+    profileCycleCount_start();
+    // profileTimedEventStop(ProfileAudioInterrupt);
 #endif
 }
 

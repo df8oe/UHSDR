@@ -1088,7 +1088,6 @@ arm_fir_instance_f32    Fir_Rx_Hilbert_Q;
 #define FIR_RX_HILBERT_STATE_SIZE (IQ_RX_NUM_TAPS_MAX + IQ_RX_BLOCK_SIZE)
 static float32_t    __MCHF_SPECIALMEM Fir_Rx_Hilbert_State_I[FIR_RX_HILBERT_STATE_SIZE];
 static float32_t    __MCHF_SPECIALMEM Fir_Rx_Hilbert_State_Q[FIR_RX_HILBERT_STATE_SIZE];
-
 //
 // TX Hilbert transform (90 degree) FIR filter state tables and instances
 arm_fir_instance_f32    Fir_Tx_Hilbert_I;

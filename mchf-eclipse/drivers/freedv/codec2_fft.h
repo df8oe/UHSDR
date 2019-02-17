@@ -14,10 +14,11 @@
 #include <string.h>
 #include <math.h>
 
+
 #ifdef FDV_ARM_MATH
   #include "fdv_arm_math.h"
 #else
-    #define USE_KISS_FFT
+  #define USE_KISS_FFT
 #endif
 
 #include "defines.h"

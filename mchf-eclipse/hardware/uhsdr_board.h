@@ -89,6 +89,14 @@ typedef enum {
 #define VOICE_TX2RX_DELAY_DEFAULT			450	// Delay for switching when going from TX to RX (this is 0.66uS units)
 //
 
+// IQ source RX demodulation
+enum
+{
+    RX_IQ_CODEC = 0,    // IQ from codec
+    RX_IQ_DIGIQ,        // IQ from USB audio
+    RX_IQ_DIG,          // demodulated audio
+    RX_IQ_NUM
+};
 // Audio sources for TX modulation
 #define TX_AUDIO_MIC			0
 #define TX_AUDIO_LINEIN_L		1
@@ -365,6 +373,7 @@ typedef struct TransceiverState
     bool    power_modified; // the actual power is lower than the requested power_level, e.g. because of out side band.
 
     uint8_t 	tx_audio_source;
+    uint8_t     rx_iq_source;
     uint32_t	tx_mic_gain_mult;
     uint8_t	tx_gain[TX_AUDIO_NUM];
     int16_t	tx_comp_level;			// Used to hold compression level which is used to calculate other values for compression.  0 = manual.

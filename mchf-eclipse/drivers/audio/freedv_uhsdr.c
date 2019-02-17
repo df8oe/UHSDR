@@ -29,8 +29,10 @@ MultiModeBuffer_t __MCHF_SPECIALMEM mmb;
 
 struct freedv *f_FREEDV;
 
+RingBuffer_DefineExtMem(fdv_demod_rb,int16_t,sizeof(mmb.fdv_demod_buff)/sizeof(int16_t), mmb.fdv_demod_buff)
+//RingBuffer_DefineExtMem(fdv_demod_rb,COMP,sizeof(mmb.fdv_demod_buff)/sizeof(COMP), mmb.fdv_demod_buff)
 RingBuffer_DefineExtMem(fdv_iq_rb,COMP,sizeof(mmb.fdv_iq_buff)/sizeof(COMP), mmb.fdv_iq_buff)
-RingBuffer_Define(fdv_audio_rb,int16_t,((FDV_RX_AUDIO_SIZE_MAX*FDV_BUFFER_AUDIO_NUM)+IQ_BLOCK_SIZE))
+RingBuffer_Define(fdv_audio_rb,int16_t,((FDV_BUFFER_SIZE*2)+IQ_BLOCK_SIZE))
 
 typedef struct {
     int32_t start;
@@ -134,8 +136,8 @@ void FreeDv_HandleFreeDv()
         else if ((ts.txrx_mode == TRX_MODE_RX))
         {
 
-            COMP    iq_buffer[freedv_get_n_max_modem_samples(f_FREEDV)];
-            int16_t    short_buffer[freedv_get_n_max_modem_samples(f_FREEDV)];
+            int16_t    demod_buffer[freedv_get_n_max_modem_samples(f_FREEDV)];
+            //COMP    demod_buffer[freedv_get_n_max_modem_samples(f_FREEDV)];
 
             int16_t audio_buffer[freedv_get_n_max_modem_samples(f_FREEDV)];
 
@@ -144,7 +146,7 @@ void FreeDv_HandleFreeDv()
 
             if (rx_was_here == false)
             {
-                RingBuffer_ClearGetTail(&fdv_iq_rb);
+                RingBuffer_ClearGetTail(&fdv_demod_rb);
                 RingBuffer_ClearPutHead(&fdv_audio_rb);
 
                 freedv_set_total_bit_errors(f_FREEDV,0);  //reset ber calculation after coming from TX
@@ -158,22 +160,18 @@ void FreeDv_HandleFreeDv()
 
             // while makes this highest prio
             // if may give more responsiveness but can cause interrupted reception
-            while (RingBuffer_GetData(&fdv_iq_rb) >= freedv_nin(f_FREEDV)
+            while (RingBuffer_GetData(&fdv_demod_rb) >= freedv_nin(f_FREEDV)
                     && RingBuffer_GetRoom(&fdv_audio_rb) >= freedv_nin(f_FREEDV))
             {
                 // MchfBoard_GreenLed(LED_STATE_OFF);
                  // if we arrive here the rx_buffer for comprx is full and will be consumed now.
                 // profileTimedEventStart(7);
-                RingBuffer_GetSamples(&fdv_iq_rb, &iq_buffer, freedv_nin(f_FREEDV));
+                RingBuffer_GetSamples(&fdv_demod_rb, &demod_buffer, freedv_nin(f_FREEDV));
 
-                for (int idx = 0; idx < freedv_nin(f_FREEDV); idx++)
-                {
-                        short_buffer[idx] = iq_buffer[idx].real;
-                }
-                int count = freedv_rx(f_FREEDV, audio_buffer, short_buffer); // run the decoding process
-                //int count = freedv_comprx(f_FREEDV, audio_buffer, iq_buffer); // run the decoding process
+                int count = freedv_rx(f_FREEDV, audio_buffer, demod_buffer); // run the decoding process
+                //int count = freedv_comprx(f_FREEDV, audio_buffer, demod_buffer); // run the decoding process
 
-                if (count == freedv_get_n_speech_samples(f_FREEDV))
+                if (freedv_get_sync(f_FREEDV) != 0)
                 {
                     RingBuffer_PutSamples(&fdv_audio_rb, &audio_buffer, count);
                 }
@@ -224,7 +222,7 @@ void  FreeDV_Init()
 {
     // Freedv Test DL2FW
 
-    f_FREEDV = freedv_open(FREEDV_MODE_700D);
+    f_FREEDV = freedv_open(FREEDV_MODE_UHSDR);
 
     sprintf(my_cb_state.tx_str, ts.special_functions_enabled == 1 ? FREEDV_TX_DF8OE_MESSAGE : FREEDV_TX_MESSAGE);
 
