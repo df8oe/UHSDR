@@ -84,6 +84,7 @@
 
 \*---------------------------------------------------------------------------*/
 
+static void stats_init(struct FSK *fsk);
 
 #ifdef USE_HANN_TABLE
 /*
@@ -171,10 +172,10 @@ struct FSK * fsk_create_hbr(int Fs, int Rs,int P,int M, int tx_f1, int tx_fs)
     
     fsk->Ndft = Ndft;
     
-    fsk->est_min = Rs/2;
+    fsk->est_min = Rs/4;
     if(fsk->est_min<0) fsk->est_min = 0;
     
-    fsk->est_max = (Fs/2)-Rs;
+    fsk->est_max = (Fs/2)-Rs/4;
     
     fsk->est_space = Rs-(Rs/5);
     
@@ -251,6 +252,7 @@ struct FSK * fsk_create_hbr(int Fs, int Rs,int P,int M, int tx_f1, int tx_fs)
         free(fsk);
         return NULL;
     }
+    stats_init(fsk);
     fsk->normalise_eye = 1;
 
     return fsk;
@@ -381,6 +383,7 @@ struct FSK * fsk_create(int Fs, int Rs,int M, int tx_f1, int tx_fs)
     fsk->ppm = 0;
     
     fsk->stats = (struct MODEM_STATS*)malloc(sizeof(struct MODEM_STATS));
+    
     if(fsk->stats == NULL){
         free(fsk->fft_est);
         free(fsk->samp_old);
@@ -388,9 +391,46 @@ struct FSK * fsk_create(int Fs, int Rs,int M, int tx_f1, int tx_fs)
         free(fsk);
         return NULL;
     }
+    stats_init(fsk);
     fsk->normalise_eye = 1;
-
+    
     return fsk;
+}
+
+/* make sure stats have known values in case monitoring process reads stats before they are set */
+
+static void stats_init(struct FSK *fsk) {
+    /* Take a sample for the eye diagrams */
+    int i,j,m;
+    int P = fsk->P;
+    int M = fsk->mode;
+
+    /* due to oversample rate P, we have too many samples for eye
+       trace.  So lets output a decimated version */
+
+    /* asserts below as we found some problems over-running eye matrix */
+    
+    /* TODO: refactor eye tracing code here and in fsk_demod */
+    
+    int neyesamp_dec = ceil(((float)P*2)/MODEM_STATS_EYE_IND_MAX);
+    int neyesamp = (P*2)/neyesamp_dec;
+    assert(neyesamp <= MODEM_STATS_EYE_IND_MAX);
+    fsk->stats->neyesamp = neyesamp;
+    
+    int eye_traces = MODEM_STATS_ET_MAX/M;
+   
+    fsk->stats->neyetr = fsk->mode*eye_traces;
+    for(i=0; i<eye_traces; i++) {
+        for (m=0; m<M; m++){
+            for(j=0; j<neyesamp; j++) {
+                assert((i*M+m) < MODEM_STATS_ET_MAX);
+                fsk->stats->rx_eye[i*M+m][j] = 0;
+           }
+        }
+    }
+
+    fsk->stats->rx_timing = fsk->stats->snr_est = 0;
+    
 }
 
 
@@ -428,12 +468,8 @@ void fsk_set_nsym(struct FSK *fsk,int nsyms){
 
 void fsk_enable_burst_mode(struct FSK *fsk,int nsyms){
     fsk_set_nsym(fsk,nsyms);
-    //fsk->nstash = 0;
-    //fsk->Nmem = fsk->N;
     fsk->nin = fsk->N;
     fsk->burst_mode = 1;
-    //free(fsk->samp_old);
-    //fsk->samp_old = (COMP*) malloc(1);
 }
 
 void fsk_clear_estimators(struct FSK *fsk){
@@ -471,7 +507,8 @@ void fsk_get_demod_stats(struct FSK *fsk, struct MODEM_STATS *stats){
     stats->neyesamp = fsk->stats->neyesamp;
     stats->neyetr = fsk->stats->neyetr;
     memcpy(stats->rx_eye, fsk->stats->rx_eye, sizeof(stats->rx_eye));
-
+    memcpy(stats->f_est, fsk->stats->f_est, fsk->mode*sizeof(float));
+    
     /* these fields not used for FSK so set to something sensible */
 
     stats->sync = 0;
@@ -956,13 +993,19 @@ void fsk2_demod(struct FSK *fsk, uint8_t rx_bits[], float rx_sd[], COMP fsk_in[]
     }
     
     #ifdef EST_EBNO
+    
     /* Calculate mean for EbNodB estimation */
     meanebno = meanebno/(float)nsym;
     
     /* Calculate the std. dev for EbNodB estimate */
     stdebno = (stdebno/(float)nsym) - (meanebno*meanebno);
-    stdebno = sqrt(stdebno);
-    
+    /* trap any negative numbers to avoid NANs flowing through */
+    if (stdebno > 0.0) {
+        stdebno = sqrt(stdebno);
+    } else {
+        stdebno = 0.0;
+    }
+        
     fsk->EbNodB = -6+(20*log10f((1e-6+meanebno)/(1e-6+stdebno)));
     #else
     fsk->EbNodB = 1;
@@ -974,6 +1017,7 @@ void fsk2_demod(struct FSK *fsk, uint8_t rx_bits[], float rx_sd[], COMP fsk_in[]
     fsk->stats->clock_offset = fsk->ppm;
         
     /* Calculate and save SNR from EbNodB estimate */
+
     fsk->stats->snr_est = .5*fsk->stats->snr_est + .5*fsk->EbNodB;//+ 10*log10f(((float)Rs)/((float)Rs*M));
         
     /* Save rx timing */
@@ -984,17 +1028,40 @@ void fsk2_demod(struct FSK *fsk, uint8_t rx_bits[], float rx_sd[], COMP fsk_in[]
     fc_tx = (fsk->f1_tx+fsk->f1_tx+fsk->fs_tx)/2;
     fsk->stats->foff = fc_tx-fc_avg;
     
-    /* Take a sample for the eye diagrams */
-    neyesamp = fsk->stats->neyesamp = P*2;
-    neyeoffset = high_sample+1+(P*28);
-        
+    /* Take a sample for the eye diagrams ---------------------------------- */
+
+    /* due to oversample rate P, we have too many samples for eye
+       trace.  So lets output a decimated version.  We use 2P
+       as we want two symbols worth of samples in trace  */
+
+    int neyesamp_dec = ceil(((float)P*2)/MODEM_STATS_EYE_IND_MAX);
+    neyesamp = (P*2)/neyesamp_dec;
+    assert(neyesamp <= MODEM_STATS_EYE_IND_MAX);
+    fsk->stats->neyesamp = neyesamp;
+
+    #ifdef I_DONT_UNDERSTAND
+    neyeoffset = high_sample+1+(P*28); /* WTF this line? Where does "28" come from ?                           */
+    #endif                             /* ifdef-ed out as I am afraid it will index out of memory as P changes */
+    neyeoffset = high_sample+1;
+    
     int eye_traces = MODEM_STATS_ET_MAX/M;
-        
+    int ind;
+    
     fsk->stats->neyetr = fsk->mode*eye_traces;
     for( i=0; i<eye_traces; i++){
         for ( m=0; m<M; m++){
-            for(j=0; j<neyesamp; j++)
-                fsk->stats->rx_eye[i*M+m][j] = cabsolute(f_int[m][neyesamp*i+neyeoffset+j]);
+            for(j=0; j<neyesamp; j++) {
+               /*
+                  2*P*i...........: advance two symbols for next trace
+                  neyeoffset......: centre trace on ideal timing offset, peak eye opening
+                  j*neweyesamp_dec: For 2*P>MODEM_STATS_EYE_IND_MAX advance through integrated 
+                                    samples newamp_dec at a time so we dont overflow rx_eye[][]
+               */
+               ind = 2*P*i + neyeoffset + j*neyesamp_dec;
+               assert((i*M+m) < MODEM_STATS_ET_MAX);
+               assert(ind < (nsym+1)*P);
+               fsk->stats->rx_eye[i*M+m][j] = cabsolute(f_int[m][ind]);
+            }
         }
     }
         
@@ -1013,6 +1080,10 @@ void fsk2_demod(struct FSK *fsk, uint8_t rx_bits[], float rx_sd[], COMP fsk_in[]
 
     fsk->stats->nr = 0;
     fsk->stats->Nc = 0;
+
+    for(i=0; i<M; i++) {
+        fsk->stats->f_est[i] = f_est[i];
+    }
     
     /* Dump some internal samples */
     modem_probe_samp_f("t_EbNodB",&(fsk->EbNodB),1);
@@ -1130,6 +1201,45 @@ void fsk_mod_c(struct FSK *fsk,COMP fsk_out[],uint8_t tx_bits[]){
     /* save TX phase */
     fsk->tx_phase_c = tx_phase_c;
     
+}
+
+
+/* Modulator that assume an external VCO.  The output is a voltage
+   that changes for each symbol */
+
+void fsk_mod_ext_vco(struct FSK *fsk, float vco_out[], uint8_t tx_bits[]) {
+    int f1_tx = fsk->f1_tx;         /* '0' frequency */
+    int fs_tx = fsk->fs_tx;         /* space between frequencies */
+    int Ts = fsk->Ts;               /* samples-per-symbol */
+    int M = fsk->mode;
+    int i, j, m, sym, bit_i;
+    
+    bit_i = 0;
+    for(i=0; i<fsk->Nsym; i++) {
+        /* generate the symbol number from the bit stream, 
+           e.g. 0,1 for 2FSK, 0,1,2,3 for 4FSK */
+
+        sym = 0;
+
+        /* unpack the symbol number from the bit stream */
+
+        for( m=M; m>>=1; ){
+            uint8_t bit = tx_bits[bit_i];
+            bit = (bit==1)?1:0;
+            sym = (sym<<1)|bit;
+            bit_i++;
+        }
+
+        /* 
+           Map 'sym' to VCO frequency
+           Note: drive is inverted, a higher tone drives VCO voltage lower
+         */
+
+        //fprintf(stderr, "i: %d sym: %d freq: %f\n", i, sym, f1_tx + fs_tx*(float)sym);
+        for(j=0; j<Ts; j++) {
+            vco_out[i*Ts+j] = f1_tx + fs_tx*(float)sym;
+        }
+    }
 }
 
 void fsk_stats_normalise_eye(struct FSK *fsk, int normalise_enable) {

@@ -53,9 +53,7 @@
 // Misc
 #include "drivers/audio/softdds/softdds.h"
 
-// Eeprom
-#include "misc/v_eprom/eeprom.h"
-//
+#include "uhsdr_flash.h" // only for EEPROM_START_ADDRESS
 #include "drivers/ui/radio_management.h"
 //
 
@@ -88,6 +86,39 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
                     RadioManagement_Request_TxOn();
                 }
                 CwGen_DitIRQ();
+            }
+            break;
+        }
+    }
+}
+
+/**
+ * Detects if a special bootloader is used and configures some settings
+ * Used for debugging and testing purposes only
+ */
+void Main_DetectSpecialBootloader()
+{
+    // detection routine for special bootloader version strings which do enable debug or development functions
+    char out[14];
+    for(uint8_t* begin = (uint8_t*)0x8000000; begin < (uint8_t*)EEPROM_START_ADDRESS-8; begin++)
+    {
+        if (memcmp("Version: ",begin,9) == 0)
+        {
+            snprintf(out,13, "%s", &begin[9]);
+            for (uint8_t i=1; i<13; i++)
+            {
+                if (out[i] == '\0')
+                {
+                    if (out[i-1] == 'a')
+                    {
+                        ts.special_functions_enabled = 1;
+                    }
+                    if (out[i-1] == 's')
+                    {
+                        ts.special_functions_enabled = 2;
+                    }
+                    break;
+                }
             }
             break;
         }
@@ -285,7 +316,6 @@ void TransceiverStateInit(void)
     ts.debug_vswr_protection_threshold = 0; // OFF
 
     ts.band_effective = 255; // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
-
 }
 
 // #include "Trace.h"
@@ -347,33 +377,8 @@ int mchfMain(void)
     // here, so we simply set reverse to false
     UiLcdHy28_TouchscreenInit(0);
 
-#if 1
-	// detection routine for special bootloader version strings which do enable debug or development functions
-	char out[14];
-    for(uint8_t* begin = (uint8_t*)0x8000000; begin < (uint8_t*)EEPROM_START_ADDRESS-8; begin++)
-    {
-    	if (memcmp("Version: ",begin,9) == 0)
-        {
-        	snprintf(out,13, "%s", &begin[9]);
-        	for (uint8_t i=1; i<13; i++)
-        	{
-        	  if (out[i] == '\0')
-        	  {
-        		if (out[i-1] == 'a')
-        		{
-				  ts.special_functions_enabled = 1;
-				}
-        		if (out[i-1] == 's')
-        		{
-				  ts.special_functions_enabled = 2;
-				}
-			  break;
-			  }
-			}
-        break;
-        }
-	}
-#endif
+
+    Main_DetectSpecialBootloader();
 
     UiDriver_Init();
 
@@ -414,7 +419,7 @@ int mchfMain(void)
     ts.rx_gain[RX_AUDIO_SPKR].value_old = 0;		// Force update of volume control
 
 #ifdef USE_FREEDV
-    FreeDV_mcHF_init();
+    FreeDV_Init();
     // we now try to place a marker after last dynamically
     // allocated memory
     Canary_Create();

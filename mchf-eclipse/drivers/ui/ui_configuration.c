@@ -26,11 +26,12 @@
 #include "audio_management.h"
 #include "ui.h" // bandInfo
 
-// Virtual eeprom
-#include "eeprom.h"
 #include "uhsdr_hw_i2c.h"
 #include "uhsdr_rtc.h"
 
+#if (MAX_VAR_ADDR > NB_OF_VAR)
+    #error "Too many eeprom variables defined in ui_configuration.h (MAX_VAR_ADDR > NB_OF_VAR ). Please change maximum number of vars in eeprom.h"
+#endif
 
 
 static int32_t UiConfiguration_CompareConfigBuildVersions(uint major, uint32_t minor, uint32_t release);
@@ -848,7 +849,7 @@ void UiConfiguration_FixDefaultsNotLoadedIssue()
         // values have been stored by older version of firmware
         uint32_t values[] = { IQ_20M, IQ_15M, IQ_10M_UP };
         bool not_all_minus_one = false;
-        for (int i = 0; i < sizeof(values)/sizeof(values[0]) && not_all_minus_one == false ; i++)
+        for (uint32_t i = 0; i < sizeof(values)/sizeof(values[0]) && not_all_minus_one == false ; i++)
         {
             not_all_minus_one = not_all_minus_one || (iq_adjust[values[i]].adj.tx[IQ_TRANS_ON].gain != -1 || iq_adjust[values[i]].adj.tx[IQ_TRANS_ON].phase != -1);
             not_all_minus_one = not_all_minus_one || (iq_adjust[values[i]].adj.tx[IQ_TRANS_OFF].gain != -1 || iq_adjust[values[i]].adj.tx[IQ_TRANS_OFF].phase != -1);
@@ -857,7 +858,7 @@ void UiConfiguration_FixDefaultsNotLoadedIssue()
         // okay, we have every value at -1 AND values stored in an older firmware than 2.9.86, we can safely rewrite all values to the right default
         if (not_all_minus_one == false)
         {
-            for (int i = 0; i < sizeof(values)/sizeof(values[0]); i++)
+            for (uint32_t i = 0; i < sizeof(values)/sizeof(values[0]); i++)
             {
                 iq_adjust[values[i]].adj.tx[IQ_TRANS_ON].gain = IQ_BALANCE_OFF;
                 iq_adjust[values[i]].adj.tx[IQ_TRANS_ON].phase = IQ_BALANCE_OFF;

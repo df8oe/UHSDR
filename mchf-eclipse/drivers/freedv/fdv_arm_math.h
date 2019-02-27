@@ -1,14 +1,11 @@
 /*---------------------------------------------------------------------------*\
 
-  FILE........: codec2_fifo.h
+  FILE........: fdv_arm_math.h
   AUTHOR......: David Rowe
-  DATE CREATED: Oct 15 2012
+  DATE CREATED: Feb 13 2019
 
-  A FIFO design useful in gluing the FDMDV modem and codec together in
-  integrated applications.
-
-  The name codec2_fifo.h is used to make it unique when "make
-  installed".
+  Bundles access to ARM CORTEX M specific functions which are enabled by
+  defining FDV_ARM_MATH
 
 \*---------------------------------------------------------------------------*/
 
@@ -29,32 +26,19 @@
   along with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __FIFO__
-#define __FIFO__
+#ifndef __FDV_ARM_MATH__
+#define __FDV_ARM_MATH__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifdef FDV_ARM_MATH
+    #include "arm_const_structs.h"
+    //#define SINF(a) arm_sin_f32(a)
+    //#define COSF(a) arm_cos_f32(a)
 
-struct FIFO;
-
-struct FIFO *fdv_fifo_create(int nshort);
-void fdv_fifo_destroy(struct FIFO *fifo);
-int fdv_fifo_write(struct FIFO *fifo, short data[], int n);
-int fdv_fifo_read(struct FIFO *fifo, short data[], int n);
-
-/*!
- * Return the number of bytes stored in the FIFO.
- */
-int fdv_fifo_used(const struct FIFO * const fifo);
-
-/*!
- * Return the space available in the FIFO.
- */
-int fdv_fifo_free(const struct FIFO * const fifo);
-
-#ifdef __cplusplus
-}
+    #define SINF(a) sinf(a) //arm_sin_f32(a)
+    #define COSF(a) cosf(a) //arm_cos_f32(a)
+#else
+    #define SINF(a) sinf(a)
+    #define COSF(a) cosf(a)
 #endif
 
 #endif

@@ -596,12 +596,13 @@ static bool TxProcessor_FM(audio_block_t* a_blocks,  iq_buffer_t* iq_buf_p, uint
 static bool TxProcessor_FreeDV (audio_block_t a_block, iq_buffer_t* iq_buf_p, int16_t blockSize)
 {
     // Freedv DL2FW
-    static int16_t outbuff_count = 0;
-    static int16_t trans_count_in = 0;
-    static int16_t FDV_TX_fill_in_pt = 0;
-    static FDV_IQ_Buffer* out_buffer = NULL;
-    static int16_t modulus_NF = 0, modulus_MOD = 0;
+    static int16_t modulus_Decimate = 0;
+    static int16_t modulus_Interpolate = 0;
 
+    const int32_t factor_Decimate = IQ_SAMPLE_RATE/8000; // 6x @ 48ksps
+    const int32_t factor_Interpolate = AUDIO_SAMPLE_RATE/8000; // 6x @ 48ksps
+
+    static bool bufferFilled = false;
     bool retval = false;
 
     // depending on the side band setting we switch the iq buffers accordingly to achieve the right sideband
@@ -617,37 +618,30 @@ static bool TxProcessor_FreeDV (audio_block_t a_block, iq_buffer_t* iq_buf_p, in
     // DOWNSAMPLING
     for (int k = 0; k < blockSize; k++)
     {
-        if (k % 6 == modulus_NF)  //every 6th sample has to be catched -> downsampling by 6
+        if (modulus_Decimate == 0)  //every 6th sample has to be catched -> downsampling by 6
         {
-            fdv_audio_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = ((int32_t)a_block[k])/4;
-            // FDV_TX_in_buff[FDV_TX_fill_in_pt].samples[trans_count_in] = 0; // transmit "silence"
-            trans_count_in++;
+            int16_t sample = ((int32_t)a_block[k])/4;
+            RingBuffer_PutSamples(&fdv_audio_rb,&sample,1);
+        }
+
+        // increment and wrap
+        modulus_Decimate++;
+        if (modulus_Decimate == factor_Decimate)
+        {
+            modulus_Decimate = 0;
         }
     }
 
-    modulus_NF += 4; //  shift modulus to not loose any data while overlapping
-    modulus_NF %= 6;//  reset modulus to 0 at modulus = 12
 
-    if (trans_count_in == FDV_BUFFER_SIZE) //yes, we really hit exactly 320 - don't worry
+    // we wait for at least two frames being processed until we start transmitting
+    // we could switch to frame plus 1 block to minimize delay
+    if (bufferFilled == false && RingBuffer_GetData(&fdv_iq_rb) > FreeDV_Iq_Get_FrameLen())
     {
-        //we have enough samples ready to start the FreeDV encoding
-
-        fdv_audio_buffer_add(&fdv_audio_buff[FDV_TX_fill_in_pt]);
-        //handshake to external function in ui.driver_thread
-        trans_count_in = 0;
-
-        FDV_TX_fill_in_pt++;
-        FDV_TX_fill_in_pt %= FDV_BUFFER_AUDIO_NUM;
+        bufferFilled = true;
     }
 
-    if (out_buffer == NULL && fdv_iq_has_data() > 1)
+    if (bufferFilled == true && RingBuffer_GetData(&fdv_iq_rb) >= (modulus_Interpolate == 1?5:6))
     {
-        fdv_iq_buffer_remove(&out_buffer);
-    }
-
-    if (out_buffer != NULL) // freeDV encode has finished (running in ui_driver.c)?
-    {
-
         // Best thing here would be to use the arm_fir_decimate function! Why?
         // --> we need phase linear filters, because we have to filter I & Q and preserve their phase relationship
         // IIR filters are power saving, but they do not care about phase, so useless at this point
@@ -656,26 +650,29 @@ static bool TxProcessor_FreeDV (audio_block_t a_block, iq_buffer_t* iq_buf_p, in
         // (and the routine knows that it does not have to multiply with 0 while filtering: if we do upsampling and subsequent
         // filtering, the filter does not know that and multiplies with zero 5 out of six times --> very inefficient)
         // BUT: we cannot use the ARM function, because decimation factor (6) has to be an integer divide of
-        // block size (which is 64 in our case --> 64 / 6 = non-integer!)
+        // block size (which is 32 in our case --> 32 / 6 = non-integer!)
 
         // UPSAMPLING [by hand]
         for (int j = 0; j < blockSize; j++) //  now we are doing upsampling by 6
         {
-            if (modulus_MOD == 0) // put in sample pair
+            if (modulus_Interpolate == 0) // put in sample pair
             {
-                i_buffer[j] = out_buffer->samples[outbuff_count].real; // + (sample_delta.real * (float32_t)modulus_MOD);
-                q_buffer[j] = out_buffer->samples[outbuff_count].imag; // + (sample_delta.imag * (float32_t)modulus_MOD);
+                fdv_iq_rb_item_t sample;
+                RingBuffer_GetSamples(&fdv_iq_rb, &sample, 1);
+                i_buffer[j] = sample.real;
+                q_buffer[j] = sample.imag;
             }
             else // in 5 of 6 cases just stuff in zeros = zero-padding / zero-stuffing
             {
                 i_buffer[j] = 0;
                 q_buffer[j] = 0;
             }
-            modulus_MOD++;
-            if (modulus_MOD == 6)
+
+            // increment and wrap
+            modulus_Interpolate++;
+            if (modulus_Interpolate == factor_Interpolate)
             {
-                outbuff_count++;
-                modulus_MOD = 0;
+                modulus_Interpolate = 0;
             }
         }
 
@@ -697,13 +694,7 @@ static bool TxProcessor_FreeDV (audio_block_t a_block, iq_buffer_t* iq_buf_p, in
     else
     {
         profileEvent(FreeDVTXUnderrun);
-    }
-
-    if (outbuff_count >= FDV_BUFFER_SIZE)
-    {
-        outbuff_count = 0;
-        out_buffer = NULL;
-        fdv_iq_buffer_remove(&out_buffer);
+        bufferFilled = false;
     }
 
     return retval;

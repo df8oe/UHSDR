@@ -131,8 +131,8 @@ long quantise(const float * cb, float vec[], float w[], int k, int m, float *se)
    for(j=0; j<m; j++) {
 	e = 0.0;
 	for(i=0; i<k; i++) {
-	    diff = cb[j*k+i]-vec[i];
-	    e += powf(diff*w[i],2.0);
+	    diff = (cb[j*k+i]-vec[i]) * w[i];
+	    e += diff*diff;
 	}
 	if (e < beste) {
 	    beste = e;
@@ -617,7 +617,6 @@ float lspmelvq_mbest_encode(int *indexes, float *x, float *xq, int ndim, int mbe
   mbest_search(codebook1, x, w, ndim, lspmelvq_cb[0].m, mbest_stage1, index);
   MBEST_PRINT("Stage 1:", mbest_stage1);
 
-
   /* Stage 2 */
 
   for (j=0; j<mbest_entries; j++) {
@@ -888,7 +887,7 @@ void aks_to_M2(
 
   float Pw[FFT_ENC/2];
 
-#ifndef ARM_MATH_CM4
+#ifndef FDV_ARM_MATH
   for(i=0; i<FFT_ENC/2; i++) {
     Pw[i] = 1.0/(Aw[i].real*Aw[i].real + Aw[i].imag*Aw[i].imag + 1E-6);
   }
@@ -1282,8 +1281,6 @@ void decode_lsps_scalar(float lsp[], int indexes[], int order)
 }
 
 
-#ifndef CORTEX_M4
-
 /*---------------------------------------------------------------------------*\
 
   FUNCTION....: encode_mels_scalar()
@@ -1351,7 +1348,6 @@ void decode_mels_scalar(float mels[], int indexes[], int order)
 
 }
 
-#endif
 
 #ifdef __EXPERIMENTAL__
 
@@ -1934,7 +1930,7 @@ void quantise_WoE(C2CONST *c2const, MODEL *model, float *e, float xq[])
   float Fs = c2const->Fs;
 
   /* VQ is only trained for Fs = 8000 Hz */
-  (void)(Fs); // makes compiler happy
+
   assert(Fs == 8000);
 
   x[0] = log10f((model->Wo/PI)*4000.0/50.0)/log10f(2);

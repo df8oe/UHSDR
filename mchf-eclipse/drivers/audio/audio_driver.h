@@ -242,6 +242,7 @@ typedef struct AudioDriverState
     float					alc_decay;			// decay rate (speed) of ALC
 
     uchar					decimation_rate;		// current decimation/interpolation rate
+    uint32_t                decimated_freq;        // resulting decimated sample frequency (used in iq and audio processing)
 
     fm_conf_t               fm_conf;       // configuration parameters for the fm demodulator
 

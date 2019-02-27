@@ -65,15 +65,18 @@ void UhsdrHwI2s_Codec_ClearTxDmaBuffer()
     memset((void*)&dma.iq_buf.out, 0, sizeof(dma.iq_buf.out));
 }
 
+// #define PROFILE_APP
 static void MchfHw_Codec_HandleBlock(uint16_t which)
 {
 #ifdef PROFILE_EVENTS
     // we stop during interrupt
     // at the end we start again
-    // profileCycleCount_stop();
+#ifdef PROFILE_APP
+    profileCycleCount_stop();
+#else
     profileTimedEventStart(ProfileAudioInterrupt);
 #endif
-
+#endif
 
 #ifdef EXEC_PROFILING
     // Profiling pin (high level)
@@ -113,8 +116,11 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 #ifdef PROFILE_EVENTS
     // we stopped during interrupt
     // now we start again
-    // profileCycleCount_start();
+#ifdef PROFILE_APP
+    profileCycleCount_start();
+#else
     profileTimedEventStop(ProfileAudioInterrupt);
+#endif
 #endif
 }
 

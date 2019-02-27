@@ -13,7 +13,6 @@
  ************************************************************************************/
 
 // Common
-#include "uhsdr_board.h"
 #include "radio_management.h"
 #include "profiling.h"
 #include "adc.h"
@@ -42,8 +41,6 @@
 #include "config_storage.h"
 
 #include "cw_gen.h"
-#include "freedv_api.h"
-#include "codec2_fdmdv.h"
 
 #include "cw_decoder.h"
 

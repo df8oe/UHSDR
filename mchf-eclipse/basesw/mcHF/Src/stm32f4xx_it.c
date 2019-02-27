@@ -147,20 +147,24 @@ void Debug_Send_ValueAndId(uint32_t val, int id)
     Debug_Send_32Bits(val);
 }
 
-static void Debug_FaultGetRegistersFromStack( uint32_t *pulFaultStackAddress, uint32_t r5)
+volatile uint32_t r0  __attribute__ ((unused));
+volatile uint32_t r1 __attribute__ ((unused));
+volatile uint32_t r2 __attribute__ ((unused));
+volatile uint32_t r3 __attribute__ ((unused));
+volatile uint32_t r5 __attribute__ ((unused));
+volatile uint32_t r12 __attribute__ ((unused));
+volatile uint32_t lr __attribute__ ((unused)); /* Link register. */
+volatile uint32_t pc __attribute__ ((unused)); /* Program counter. */
+volatile uint32_t psr __attribute__ ((unused));/* Program status register. */
+volatile uint32_t cfsr __attribute__ ((unused)); /* Program counter. */
+volatile uint32_t bfar __attribute__ ((unused));/* Program status register. */
+
+static void Debug_FaultGetRegistersFromStack( uint32_t *pulFaultStackAddress, uint32_t r5x)
 {
 /* These are volatile to try and prevent the compiler/linker optimising them
 away as the variables never actually get used.  If the debugger won't show the
 values of the variables, make them global my moving their declaration outside
 of this function. */
-volatile uint32_t r0  __attribute__ ((unused));
-volatile uint32_t r1 __attribute__ ((unused));
-volatile uint32_t r2 __attribute__ ((unused));
-volatile uint32_t r3 __attribute__ ((unused));
-volatile uint32_t r12 __attribute__ ((unused));
-volatile uint32_t lr __attribute__ ((unused)); /* Link register. */
-volatile uint32_t pc __attribute__ ((unused)); /* Program counter. */
-volatile uint32_t psr __attribute__ ((unused));/* Program status register. */
 
     r0 = pulFaultStackAddress[ 0 ];
     r1 = pulFaultStackAddress[ 1 ];
@@ -171,6 +175,9 @@ volatile uint32_t psr __attribute__ ((unused));/* Program status register. */
     lr = pulFaultStackAddress[ 5 ];
     pc = pulFaultStackAddress[ 6 ];
     psr = pulFaultStackAddress[ 7 ];
+    cfsr = SCB->CFSR;
+    bfar = SCB->BFAR;
+    r5 = r5x;
 
     while (1)
     {

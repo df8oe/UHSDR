@@ -53,6 +53,10 @@ extern const float i_rx_7k5_coeffs[IQ_RX_NUM_TAPS];
 //extern const float i_rx_coeffs[IQ_NUM_TAPS];
 extern const float i_rx_wow_coeffs[IQ_RX_NUM_TAPS_HI];
 extern const float i_rx_new_coeffs[IQ_RX_NUM_TAPS_HI];
+extern const float i_rx_FREEDV_700D_coeffs[IQ_RX_NUM_TAPS];
+extern const float q_rx_FREEDV_700D_coeffs[IQ_RX_NUM_TAPS];
+extern const float i_rx_FREEDV_700D_F4_coeffs[IQ_RX_NUM_TAPS_LO];
+extern const float q_rx_FREEDV_700D_F4_coeffs[IQ_RX_NUM_TAPS_LO];
 
 extern const float q_rx_new_coeffs[IQ_RX_NUM_TAPS_HI];
 extern const float q_rx_wow_coeffs[IQ_RX_NUM_TAPS_HI];

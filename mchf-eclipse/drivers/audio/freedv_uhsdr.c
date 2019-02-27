@@ -26,154 +26,18 @@ MultiModeBuffer_t __MCHF_SPECIALMEM mmb;
 #ifdef USE_FREEDV
 
 #include "freedv_api.h"
-#include "codec2_fdmdv.h"
 
+freedv_conf_t freedv_conf;
 
 struct freedv *f_FREEDV;
 
-FDV_Audio_Buffer fdv_audio_buff[FDV_BUFFER_AUDIO_NUM];
 
-FDV_IQ_Buffer* fdv_iq_buffers[FDV_BUFFER_IQ_FIFO_SIZE];
+RingBuffer_DefineExtMem(fdv_demod_rb,sizeof(mmb.fdv_demod_buff)/sizeof(fdv_demod_rb_item_t), mmb.fdv_demod_buff)
+RingBuffer_DefineExtMem(fdv_iq_rb,sizeof(mmb.fdv_iq_buff)/sizeof(fdv_iq_rb_item_t), mmb.fdv_iq_buff)
 
-
-__IO int32_t fdv_iq_head = 0;
-__IO int32_t fdv_iq_tail = 0;
-
-int fdv_iq_buffer_peek(FDV_IQ_Buffer** c_ptr)
-{
-    int ret = 0;
-
-    if (fdv_iq_head != fdv_iq_tail)
-    {
-        FDV_IQ_Buffer* c = fdv_iq_buffers[fdv_iq_tail];
-        *c_ptr = c;
-        ret++;
-    }
-    return ret;
-}
-
-
-int fdv_iq_buffer_remove(FDV_IQ_Buffer** c_ptr)
-{
-    int ret = 0;
-
-    if (fdv_iq_head != fdv_iq_tail)
-    {
-        FDV_IQ_Buffer* c = fdv_iq_buffers[fdv_iq_tail];
-        fdv_iq_tail = (fdv_iq_tail + 1) % FDV_BUFFER_IQ_FIFO_SIZE;
-        *c_ptr = c;
-        ret++;
-    }
-    return ret;
-}
-
-/* no room left in the buffer returns 0 */
-int fdv_iq_buffer_add(FDV_IQ_Buffer* c)
-{
-    int ret = 0;
-    int32_t next_head = (fdv_iq_head + 1) % FDV_BUFFER_IQ_FIFO_SIZE;
-
-    if (next_head != fdv_iq_tail)
-    {
-        /* there is room */
-        fdv_iq_buffers[fdv_iq_head] = c;
-        fdv_iq_head = next_head;
-        ret ++;
-    }
-    return ret;
-}
-
-void fdv_iq_buffer_reset()
-{
-    fdv_iq_tail = fdv_iq_head;
-}
-
-int32_t fdv_iq_has_data()
-{
-    int32_t len = fdv_iq_head - fdv_iq_tail;
-    return len < 0?len+FDV_BUFFER_IQ_FIFO_SIZE:len;
-}
-
-int32_t fdv_iq_has_room()
-{
-    // FIXME: Since we cannot completely fill the buffer
-    // we need to say full 1 element earlier
-    return FDV_BUFFER_IQ_FIFO_SIZE - 1 - fdv_iq_has_data();
-}
-
-
-
-#define FDV_BUFFER_AUDIO_FIFO_SIZE (FDV_BUFFER_AUDIO_NUM+1)
-// we allow for one more pointer to a buffer as we have buffers
-// why? because our implementation will only fill up the fifo only to N-1 elements
-
-FDV_Audio_Buffer* fdv_audio_buffers[FDV_BUFFER_AUDIO_FIFO_SIZE];
-__IO int32_t fdv_audio_head = 0;
-__IO int32_t fdv_audio_tail = 0;
-
-int fdv_audio_buffer_peek(FDV_Audio_Buffer** c_ptr)
-{
-    int ret = 0;
-
-    if (fdv_audio_head != fdv_audio_tail)
-    {
-        FDV_Audio_Buffer* c = fdv_audio_buffers[fdv_audio_tail];
-        *c_ptr = c;
-        ret++;
-    }
-    return ret;
-}
-
-
-int fdv_audio_buffer_remove(FDV_Audio_Buffer** c_ptr)
-{
-    int ret = 0;
-
-    if (fdv_audio_head != fdv_audio_tail)
-    {
-        FDV_Audio_Buffer* c = fdv_audio_buffers[fdv_audio_tail];
-        fdv_audio_tail = (fdv_audio_tail + 1) % FDV_BUFFER_AUDIO_FIFO_SIZE;
-        *c_ptr = c;
-        ret++;
-    }
-    return ret;
-}
-
-/* no room left in the buffer returns 0 */
-int fdv_audio_buffer_add(FDV_Audio_Buffer* c)
-{
-    int ret = 0;
-    int32_t next_head = (fdv_audio_head + 1) % FDV_BUFFER_AUDIO_FIFO_SIZE;
-
-    if (next_head != fdv_audio_tail)
-    {
-        /* there is room */
-        fdv_audio_buffers[fdv_audio_head] = c;
-        fdv_audio_head = next_head;
-        ret ++;
-    }
-    return ret;
-}
-
-void fdv_audio_buffer_reset()
-{
-    fdv_audio_tail = fdv_audio_head;
-}
-
-int32_t fdv_audio_has_data()
-{
-    int32_t len = fdv_audio_head - fdv_audio_tail;
-    return len < 0?len+FDV_BUFFER_AUDIO_FIFO_SIZE:len;
-}
-
-int32_t fdv_audio_has_room()
-{
-    // FIXME: Since we cannot completely fill the buffer
-    // we need to say full 1 element earlier
-    return FDV_BUFFER_AUDIO_FIFO_SIZE - 1 - fdv_audio_has_data();
-}
-
-
+#define FDV_AUDIO_MEM_SIZE ((FDV_BUFFER_SIZE*2)+IQ_BLOCK_SIZE)
+__MCHF_SPECIALMEM fdv_audio_rb_item_t fdv_audio_rb_mem[FDV_AUDIO_MEM_SIZE];
+RingBuffer_DefineExtMem(fdv_audio_rb, FDV_AUDIO_MEM_SIZE, fdv_audio_rb_mem)
 
 typedef struct {
     int32_t start;
@@ -183,7 +47,48 @@ typedef struct {
 
 static uint16_t freedv_display_x_offset;
 
+/**
+ * Returns the internal UHSDR  configuration value in the value range for display and use with the freedv_api
+ * @param freedv_conf_p
+ * @return SNR in the range of -100 to 99
+ */
 
+int32_t FreeDV_Get_Squelch_SNR(freedv_conf_t* freedv_conf_p)
+{
+    return (int32_t)(freedv_conf_p->squelch_snr_thresh) + FDV_SQUELCH_OFFSET;
+}
+
+/**
+ * Sets the internal UHSDR  configuration value in the permitted value range
+ * @param freedv_conf_p
+ * @param squelch_snr  SNR in the range of -100 to 99 , -100 represents OFF
+ */
+void FreeDV_Set_Squelch_SNR(freedv_conf_t* freedv_conf_p, int8_t squelch_snr)
+{
+    int32_t internal_snr = squelch_snr - FDV_SQUELCH_OFFSET;
+    if (internal_snr > FDV_SQUELCH_MAX)
+    {
+        internal_snr = FDV_SQUELCH_MAX;
+    }
+    else if (internal_snr < FDV_SQUELCH_OFF)
+    {
+        internal_snr = FDV_SQUELCH_OFF;
+    }
+
+    freedv_conf_p->squelch_snr_thresh = internal_snr;
+}
+
+int FreeDV_Is_Squelch_Enable(freedv_conf_t* freedv_conf_p)
+{
+    return freedv_conf_p->squelch_snr_thresh != FDV_SQUELCH_OFF;
+}
+
+void FreeDV_Squelch_Update(freedv_conf_t* freedv_conf_p)
+{
+    UNUSED(freedv_conf_p);
+    freedv_set_squelch_en(f_FREEDV, FreeDV_Is_Squelch_Enable(&freedv_conf));
+    freedv_set_snr_squelch_thresh(f_FREEDV, FreeDV_Get_Squelch_SNR(&freedv_conf));
+}
 
 static void FreeDv_DisplayBer()
 {
@@ -208,9 +113,29 @@ static void FreeDv_DisplaySnr()
     freedv_get_modem_stats(f_FREEDV,&sync,&SNR_est);
 
     SNR = 0.95*SNR + 0.05 * SNR_est; //some averaging to keep it more calm
-    if (SNR<0) SNR=0.0;
-    snprintf(SNR_string,12,"%02d",(int)(SNR+0.5));  //Display the current SNR and round it up to the next int
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x + freedv_display_x_offset, ts.Layout->FREEDV_SNR.y ,SNR_string,Yellow,Black, ts.Layout->FREEDV_FONT);
+    int32_t SNR_Int = roundf(SNR);
+
+    if (SNR_Int > 99)
+    {
+        SNR_Int = 99;
+    }
+    else if (SNR_Int < -99)
+    {
+        SNR_Int = -99;
+    }
+
+    uint32_t clr_fg;
+    if (FreeDV_Is_Squelch_Enable(&freedv_conf))
+    {
+        clr_fg = SNR_Int >= FreeDV_Get_Squelch_SNR(&freedv_conf)? Green:Red;
+    }
+    else
+    {
+        clr_fg = Yellow;
+    }
+
+    snprintf(SNR_string,12,"%-2ld",SNR_Int);  //Display the current SNR and round it up to the next int
+    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x + freedv_display_x_offset, ts.Layout->FREEDV_SNR.y ,SNR_string,clr_fg,Black, ts.Layout->FREEDV_FONT);
 }
 
 void FreeDv_DisplayClear()
@@ -241,206 +166,132 @@ void FreeDv_DisplayUpdate()
 void FreeDv_HandleFreeDv()
 {
 
-    // Freedv Test DL2FW
-    static uint16_t fdv_current_buffer_idx = 0;
+    // Freedv DL2FW
     // static FDV_Out_Buffer FDV_TX_out_im_buff;
     static bool tx_was_here = false;
-    static bool rx_was_here = false;
+    static bool rx_was_here = true;
 
 
-    if ((tx_was_here == true && ts.txrx_mode == TRX_MODE_RX) || (rx_was_here == true && ts.txrx_mode == TRX_MODE_TX))
+     // we are always called, so check if there is FreeDV active
+    if (ts.digital_mode == DigitalMode_FreeDV)
     {
-        tx_was_here = false; //set to false to detect the first entry after switching to TX
-        rx_was_here = false;
-        fdv_current_buffer_idx = 0;
-        fdv_audio_buffer_reset();
-        fdv_iq_buffer_reset();
-    }
-    //will later be inside RX
-    if (ts.digital_mode == DigitalMode_FreeDV) {  // if we are in freedv1-mode and ...
-        if ((ts.txrx_mode == TRX_MODE_TX) && fdv_audio_has_data() && fdv_iq_has_room())
-        {           // ...and if we are transmitting and samples from dv_tx_processor are ready
+        if ((ts.txrx_mode == TRX_MODE_TX)
+                && RingBuffer_GetData(&fdv_audio_rb) >= freedv_get_n_speech_samples(f_FREEDV)
+                && RingBuffer_GetRoom(&fdv_iq_rb) >= freedv_get_n_nom_modem_samples(f_FREEDV))
+        {
+            // ...and if we are transmitting and samples from dv_tx_processor are ready
+            if (tx_was_here == false)
+            {
+                RingBuffer_ClearGetTail(&fdv_audio_rb);
+                RingBuffer_ClearPutHead(&fdv_iq_rb);
+                tx_was_here = true;
+                rx_was_here = false;
+            }
+            COMP    iq_buffer[freedv_get_n_nom_modem_samples(f_FREEDV)];
+            int16_t audio_buffer[freedv_get_n_speech_samples(f_FREEDV)];
 
-            tx_was_here = true;
-            fdv_current_buffer_idx %= FDV_BUFFER_IQ_NUM;
+            RingBuffer_GetSamples(&fdv_audio_rb, &audio_buffer, freedv_get_n_speech_samples(f_FREEDV));
 
-            FDV_Audio_Buffer* input_buf = NULL;
-            fdv_audio_buffer_remove(&input_buf);
-
+            profileTimedEventStart(7);
             freedv_comptx(f_FREEDV,
-                    mmb.fdv_iq_buff[fdv_current_buffer_idx].samples,
-                    input_buf->samples); // start the encoding process
+                    iq_buffer,
+                    audio_buffer); // start the encoding process
+            profileTimedEventStop(7);
 
-            fdv_iq_buffer_add(&mmb.fdv_iq_buff[fdv_current_buffer_idx]);
+            for (int idx = 0; idx < freedv_get_n_nom_modem_samples(f_FREEDV); idx++)
+            {
+                fdv_iq_rb_item_t sample;
+                sample.real = iq_buffer[idx].real;
+                sample.imag = iq_buffer[idx].imag;
 
-            // to bypass the encoding
-            // for (s=0;s<320;s++)
-            // {
-            //    FDV_TX_out_buff[FDV_TX_pt].samples[s] = FDV_TX_in_buff[ts.FDV_TX_in_start_pt].samples[s];
-            // }
-            // was_here ensures, that at least 2 encoded blocks are in the buffer before we start
-            fdv_current_buffer_idx++;
+                RingBuffer_PutSamples(&fdv_iq_rb, &sample, 1);
+            }
 
         }
         else if ((ts.txrx_mode == TRX_MODE_RX))
         {
 
-            bool leave_now = false;
 
-            static flex_buffer outBufCtrl = { 0, 0, 0 }; // Audio Buffer
-            static flex_buffer inBufCtrl = { 0, 0, 0 };  // IQ Buffer
+            if (rx_was_here == false)
+            {
+                RingBuffer_ClearGetTail(&fdv_demod_rb);
+                RingBuffer_ClearPutHead(&fdv_audio_rb);
 
-            static FDV_IQ_Buffer* inBuf = NULL; // used to point to the current IQ input buffer
-            // since we are not always use the same amount of samples, we need to remember the last (partially)
-            // used buffer here. The index to the first unused data element into the buffer is stored in inBufCtrl.offset
-
-            static int16_t rx_buffer[FDV_RX_AUDIO_SIZE_MAX];
-            static COMP    iq_buffer[FDV_RX_AUDIO_SIZE_MAX];
-            // these buffers are large enough to hold the requested/provided amount of data for freedv_comprx
-            // these are larger than the FDV_BUFFER_SIZE since some more bytes may be asked for.
-
-            if (!rx_was_here) {
                 freedv_set_total_bit_errors(f_FREEDV,0);  //reset ber calculation after coming from TX
                 freedv_set_total_bits(f_FREEDV,0);
-                FreeDv_DisplayClear();
+
+                rx_was_here = true; // this is used to clear buffers when going into TX
+                tx_was_here = false;
             }
 
-
-            rx_was_here = true; // this is used to clear buffers when going into TX
+            // these buffers are large enough to hold the requested/provided amount of data for freedv_comprx
+            // these are larger than the FDV_BUFFER_SIZE since some more bytes may be asked for.
+#ifdef USE_SIMPLE_FREEDV_FILTERS
+            #define     input_rb fdv_iq_rb
+            #define     input_rb_item_t fdv_iq_rb_item_t
+            #define     FREEDV_RX_FUNC freedv_comprx
+            #define     FREEDV_RX_INPUT_T COMP
+#else
+            #define     input_rb fdv_demod_rb
+            #define     input_rb_item_t fdv_demod_rb_item_t
+            #define     FREEDV_RX_FUNC freedv_rx
+            #define     FREEDV_RX_INPUT_T int16_t
+#endif
+            FREEDV_RX_INPUT_T input_buffer[freedv_get_n_max_modem_samples(f_FREEDV)];
+            int16_t audio_buffer[freedv_get_n_max_modem_samples(f_FREEDV)];
 
             // while makes this highest prio
             // if may give more responsiveness but can cause interrupted reception
-            while (fdv_iq_has_data() && fdv_audio_has_room())
-                // while (fdv_audio_has_room())
-                // if (fdv_iq_has_data() && fdv_audio_has_room())
+            while (RingBuffer_GetData(&input_rb) >= freedv_nin(f_FREEDV)
+                    && RingBuffer_GetRoom(&fdv_audio_rb) >= freedv_nin(f_FREEDV))
             {
                 // MchfBoard_GreenLed(LED_STATE_OFF);
-
-                leave_now = false;
-                fdv_current_buffer_idx %= FDV_BUFFER_AUDIO_NUM; // this makes sure we stay in our index range, i.e. the number of avail buffers
-
-                int iq_nin = freedv_nin(f_FREEDV); // how many bytes are requested as input for freedv_comprx ?
-
-                // now fill the rx_buffer with the samples from the IQ input buffer
-                while (inBufCtrl.offset != iq_nin)
+                 // if we arrive here the rx_buffer is full enough and will be consumed now.
+#ifdef USE_SIMPLE_FREEDV_FILTERS
+                for (int idx = 0; idx < freedv_nin(f_FREEDV); idx++ )
                 {
-                    // okay no buffer with fresh data, let's get one
-                    // we will get one without delay since we checked for that
-                    // See below
-                    if  (inBuf == NULL)
-                    {
-                        fdv_iq_buffer_peek(&inBuf);
-#ifdef DEBUG_FREEDV
-                        // here we simulate input using pre-generated data
-                        static  int iq_testidx  = 0;
-                        iq_testidx %= FREEDV_TEST_BUFFER_FRAME_COUNT;
-                        /*
-                        memcpy(inBuf->samples,
-                                &test_buffer[iq_testidx++*FREEDV_TEST_BUFFER_FRAME_SIZE],
-                                FREEDV_TEST_BUFFER_FRAME_SIZE*sizeof(COMP));
-                         */
-                        inBuf = (FDV_IQ_Buffer*)&test_buffer[iq_testidx++*FREEDV_TEST_BUFFER_FRAME_SIZE];
-
-#endif
-                        inBufCtrl.start = 0;
-                    }
-
-                    // do we empty a complete buffer?
-                    if ( (iq_nin - inBufCtrl.offset) >= (FDV_BUFFER_SIZE  - inBufCtrl.start)  )
-                    {
-                        memcpy(&iq_buffer[inBufCtrl.offset],&inBuf->samples[inBufCtrl.start],(FDV_BUFFER_SIZE-inBufCtrl.start)*sizeof(COMP));
-                        inBufCtrl.offset += FDV_BUFFER_SIZE-inBufCtrl.start;
-                        fdv_iq_buffer_remove(&inBuf);
-                        inBuf = NULL;
-
-                        // if there is no buffer available, leave the whole
-                        // function, next time we'll have more data ready here
-                        leave_now = (fdv_iq_has_data() == 0);
-                        if (leave_now)
-                        {
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        // the input buffer data will not be used completely to fill the buffer for the encoder.
-                        // fill encoder buffer, remember pointer in iq in buffer coming from the audio interrupt
-                        memcpy(&iq_buffer[inBufCtrl.offset],&inBuf->samples[inBufCtrl.start],(iq_nin - inBufCtrl.offset)*sizeof(COMP));
-                        inBufCtrl.start += (iq_nin - inBufCtrl.offset);
-                        inBufCtrl.offset = iq_nin;
-                    }
+                    input_rb_item_t sample;
+                    RingBuffer_GetSamples(&input_rb, &sample, 1);
+                    input_buffer[idx].real = sample.real;
+                    input_buffer[idx].imag = sample.imag;
                 }
-                if (leave_now == false)
+#else
+                RingBuffer_GetSamples(&input_rb, &input_buffer, freedv_nin(f_FREEDV));
+#endif
+
+                int count = FREEDV_RX_FUNC(f_FREEDV, audio_buffer, input_buffer); // run the decoding process
+
+                if (freedv_get_sync(f_FREEDV) != 0)
                 {
-
-                    if (outBufCtrl.count == 0)
-                    {
-                        // if we arrive here the rx_buffer for comprx is full and will be consumed now.
-                        inBufCtrl.offset = 0;
-                        // profileTimedEventStart(7);
-                        outBufCtrl.count = freedv_comprx(f_FREEDV, rx_buffer, iq_buffer); // run the decoding process
-                        // profileTimedEventStop(7);
-                        // outBufCtrl.count = iq_nin;
-                    }
-
-                    // result tells us the number of returned audio samples
-                    // place  these in the audio output buffer for sending them to the I2S Codec
-                    do
-                    {
-                        // the output data will fill the current audio output buffer
-                        // some data may be left for copying into the next audio output buffer.
-                        if ((outBufCtrl.count - outBufCtrl.offset) + outBufCtrl.start >= FDV_BUFFER_SIZE)
-                        {
-                            memcpy(&fdv_audio_buff[fdv_current_buffer_idx].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(FDV_BUFFER_SIZE-outBufCtrl.start)*sizeof(int16_t));
-
-                            outBufCtrl.offset += FDV_BUFFER_SIZE-outBufCtrl.start;
-
-                            fdv_audio_buffer_add(&fdv_audio_buff[fdv_current_buffer_idx]);
-                            fdv_current_buffer_idx ++;
-                            fdv_current_buffer_idx %= FDV_BUFFER_AUDIO_NUM;
-                            outBufCtrl.start = 0;
-
-                            if (outBufCtrl.count > outBufCtrl.offset) {
-                                // do we have more data? no -> leave the whole function
-                                leave_now = (fdv_audio_has_room() == 0);
-                                if (leave_now)
-                                {
-                                    break;
-                                }
-                                // we have to wait until we can use the next buffer
-                            }
-                            else
-                            {
-                                // ready to decode next  buffer
-                                outBufCtrl.offset = 0;
-                                outBufCtrl.count = 0;
-                            }
-                        }
-                        else
-                        {
-                            // copy all output data we have into the audio output buffer, but we will not fill it completely
-                            memcpy(&fdv_audio_buff[fdv_current_buffer_idx].samples[outBufCtrl.start],&rx_buffer[outBufCtrl.offset],(outBufCtrl.count - outBufCtrl.offset)*sizeof(int16_t));
-                            outBufCtrl.start += (outBufCtrl.count-outBufCtrl.offset);
-                            outBufCtrl.offset = outBufCtrl.count = 0;
-                        }
-                    } while (outBufCtrl.count > outBufCtrl.offset);
+                    RingBuffer_PutSamples(&fdv_audio_rb, &audio_buffer, count);
                 }
             }
         }
     }
-    // END Freedv Test DL2FW
+    else
+    {
+        if (tx_was_here == true || rx_was_here == true)
+        {
+            tx_was_here = false;
+            rx_was_here = false;
+            RingBuffer_ClearGetTail(&fdv_iq_rb);
+            RingBuffer_ClearGetTail(&fdv_audio_rb);
+        }
+    }
 }
 
-struct my_callback_state  my_cb_state;
 
 // FreeDV txt test - will be out of here
-struct my_callback_state {
+typedef struct {
     char  tx_str[80];
     char *ptx_str;
-};
+} my_callback_state_t;
 
-char my_get_next_tx_char(void *callback_state) {
-    struct my_callback_state* pstate = (struct my_callback_state*)callback_state;
+static my_callback_state_t  my_cb_state;
+
+static char my_get_next_tx_char(void *callback_state) {
+    my_callback_state_t* pstate = (my_callback_state_t*)callback_state;
+
     char  c = *pstate->ptx_str++;
 
     if (*pstate->ptx_str == 0) {
@@ -451,32 +302,134 @@ char my_get_next_tx_char(void *callback_state) {
 }
 
 
-void my_put_next_rx_char(void *callback_state, char ch) {
+static void my_put_next_rx_char(void *callback_state, char ch)
+{
+    UNUSED(callback_state);
     UiDriver_TextMsgPutChar(ch);
 }
 
+freedv_mode_desc_t freedv_modes[] =
+{
+        { "1600", "FD1600", FREEDV_MODE_1600 },
+#ifdef USE_FREEDV_700D
+        { "700D", "FD700D", FREEDV_MODE_700D },
+#endif
+};
+
+const uint8_t freedv_modes_num = sizeof(freedv_modes)/sizeof(freedv_modes[0]);
+
+
 // FreeDV txt test - will be out of here
-void  FreeDV_mcHF_init()
+void  FreeDV_Init()
 {
     // Freedv Test DL2FW
 
-    f_FREEDV = freedv_open(FREEDV_MODE_1600);
-    if( ts.special_functions_enabled == 1 )
-    {
-        sprintf(my_cb_state.tx_str, FREEDV_TX_DF8OE_MESSAGE);
-    }
-    else
-    {
-        sprintf(my_cb_state.tx_str, FREEDV_TX_MESSAGE);
-    }
-    my_cb_state.ptx_str = my_cb_state.tx_str;
-    freedv_set_callback_txt(f_FREEDV, &my_put_next_rx_char, &my_get_next_tx_char, &my_cb_state);
-    // freedv_set_squelch_en(f_FREEDV,0);
-    // freedv_set_snr_squelch_thresh(f_FREEDV,-100.0);
+     // move this to ui_configuration;
+     FreeDV_Set_Squelch_SNR(&freedv_conf,-2);
+     freedv_conf.mode = 0; // 0 = 1600, 1 = 700D
 
-    // ts.dvmode = true;
-    // ts.digital_mode = 1;
+     FreeDV_SetMode(freedv_conf.mode, true);
+
 }
-// end Freedv Test DL2FW
+
+/**
+ *
+ * @return true if mode was activated, false if old mode is still active
+ */
+int32_t FreeDV_SetMode(uint8_t fdv_mode, int32_t firstTime)
+{
+    bool retval = true;
+
+    // turn off rx audio processing to be able to disable and reenable FreeDV processing
+    ads.af_disabled++;
+
+    // normal init starts
+    if (fdv_mode >= freedv_modes_num)
+    {
+        fdv_mode = 0;
+    }
+
+    // we don't switch if TX is currently active
+    if (firstTime == false)
+    {
+        retval = (ts.txrx_mode == TRX_MODE_RX);
+        if (retval == true && f_FREEDV != NULL && freedv_conf.mode != fdv_mode)
+        {
+            freedv_close(f_FREEDV);
+            f_FREEDV = NULL;
+        }
+    }
+
+    // only if all went well AND we have not yet initialized the mode,
+    // we are going to run the mode, so if same mode is being set, nothing happens
+    // really
+    if (retval && f_FREEDV == NULL)
+    {
+        f_FREEDV = freedv_open(freedv_modes[fdv_mode].freedv_id);
+
+        retval = f_FREEDV != NULL;
+        if (retval)
+        {
+            sprintf(my_cb_state.tx_str, ts.special_functions_enabled == 1 ? FREEDV_TX_DF8OE_MESSAGE : FREEDV_TX_MESSAGE);
+
+            my_cb_state.ptx_str = my_cb_state.tx_str;
+            freedv_set_callback_txt(f_FREEDV, &my_put_next_rx_char, &my_get_next_tx_char, &my_cb_state);
+
+            if (FreeDV_Is_Squelch_Enable(&freedv_conf))
+            {
+                freedv_set_squelch_en(f_FREEDV,1);
+                freedv_set_snr_squelch_thresh(f_FREEDV, FreeDV_Get_Squelch_SNR(&freedv_conf));
+            }
+            else
+            {
+                freedv_set_squelch_en(f_FREEDV,0);
+            }
+
+            freedv_set_tx_bpf(f_FREEDV, 0);
+        }
+    }
+
+    if (retval)
+    {
+        freedv_conf.mode = fdv_mode;
+    }
+
+    // turn on rx audio processing, FreeDV is ready for work
+    ads.af_disabled--;
+
+    return retval;
+}
+int32_t FreeDV_Iq_Get_FrameLen()
+{
+    return freedv_get_n_nom_modem_samples(f_FREEDV);
+}
+
+int32_t FreeDV_Audio_Get_FrameLen()
+{
+    return freedv_get_n_speech_samples(f_FREEDV);
+}
+
+
+#ifdef DEBUG_FREEDV
+void FreeDV_Test()
+{
+    ts.digital_mode = DigitalMode_FreeDV;
+    ts.txrx_mode = TRX_MODE_RX;
+    while (1)
+    {
+        for (int idx = 0; idx < FREEDV_TEST_BUFFER_FRAME_SIZE*FREEDV_TEST_BUFFER_FRAME_COUNT; idx++)
+        {
+            int16_t sample[2];
+            sample[0] = test_buffer[idx].real;
+            sample[1] = test_buffer[idx].imag;
+
+            RingBuffer_PutSamples(&fdv_iq_rb,&sample,2);
+            FreeDv_HandleFreeDv();
+            RingBuffer_GetSamples(&fdv_audio_rb,sample,1);
+        }
+    }
+
+}
+#endif
 
 #endif

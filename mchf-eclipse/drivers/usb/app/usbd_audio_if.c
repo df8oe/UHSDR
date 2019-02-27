@@ -334,7 +334,8 @@ static int8_t AUDIO_AudioCmd_FS (uint8_t* pbuf, uint32_t size, uint8_t cmd)
         {
 
 
-            if (ts.txrx_mode == TRX_MODE_TX)
+            if ((ts.txrx_mode == TRX_MODE_RX && (ts.rx_iq_source == RX_IQ_DIG || ts.rx_iq_source == RX_IQ_DIGIQ))
+                || (ts.txrx_mode == TRX_MODE_TX && (ts.tx_audio_source == TX_AUDIO_DIG || ts.tx_audio_source == TX_AUDIO_DIGIQ)))
             {
                 uint16_t* pkt = (uint16_t*)pbuf;
                 uint32_t count;

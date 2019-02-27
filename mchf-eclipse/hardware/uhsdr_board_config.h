@@ -213,6 +213,14 @@
 #define SAMPLES_PER_CENTISECOND (IQ_SAMPLE_RATE/100)
 
 
+#ifdef STM32F4
+    #define USE_SIMPLE_FREEDV_FILTERS
+    #define USE_FREEDV_1600
+#else
+    #define USE_FREEDV_700D
+#endif
+
+
 #if (IQ_SAMPLE_RATE) != 48000
     #error Only 48k sample frequency supported (yet).
 #endif

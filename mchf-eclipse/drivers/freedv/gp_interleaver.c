@@ -17,7 +17,7 @@
   All rights reserved.
 
   This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU Lesser General Public License version 2, as
+  it under the terms of the GNU Lesser General Public License version 2.1, as
   published by the Free Software Foundation.  This program is
   distributed in the hope that it will be useful, but WITHOUT ANY
   WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -74,7 +74,6 @@ int choose_interleaver_b(int Nbits)
     /* if we get it means a Nbits we dont have in our table so choke */
     
     assert(0);
-    return -1; // makes compiler happy
 }
 
 

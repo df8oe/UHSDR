@@ -29,7 +29,7 @@
 #include "soft_tcxo.h"
 //
 // Eeprom items
-#include "eeprom.h"
+#include "uhsdr_flash.h"
 #include "adc.h"
 #include "dac.h"
 
@@ -262,7 +262,7 @@ void Board_InitFull()
     if (ts.display->use_spi == true)
 #endif
     {
-        ts.rtc_present = MchfRtc_enabled();
+        ts.rtc_present = Rtc_isEnabled();
     }
 #ifdef UI_BRD_MCHF
     // we need to find out which keyboard layout before we init the GPIOs to use it.
@@ -351,14 +351,11 @@ void Board_Powerdown()
     for(;;) { asm("nop"); }
     // there is no coming back from here...
 }
-//*----------------------------------------------------------------------------
-//* Function Name       : mchf_board_post_init
-//* Object              : Extra init, which requires full boot up first
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
+/**
+ * This is called once AFTER configuration data has been loaded from persistent storage
+ * (i.e. EEPROM or FLASH)
+ */
 void Board_PostInit(void)
 {
     // Set system tick interrupt
@@ -370,7 +367,7 @@ void Board_PostInit(void)
 
     if (ts.rtc_present)
     {
-        MchfRtc_SetPpm(ts.rtc_calib);
+        Rtc_SetPpm(ts.rtc_calib);
     }
 }
 

@@ -286,7 +286,7 @@ PowerMeter					pwmt;
 // ------------------------------------------------
 
 uchar drv_state = 0;
-ui_driver_mode_t ui_driver_state;
+ui_driver_mode_t ui_driver_state = { .dmod_mode = 255, .digital_mode = 255 }; // initialize so that at startup we detect change
 bool filter_path_change = false;
 
 // check if touched point is within rectangle of valid action
@@ -4306,7 +4306,16 @@ static void UiDriver_DisplayModulationType()
 	switch(ts.dmod_mode)
 	{
 	case DEMOD_DIGI:
-		txt = digimodes[ts.digital_mode].label;
+#if defined(USE_FREEDV)
+	    if  (ts.digital_mode == DigitalMode_FreeDV)
+	    {
+	        txt = freedv_modes[freedv_conf.mode].label;
+	    }
+	    else
+#endif
+	    {
+	        txt = digimodes[ts.digital_mode].label;
+	    }
 		break;
 	case DEMOD_LSB:
 	case DEMOD_USB:
@@ -6937,20 +6946,24 @@ void UiDriver_TaskHandler_HighPrioTasks()
 {
     // READ THE LENGTHY COMMENT ABOVE BEFORE CHANGING ANYTHING BELOW!!!
     // YES, READ IT! Thank you!
-#ifdef USE_FREEDV
-    if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_FreeDV)
+    if (ads.af_disabled == false)
     {
-        FreeDv_HandleFreeDv();
-    }
+        // we only process these audio things if rx data processing is active
+#ifdef USE_FREEDV
+        if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_FreeDV)
+        {
+            FreeDv_HandleFreeDv();
+        }
 #endif // USE_FREEDV
 
 #ifdef USE_ALTERNATE_NR
-    if ((is_dsp_nb_active() || is_dsp_nr()) && (ads.decimation_rate == 4))
-    {
+        if ((is_dsp_nb_active() || is_dsp_nr()) && (ads.decimated_freq == 12000))
+        {
 
-        AudioNr_HandleNoiseReduction();
-    }
+            AudioNr_HandleNoiseReduction();
+        }
 #endif
+    }
 #ifdef USE_HIGH_PRIO_PTT
     if (RadioManagement_SwitchTxRx_Possible())
     {
@@ -7277,7 +7290,7 @@ void UiDriver_TaskHandler_MainTasks()
 					RTC_TimeTypeDef sTime;
 
 
-					MchfRtc_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+					Rtc_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
 
 					char str[20];
 					snprintf(str,20,"%2u:%02u:%02u",sTime.Hours,sTime.Minutes,sTime.Seconds);

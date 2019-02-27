@@ -18,10 +18,10 @@
 
 #include "rtc.h"
 
-bool MchfRtc_enabled();
-void MchfRtc_FullReset();
-void MchfRtc_Start();
-bool MchfRtc_SetPpm(int16_t ppm);
-void MchfRtc_GetTime(RTC_HandleTypeDef *hrtc, RTC_TimeTypeDef *sTime, uint32_t Format);
+bool Rtc_isEnabled();
+void Rtc_FullReset();
+void Rtc_Start();
+bool Rtc_SetPpm(int16_t ppm);
+void Rtc_GetTime(RTC_HandleTypeDef *hrtc, RTC_TimeTypeDef *sTime, uint32_t Format);
 
 #endif /* HARDWARE_MCHF_RTC_H_ */

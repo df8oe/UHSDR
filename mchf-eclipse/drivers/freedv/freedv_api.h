@@ -37,7 +37,9 @@
 
 // This declares a single-precision (float) complex number
 #include <sys/types.h>
+
 #include "comp.h"
+#include "codec2_ofdm.h"
 
 #define FREEDV_MODE_1600        0
 #define FREEDV_MODE_700         1
@@ -106,6 +108,7 @@ int  freedv_data_ntxframes (struct freedv *freedv);
 
 int freedv_nin      (struct freedv *freedv);
 int freedv_rx       (struct freedv *freedv, short speech_out[], short demod_in[]);
+int freedv_shortrx  (struct freedv *freedv, short speech_out[], short demod_in[], float gain);
 int freedv_floatrx  (struct freedv *freedv, short speech_out[], float demod_in[]);
 int freedv_comprx   (struct freedv *freedv, short speech_out[], COMP  demod_in[]);
 int freedv_codecrx  (struct freedv *freedv, unsigned char *packed_codec_bits, short demod_in[]);
@@ -128,8 +131,10 @@ void freedv_set_varicode_code_num       (struct freedv *freedv, int val);
 void freedv_set_data_header             (struct freedv *freedv, unsigned char *header);
 int  freedv_set_alt_modem_samp_rate     (struct freedv *freedv, int samp_rate);
 void freedv_set_carrier_ampl            (struct freedv *freedv, int c, float ampl);
-void freedv_set_sync                    (struct freedv *freedv, int sync_cmd);
+void freedv_set_sync                    (struct freedv *freedv, Sync sync_cmd);
 void freedv_set_verbose                 (struct freedv *freedv, int verbosity);
+void freedv_set_tx_bpf                  (struct freedv *freedv, int val);
+void freedv_set_ext_vco                 (struct freedv *f, int val);
 
 // Get parameters -------------------------------------------------------------------------
 
@@ -141,6 +146,7 @@ void freedv_get_modem_extended_stats(struct freedv *freedv, struct MODEM_STATS *
 int freedv_get_test_frames	    (struct freedv *freedv);
 int freedv_get_n_speech_samples	    (struct freedv *freedv);
 int freedv_get_modem_sample_rate    (struct freedv *freedv);
+int freedv_get_modem_symbol_rate    (struct freedv *freedv);
 int freedv_get_n_max_modem_samples  (struct freedv *freedv);
 int freedv_get_n_nom_modem_samples  (struct freedv *freedv);
 int freedv_get_total_bits	    (struct freedv *freedv);
