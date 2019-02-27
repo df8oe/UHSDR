@@ -44,12 +44,14 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+#include "uhsdr_board.h"
 #include "usb_host.h"
 #include "usbh_core.h"
 #include "usbh_msc.h"
-#include "usbh_hid.h"
+#ifndef BOOTLOADER_BUILD
+    #include "usbh_hid.h"
+#endif
 #include "fatfs.h"
-#include "uhsdr_board.h"
 
 
 /* USB Host Core handle declaration */

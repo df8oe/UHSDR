@@ -16,8 +16,10 @@ typedef struct {
     const RingBuffer_conf_t conf;
 } RingBuffer_data_t;
 
-#define RingBuffer_Define(name, type, buf_size) type name##_buffer[(buf_size)]; RingBuffer_data_t name = { .buffer_tail = 0, .buffer_head = 0, .conf = { .size = (buf_size), .sizeofItem = sizeof(type) , .buffer = name##_buffer  } };
-#define RingBuffer_DefineExtMem(name, type, buf_size, buf_addr) RingBuffer_data_t name = { .buffer_tail = 0, .buffer_head = 0, .conf = { .size = (buf_size), .sizeofItem = sizeof(type) , .buffer = (buf_addr)  } };
+#define RingBuffer_Declare(name, type) typedef type name##_item_t; extern RingBuffer_data_t name;
+
+#define RingBuffer_Define(name, buf_size) name##_item_t name##_buffer[(buf_size)]; RingBuffer_data_t name = { .buffer_tail = 0, .buffer_head = 0, .conf = { .size = (buf_size), .sizeofItem = sizeof(name##_item_t) , .buffer = name##_buffer  } };
+#define RingBuffer_DefineExtMem(name, buf_size, buf_addr) RingBuffer_data_t name = { .buffer_tail = 0, .buffer_head = 0, .conf = { .size = (buf_size), .sizeofItem = sizeof(name##_item_t) , .buffer = (buf_addr)  } };
 
 void RingBuffer_ClearGetTail(RingBuffer_data_t* buf);
 void RingBuffer_ClearPutHead(RingBuffer_data_t* buf);

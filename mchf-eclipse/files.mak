@@ -86,6 +86,7 @@ drivers/freedv/nlp.c \
 drivers/freedv/ofdm.c \
 drivers/freedv/pack.c \
 drivers/freedv/phase.c \
+drivers/freedv/phi0.c \
 drivers/freedv/postfilter.c \
 drivers/freedv/quantise.c \
 drivers/freedv/sine.c \

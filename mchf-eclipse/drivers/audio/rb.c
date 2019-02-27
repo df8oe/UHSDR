@@ -1,7 +1,5 @@
 #include "rb.h"
 
-RingBuffer_Define(buf_data, int16_t, 1280)
-
 void RingBuffer_ClearGetTail(RingBuffer_data_t* buf)
 {
     do

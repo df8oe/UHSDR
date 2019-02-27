@@ -4273,6 +4273,48 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                 snprintf(options,32,"     %d",ts.debug_vswr_protection_threshold);
             }
             break;
+
+#ifdef USE_FREEDV
+        case MENU_DEBUG_FREEDV_MODE:
+            temp_var_u8 = freedv_conf.mode;
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
+                    0,
+                    freedv_modes_num-1,
+                    0,
+                    1);
+            if (var_change)
+            {
+                if (FreeDV_SetMode(temp_var_u8, false) == false)
+                {
+                    clr = Red;
+                }
+            }
+
+            txt_ptr = freedv_modes[freedv_conf.mode].name;
+            break;
+
+        case MENU_DEBUG_FREEDV_SQL_THRESHOLD:
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &freedv_conf.squelch_snr_thresh,
+                    FDV_SQUELCH_OFF,
+                    FDV_SQUELCH_MAX,
+                    FDV_SQUELCH_DEFAULT,
+                    1);
+
+            if (var_change)
+            {
+                FreeDV_Squelch_Update(&freedv_conf);
+            }
+
+            if (FreeDV_Is_Squelch_Enable(&freedv_conf))
+            {
+                snprintf(options,32,"     %ld",FreeDV_Get_Squelch_SNR(&freedv_conf));
+            }
+            else
+            {
+                txt_ptr = "OFF";
+            }
+            break;
+#endif
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

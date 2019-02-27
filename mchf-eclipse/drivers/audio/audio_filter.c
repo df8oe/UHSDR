@@ -1147,7 +1147,7 @@ void 	AudioFilter_SetRxHilbertAndDecimationFIR(uint8_t dmod_mode)
 
     // in FilterPathInfo, we have stored the coefficients already, so no if . . . necessary
     // also applicable for FM case !
-    for(int i = 0; i < rx_iq_num_taps; i++)
+    for(uint32_t i = 0; i < rx_iq_num_taps; i++)
     {
         fc.fir_rx_hilbert_taps_i[i] = ts.filters_p->FIR_I_coeff_file[i];
         fc.fir_rx_hilbert_taps_q[i] = ts.filters_p->FIR_Q_coeff_file[i];

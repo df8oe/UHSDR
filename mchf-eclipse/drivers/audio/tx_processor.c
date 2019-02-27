@@ -657,10 +657,10 @@ static bool TxProcessor_FreeDV (audio_block_t a_block, iq_buffer_t* iq_buf_p, in
         {
             if (modulus_Interpolate == 0) // put in sample pair
             {
-                COMP sample;
+                fdv_iq_rb_item_t sample;
                 RingBuffer_GetSamples(&fdv_iq_rb, &sample, 1);
-                i_buffer[j] = sample.real * 10.0; // + (sample_delta.real * (float32_t)modulus_MOD);
-                q_buffer[j] = sample.imag * 10.0; // + (sample_delta.imag * (float32_t)modulus_Interpolate);
+                i_buffer[j] = sample.real;
+                q_buffer[j] = sample.imag;
             }
             else // in 5 of 6 cases just stuff in zeros = zero-padding / zero-stuffing
             {

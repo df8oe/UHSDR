@@ -1698,7 +1698,7 @@ float calc_snr(int Nc, float sig_est[], float noise_est[])
 
     S = 0.0;
     for(c=0; c<Nc+1; c++)
-	S += powf(sig_est[c], 2.0);
+	S += sig_est[c] * sig_est[c];
     SdB = 10.0*log10f(S+1E-12);
 
     /* Average noise mag across all carriers and square to get an
@@ -1710,7 +1710,7 @@ float calc_snr(int Nc, float sig_est[], float noise_est[])
     for(c=0; c<Nc+1; c++)
 	mean += noise_est[c];
     mean /= (Nc+1);
-    N50 = powf(mean, 2.0);
+    N50 = mean * mean;
     N50dB = 10.0*log10f(N50+1E-12);
 
     /* Now multiply by (3000 Hz)/(50 Hz) to find the total noise power

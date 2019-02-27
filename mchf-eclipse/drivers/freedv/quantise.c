@@ -131,8 +131,8 @@ long quantise(const float * cb, float vec[], float w[], int k, int m, float *se)
    for(j=0; j<m; j++) {
 	e = 0.0;
 	for(i=0; i<k; i++) {
-	    diff = cb[j*k+i]-vec[i];
-	    e += powf(diff*w[i],2.0);
+	    diff = (cb[j*k+i]-vec[i]) * w[i];
+	    e += diff*diff;
 	}
 	if (e < beste) {
 	    beste = e;

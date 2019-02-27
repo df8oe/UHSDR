@@ -362,7 +362,7 @@ static float32_t* mag_coeffs[MAGNIFY_NUM] =
         }
 };
 
-
+#ifdef USE_SIMPLE_FREEDV_FILTERS
 //******* From here 2 set of filters for the I/Q FreeDV aliasing filter**********
 // I- and Q- Filter instances for FreeDV downsampling aliasing filters
 
@@ -416,6 +416,7 @@ static float32_t* FreeDV_coeffs[1] =
             -0.892530463578263378
         }
 };
+#endif
 
 //******* End of 2 set of filters for the I/Q FreeDV aliasing filter**********
 
@@ -601,24 +602,32 @@ static void AudioDriver_Dsp_Init(volatile dsp_params_t* dsp_p)
  */
 
 #define FIR_RX_HILBERT_STATE_SIZE (IQ_RX_NUM_TAPS_MAX + IQ_RX_BLOCK_SIZE)
+#ifndef USE_SIMPLE_FREEDV_FILTERS
 static float32_t    __MCHF_SPECIALMEM Fir_FreeDV_Rx_Hilbert_State_I[FIR_RX_HILBERT_STATE_SIZE];
 static float32_t    __MCHF_SPECIALMEM Fir_FreeDV_Rx_Hilbert_State_Q[FIR_RX_HILBERT_STATE_SIZE];
-arm_fir_instance_f32    Fir_FreeDV_Rx_Hilbert_I;
-arm_fir_instance_f32    Fir_FreeDV_Rx_Hilbert_Q;
+static arm_fir_instance_f32    Fir_FreeDV_Rx_Hilbert_I;
+static arm_fir_instance_f32    Fir_FreeDV_Rx_Hilbert_Q;
+#endif
 
 static void AudioDriver_FreeDV_Rx_Init()
 {
+#ifdef USE_SIMPLE_FREEDV_FILTERS
     IIR_biquad_FreeDV_I.pCoeffs = FreeDV_coeffs[0];  // FreeDV Filter test -DL2FW-
     IIR_biquad_FreeDV_Q.pCoeffs = FreeDV_coeffs[0];
-
-    // temporary installed audio filter's coefficients
-    arm_fir_init_f32(&Fir_FreeDV_Rx_Hilbert_I,IQ_RX_NUM_TAPS,(float32_t*)i_rx_4k5_coeffs,Fir_FreeDV_Rx_Hilbert_State_I, IQ_BLOCK_SIZE);
-    arm_fir_init_f32(&Fir_FreeDV_Rx_Hilbert_Q,IQ_RX_NUM_TAPS,(float32_t*)q_rx_4k5_coeffs,Fir_FreeDV_Rx_Hilbert_State_Q, IQ_BLOCK_SIZE);
+#else
+#ifdef STM32F4
+    arm_fir_init_f32(&Fir_FreeDV_Rx_Hilbert_I,IQ_RX_NUM_TAPS_LO,(float32_t*)i_rx_FREEDV_700D_F4_coeffs,Fir_FreeDV_Rx_Hilbert_State_I, IQ_BLOCK_SIZE);
+    arm_fir_init_f32(&Fir_FreeDV_Rx_Hilbert_Q,IQ_RX_NUM_TAPS_LO,(float32_t*)q_rx_FREEDV_700D_F4_coeffs,Fir_FreeDV_Rx_Hilbert_State_Q, IQ_BLOCK_SIZE);
+#else
+    arm_fir_init_f32(&Fir_FreeDV_Rx_Hilbert_I,IQ_RX_NUM_TAPS,(float32_t*)i_rx_FREEDV_700D_coeffs,Fir_FreeDV_Rx_Hilbert_State_I, IQ_BLOCK_SIZE);
+    arm_fir_init_f32(&Fir_FreeDV_Rx_Hilbert_Q,IQ_RX_NUM_TAPS,(float32_t*)q_rx_FREEDV_700D_coeffs,Fir_FreeDV_Rx_Hilbert_State_Q, IQ_BLOCK_SIZE);
+#endif
+#endif
 }
 
 void AudioDriver_AgcWdsp_Set()
 {
-    AudioAgc_SetupAgcWdsp(IQ_SAMPLE_RATE_F / (float32_t)ads.decimation_rate, ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM);
+    AudioAgc_SetupAgcWdsp(ads.decimated_freq, ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM);
 }
 
 /**
@@ -701,7 +710,7 @@ void AudioDriver_SetSamPllParameters()
 {
 
     // definitions and intializations for synchronous AM demodulation = SAM
-    const float32_t decimSampleRate = IQ_SAMPLE_RATE_F / ads.decimation_rate;
+    const float32_t decimSampleRate = ads.decimated_freq;
     const float32_t pll_fmax = ads.pll_fmax_int;
 
     // DX adjustments: zeta = 0.15, omegaN = 100.0
@@ -1098,6 +1107,7 @@ void AudioDriver_SetProcessingChain(uint8_t dmod_mode, bool reset_dsp_nr)
 
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = filters_p->sample_rate_dec;
+    ads.decimated_freq = IQ_SAMPLE_RATE / ads.decimation_rate;
 
     for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
     {
@@ -1320,7 +1330,7 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * const dst, int16_t blockSize)
 {
 
-    bool retval = false;
+    bool retval = true;
 
     // Freedv DL2FW
     static int16_t modulus_Decimate = 0, modulus_Interpolate = 0;
@@ -1330,29 +1340,49 @@ static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * co
     const int32_t factor_Decimate = IQ_SAMPLE_RATE/8000; // 6x @ 48ksps
     const int32_t factor_Interpolate = AUDIO_SAMPLE_RATE/8000; // 6x @ 48ksps
 
-    // Freedv Test DL2FW
-
     bool lsb_active = RadioManagement_LSBActive(ts.dmod_mode);
 
+    // we switch I and Q here so that we later always use USB demodulation
+    // this works because we have the frequency of interest centered.
     float32_t* real = (lsb_active == true)? iq_buf_p->q_buffer : iq_buf_p->i_buffer;
     float32_t* imag = (lsb_active == true)? iq_buf_p->i_buffer : iq_buf_p->q_buffer;
 
     float32_t real_buffer[blockSize];
     float32_t imag_buffer[blockSize];
 
+#ifdef USE_SIMPLE_FREEDV_FILTERS
+    arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_I, real, real_buffer, blockSize);
+    arm_biquad_cascade_df1_f32 (&IIR_biquad_FreeDV_Q, imag, imag_buffer, blockSize);
+#else
     // we run a hilbert transform including a low pass to avoid
     // aliasing artifacts
     arm_fir_f32(&Fir_FreeDV_Rx_Hilbert_I,real,real_buffer,blockSize);
     arm_fir_f32(&Fir_FreeDV_Rx_Hilbert_Q,imag,imag_buffer,blockSize);
+#endif
 
     // DOWNSAMPLING
     for (int k = 0; k < blockSize; k++)
     {
         if (modulus_Decimate == 0)  //every nth sample has to be catched -> downsampling
         {
+
+            const float32_t f32_to_i16_gain = 10;
+            // 10 for normal RX, 1000 for USB PC debugging
+
+#ifdef USE_SIMPLE_FREEDV_FILTERS
+            fdv_iq_rb_item_t sample;
+            // this is the USB demodulation I + Q
+
+            sample.real = real_buffer[k] * f32_to_i16_gain;
+            sample.imag = imag_buffer[k] * f32_to_i16_gain;
+            RingBuffer_PutSamples(&fdv_iq_rb, &sample, 1);
+
+#else
             int16_t sample;
-            sample = real_buffer[k]*4096; // + imag_buffer[k];
+            // this is the USB demodulation I + Q
+            sample = (real_buffer[k] + imag_buffer[k]) * f32_to_i16_gain;
             RingBuffer_PutSamples(&fdv_demod_rb, &sample, 1);
+#endif
         }
 
         // increment and wrap
@@ -1361,7 +1391,6 @@ static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * co
         {
             modulus_Decimate = 0;
         }
-
     }
 
 
@@ -1386,7 +1415,7 @@ static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * co
         // (and the routine knows that it does not have to multiply with 0 while filtering: if we do upsampling and subsequent
         // filtering, the filter does not know that and multiplies with zero 5 out of six times --> very inefficient)
         // BUT: we cannot use the ARM function, because decimation factor (6) has to be an integer divide of
-        // block size (which is 64 in our case --> 64 / 6 = non-integer!)
+        // block size (which is 32 in our case --> 32 / 6 = non-integer!)
 
 
         for (int j=0; j < blockSize; j++) //upsampling with integrated interpolation-filter for M=6
@@ -1397,11 +1426,11 @@ static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * co
             {
                 RingBuffer_GetSamples(&fdv_audio_rb, &sample, 1);
             }
-            dst[j] =
-                                        Fir_Rx_FreeDV_Interpolate_Coeffs[5-modulus_Interpolate] * History[0] +
-                                        Fir_Rx_FreeDV_Interpolate_Coeffs[11-modulus_Interpolate] * History[1] +
-                                        Fir_Rx_FreeDV_Interpolate_Coeffs[17-modulus_Interpolate] * History[2] +
-                                        Fir_Rx_FreeDV_Interpolate_Coeffs[23-modulus_Interpolate] * sample;
+            dst[j] = Fir_Rx_FreeDV_Interpolate_Coeffs[5-modulus_Interpolate] * History[0] +
+                     Fir_Rx_FreeDV_Interpolate_Coeffs[11-modulus_Interpolate] * History[1] +
+                     Fir_Rx_FreeDV_Interpolate_Coeffs[17-modulus_Interpolate] * History[2] +
+                     Fir_Rx_FreeDV_Interpolate_Coeffs[23-modulus_Interpolate] * sample;
+
             History[0] = History[1];
             History[1] = History[2];
             History[2] = sample;
@@ -2577,8 +2606,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
 
     IqSample_t srcUSB[blockSize];
 
-    IqSample_t * const src = (rx_iq_source == RX_IQ_DIG || rx_iq_source == RX_IQ_DIGIQ) ? srcUSB : srcCodec;
 
+    IqSample_t * const src = (rx_iq_source == RX_IQ_DIG || rx_iq_source == RX_IQ_DIGIQ) ? srcUSB : srcCodec;
     // If source is digital usb in, pull from USB buffer, discard codec iq and
     // let the normal processing happen
     if (rx_iq_source == RX_IQ_DIG || rx_iq_source == RX_IQ_DIGIQ)
@@ -2632,14 +2661,12 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
             adb.iq_buf.i_buffer[i] = I2S_correctHalfWord(src[i].l);
             adb.iq_buf.q_buffer[i] = I2S_correctHalfWord(src[i].r);
         }
-
         if (IQ_BIT_SCALE_DOWN != 1.0)
         {
             // we scale everything into the range of +/-32767 if we are getting 32 bit input
             arm_scale_f32 (adb.iq_buf.i_buffer, IQ_BIT_SCALE_DOWN, adb.iq_buf.i_buffer, blockSize);
             arm_scale_f32 (adb.iq_buf.q_buffer, IQ_BIT_SCALE_DOWN, adb.iq_buf.q_buffer, blockSize);
         }
-
         AudioDriver_RxHandleIqCorrection(adb.iq_buf.i_buffer, adb.iq_buf.q_buffer, blockSize);
 
         // at this point we have phase corrected IQ @ IQ_SAMPLE_RATE, unshifted in adb.iq_buf.i_buffer, adb.iq_buf.q_buffer
@@ -2660,12 +2687,12 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         // Spectrum display sample collect for magnify != 0
 
         AudioDriver_SpectrumZoomProcessSamples(&adb.iq_buf, blockSize);
+#ifdef USE_FREEDV
         if (ts.dvmode == true && ts.digital_mode == DigitalMode_FreeDV)
         {
             signal_active = AudioDriver_RxProcessorFreeDV(&adb.iq_buf, adb.a_buffer[1], blockSize);
         }
-
-
+#endif
         if (signal_active == false)
         {
             signal_active = true;
@@ -2677,11 +2704,9 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
                     && dmod_mode != DEMOD_FM ) || dmod_mode == DEMOD_SAM || dmod_mode == DEMOD_AM  ;
 
             const int16_t blockSizeDecim = blockSize/ads.decimation_rate;
-            const uint32_t sampleRateDecim = IQ_SAMPLE_RATE / ads.decimation_rate;
-
 
             const uint16_t blockSizeIQ = use_decimatedIQ? blockSizeDecim: blockSize;
-            const uint32_t sampleRateIQ = use_decimatedIQ? sampleRateDecim: IQ_SAMPLE_RATE;
+            const uint32_t sampleRateIQ = use_decimatedIQ? ads.decimated_freq: IQ_SAMPLE_RATE;
 
             // in some case we decimate the IQ before passing to demodulator, in some don't
             // in any case, we do audio filtering on decimated data
@@ -2771,7 +2796,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
                 // at this point we are at the decimated audio sample rate
                 // we support multiple rates
                 // here also the various digital mode modems are called
-                RxProcessor_DemodAudioPostprocessing(adb.a_buffer, blockSize, blockSizeDecim, sampleRateDecim, use_stereo);
+                RxProcessor_DemodAudioPostprocessing(adb.a_buffer, blockSize, blockSizeDecim, ads.decimated_freq, use_stereo);
                 // we get back blockSize audio at full sample rate
 
             } // end NOT in FM mode
@@ -2843,8 +2868,6 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         }
 #endif
     }
-
-
 
     float32_t usb_audio_gain = ts.rx_gain[RX_AUDIO_DIG].value/31.0;
 

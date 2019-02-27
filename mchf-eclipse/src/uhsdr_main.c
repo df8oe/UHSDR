@@ -93,6 +93,39 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
 }
 
 /**
+ * Detects if a special bootloader is used and configures some settings
+ * Used for debugging and testing purposes only
+ */
+void Main_DetectSpecialBootloader()
+{
+    // detection routine for special bootloader version strings which do enable debug or development functions
+    char out[14];
+    for(uint8_t* begin = (uint8_t*)0x8000000; begin < (uint8_t*)EEPROM_START_ADDRESS-8; begin++)
+    {
+        if (memcmp("Version: ",begin,9) == 0)
+        {
+            snprintf(out,13, "%s", &begin[9]);
+            for (uint8_t i=1; i<13; i++)
+            {
+                if (out[i] == '\0')
+                {
+                    if (out[i-1] == 'a')
+                    {
+                        ts.special_functions_enabled = 1;
+                    }
+                    if (out[i-1] == 's')
+                    {
+                        ts.special_functions_enabled = 2;
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+    }
+}
+
+/**
  * All data inside the ts data structure which needs a non-zero value set at startup AND
  * is either used before the configuration has been loaded OR which is not loaded from the persistent configuration
  * should be initialized here.
@@ -283,11 +316,6 @@ void TransceiverStateInit(void)
     ts.debug_vswr_protection_threshold = 0; // OFF
 
     ts.band_effective = 255; // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
-
-    // DEBUG !!!
-    ts.stream_tx_audio = STREAM_TX_AUDIO_GENIQ;
-    ts.rx_iq_source = RX_IQ_DIGIQ;
-
 }
 
 // #include "Trace.h"
@@ -349,33 +377,8 @@ int mchfMain(void)
     // here, so we simply set reverse to false
     UiLcdHy28_TouchscreenInit(0);
 
-#if 1
-	// detection routine for special bootloader version strings which do enable debug or development functions
-	char out[14];
-    for(uint8_t* begin = (uint8_t*)0x8000000; begin < (uint8_t*)EEPROM_START_ADDRESS-8; begin++)
-    {
-    	if (memcmp("Version: ",begin,9) == 0)
-        {
-        	snprintf(out,13, "%s", &begin[9]);
-        	for (uint8_t i=1; i<13; i++)
-        	{
-        	  if (out[i] == '\0')
-        	  {
-        		if (out[i-1] == 'a')
-        		{
-				  ts.special_functions_enabled = 1;
-				}
-        		if (out[i-1] == 's')
-        		{
-				  ts.special_functions_enabled = 2;
-				}
-			  break;
-			  }
-			}
-        break;
-        }
-	}
-#endif
+
+    Main_DetectSpecialBootloader();
 
     UiDriver_Init();
 
