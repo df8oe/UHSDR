@@ -377,12 +377,12 @@ bool RadioManagement_Tune(bool tune)
         }
         else
         {
+            RadioManagement_SwitchTxRx(TRX_MODE_RX,true);                // tune OFF
             if(ts.tune_power_level != PA_LEVEL_TUNE_KEEP_CURRENT)
             {
-                ts.power_level = ts.power_temp; // restore tx level
+                RadioManagement_SetPowerLevel(RadioManagement_GetBand(df.tune_new), ts.power_temp);
             }
 
-            RadioManagement_SwitchTxRx(TRX_MODE_RX,true);                // tune OFF
             retval = (ts.txrx_mode == TRX_MODE_TX); // no longer tuning
         }
     }
