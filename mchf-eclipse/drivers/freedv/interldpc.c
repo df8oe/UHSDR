@@ -28,11 +28,12 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 
 #include "interldpc.h"
-#include "codec2_ofdm.h"
+#include "ofdm_internal.h"
 #include "mpdecode_core.h"
 #include "gp_interleaver.h"
 #include "HRA_112_112.h"
@@ -119,7 +120,7 @@ void interleaver_sync_state_machine(struct OFDM *ofdm,
     int coded_bits_per_frame = ldpc->coded_bits_per_frame;
     int data_bits_per_frame = ldpc->data_bits_per_frame;
     float llr[coded_bits_per_frame];
-    char out_char[coded_bits_per_frame];
+    uint8_t out_char[coded_bits_per_frame];
     State next_sync_state_interleaver;
 
     next_sync_state_interleaver = ofdm->sync_state_interleaver;
@@ -190,7 +191,7 @@ int count_uncoded_errors(struct LDPC *ldpc, struct OFDM_CONFIG *config, int Nerr
     return Terrs;
 }
 
-int count_errors(int tx_bits[], char rx_bits[], int n) {
+int count_errors(uint8_t tx_bits[], uint8_t rx_bits[], int n) {
     int i;
     int Nerrs = 0;
 
