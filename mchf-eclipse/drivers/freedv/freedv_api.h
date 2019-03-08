@@ -50,6 +50,48 @@
 #define FREEDV_MODE_700C        6
 #define FREEDV_MODE_700D        7
 
+
+#ifndef FREEDV_MODE_EN_DEFAULT
+#define FREEDV_MODE_EN_DEFAULT 1
+#endif
+
+// by default we enable all modes
+// disable during compile time with -DFREEDV_MODE_1600_EN=0
+// all butFreeDV 1600
+
+//or the other way round
+// -DFREEDV_MODE_EN_DEFAULT=0 -DFREEDV_MODE_1600_EN=1
+// only FreeDV 1600
+
+#if !defined(FREEDV_MODE_1600_EN)
+        #define FREEDV_MODE_1600_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_700_EN)
+        #define FREEDV_MODE_700_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_700B_EN)
+        #define FREEDV_MODE_700B_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_700C_EN)
+        #define FREEDV_MODE_700C_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_700D_EN)
+        #define FREEDV_MODE_700D_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_2400A_EN)
+        #define FREEDV_MODE_2400A_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_2400B_EN)
+        #define FREEDV_MODE_2400B_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_800XA_EN)
+        #define FREEDV_MODE_800XA_EN FREEDV_MODE_EN_DEFAULT
+#endif
+
+
+
+#define FDV_MODE_ACTIVE(mode_name, var)  ((mode_name##_EN) == 0 ? 0: (var) == mode_name)
+
 /* operator control of 700D state machine */
       
 #define FREEDV_SYNC_UNSYNC 0                 /* force sync state machine to lose sync, and search for new sync */
@@ -126,12 +168,14 @@ void freedv_set_snr_squelch_thresh	(struct freedv *freedv, float snr_squelch_thr
 void freedv_set_clip	                (struct freedv *freedv, int val);
 void freedv_set_total_bit_errors    	(struct freedv *freedv, int val);
 void freedv_set_total_bits              (struct freedv *freedv, int val);
+void freedv_set_total_bit_errors_coded  (struct freedv *freedv, int val);
+void freedv_set_total_bits_coded        (struct freedv *freedv, int val);
 void freedv_set_callback_error_pattern  (struct freedv *freedv, freedv_calback_error_pattern cb, void *state);
 void freedv_set_varicode_code_num       (struct freedv *freedv, int val);
 void freedv_set_data_header             (struct freedv *freedv, unsigned char *header);
 int  freedv_set_alt_modem_samp_rate     (struct freedv *freedv, int samp_rate);
 void freedv_set_carrier_ampl            (struct freedv *freedv, int c, float ampl);
-void freedv_set_sync                    (struct freedv *freedv, Sync sync_cmd);
+void freedv_set_sync                    (struct freedv *freedv, int sync_cmd);
 void freedv_set_verbose                 (struct freedv *freedv, int verbosity);
 void freedv_set_tx_bpf                  (struct freedv *freedv, int val);
 void freedv_set_ext_vco                 (struct freedv *f, int val);

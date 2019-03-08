@@ -31,11 +31,8 @@
 
 #ifdef FDV_ARM_MATH
     #include "arm_const_structs.h"
-    //#define SINF(a) arm_sin_f32(a)
-    //#define COSF(a) arm_cos_f32(a)
-
-    #define SINF(a) sinf(a) //arm_sin_f32(a)
-    #define COSF(a) cosf(a) //arm_cos_f32(a)
+    #define SINF(a) arm_sin_f32(a)
+    #define COSF(a) arm_cos_f32(a)
 #else
     #define SINF(a) sinf(a)
     #define COSF(a) cosf(a)
