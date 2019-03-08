@@ -59,7 +59,6 @@ ifeq ($(BUILDFOR),H7)
 endif
 
 ROOTLOC=.
-vpath %.h $(ROOTLOC)
 vpath %.c $(ROOTLOC)
 vpath %.cpp $(ROOTLOC)
 vpath %.S $(ROOTLOC)
@@ -100,7 +99,8 @@ ifeq ($(OS),Darwin)
   SED = gsed
 endif
 
-COMPILEFLAGS := -D_GNU_SOURCE -DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" $(CONFIGFLAGS) -DUSE_HAL_DRIVER -DFDV_ARM_MATH \
+COMPILEFLAGS := -D_GNU_SOURCE -DTRX_ID=\"$(TRX_ID)\" -DTRX_NAME=\"$(TRX_NAME)\" $(CONFIGFLAGS) -DUSE_HAL_DRIVER\
+	-DFDV_ARM_MATH -DFREEDV_MODE_EN_DEFAULT=0 -DFREEDV_MODE_1600_EN=1 -DCODEC2_MODE_EN_DEFAULT=0 -DCODEC2_MODE_1300_EN=1\
 	-ffunction-sections -fdata-sections -flto -Wall -Wuninitialized -Wextra -Wno-unused-parameter -Wno-unused-function -Wno-sign-compare -g3
 
 # identifying of "official builds by DF8OE"
@@ -114,8 +114,8 @@ MACHFLAGS_F7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM
 MACHFLAGS_H7 := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16    -mthumb -DARM_MATH_CM7 -DCORTEX_M7 -DSTM32H743xx -D__FPU_PRESENT=1
 
 BASECFLAGS_F4  = $(MACHFLAGS_F4)  $(COMPILEFLAGS) $(EXTRACFLAGS)
-BASECFLAGS_F7  = $(MACHFLAGS_F7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
-BASECFLAGS_H7  = $(MACHFLAGS_H7)  $(COMPILEFLAGS) $(EXTRACFLAGS)
+BASECFLAGS_F7  = $(MACHFLAGS_F7)  $(COMPILEFLAGS) $(EXTRACFLAGS) -DFREEDV_MODE_700D_EN=1 -DCODEC2_MODE_700C_EN=1
+BASECFLAGS_H7  = $(MACHFLAGS_H7)  $(COMPILEFLAGS) $(EXTRACFLAGS) -DFREEDV_MODE_700D_EN=1 -DCODEC2_MODE_700C_EN=1
 
 LINKERLOC=$(ROOTLOC)/linker
 
@@ -217,6 +217,9 @@ OC      = $(VPRE)$(PREFIX)arm-none-eabi-objcopy
 SZ      = $(VPRE)$(PREFIX)arm-none-eabi-size
 HEX2DFU = $(VPRE)python $(ROOTLOC)/support/hex2dfu/hex2dfu.py
 
+POSTCOMPILE = @mv -f $*.Td $*.d && touch $@
+DEPFLAGS = -MT $@ -MMD -MP -MF $*.Td
+
 
 ECHO = @echo
 
@@ -229,11 +232,16 @@ else
 endif
 
 # how to compile individual object files
+ALL_SRC:=$(SRC) $(DSPLIB_SRC) $(HAL_SRC) $(BL_SRC) $(BL_HAL_SRC)
+
 OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRC:.cpp=.o)))
 DSPLIB_OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(DSPLIB_SRC:.cpp=.o)))
 HAL_OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(HAL_SRC:.cpp=.o)))
 BL_OBJS := $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(BL_SRC:.c=.o)))
 BL_HAL_OBJS := $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(BL_HAL_SRC:.c=.o)))
+
+ALL_OBJS := $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(ALL_SRC:.cpp=.o)))
+
 
 $(DSPLIB_OBJS): EXTRA_CFLAGS:= -Wno-strict-aliasing
 basesw/%/usbh_mtp.o: CFLAGS += -Wno-implicit-fallthrough
@@ -244,24 +252,29 @@ basesw/%stm32f4xx_ll_usb.o: CFLAGS += -Wno-attributes
 basesw/%stm32f7xx_ll_usb.o: CFLAGS += -Wno-attributes
 basesw/%stm32h7xx_ll_usb.o: CFLAGS += -Wno-attributes
 
-.S.o:
+.S.o: %.d
 	$(ECHO) "  [CC] $@"
 	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
-.c.o:
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
+	$(POSTCOMPILE)
+
+.c.o: %.d
 	$(ECHO) "  [CC] $@"
 	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
+	$(POSTCOMPILE)
 
-.cxx.o:
+.cxx.o: %.d
 	$(ECHO) "  [CXX] $@"
 	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
-	$(CXX) $(CFLAGS) $(CXXFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(DEPFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
+	$(POSTCOMPILE)
 
-.cpp.o:
+.cpp.o: %.d
 	$(ECHO) "  [CXX] $@"
 	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
-	$(CXX) $(CFLAGS) $(CXXFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(DEPFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
+	$(POSTCOMPILE)
 
 %.bin: %.elf
 	$(ECHO) "  [OBJC] $@"
@@ -277,6 +290,12 @@ basesw/%stm32h7xx_ll_usb.o: CFLAGS += -Wno-attributes
 	$(ECHO) "  [H2D] $@"
 	$(SZ) $<
 	$(HEX2DFU) $< $@
+
+%.d: ;
+
+.PRECIOUS: %.d
+
+include $(wildcard $(patsubst %,%.d,$(basename $(ALL_SRC))))
 
 # ---------------------------------------------------------
 #  BUILT-IN HELP
@@ -396,11 +415,7 @@ handbook-ui-menu-clean:
 
 handy:  
 	# rm all .o (but not executables, .map and .dmp)
-	$(RM) $(call FixPath,$(OBJS))
-	$(RM) $(call FixPath,$(DSPLIB_OBJS))
-	$(RM) $(call FixPath,$(HAL_OBJS))
-	$(RM) $(call FixPath,$(BL_OBJS))
-	$(RM) $(call FixPath,$(BL_HAL_OBJS))
+	$(RM) $(call FixPath,$(ALL_OBJS))
 	$(RM) $(call FixPath,*~)
 
 release:  
