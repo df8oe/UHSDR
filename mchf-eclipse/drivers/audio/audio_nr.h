@@ -113,6 +113,7 @@ audio_nr_params_t nr_params;
 
 void NR_Init();
 
+void AudioNr_Prepare();
 void AudioNr_HandleNoiseReduction();
 void AudioNr_ActivateAutoNotch(uint8_t notch1_bin, bool notch1_active);
 
