@@ -3525,7 +3525,7 @@ static void UiDriver_CheckEncoderTwo()
 					if (is_dsp_nr())        // only allow adjustment if DSP NR is active
 					{	//
 				    	uint8_t nr_step = DSP_NR_STRENGTH_STEP;
-				    	if(ts.dsp.nr_strength >= 190)
+				    	if(ts.dsp.nr_strength >= 190 || ts.dsp.nr_strength <= 10)
 				    	{
 				    		nr_step = 1;
 				    	}
@@ -3533,6 +3533,10 @@ static void UiDriver_CheckEncoderTwo()
 			        	if(ts.dsp.nr_strength == 189)
 			        	{
 			        		ts.dsp.nr_strength = 185;
+			        	}
+			        	if(ts.dsp.nr_strength == 11)
+			        	{
+			        		ts.dsp.nr_strength = 15;
 			        	}
 
 						// this causes considerable noise

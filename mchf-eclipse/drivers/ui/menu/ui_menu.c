@@ -786,7 +786,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
     {
     case MENU_DSP_NR_STRENGTH:  // DSP Noise reduction strength
     	nr_step = DSP_NR_STRENGTH_STEP;
-    	if(ts.dsp.nr_strength >= 190)
+    	if(ts.dsp.nr_strength >= 190 || ts.dsp.nr_strength <= 10)
     	{
     		nr_step = 1;
     	}
@@ -801,6 +801,10 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         	if(ts.dsp.nr_strength == 189)
         	{
         		ts.dsp.nr_strength = 185;
+        	}
+        	if(ts.dsp.nr_strength == 11)
+        	{
+        		ts.dsp.nr_strength = 15;
         	}
         	// did it change?
             if(ts.dsp.active & DSP_NR_ENABLE)   // only change if DSP active

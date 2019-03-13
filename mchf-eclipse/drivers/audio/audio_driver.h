@@ -472,7 +472,7 @@ extern uint32_t fm_tone_burst_freq[FM_TONE_BURST_MAX+1];
 #define	RX_DECIMATION_RATE_24KHZ		2		// Decimation/Interpolation rate in receive function for 24 kHz sample rate
 #define RX_DECIMATION_RATE_48KHZ		1		// Deimcation/Interpolation rate in receive function for 48 kHz sample rate (e.g. no decimation!)
 
-#define DSP_NR_STRENGTH_MIN		5
+#define DSP_NR_STRENGTH_MIN		1
 #define	DSP_NR_STRENGTH_MAX		200	// Maximum menu setting for DSP "Strength"
 #define DSP_NR_STRENGTH_STEP	5
 #define	DSP_NR_STRENGTH_DEFAULT	160	// Default setting
