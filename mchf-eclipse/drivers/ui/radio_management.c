@@ -225,7 +225,7 @@ float32_t RadioManagement_CalculatePowerFactorScale(float32_t powerMw)
 
 /**
  *
- * Depends on globals: ts.pwr_adj, ts.power_level, df.tune_new, ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE
+ * Depends on globals: ts.pwr_adj, ts.power_level, df.tune_old, ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE
  * Impacts globals:    ts.tx_power_factor
  * @param band
  * @return true if the power factor value differs from previous
@@ -252,7 +252,7 @@ static bool RadioManagement_SetBandPowerFactor(band_mode_t band, int32_t power)
     }
     else
     {
-        pf_bandvalue = ts.pwr_adj[ts.power == 0?ADJ_FULL_POWER:ADJ_REF_PWR][band];
+        pf_bandvalue = ts.pwr_adj[power == 0?ADJ_FULL_POWER:ADJ_REF_PWR][band];
     }
 
     pf_bandvalue /= RadioManagement_IsPowerFactorReduce(df.tune_old)? 400: 100;
@@ -366,10 +366,14 @@ bool RadioManagement_Tune(bool tune)
         {
             if(ts.tune_power_level != PA_LEVEL_TUNE_KEEP_CURRENT)
             {
-                ts.power_temp = ts.power_level;             //store tx level and set tune level
-                ts.power_level =ts.tune_power_level;
+                ts.power_temp  = ts.power_level;             //store tx level and set tune level
+                ts.power_level = ts.tune_power_level;
             }
-            RadioManagement_SwitchTxRx(TRX_MODE_TX,true);                // tune ON
+
+            RadioManagement_SwitchTxRx(TRX_MODE_TX,true);
+            // tune ON, this will also update the power to use our
+            // to our temporarily changed level
+
             retval = (ts.txrx_mode == TRX_MODE_TX);
         }
         else
