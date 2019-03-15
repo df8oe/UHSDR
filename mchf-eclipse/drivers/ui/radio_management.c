@@ -1082,6 +1082,9 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
     else if (ts.dmod_mode == DEMOD_DIGI)
     {
             RadioManagement_ChangeCodec(ts.digital_mode,0);
+            // FIXME:  Maybe we should better handle the
+            // mode switching centrally for all modes
+            AudioNr_Prepare(); // prepare AudioNr for use after FreeDV using the same buffer
     }
 
     if (new_mode == DEMOD_FM && ts.dmod_mode != DEMOD_FM)

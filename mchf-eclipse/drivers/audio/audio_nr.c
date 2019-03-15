@@ -39,6 +39,9 @@ typedef struct NoiseReduction // declaration
 //  float32_t                   notch2_f;
 //  bool                        notch2_enable;
     //ulong                     long_tone_counter;
+    uint16_t current_buffer_idx;
+    bool was_here;
+
 } NoiseReduction;
 
 
@@ -296,6 +299,13 @@ int32_t NR_out_has_room()
 }
 
 
+void AudioNr_Prepare()
+{
+    NR.current_buffer_idx = 0;
+    NR.was_here = false;
+    memset(&mmb.nr_audio_buff[0].samples[0], 0, NR_BUFFER_NUM * sizeof(mmb.nr_audio_buff[0]));
+}
+
 /**
  * External "interface" of the noise reduction, handles the buffer communication and runs the actual processing algorithm
  * Runs for a significant time (couple of milliseconds on a STM32F4) so must be run in an interruptible context.
@@ -303,13 +313,11 @@ int32_t NR_out_has_room()
  */
 void AudioNr_HandleNoiseReduction()
 {
-    static uint16_t NR_current_buffer_idx = 0;
-    static bool NR_was_here = false;
 
-    if (NR_was_here == false)
+    if (NR.was_here == false)
     {
-        NR_was_here = true;
-        NR_current_buffer_idx = 0;
+        NR.was_here = true;
+        NR.current_buffer_idx = 0;
         NR_in_buffer_reset();
         NR_out_buffer_reset();
     }
@@ -317,25 +325,25 @@ void AudioNr_HandleNoiseReduction()
     if ( NR_in_has_data() && NR_out_has_room())
     {   // audio data is ready to be processed
 
-        NR_current_buffer_idx %= NR_BUFFER_NUM;
+        NR.current_buffer_idx %= NR_BUFFER_NUM;
 
         NR_Buffer* input_buf = NULL;
         NR_in_buffer_remove(&input_buf); //&input_buffer points to the current valid audio data
 
         // inside here do all the necessary noise reduction stuff!!!!!
         // here are the current input samples:  input_buf->samples
-        // NR_output samples have to be placed here: fdv_iq_buff[NR_current_buffer_idx].samples
+        // NR_output samples have to be placed here: fdv_iq_buff[NR.current_buffer_idx].samples
         // but starting at an offset of NR_FFT_SIZE as we are using the same buffer for in and out
         // here is the only place where we are referring to fdv_iq... as this is the name of the used freedv buffer
 
         //profileTimedEventStart(ProfileTP8);
 
-        AudioNr_RunNoiseReduction(&input_buf->samples[0].real,&mmb.nr_audio_buff[NR_current_buffer_idx].samples[NR_FFT_SIZE].real);
+        AudioNr_RunNoiseReduction(&input_buf->samples[0].real,&mmb.nr_audio_buff[NR.current_buffer_idx].samples[NR_FFT_SIZE].real);
 
         //profileTimedEventStop(ProfileTP8);
 
-        NR_out_buffer_add(&mmb.nr_audio_buff[NR_current_buffer_idx]);
-        NR_current_buffer_idx++;
+        NR_out_buffer_add(&mmb.nr_audio_buff[NR.current_buffer_idx]);
+        NR.current_buffer_idx++;
 
     }
 
