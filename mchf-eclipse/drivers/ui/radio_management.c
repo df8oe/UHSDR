@@ -370,6 +370,7 @@ bool RadioManagement_Tune(bool tune)
             {
                 ts.power_temp = ts.power_level;             //store tx level and set tune level
                 ts.power_level =ts.tune_power_level;
+                RadioManagement_SetPowerLevel(RadioManagement_GetBand(df.tune_new), ts.power_level);
             }
             // DDS on
             RadioManagement_SwitchTxRx(TRX_MODE_TX,true);                // tune ON
