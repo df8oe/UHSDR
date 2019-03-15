@@ -230,11 +230,9 @@ float32_t RadioManagement_CalculatePowerFactorScale(float32_t powerMw)
  * @param band
  * @return true if the power factor value differs from previous
  */
-static bool RadioManagement_SetBandPowerFactor(band_mode_t band)
+static bool RadioManagement_SetBandPowerFactor(band_mode_t band, int32_t power)
 {
     float32_t   pf_bandvalue;    // used as a holder for percentage of power output scaling
-
-    int32_t power = ts.power;
 
     // FIXME: This code needs fixing, the hack for TX Outside should at least reduce power factor for lower bands
     if (band >= MAX_BANDS)
@@ -340,7 +338,7 @@ bool RadioManagement_SetPowerLevel(band_mode_t band, power_level_t power_level)
 
 
         // Calculate TX power factor - see if power changed
-        bool pf_change = RadioManagement_SetBandPowerFactor(band);
+        bool pf_change = RadioManagement_SetBandPowerFactor(band, power);
 
         if (pf_change == true || power != ts.power || ts.power_level != power_level || ts.power_modified != power_modified)
         {
@@ -370,9 +368,7 @@ bool RadioManagement_Tune(bool tune)
             {
                 ts.power_temp = ts.power_level;             //store tx level and set tune level
                 ts.power_level =ts.tune_power_level;
-                RadioManagement_SetPowerLevel(RadioManagement_GetBand(df.tune_new), ts.power_level);
             }
-            // DDS on
             RadioManagement_SwitchTxRx(TRX_MODE_TX,true);                // tune ON
             retval = (ts.txrx_mode == TRX_MODE_TX);
         }
@@ -812,12 +808,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             RadioManagement_DisablePaBias(); // kill bias to mute the HF output quickly
         }
 
-        if(txrx_mode_final == TRX_MODE_RX)
-        {
-                // remember current agc
-//                ads.agc_holder = ads.agc_val;
-        }
-        else
+        if(txrx_mode_final == TRX_MODE_TX)
         {
 
 
