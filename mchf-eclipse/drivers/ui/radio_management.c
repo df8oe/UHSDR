@@ -1475,21 +1475,21 @@ bool RadioManagement_USBActive(uint16_t dmod_mode)
 }
 
 
-static void RadioManagement_PowerFromADCValue(float val, float sensor_null, float coupling_calc,volatile float* pwr_ptr, volatile float* dbm_ptr)
+static void RadioManagement_PowerFromADCValue(float inval, float sensor_null, float coupling_calc,volatile float* pwr_ptr, volatile float* dbm_ptr)
 {
-    float pwr;
-    float dbm;
-    val *= SWR_ADC_VOLT_REFERENCE;    // get nominal A/D reference voltage
-    val /= SWR_ADC_FULL_SCALE;        // divide by full-scale A/D count to yield actual input voltage from detector
-    val += sensor_null;               // offset result
+    float32_t pwr;
+    const float32_t val = sensor_null + ((inval * SWR_ADC_VOLT_REFERENCE) / SWR_ADC_FULL_SCALE);
+    // get nominal A/D reference voltage
+    // divide by full-scale A/D count to yield actual input voltage from detector
+    // offset result
 
     if(val <= LOW_POWER_CALC_THRESHOLD)     // is this low power as evidenced by low voltage from the sensor?
     {
-        pwr = LOW_RF_PWR_COEFF_A + (LOW_RF_PWR_COEFF_B * val) + (LOW_RF_PWR_COEFF_C * powf(val,2 )) + (LOW_RF_PWR_COEFF_D * powf(val, 3));
+        pwr = LOW_RF_PWR_COEFF_A + (LOW_RF_PWR_COEFF_B * val) + (LOW_RF_PWR_COEFF_C * (val * val) ) + (LOW_RF_PWR_COEFF_D * powf(val, 3));
     }
     else            // it is high power
     {
-        pwr = HIGH_RF_PWR_COEFF_A + (HIGH_RF_PWR_COEFF_B * val) + (HIGH_RF_PWR_COEFF_C * powf(val, 2));
+        pwr = HIGH_RF_PWR_COEFF_A + (HIGH_RF_PWR_COEFF_B * val) + (HIGH_RF_PWR_COEFF_C * (val * val));
     }
     // calculate forward and reverse RF power in watts (p = a + bx + cx^2) for high power (above 50-60
 
@@ -1498,10 +1498,9 @@ static void RadioManagement_PowerFromADCValue(float val, float sensor_null, floa
         pwr = 0;
     }
 
-    dbm = (10 * (log10f(pwr))) + 30 + coupling_calc;
-    pwr = pow10f(dbm/10)/1000;
-    *pwr_ptr = pwr;
+    const float32_t dbm = (10 * (log10f(pwr))) + 30 + coupling_calc;
     *dbm_ptr = dbm;
+    *pwr_ptr = pow10f(dbm/10)/1000;
 }
 
 /*
