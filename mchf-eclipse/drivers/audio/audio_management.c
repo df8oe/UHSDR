@@ -15,7 +15,7 @@
 void AudioManagement_CalcALCDecay()
 {
     // calculate ALC decay (release) time constant - this needs to be moved to its own function (and the one in "ui_menu.c")
-    ads.alc_decay = powf(10,-((((float32_t)ts.alc_decay_var)+35.0)/10.0));
+    ads.alc_decay = pow10f(-((((float32_t)ts.alc_decay_var)+35.0)/10.0));
 }
 
 // make sure the frequencies below match the order of iq_freq_enum_t !

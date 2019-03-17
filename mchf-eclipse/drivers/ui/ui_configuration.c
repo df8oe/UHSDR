@@ -960,9 +960,6 @@ uint16_t UiConfiguration_SaveEepromValues(void)
     }
     else
     {
-        // disable DSP during write because it decreases speed tremendous
-        //  ts.dsp.active &= 0xfa;  // turn off DSP
-
         const uint8_t dmod_mode = ts.dmod_mode;
 
         // TODO: THIS IS UGLY: We are switching to RAM based storage in order to gain speed

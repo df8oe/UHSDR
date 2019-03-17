@@ -226,7 +226,7 @@ loadWcpAGC(a);
         agc_wdsp.initialised = true;
     }
     //    var_gain = 32.0;  // slope of the AGC --> this is 10 * 10^(slope / 20) --> for 10dB slope, this is 30.0
-    agc_wdsp.var_gain = powf (10.0, (float32_t)agc_wdsp_conf.slope / 20.0 / 10.0); // 10^(slope / 200)
+    agc_wdsp.var_gain = pow10f((float32_t)agc_wdsp_conf.slope / 20.0 / 10.0); // 10^(slope / 200)
 
     //    hangtime = 0.250;                // hangtime
     agc_wdsp.hangtime = (float32_t)agc_wdsp_conf.hang_time / 1000.0;
@@ -282,7 +282,7 @@ loadWcpAGC(a);
     //  max_gain = out_target / var_gain * powf (10.0, (thresh + noise_offset) / 20.0));
     agc_wdsp.tau_hang_decay = (float32_t)agc_wdsp_conf.tau_hang_decay / 1000.0;
     agc_wdsp.tau_decay = (float32_t)agc_wdsp_conf.tau_decay[agc_wdsp_conf.mode] / 1000.0;
-    agc_wdsp.max_gain = powf (10.0, (float32_t)agc_wdsp_conf.thresh / 20.0);
+    agc_wdsp.max_gain = pow10f ((float32_t)agc_wdsp_conf.thresh / 20.0);
     agc_wdsp.fixed_gain = agc_wdsp.max_gain / 10.0;
     // attack_buff_size is 48 for sample rate == 12000 and
     // 96 for sample rate == 24000
@@ -315,7 +315,7 @@ loadWcpAGC(a);
     if (agc_wdsp.max_input > agc_wdsp.min_volts)
     {
         float32_t convert
-        = powf (10.0, (float32_t)agc_wdsp_conf.hang_thresh / 20.0);
+        = pow10f ((float32_t)agc_wdsp_conf.hang_thresh / 20.0);
         float32_t tmpB = (convert - agc_wdsp.min_volts) / (agc_wdsp.max_input - agc_wdsp.min_volts);
         if(tmpB < 1e-8)
         {
@@ -328,7 +328,7 @@ loadWcpAGC(a);
         agc_wdsp.hang_thresh = 1.0;
     }
 
-    float32_t tmpC = powf (10.0, (agc_wdsp.hang_thresh - 1.0) / 0.125);
+    float32_t tmpC = pow10f ((agc_wdsp.hang_thresh - 1.0) / 0.125);
     agc_wdsp.hang_level = (agc_wdsp.max_input * tmpC + (agc_wdsp.out_target /
             (agc_wdsp.var_gain * agc_wdsp.max_gain)) * (1.0 - tmpC)) * 0.637;
 

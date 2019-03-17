@@ -505,6 +505,25 @@ bool UiDriver_ProcessKeyActions(const keyaction_list_descr_t* kld)
 
 	return retval;
 }
+
+static void UiDriver_DisplayMessageStart()
+{
+    UiSpectrum_Clear();
+}
+
+static void UiDriver_DisplayMessageStop()
+{
+    if(ts.menu_mode)
+    {
+        UiMenu_RenderMenu(MENU_RENDER_ONLY);    // update menu display, was destroyed by message
+    }
+    else
+    {
+        UiSpectrum_Init();          // not in menu mode, redraw spectrum scope
+    }
+}
+
+
 /**
  * @brief restarts lcd blanking timer, called in all functions which detect user interaction with the device
  */
@@ -2676,6 +2695,28 @@ void UiDriver_ChangeTuningStep(uchar is_up)
 
 }
 
+static void UiDriver_ShowTxErrorMessages()
+{
+    // if there is no power factor ( == no output power)
+    // or effective bias is 0 (== no or very distorted output)
+    // inform operator
+    if (RadioManagement_IsTxDisabled() == false &&
+            (
+                ts.tx_power_factor == 0
+                || (ts.dmod_mode != DEMOD_CW && ts.pa_bias == 0)
+                || (ts.dmod_mode == DEMOD_CW && ts.pa_cw_bias == 0 && ts.pa_bias == 0)
+            )
+        )
+    {
+        UiDriver_DisplayMessageStart();
+        const uint16_t scope_middle_y = sd.Slayout->full.h/2+sd.Slayout->full.y;
+        const char* txp = "No TX Power\nCheck PA calibration!";
+        UiLcdHy28_PrintTextCentered(sd.Slayout->full.x, scope_middle_y-6, sd.Slayout->full.w,txp,Red,Black,0);
+
+        HAL_Delay(3000);
+        UiDriver_DisplayMessageStop();
+    }
+}
 
 /*----------------------------------------------------------------------------
  * @brief Scans buttons 0-16:  0-15 are normal buttons, 16 is power button, 17 touch
@@ -2843,6 +2884,10 @@ static void UiDriver_TxRxUiSwitch(enum TRX_States_t state)
 
 			// force redisplay of Encoder boxes and values
 			UiDriver_RefreshEncoderDisplay();
+
+			// if there is a need to tell the operator something related to
+			// the tx mode (such as PA not configured correctly) we do this now.
+			UiDriver_ShowTxErrorMessages();
 		}
 		else if (state == TRX_STATE_TX_TO_RX)
 		{
@@ -4662,6 +4707,8 @@ static bool UiDriver_SaveConfiguration()
 {
 	bool savedConfiguration = true;
 
+	const uint16_t scope_middle_y = sd.Slayout->full.h/2+sd.Slayout->full.y;
+
 	const char* txp;
 	uint16_t txc;
 
@@ -4677,7 +4724,7 @@ static bool UiDriver_SaveConfiguration()
 		txp = "Detected problems: Not saving";
 		savedConfiguration = false;
 	}
-	UiLcdHy28_PrintTextCentered(sd.Slayout->full.x,sd.Slayout->full.h/2+sd.Slayout->full.y-6,sd.Slayout->full.w,txp,Blue,Black,0);
+	UiLcdHy28_PrintTextCentered(sd.Slayout->full.x, scope_middle_y-6, sd.Slayout->full.w,txp,Blue,Black,0);
 
 	if (savedConfiguration)
 	{
@@ -4693,7 +4740,7 @@ static bool UiDriver_SaveConfiguration()
 			txc = Red;
 			savedConfiguration = false;
 		}
-		UiLcdHy28_PrintTextCentered(sd.Slayout->full.x,sd.Slayout->full.h/2+sd.Slayout->full.y+6,sd.Slayout->full.w,txp,txc,Black,0);
+		UiLcdHy28_PrintTextCentered(sd.Slayout->full.x, scope_middle_y+6, sd.Slayout->full.w,txp,txc,Black,0);
 	}
 	return savedConfiguration;
 }
@@ -5853,7 +5900,9 @@ void UiDriver_StartUpScreenFinish()
 
 	uint32_t hold_time;
 
-	UiDriver_StartupScreen_LogIfProblem(osc->isPresent() == false, "Local Oscillator NOT Detected!");
+	bool osc_present_problem = osc->isPresent() == false;
+
+	UiDriver_StartupScreen_LogIfProblem(osc_present_problem, "Local Oscillator NOT Detected!");
 
 	if(!Si5351a_IsPresent() && RadioManagement_TcxoIsEnabled())
 	{
@@ -5876,6 +5925,16 @@ void UiDriver_StartUpScreenFinish()
 	  UiDriver_StartupScreen_LogIfProblem((HAL_ADC_GetValue(&hadc2) > MAX_VSWR_MOD_VALUE) && (HAL_ADC_GetValue(&hadc3) > MAX_VSWR_MOD_VALUE),
 			"SWR Bridge resistor mod NOT completed!");
 	}
+
+	// we report this problem only if we are theoretically able to transmit
+	// and tx was not disabled such as in a RX only device
+    if (RadioManagement_IsTxDisabled() == false && osc_present_problem == false)
+    {
+        bool pa_bias_problem = ts.pa_bias == 0;
+        UiDriver_StartupScreen_LogIfProblem(pa_bias_problem,
+              "PA Bias is 0, TX not possible");
+    }
+
 	if (UiDriver_FirmwareVersionCheck())
 	{
 		hold_time = 10000; // 10s
@@ -5884,6 +5943,7 @@ void UiDriver_StartUpScreenFinish()
 
 		UiDriver_FirmwareVersionUpdateConfig();
 	}
+
 
 	if(startUpError == true)
 	{
@@ -6145,21 +6205,13 @@ static void UiAction_SaveConfigurationToMemory()
 {
 	if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode
 	{
-		UiSpectrum_Clear();
+		UiDriver_DisplayMessageStart();
 		UiDriver_SaveConfiguration();
 		HAL_Delay(3000);
+        UiDriver_DisplayMessageStop();
 
 		ts.menu_var_changed = 0;                    // clear "EEPROM SAVE IS NECESSARY" indicators
 		UiDriver_DisplayFButton_F1MenuExit();
-
-		if(ts.menu_mode)
-		{
-			UiMenu_RenderMenu(MENU_RENDER_ONLY);    // update menu display, was destroyed by message
-		}
-		else
-		{
-			UiSpectrum_Init();          // not in menu mode, redraw spectrum scope
-		}
 	}
 }
 

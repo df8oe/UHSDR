@@ -92,6 +92,7 @@ typedef struct {
 
     uint8_t squelch_snr_thresh;
     uint8_t mode;
+    bool    mute_if_squelched;
 } freedv_conf_t;
 
 extern freedv_conf_t freedv_conf;
