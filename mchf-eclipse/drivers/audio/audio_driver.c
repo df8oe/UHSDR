@@ -1330,7 +1330,7 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * const dst, int16_t blockSize)
 {
 
-    bool retval = true;
+    bool retval = false;
 
     // Freedv DL2FW
     static int16_t modulus_Decimate = 0, modulus_Interpolate = 0;
@@ -1421,10 +1421,15 @@ static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * co
         for (int j=0; j < blockSize; j++) //upsampling with integrated interpolation-filter for M=6
             // avoiding multiplications by zero within the arm_iir_filter
         {
-            static int16_t sample;
+            static float32_t sample;
+
             if (modulus_Interpolate == 0)
             {
-                RingBuffer_GetSamples(&fdv_audio_rb, &sample, 1);
+                int16_t sample_in;
+                RingBuffer_GetSamples(&fdv_audio_rb, &sample_in, 1);
+                sample = (float32_t)sample_in * 0.25;
+                // we scale samples down to align this with other demodulators
+                // TODO: find out correct scaling val, not just a rough estimation
             }
             dst[j] = Fir_Rx_FreeDV_Interpolate_Coeffs[5-modulus_Interpolate] * History[0] +
                      Fir_Rx_FreeDV_Interpolate_Coeffs[11-modulus_Interpolate] * History[1] +
@@ -1449,6 +1454,11 @@ static bool AudioDriver_RxProcessorFreeDV (iq_buffer_t* iq_buf_p, float32_t * co
     {
         bufferFilled = false;
         profileEvent(FreeDVTXUnderrun);
+    }
+    if (retval == false && freedv_conf.mute_if_squelched == true)
+    {
+        memset(dst,0,sizeof(dst[0])*blockSize);
+        retval = true;
     }
 
     return retval;
