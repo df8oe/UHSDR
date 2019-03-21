@@ -2329,100 +2329,106 @@ static void AudioDriver_RxProcessorNoiseReduction(uint16_t blockSizeDecim, float
 {
 #ifdef USE_ALTERNATE_NR
 
-    static int trans_count_in=0;
-    static int outbuff_count=0;
-    static int NR_fill_in_pt=0;
-    static NR_Buffer* out_buffer = NULL;
-    // this would be the right place for another decimation-by-2 to get down to 6ksps
-    // in order to further improve the spectral noise reduction
-
-    // anti-alias-filtering is already provided at this stage by the IIR main filter
-    // Only allow another decimation-by-two, if filter bandwidth is <= 2k7
-    //
-    // Add decimation-by-two HERE
-
-    //  decide whether filter < 2k7!!!
-    uint32_t no_dec_samples = blockSizeDecim; // only used for the noise reduction decimation-by-two handling
-    // buffer needs max blockSizeDecim , less if second decimation is done
-    // see below
-
-    nr_params.NR_decimation_active = nr_params.NR_decimation_enable && (FilterInfo[ts.filters_p->id].width < 2701);
-
-    if (nr_params.NR_decimation_active == true)
+    // we check if we can safely use the buffer, if not, we just do nothing
+    // TODO: add a better way to control which functions are used (available) in which mode
+#ifdef USE_FREEDV
+    if ((ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_FreeDV) == false)
+#endif
     {
-        no_dec_samples = blockSizeDecim / 2;
-        // decimate-by-2, DECIMATE_NR, in place
-        arm_fir_decimate_f32(&DECIMATE_NR, inout_buffer, inout_buffer, blockSizeDecim);
-    }
+        static int trans_count_in=0;
+        static int outbuff_count=0;
+        static int NR_fill_in_pt=0;
+        static NR_Buffer* out_buffer = NULL;
+        // this would be the right place for another decimation-by-2 to get down to 6ksps
+        // in order to further improve the spectral noise reduction
 
-    // attention -> change loop no into no_dec_samples!
+        // anti-alias-filtering is already provided at this stage by the IIR main filter
+        // Only allow another decimation-by-two, if filter bandwidth is <= 2k7
+        //
+        // Add decimation-by-two HERE
 
-    for (int k = 0; k < no_dec_samples; k=k+2) //transfer our noisy audio to our NR-input buffer
-    {
-        mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].real=inout_buffer[k];
-        mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].imag=inout_buffer[k+1];
-        //trans_count_in++;
-        trans_count_in++; // count the samples towards FFT-size  -  2 samples per loop
-    }
+        //  decide whether filter < 2k7!!!
+        uint32_t no_dec_samples = blockSizeDecim; // only used for the noise reduction decimation-by-two handling
+        // buffer needs max blockSizeDecim , less if second decimation is done
+        // see below
 
-    if (trans_count_in >= (NR_FFT_SIZE/2))
-        //NR_FFT_SIZE has to be an integer mult. of blockSizeDecim!!!
-    {
-        NR_in_buffer_add(&mmb.nr_audio_buff[NR_fill_in_pt]); // save pointer to full buffer
-        trans_count_in=0;                              // set counter to 0
-        NR_fill_in_pt++;                               // increase pointer index
-        NR_fill_in_pt %= NR_BUFFER_NUM;            // make sure, that index stays in range
+        nr_params.NR_decimation_active = nr_params.NR_decimation_enable && (FilterInfo[ts.filters_p->id].width < 2701);
 
-        //at this point we have transfered one complete block of 128 (?) samples to one buffer
-    }
-
-    //**********************************************************************************
-    //don't worry!  in the mean time the noise reduction routine is (hopefully) doing it's job within ui
-    //as soon as "fdv_audio_has_data" we can start harvesting the output
-    //**********************************************************************************
-
-    if (out_buffer == NULL && NR_out_has_data() > 1)
-    {
-        NR_out_buffer_peek(&out_buffer);
-    }
-
-    float32_t NR_dec_buffer[no_dec_samples];
-
-    if (out_buffer != NULL)  //NR-routine has finished it's job
-    {
-        for (int j=0; j < no_dec_samples; j=j+2) // transfer noise reduced data back to our buffer
-            //                            for (int j=0; j < blockSizeDecim; j=j+2) // transfer noise reduced data back to our buffer
+        if (nr_params.NR_decimation_active == true)
         {
-            NR_dec_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
-            NR_dec_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
-            outbuff_count++;
+            no_dec_samples = blockSizeDecim / 2;
+            // decimate-by-2, DECIMATE_NR, in place
+            arm_fir_decimate_f32(&DECIMATE_NR, inout_buffer, inout_buffer, blockSizeDecim);
         }
 
-        if (outbuff_count >= (NR_FFT_SIZE/2)) // we reached the end of the buffer coming from NR
+        // attention -> change loop no into no_dec_samples!
+
+        for (int k = 0; k < no_dec_samples; k=k+2) //transfer our noisy audio to our NR-input buffer
         {
-            outbuff_count = 0;
-            NR_out_buffer_remove(&out_buffer);
-            out_buffer = NULL;
+            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].real=inout_buffer[k];
+            mmb.nr_audio_buff[NR_fill_in_pt].samples[trans_count_in].imag=inout_buffer[k+1];
+            trans_count_in++; // count the samples towards FFT-size  -  2 samples per loop
+        }
+
+        if (trans_count_in >= (NR_FFT_SIZE/2))
+            //NR_FFT_SIZE has to be an integer mult. of blockSizeDecim!!!
+        {
+            NR_in_buffer_add(&mmb.nr_audio_buff[NR_fill_in_pt]); // save pointer to full buffer
+            trans_count_in=0;                              // set counter to 0
+            NR_fill_in_pt++;                               // increase pointer index
+            NR_fill_in_pt %= NR_BUFFER_NUM;            // make sure, that index stays in range
+
+            //at this point we have transfered one complete block of 128 (?) samples to one buffer
+        }
+
+        //**********************************************************************************
+        //don't worry!  in the mean time the noise reduction routine is (hopefully) doing it's job within ui
+        //as soon as "fdv_audio_has_data" we can start harvesting the output
+        //**********************************************************************************
+
+        if (out_buffer == NULL && NR_out_has_data() > 1)
+        {
             NR_out_buffer_peek(&out_buffer);
         }
-    }
-    else
-    {
-        memset(NR_dec_buffer,0,sizeof(NR_dec_buffer));
-    }
+
+        float32_t NR_dec_buffer[no_dec_samples];
+
+        if (out_buffer != NULL)  //NR-routine has finished it's job
+        {
+            for (int j=0; j < no_dec_samples; j=j+2) // transfer noise reduced data back to our buffer
+                //                            for (int j=0; j < blockSizeDecim; j=j+2) // transfer noise reduced data back to our buffer
+            {
+                NR_dec_buffer[j]   = out_buffer->samples[outbuff_count+NR_FFT_SIZE].real; //here add the offset in the buffer
+                NR_dec_buffer[j+1] = out_buffer->samples[outbuff_count+NR_FFT_SIZE].imag; //here add the offset in the buffer
+                outbuff_count++;
+            }
+
+            if (outbuff_count >= (NR_FFT_SIZE/2)) // we reached the end of the buffer coming from NR
+            {
+                outbuff_count = 0;
+                NR_out_buffer_remove(&out_buffer);
+                out_buffer = NULL;
+                NR_out_buffer_peek(&out_buffer);
+            }
+        }
+        else
+        {
+            memset(NR_dec_buffer,0,sizeof(NR_dec_buffer));
+        }
 
 
-    // interpolation of a_buffer from 6ksps to 12ksps!
-    // from NR_dec_buffer --> a_buffer
-    // but only, if we have decimated to 6ksps, otherwise just copy the samples into a_buffer
-    if (nr_params.NR_decimation_active == true)
-    {
-        arm_fir_interpolate_f32(&INTERPOLATE_NR, NR_dec_buffer, inout_buffer, no_dec_samples);
-        arm_scale_f32(inout_buffer, 2.0, inout_buffer, blockSizeDecim);
-    }
-    else
-    {
-        arm_copy_f32(NR_dec_buffer, inout_buffer, blockSizeDecim);
+        // interpolation of a_buffer from 6ksps to 12ksps!
+        // from NR_dec_buffer --> a_buffer
+        // but only, if we have decimated to 6ksps, otherwise just copy the samples into a_buffer
+        if (nr_params.NR_decimation_active == true)
+        {
+            arm_fir_interpolate_f32(&INTERPOLATE_NR, NR_dec_buffer, inout_buffer, no_dec_samples);
+            arm_scale_f32(inout_buffer, 2.0, inout_buffer, blockSizeDecim);
+        }
+        else
+        {
+            arm_copy_f32(NR_dec_buffer, inout_buffer, blockSizeDecim);
+        }
     }
 #endif
 }
