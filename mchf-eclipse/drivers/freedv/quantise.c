@@ -1927,11 +1927,10 @@ void quantise_WoE(C2CONST *c2const, MODEL *model, float *e, float xq[])
   int          ndim = ge_cb[0].k;
   float Wo_min = c2const->Wo_min;
   float Wo_max = c2const->Wo_max;
-  float Fs = c2const->Fs;
 
   /* VQ is only trained for Fs = 8000 Hz */
 
-  assert(Fs == 8000);
+  assert(c2const->Fs == 8000);
 
   x[0] = log10f((model->Wo/PI)*4000.0/50.0)/log10f(2);
   x[1] = 10.0*log10f(1e-4 + *e);

@@ -70,6 +70,7 @@ drivers/freedv/fsk.c \
 drivers/freedv/golay23.c \
 drivers/freedv/gp_interleaver.c \
 drivers/freedv/HRA_112_112.c \
+drivers/freedv/HRAb_396_504.c \
 drivers/freedv/interp.c \
 drivers/freedv/interldpc.c \
 drivers/freedv/kiss_fft.c \

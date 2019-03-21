@@ -112,8 +112,8 @@ extern const struct lsp_codebook newamp1_energy_cb[];
 extern const struct lsp_codebook newamp2vq_cb[];
 extern const struct lsp_codebook newamp2_energy_cb[];
 
-#ifdef __GNUC__
-    #define POW10F(x) pow10f((x))
+#ifdef _GNU_SOURCE
+    #define POW10F(x) exp10f((x))
 #else
     #define POW10F(x) expf(2.302585092994046f*(x))
 #endif
