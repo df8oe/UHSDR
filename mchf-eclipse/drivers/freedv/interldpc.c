@@ -37,6 +37,7 @@
 #include "mpdecode_core.h"
 #include "gp_interleaver.h"
 #include "HRA_112_112.h"
+#include "HRAb_396_504.h"
 
 /* CRC type function, used to compare QPSK vectors when debugging */
 
@@ -60,6 +61,32 @@ void printf_n(COMP v[], int n) {
     }
 }
 
+void set_up_ldpc_constants(struct LDPC *ldpc, int code_length, int parity_bits, int bps) {
+    /* following provided for convenience and to match Octave variable names */
+
+    /* these remain fixed */
+    ldpc->ldpc_data_bits_per_frame = code_length - parity_bits;
+    ldpc->ldpc_coded_bits_per_frame = code_length;
+
+    /* in the case there are some unused data bits, these may be
+       modified to be less that ldpc->ldpc_xxx versions above. We
+       place known bits in the unused data bit positions, which make
+       the code stronger, and allow us to mess with different speech
+       codec bit allocations without designing new LDPC codes. */
+    
+    ldpc->data_bits_per_frame = ldpc->ldpc_data_bits_per_frame;
+    ldpc->coded_bits_per_frame = ldpc->ldpc_coded_bits_per_frame;
+    ldpc->coded_syms_per_frame = ldpc->coded_bits_per_frame / bps;
+}
+
+void set_data_bits_per_frame(struct LDPC *ldpc, int new_data_bits_per_frame, int bps) {
+    ldpc->data_bits_per_frame = new_data_bits_per_frame;
+    ldpc->coded_bits_per_frame = ldpc->data_bits_per_frame + ldpc->NumberParityBits;
+    ldpc->coded_syms_per_frame = ldpc->coded_bits_per_frame / bps;
+}
+    
+// TODO: this should be in (n,k) = (224,112) format, fix some time
+
 void set_up_hra_112_112(struct LDPC *ldpc, struct OFDM_CONFIG *config) {
     ldpc->max_iter = HRA_112_112_MAX_ITER;
     ldpc->dec_type = 0;
@@ -73,24 +100,51 @@ void set_up_hra_112_112(struct LDPC *ldpc, struct OFDM_CONFIG *config) {
     ldpc->H_rows = (uint16_t *) HRA_112_112_H_rows;
     ldpc->H_cols = (uint16_t *) HRA_112_112_H_cols;
 
-    /* provided for convenience and to match Octave vaiable names */
+    /* provided for convenience and to match Octave variable names */
 
-    ldpc->data_bits_per_frame = HRA_112_112_CODELENGTH - HRA_112_112_NUMBERPARITYBITS;
-    ldpc->coded_bits_per_frame = HRA_112_112_CODELENGTH;
-    ldpc->coded_syms_per_frame = ldpc->coded_bits_per_frame / config->bps;
+    set_up_ldpc_constants(ldpc, HRA_112_112_CODELENGTH, HRA_112_112_NUMBERPARITYBITS, config->bps);
+}
+
+// Note code #defines below should be in (n,k) = (504,396)
+// TODO : fix this some time
+void set_up_hra_504_396(struct LDPC *ldpc, struct OFDM_CONFIG *config) {
+    ldpc->max_iter = HRAb_396_504_MAX_ITER;
+    ldpc->dec_type = 0;
+    ldpc->q_scale_factor = 1;
+    ldpc->r_scale_factor = 1;
+    ldpc->CodeLength = HRAb_396_504_CODELENGTH;
+    ldpc->NumberParityBits = HRAb_396_504_NUMBERPARITYBITS;
+    ldpc->NumberRowsHcols = HRAb_396_504_NUMBERROWSHCOLS;
+    ldpc->max_row_weight = HRAb_396_504_MAX_ROW_WEIGHT;
+    ldpc->max_col_weight = HRAb_396_504_MAX_COL_WEIGHT;
+    ldpc->H_rows = (uint16_t *) HRAb_396_504_H_rows;
+    ldpc->H_cols = (uint16_t *) HRAb_396_504_H_cols;
+
+    set_up_ldpc_constants(ldpc, HRAb_396_504_CODELENGTH, HRAb_396_504_NUMBERPARITYBITS, config->bps);
 }
 
 void ldpc_encode_frame(struct LDPC *ldpc, int codeword[], unsigned char tx_bits_char[]) {
     unsigned char pbits[ldpc->NumberParityBits];
     int i, j;
 
-    encode(ldpc, tx_bits_char, pbits);
-    
+    if (ldpc->data_bits_per_frame == ldpc->ldpc_data_bits_per_frame) {
+        /* we have enough data bits to fill the codeword */
+        encode(ldpc, tx_bits_char, pbits);
+    } else {        
+        unsigned char tx_bits_char_padded[ldpc->ldpc_data_bits_per_frame];
+        /* some unused data bits, set these to known values to strengthen code */    
+        memcpy(tx_bits_char_padded, tx_bits_char, ldpc->data_bits_per_frame);
+        for (i = ldpc->data_bits_per_frame; i < ldpc->ldpc_data_bits_per_frame; i++)
+            tx_bits_char_padded[i] = 1;
+        encode(ldpc, tx_bits_char_padded, pbits);
+    }
+          
+    /* output codeword is concatenation of (used) data bits and parity
+       bits, we don't bother sending unused (known) data bits */
     for (i = 0; i < ldpc->data_bits_per_frame; i++) {
         codeword[i] = tx_bits_char[i];
     }
-    
-    for (j = 0; i < ldpc->coded_bits_per_frame; i++, j++) {
+    for (j = 0; j < ldpc->NumberParityBits; i++, j++) {
         codeword[i] = pbits[j];
     }
 }
