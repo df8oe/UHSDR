@@ -88,7 +88,7 @@ static uint8_t MCP9801_InitExternalTempSensor()
     uint16_t res;
 
     // Read config reg
-    res = mchf_hw_i2c1_ReadRegister(MCP_ADDR, MCP_CONFIG, &config);
+    res = UhsdrHw_I2C_ReadRegister(MCP_I2C, MCP_ADDR, MCP_CONFIG, 1, &config);
     if(res != 0)
     {
         retval = 1;
@@ -104,7 +104,7 @@ static uint8_t MCP9801_InitExternalTempSensor()
         config |= (MCP_POWER_UP << MCP_SHUTDOWN);
 
         // Write config reg
-        res = mchf_hw_i2c1_WriteRegister(MCP_ADDR, MCP_CONFIG, config);
+        res = UhsdrHw_I2C_WriteRegister(MCP_I2C, MCP_ADDR, MCP_CONFIG, 1, config);
         if(res != 0)
         {
             retval = 2;
@@ -121,7 +121,7 @@ static uint8_t MCP9801_ReadExternalTempSensor(int32_t *temp)
 
 
     // Read temperature
-    if(temp != NULL && mchf_hw_i2c1_ReadData(MCP_ADDR, MCP_TEMP, data, 2) == 0)
+    if(temp != NULL && UhsdrHw_I2C_ReadBlock(MCP_I2C, MCP_ADDR, MCP_TEMP, 1, data, 2) == 0)
     {
         *temp = MCP9801_ConvExternalTemp(data);
     }

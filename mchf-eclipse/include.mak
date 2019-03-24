@@ -1,6 +1,7 @@
 SUBDIRS := \
 . \
 hardware \
+hardware/board_configs \
 drivers/freedv \
 drivers/audio \
 drivers/ui/oscillator \
@@ -22,5 +23,6 @@ drivers/diag \
 drivers/usb/device/class/composite \
 drivers/usb/device/class/AUDIO/Inc \
 drivers/usb/device/class/CDC/Inc \
+drivers/usb/host/class/HID/Inc \
 drivers/usb/app \
 

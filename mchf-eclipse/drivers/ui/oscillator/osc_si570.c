@@ -95,11 +95,6 @@ static const float	fdco_min	= FDCO_MIN;
 
 OscillatorState os;
 
-/**
- * @returns true if an Si570 was detected
- */
-bool   Si570_IsPresent() { return os.present == true; }
-
 /*
  * @brief Returns startup frequency value of Si570, call only after init of Si570
  *
@@ -119,7 +114,7 @@ static uchar Si570_SetBits(unsigned char original, unsigned char reset_mask, uns
 
 static uint16_t Si570_ReadRegisters(uint8_t* regs)
 {
-    return mchf_hw_i2c1_ReadData(os.si570_address, os.base_reg, regs, 6);
+    return UhsdrHw_I2C_ReadBlock(SI570_I2C, os.si570_address, os.base_reg, 1, regs, 6);
 }
 
 /*
@@ -153,18 +148,18 @@ static Oscillator_ResultCodes_t Si570_VerifyFrequencyRegisters()
 }
 
 static uint16_t Si570_SetRegisterBits(uint8_t si570_address, uint8_t regaddr ,uint8_t* reg_ptr,uint8_t val){
-    uint16_t retval = mchf_hw_i2c1_ReadRegister(si570_address, regaddr, reg_ptr);
+    uint16_t retval = UhsdrHw_I2C_ReadRegister(SI570_I2C, si570_address, regaddr, 1, reg_ptr);
     if (retval == 0)
     {
-        retval = mchf_hw_i2c1_WriteRegister(si570_address, regaddr, (*reg_ptr|val));
+        retval = UhsdrHw_I2C_WriteRegister(SI570_I2C, si570_address, regaddr, 1, (*reg_ptr|val));
     }
     return retval;
 }
 static uint16_t Si570_ClearRegisterBits(uint8_t si570_address, uint8_t regaddr ,uint8_t* reg_ptr,uint8_t val){
-    uint16_t retval = mchf_hw_i2c1_ReadRegister(si570_address, regaddr, reg_ptr);
+    uint16_t retval = UhsdrHw_I2C_ReadRegister(SI570_I2C, si570_address, regaddr, 1, reg_ptr);
     if (retval == 0)
     {
-        retval = mchf_hw_i2c1_WriteRegister(si570_address, regaddr, (*reg_ptr & ~val));
+        retval = UhsdrHw_I2C_WriteRegister(SI570_I2C, si570_address, regaddr, 1, (*reg_ptr & ~val));
     }
     return retval;
 }
@@ -189,7 +184,7 @@ static Oscillator_ResultCodes_t Si570_SmallFrequencyChange()
     if (ret == 0)
     {
         // Write as block, registers 7-12
-        ret = mchf_hw_i2c1_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.cur_regs, 6);
+        ret = UhsdrHw_I2C_WriteBlock(SI570_I2C, os.si570_address, os.base_reg, 1, (uchar*)os.cur_regs, 6);
         if (ret == 0)
         {
             retval = Si570_VerifyFrequencyRegisters();
@@ -219,7 +214,7 @@ static Oscillator_ResultCodes_t Si570_LargeFrequencyChange()
     if (Si570_SetRegisterBits(os.si570_address, SI570_REG_137, &reg_137, SI570_FREEZE_DCO) == 0)
     {
         // Write as block, registers 7-12
-        if(mchf_hw_i2c1_WriteBlock(os.si570_address, os.base_reg, (uchar*)os.cur_regs, 6) == 0)
+        if(UhsdrHw_I2C_WriteBlock(SI570_I2C, os.si570_address, os.base_reg, 1, (uchar*)os.cur_regs, 6) == 0)
         {
             retval = Si570_VerifyFrequencyRegisters();
         }
@@ -235,7 +230,7 @@ static Oscillator_ResultCodes_t Si570_LargeFrequencyChange()
             // Wait for action completed
             do
             {
-                ret = mchf_hw_i2c1_ReadRegister(os.si570_address, SI570_REG_135, &reg_135);
+                ret = UhsdrHw_I2C_ReadRegister(SI570_I2C, os.si570_address, SI570_REG_135, 1, &reg_135);
             } while(ret == 0 && (reg_135 & SI570_NEW_FREQ));
         }
     }
@@ -503,7 +498,7 @@ uint8_t   Si570_GetI2CAddress()
  * @brief Sets a new PPM value AND corrects the internally used xtal frequency accordingly
  * @param ppm ppm value
  */
-void Si570_SetPPM(float32_t ppm)
+static void Si570_SetPPM(float32_t ppm)
 {
     os.fxtal_ppm = ppm;
     os.fxtal_calc = os.fxtal + (os.fxtal / (float64_t)1000000.0) * os.fxtal_ppm;
@@ -513,7 +508,7 @@ void Si570_SetPPM(float32_t ppm)
     }
 }
 
-uint8_t Si570_ResetConfiguration()
+static uint8_t Si570_ResetConfiguration()
 {
     uint8_t retval = 0;
 
@@ -529,7 +524,7 @@ uint8_t Si570_ResetConfiguration()
     os.fxtal        = FACTORY_FXTAL;
     os.present = false;
 
-    res = mchf_hw_i2c1_WriteRegister(os.si570_address, SI570_REG_135, SI570_RECALL);
+    res = UhsdrHw_I2C_WriteRegister(SI570_I2C, os.si570_address, SI570_REG_135, 1, SI570_RECALL);
     if(res != 0)
     {
         retval = 1;
@@ -540,7 +535,7 @@ uint8_t Si570_ResetConfiguration()
         int i = 0;
         do
         {
-            res = mchf_hw_i2c1_ReadRegister(os.si570_address, SI570_REG_135, &ret);
+            res = UhsdrHw_I2C_ReadRegister(SI570_I2C, os.si570_address, SI570_REG_135, 1, &ret);
             if(res != 0)
             {
                 retval = 2;
@@ -605,15 +600,22 @@ bool Si570_ReadyForIrqCall()
     return (SI570_I2C->Lock == HAL_UNLOCKED);
 }
 
+static bool Oscillator_IsPresent()
+{
+    return os.present;
+}
+
 const OscillatorInterface_t osc_si570 =
 {
 		.init = Si570_Init,
-		.isPresent = Si570_IsPresent,
+		.isPresent = Oscillator_IsPresent,
 		.setPPM = Si570_SetPPM,
 		.prepareNextFrequency = Si570_PrepareNextFrequency,
 		.changeToNextFrequency = Si570_ChangeToNextFrequency,
 		.isNextStepLarge = Si570_IsNextStepLarge,
 		.readyForIrqCall = Si570_ReadyForIrqCall,
+		.name = "Si570",
+		.type = OSC_SI570,
 };
 
 
@@ -625,13 +627,13 @@ void Si570_Init()
 
 	// test for hardware address of SI570
 	os.si570_address = (0x55 << 1);
-	if(mchf_hw_i2c1_ReadRegister(os.si570_address, (os.base_reg), &dummy) != 0)
+	if(UhsdrHw_I2C_ReadRegister(SI570_I2C,os.si570_address, (os.base_reg),1, &dummy) != 0)
 	{
 		os.si570_address = (0x50 << 1);
 	}
 
 
-	if (MCHF_I2C_DeviceReady(SI570_I2C,os.si570_address) == HAL_OK)
+	if (UhsdrHw_I2C_DeviceReady(SI570_I2C,os.si570_address) == HAL_OK)
 	{
 		// make sure everything is cleared and in initial state
 		Si570_ResetConfiguration();
@@ -683,7 +685,7 @@ void Si570_Init()
 		HAL_Delay(40);
 		Si570_ResetConfiguration();
 	}
-	osc = Si570_IsPresent()?&osc_si570:NULL;
+	osc = os.present?&osc_si570:NULL;
 }
 
 /**

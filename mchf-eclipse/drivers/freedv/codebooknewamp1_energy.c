@@ -7,7 +7,7 @@
 
 #include "defines.h"
 
-  /* /home/david/codec2-dev/src/codebook/newamp1_energy_q.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/newamp1_energy_q.txt */
 static const float codes0[] = {
   10,
   12.5,
@@ -28,7 +28,7 @@ static const float codes0[] = {
 };
 
 const struct lsp_codebook newamp1_energy_cb[] = {
-  /* /home/david/codec2-dev/src/codebook/newamp1_energy_q.txt */
+  /* /home/danilo/MCHF/my-sw/codec2-dev/src/codebook/newamp1_energy_q.txt */
   {
     1,
     4,

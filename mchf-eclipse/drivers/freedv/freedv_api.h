@@ -37,7 +37,9 @@
 
 // This declares a single-precision (float) complex number
 #include <sys/types.h>
+
 #include "comp.h"
+#include "codec2_ofdm.h"
 
 #define FREEDV_MODE_1600        0
 #define FREEDV_MODE_700         1
@@ -47,6 +49,48 @@
 #define FREEDV_MODE_800XA       5
 #define FREEDV_MODE_700C        6
 #define FREEDV_MODE_700D        7
+
+
+#ifndef FREEDV_MODE_EN_DEFAULT
+#define FREEDV_MODE_EN_DEFAULT 1
+#endif
+
+// by default we enable all modes
+// disable during compile time with -DFREEDV_MODE_1600_EN=0
+// all butFreeDV 1600
+
+//or the other way round
+// -DFREEDV_MODE_EN_DEFAULT=0 -DFREEDV_MODE_1600_EN=1
+// only FreeDV 1600
+
+#if !defined(FREEDV_MODE_1600_EN)
+        #define FREEDV_MODE_1600_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_700_EN)
+        #define FREEDV_MODE_700_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_700B_EN)
+        #define FREEDV_MODE_700B_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_700C_EN)
+        #define FREEDV_MODE_700C_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_700D_EN)
+        #define FREEDV_MODE_700D_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_2400A_EN)
+        #define FREEDV_MODE_2400A_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_2400B_EN)
+        #define FREEDV_MODE_2400B_EN FREEDV_MODE_EN_DEFAULT
+#endif
+#if !defined(FREEDV_MODE_800XA_EN)
+        #define FREEDV_MODE_800XA_EN FREEDV_MODE_EN_DEFAULT
+#endif
+
+
+
+#define FDV_MODE_ACTIVE(mode_name, var)  ((mode_name##_EN) == 0 ? 0: (var) == mode_name)
 
 /* operator control of 700D state machine */
       
@@ -106,6 +150,7 @@ int  freedv_data_ntxframes (struct freedv *freedv);
 
 int freedv_nin      (struct freedv *freedv);
 int freedv_rx       (struct freedv *freedv, short speech_out[], short demod_in[]);
+int freedv_shortrx  (struct freedv *freedv, short speech_out[], short demod_in[], float gain);
 int freedv_floatrx  (struct freedv *freedv, short speech_out[], float demod_in[]);
 int freedv_comprx   (struct freedv *freedv, short speech_out[], COMP  demod_in[]);
 int freedv_codecrx  (struct freedv *freedv, unsigned char *packed_codec_bits, short demod_in[]);
@@ -123,6 +168,8 @@ void freedv_set_snr_squelch_thresh	(struct freedv *freedv, float snr_squelch_thr
 void freedv_set_clip	                (struct freedv *freedv, int val);
 void freedv_set_total_bit_errors    	(struct freedv *freedv, int val);
 void freedv_set_total_bits              (struct freedv *freedv, int val);
+void freedv_set_total_bit_errors_coded  (struct freedv *freedv, int val);
+void freedv_set_total_bits_coded        (struct freedv *freedv, int val);
 void freedv_set_callback_error_pattern  (struct freedv *freedv, freedv_calback_error_pattern cb, void *state);
 void freedv_set_varicode_code_num       (struct freedv *freedv, int val);
 void freedv_set_data_header             (struct freedv *freedv, unsigned char *header);
@@ -130,6 +177,8 @@ int  freedv_set_alt_modem_samp_rate     (struct freedv *freedv, int samp_rate);
 void freedv_set_carrier_ampl            (struct freedv *freedv, int c, float ampl);
 void freedv_set_sync                    (struct freedv *freedv, int sync_cmd);
 void freedv_set_verbose                 (struct freedv *freedv, int verbosity);
+void freedv_set_tx_bpf                  (struct freedv *freedv, int val);
+void freedv_set_ext_vco                 (struct freedv *f, int val);
 
 // Get parameters -------------------------------------------------------------------------
 
@@ -141,6 +190,7 @@ void freedv_get_modem_extended_stats(struct freedv *freedv, struct MODEM_STATS *
 int freedv_get_test_frames	    (struct freedv *freedv);
 int freedv_get_n_speech_samples	    (struct freedv *freedv);
 int freedv_get_modem_sample_rate    (struct freedv *freedv);
+int freedv_get_modem_symbol_rate    (struct freedv *freedv);
 int freedv_get_n_max_modem_samples  (struct freedv *freedv);
 int freedv_get_n_nom_modem_samples  (struct freedv *freedv);
 int freedv_get_total_bits	    (struct freedv *freedv);

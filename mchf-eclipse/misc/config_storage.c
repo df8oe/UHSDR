@@ -11,10 +11,15 @@
  **  Last Modified:                                                                 **
  **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
-
+#ifndef USE_HAL_DRIVER
+    #define USE_HAL_DRIVER
+#endif
+#include "uhsdr_board.h"
+#include <stdint.h>
 #include "config_storage.h"
 #include "ui_configuration.h"
 #include "serial_eeprom.h"
+#include "uhsdr_flash.h"
 
 static uint8_t config_ramcache[MAX_VAR_ADDR*2+2];
 
@@ -138,14 +143,26 @@ uint16_t ConfigStorage_WriteVariable(uint16_t addr, uint16_t value)
     }
     else if(ts.configstore_in_use == CONFIGSTORE_IN_USE_RAMCACHE)
     {
-        uint8_t lowbyte;
-        uint8_t highbyte;
+        /**
+         * Was found that during saving settings,
+         * first two cells was corrupted.
+         * Just temp. protection...
+         */
+        if ( addr == 0 )
+        {
+            status = HAL_ERROR;
+        }
+        else
+        {
+            uint8_t lowbyte;
+            uint8_t highbyte;
 
-        lowbyte = (uint8_t)((0x00FF)&value);
-        highbyte = (uint8_t)((0x00FF)&(value >> 8));
-        config_ramcache[addr*2] = highbyte;
-        config_ramcache[addr*2+1] = lowbyte;
-        status = HAL_OK;
+            lowbyte = (uint8_t)((0x00FF)&value);
+            highbyte = (uint8_t)((0x00FF)&(value >> 8));
+            config_ramcache[addr*2] = highbyte;
+            config_ramcache[addr*2+1] = lowbyte;
+            status = HAL_OK;
+        }
     }
     return status;
 }
@@ -214,7 +231,8 @@ void ConfigStorage_CopySerial2RAMCache()
 
 uint16_t ConfigStorage_CopyRAMCache2Serial()
 {
-    uint16_t retval = SerialEEPROM_24Cxx_WriteBulk(0, config_ramcache, MAX_VAR_ADDR*2+2, ts.ser_eeprom_type);
+    // we start behind the signature, which we don't want to change
+    uint16_t retval = SerialEEPROM_24Cxx_WriteBulk(2, config_ramcache+2, MAX_VAR_ADDR*2, ts.ser_eeprom_type);
     if (retval == HAL_OK)
     {
         ts.configstore_in_use = CONFIGSTORE_IN_USE_I2C;

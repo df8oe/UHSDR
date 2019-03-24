@@ -6,10 +6,42 @@
  **                                                                                 **
  **---------------------------------------------------------------------------------**
  **                                                                                 **
- **  Licence:       GNU GPLv3                                                      **
+ **  Licence:       GNU GPLv3                                                       **
  ************************************************************************************/
-#include "uhsdr_board.h"
+#include <assert.h>
+
+#include "uhsdr_board_config.h"
 #include "uhsdr_keypad.h"
+#include "gpio.h"
+
+// Key map structure
+// represents a physical key which can be pressed (via GPIO)
+typedef struct
+{
+    GPIO_TypeDef*   keyPort;
+    uint16_t        keyPin;
+    uint16_t        button_id;
+    const char*     label;
+
+} Keypad_KeyPhys_t;
+
+// represents a logical button
+typedef struct
+{
+    uint16_t        button_id;
+    const char*     label;
+} UhsdrButtonLogical_t;
+
+typedef struct
+{
+    const Keypad_KeyPhys_t* map;
+    uint32_t num;
+} UhsdrHwKey_t;
+
+const Keypad_KeyPhys_t* bm_set_normal;
+#ifdef UI_BRD_MCHF
+const Keypad_KeyPhys_t* bm_set_rtc;
+#endif
 
 // -------------------------------------------------------
 // Constant declaration of the buttons map across ports
@@ -43,7 +75,6 @@ const Keypad_KeyPhys_t bm_set_normal_arr[] =
         {BUTTON_S18_PIO,    BUTTON_S18,     BUTTON_NOP,             "S18"},
         {BUTTON_S19_PIO,    BUTTON_S19,     BUTTON_F6_PRESSED,      "S19"},
 #endif
-
         // this must be the last entry
         {NULL,              0,              0,                      NULL}
 };
@@ -52,7 +83,6 @@ const Keypad_KeyPhys_t* bm_set_normal = &bm_set_normal_arr[0];
 
 #ifdef UI_BRD_MCHF
 const Keypad_KeyPhys_t bm_set_rtc_arr[] =
-
 {
         // alternative mapping for RTC Modification
         {BUTTON_M2_PIO,         BUTTON_M2,      BUTTON_M2_PRESSED,      "S3"},
@@ -113,11 +143,20 @@ const UhsdrButtonLogical_t buttons[BUTTON_NUM] =
 #endif
 };
 
-// the inital button map is the default one
+// the initial button map is the default one
 UhsdrHwKey_t hwKeys = { .map = &bm_set_normal_arr[0], .num = 0 };
 
+// FIXME? Do we change state of these in IRQ? Maybe more save mark them as volatile?
 uint32_t buttonStates; // logical buttons
 uint32_t keyStates; // hw scan keys
+
+#ifdef UI_BRD_MCHF
+// this function invoked only on the UI_MCHF_BRD with RTC as they have different buttons layout
+inline void Keypad_SetLayoutRTC_MCHF()
+{
+    hwKeys.map = &bm_set_rtc[0];
+}
+#endif
 
 bool Keypad_IsButtonPressed(uint32_t button_num)
 {
@@ -147,13 +186,13 @@ uint32_t Keypad_ButtonStates()
     return buttonStates;
 }
 
-
 /*
  * @brief keypad hardware initialization based on the given keyMap
  *
  */
-void Keypad_KeypadInit(UhsdrHwKey_t* keyMap)
+void Keypad_KeypadInit()
 {
+    UhsdrHwKey_t* keyMap = &hwKeys;
     GPIO_InitTypeDef GPIO_InitStructure;
 
     // Common init
@@ -169,7 +208,6 @@ void Keypad_KeypadInit(UhsdrHwKey_t* keyMap)
     }
 }
 
-
 /*
  *  @brief Keypad direct HW access reading returning if a key is pressed (or not)
  */
@@ -184,19 +222,24 @@ static bool Keypad_GetKeyGPIOState(const Keypad_KeyPhys_t* key)
  */
 void Keypad_Scan()
 {
-    for (int key_num = 0; key_num < hwKeys.num; key_num++)
+    for (uint32_t key_num = 0; key_num < hwKeys.num; key_num++)
     {
         if (Keypad_GetKeyGPIOState(&hwKeys.map[key_num]))
         {
             // in normal mode - return key value
-            buttonStates |= (1 << hwKeys.map[key_num].button_id);
-            keyStates |= (1 << key_num);
+            SET_BIT( buttonStates, ( 1 << hwKeys.map[key_num].button_id ));
+            SET_BIT( keyStates, ( 1 << key_num ));
         }
         else
         {
-            buttonStates &= ~(1 << hwKeys.map[key_num].button_id);
-            keyStates &= ~(1 << key_num);
-
+            CLEAR_BIT( buttonStates, ( 1 << hwKeys.map[key_num].button_id ));
+            CLEAR_BIT( keyStates, ( 1 << key_num ));
         }
     }
+}
+
+inline const char* Keypad_GetLabelOfButton( uint32_t id_button )
+{
+    assert( id_button < sizeof( buttons ) / sizeof( UhsdrButtonLogical_t ));
+    return buttons[ id_button ].label;
 }

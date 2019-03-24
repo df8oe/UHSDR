@@ -233,6 +233,7 @@ enum
     CONFIG_TUNE_TONE_MODE,
 //    CONFIG_SPECTRUM_FFT_WINDOW_TYPE,
     CONFIG_RESET_SER_EEPROM,
+    CONFIG_RESET_SER_EEPROM_SIGNATURE,
     CONFIG_CAT_IN_SANDBOX,
     CONFIG_CAT_XLAT,
     CONFIG_CAT_PTT_RTS,
@@ -300,6 +301,8 @@ enum
     MENU_DEBUG_HMC1023_DRVR,
     MENU_DEBUG_TWINPEAKS_CORR_RUN,
     MENU_DEBUG_VSWR_PROTECTION_THRESHOLD,
+    MENU_DEBUG_FREEDV_MODE,
+    MENU_DEBUG_FREEDV_SQL_THRESHOLD,
 
     CONFIG_RTC_START,
     CONFIG_RTC_HOUR,
@@ -382,7 +385,7 @@ typedef struct
 
 extern const MenuGroupDescriptor groups[];
 
-void UiMenu_UpdateItem(uint16_t select, uint16_t mode, int pos, int var, char* options, const char** txt_ptr_ptr, uint32_t* clr_ptr);
+void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int var, char* options, const char** txt_ptr_ptr, uint32_t* clr_ptr);
 void UiMenu_DisplayValue(const char* value,uint32_t clr,uint16_t pos);
 
 #endif /* DRIVERS_UI_UI_MENU_INTERNAL_H_ */

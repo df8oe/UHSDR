@@ -36,11 +36,13 @@ typedef struct
  */
 inline uint32_t softdds_nextSampleIndex(soft_dds_t* dds)
 {
+    uint32_t retval = (dds->acc >> SOFTDDS_ACC_SHIFT)%DDS_TBL_SIZE;
+
 	dds->acc += dds->step;
 
 	// now scale down precision and  make sure that
 	// index wraps around properly
-	return (dds->acc >> SOFTDDS_ACC_SHIFT)%DDS_TBL_SIZE;
+	return retval;
 }
 
 /*
@@ -69,7 +71,7 @@ void softdds_genIQSingleTone(soft_dds_t* dds, float32_t *i_buff,float32_t *q_buf
 void softdds_genIQTwoTone(soft_dds_t* ddsA, soft_dds_t* ddsB, float *i_buff,float *q_buff,ushort size);
 
 void softdds_addSingleTone(soft_dds_t* dds_ptr, float32_t* buffer, const size_t blockSize, float32_t scaling);
-
+void softdds_addSingleToneToTwobuffers(soft_dds_t* dds_ptr, float32_t* buffer1, float32_t* buffer2, const size_t blockSize, float32_t scaling);
 
 void softdds_runIQ(float32_t *i_buff, float32_t *q_buff, uint16_t size);
 void softdds_configRunIQ(float32_t freq[2],uint32_t samp_rate,uint8_t smooth);

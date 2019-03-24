@@ -251,9 +251,9 @@ void post_filter_newamp1(float vec[], float sample_freq_kHz[], int K, float pf_g
     for(k=0; k<K; k++) {
         pre[k] = 20.0*log10f(sample_freq_kHz[k]/0.3);
         vec[k] += pre[k];
-        e_before += powf(10.0, 2.0*vec[k]/20.0);
+        e_before += POW10F(vec[k]/10.0);
         vec[k] *= pf_gain;
-        e_after += powf(10.0, 2.0*vec[k]/20.0);        
+        e_after += POW10F(vec[k]/10.0);
     }
 
     float gain = e_after/e_before;
@@ -376,8 +376,9 @@ void determine_phase(C2CONST *c2const, COMP H[], MODEL *model, int Nfft, codec2_
     float AmdB[MAX_AMP+1], rate_L_sample_freqs_kHz[MAX_AMP+1];
 
     for(m=1; m<=model->L; m++) {
-        AmdB[m] = 20.0*log10f(model->A[m]+1);
-        rate_L_sample_freqs_kHz[m] = (float)m*model->Wo*(c2const->Fs/2000.0)/M_PI;
+        assert(model->A[m] != 0.0);
+        AmdB[m] = 20.0*log10f(model->A[m]);
+        rate_L_sample_freqs_kHz[m] = (float)m*model->Wo*(c2const->Fs/2000.0)/M_PI;        
     }
     
     for(i=0; i<Ns; i++) {
@@ -385,7 +386,6 @@ void determine_phase(C2CONST *c2const, COMP H[], MODEL *model, int Nfft, codec2_
     }
 
     interp_para(Gdbfk, &rate_L_sample_freqs_kHz[1], &AmdB[1], model->L, sample_freqs_kHz, Ns);
-
     mag_to_phase(phase, Gdbfk, Nfft, fwd_cfg, inv_cfg);
 
     for(m=1; m<=model->L; m++) {

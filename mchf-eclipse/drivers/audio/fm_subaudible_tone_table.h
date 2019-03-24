@@ -16,7 +16,7 @@
 #define __SUBAUDIBLE_TONE_TABLE
 
 
-const float fm_subaudible_tone_table[] =
+static const float fm_subaudible_tone_table[] =
 {
     0,
     67.0,

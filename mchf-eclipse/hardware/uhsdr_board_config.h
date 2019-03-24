@@ -1,786 +1,261 @@
 /*  -*-  mode: c; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; coding: utf-8  -*-  */
 /************************************************************************************
-**                                                                                 **
-**                               mcHF QRP Transceiver                              **
-**                             K Atanassov - M0NKA 2014                            **
-**                                                                                 **
-**---------------------------------------------------------------------------------**
-**                                                                                 **
-**  File name:                                                                     **
-**  Description:                                                                   **
-**  Last Modified:                                                                 **
-**  Licence:		GNU GPLv3                                                      **
-************************************************************************************/
-#ifndef __MCHF_BOARD_CONFIG_H
-#define __MCHF_BOARD_CONFIG_H
+ **                                                                                **
+ **                                        UHSDR                                   **
+ **               a powerful firmware for STM32 based SDR transceivers             **
+ **                                                                                **
+ **--------------------------------------------------------------------------------**
+ **                                                                                **
+ **  Description:   Please provide one                                             **
+ **  Licence:       GNU GPLv3                                                      **
+ ************************************************************************************/
 
-#include "uhsdr_types.h"
-#include "uhsdr_mcu.h"
+#ifndef __UHSDR_BOARD_CONFIG_H
+#define __UHSDR_BOARD_CONFIG_H
 
-
-
-#ifdef STM32F4
-
-#ifndef TRX_NAME
-  #define TRX_NAME "mcHF QRP"
-#endif
-#ifndef TRX_ID
-  #define TRX_ID "mchf"
-#endif
-
-#ifndef TRX_HW_LIC
-#define TRX_HW_LIC "CC BY-NC-SA 3.0"
-#define TRX_HW_CREATOR "K. Atanassov, M0NKA, www.m0nka.co.uk"
-#endif
-
-#define UI_BRD_MCHF
-#define RF_BRD_MCHF
-
-
-// place tagged elements in CCM 64k extra RAM (no DMA)
-#define __MCHF_SPECIALMEM __attribute__ ((section (".ccm")))
-
-// NOT USED ON F4 based mcHF boards (defined as "no-op")
-// if used place tagged elements in an memory to peripheral DMA-able memory region
-// with the correct cache strategy set
-#define __UHSDR_DMAMEM
-
-
-#define SI570_I2C               (&hi2c1)
-#define SI5351A_I2C				(&hi2c1)
-
-#define CODEC_I2C               (&hi2c2)
-#define CODEC_ANA_I2C               (&hi2c2)
-#define CODEC_IQ_I2C                (&hi2c2)
-
-#define SERIALEEPROM_I2C            (&hi2c2)
-
-// -----------------------------------------------------------------------------
-//						PORT PINS ALLOCATION
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-// ---- 						PORT A										----
-// -----------------------------------------------------------------------------
-// pin 0
-#define ENC_THREE_CH1 			GPIO_PIN_0
-#define ENC_THREE_CH1_PIO       GPIOA
-// pin 1
-#define ENC_THREE_CH2 			GPIO_PIN_1
-#define ENC_THREE_CH2_PIO       GPIOA
-// pin 2
-#define ADC3_FWD				GPIO_PIN_2
-#define ADC3_FWD_PIO       		GPIOA
-// pin 3
-#define ADC2_RET				GPIO_PIN_3
-#define ADC2_RET_PIO       		GPIOA
-// pin 4
-#ifdef MCHF_BOARD_0P5
-#define TP_IRQ					GPIO_PIN_14
+#if defined(UI_BRD_MCHF) && defined(UI_BRD_OVI40)
+    #error Only one ui board can be selected: UI_BRD_MCHF, UI_BRD_OVI40
+#elif defined(UI_BRD_OVI40)
+    #include "UHSDR_UI_ovi40_config.h"
+#elif defined(UI_BRD_MCHF)
+    #include "UHSDR_UI_mchf_config.h"
 #else
-#define TP_IRQ					GPIO_PIN_4
-#endif
-#define TP_IRQ_PIO				GPIOA
-
-#define DAC0 					GPIO_PIN_4
-#define DAC0_PIO       			GPIOA
-// pin 5
-//#define DAC1 					GPIO_PIN_5
-//#define DAC1_SOURCE				GPIO_PinSource5
-//#define DAC1_PIO       			GPIOA
-// pin 6
-#define ADC1_PWR				GPIO_PIN_6
-#define ADC1_PWR_PIO       		GPIOA
-// pin 7
-#define BAND0		 			GPIO_PIN_7
-#define BAND0_PIO       		GPIOA
-// pin 8
-#define BAND1		 			GPIO_PIN_8
-#define BAND1_PIO       		GPIOA
-// pin 9
-#define DEBUG_PRINT	 			GPIO_PIN_9
-#define DEBUG_PRINT_PIO    		GPIOA
-
-#ifdef MCHF_BOARD_0P5
-#define TP_CS					GPIO_PIN_13
-#else
-#define TP_CS					GPIO_PIN_9
-#endif
-#define TP_CS_PIO				GPIOA
-// pin 10
-#define BAND2 					GPIO_PIN_10
-#define BAND2_PIO       		GPIOA
-// pin 11
-// USB DFU
-//
-// pin 12
-// USB DFU
-//
-//
-// pin 13
-// SWDIO
-// pin 14
-// SWCLK
-//
-//
-// pin 15
-#define CODEC_I2S_WS			GPIO_PIN_15
-#define CODEC_I2S_WS_PIO  		GPIOA
-//
-// -----------------------------------------------------------------------------
-// ---- 						PORT B										----
-// -----------------------------------------------------------------------------
-// pin 0
-#define BUTTON_BNDM				GPIO_PIN_0
-#define BUTTON_BNDM_PIO       	GPIOB
-// pin 1
-#define PTT_CNTR 				GPIO_PIN_1
-#define PTT_CNTR_PIO       		GPIOB
-// pin 2
-#define BUTTON_BNDP 			GPIO_PIN_2
-#define BUTTON_BNDP_PIO       	GPIOB
-// pin 3
-#define BUTTON_M2 				GPIO_PIN_3
-#define BUTTON_M2_PIO       	GPIOB
-// pin 4
-#define ENC_ONE_CH1 			GPIO_PIN_4
-#define ENC_ONE_CH1_PIO       	GPIOB
-// pin 5
-#define ENC_ONE_CH2 			GPIO_PIN_5
-#define ENC_ONE_CH2_PIO       	GPIOB
-// pin 6
-#define I2C1_SCL_PIN            GPIO_PIN_6
-#define I2C1_SCL_GPIO           GPIOB
-// pin 7
-#define I2C1_SDA_PIN            GPIO_PIN_7
-#define I2C1_SDA_GPIO           GPIOB
-// pin 8
-#define BUTTON_G2 				GPIO_PIN_8
-#define BUTTON_G2_PIO       	GPIOB
-// pin 9
-#define GREEN_LED 				GPIO_PIN_9
-#define GREEN_LED_PIO       	GPIOB
-// pin 10
-#define I2C2_SCL_PIN            GPIO_PIN_10
-#define I2C2_SCL_GPIO           GPIOB
-// pin 11
-#define I2C2_SDA_PIN            GPIO_PIN_11
-#define I2C2_SDA_GPIO           GPIOB
-// pin 12
-#define RED_LED 				GPIO_PIN_12
-#define RED_LED_PIO       		GPIOB
-// pin 13
-#define LCD_SCK 				GPIO_PIN_13
-#define LCD_SCK_PIO         	GPIOB
-// pin 14
-// USB HOST
-//
-// pin 15
-// USB HOST
-//
-//
-// -----------------------------------------------------------------------------
-// ---- 						PORT C										----
-// -----------------------------------------------------------------------------
-// pin 0
-#define BUTTON_G4 				GPIO_PIN_0
-#define BUTTON_G4_PIO       	GPIOC
-// pin 1
-#define BUTTON_M3 				GPIO_PIN_1
-#define BUTTON_M3_PIO       	GPIOC
-// pin 2
-#define LCD_MISO 				GPIO_PIN_2
-#define LCD_MISO_PIO         	GPIOC
-// pin 3
-#define LCD_MOSI 				GPIO_PIN_3
-#define LCD_MOSI_PIO         	GPIOC
-// pin 4
-#define BUTTON_STEPM			GPIO_PIN_4
-#define BUTTON_STEPM_PIO       	GPIOC
-// pin 5
-#define BUTTON_STEPP			GPIO_PIN_5
-#define BUTTON_STEPP_PIO       	GPIOC
-// pin 6
-#define FREQ_ENC_CH1 			GPIO_PIN_6
-#define FREQ_ENC_CH1_PIO        GPIOC
-// pin 7
-#define FREQ_ENC_CH2 			GPIO_PIN_7
-#define FREQ_ENC_CH2_PIO        GPIOC
-// pin 8
-#define POWER_DOWN 				GPIO_PIN_8
-#define POWER_DOWN_PIO         	GPIOC
-// pin 9
-#define CODEC_CLOCK 			GPIO_PIN_9
-#define CODEC_CLOCK_PIO         GPIOC
-// pin 10
-#define CODEC_I2S_SCK 			GPIO_PIN_10
-#define CODEC_I2S_SCK_PIO       GPIOC
-// pin 11
-#define CODEC_I2S_SDI 			GPIO_PIN_11
-#define CODEC_I2S_SDI_PIO       GPIOC
-// pin 12
-#define CODEC_I2S_SDO 			GPIO_PIN_12
-#define CODEC_I2S_SDO_PIO       GPIOC
-// pin 13
-#define BUTTON_PWR				GPIO_PIN_13
-#define BUTTON_PWR_PIO       	GPIOC
-// pin 14
-#define BUTTON_M1				GPIO_PIN_14
-#define BUTTON_M1_PIO       	GPIOC
-// pin 15
-#define BUTTON_F3				GPIO_PIN_15
-#define BUTTON_F3_PIO       	GPIOC
-
-#define BUTTON_M1_RTC           GPIO_PIN_14
-#define BUTTON_M1_PIO_RTC       GPIOD
-// pin 15
-#define BUTTON_F3_RTC           GPIO_PIN_15
-#define BUTTON_F3_PIO_RTC       GPIOD
-
-//
-// -----------------------------------------------------------------------------
-// ---- 						PORT D										----
-// -----------------------------------------------------------------------------
-// pin 0
-#define LCD_D2					GPIO_PIN_0
-#define LCD_D2_PIO      		GPIOD
-// pin 1
-#define LCD_D3					GPIO_PIN_1
-#define LCD_D3_PIO      		GPIOD
-// pin 2
-#define LCD_BACKLIGHT			GPIO_PIN_2
-#define LCD_BACKLIGHT_PIO      	GPIOD
-// pin 3
-#define LCD_RESET				GPIO_PIN_3
-#define LCD_RESET_PIO      		GPIOD
-// pin 4
-#define LCD_RD					GPIO_PIN_4
-#define LCD_RD_PIO      		GPIOD
-// pin 5
-#define LCD_WR					GPIO_PIN_5
-#define LCD_WR_PIO      		GPIOD
-// pin 6
-#define BUTTON_F1				GPIO_PIN_6
-#define BUTTON_F1_PIO       	GPIOD
-// pin 7
-#define LCD_CSA					GPIO_PIN_7
-#define LCD_CSA_PIO      		GPIOD
-// pin 8
-#define LCD_D15					GPIO_PIN_8
-#define LCD_D15_PIO      		GPIOD
-// pin 9
-#define LCD_D16					GPIO_PIN_9
-#define LCD_D16_PIO      		GPIOD
-// pin 10
-#define LCD_D17					GPIO_PIN_10
-#define LCD_D17_PIO      		GPIOD
-// pin 11
-#define LCD_RS					GPIO_PIN_11
-#define LCD_RS_PIO      		GPIOD
-// pin 12
-#define ENC_TWO_CH1 			GPIO_PIN_12
-#define ENC_TWO_CH1_PIO         GPIOD
-// pin 13
-#define ENC_TWO_CH2 			GPIO_PIN_13
-#define ENC_TWO_CH2_PIO         GPIOD
-// pin 14
-#define LCD_D0					GPIO_PIN_14
-#define LCD_D0_PIO      		GPIOD
-// pin 15
-#define LCD_D1					GPIO_PIN_15
-#define LCD_D1_PIO      		GPIOD
-//
-// -----------------------------------------------------------------------------
-// ---- 						PORT E										----
-// -----------------------------------------------------------------------------
-// pin 0
-#define PADDLE_DAH				GPIO_PIN_0
-#define PADDLE_DAH_PIO       	GPIOE
-// pin 1
-#define PADDLE_DIT				GPIO_PIN_1
-#define PADDLE_DIT_PIO       	GPIOE
-// pin 2
-#define BUTTON_F2				GPIO_PIN_2
-#define BUTTON_F2_PIO       	GPIOE
-// pin 3
-#define BUTTON_F4				GPIO_PIN_3
-#define BUTTON_F4_PIO       	GPIOE
-// pin 4
-#define BUTTON_G3				GPIO_PIN_4
-#define BUTTON_G3_PIO       	GPIOE
-// pin 5
-#define BUTTON_F5				GPIO_PIN_5
-#define BUTTON_F5_PIO       	GPIOE
-// pin 6
-#define BUTTON_G1				GPIO_PIN_6
-#define BUTTON_G1_PIO       	GPIOE
-// pin 7
-#define LCD_D4					GPIO_PIN_7
-#define LCD_D4_PIO      		GPIOE
-// pin 8
-#define LCD_D5					GPIO_PIN_8
-#define LCD_D5_PIO      		GPIOE
-// pin 9
-#define LCD_D6					GPIO_PIN_9
-#define LCD_D6_PIO      		GPIOE
-// pin 10
-#define LCD_D7					GPIO_PIN_10
-#define LCD_D7_PIO      		GPIOE
-// pin 11
-#define LCD_D10					GPIO_PIN_11
-#define LCD_D10_PIO      		GPIOE
-// pin 12
-#define LCD_D11					GPIO_PIN_12
-#define LCD_D11_PIO        		GPIOE
-// pin 13
-#define LCD_D12					GPIO_PIN_13
-#define LCD_D12_PIO      		GPIOE
-// pin 14
-#define LCD_D13					GPIO_PIN_14
-#define LCD_D13_PIO      		GPIOE
-// pin 15
-#define LCD_D14					GPIO_PIN_15
-#define LCD_D14_PIO      		GPIOE
+    #error One ui board has to be selected: UI_BRD_MCHF, UI_BRD_OVI40
 #endif
 
-
-#if defined(STM32F7) || defined(STM32H7)
-
-    #if defined(STM32F7)
-
-        #ifndef TRX_NAME
-            #define TRX_NAME "OVI40 F7"
+#if !defined(BOOTLOADER_BUILD)
+// The rf boards we want to support, but the bootloader should compile for all if possible.
+// so we don't tell the bootloader which one we have
+    #if !defined(RF_BRD_OVI40) && !defined(RF_BRD_MCHF)
+        #error At least one rf board must be selected: RF_BRD_MCHF, RF_BRD_OVI40
+    #else
+        #if defined(RF_BRD_OVI40)
+            #include "UHSDR_RF_ovi40_config.h"
         #endif
-        #ifndef TRX_ID
-            #define TRX_ID "40sdr"
-        #endif
-    #elif defined(STM32H7)
-        #ifndef TRX_NAME
-            #define TRX_NAME "OVI40 H7"
-        #endif
-        #ifndef TRX_ID
-            #define TRX_ID "ovi40"
+        #if defined(RF_BRD_MCHF)
+            #include "UHSDR_RF_mchf_config.h"
         #endif
     #endif
-
-#ifndef TRX_HW_LIC
-// #define TRX_HW_LIC "???"
-// #define TRX_HW_CREATOR "???"
 #endif
 
+#include "uhsdr_types.h"
 
-#define UI_BRD_OVI40
-#define RF_BRD_MCHF
+//************DEFAULT_VALUES_IF_NOT_SET_IN_BOARD_CONFIG_FILES**********//
 
-// NOT USED on OVI40 F7/H7 boards (defined as no-op)
-// compiler places tagged elements by its default rules
-#define __MCHF_SPECIALMEM
+#if !defined(TRX_NAME)
+    #define TRX_NAME "mcHF QRP"
+#endif //TRX_NAME
 
-// place tagged elements in a memory to peripheral DMA-able memory region
-// with the correct cache strategy set
-#ifdef STM32H7
-    #define __UHSDR_DMAMEM __attribute__ ((section (".dmamem")))
-#else
+#if !defined(TRX_ID)
+    #define TRX_ID "mchf"
+#endif // TRX_ID
+
+#if !defined(TRX_HW_LIC)
+    #define TRX_HW_LIC "CC BY-NC-SA 3.0"
+    #define TRX_HW_CREATOR "K. Atanassov, M0NKA, www.m0nka.co.uk"
+#endif // TRX_HW_LIC
+
+#if !defined(__MCHF_SPECIALMEM)
+    #define __MCHF_SPECIALMEM
+#endif
+
+#if !defined(__UHSDR_DMAMEM)
     #define __UHSDR_DMAMEM
 #endif
 
+#if !defined(DEVICE_STRING)
+    #define DEVICE_STRING TRX_NAME " Transceiver"
+#endif
 
-#define SI570_I2C               (&hi2c1)
-#define SI5351A_I2C				(&hi2c1)
+/***
+ * Please document all switches/parameters with what they are supposed to do and what values they can have.
+ * Please use proper naming:
+ * For capabilities of the software which can be enabled and disabled
+ * use USE_<CAPABILITY/FEATURENAME>
+ *
+ * These should be defined using #define USE_CAPABILITY
+ * or left undefined if not enabled so that these can be checked using #ifdef
+ *
+ * For related parameters DON'T USE USE_...
+ *
+ * In an ideal world please use PAR_<CAPABILITY/FEATURE>_<PARAMETERNAME> (we haven't done that yet)
+ * Please don't define constant or local parameters here, only those a user (!) is supposed to change as part of
+ * configuring a specific build variant.
+ *
+ */
 
-#define CODEC_ANA_I2C               (&hi2c2)
-#define CODEC_ANA_SAI               SAI1
+// Fast convolution filtering
+// experimental at the moment DD4WH, 2018_08_18
+//#define USE_CONVOLUTION
 
-#define CODEC_IQ_I2C                (&hi2c4)
-#define CODEC_IQ_SAI                SAI2
+// old LMS noise reduction
+// will probably never used any more
+//#define OBSOLETE_NR
 
-#define SERIALEEPROM_I2C            (&hi2c2)
+// this switches on the autonotch filter based on LMS algorithm
+// leave this switched on, until we have a new autonotch filter approach
+#define USE_LMS_AUTONOTCH
 
+// save processor time for the STM32F4
+// changes lowpass decimation filters to 89 taps instead of 199 taps
+// because they run at 48ksps, this is a considerable decrease in processing power
+#ifdef STM32F4
+//#define USE_SMALL_HILBERT_DECIMATION_FILTERS
+#endif
 
-// -----------------------------------------------------------------------------
-//                      PORT PINS ALLOCATION
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-// ----                         PORT A                                      ----
-// -----------------------------------------------------------------------------
-// pin 0
-#define ENC_THREE_CH1           GPIO_PIN_0
-#define ENC_THREE_CH1_PIO       GPIOA
-// pin 1
-#define ENC_THREE_CH2           GPIO_PIN_1
-#define ENC_THREE_CH2_PIO       GPIOA
-// pin 2
-#define XADC3_FWD                GPIO_PIN_2
-#define XXADC3_FWD_PIO            GPIOA
-// pin 3
-#define ADC2_RET                GPIO_PIN_3
-#define ADC2_RET_PIO            GPIOA
-// pin 4
-#define DAC_CH1                 GPIO_PIN_4
-#define DAC_CH1_PIO             GPIOA
-// pin 5
-#define DAC_CH2                 GPIO_PIN_5
-#define DAC_CH2_PIO             GPIOA
-// pin 6
-#define ADC1_PWR                GPIO_PIN_6
-#define ADC1_PWR_PIO            GPIOA
-// pin 7
-// pin 8
-#define BAND1                   GPIO_PIN_8
-#define BAND1_PIO               GPIOA
-// pin 9
-#define TP_CS                   GPIO_PIN_9
-#define TP_CS_PIO               GPIOA
-// pin 10
-#define BAND2                   GPIO_PIN_10
-#define BAND2_PIO               GPIOA
-// pin 11
-// USB DFU
-//
-// pin 12
-// USB DFU
-//
-//
-// pin 13
-// SWDIO
-// pin 14
-// SWCLK
-//
-//
-// pin 15
-#define BUTTON_F1               GPIO_PIN_15
-#define BUTTON_F1_PIO           GPIOA
-//
-// -----------------------------------------------------------------------------
-// ----                         PORT B                                      ----
-// -----------------------------------------------------------------------------
-// pin 0
-#define BUTTON_BNDM             GPIO_PIN_0
-#define BUTTON_BNDM_PIO         GPIOB
-// pin 1
-#define PTT_CNTR                GPIO_PIN_1
-#define PTT_CNTR_PIO            GPIOB
-// pin 2
-#define BUTTON_BNDP             GPIO_PIN_2
-#define BUTTON_BNDP_PIO         GPIOB
-// pin 3
-#define BUTTON_M2               GPIO_PIN_3
-#define BUTTON_M2_PIO           GPIOB
-// pin 4
-#define ENC_ONE_CH1             GPIO_PIN_4
-#define ENC_ONE_CH1_PIO         GPIOB
-// pin 5
-#define ENC_ONE_CH2             GPIO_PIN_5
-#define ENC_ONE_CH2_PIO         GPIOB
-// pin 6
-#define I2C1_SCL_PIN            GPIO_PIN_6
-#define I2C1_SCL_GPIO           GPIOB
-// pin 7
-#define I2C1_SDA_PIN            GPIO_PIN_7
-#define I2C1_SDA_GPIO           GPIOB
-// pin 8
-#define BUTTON_G2               GPIO_PIN_8
-#define BUTTON_G2_PIO           GPIOB
-// pin 9
-#define GREEN_LED               GPIO_PIN_9
-#define GREEN_LED_PIO           GPIOB
-// pin 10
-#define I2C2_SCL_PIN            GPIO_PIN_10
-#define I2C2_SCL_GPIO           GPIOB
-// pin 11
-#define I2C2_SDA_PIN            GPIO_PIN_11
-#define I2C2_SDA_GPIO           GPIOB
-// pin 12
-#define RED_LED                 GPIO_PIN_12
-#define RED_LED_PIO             GPIOB
-// pin 13
-#define LCD_SCK                 GPIO_PIN_13
-#define LCD_SCK_PIO             GPIOB
-// pin 14
-// USB HOST
-//
-// pin 15
-// USB HOST
-//
-//
-// -----------------------------------------------------------------------------
-// ----                         PORT C                                      ----
-// -----------------------------------------------------------------------------
-// pin 0
-#define XBUTTON_G4               GPIO_PIN_0
-#define XBUTTON_G4_PIO           GPIOC
-// pin 1
-#define BUTTON_M3               GPIO_PIN_1
-#define BUTTON_M3_PIO           GPIOC
-// pin 2
-#define LCD_MISO                GPIO_PIN_2
-#define LCD_MISO_PIO            GPIOC
-// pin 3
-#define LCD_MOSI                GPIO_PIN_3
-#define LCD_MOSI_PIO            GPIOC
-// pin 4
-#define BUTTON_STEPM            GPIO_PIN_4
-#define BUTTON_STEPM_PIO        GPIOC
-// pin 5
-#define BUTTON_STEPP            GPIO_PIN_5
-#define BUTTON_STEPP_PIO        GPIOC
-// pin 6
-#define FREQ_ENC_CH1            GPIO_PIN_6
-#define FREQ_ENC_CH1_PIO        GPIOC
-// pin 7
-#define FREQ_ENC_CH2            GPIO_PIN_7
-#define FREQ_ENC_CH2_PIO        GPIOC
-// pin 8
-#define POWER_DOWN              GPIO_PIN_8
-#define POWER_DOWN_PIO          GPIOC
-// pin 9
-#define IQ_CLOCK_DIV4_SIG             GPIO_PIN_9
-#define IQ_CLOCK_DIV4_SIG_PIO         GPIOC
-// pin 10
-#define CODEC_I2S_SCK           GPIO_PIN_10
-#define CODEC_I2S_SCK_PIO       GPIOC
-// pin 11
-#define CODEC_I2S_SDI           GPIO_PIN_11
-#define CODEC_I2S_SDI_PIO       GPIOC
-// pin 12
-#define CODEC_I2S_SDO           GPIO_PIN_12
-#define CODEC_I2S_SDO_PIO       GPIOC
-// pin 13
-#define XBUTTON_PWR              GPIO_PIN_13
-#define XBUTTON_PWR_PIO          GPIOC
-// pin 14
-#define XBUTTON_M1               GPIO_PIN_14
-#define XBUTTON_M1_PIO           GPIOC
-// pin 15
-#define XBUTTON_F3               GPIO_PIN_15
-#define XBUTTON_F3_PIO           GPIOC
+// save processor time for the STM32F4
+// changes lowpass decimation filters to 89 taps instead of 199 taps
+// because they run at 48ksps, this is a considerable decrease in processing power
+// this is ONLY relevant for STM32F4 which has SPI !
+// in those machines when enabling NR and other features, ui slows down . . .
+// thus we should enable the small decimation filter in those machines
 
-// pin 15
+/**
+ * This parameter disables certain features / capabilites in order to achieve a minimum build size for
+ * the 192k ram / 512k flash STM32F4 machines. Unless you have such a machine, leave this disabled.
+ */
+// #define IS_SMALL_BUILD
 
-//
-// -----------------------------------------------------------------------------
-// ----                         PORT D                                      ----
-// -----------------------------------------------------------------------------
-// pin 0
-#define LCD_D2                  GPIO_PIN_0
-#define LCD_D2_PIO              GPIOD
-// pin 1
-#define LCD_D3                  GPIO_PIN_1
-#define LCD_D3_PIO              GPIOD
-// pin 2
-#define LCD_BACKLIGHT           GPIO_PIN_2
-#define LCD_BACKLIGHT_PIO       GPIOD
-// pin 3
-#define LCD_RESET               GPIO_PIN_3
-#define LCD_RESET_PIO           GPIOD
-// pin 4
-#define LCD_RD                  GPIO_PIN_4
-#define LCD_RD_PIO              GPIOD
-// pin 5
-#define LCD_WR                  GPIO_PIN_5
-#define LCD_WR_PIO              GPIOD
-// pin 6
-#define XBUTTON_F1               GPIO_PIN_6
-#define XBUTTON_F1_PIO           GPIOD
-// pin 7
-#define LCD_CSA                 GPIO_PIN_7
-#define LCD_CSA_PIO             GPIOD
-// pin 8
-#define LCD_D13                 GPIO_PIN_8
-#define LCD_D13_PIO             GPIOD
-// pin 9
-#define LCD_D14                 GPIO_PIN_9
-#define LCD_D14_PIO             GPIOD
-// pin 10
-#define LCD_D15                 GPIO_PIN_10
-#define LCD_D15_PIO             GPIOD
-// pin 11
-//SAI INTERFACE: SAI2_SD_A
-// pin 12
-#define ENC_TWO_CH1             GPIO_PIN_12
-#define ENC_TWO_CH1_PIO         GPIOD
-// pin 13
-#define ENC_TWO_CH2             GPIO_PIN_13
-#define ENC_TWO_CH2_PIO         GPIOD
-// pin 14
-#define LCD_D0                  GPIO_PIN_14
-#define LCD_D0_PIO              GPIOD
-// pin 15
-#define LCD_D1                  GPIO_PIN_15
-#define LCD_D1_PIO              GPIOD
-//
-// -----------------------------------------------------------------------------
-// ----                         PORT E                                      ----
-// -----------------------------------------------------------------------------
-// pin 0
-#define PADDLE_DAH              GPIO_PIN_0
-#define PADDLE_DAH_PIO          GPIOE
-// pin 1
-#define PADDLE_DIT              GPIO_PIN_1
-#define PADDLE_DIT_PIO          GPIOE
-// pin 2
-#define BUTTON_F2               GPIO_PIN_2
-#define BUTTON_F2_PIO           GPIOE
-// pin 3
-#define BUTTON_F4               GPIO_PIN_3
-#define BUTTON_F4_PIO           GPIOE
-// pin 4
-#define BUTTON_G3               GPIO_PIN_4
-#define BUTTON_G3_PIO           GPIOE
-// pin 5
-#define BUTTON_F5               GPIO_PIN_5
-#define BUTTON_F5_PIO           GPIOE
-// pin 6
-#define XBUTTON_G1               GPIO_PIN_6
-#define XBUTTON_G1_PIO           GPIOE
-// pin 7
-#define LCD_D4                  GPIO_PIN_7
-#define LCD_D4_PIO              GPIOE
-// pin 8
-#define LCD_D5                  GPIO_PIN_8
-#define LCD_D5_PIO              GPIOE
-// pin 9
-#define LCD_D6                  GPIO_PIN_9
-#define LCD_D6_PIO              GPIOE
-// pin 10
-#define LCD_D7                  GPIO_PIN_10
-#define LCD_D7_PIO              GPIOE
-// pin 11
-#define LCD_D8                  GPIO_PIN_11
-#define LCD_D8_PIO              GPIOE
-// pin 12
-#define LCD_D9                  GPIO_PIN_12
-#define LCD_D9_PIO              GPIOE
-// pin 13
-#define LCD_D10                 GPIO_PIN_13
-#define LCD_D10_PIO             GPIOE
-// pin 14
-#define LCD_D11                 GPIO_PIN_14
-#define LCD_D11_PIO             GPIOE
-// pin 15
-#define LCD_D12                 GPIO_PIN_15
-#define LCD_D12_PIO             GPIOE
+#if !defined(IS_SMALL_BUILD)
+    #define USE_8bit_FONT
+    #define USE_PREDEFINED_WINDOW_DATA
 
-// -----------------------------------------------------------------------------
-// ----                         PORT F                                      ----
-// -----------------------------------------------------------------------------
-// pin 0
-#define BUTTON_M1               GPIO_PIN_0
-#define BUTTON_M1_PIO           GPIOF
+    // OPTION
+    // with IS_SMALL_BUILD we are not automatically including USE_FREEDV as it uses lot of memory
+    // both RAM and flash
+    #define USE_FREEDV
+#endif // IS_SMALL_BUILD
 
-// pin 1
-// pin 2
-#define ADC3_FWD                GPIO_PIN_3
-#define ADC3_FWD_PIO            GPIOF
-// pin 3
-// pin 4
-// pin 5
-#define BUTTON_E2               GPIO_PIN_5
-#define BUTTON_E2_PIO           GPIOF
-// pin 6
-// pin 7
-// pin 8
-// pin 9
-// pin 10
-#define BUTTON_E3               GPIO_PIN_10
-#define BUTTON_E3_PIO           GPIOF
-// pin 11
-#define BUTTON_S18              GPIO_PIN_11
-#define BUTTON_S18_PIO          GPIOF
-// pin 12
-#define BLUE_LED                GPIO_PIN_12
-#define BLUE_LED_PIO            GPIOF
-// pin 13
-#define BUTTON_E1               GPIO_PIN_13
-#define BUTTON_E1_PIO           GPIOF
-// pin 14
-// pin 15
-#define BUTTON_F3               GPIO_PIN_15
-#define BUTTON_F3_PIO           GPIOG
+// some special switches
+//#define   DEBUG_BUILD
+//#define   DEBUG_FREEDV
 
-#define BUTTON_F3_RTC           GPIO_PIN_15
-#define BUTTON_F3_PIO_RTC       GPIOG
+// if enabled the alternate (read new and better) noise reduction is active
+// this is the standard NR now (Febr 2018)
+#define USE_ALTERNATE_NR
 
-// -----------------------------------------------------------------------------
-// ----                         PORT G                                      ----
-// -----------------------------------------------------------------------------
-// pin 0
-#define BAND0                   GPIO_PIN_0
-#define BAND0_PIO               GPIOG
-// pin 1
-#define BAND3                   GPIO_PIN_1
-#define BAND3_PIO               GPIOG
-// pin 2
-#define BUTTON_PWR              GPIO_PIN_2
-#define BUTTON_PWR_PIO          GPIOG
-// pin 3
-#define LCD_RS                  GPIO_PIN_3
-#define LCD_RS_PIO              GPIOG
-// pin 4
-#define TP_IRQ                  GPIO_PIN_4
-#define TP_IRQ_PIO              GPIOG
-// pin 5
-#define AUDIO_PA_EN             GPIO_PIN_5
-#define AUDIO_PA_EN_PIO         GPIOG
-// pin 6
-#define BUTTON_G1               GPIO_PIN_6
-#define BUTTON_G1_PIO           GPIOG
-// pin 7
-#define BUTTON_E4               GPIO_PIN_7
-#define BUTTON_E4_PIO           GPIOG
-// pin 8
-#define AUDIO_MIC_BIAS          GPIO_PIN_8
-#define AUDIO_MIC_BIAS_PIO      GPIOG
-// pin 9
-// pin 10
-// pin 11
-#define BUTTON_G4               GPIO_PIN_11
-#define BUTTON_G4_PIO           GPIOG
-// pin 12
-// pin 13
-// pin 14
-// pin 15
-
-// PORT H
-// pin1
-#define BUTTON_S19              GPIO_PIN_1
-#define BUTTON_S19_PIO          GPIOH
-
-    #if defined(STM32H7)
-        #define hdac hdac1
+// you may optionally define the list of supported GFX drivers externally
+// if you just define EXTERNAL_USE_GFX_CONFIG and no USE_GFX_...
+// you will get a headless system using a dummy display driver
+#ifndef EXTERNAL_USE_GFX_CONFIG
+    #define USE_GFX_ILI932x
+    #define USE_GFX_ILI9486
+    // SSD1289 support is not yet working, also requires USE_GFX_ILI932x to be enabled for now.
+    // #define USE_GFX_SSD1289
+    #define USE_DISP_480_320
+    #if defined(STM32F7) || defined(STM32H7)
+      #define USE_GFX_RA8875
     #endif
 #endif
 
-//
-// -----------------------------------------------------------------------------
-#define     DEVICE_STRING           TRX_NAME " Transceiver"
-//
-// -----------------------------------------------------------------------------
+#define USE_FFT_1024
 
-// WE DO SET SOME CHOICES BASED ON THE UI BOARD
-#ifdef UI_BRD_OVI40
-#define USE_TWO_CHANNEL_AUDIO
-#define USE_HMC1023
+// OPTION
+#define USE_RTTY_PROCESSOR
+
+// OPTION
+#define USE_USBHOST
+#ifdef USE_USBHOST
+    // define additional USBHOST related "switches" only here!
+    // #define USE_USBDRIVE
+    #define USE_USBKEYBOARD
 #endif
 
 
-/* CONFIGURATION LOGIC CHECKS */
+// use the STM32 internal RTC with an external quartz and
+// M1 and F3 connected to PD14 and PD15 (D0 and D1 of LCD) instead of PC14 and PC15 (to which the 32768 Hz quartz has to be connected)
+#define USE_RTC_LSE
 
-#if defined(UI_BRD_MCHF) && defined(UI_BRD_OVI40)
-#error Only one ui board can be selected: UI_BRD_MCHF, UI_BRD_OVI40
-#endif
-#if !defined(UI_BRD_MCHF) && !defined(UI_BRD_OVI40)
-#error One ui board has to be selected: UI_BRD_MCHF, UI_BRD_OVI40
+// multiple oscillators may be enabled, but only the first detected oscillator is issued
+// i.e. there is currently only support for a single oscillator in a TRX.
+// Support for LO based on SI570
+#define USE_OSC_SI570
+// Support for LO based on SI5351
+#define USE_OSC_SI5351A
+
+// OPTION TO USE FLASH BASED CONFIGURATION STORAGE
+#define USE_CONFIGSTORAGE_FLASH
+
+// Option: If defined, high priority tasks are executed in the context of an PendSV interrupt
+// which gives finishing these tasks a priority over "normal", less real-time critical longer running user control tasks
+// such as display redraw.
+// In general this should be defined but in case of issues one may want to execute High Prio tasks not concurrently
+// to normal tasks, comment this in this case and see if the issue goes away. But this may cause other problems
+// of course.
+#define USE_PENDSV_FOR_HIGHPRIO_TASKS
+
+// OPTION: Enable handling of TX/RX switching in an interrupt. Provides very low latency switching
+// EXPERIMENTAL !!!
+#define USE_HIGH_PRIO_PTT
+
+// OPTION: IQ signal path now use 24bit samples from/to the codecs instead of the default 16bit. Slightly increases RAM usage (+0.5 - 1k).
+// will finally work both on single and dual codec configurations.
+#define USE_32_IQ_BITS
+#define USE_32_AUDIO_BITS
+
+
+// for now: These are fixed.
+#define IQ_SAMPLE_RATE (48000)
+#define AUDIO_SAMPLE_RATE (48000)
+
+// a lot of code pieces assume that this frequency
+// is 1500 Hz, so don't change
+#define IQ_INTERRUPT_FREQ (1500)
+
+// we process one dma block of samples at once
+// block sizes should be a power of two
+// a lot of code process information in these blocks
+#define IQ_BLOCK_SIZE (IQ_SAMPLE_RATE/IQ_INTERRUPT_FREQ)
+#define AUDIO_BLOCK_SIZE (AUDIO_SAMPLE_RATE/IQ_INTERRUPT_FREQ)
+
+// use for clocking based on DMA IRQ
+#define SAMPLES_PER_DMA_CYCLE   (IQ_BLOCK_SIZE)
+#define SAMPLES_PER_CENTISECOND (IQ_SAMPLE_RATE/100)
+
+
+#ifdef STM32F4
+    #define USE_SIMPLE_FREEDV_FILTERS
+    #define USE_FREEDV_1600
+#else
+    #define USE_FREEDV_700D
 #endif
 
-#if defined(RF_BRD_MCHF) && defined(RF_BRD_OVI40)
-#error Only one rf board can be selected: RF_BRD_MCHF, RF_BRD_OVI40
+
+#if (IQ_SAMPLE_RATE) != 48000
+    #error Only 48k sample frequency supported (yet).
 #endif
-#if !defined(RF_BRD_MCHF) && !defined(RF_BRD_OVI40)
-#error One rf board has to be selected: RF_BRD_MCHF, RF_BRD_OVI40
+#if (IQ_BLOCK_SIZE * 1500) != IQ_SAMPLE_RATE
+    #error Audio Interrupt Frequency must be 1500.
+#endif
+#if (IQ_SAMPLE_RATE/IQ_BLOCK_SIZE) != (AUDIO_SAMPLE_RATE/AUDIO_BLOCK_SIZE)
+    #error IQ Interrupt frequency must be idential to Audio Interrupt Frequency
+#endif
+
+
+//******************************CONFIGURATION_LOGIC_CHECKS************************************//
+
+#if !defined(USE_OSC_SI570) && !defined(USE_OSC_SI5351A)
+    #error At least one of supported oscillators should be enabled.
+#endif
+
+#if !defined(USE_PENDSV_FOR_HIGHPRIO_TASKS) && defined(USE_HIGH_PRIO_PTT)
+#error USE_HIGH_PRIO_PTT requires USE_PENDSV_FOR_HIGHPRIO_TASKS
+#endif
+
+#if defined(USE_32_IQ_BITS) && CODEC_NUM == 1
+    #define USE_32_AUDIO_BITS
+#endif
+
+#if !defined(USE_GFX_ILI932x) && !defined(USE_GFX_ILI9486)
+#warning Both USE_GFX_ILI932x and USE_GFX_ILI9486 are disabled, no display driver will be available!
 #endif
 
 #if defined(UI_BRD_MCHF) && defined(USE_TWO_CHANNEL_AUDIO)
 #error UI_BRD_MCHF does not permit USE_TWO_CHANNEL_AUDIO
+#endif
+
+#if CODEC_NUM == 1 && (defined(USE_32_IQ_BITS) &&  !defined(USE_32_AUDIO_BITS)) || (!defined(USE_32_IQ_BITS) &&  defined(USE_32_AUDIO_BITS))
+#error With only one codec bit width of iq and audio must match, either define both USE_32_IQ_BITS and USE_32_AUDIO_BITS or none
 #endif
 
 #endif

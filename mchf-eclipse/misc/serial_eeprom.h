@@ -53,5 +53,6 @@ uint8_t  SerialEEPROM_Detect();
 uint16_t SerialEEPROM_Set_UseStateInSignature(uint8_t state);
 uint16_t SerialEEPROM_Get_UseStateInSignature();
 void     SerialEEPROM_Clear_Signature();
+void     SerialEEPROM_Clear_AllVariables();
 
 #endif

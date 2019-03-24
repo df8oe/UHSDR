@@ -13,6 +13,7 @@
 ************************************************************************************/
 
 // Common
+#include "uhsdr_board_config.h"
 #include "uhsdr_board.h"
 #include "profiling.h"
 #include "uhsdr_hw_i2s.h"
@@ -28,45 +29,54 @@
 #endif
 
 
+typedef struct
+{
+    IqSample_t out[2*IQ_BLOCK_SIZE];
+    IqSample_t in[2*IQ_BLOCK_SIZE];
+} dma_iq_buffer_t;
+
+typedef struct
+{
+    AudioSample_t out[2*AUDIO_BLOCK_SIZE];
+    AudioSample_t in[2*AUDIO_BLOCK_SIZE];
+} dma_audio_buffer_t;
 
 
-__UHSDR_DMAMEM __IO dma_audio_buffer_t audio_buf[DMA_AUDIO_NUM];
+// we do something tricky here:
+// if we have a single codec both buffers are in fact the same, so we use a union
+// if we have two codecs we use a struct hence two separate buffers
 
-
-static uint32_t szbuf;
-
-
-#ifdef USE_24_BITS
-typedef int32_t audio_data_t;
+typedef
+#if CODEC_NUM == 1
+    union
 #else
-typedef int16_t audio_data_t;
+    struct
 #endif
+    {
+        dma_iq_buffer_t iq_buf;
+        dma_audio_buffer_t audio_buf;
+    } I2S_DmaBuffers_t;
 
-#ifdef UI_BRD_MCHF
-#define CODEC_IQ_IDX 0
-#define CODEC_ANA_IDX  0
-#endif
+static __UHSDR_DMAMEM I2S_DmaBuffers_t dma;
 
-#ifdef UI_BRD_OVI40
-#define CODEC_IQ_IDX 1
-#define CODEC_ANA_IDX 0
-#endif
 
 void UhsdrHwI2s_Codec_ClearTxDmaBuffer()
 {
-    memset((void*)&audio_buf[CODEC_IQ_IDX].out, 0, sizeof(audio_buf[CODEC_IQ_IDX].out));
+    memset((void*)&dma.iq_buf.out, 0, sizeof(dma.iq_buf.out));
 }
 
+// #define PROFILE_APP
 static void MchfHw_Codec_HandleBlock(uint16_t which)
 {
 #ifdef PROFILE_EVENTS
     // we stop during interrupt
     // at the end we start again
-    // profileCycleCount_stop();
+#ifdef PROFILE_APP
+    profileCycleCount_stop();
+#else
     profileTimedEventStart(ProfileAudioInterrupt);
 #endif
-
-    static audio_data_t *src, *dst, sz;
+#endif
 
 #ifdef EXEC_PROFILING
     // Profiling pin (high level)
@@ -77,22 +87,27 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 
     // Transfer complete interrupt
     // Point to 2nd half of buffers
-    sz = szbuf/2;
-    uint16_t offset = which == 0?sz:0;
+    const size_t sz = IQ_BLOCK_SIZE;
+    const uint16_t offset = which == 0?sz:0;
+
+    AudioSample_t *audio;
+    IqSample_t    *iq;
 
     if (ts.txrx_mode != TRX_MODE_TX)
     {
-        src = (audio_data_t*)&audio_buf[CODEC_IQ_IDX].in[offset];
-        dst = (audio_data_t*)&audio_buf[CODEC_ANA_IDX].out[offset];
+        iq = &dma.iq_buf.in[offset];
+        audio = &dma.audio_buf.out[offset];
     }
     else
     {
-        src = (audio_data_t*)&audio_buf[CODEC_ANA_IDX].in[offset];
-        dst = (audio_data_t*)&audio_buf[CODEC_IQ_IDX].out[offset];
+        audio = &dma.audio_buf.in[offset];
+        iq = &dma.iq_buf.out[offset];
     }
 
+    AudioSample_t *audioDst = &dma.audio_buf.out[offset];
+
     // Handle
-    AudioDriver_I2SCallback(src, dst, (audio_data_t*)&audio_buf[CODEC_ANA_IDX].out[offset], sz);
+    AudioDriver_I2SCallback(audio, iq, audioDst, sz);
 
 #ifdef EXEC_PROFILING
     // Profiling pin (low level)
@@ -101,8 +116,11 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 #ifdef PROFILE_EVENTS
     // we stopped during interrupt
     // now we start again
-    // profileCycleCount_start();
+#ifdef PROFILE_APP
+    profileCycleCount_start();
+#else
     profileTimedEventStop(ProfileAudioInterrupt);
+#endif
 #endif
 }
 
@@ -145,22 +163,58 @@ void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hi2s)
 }
 #endif
 
+#if defined(UI_BRD_OVI40)
+static void UhsdrHWI2s_Sai32Bits(SAI_HandleTypeDef* hsai)
+{
+    hsai->hdmarx->Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+    hsai->hdmarx->Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+    HAL_DMA_Init(hsai->hdmarx);
+
+    HAL_SAI_InitProtocol(hsai, SAI_I2S_STANDARD, SAI_PROTOCOL_DATASIZE_32BIT, 2);
+}
+#endif
+
+static void UhsdrHwI2s_SetBitWidth()
+{
+#if defined(USE_32_IQ_BITS)
+    #if defined(UI_BRD_MCHF)
+    hi2s3.Init.DataFormat = I2S_DATAFORMAT_32B;
+    HAL_I2S_Init(&hi2s3);
+
+    #endif
+    #if defined(UI_BRD_OVI40)
+    UhsdrHWI2s_Sai32Bits(&hsai_BlockA2);
+    UhsdrHWI2s_Sai32Bits(&hsai_BlockB2);
+    #endif
+#endif
+
+#if defined(USE_32_AUDIO_BITS)
+    #if defined(UI_BRD_OVI40)
+    UhsdrHWI2s_Sai32Bits(&hsai_BlockA1);
+    UhsdrHWI2s_Sai32Bits(&hsai_BlockB1);
+    #endif
+#endif
+}
+
+
+
 void UhsdrHwI2s_Codec_StartDMA()
 {
-    szbuf = BUFF_LEN;
+    UhsdrHwI2s_SetBitWidth();
 
 #ifdef UI_BRD_MCHF
-    HAL_I2SEx_TransmitReceive_DMA(&hi2s3,(uint16_t*)audio_buf[0].out,(uint16_t*)audio_buf[0].in,szbuf);
+    HAL_I2SEx_TransmitReceive_DMA(&hi2s3,(uint16_t*)dma.iq_buf.out,(uint16_t*)dma.iq_buf.in,sizeof(dma.iq_buf.in)/sizeof(dma.iq_buf.in[0].l));
 #endif
 #ifdef UI_BRD_OVI40
     // we clean the buffers since we don't know if we are in a "cleaned" memory segement
-    memset((void*)audio_buf,0,sizeof(audio_buf));
+    memset((void*)&dma.audio_buf,0,sizeof(dma.audio_buf));
+    memset((void*)&dma.iq_buf,0,sizeof(dma.iq_buf));
 
-    HAL_SAI_Receive_DMA(&hsai_BlockA1,(uint8_t*)audio_buf[0].in,szbuf);
-    HAL_SAI_Transmit_DMA(&hsai_BlockB1,(uint8_t*)audio_buf[0].out,szbuf);
+    HAL_SAI_Receive_DMA(&hsai_BlockA1,(uint8_t*)dma.audio_buf.in,sizeof(dma.audio_buf.in)/sizeof(dma.audio_buf.in[0].l));
+    HAL_SAI_Transmit_DMA(&hsai_BlockB1,(uint8_t*)dma.audio_buf.out,sizeof(dma.audio_buf.out)/sizeof(dma.audio_buf.out[0].l));
 
-    HAL_SAI_Receive_DMA(&hsai_BlockA2,(uint8_t*)audio_buf[1].in,szbuf);
-    HAL_SAI_Transmit_DMA(&hsai_BlockB2,(uint8_t*)audio_buf[1].out,szbuf);
+    HAL_SAI_Receive_DMA(&hsai_BlockA2,(uint8_t*)dma.iq_buf.in,sizeof(dma.iq_buf.in)/sizeof(dma.iq_buf.in[0].l));
+    HAL_SAI_Transmit_DMA(&hsai_BlockB2,(uint8_t*)dma.iq_buf.out,sizeof(dma.iq_buf.out)/sizeof(dma.iq_buf.out[0].l));
 
 #endif
 }

@@ -18,7 +18,6 @@
 #include "osc_interface.h"
 
 void 	Si570_Init();
-bool    Si570_IsPresent();
 
 // non-critical device information reading
 float32_t   Si570_GetStartupFrequency();

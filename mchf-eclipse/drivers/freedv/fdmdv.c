@@ -37,12 +37,7 @@
 #include <string.h>
 #include <math.h>
 
-#ifdef ARM_MATH_CM4
-  #include "stm32f4xx.h"
-  #include "core_cm4.h"
-  #include "arm_math.h"
-#endif
-
+#include "fdv_arm_math.h"
 
 #include "fdmdv_internal.h"
 #include "codec2_fdmdv.h"
@@ -56,17 +51,11 @@
 #include "os.h"
 #include "machdep.h"
 
+#include "debug_alloc.h"
+
 static int sync_uw[] = {1,-1,1,-1,1,-1};
 #ifdef __EMBEDDED__
 #define printf gdb_stdio_printf
-#endif
-
-#ifndef ARM_MATH_CM4
-  #define SINF(a) sinf(a)
-  #define COSF(a) cosf(a)
-#else
-  #define SINF(a) arm_sin_f32(a)
-  #define COSF(a) arm_cos_f32(a)
 #endif
 
 static const COMP  pi_on_4 = { .70710678118654752439, .70710678118654752439 }; // COSF(PI/4) , SINF(PI/4)
@@ -94,7 +83,7 @@ struct FDMDV * fdmdv_create(int Nc)
     assert(FDMDV_NOM_SAMPLES_PER_FRAME == M_FAC);
     assert(FDMDV_MAX_SAMPLES_PER_FRAME == (M_FAC+M_FAC/P));
 
-    f = (struct FDMDV*)malloc(sizeof(struct FDMDV));
+    f = (struct FDMDV*)MALLOC(sizeof(struct FDMDV));
     if (f == NULL)
 	return NULL;
 
@@ -102,7 +91,7 @@ struct FDMDV * fdmdv_create(int Nc)
 
     f->ntest_bits = Nc*NB*4;
     f->current_test_bit = 0;
-    f->rx_test_bits_mem = (int*)malloc(sizeof(int)*f->ntest_bits);
+    f->rx_test_bits_mem = (int*)MALLOC(sizeof(int)*f->ntest_bits);
     assert(f->rx_test_bits_mem != NULL);
     for(i=0; i<f->ntest_bits; i++)
 	f->rx_test_bits_mem[i] = 0;
@@ -219,8 +208,8 @@ void fdmdv_destroy(struct FDMDV *fdmdv)
 {
     assert(fdmdv != NULL);
     codec2_fft_free(fdmdv->fft_pilot_cfg);
-    free(fdmdv->rx_test_bits_mem);
-    free(fdmdv);
+    FREE(fdmdv->rx_test_bits_mem);
+    FREE(fdmdv);
 }
 
 
@@ -814,7 +803,7 @@ void lpf_peak_pick(float *foff, float *max, COMP pilot_baseband[],
 float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft)
 {
     int  i;
-#ifndef ARM_MATH_CM4
+#ifndef FDV_ARM_MATH
     int j;
 #endif
     COMP pilot[M_FAC+M_FAC/P];
@@ -851,7 +840,7 @@ float rx_est_freq_offset(struct FDMDV *f, COMP rx_fdm[], int nin, int do_fft)
 	f->pilot_baseband2[i] = f->pilot_baseband2[i+nin];
     }
 
-#ifndef ARM_MATH_CM4
+#ifndef FDV_ARM_MATH
     for(i=0,j=NPILOTBASEBAND-nin; i<nin; i++,j++) {
        	f->pilot_baseband1[j] = cmult(rx_fdm[i], pilot[i]);
 	f->pilot_baseband2[j] = cmult(rx_fdm[i], prev_pilot[i]);
@@ -1708,8 +1697,9 @@ float calc_snr(int Nc, float sig_est[], float noise_est[])
     int   c;
 
     S = 0.0;
-    for(c=0; c<Nc+1; c++)
-	S += powf(sig_est[c], 2.0);
+    for(c=0; c<Nc+1; c++) {
+        S += sig_est[c] * sig_est[c];
+    }
     SdB = 10.0*log10f(S+1E-12);
 
     /* Average noise mag across all carriers and square to get an
@@ -1721,7 +1711,7 @@ float calc_snr(int Nc, float sig_est[], float noise_est[])
     for(c=0; c<Nc+1; c++)
 	mean += noise_est[c];
     mean /= (Nc+1);
-    N50 = powf(mean, 2.0);
+    N50 = mean * mean;
     N50dB = 10.0*log10f(N50+1E-12);
 
     /* Now multiply by (3000 Hz)/(50 Hz) to find the total noise power
@@ -1849,7 +1839,7 @@ void fdmdv_8_to_16_short(short out16k[], short in8k[], int n)
   Changes the sample rate of a signal from 16 to 8 kHz.
 
   n is the number of samples at the 8 kHz rate, there are FDMDV_OS*n
-  samples at the 48 kHz rate.  As above however a memory of
+  samples at the 16 kHz rate.  As above however a memory of
   FDMDV_OS_TAPS samples is reqd for in16k[] (see t16_8.c unit test as example).
 
   Low pass filter the 16 kHz signal at 4 kHz using the same filter as
@@ -1983,7 +1973,7 @@ void fdmdv_simulate_channel(float *sig_pwr_av, COMP samples[], int nin, float ta
 
     /* det noise to meet target SNR */
 
-    target_snr_linear = powf(10.0, target_snr/10.0);
+    target_snr_linear = POW10F(target_snr/10.0);
     noise_pwr = *sig_pwr_av/target_snr_linear;       /* noise pwr in a 3000 Hz BW     */
     noise_pwr_1Hz = noise_pwr/3000.0;                  /* noise pwr in a 1 Hz bandwidth */
     noise_pwr_4000Hz = noise_pwr_1Hz*4000.0;           /* noise pwr in a 4000 Hz BW, which

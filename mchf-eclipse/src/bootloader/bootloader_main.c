@@ -12,20 +12,19 @@
  **  Licence:		GNU GPLv3                                                      **
  ************************************************************************************/
 
+#include <unistd.h>
+#include "dma.h"
+#include "spi.h"
+#include "gpio.h"
+
+#include "uhsdr_board.h"
 #include "flash_if.h"
 #include "uhsdr_boot_hw.h"
-#include "hardware/uhsdr_board.h"
 #include "command.h"
 #include "fatfs.h"
 #include "usb_host.h"
 #include "bootloader_main.h"
 #include "ui_lcd_hy28.h"
-
-#include "dma.h"
-#include "spi.h"
-#include "gpio.h"
-
-#include <unistd.h>
 
 
 FATFS USBDISKFatFs;           /* File system object for USB disk logical drive */
@@ -203,7 +202,7 @@ static int Bootloader_UsbMSCDevice_Application(void)
         {}
 
         /* Jumps to user application code located in the internal Flash memory */
-        COMMAND_ResetMCU(BOOT_FIRMWARE);
+        COMMAND_ResetMCU(BOOT_REBOOT);
     }
 
     // this below is a trick to get sbrk() linked in at the right time so that
@@ -251,12 +250,41 @@ bool uhsdrBl_IsValidApplication(uint32_t ApplicationAddress)
     return  APPLICATION_PTR[0] <= (linker_ram_start_addr + (1024 * 1024)) && ( APPLICATION_PTR[0] >= linker_ram_start_addr);
 }
 
+/**
+ * Jumps to new code using a reset vector,
+ * brings processor into the default state (almost like in reset state, except for peripherals and their clocks)
+ * set stackpointer and then jumps to the specific address. This function normally never returns unless
+ * the IsValidApplication check fails.
+ *
+ * @param ApplicationAddress the start address of the reset vector (not the start of the code itself!)
+ */
 void UhsdrBl_JumpToApplication(uint32_t ApplicationAddress)
 {
 
     if (uhsdrBl_IsValidApplication(ApplicationAddress))
     {
         uint32_t* const APPLICATION_PTR = (uint32_t*)ApplicationAddress;
+
+        // disable all interrupts
+        __disable_irq();
+
+        // disable systick irq
+        HAL_SuspendTick();
+
+        // set clocks to default state
+        HAL_RCC_DeInit();
+
+        // clear Interrupt Enable Register & Interrupt Pending Register
+        const size_t icer_count = sizeof(NVIC->ICER)/sizeof(NVIC->ICER[0]);
+
+        for (size_t i = 0; i <icer_count; i++)
+        {
+            NVIC->ICER[i]=0xFFFFFFFF;
+            NVIC->ICPR[i]=0xFFFFFFFF;
+        }
+
+        // enable all interrupts
+        __enable_irq();
 
         __set_MSP(APPLICATION_PTR[0]);
         /* Jump to user application */
@@ -280,6 +308,13 @@ int Bootloader_Main()
 	{
 	  ;
 	}
+
+	#ifdef SBLA
+	  *(uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE development features
+	#endif
+	#ifdef SBLS
+	  *(uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for special beta-testing features
+	#endif
 
     /* initialization */
     BSP_Init();
@@ -322,7 +357,6 @@ int Bootloader_Main()
         // we had that and it is pain to debug, see #1610 in GitHub!
         if (uhsdrBl_IsValidApplication(APPLICATION_ADDRESS))
         {
-            HAL_SuspendTick();
             UhsdrBl_JumpToApplication(APPLICATION_ADDRESS);
         }
         else

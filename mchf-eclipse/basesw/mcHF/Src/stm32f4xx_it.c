@@ -47,6 +47,19 @@ extern DMA_HandleTypeDef hdma_spi3_tx;
 extern DMA_HandleTypeDef hdma_i2s3_ext_rx;
 extern DMA_HandleTypeDef hdma_spi2_tx;
 
+/*
+ * TODO: Well, we don't want leds in the bootloader fault handlers.  We should decide about a general fault debugging concept
+ * for all platforms
+ */
+
+#if  !defined(BOOTLOADER_BUILD)
+#define GreenLed(a) Board_GreenLed(a)
+#define RedLed(a) Board_RedLed(a)
+#else
+#define GreenLed(a)
+#define RedLed(a)
+#endif
+
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
 /******************************************************************************/
@@ -59,11 +72,14 @@ void NMI_Handler(void)
   /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
 
   /* USER CODE END NonMaskableInt_IRQn 0 */
-    Board_GreenLed(LED_STATE_OFF);
+    GreenLed(LED_STATE_OFF);
   /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
 
   /* USER CODE END NonMaskableInt_IRQn 1 */
 }
+
+// TODO: Factor out and make avail on all platforms
+#if  !defined(BOOTLOADER_BUILD)
 
 void Debug_WaitShort()
 {
@@ -80,26 +96,27 @@ void Debug_WaitLong()
         Debug_WaitShort();
     }
 }
+
 void Debug_Blink_Bit(uint32_t what)
 {
-    Board_RedLed(LED_STATE_OFF);
-    Board_GreenLed(LED_STATE_OFF);
+    RedLed(LED_STATE_OFF);
+    GreenLed(LED_STATE_OFF);
     Debug_WaitShort();
 
-    Board_GreenLed(LED_STATE_ON);
+    GreenLed(LED_STATE_ON);
     if (what)
     {
-        Board_RedLed(LED_STATE_ON);
+        RedLed(LED_STATE_ON);
     }
     Debug_WaitShort();
-    Board_RedLed(LED_STATE_OFF);
-    Board_GreenLed(LED_STATE_OFF);
+    RedLed(LED_STATE_OFF);
+    GreenLed(LED_STATE_OFF);
 }
 void Debug_Blink_RedLed()
 {
-    Board_RedLed(LED_STATE_ON);
+    RedLed(LED_STATE_ON);
     Debug_WaitShort();
-    Board_RedLed(LED_STATE_OFF);
+    RedLed(LED_STATE_OFF);
     Debug_WaitShort();
 }
 
@@ -122,28 +139,32 @@ void Debug_Send_32Bits(uint32_t val)
 
 void Debug_Send_ValueAndId(uint32_t val, int id)
 {
-    Board_RedLed(LED_STATE_OFF);
-    Board_GreenLed(LED_STATE_OFF);
+    RedLed(LED_STATE_OFF);
+    GreenLed(LED_STATE_OFF);
     Debug_WaitLong();
     Debug_Send_RedBlinks(id);
     Debug_WaitLong();
     Debug_Send_32Bits(val);
 }
 
-static void Debug_FaultGetRegistersFromStack( uint32_t *pulFaultStackAddress, uint32_t r5)
+volatile uint32_t r0  __attribute__ ((unused));
+volatile uint32_t r1 __attribute__ ((unused));
+volatile uint32_t r2 __attribute__ ((unused));
+volatile uint32_t r3 __attribute__ ((unused));
+volatile uint32_t r5 __attribute__ ((unused));
+volatile uint32_t r12 __attribute__ ((unused));
+volatile uint32_t lr __attribute__ ((unused)); /* Link register. */
+volatile uint32_t pc __attribute__ ((unused)); /* Program counter. */
+volatile uint32_t psr __attribute__ ((unused));/* Program status register. */
+volatile uint32_t cfsr __attribute__ ((unused)); /* Program counter. */
+volatile uint32_t bfar __attribute__ ((unused));/* Program status register. */
+
+static void Debug_FaultGetRegistersFromStack( uint32_t *pulFaultStackAddress, uint32_t r5x)
 {
 /* These are volatile to try and prevent the compiler/linker optimising them
 away as the variables never actually get used.  If the debugger won't show the
 values of the variables, make them global my moving their declaration outside
 of this function. */
-volatile uint32_t r0  __attribute__ ((unused));
-volatile uint32_t r1 __attribute__ ((unused));
-volatile uint32_t r2 __attribute__ ((unused));
-volatile uint32_t r3 __attribute__ ((unused));
-volatile uint32_t r12 __attribute__ ((unused));
-volatile uint32_t lr __attribute__ ((unused)); /* Link register. */
-volatile uint32_t pc __attribute__ ((unused)); /* Program counter. */
-volatile uint32_t psr __attribute__ ((unused));/* Program status register. */
 
     r0 = pulFaultStackAddress[ 0 ];
     r1 = pulFaultStackAddress[ 1 ];
@@ -154,6 +175,9 @@ volatile uint32_t psr __attribute__ ((unused));/* Program status register. */
     lr = pulFaultStackAddress[ 5 ];
     pc = pulFaultStackAddress[ 6 ];
     psr = pulFaultStackAddress[ 7 ];
+    cfsr = SCB->CFSR;
+    bfar = SCB->BFAR;
+    r5 = r5x;
 
     while (1)
     {
@@ -195,6 +219,18 @@ void HardFault_Handler(void)
 
   /* USER CODE END HardFault_IRQn 1 */
 }
+#else
+void HardFault_Handler()
+{
+/* USER CODE BEGIN HardFault_IRQn 0 */
+/* USER CODE END HardFault_IRQn 0 */
+/* USER CODE BEGIN HardFault_IRQn 1 */
+    while(1)
+    {
+    }
+/* USER CODE END HardFault_IRQn 1 */
+}
+#endif
 
 /**
 * @brief This function handles Memory management fault.
@@ -202,7 +238,7 @@ void HardFault_Handler(void)
 void MemManage_Handler(void)
 {
   /* USER CODE BEGIN MemoryManagement_IRQn 0 */
-  Board_GreenLed(LED_STATE_OFF);
+  GreenLed(LED_STATE_OFF);
   /* USER CODE END MemoryManagement_IRQn 0 */
   while (1)
   {
@@ -235,7 +271,7 @@ void BusFault_Handler(void)
 void UsageFault_Handler(void)
 {
   /* USER CODE BEGIN UsageFault_IRQn 0 */
-    Board_RedLed(LED_STATE_OFF);
+    RedLed(LED_STATE_OFF);
   /* USER CODE END UsageFault_IRQn 0 */
   while (1)
   {
@@ -251,7 +287,7 @@ void UsageFault_Handler(void)
 void SVC_Handler(void)
 {
   /* USER CODE BEGIN SVCall_IRQn 0 */
-    // Board_GreenLed(LED_STATE_OFF);
+    // GreenLed(LED_STATE_OFF);
   /* USER CODE END SVCall_IRQn 0 */
   /* USER CODE BEGIN SVCall_IRQn 1 */
 

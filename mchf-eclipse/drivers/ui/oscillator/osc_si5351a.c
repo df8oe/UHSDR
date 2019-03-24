@@ -85,12 +85,12 @@
 
 static uint16_t Si5351a_WriteRegister(uint8_t reg, uint8_t val)
 {
-	return mchf_hw_i2c1_WriteRegister(SI5351_I2C_WRITE, reg, val);
+    return UhsdrHw_I2C_WriteRegister(SI5351A_I2C, SI5351_I2C_WRITE, reg, 1, val);
 }
 
 static uint16_t Si5351a_WriteRegisters(uint8_t reg, uint8_t* val_p, uint32_t size)
 {
-	return 	MCHF_I2C_WriteBlock(SI5351A_I2C,SI5351_I2C_WRITE, reg, 1, val_p, size);
+	return 	UhsdrHw_I2C_WriteBlock(SI5351A_I2C,SI5351_I2C_WRITE, reg, 1, val_p, size);
 }
 
 
@@ -370,6 +370,8 @@ static void Si5351a_SetPPM(float32_t ppm)
 
 static Oscillator_ResultCodes_t Si5351a_PrepareNextFrequency(uint32_t freq, int temp_factor)
 {
+    UNUSED(temp_factor);
+
 #ifdef TEST_QUADRATURE
 	// TODO: Replace this with a proper configurable switch point, the current limit is the minimum frequency we can do 90 degree phase
 	si5351a_state.next.phasedOutput = freq > SI5351_MIN_FREQ_PHASE90;
@@ -422,6 +424,8 @@ const OscillatorInterface_t osc_si5351a =
 		.changeToNextFrequency = Si5351a_ChangeToNextFrequency,
 		.isNextStepLarge = Si5351a_IsNextStepLarge,
 		.readyForIrqCall = Si5351a_ReadyForIrqCall,
+        .name = "Si5351a",
+        .type = OSC_SI5351A,
 };
 
 void Si5351a_Init()
@@ -431,7 +435,7 @@ void Si5351a_Init()
 	si5351a_state.current.multisynth_divider = 0;
 	si5351a_state.next.multisynth_divider = 0;
 
-	si5351a_state.is_present = MCHF_I2C_DeviceReady(SI5351A_I2C,SI5351_I2C_WRITE) == HAL_OK;
+	si5351a_state.is_present = UhsdrHw_I2C_DeviceReady(SI5351A_I2C,SI5351_I2C_WRITE) == HAL_OK;
 
 	if (si5351a_state.is_present)
 	{

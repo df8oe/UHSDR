@@ -15,9 +15,8 @@
 				<Option projectDeviceOptionsRelation="0" />
 				<Compiler>
 					<Add option="-std=gnu11" />
-					<Add option="-O0" />
 					<Add option="-g2" />
-					<Add option="-mthumb" />
+					<Add option="-Og" />
 				</Compiler>
 				<Cpp>
 					<Add option="-std=gnu++11" />
@@ -37,6 +36,7 @@
 					<Add option="-ffunction-sections" />
 					<Add option="-O2" />
 					<Add option="-g2" />
+					<Add option="-Os" />
 				</Compiler>
 				<Linker>
 					<Add option="-eb_lib=n" />
@@ -75,7 +75,7 @@
 			</Target>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="ReleaseSmall;" />
+			<Add alias="All" targets="Release;" />
 		</VirtualTargets>
 		<Device>
 			<Add option="$device=cortex-m4" />
@@ -88,6 +88,8 @@
 			<Add option="-fdata-sections" />
 			<Add option="-ffunction-sections" />
 			<Add option="-Wno-unused-function" />
+			<Add option="-mthumb" />
+			<Add option="-flto" />
 			<Add symbol="ARM_MATH_CM4" />
 			<Add symbol="_GNU_SOURCE" />
 			<Add symbol="CORTEX_M4" />
@@ -98,6 +100,7 @@
 			<Add symbol="TRACE" />
 			<Add symbol="__FPU_PRESENT=1U" />
 			<Add symbol="BOOTLOADER_BUILD" />
+			<Add symbol="UI_BRD_MCHF" />
 			<Add directory="..\mchf-eclipse\basesw\mcHF\Inc" />
 			<Add directory="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Inc" />
 			<Add directory="..\mchf-eclipse\basesw\mcHF\Drivers\CMSIS\Include" />
@@ -134,6 +137,7 @@
 			<Add directory="..\mchf-eclipse\drivers\ui\encoder" />
 			<Add directory="..\mchf-eclipse\drivers\ui\menu" />
 			<Add directory="..\mchf-eclipse\drivers\usb\device\class\composite" />
+			<Add directory="..\mchf-eclipse\hardware\board_configs" />
 		</Compiler>
 		<Cpp>
 			<Add option="-mfloat-abi=hard" />
@@ -148,117 +152,217 @@
 			<Add option="-eb_start_files" />
 			<Add option="-Wl,--gc-sections" />
 			<Add option="-flto" />
-			<Add option="-lm" />
-			<Add option="-lc" />
-			<Add option="-lnosys" />
+			<Add option="--specs=nano.specs" />
+			<Add option="--specs=nosys.specs" />
 			<Add option="-T..\mchf-eclipse\linker\arm-gcc-link-bootloader_f4.ld" />
 			<Add option="-Xlinker" />
 			<Add option="--gc-sections" />
-			<Add option="-Llibs" />
 		</Linker>
-		<Unit filename="..\mchf-eclipse\linker\arm-gcc-link-bootloader_f4.ld" />
-		<Unit filename="..\mchf-eclipse\src\bootloader\bootloader_main.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\src\bootloader\command.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_adc.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\misc\config_storage.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_adc_ex.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\dac.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_can.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\diskio.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_cec.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\dma.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_cortex.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\misc\v_eprom\eeprom.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_crc.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\fatfs.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_cryp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\ff.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_cryp_ex.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\ff_gen_drv.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dac.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\src\bootloader\flash_if.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dac_ex.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\fsmc.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dcmi.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\gpio.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dcmi_ex.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\support\hex2dfu\hex2dfu.py" />
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\i2s.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dfsdm.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\main.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dma.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\Makefile" />
-		<Unit filename="..\mchf-eclipse\hardware\uhsdr_board.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dma2d.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\src\bootloader\uhsdr_boot_hw.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dma_ex.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\hardware\uhsdr_rtc.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dsi.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\misc\profiling.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_eth.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\rtc.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_flash.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\misc\serial_eeprom.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_flash_ex.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\spi.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_flash_ramfunc.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\..\mchf-eclipse\basesw\mcHF\Src\startup_stm32f407xx.S">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_fmpi2c.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\stm32f4xx_hal_msp.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_fmpi2c_ex.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\stm32f4xx_it.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_gpio.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\option\syscall.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_hash.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\system_stm32f4xx.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_hash_ex.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\ui\lcd\ui_lcd_hy28.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_hcd.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\ui\lcd\ui_lcd_hy28_fonts.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_i2c.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\option\unicode.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_i2c_ex.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\usb_host.c">
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_i2s.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_i2s_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_irda.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_iwdg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_lptim.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_ltdc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_ltdc_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_nand.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_nor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pccard.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pcd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pcd_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pwr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_pwr_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_qspi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rcc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rcc_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rng.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rtc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rtc_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sai.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sai_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sdram.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_smartcard.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_spdifrx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_spi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sram.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim_ex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_uart.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_usart.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_wwdg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_ll_fmc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_ll_fsmc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_ll_sdmmc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_ll_usb.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_core.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_ctlreq.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\drivers\usb\app\usbd_desc.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_ioreq.c">
@@ -268,18 +372,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\CDC\Src\usbh_cdc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\usbh_conf.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_core.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_ctlreq.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\drivers\usbh_diskio.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\HID\Src\usbh_hid.c">
@@ -292,9 +384,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\HID\Src\usbh_hid_parser.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_ioreq.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\MSC\Src\usbh_msc.c">
@@ -312,12 +401,126 @@
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Class\MTP\Src\usbh_mtp_ptp.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_core.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_ctlreq.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_ioreq.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\ST\STM32_USB_Host_Library\Core\Src\usbh_pipes.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\diskio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\drivers\usbh_diskio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\ff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\ff_gen_drv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\option\syscall.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Middlewares\Third_Party\FatFs\src\option\unicode.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\dac.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\dma.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\fatfs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\fsmc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\gpio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\i2s.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\rtc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\spi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\..\mchf-eclipse\basesw\mcHF\Src\startup_stm32f407xx.S">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\stm32f4xx_hal_msp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\stm32f4xx_it.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\system_stm32f4xx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\usb_host.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\usbh_conf.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="..\mchf-eclipse\basesw\mcHF\Src\user_diskio.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\ui\lcd\ui_lcd_hy28.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\ui\lcd\ui_lcd_hy28_fonts.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\drivers\usb\app\usbd_desc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\hardware\uhsdr_board.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\hardware\uhsdr_rtc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\linker\arm-gcc-link-bootloader_f4.ld" />
+		<Unit filename="..\mchf-eclipse\Makefile" />
+		<Unit filename="..\mchf-eclipse\misc\config_storage.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\misc\profiling.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\misc\serial_eeprom.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\misc\v_eprom\eeprom.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\src\bootloader\bootloader_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\src\bootloader\command.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\src\bootloader\flash_if.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\src\bootloader\uhsdr_boot_hw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\mchf-eclipse\support\hex2dfu\hex2dfu.py" />
 		<Extensions>
 			<code_completion />
 			<debugger />

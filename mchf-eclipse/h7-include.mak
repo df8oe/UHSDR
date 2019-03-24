@@ -7,7 +7,6 @@ basesw/ovi40-h7/Drivers/CMSIS/DSP/Include \
 basesw/ovi40-h7/Middlewares/ST/STM32_USB_Device_Library/Core/Inc \
 basesw/ovi40-h7/Middlewares/ST/STM32_USB_Host_Library/Class/AUDIO/Inc \
 basesw/ovi40-h7/Middlewares/ST/STM32_USB_Host_Library/Class/CDC/Inc \
-basesw/ovi40-h7/Middlewares/ST/STM32_USB_Host_Library/Class/HID/Inc \
 basesw/ovi40-h7/Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Inc \
 basesw/ovi40-h7/Middlewares/ST/STM32_USB_Host_Library/Class/MTP/Inc \
 basesw/ovi40-h7/Middlewares/ST/STM32_USB_Host_Library/Core/Inc \

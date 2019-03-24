@@ -42,10 +42,7 @@
 #include "cw_gen.h"
 #include "cat_driver.h"
 #include "ui_driver.h"
-
-// FIXME: will need to be changed to  "digimodes.h" later
-#include "rtty.h"
-
+#include "uhsdr_digi_buffer.h"
 
 // States
 #define CW_IDLE             0
@@ -94,7 +91,6 @@ typedef struct PaddleState
 
 	uint32_t   cw_char;
 	uint32_t   sending_char;
-
 } PaddleState;
 
 // Public paddle state
@@ -103,6 +99,7 @@ PaddleState  ps;
 static bool   CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static bool   CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong size);
 static void   CwGen_TestFirstPaddle();
+static void   CwGen_ResetBufferSending();
 
 #define CW_SPACE_CHAR		1
 
@@ -420,6 +417,9 @@ static void CwGen_SetBreakTime()
  */
 void CwGen_Init(void)
 {
+    // Init Soft DDS
+    float freq[2] = { 0.0, 0.0 };
+    softdds_configRunIQ(freq,ts.samp_rate,0);
 
 	CwGen_SetSpeed();
 
@@ -489,7 +489,7 @@ static void CwGen_RemoveClickOnFallingEdge(float *i_buffer,float *q_buffer,ulong
         ps.sm_tbl_ptr = (CW_SMOOTH_TBL_SIZE - 1);
     }
 
-    for(int i = 0,j = 0; i < size; i++) // iterate over the I&Q audio buffer elements
+    for( uint32_t i = 0,j = 0; i < size; i++) // iterate over the I&Q audio buffer elements
     {
         i_buffer[i] = i_buffer[i] * sm_table[ps.sm_tbl_ptr];
         q_buffer[i] = q_buffer[i] * sm_table[ps.sm_tbl_ptr];
@@ -506,7 +506,6 @@ static void CwGen_RemoveClickOnFallingEdge(float *i_buffer,float *q_buffer,ulong
         }
     }
 }
-
 
 /**
  * @brief Is the logically DIT pressed (may reverse logic of HW contacts)
@@ -562,10 +561,19 @@ uint32_t CwGen_ReverseCode(uint32_t code)
 	return result;
 }
 
+/*
+ * our lookup table has only UperCase letters,
+ * so convert every char from the buffer to UPER
+ */
+static inline uint8_t CwGen_TranslateToUperCase( uint8_t c )
+{
+    return ( c >= 'a' && c <= 'z' ) ? (c - 32) : c;
+}
+
 static void CwGen_CheckKeyerState(void)
 {
 	uint8_t c;
-	char prosign[2];
+//	char prosign[2];
 
 	if (CwGen_DahRequested())
 	{
@@ -577,62 +585,65 @@ static void CwGen_CheckKeyerState(void)
 		ps.port_state |= CW_DIT_L;
 	}
 
-	if (!ts.cw_text_entry && ps.cw_state == CW_IDLE)
+	if ( ps.cw_state == CW_IDLE )
 	{
-		if (ts.txrx_mode == TRX_MODE_TX && DigiModes_TxBufferHasData() && !ps.sending_char &&
-				(! (ps.port_state & CW_END_PROC) && ps.space_timer < ps.space_time - ps.dah_time))
-		{
-			DigiModes_TxBufferRemove(&c);
-			if (c=='<')
-			{
-				DigiModes_TxBufferRemove(&c);
-				prosign[0] = c;
-				DigiModes_TxBufferRemove(&c);
-				prosign[1] = c;
-				DigiModes_TxBufferRemove(&c);
-				if (c != '>') // Something is wrong - prosign not closed by matching >, better use space then
-				{
-					ps.sending_char = CW_SPACE_CHAR;
-				}
-				else
-				{
-					for (int i = 0; i<CW_SIGN_CODES; i++)
-					{
-						if (cw_sign_chars[i][0] == prosign[0] && cw_sign_chars[i][1] == prosign[1])
-						{
-							ps.sending_char = CwGen_ReverseCode(cw_sign_codes[i]);
-							break;
-						}
-					}
-				}
+        if ( !(ps.sending_char) && (! (ps.port_state & CW_END_PROC)
+                && ps.space_timer < ps.space_time - ps.dah_time))
+        {
+//FIXME Add handling sending prosigns, seems like we need to scan
+//      from cw_sign_onechar[] and send related value from cw_sign_codes[]
+//          if (c=='<')
+//          {
+//              DigiModes_TxBufferRemove(&c);
+//              prosign[0] = CwGen_TranslateToUperCase( c );
+//              DigiModes_TxBufferRemove(&c);
+//              prosign[1] = CwGen_TranslateToUperCase( c );
+//              DigiModes_TxBufferRemove(&c);
+//              if (c != '>') // Something is wrong - prosign not closed by matching >, better use space then
+//              {
+//                  ps.sending_char = CW_SPACE_CHAR;
+//              }
+//              else
+//              {
+//                  for (int i = 0; i<CW_SIGN_CODES; i++)
+//                  {
+//                      if (cw_sign_chars[i][0] == prosign[0] && cw_sign_chars[i][1] == prosign[1])
+//                      {
+//                          ps.sending_char = CwGen_ReverseCode(cw_sign_codes[i]);
+//                          break;
+//                      }
+//                  }
+//              }
+//
+//          }
+            if ( DigiModes_TxBufferRemove( &c, CW ))
+            {
+                c = CwGen_TranslateToUperCase( c );
+                for (int i = 0; i<CW_CHAR_CODES; i++)
+                {
+                    if (cw_char_chars[i] == c)
+                    {
+                      RadioManagement_Request_TxOn();
+                      ps.sending_char = CwGen_ReverseCode(cw_char_codes[i]);
+                      break;
+                    }
+                }
+            }
+        }
 
-			}
-			else
-			{
-				for (int i = 0; i<CW_CHAR_CODES; i++)
-				{
-					if (cw_char_chars[i] == c)
-					{
-						ps.sending_char = CwGen_ReverseCode(cw_char_codes[i]);
-						break;
-					}
-				}
-			}
-		}
-
-		if (ps.sending_char > CW_SPACE_CHAR) // 1 is space
-		{
-			if (ps.sending_char % 4 == 3)
-			{
-				ps.port_state |= CW_DAH_L;
-			}
-			else
-			{
-				ps.port_state |= CW_DIT_L;
-			}
-			ps.sending_char /= 4;
-		}
-	}
+        if (ps.sending_char > CW_SPACE_CHAR) // 1 is space
+        {
+          if (ps.sending_char % 4 == 3)
+          {
+              ps.port_state |= CW_DAH_L;
+          }
+          else
+          {
+              ps.port_state |= CW_DIT_L;
+          }
+          ps.sending_char /= 4;
+        }
+    }
 }
 
 /**
@@ -642,7 +653,6 @@ static void CwGen_CheckKeyerState(void)
 bool CwGen_Process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
 	bool retval;
-
 
 	if(ts.cw_keyer_mode == CW_KEYER_MODE_STRAIGHT || CatDriver_CatPttActive())
 	{
@@ -660,7 +670,6 @@ bool CwGen_Process(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 	}
 	return retval;
 }
-
 
 static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulong blockSize)
 {
@@ -689,9 +698,7 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 	}
 	else
 	{
-
 		softdds_runIQ(i_buffer,q_buffer,blockSize);
-
 		// ----------------------------------------------------------------
 		// Raising slope
 		//
@@ -709,12 +716,10 @@ static bool CwGen_ProcessStraightKey(float32_t *i_buffer,float32_t *q_buffer,ulo
 				ps.key_timer = 2;	// at end of rising edge change to constant signal phase
 			}
 		}
-
 		// -----------------------------------------------------------------
 		// Middle of a symbol - no shaping, just
 		// pass soft DDS data (key_timer = 2)
 		// ..................
-
 		// -----------------------------------------------------------------
 		// Failing edge
 		//
@@ -793,59 +798,38 @@ uint8_t CwGen_CharacterIdFunc(uint32_t code)
 	return out;
 }
 
-
-// FIXME: HACK RTTY
-#include "radio_management.h"
-
-void CwGen_AddChar(ulong code)
+/*
+ * Pushed proper char into digi_buffer.
+ */
+static void CwGen_AddChar( uint32_t code )
 {
 	char result = '*';
 	// need to use a character which is both in morse and rtty
 
-	for (int i = 0; i<CW_CHAR_CODES; i++)
+	for ( uint32_t i = 0; i < CW_CHAR_CODES; i++ )
 	{
-		if (cw_char_codes[i] == code) {
+		if ( cw_char_codes[i] == code )
+		{
 			result = cw_char_chars[i];
-
-			// FIXME: HACK HACK FOR RTTY TX TESTING
-			// We can use the same buffer for all digimodes
-			if ((ts.txrx_mode == TRX_MODE_TX && is_demod_rtty()) || ts.cw_text_entry) // Can rtty rely just on cw_text_entry here?
-			{
-				DigiModes_TxBufferPutChar(result);
-			}
-			// HACK END
-
+            DigiModes_TxBufferPutChar( result, CW );
 			break;
 		}
 	}
 
-	if (result != '*')
+	if ( result == '*' )
 	{
-		UiDriver_TextMsgPutChar(result);
-	}
-	else
-	{
-		for (int i = 0; i<CW_SIGN_CODES; i++)
+		for ( uint32_t i = 0; i < CW_SIGN_CODES; i++ )
 		{
-			if (cw_sign_codes[i] == code) {
+			if (cw_sign_codes[i] == code)
+			{
 				result = '-';
-
-				UiDriver_TextMsgPutSign(cw_sign_chars[i]);
-
-				// FIXME: HACK HACK FOR RTTY TX TESTING
-				// We can use the same buffer for all digimodes
-				if ((ts.txrx_mode == TRX_MODE_TX && is_demod_rtty()) || ts.cw_text_entry) // Can rtty rely just on cw_text_entry here?
-				{
-					DigiModes_TxBufferPutSign(cw_sign_chars[i]);
-				}
-				// HACK END
-
+                DigiModes_TxBufferPutSign( cw_sign_chars[i], CW );
 				break;
 			}
 		}
-		if (result == '*')
+		if ( result == '*' )
 		{
-			UiDriver_TextMsgPutChar('*');
+		    DigiModes_TxBufferPutChar( '*', CW );
 		}
 	}
 
@@ -871,10 +855,10 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 
 			CwGen_CheckKeyerState();
 			// at least one paddle is still or has been recently pressed
-			if( (Board_DitLinePressed() || Board_PttDahLinePressed() || (ps.port_state & (CW_DAH_L|CW_DIT_L)))
-					&& (ts.txrx_mode == TRX_MODE_TX || ts.cw_text_entry))
+			if( ps.port_state & ( CW_DAH_L | CW_DIT_L ))
 			{
-				ps.cw_state = CW_WAIT;		// Note if Dit/Dah is discriminated in this function, it breaks the Iambic-ness!
+			    // Note if Dit/Dah is discriminated in this function, it breaks the Iambic-ness!
+				ps.cw_state = CW_WAIT;
 				rerunStateMachine = true;
 			}
 			else
@@ -898,7 +882,7 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 					}
 				}
 
-				if (ps.break_timer > 0 && !ps.sending_char && !DigiModes_TxBufferHasData())
+				if (ps.break_timer > 0 && !ps.sending_char /*&& !DigiModes_TxBufferHasData()*/)
 				{
 					if (--ps.break_timer == 0)
 					{
@@ -910,11 +894,17 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 			}
 		}
 		break;
-		case CW_WAIT:		// This is an extra state called after detection of an element to allow the other state machines to settle.
+		// This is an extra state called after detection of an element to
+		// allow the other state machines to settle.
+		case CW_WAIT:
 		{
-			// It is NECESSARY to eliminate a "glitch" at the beginning of the first Iambic Morse DIT element in a string!
-			ps.cw_state = CW_DIT_CHECK;
-			rerunStateMachine = true;
+			// It is NECESSARY to eliminate a "glitch" at the beginning of the
+		    // first Iambic Morse DIT element in a string!
+		    if ( ts.txrx_mode == TRX_MODE_TX || ts.cw_text_entry )
+		    {
+                ps.cw_state = CW_DIT_CHECK;
+                rerunStateMachine = true;
+		    }
 		}
 		break;
 		case CW_DIT_CHECK:
@@ -1028,18 +1018,17 @@ static bool CwGen_ProcessIambic(float32_t *i_buffer,float32_t *q_buffer,ulong bl
 				else
 				{
 					CwGen_TestFirstPaddle();
-					//			if(cw_dah_requested() && ps.ultim == 0)
-						if((ps.port_state & CW_DAH_L) && ps.ultim == 0)
-						{
-							ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
-							ps.cw_state   = CW_DAH_CHECK;
-						}
-						else
-						{
-							ps.port_state &= ~(CW_DAH_L);
-							CwGen_SetBreakTime();
-							ps.cw_state    = CW_IDLE;
-						}
+                    if((ps.port_state & CW_DAH_L) && ps.ultim == 0)
+                    {
+                        ps.port_state &= ~(CW_DIT_L + CW_DIT_PROC);
+                        ps.cw_state   = CW_DAH_CHECK;
+                    }
+                    else
+                    {
+                        ps.port_state &= ~(CW_DAH_L);
+                        CwGen_SetBreakTime();
+                        ps.cw_state    = CW_IDLE;
+                    }
 				}
 				rerunStateMachine = true;
 			}
@@ -1097,7 +1086,6 @@ void CwGen_DahIRQ(void)
 	{
 		CwGen_TestFirstPaddle();
 	}
-
 }
 
 /**
@@ -1112,5 +1100,4 @@ void CwGen_DitIRQ(void)
 	{
 		CwGen_TestFirstPaddle();
 	}
-
 }

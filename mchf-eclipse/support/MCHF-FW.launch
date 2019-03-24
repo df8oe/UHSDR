@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="ilg.gnumcueclipse.debug.gdbjtag.openocd.launchConfigurationType">
 <stringAttribute key="bad_container_name" value="\mchf-eclipse\supp"/>
-<stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.PERIPHERALS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;peripherals&gt;&#13;&#10;&lt;peripheral name=&quot;GPIOA&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;OTG_FS_DEVICE&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;OTG_FS_GLOBAL&quot;/&gt;&#13;&#10;&lt;/peripherals&gt;&#13;&#10;"/>
+<stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.PERIPHERALS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;peripherals&gt;&#13;&#10;&lt;peripheral name=&quot;GPIOA&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;OTG_FS_DEVICE&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;OTG_FS_GLOBAL&quot;/&gt;&#13;&#10;&lt;peripheral name=&quot;DMA1&quot;/&gt;&#13;&#10;&lt;/peripherals&gt;&#13;&#10;"/>
 <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doContinue" value="true"/>
 <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doDebugInRam" value="false"/>
 <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doFirstReset" value="true"/>
 <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doGdbServerAllocateConsole" value="true"/>
 <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doGdbServerAllocateTelnetConsole" value="false"/>
 <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doSecondReset" value="true"/>
+<booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doStartGdbCLient" value="true"/>
 <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.doStartGdbServer" value="true"/>
 <booleanAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.enableSemihosting" value="true"/>
 <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.firstResetType" value="init"/>
@@ -18,10 +19,12 @@
 <intAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbServerGdbPortNumber" value="3333"/>
 <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbServerLog" value=""/>
 <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbServerOther" value="-f support/MCHF.cfg"/>
+<stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbServerTclPortNumber" value="6666"/>
 <intAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.gdbServerTelnetPortNumber" value="4444"/>
 <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.otherInitCommands" value=""/>
 <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.otherRunCommands" value=""/>
 <stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.openocd.secondResetType" value="halt"/>
+<stringAttribute key="ilg.gnumcueclipse.debug.gdbjtag.svdPath" value=""/>
 <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.imageFileName" value=""/>
 <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.imageOffset" value=""/>
 <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.ipAddress" value="localhost"/>
@@ -62,7 +65,7 @@
 <listAttribute key="org.eclipse.debug.ui.favoriteGroups">
 <listEntry value="org.eclipse.debug.ui.launchGroup.debug"/>
 </listAttribute>
-<stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;Context string&quot;&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134283264&quot; label=&quot;0x8010000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134217728&quot; label=&quot;0x8000000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;537001984&quot; label=&quot;0x20020000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;537001984&quot; label=&quot;0x20020000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;536870912&quot; label=&quot;0x20000000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;537001984&quot; label=&quot;0x20020000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;536973808&quot; label=&quot;0x200191F0&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;536910408&quot; label=&quot;0x20009a48&quot;/&gt;&#13;&#10;&lt;/memoryBlockExpressionList&gt;&#13;&#10;"/>
+<stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;Context string&quot;&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134283264&quot; label=&quot;0x8010000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;134217728&quot; label=&quot;0x8000000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;537001984&quot; label=&quot;0x20020000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;537001984&quot; label=&quot;0x20020000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;536870912&quot; label=&quot;0x20000000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;537001984&quot; label=&quot;0x20020000&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;536973808&quot; label=&quot;0x200191F0&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;536910408&quot; label=&quot;0x20009a48&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;536892944&quot; label=&quot;0x20005610&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;536893456&quot; label=&quot;0x20005810&quot;/&gt;&#13;&#10;&lt;memoryBlockExpression address=&quot;536893196&quot; label=&quot;0x2000570C&quot;/&gt;&#13;&#10;&lt;/memoryBlockExpressionList&gt;&#13;&#10;"/>
 <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
-<stringAttribute key="saved_expressions&lt;seperator&gt;Unknown" value="0x80008000,0x8008000,0x800C000,0x200089b8,0x200189b8,0x2001F000,0x200089ac,0x20017F3C                                                                                                                                &lt;..,0x20017F3C                                                                                                                          &lt;..,0x20017F3C,0x20000000,0x200000000,0x200017F3C,0x20020000,0x200089b0"/>
+<stringAttribute key="saved_expressions&lt;seperator&gt;Unknown" value="0x8008000,0x800C000,0x200089b8,0x200189b8,0x2001F000,0x200089ac,0x20017F3C                                                                                                                                &lt;..,0x20017F3C                                                                                                                          &lt;..,0x20017F3C,0x20000000,0x200000000,0x200017F3C,0x20020000,0x200089b0,0x20005610"/>
 </launchConfiguration>

@@ -36,7 +36,7 @@
 
 /* General defines */
 
-#define N_S        0.010        /* buffer size in s                     */
+#define N_S        0.01         /* internal proc frame length in secs   */
 #define TW_S       0.005        /* trapezoidal synth window overlap     */
 #define MAX_AMP    160		/* maximum number of harmonics          */
 #ifndef PI
@@ -109,5 +109,13 @@ extern const struct lsp_codebook ge_cb[];
 extern const struct lsp_codebook lspmelvq_cb[];
 extern const struct lsp_codebook newamp1vq_cb[];
 extern const struct lsp_codebook newamp1_energy_cb[];
+extern const struct lsp_codebook newamp2vq_cb[];
+extern const struct lsp_codebook newamp2_energy_cb[];
+
+#ifdef _GNU_SOURCE
+    #define POW10F(x) exp10f((x))
+#else
+    #define POW10F(x) expf(2.302585092994046f*(x))
+#endif
 
 #endif

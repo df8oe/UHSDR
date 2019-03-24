@@ -118,6 +118,25 @@ void softdds_addSingleTone(soft_dds_t* dds_ptr, float32_t* buffer, const size_t 
     }
 }
 
+/**
+ * Overlays an audio stream with a beep signal
+ * @param dds The previously initialized dds configuration
+ * @param buffer1 audio buffer of blockSize (mono/single channel) samples
+ * @param buffer2 audio buffer of blockSize (mono/single channel) samples
+ * @param blockSize
+ * @param scaling scale the resulting sine wave with this factor
+ */
+
+void softdds_addSingleToneToTwobuffers(soft_dds_t* dds_ptr, float32_t* buffer1, float32_t* buffer2, const size_t blockSize, float32_t scaling)
+{
+    float32_t Tone;
+    for(int i=0; i < blockSize; i++)                            // transfer to DMA buffer and do conversion to INT
+    {
+        Tone=(float32_t) softdds_nextSample(dds_ptr) * scaling; // load indexed sine wave value, adding it to audio, scaling the amplitude and putting it on "b" - speaker (ONLY)
+        buffer1[i] += Tone;
+        buffer2[i] += Tone;
+    }
+}
 
 /*
  * Generates the sinus frequencies as IQ data stream

@@ -63,7 +63,7 @@ static void RTC_LSE_Config() {
 
 }
 
-void MchfRtc_FullReset() {
+void Rtc_FullReset() {
     __HAL_RCC_BACKUPRESET_FORCE();
 }
 #if 0
@@ -92,7 +92,7 @@ static void RTC_LSI_Config() {
 }
 #endif
 
-static void MchfRtc_StartInternal(bool doClock)
+static void Rtc_StartInternal(bool doClock)
 {
 
 
@@ -114,13 +114,13 @@ static void MchfRtc_StartInternal(bool doClock)
 }
 
 
-void MchfRtc_Start()
+void Rtc_Start()
 {
-    MchfRtc_StartInternal(true);
+    Rtc_StartInternal(true);
 }
 
 #endif
-bool MchfRtc_enabled()
+bool Rtc_isEnabled()
 {
     bool retval = false;
 #ifdef USE_RTC_LSE
@@ -165,7 +165,7 @@ bool MchfRtc_enabled()
     return retval;
 }
 
-bool MchfRtc_SetPpm(int16_t ppm)
+bool Rtc_SetPpm(int16_t ppm)
 {
     bool retval = false;
     if (ppm >= RTC_CALIB_PPM_MIN && ppm <= RTC_CALIB_PPM_MAX)
@@ -212,11 +212,13 @@ bool MchfRtc_SetPpm(int16_t ppm)
   * @retval HAL status
   */
 
-uint32_t dr_dummy;
+// we need this to keep the compiler happy and keep the read of the DR
+static volatile uint32_t dr_dummy ;
 
-void MchfRtc_GetTime(RTC_HandleTypeDef *hrtc, RTC_TimeTypeDef *sTime, uint32_t Format)
+void Rtc_GetTime(RTC_HandleTypeDef *hrtc, RTC_TimeTypeDef *sTime, uint32_t Format)
 {
   uint32_t tmpreg = 0U;
+
 
   /* Check the parameters */
   assert_param(IS_RTC_FORMAT(Format));

@@ -1,7 +1,4 @@
-org.eclipse.cdt.core.prefs
-org.eclipse.cdt.ui.prefs
-org.eclipse.core.resources.prefs
-org.eclipse.mylyn.tasks.ui.prefs
-org.eclipse.cdt.managedbuilder.core.prefs
-language.settings.xml
-ilg.gnumcueclipse.debug.gdbjtag.openocd.prefs
+**
+!UHSDR_Eclipse_formatting_settings.xml
+!org.eclipse.cdt.core.prefs
+!org.eclipse.cdt.ui.prefs

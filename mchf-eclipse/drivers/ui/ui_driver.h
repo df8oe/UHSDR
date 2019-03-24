@@ -242,9 +242,14 @@ uint32_t UiDriver_GetActiveDSPFunctions();
 void UiDriver_UpdateDSPmode(uint8_t new_dsp_mode);
 bool UiDriver_CheckTouchRegion(const UiArea_t* tr_p);
 
+uint32_t UiDriver_GetNBColor();
+
 void UiDriver_InitBandSet();
 void UiDriver_UpdateBand(uint16_t vfo_sel, uint8_t curr_band_index, uint8_t new_band_index);
-//
+
+
+void UiDriver_Callback_AudioISR();
+
 // Items that are timed using ts.sysclock (operates at 100 Hz)
 //
 #define	DSP_STARTUP_DELAY					350		// Delay, in 100ths of seconds, after startup, before allowing DSP NR or Notch to be enabled.

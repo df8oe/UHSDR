@@ -220,6 +220,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLN = 432; //270;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 9;
+  RCC_OscInitStruct.PLL.PLLR = 2; // we have to set this to keep an assert in HAL_RCC_OscConfig from failing
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -342,6 +343,7 @@ void assert_failed(uint8_t* file, uint32_t line)
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+    for(;;); // We stuck here as long as we do not have any debug interface...
   /* USER CODE END 6 */
 
 }

@@ -403,7 +403,7 @@ void UiMenu_MoveCursor(uint32_t newpos)
 }
 
 
-static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
+static void UiMenu_UpdateHWInfoLines(uchar index, MenuProcessingMode_t mode, int pos)
 {
     uint32_t m_clr;
     const char* outs = UiMenu_GetSystemInfo(&m_clr, index);
@@ -416,7 +416,7 @@ static void UiMenu_UpdateHWInfoLines(uchar index, uchar mode, int pos)
  * @param mode 0=display/update 1=change item 3=set default
  * @param pos (0-5) use this line as position
  */
-static void UiMenu_UpdateLines(uint16_t select, uint16_t mode, int pos)
+static void UiMenu_UpdateLines(uint16_t select, MenuProcessingMode_t mode, int pos)
 {
     char options[32];
     const char* txt_ptr = NULL; // if filled, we use this string for display, otherwise options
@@ -454,7 +454,7 @@ static void UiMenu_UpdateLines(uint16_t select, uint16_t mode, int pos)
 /*
  * Render a menu entry on a given menu position
  */
-void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos)
+void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, MenuProcessingMode_t mode, uint8_t pos)
 {
     uint32_t  m_clr;
     m_clr = Yellow;
@@ -523,7 +523,7 @@ void UiMenu_UpdateMenuEntry(const MenuDescriptor* entry, uchar mode, uint8_t pos
                     for (idx = pos+1; idx < ts.Layout->MENUSIZE; idx++)
                     {
                         UiMenu_FillSlotWithEntry(&menu[idx],UiMenu_NextMenuEntry(menu[idx-1].entryItem));
-                        UiMenu_UpdateMenuEntry(menu[idx].entryItem, 0, idx);
+                        UiMenu_UpdateMenuEntry(menu[idx].entryItem, MENU_RENDER_ONLY, idx);
                     }
                 }
                 ts.menu_var = 0;
@@ -654,7 +654,7 @@ bool UiMenu_DisplayMoveSlotsForward(int16_t change)
  * @param mode   0=show all, 1=update current item, 3=restore default setting for selected item
  *
  */
-void UiMenu_RenderMenu(uint16_t mode)
+void UiMenu_RenderMenu(MenuProcessingMode_t mode)
 {
     if (init_done == false )
     {

@@ -15,6 +15,7 @@
 #ifndef __MCHF_TYPES_H
 #define __MCHF_TYPES_H
 
+#include <stdint.h>
 #include "arm_math.h"
 // defines float32_t
 
@@ -50,5 +51,13 @@ typedef struct {
     float32_t i;
     float32_t q;
 } iq_float_t;
+
+typedef enum {
+    IQ_TRANS_OFF = 0,
+    IQ_TRANS_ON,
+    IQ_TRANS_NUM
+} iq_trans_idx_t;
+
+
 
 #endif

@@ -46,6 +46,7 @@
 #include "audio_driver.h"
 #include "rtty.h"
 #include "cw_gen.h"
+#include <stdio.h>
 
 Goertzel cw_goertzel;
 
@@ -65,7 +66,7 @@ cw_config_t cw_decoder_config =
 
 static void CW_Decode(void);
 
-void CwDecode_FilterInit()
+void CwDecode_Filter_Set()
 {
 	// set Goertzel parameters for CW decoding
 	AudioFilter_CalcGoertzel(&cw_goertzel, ts.cw_sidetone_freq , // cw_decoder_config.target_freq,

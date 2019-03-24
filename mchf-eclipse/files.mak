@@ -1,10 +1,12 @@
 SRC := \
 src/uhsdr_main.c \
-misc/v_eprom/eeprom.c \
+misc/v_eprom/uhsdr_flash.c \
 misc/config_storage.c \
 misc/TestCPlusPlusBuild.cpp \
 misc/profiling.c \
 misc/serial_eeprom.c \
+misc/uhsdr_canary.c \
+misc/uhsdr_math.c \
 hardware/uhsdr_board.c \
 hardware/uhsdr_hw_i2c.c \
 hardware/uhsdr_hmc1023.c \
@@ -14,6 +16,10 @@ drivers/usb/device/class/composite/usbd_composite.c \
 drivers/usb/device/class/composite/usbd_composite_desc.c \
 drivers/usb/device/class/CDC/Src/usbd_cdc.c \
 drivers/usb/device/class/AUDIO/Src/usbd_audio_cdc_comp.c \
+drivers/usb/host/class/HID/Src/usbh_hid.c \
+drivers/usb/host/class/HID/Src/usbh_hid_keybd.c \
+drivers/usb/host/class/HID/Src/usbh_hid_mouse.c \
+drivers/usb/host/class/HID/Src/usbh_hid_parser.c \
 drivers/usb/app/usb_device.c \
 drivers/usb/app/usbd_audio_if.c \
 drivers/usb/app/usbd_cdc_if.c \
@@ -43,6 +49,8 @@ drivers/freedv/codebooklspmelvq.c \
 drivers/freedv/codebookmel.c \
 drivers/freedv/codebooknewamp1.c \
 drivers/freedv/codebooknewamp1_energy.c \
+drivers/freedv/codebooknewamp2.c \
+drivers/freedv/codebooknewamp2_energy.c \
 drivers/freedv/codebookres.c \
 drivers/freedv/codebookvq.c \
 drivers/freedv/codebookvqanssi.c \
@@ -52,7 +60,7 @@ drivers/freedv/cohpsk.c \
 drivers/freedv/dct2.c \
 drivers/freedv/dump.c \
 drivers/freedv/fdmdv.c \
-drivers/freedv/fifo.c \
+drivers/freedv/filter.c \
 drivers/freedv/fm.c \
 drivers/freedv/fmfsk.c \
 drivers/freedv/freedv_api.c \
@@ -61,6 +69,8 @@ drivers/freedv/freedv_vhf_framing.c \
 drivers/freedv/fsk.c \
 drivers/freedv/golay23.c \
 drivers/freedv/gp_interleaver.c \
+drivers/freedv/HRA_112_112.c \
+drivers/freedv/HRAb_396_504.c \
 drivers/freedv/interp.c \
 drivers/freedv/interldpc.c \
 drivers/freedv/kiss_fft.c \
@@ -72,11 +82,12 @@ drivers/freedv/mbest.c \
 drivers/freedv/modem_stats.c \
 drivers/freedv/mpdecode_core.c \
 drivers/freedv/newamp1.c \
+drivers/freedv/newamp2.c \
 drivers/freedv/nlp.c \
-drivers/freedv/octave.c \
 drivers/freedv/ofdm.c \
 drivers/freedv/pack.c \
 drivers/freedv/phase.c \
+drivers/freedv/phi0.c \
 drivers/freedv/postfilter.c \
 drivers/freedv/quantise.c \
 drivers/freedv/sine.c \
@@ -128,10 +139,12 @@ drivers/audio/filters/iir_antialias.c \
 drivers/audio/filters/iq_rx_filter.c \
 drivers/audio/filters/iq_rx_filter_am.c \
 drivers/audio/filters/iq_tx_filter.c \
+drivers/audio/cw/uhsdr_digi_buffer.c \
 drivers/audio/cw/cw_gen.c \
 drivers/audio/cw/cw_decoder.c \
 drivers/audio/codec/codec.c \
 drivers/audio/codec/uhsdr_hw_i2s.c \
+drivers/audio/audio_agc.c \
 drivers/audio/audio_driver.c \
 drivers/audio/audio_filter.c \
 drivers/audio/audio_convolution.c \
@@ -142,5 +155,7 @@ drivers/audio/freedv_test_data.c \
 drivers/audio/freq_shift.c \
 drivers/audio/rtty.c \
 drivers/audio/psk.c \
+drivers/audio/rb.c \
+drivers/audio/tx_processor.c \
 drivers/ui/lcd/ui_lcd_layouts.c \
 drivers/ui/ui_vkeybrd.c \

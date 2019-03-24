@@ -45,6 +45,7 @@
 #include "usbd_audio_if.h"
 /* USER CODE BEGIN INCLUDE */
 #include "uhsdr_board.h"
+#include "audio_driver.h"
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -209,20 +210,25 @@ static void audio_out_buffer_pop_pkt(volatile int16_t* ptr, uint32_t len)
     }
 }
 
-/* len is length in 16 bit samples */
-void audio_out_fill_tx_buffer(int16_t *buffer, uint32_t len)
+/* len is length in  stereo  samples */
+void UsbdAudio_FillTxBuffer(AudioSample_t *buffer, uint32_t len)
 {
-    volatile int16_t *pkt = audio_out_buffer_next_pkt(len);
+    volatile int16_t *pkt = audio_out_buffer_next_pkt(2*len);
 
     static uint16_t fill_buffer = 1;
     if (fill_buffer == 0 && pkt)
     {
-        uint32_t idx;
-        for (idx = len; idx; idx--)
+        for (uint32_t idx = len; idx; idx--)
         {
-            *buffer++ = *pkt++;
+            // the purpose is to place the USB input exactly as the I2S does
+            // which is weird if on F4 and 32 Bit transfers are done. (mixed endian)
+            // for all other systems we scale 16bit USB audio to 32bit
+            // on 16 bit audio nothing at  all happens here.
+            buffer->l = I2S_Int16_2_AudioSample(*pkt++);
+            buffer->r = I2S_Int16_2_AudioSample(*pkt++);
+            buffer++;
         }
-        audio_out_buffer_pop_pkt(pkt,len);
+        audio_out_buffer_pop_pkt(pkt,2*len);
     }
     else
     {
@@ -236,10 +242,11 @@ void audio_out_fill_tx_buffer(int16_t *buffer, uint32_t len)
             fill_buffer = 0;
         }
         // Deliver silence if not enough data is stored in buffer
-        // TODO: Make this more efficient by providing 4byte aligned buffers only (and requesting len in 4 byte increments)
-        for (; len; len--)
+        for (uint32_t idx = len; idx; idx--)
         {
-            *buffer++=0;
+            buffer->l = 0;
+            buffer->r = 0;
+            buffer++;
         }
     }
 }
@@ -327,7 +334,8 @@ static int8_t AUDIO_AudioCmd_FS (uint8_t* pbuf, uint32_t size, uint8_t cmd)
         {
 
 
-            if (ts.txrx_mode == TRX_MODE_TX)
+            if ((ts.txrx_mode == TRX_MODE_RX && (ts.rx_iq_source == RX_IQ_DIG || ts.rx_iq_source == RX_IQ_DIGIQ))
+                || (ts.txrx_mode == TRX_MODE_TX && (ts.tx_audio_source == TX_AUDIO_DIG || ts.tx_audio_source == TX_AUDIO_DIGIQ)))
             {
                 uint16_t* pkt = (uint16_t*)pbuf;
                 uint32_t count;

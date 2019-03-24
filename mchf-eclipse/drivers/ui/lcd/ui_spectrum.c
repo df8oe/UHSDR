@@ -26,7 +26,7 @@
 #include "cw_decoder.h"
 #include "audio_nr.h"
 #include "psk.h"
-
+#include "uhsdr_math.h"
 /*
 #if defined(USE_DISP_480_320) || defined(USE_EXPERIMENTAL_MULTIRES)
 #define USE_DISP_480_320_SPEC
@@ -284,7 +284,7 @@ static void UiSpectrum_UpdateSpectrumPixelParameters()
         old_digital_mode = ts.digital_mode;
         old_rtty_shift = rtty_ctrl_config.shift_idx;
 
-        float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())/TUNE_MULT))/sd.hz_per_pixel;
+        float32_t tx_vfo_offset = ((float32_t)(((int32_t)RadioManagement_GetTXDialFrequency() - (int32_t)RadioManagement_GetRXDialFrequency())))/sd.hz_per_pixel;
 
         // FIXME: DOES NOT WORK PROPERLY IN SPLIT MODE
         sd.marker_num_prev = sd.marker_num;
@@ -1257,7 +1257,7 @@ static void UiSpectrum_DrawWaterfall()
 
 static float32_t  UiSpectrum_ScaleFFTValue(const float32_t value, float32_t* min_p)
 {
-    float32_t sig = sd.display_offset + log10f_fast(value) * sd.db_scale;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
+    float32_t sig = sd.display_offset + Math_log10f_fast(value) * sd.db_scale;     // take FFT data, do a log10 and multiply it to scale 10dB (fixed)
     // apply "AGC", vertical "sliding" offset (or brightness for waterfall)
 
     if (sig < *min_p)
@@ -1392,33 +1392,33 @@ static void UiSpectrum_RedrawSpectrum()
 
         // just for debugging purposes
         // display the spectral noise reduction bin gain values in the second 64 pixels of the spectrum display
-        if((ts.dsp_active & DSP_NR_ENABLE) && NR.gain_display != 0)
+        if((is_dsp_nr()) && ts.nr_gain_display != 0)
         {
-        	if(NR.gain_display == 1)
+        	if(ts.nr_gain_display == 1)
         	{
-        	for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
+        	for(int bindx = 0; bindx < nr_params.NR_FFT_L / 2; bindx++)
         	{
-        		sd.FFT_MagData[(ts.NR_FFT_L / 2 - 1) - bindx] = NR.Hk[bindx] * 150.0;
+        		sd.FFT_MagData[(nr_params.NR_FFT_L / 2 - 1) - bindx] = NR2.Hk[bindx] * 150.0;
         	}
         	}
         	/*        	else
-        	if(NR.gain_display == 2)
+        	if(ts.nr_gain_display == 2)
         	{
-            	for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
+            	for(int bindx = 0; bindx < nr_params.NR_FFT_L / 2; bindx++)
             	{
-            		sd.FFT_MagData[(ts.NR_FFT_L / 2 - 1) - bindx] = NR2.long_tone_gain[bindx] * 150.0;
+            		sd.FFT_MagData[(nr_params.NR_FFT_L / 2 - 1) - bindx] = NR2.long_tone_gain[bindx] * 150.0;
             	}
         	}
         	else
-        	if(NR.gain_display == 3)
+        	if(ts.nr_gain_display == 3)
         	{
-            	for(int bindx = 0; bindx < ts.NR_FFT_L / 2; bindx++)
+            	for(int bindx = 0; bindx < nr_params.NR_FFT_L / 2; bindx++)
             	{
-            		sd.FFT_MagData[(ts.NR_FFT_L / 2 - 1) - bindx] = NR.Hk[bindx] * NR2.long_tone_gain[bindx] * 150.0;
+            		sd.FFT_MagData[(nr_params.NR_FFT_L / 2 - 1) - bindx] = NR.Hk[bindx] * NR2.long_tone_gain[bindx] * 150.0;
             	}
         	} */
         	// set all other pixels to a low value
-        	for(int bindx = ts.NR_FFT_L / 2; bindx < sd.spec_len; bindx++)
+        	for(int bindx = nr_params.NR_FFT_L / 2; bindx < sd.spec_len; bindx++)
         	{
         		sd.FFT_MagData[bindx] = 10.0;
         	}
@@ -1661,7 +1661,7 @@ static void UiSpectrum_DrawFrequencyBar()
         uint32_t  clr;
         UiMenu_MapColors(ts.spectrum_freqscale_colour,NULL, &clr);
 
-        float32_t freq_calc = (RadioManagement_GetRXDialFrequency() + (ts.dmod_mode == DEMOD_CW?RadioManagement_GetCWDialOffset():0))/TUNE_MULT;      // get current tune frequency in Hz
+        float32_t freq_calc = RadioManagement_GetRXDialFrequency() + (ts.dmod_mode == DEMOD_CW ? RadioManagement_GetCWDialOffset() : 0 );      // get current tune frequency in Hz
 
         if (sd.magnify == 0)
         {
@@ -1888,28 +1888,28 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
 		// in the CW decoder section
 		// OR if we are in AM/SAM/Digi BPSK mode
 	{
-		static float32_t freq_old = 10000000.0;
-	float32_t help_freq = (float32_t)df.tune_old / ((float32_t)TUNE_MULT);
-	// 1. lowpass filter all the relevant bins over 2 to 20 FFTs (?)
-	// lowpass filtering already exists in the spectrum/waterfall display driver
+	    static float32_t freq_old = 10000000.0;
+	    float32_t help_freq = df.tune_old;
+	    // 1. lowpass filter all the relevant bins over 2 to 20 FFTs (?)
+	    // lowpass filtering already exists in the spectrum/waterfall display driver
 
-// 2. determine bin with maximum value inside these samples
+	    // 2. determine bin with maximum value inside these samples
 
-    // look for maximum value and save the bin # for frequency delta calculation
-    float32_t maximum = 0.0;
-    float32_t maxbin = 1.0;
-    float32_t delta1 = 0.0;
-    float32_t delta2 = 0.0;
-    float32_t delta = 0.0;
+	    // look for maximum value and save the bin # for frequency delta calculation
+	    float32_t maximum = 0.0;
+	    float32_t maxbin = 1.0;
+	    float32_t delta1 = 0.0;
+	    float32_t delta2 = 0.0;
+	    float32_t delta = 0.0;
 
-    for (int c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
-    {
-        if (maximum < sd.FFT_Samples[c])
-        {
-            maximum = sd.FFT_Samples[c];
-            maxbin = c;
-        }
-    }
+	    for (int c = (int)Lbin; c <= (int)Ubin; c++)   // search for FFT bin with highest value = carrier and save the no. of the bin in maxbin
+	    {
+	        if (maximum < sd.FFT_Samples[c])
+	        {
+	            maximum = sd.FFT_Samples[c];
+	            maxbin = c;
+	        }
+	    }
 
 // 3. first frequency carrier offset calculation
     // ok, we have found the maximum, now save first delta frequency
@@ -1959,7 +1959,6 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     help_freq = help_freq + delta;
     // do we need a lowpass filter?
     help_freq = 0.2 * help_freq + 0.8 * freq_old;
-    //help_freq = help_freq * ((float32_t)TUNE_MULT);
     ads.snap_carrier_freq = (ulong) (help_freq);
     freq_old = help_freq;
 
@@ -1976,7 +1975,7 @@ void UiSpectrum_CalculateSnap(float32_t Lbin, float32_t Ubin, int posbin, float3
     	{
     		// tune to frequency
             // set frequency of Si570 with 4 * dialfrequency
-            df.tune_new = (help_freq * ((float32_t)TUNE_MULT));
+            df.tune_new = help_freq;
     		// reset counter
     		snap_counter = 0;
     		sc.snap = false;
@@ -2013,16 +2012,16 @@ static void UiSpectrum_CalculateDBm()
         // correct bin bandwidth is determined by the Zoom FFT display setting
         const float32_t bin_BW = IQ_SAMPLE_RATE_F * 2.0 / (buff_len * (1 << sd.magnify)) ;
 
-        float32_t width = FilterInfo[FilterPathInfo[ts.filter_path].id].width;
-        float32_t offset = FilterPathInfo[ts.filter_path].offset;
+        float32_t width = FilterInfo[ts.filters_p->id].width;
+        float32_t offset = ts.filters_p->offset;
 
         if (offset == 0)
         {
             offset = width/2;
         }
 
-        float32_t lf_freq = offset - width/2;
-        float32_t uf_freq = offset + width/2;
+        const float32_t lf_freq = offset - width/2;
+        const float32_t uf_freq = offset + width/2;
 
         //	determine Lbin and Ubin from ts.dmod_mode and FilterInfo.width
         //	= determine bandwith separately for lower and upper sideband
@@ -2040,7 +2039,7 @@ static void UiSpectrum_CalculateDBm()
             bw_UPPER = -lf_freq;
             bw_LOWER = -uf_freq;
         }
-        else if (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)
+        else if (is_demod_psk())
         { // this is for experimental SNAP of BPSK carriers
             bw_LOWER = PSK_OFFSET - PSK_SNAP_RANGE;
             bw_UPPER = PSK_OFFSET + PSK_SNAP_RANGE;
@@ -2057,15 +2056,8 @@ static void UiSpectrum_CalculateDBm()
         // frequency translation off, IF = 0 Hz OR
         // in all magnify cases (2x up to 32x) the posbin is in the centre of the spectrum display
 
-        int bin_offset = 0;
-
-
-        if(sd.magnify == 0)
-        {
-            bin_offset = - (buff_len_int * AudioDriver_GetTranslateFreq( )) / (2 * IQ_SAMPLE_RATE);
-        }
-
-        int posbin = buff_len_int / 4 + bin_offset;  // right in the middle!
+        const int32_t bin_offset = sd.magnify != 0 ? 0 : (- (buff_len_int * AudioDriver_GetTranslateFreq( )) / (2 * IQ_SAMPLE_RATE));
+        const int32_t posbin = buff_len_int / 4 + bin_offset;  // right in the middle!
 
 
         // calculate upper and lower limit for determination of signal strength
@@ -2073,7 +2065,7 @@ static void UiSpectrum_CalculateDBm()
         float32_t Lbin = (float32_t)posbin + roundf(bw_LOWER / bin_BW);
         float32_t Ubin = (float32_t)posbin + roundf(bw_UPPER / bin_BW); // the bin on the upper sideband side
 
-        if(ts.dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_USB) // workaround to make SNAP and carrier offaet display work with sideband-selected SAM
+        if(ts.dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_USB) // workaround to make SNAP and carrier offset display work with sideband-selected SAM
         {
             Lbin = Lbin - 1.0;
         }
@@ -2083,10 +2075,9 @@ static void UiSpectrum_CalculateDBm()
         {
             Lbin = 0;
         }
-        //if (Ubin > 255)
+
         if (Ubin > (sd.spec_len-1))
         {
-            //Ubin = 255;
             Ubin = sd.spec_len-1;
         }
 
@@ -2103,12 +2094,11 @@ static void UiSpectrum_CalculateDBm()
         if(cw_decoder_config.snap_enable && (ts.dmod_mode == DEMOD_CW || ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM || (ts.dmod_mode == DEMOD_DIGI && ts.digital_mode == DigitalMode_BPSK)))
         {
             UiSpectrum_CalculateSnap(Lbin, Ubin, posbin, bin_BW);
-
         }
 
         float32_t sum_db = 0.0;
         // determine the sum of all the bin values in the passband
-        for (int c = (int)Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
+        for (int c = Lbin; c <= (int)Ubin; c++)   // sum up all the values of all the bins in the passband
         {
             sum_db = sum_db + sd.FFT_Samples[c]; // / (float32_t)(1<<sd.magnify);
         }
@@ -2121,8 +2111,8 @@ static void UiSpectrum_CalculateDBm()
 
         if (sum_db > 0)
         {
-            sm.dbm_cur = slope * log10f_fast (sum_db) + cons;
-            sm.dbmhz_cur = sm.dbm_cur -  10 * log10f_fast ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) ;
+            sm.dbm_cur = slope * Math_log10f_fast (sum_db) + cons;
+            sm.dbmhz_cur = sm.dbm_cur -  10 * Math_log10f_fast ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) ;
         }
         else
         {

@@ -132,7 +132,7 @@ long quantise(const float * cb, float vec[], float w[], int k, int m, float *se)
 	e = 0.0;
 	for(i=0; i<k; i++) {
 	    diff = cb[j*k+i]-vec[i];
-	    e += powf(diff*w[i],2.0);
+	    e += (diff*w[i] * diff*w[i]);
 	}
 	if (e < beste) {
 	    beste = e;
@@ -617,7 +617,6 @@ float lspmelvq_mbest_encode(int *indexes, float *x, float *xq, int ndim, int mbe
   mbest_search(codebook1, x, w, ndim, lspmelvq_cb[0].m, mbest_stage1, index);
   MBEST_PRINT("Stage 1:", mbest_stage1);
 
-
   /* Stage 2 */
 
   for (j=0; j<mbest_entries; j++) {
@@ -888,7 +887,7 @@ void aks_to_M2(
 
   float Pw[FFT_ENC/2];
 
-#ifndef ARM_MATH_CM4
+#ifndef FDV_ARM_MATH
   for(i=0; i<FFT_ENC/2; i++) {
     Pw[i] = 1.0/(Aw[i].real*Aw[i].real + Aw[i].imag*Aw[i].imag + 1E-6);
   }
@@ -1069,7 +1068,7 @@ float decode_log_Wo(C2CONST *c2const, int index, int bits)
     step = (log10f(Wo_max) - log10f(Wo_min))/Wo_levels;
     Wo   = log10f(Wo_min) + step*(index);
 
-    return powf(10,Wo);
+    return POW10F(Wo);
 }
 
 #if 0
@@ -1282,8 +1281,6 @@ void decode_lsps_scalar(float lsp[], int indexes[], int order)
 }
 
 
-#ifndef CORTEX_M4
-
 /*---------------------------------------------------------------------------*\
 
   FUNCTION....: encode_mels_scalar()
@@ -1351,7 +1348,6 @@ void decode_mels_scalar(float mels[], int indexes[], int order)
 
 }
 
-#endif
 
 #ifdef __EXPERIMENTAL__
 
@@ -1814,7 +1810,7 @@ float decode_energy(int index, int bits)
 
     step = (e_max - e_min)/e_levels;
     e    = e_min + step*(index);
-    e    = powf(10.0,e/10.0);
+    e    = POW10F(e/10.0);
 
     return e;
 }
@@ -1931,11 +1927,10 @@ void quantise_WoE(C2CONST *c2const, MODEL *model, float *e, float xq[])
   int          ndim = ge_cb[0].k;
   float Wo_min = c2const->Wo_min;
   float Wo_max = c2const->Wo_max;
-  float Fs = c2const->Fs;
 
   /* VQ is only trained for Fs = 8000 Hz */
 
-  assert(Fs == 8000);
+  assert(c2const->Fs == 8000);
 
   x[0] = log10f((model->Wo/PI)*4000.0/50.0)/log10f(2);
   x[1] = 10.0*log10f(1e-4 + *e);
@@ -1967,7 +1962,7 @@ void quantise_WoE(C2CONST *c2const, MODEL *model, float *e, float xq[])
 
   model->L  = PI/model->Wo; /* if we quantise Wo re-compute L */
 
-  *e = powf(10.0, xq[1]/10.0);
+  *e = POW10F(xq[1]/10.0);
 }
 
 /*---------------------------------------------------------------------------*\
@@ -2050,6 +2045,6 @@ void decode_WoE(C2CONST *c2const, MODEL *model, float *e, float xq[], int n1)
 
   model->L  = PI/model->Wo; /* if we quantise Wo re-compute L */
 
-  *e = powf(10.0, xq[1]/10.0);
+  *e = POW10F(xq[1]/10.0);
 }
 

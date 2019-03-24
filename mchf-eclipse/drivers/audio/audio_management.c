@@ -9,20 +9,13 @@
 #include "fm_subaudible_tone_table.h"
 #include "radio_management.h"
 
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcALCDecay
-//* Object              : Calculate Decay timing for ALC (TRANSMIT!)
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-void AudioManagement_CalcALCDecay(void)
+/**
+ * Calculate the ALC Decay for the Tx Voice Compressor
+ */
+void AudioManagement_CalcALCDecay()
 {
     // calculate ALC decay (release) time constant - this needs to be moved to its own function (and the one in "ui_menu.c")
-    ads.alc_decay = powf(10,-((((float32_t)ts.alc_decay_var)+35.0)/10.0));
+    ads.alc_decay = pow10f(-((((float32_t)ts.alc_decay_var)+35.0)/10.0));
 }
 
 // make sure the frequencies below match the order of iq_freq_enum_t !
@@ -305,26 +298,34 @@ void AudioManagement_CalcTxCompLevel()
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-void AudioManagement_CalcSubaudibleGenFreq(void)
+void AudioManagement_CalcSubaudibleGenFreq(float32_t freq)
 {
-    ads.fm_conf.subaudible_tone_gen_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_gen_select];       // look up tone frequency (in Hz)
+    ads.fm_conf.subaudible_tone_gen_freq = freq; // look up tone frequency (in Hz)
     softdds_setFreqDDS(&ads.fm_conf.subaudible_tone_dds, ads.fm_conf.subaudible_tone_gen_freq,ts.samp_rate,false);
 }
 
+
+#define FM_GOERTZEL_HIGH    1.04        // ratio of "high" detect frequency with respect to center
+#define FM_GOERTZEL_LOW     0.95        // ratio of "low" detect frequency with respect to center
 /**
  * @brief Calculate frequency word for subaudible tone, call after change of detection frequency  [KA7OEI October, 2015]
  */
-void AudioManagement_CalcSubaudibleDetFreq(void)
+void AudioManagement_CalcSubaudibleDetFreq(float32_t freq)
 {
-    const uint32_t size = BUFF_LEN/2;
+    const uint32_t size = AUDIO_BLOCK_SIZE;
 
-    ads.fm_conf.subaudible_tone_det_freq = fm_subaudible_tone_table[ts.fm_subaudible_tone_det_select];       // look up tone frequency (in Hz)
+    ads.fm_conf.subaudible_tone_det_freq = freq;       // look up tone frequency (in Hz)
 
-    // Calculate Goertzel terms for tone detector(s)
-    AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_HIGH], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_HIGH, IQ_SAMPLE_RATE);
-    AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_LOW], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_LOW, IQ_SAMPLE_RATE);
-    AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_CTR], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,1.0, IQ_SAMPLE_RATE);
+    if (freq > 0)
+    {
+        // Calculate Goertzel terms for tone detector(s)
+        AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_HIGH], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_HIGH, IQ_SAMPLE_RATE);
+        AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_LOW], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,FM_GOERTZEL_LOW, IQ_SAMPLE_RATE);
+        AudioFilter_CalcGoertzel(&ads.fm_conf.goertzel[FM_CTR], ads.fm_conf.subaudible_tone_det_freq, FM_SUBAUDIBLE_GOERTZEL_WINDOW*size,1.0, IQ_SAMPLE_RATE);
+    }
 }
+
+uint32_t fm_tone_burst_freq[FM_TONE_BURST_MAX+1] = { 0, 1750, 2135 };
 
 //
 //
@@ -339,20 +340,12 @@ void AudioManagement_LoadToneBurstMode()
 {
     uint16_t frequency = 0;
 
-    switch(ts.fm_tone_burst_mode)
+    if (ts.fm_tone_burst_mode <= FM_TONE_BURST_MAX)
     {
-    case FM_TONE_BURST_1750_MODE:
-        frequency = 1750;
-        break;
-    case FM_TONE_BURST_2135_MODE:
-        frequency = 2135;
-        break;
-    default:
-        frequency = 0;
-        break;
+        frequency = fm_tone_burst_freq[ts.fm_tone_burst_mode];
     }
 
-    softdds_setFreqDDS(&ads.fm_conf.tone_burst_dds, frequency,ts.samp_rate,false);
+    softdds_setFreqDDS(&ads.fm_conf.tone_burst_dds, frequency, ts.samp_rate, false);
 }
 
 /**
@@ -374,15 +367,10 @@ void AudioManagement_KeyBeepPrepare()
  */
 void AudioManagement_KeyBeep()
 {
-    // FIXME: Do we really need to call this here, or shall we rely on the calls
-    // made when changing the freq/settings?
-    // right now every beep runs the generator code
-    if(ts.flags2 & FLAGS2_KEY_BEEP_ENABLE)      // is beep enabled?
+    if((ts.flags2 & FLAGS2_KEY_BEEP_ENABLE) && (ads.beep.step > 0))      // is beep enabled and frequency non-zero?
     {
-        AudioManagement_KeyBeepPrepare();       // load and calculate beep frequency
         ads.beep.acc = 0; // force reset of accumulator to start at zero to minimize "click" caused by an abrupt voltage transition at startup
-        ts.beep_timing = ts.sysclock + BEEP_DURATION;       // set duration of beep
-        ts.beep_active = 1;                                 // activate tone
+        ts.beep_timing = BEEP_DURATION * (IQ_INTERRUPT_FREQ / 100);       // set duration of beep and activate it
     }
 }
 
@@ -414,91 +402,3 @@ void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
 
     softdds_configRunIQ(tonefreq,ts.samp_rate,0);
 }
-
-#ifdef OBSOLETE_AGC
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcAGCDecay
-//* Object              : Calculate Decay timing for AGC (RECEIVE!)
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-
-void AudioManagement_CalcAGCDecay()
-{
-    switch (ts.agc_mode)
-    {
-    case AGC_SLOW:
-        ads.agc_decay = AGC_SLOW_DECAY;
-        break;
-    case AGC_FAST:
-        ads.agc_decay = AGC_FAST_DECAY;
-        break;
-    case AGC_CUSTOM:      // calculate custom AGC setting
-    {
-        ads.agc_decay = powf(10,-((((float32_t)ts.agc_custom_decay)+30.0)/10.0));
-    }
-    break;
-    default:
-        ads.agc_decay = AGC_MED_DECAY;
-    }
-}
-
-void AudioManagement_CalcAGCVals(void)
-{
-    float max_rf_gain = 1 + (ts.max_rf_gain <= MAX_RF_GAIN_MAX ? ts.max_rf_gain : MAX_RF_GAIN_DEFAULT);
-
-    ads.agc_knee = AGC_KNEE_REF * max_rf_gain;
-    ads.agc_val_max = AGC_VAL_MAX_REF / max_rf_gain;
-    ads.post_agc_gain = POST_AGC_GAIN_SCALING_REF / (float)(ts.max_rf_gain + 1);
-    // TODO: Why is here always ts.max_rf_gain used? Shouldn't it be max_rf_gain too?
-}
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiCalcRFGain
-//* Object              : Calculate RF Gain internal value from user setting
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-//
-void AudioManagement_CalcRFGain(void)
-{
-    float tcalc;    // temporary value as "ads.agc_rf_gain" may be used during the calculation!
-
-    // calculate working RF gain value
-    tcalc = (float)ts.rf_gain;
-    tcalc *= 1.4;
-    tcalc -= 20;
-    tcalc /= 10;
-    ads.agc_rf_gain = powf(10, tcalc);
-
-}
-//
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : AudioManagement_CalcNB_AGC
-//* Object              : Calculate Noise Blanker AGC settings
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
-void AudioManagement_CalcNB_AGC(void)
-{
-    float temp_float;
-
-    temp_float = ts.nb_agc_time_const;              // get user setting
-    temp_float = NB_MAX_AGC_SETTING-temp_float;     // invert (0 = minimum))
-    temp_float /= 1.1;                              // scale calculation
-    temp_float *= temp_float;                       // square value
-    temp_float += 1;                                // offset by one
-    temp_float /= 44000;                            // rescale
-    temp_float += 1;                                // prevent negative log result
-    ads.nb_sig_filt = log10f(temp_float);           // de-linearize and save in "new signal" contribution parameter
-    ads.nb_agc_filt = 1 - ads.nb_sig_filt;          // calculate parameter for recyling "old" AGC value
-}
-#endif

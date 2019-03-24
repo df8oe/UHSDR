@@ -7,7 +7,7 @@
   Golden Prime Interleaver. My interpretation of "On the Analysis and
   Design of Good Algebraic Interleavers", Xie et al,eq (5).
 
-  See also octvae/gp_interleaver.m
+  See also octave/gp_interleaver.m
 
 \*---------------------------------------------------------------------------*/
 
@@ -17,7 +17,7 @@
   All rights reserved.
 
   This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU Lesser General Public License version 2, as
+  it under the terms of the GNU Lesser General Public License version 2.1, as
   published by the Free Software Foundation.  This program is
   distributed in the hope that it will be useful, but WITHOUT ANY
   WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -38,13 +38,18 @@
   section of N.
 
   Implemented with a LUT in C for convenience, Octave version
-  has a more complete implementation.
+  has a more complete implementation.  If you find you need some more
+  numbers head back to the Octave choose_interleaver_b() function.
 */
 
 int b_table[] = {
   112,71,
+  210,131,
   224,139,
+  252,157,
+  420,263,
   448,277,
+  504,313,
   672,419,
   896,557,
   1120,701,
@@ -71,9 +76,11 @@ int choose_interleaver_b(int Nbits)
         }
     }
 
-    /* if we get it means a Nbits we dont have in our table so choke */
+    /* if we get to here it means a Nbits we don't have in our table so choke */
     
+    fprintf(stderr, "Nbits: %d, b not found!\n", Nbits);
     assert(0);
+    while(1);
 }
 
 

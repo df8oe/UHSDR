@@ -19,6 +19,6 @@ typedef enum
     FREQ_SHIFT_DOWN = 1,
 } freq_shift_dir_t;
 
-void FreqShift(float32_t* i_buffer, float32_t* q_buffer, size_t blockSize, freq_shift_dir_t dir);
+void FreqShift(float32_t* i_buffer, float32_t* q_buffer, size_t blockSize, int32_t shift);
 
 #endif

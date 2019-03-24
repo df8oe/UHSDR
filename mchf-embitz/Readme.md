@@ -1,3 +1,8 @@
+**PLEASE NOTE: EMBITZ BUILD IS CURRENTLY UNMAINTAINED**
+Builds are mostly not working. Looking for volunteers!
+
+
+
 # Building uhsdr firmware with EmBitz
 
 This document describes how to build the uhsdr firmware using the EmBitz IDE on windows.

@@ -23,14 +23,14 @@ void UiMenu_MapColors(uint32_t color ,char* options,volatile uint32_t* clr_ptr);
 
 
 // The supported mode values
-enum
+typedef enum
 {
-    MENU_RENDER_ONLY = 0,
-    MENU_PROCESS_VALUE_CHANGE,
-    MENU_PROCESS_VALUE_SETDEFAULT,
-};
+    MENU_RENDER_ONLY = 0, // no value change
+    MENU_PROCESS_VALUE_CHANGE,  // user value change permitted
+    MENU_PROCESS_VALUE_SETDEFAULT, // set value to default, no user change
+} MenuProcessingMode_t;
 
-void UiMenu_RenderMenu(uint16_t mode);
+void UiMenu_RenderMenu(MenuProcessingMode_t mode);
 
 void UiMenu_RenderChangeItemValue(int16_t pot_diff);
 void UiMenu_RenderChangeItem(int16_t pot_diff);
@@ -48,9 +48,7 @@ enum MENU_INFO_ITEM
 #ifdef USE_OSC_SI570
     INFO_SI570,
 #endif
-#ifdef USE_OSC_SI5351A
-	INFO_SI5351A,
-#endif
+	INFO_OSC_NAME,
     INFO_TP,
     INFO_RFBOARD,
     INFO_CPU,

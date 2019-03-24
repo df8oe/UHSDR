@@ -14,20 +14,14 @@
 #include <string.h>
 #include <math.h>
 
-#ifdef ARM_MATH_CM4
-  #include "stm32f4xx.h"
-  #include "core_cm4.h"
-  #include "arm_math.h"
-  #include "arm_const_structs.h"
+#ifdef FDV_ARM_MATH
+  #include "fdv_arm_math.h"
+#else
+    #define USE_KISS_FFT
 #endif
 
 #include "defines.h"
 #include "comp.h"
-
-#ifndef ARM_MATH_CM4
-    #define USE_KISS_FFT
-#endif
-// #define USE_KISS_FFT
 
 
 typedef COMP    codec2_fft_cpx;
@@ -91,7 +85,7 @@ static inline void codec2_fft(codec2_fft_cfg cfg, codec2_fft_cpx* in, codec2_fft
       kiss_fft(cfg, (kiss_fft_cpx*)in, (kiss_fft_cpx*)out);
 #else
     memcpy(out,in,cfg->instance->fftLen*2*sizeof(float));
-    arm_cfft_f32(cfg->instance,(float*)out,cfg->inverse,0);
+    arm_cfft_f32(cfg->instance,(float*)out,cfg->inverse, 1);
     // TODO: this is not nice, but for now required to keep changes minimal
     // however, since main goal is to reduce the memory usage
     // we should convert to an in place interface

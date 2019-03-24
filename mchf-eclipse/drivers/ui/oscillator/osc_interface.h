@@ -28,6 +28,14 @@ typedef enum
 
 } Oscillator_ResultCodes_t;
 
+typedef enum
+{
+    OSC_UNKNOWN,
+    OSC_DUMMY,
+    OSC_SI570,
+    OSC_SI5351A,
+} Oscillator_Type_t;
+
 typedef struct
 {
 	// startup handling
@@ -45,6 +53,9 @@ typedef struct
 	Oscillator_ResultCodes_t (*changeToNextFrequency)();
 	bool 			  (*isNextStepLarge)();
 	bool              (*readyForIrqCall)();
+    const char*  name;
+    const Oscillator_Type_t  type;
+
 } OscillatorInterface_t;
 
 extern const OscillatorInterface_t *osc;

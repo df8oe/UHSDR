@@ -14,6 +14,7 @@
 #ifndef __MCHF_MCU_H
 #define __MCHF_MCU_H
 
+#include "uhsdr_board_config.h"
 
 typedef enum {
     CPU_NONE = 0,
@@ -21,21 +22,6 @@ typedef enum {
     CPU_STM32F7 = 2,
     CPU_STM32H7 = 3,
 } mchf_cpu_t;
-
-
-#ifdef CORTEX_M7
-#ifdef STM32H743xx
-	#include "stm32h7xx.h"
-	#include "stm32h7xx_hal.h"
-#else
-	#include "stm32f7xx_hal.h"
-#endif
-
-#endif
-#ifdef CORTEX_M4
-#include "stm32f4xx.h"
-#include "stm32f407xx.h"
-#endif
 
 inline mchf_cpu_t MchfHW_Cpu()
 {

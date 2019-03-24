@@ -56,12 +56,12 @@ void hs_pitch_refinement(MODEL *model, COMP Sw[], float pmin, float pmax,
 
 \*---------------------------------------------------------------------------*/
 
-C2CONST c2const_create(int Fs) {
+C2CONST c2const_create(int Fs, float framelength_s) {
     C2CONST c2const;
 
     assert((Fs == 8000) || (Fs = 16000));
     c2const.Fs = Fs;
-    c2const.n_samp = Fs*N_S;
+    c2const.n_samp = round(Fs*framelength_s);
     c2const.max_amp = floor(Fs*P_MIN_S/2);
     c2const.p_min = floor(Fs*P_MIN_S);
     c2const.p_max = floor(Fs*P_MAX_S);
@@ -507,7 +507,7 @@ float est_voicing_mbe(
 
         /* Determine error between estimated harmonic and original */
 
-        offset = FFT_ENC/2 - l*Wo*FFT_ENC/TWO_PI + 0.5;
+// Redundant!        offset = FFT_ENC/2 - l*Wo*FFT_ENC/TWO_PI + 0.5;
         for(m=al; m<bl; m++) {
 	    Ew.real = Sw[m].real - Am.real*W[offset+m].real;
 	    Ew.imag = Sw[m].imag - Am.imag*W[offset+m].real;

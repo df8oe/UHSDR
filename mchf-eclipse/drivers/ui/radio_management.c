@@ -14,7 +14,6 @@
 
 // Common
 #include "radio_management.h"
-#include "uhsdr_board.h"
 #include "profiling.h"
 #include "adc.h"
 
@@ -42,13 +41,14 @@
 #include "config_storage.h"
 
 #include "cw_gen.h"
-#include "freedv_api.h"
-#include "codec2_fdmdv.h"
 
 #include "cw_decoder.h"
 
 #include "psk.h"
 #include "rtty.h"
+#include "uhsdr_digi_buffer.h"
+
+#include "audio_nr.h"
 
 #define SWR_SAMPLES_SKP             1   //5000
 #define SWR_SAMPLES_CNT             5//10
@@ -78,30 +78,79 @@ SWRMeter                    swrm;
 // Frequency public
 DialFrequency               df;
 
+//
+// Bands definition
+//
+//
+//
+//  Frequency limits for filters, in Hz, for bandpass filter selection - MODIFY AT YOUR OWN RISK!
+//
+#define BAND_FILTER_UPPER_160       2500000             // Upper limit for 160 meter filter
+#define BAND_FILTER_UPPER_80        4250000             // Upper limit for 80 meter filter
+#define BAND_FILTER_UPPER_40        8000000             // Upper limit for 40/60 meter filter
+#define BAND_FILTER_UPPER_20        16000000            // Upper limit for 20/30 meter filter
+#define BAND_FILTER_UPPER_10        32000000            // Upper limit for 10 meter filter
+#define BAND_FILTER_UPPER_6     40000000            // Upper limit for 6 meter filter
+#define BAND_FILTER_UPPER_4     70000000            // Upper limit for 4 meter filter
 
-#define BandInfoGenerate(BAND,SUFFIX,NAME) { BAND_FREQ_##BAND , BAND_SIZE_##BAND , NAME }
 
 const BandInfo bandInfo[] =
 {
-    BandInfoGenerate(80,M,"80m") ,
-    BandInfoGenerate(60,M,"60m"),
-    BandInfoGenerate(40,M,"40m"),
-    BandInfoGenerate(30,M,"30m"),
-    BandInfoGenerate(20,M,"20m"),
-    BandInfoGenerate(17,M,"17m"),
-    BandInfoGenerate(15,M,"15m"),
-    BandInfoGenerate(12,M,"12m"),
-    BandInfoGenerate(10,M,"10m"),
-    BandInfoGenerate(6,M,"6m"),
-    BandInfoGenerate(4,M,"4m"),
-    BandInfoGenerate(2,M,"2m"),
-    BandInfoGenerate(70,CM,"70cm"),
-    BandInfoGenerate(23,CM,"23cm"),
-    BandInfoGenerate(2200,M,"2200m"),
-    BandInfoGenerate(630,M,"630m"),
-    BandInfoGenerate(160,M,"160m"),
-    { 0, 0, "Gen" } // Generic Band
+    { .tune = 3500000, .size = 500000, .name = "80m"} , // Region 2
+    { .tune = 5250000, .size = 200000, .name = "60m"} , // should cover all regions
+    { .tune = 7000000, .size = 300000, .name = "40m"} , // Region 2
+    { .tune = 10100000, .size = 50000, .name = "30m"} ,
+    { .tune = 14000000, .size = 350000, .name = "20m"} ,
+    { .tune = 18068000, .size = 100000, .name = "17m"} ,
+    { .tune = 21000000, .size = 450000, .name = "15m"} ,
+    { .tune = 24890000, .size = 100000, .name = "12m"} ,
+    { .tune = 28000000, .size = 1700000, .name = "10m"} ,
+    { .tune = 50000000, .size = 2000000, .name = "6m"} , // Region 2
+    { .tune = 70000000, .size = 500000, .name = "4m"} ,
+    { .tune = 144000000, .size = 2000000, .name = "2m"} , // Region 1
+    { .tune = 430000000, .size = 10000000, .name = "70cm"} , // Region 1
+    { .tune = 1240000000, .size = 60000000, .name = "23cm"} , // Region 1
+    { .tune = 135.7000, .size = 2.1000, .name = "2200m"} , // Region 1
+    { .tune = 472000, .size = 7000, .name = "630m"} , // Region 1
+    { .tune = 1810000, .size = 190000, .name = "160m"} ,
+    { .tune = 0, .size = 0, .name = "Gen"} ,
 };
+
+// this structure MUST match the order of entries in power_level_t !
+static const power_level_desc_t mchf_rf_power_levels[] =
+{
+        { .id = PA_LEVEL_FULL, .name = "FULL", .power_factor = 1.0   , .mW = 0,   }, // we use 0 to indicate max power
+        { .id = PA_LEVEL_5W,   .name = "5W"  , .power_factor = 1.0   , .mW = 5000, },
+        { .id = PA_LEVEL_2W,   .name = "2W"  , .power_factor = 0.6324, .mW = 2000, },
+        { .id = PA_LEVEL_1W,   .name = "1W"  , .power_factor = 0.447 , .mW = 1000, },
+        { .id = PA_LEVEL_0_5W, .name = "0.5W"  , .power_factor = 0.316 , .mW =  500, },
+};
+
+
+const pa_power_levels_info_t mchf_power_levelsInfo =
+{
+        .levels = mchf_rf_power_levels,
+        .count = sizeof(mchf_rf_power_levels)/sizeof(*mchf_rf_power_levels),
+};
+
+typedef struct
+{
+    char* name;
+    float32_t  reference_power;
+    int32_t  max_freq;
+    int32_t  min_freq;
+    int32_t max_am_power;
+} pa_info_t;
+
+static const pa_info_t mchf_pa =
+{
+        .name  = "mcHF PA",
+        .reference_power = 5000.0,
+        .max_freq = 32000000,
+        .min_freq =  1800000,
+        .max_am_power = 2000.0,
+};
+
 
 
 // The following descriptor table has to be in the order of the enum digital_modes_t in  radio_management.h
@@ -116,6 +165,7 @@ const digital_mode_desc_t digimodes[DigitalMode_Num_Modes] =
     { "RTTY"    , true },
     { "BPSK"    , true },
 };
+
 
 
 /**
@@ -152,43 +202,158 @@ void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec)
 }
 
 
+
+
+
+
+
+/**
+ * Returns the scaling which needs to be applied to the standard signal levl (which delivers the PA_REFERENCE_POWER)
+ * in order to output  the request power.
+ * @param powerMw requested power in mW. mW =< 0.0 returns scale 1
+ * @return scaling (gain)
+ */
+float32_t RadioManagement_CalculatePowerFactorScale(float32_t powerMw)
+{
+    float32_t retval = 1.0;
+    if (powerMw > 0)
+    {
+        retval = sqrtf(powerMw / mchf_pa.reference_power);
+    }
+    return retval;
+}
+
+/**
+ *
+ * Depends on globals: ts.pwr_adj, ts.power_level, df.tune_old, ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE
+ * Impacts globals:    ts.tx_power_factor
+ * @param band
+ * @return true if the power factor value differs from previous
+ */
+static bool RadioManagement_SetBandPowerFactor(band_mode_t band, int32_t power)
+{
+    float32_t   pf_bandvalue;    // used as a holder for percentage of power output scaling
+
+    // FIXME: This code needs fixing, the hack for TX Outside should at least reduce power factor for lower bands
+    if (band >= MAX_BANDS)
+    {
+        // TX outside bands **very dirty hack**
+        //  FIXME: calculate based on 2 frequency points close the selected frequency, should be inter-/extrapolated
+        float32_t adj_min = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_80];
+        uint32_t freq_min = bandInfo[BAND_MODE_80].tune;
+        float32_t adj_max = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_10];
+        uint32_t freq_max = bandInfo[BAND_MODE_10].tune;
+        float32_t delta_f = (float32_t)df.tune_old - (float32_t)freq_min; // we must convert to a signed type
+        float32_t delta_points = freq_max - freq_min;
+
+        float32_t freq_mult = delta_f / delta_points;
+
+        pf_bandvalue =  freq_mult * (adj_max - adj_min) + adj_min;
+    }
+    else
+    {
+        pf_bandvalue = ts.pwr_adj[power == 0?ADJ_FULL_POWER:ADJ_REF_PWR][band];
+    }
+
+    pf_bandvalue /= RadioManagement_IsPowerFactorReduce(df.tune_old)? 400: 100;
+
+
+    float32_t power_factor_scale = 1.0 ;
+    // now rescale to power levels below reference power (i.e for mcHF <5 watts) if necessary.
+    if (power != 0)
+    {
+        power_factor_scale = RadioManagement_CalculatePowerFactorScale(power);
+    }
+
+    float32_t power_factor = pf_bandvalue * power_factor_scale;
+
+    // limit hard limit for power factor since it otherwise may overdrive the PA section
+
+    const float32_t old_pf = ts.tx_power_factor;
+
+    ts.tx_power_factor =
+            (power_factor > TX_POWER_FACTOR_MAX_INTERNAL) ?
+            TX_POWER_FACTOR_MAX_INTERNAL : power_factor;
+
+    ts.power_modified |=  (power_factor == 0 || ts.tx_power_factor != power_factor);
+
+    return ts.tx_power_factor != old_pf;
+}
+
+/**
+ * Is the currently active modulation / transceiver mode able to generate a side tone during transmit
+ * Can be called during RX and TX
+ *
+ * @return true if the selected modulation mode permits the use of a side tone
+ */
+bool RadioManagement_UsesTxSidetone()
+{
+    return ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || (ts.tune && !ts.iq_freq_mode);
+}
+
 /**
  * @brief API Function, implements application logic for changing the power level including filter changes
  *
  *
- * @param power_level The requested power level (as PA_LEVEL constants)
+ * @param power_level The requested power level (as PA_LEVEL constants). Invalid values are not accepted
  * @returns true if power level has been changed, false otherwise
  */
-bool RadioManagement_PowerLevelChange(uint8_t band, uint8_t power_level)
+bool RadioManagement_SetPowerLevel(band_mode_t band, power_level_t power_level)
 {
     bool retval = false;
+    bool power_modified = false;
 
-    if(ts.dmod_mode == DEMOD_AM)                // in AM mode?
+    int32_t power = power_level < mchf_power_levelsInfo.count ? mchf_power_levelsInfo.levels[power_level].mW : -1;
+
+    if (power != -1)
     {
-        if(power_level >= PA_LEVEL_TUNE_KEEP_CURRENT)     // yes, power over 2 watts?
+        if (band >= MAX_BANDS)
         {
-            power_level = PA_LEVEL_2W;  // force to 2 watt mode when we "roll over"
+            if(ts.flags1 & FLAGS1_TX_OUTSIDE_BANDS)
+            {
+                power = 50; // ~50 mW limit;
+                power_modified = true;
+                // I never will use this function (DF8OE)
+            }
+            else
+            {
+                power = 5; // 5mW, use very low value in case of wrong call to this function
+                power_modified = true;
+            }
         }
-    }
-    else        // other modes, do not limit max power
-    {
-        if(power_level >= PA_LEVEL_TUNE_KEEP_CURRENT)
+
+        if(ts.dmod_mode == DEMOD_AM)                // in AM mode?
         {
-            power_level = PA_LEVEL_FULL; //  0 == full power
+            if(power > mchf_pa.max_am_power || power == 0)     // yes, power over am limits?
+            {
+                power = mchf_pa.max_am_power;  // force to keep am limits
+                power_modified = true;
+            }
+        }
+        else if(power > mchf_pa.reference_power)
+        {
+            power = 0; //  0 == full power
+            power_level = PA_LEVEL_FULL;
+        }
+
+
+        // Calculate TX power factor - see if power changed
+        bool pf_change = RadioManagement_SetBandPowerFactor(band, power);
+
+        if (pf_change == true || power != ts.power || ts.power_level != power_level || ts.power_modified != power_modified)
+        {
+            retval = true;
+            ts.power_level = power_level;
+            ts.power = power;
+            ts.power_modified = power_modified;
+
+            if (RadioManagement_UsesTxSidetone())
+            {
+                Codec_TxSidetoneSetgain(ts.txrx_mode);
+            }
         }
     }
 
-    if (power_level != ts.power_level)
-    {
-        retval = true;
-        ts.power_level = power_level;
-        if(ts.tune && !ts.iq_freq_mode)         // recalculate sidetone gain only if transmitting/tune mode
-        {
-            Codec_TxSidetoneSetgain(ts.txrx_mode);
-        }
-        // Set TX power factor - to reflect changed power
-        RadioManagement_SetBandPowerFactor(band);
-    }
     return retval;
 }
 
@@ -201,21 +366,24 @@ bool RadioManagement_Tune(bool tune)
         {
             if(ts.tune_power_level != PA_LEVEL_TUNE_KEEP_CURRENT)
             {
-                ts.power_temp = ts.power_level;             //store tx level and set tune level
-                ts.power_level =ts.tune_power_level;
+                ts.power_temp  = ts.power_level;             //store tx level and set tune level
+                ts.power_level = ts.tune_power_level;
             }
-            // DDS on
-            RadioManagement_SwitchTxRx(TRX_MODE_TX,true);                // tune ON
+
+            RadioManagement_SwitchTxRx(TRX_MODE_TX,true);
+            // tune ON, this will also update the power to use our
+            // to our temporarily changed level
+
             retval = (ts.txrx_mode == TRX_MODE_TX);
         }
         else
         {
+            RadioManagement_SwitchTxRx(TRX_MODE_RX,true);                // tune OFF
             if(ts.tune_power_level != PA_LEVEL_TUNE_KEEP_CURRENT)
             {
-                ts.power_level = ts.power_temp; // restore tx level
+                RadioManagement_SetPowerLevel(RadioManagement_GetBand(df.tune_new), ts.power_temp);
             }
 
-            RadioManagement_SwitchTxRx(TRX_MODE_RX,true);                // tune OFF
             retval = (ts.txrx_mode == TRX_MODE_TX); // no longer tuning
         }
     }
@@ -249,13 +417,13 @@ int32_t RadioManagement_GetCWDialOffset()
         }
     }
 
-    return retval * TUNE_MULT;
+    return retval;
 }
 
 /**
  * @brief returns true if the mode parameters tell us we will TX at zero if as opposed to offset frequency
  */
-static bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode)
+bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode)
 {
     return  (
                 dmod_mode == DEMOD_CW ||
@@ -266,8 +434,10 @@ static bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode
 #else
                             false
 #endif
-                            ||
-                            digital_mode == DigitalMode_BPSK
+                            || is_demod_psk()
+#ifdef USE_RTTY_PROCESSOR
+                            || is_demod_rtty()
+#endif
                     )
                 )
              );
@@ -280,7 +450,7 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
     // Do "Icom" style frequency offset of the LO if in "CW OFFSET" mode.  (Display freq. is also offset!)
     if(ts.dmod_mode == DEMOD_CW)            // In CW mode?
     {
-        tune_freq += RadioManagement_GetCWDialOffset() / TUNE_MULT;
+        tune_freq += RadioManagement_GetCWDialOffset();
     }
 
 
@@ -389,7 +559,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
                 df.temp_factor_changed = false;
                 ts.tune_freq = ts.tune_freq_req;        // frequency change required - update change detector
                 // Save current freq
-                df.tune_old = dial_freq*TUNE_MULT;
+                df.tune_old = dial_freq;
             }
             else
             {
@@ -444,7 +614,7 @@ Oscillator_ResultCodes_t RadioManagement_ValidateFrequencyForTX(uint32_t dial_fr
 
 /**
  * @brief returns the current LO Tune Frequency for TX
- * @returns LO Frequency in Hz, needs to be dived by TUNE_MULT to get real Hz
+ * @returns LO Frequency in Hz
  */
 uint32_t RadioManagement_GetTXDialFrequency()
 {
@@ -477,7 +647,7 @@ uint32_t RadioManagement_GetTXDialFrequency()
 }
 /**
  * @brief returns the current LO Dial Frequency for RX
- * @returns LO Frequency in Hz, needs to be dived by TUNE_MULT to get real Hz
+ * @returns LO Frequency in Hz
  */
 uint32_t RadioManagement_GetRXDialFrequency()
 {
@@ -507,7 +677,7 @@ uint32_t RadioManagement_GetRXDialFrequency()
         baseval = df.tune_new;
     }
 
-    return baseval + (ts.rit_value*20)*TUNE_MULT;
+    return baseval + (ts.rit_value*20);
 }
 
 // globals used:
@@ -528,8 +698,8 @@ uint32_t RadioManagement_GetRXDialFrequency()
 // Board_RedLed(LED_STATE_ON); // TX
 // Board_GreenLed(LED_STATE_OFF);
 // Board_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
-// RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, txrx_mode_final);
-// uint8_t tx_band = RadioManagement_GetBand(tune_new/TUNE_MULT);
+// RadioManagement_ChangeFrequency(false,df.tune_new, txrx_mode_final);
+// uint8_t tx_band = RadioManagement_GetBand(tune_new);
 // RadioManagement_PowerLevelChange(tx_band,ts.power_level);
 // RadioManagement_SetBandPowerFactor(tx_band);
 // AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,txrx_mode_final == TRX_MODE_RX?false:tune_mode);
@@ -602,7 +772,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
     if(txrx_mode == TRX_MODE_TX)
     {
         // FIXME: Not very robust code, make sure Validate always returns TUNE_IMPOSSIBLE in case of issues
-        tx_ok = RadioManagement_ValidateFrequencyForTX(tune_new/TUNE_MULT) != OSC_TUNE_IMPOSSIBLE;
+        tx_ok = RadioManagement_ValidateFrequencyForTX(tune_new) != OSC_TUNE_IMPOSSIBLE;
 
 
         // this code handles the ts.tx_disable
@@ -623,7 +793,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
         if (is_demod_psk())
         {
-        	Bpsk_ModulatorInit();
+        	Psk_Modulator_PrepareTx();
         }
     }
 
@@ -642,12 +812,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             RadioManagement_DisablePaBias(); // kill bias to mute the HF output quickly
         }
 
-        if(txrx_mode_final == TRX_MODE_RX)
-        {
-                // remember current agc
-//                ads.agc_holder = ads.agc_val;
-        }
-        else
+        if(txrx_mode_final == TRX_MODE_TX)
         {
 
 
@@ -674,15 +839,14 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         }
 
         df.tune_new = tune_new;
-        RadioManagement_ChangeFrequency(false,df.tune_new/TUNE_MULT, txrx_mode_final);
+        RadioManagement_ChangeFrequency(false,df.tune_new, txrx_mode_final);
         // ts.audio_dac_muting_flag = true; // let the audio being muted initially as long as we need it
 
         // there might have been a band change between the modes, make sure to have the power settings fitting the mode
         if (txrx_mode_final == TRX_MODE_TX)
         {
-            uint8_t tx_band = RadioManagement_GetBand(tune_new/TUNE_MULT);
-            RadioManagement_PowerLevelChange(tx_band,ts.power_level);
-            RadioManagement_SetBandPowerFactor(tx_band);
+            uint8_t tx_band = RadioManagement_GetBand(tune_new);
+            RadioManagement_SetPowerLevel(tx_band,ts.power_level);
         }
 
         AudioManagement_SetSidetoneForDemodMode(ts.dmod_mode,txrx_mode_final == TRX_MODE_RX?false:tune_mode);
@@ -775,8 +939,8 @@ bool RadioManagement_CalculateCWSidebandMode()
     switch(RadioManagement_CWConfigValueToModeEntry(ts.cw_offset_mode)->sideband_mode)
     {
     case CW_SB_AUTO:                     // For "auto" modes determine if we are above or below threshold frequency
-        // if (RadioManagement_SSB_AutoSideBand(df.tune_new/TUNE_MULT) == DEMOD_USB)   // is the current frequency above the USB threshold?
-        retval = (df.tune_new/TUNE_MULT <= USB_FREQ_THRESHOLD && RadioManagement_GetBand(df.tune_new/TUNE_MULT) != BAND_MODE_60);
+        // if (RadioManagement_SSB_AutoSideBand(df.tune_new) == DEMOD_USB)   // is the current frequency above the USB threshold?
+        retval = (df.tune_new <= USB_FREQ_THRESHOLD && RadioManagement_GetBand(df.tune_new) != BAND_MODE_60);
         // is the current frequency below the USB threshold AND is it not 60m? -> LSB
         break;
     case CW_SB_LSB:
@@ -827,7 +991,7 @@ void RadioManagement_ChangeBandFilter(uchar band)
     default:
         break;
     }
-  ts.nr_first_time = 1; // in case of any Bandfilter change restart the NR routine
+  nr_params.first_time = 1; // in case of any Bandfilter change restart the NR routine
 }
 typedef struct BandFilterDescriptor
 {
@@ -889,61 +1053,6 @@ bool RadioManagement_IsPowerFactorReduce(uint32_t freq)
 }
 
 
-/*
- * Depends on globals: ts.pwr_adj, ts.power_level, df.tune_new, ts.flags2 & FLAGS2_LOW_BAND_BIAS_REDUCE
- * Impacts globals:    ts.tx_power_factor
- */
-void RadioManagement_SetBandPowerFactor(uchar band)
-{
-    float32_t   pf_bandvalue, pf_levelscale;    // used as a holder for percentage of power output scaling
-
-    // FIXME: This code needs fixing, the hack for TX Outside should at least reduce power factor for lower bands
-    if (band >= MAX_BANDS)
-    {
-        if(ts.flags1 & FLAGS1_TX_OUTSIDE_BANDS)
-        {               // TX outside bands **very dirty hack**: I use constant for power
-          pf_bandvalue = 12; // because no factor is known outside bands
-        }               // I never will use this function (DF8OE)
-        else
-        {
-          pf_bandvalue = 3; // use very low value in case of wrong call to this function
-        }
-    }
-    else
-    {
-        pf_bandvalue = (float)ts.pwr_adj[ts.power_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_5W][band];
-    }
-
-    pf_bandvalue /= RadioManagement_IsPowerFactorReduce(df.tune_old/TUNE_MULT)? 400: 100;
-
-
-    // now rescale to power levels <5 watts, is so-configured
-    switch(ts.power_level)
-    {
-    case    PA_LEVEL_0_5W:
-        pf_levelscale = 0.316;        // rescale for 10% of 5 watts (0.5 watts)
-        break;
-    case    PA_LEVEL_1W:
-        pf_levelscale = 0.447;        // rescale for 20% of 5 watts (1.0 watts)
-        break;
-    case    PA_LEVEL_2W:
-        pf_levelscale = 0.6324;       // rescale for 40% of 5 watts (2 watts)
-        break;
-    default:                    // 100% is 5 watts or full power!!
-        pf_levelscale = 1;
-        break;
-    }
-
-
-    float32_t power_factor = pf_levelscale * pf_bandvalue;  // rescale this for the actual power level
-
-    // limit hard limit for power factor since it otherwise may overdrive the PA section
-    ts.tx_power_factor =
-            (power_factor > TX_POWER_FACTOR_MAX_INTERNAL) ?
-            TX_POWER_FACTOR_MAX_INTERNAL : power_factor;
-}
-
-
 
 
 /*
@@ -953,10 +1062,7 @@ void RadioManagement_SetBandPowerFactor(uchar band)
  */
 void RadioManagement_SetDemodMode(uint8_t new_mode)
 {
-
-	DigiModes_TxBufferReset();
-
-    ts.dsp_inhibit++;
+    ts.dsp.inhibit++;
     ads.af_disabled++;
 
     if (new_mode == DEMOD_DIGI)
@@ -971,6 +1077,9 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
     else if (ts.dmod_mode == DEMOD_DIGI)
     {
             RadioManagement_ChangeCodec(ts.digital_mode,0);
+            // FIXME:  Maybe we should better handle the
+            // mode switching centrally for all modes
+            AudioNr_Prepare(); // prepare AudioNr for use after FreeDV using the same buffer
     }
 
     if (new_mode == DEMOD_FM && ts.dmod_mode != DEMOD_FM)
@@ -988,7 +1097,7 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
             // we come from a non-CW mode
             if (RadioManagement_UsesBothSidebands(ts.dmod_mode) == false)
             {
-                sidetone_mult = (RadioManagement_LSBActive(ts.dmod_mode)?-TUNE_MULT:TUNE_MULT);
+                sidetone_mult = RadioManagement_LSBActive(ts.dmod_mode) ? -1 : 1;
                 // if we have a sideband mode
                 // adjust dial frequency by side tone offset
                 // if the sidetone frequency is not change, we return exactly to the frequency we have been before
@@ -1008,8 +1117,7 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
              df.tune_new -= sidetone_mult * ts.cw_sidetone_freq;
          }
     }
-    AudioDriver_SetRxAudioProcessing(new_mode, false);
-    AudioDriver_TxFilterInit(new_mode);
+    AudioDriver_SetProcessingChain(new_mode, false);
     AudioManagement_SetSidetoneForDemodMode(new_mode,false);
 
     if (new_mode == DEMOD_SAM)
@@ -1023,30 +1131,33 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
     ts.dmod_mode = new_mode;
 
     if  (ads.af_disabled) { ads.af_disabled--; }
-    if (ts.dsp_inhibit) { ts.dsp_inhibit--; }
-    ts.nr_first_time = 1; // re-initialize spectral noise reduction, when dmod_mode was changed
+    if (ts.dsp.inhibit) { ts.dsp.inhibit--; }
+    nr_params.first_time = 1; // re-initialize spectral noise reduction, when dmod_mode was changed
 
 }
 
 /**
- * @param freq the frequency to check multiplied with TUNE_MULT
+ * @param freq the frequency to check
  */
 bool RadioManagement_FreqIsInBand(const BandInfo* bandinfo, const uint32_t freq)
 {
     return (freq >= bandinfo->tune) && (freq <= (bandinfo->tune + bandinfo->size));
 }
 
+/**
+ * Identify ham band for a given frequency
+ * @param freq in Hz
+ * @return the ham band or BAND_MODE_GEN if not a known ham band
+ */
 uint8_t RadioManagement_GetBand(uint32_t freq)
 {
-    static uint8_t band_scan_old = 99;
-    uchar   band_scan;
+    static band_mode_t band_scan_old = BAND_MODE_GEN;
+    band_mode_t   band_scan;
 
-    band_scan = 0;
+    band_scan = BAND_MODE_GEN;
 
-    freq *= TUNE_MULT;
-
-    // first try the last band, and see if it is an match
-    if (band_scan_old != 99 && freq >= bandInfo[band_scan_old].tune && freq <= (bandInfo[band_scan_old].tune + bandInfo[band_scan_old].size))
+    // first try the previously selected band, and see if it is an match
+    if (band_scan_old != BAND_MODE_GEN && freq >= bandInfo[band_scan_old].tune && freq <= (bandInfo[band_scan_old].tune + bandInfo[band_scan_old].size))
     {
         band_scan = band_scan_old;
     }
@@ -1059,8 +1170,10 @@ uint8_t RadioManagement_GetBand(uint32_t freq)
                 break;  // yes - stop the scan
             }
         }
+        band_scan_old = band_scan;  // update band change detector
     }
-    band_scan_old = band_scan;  // update band change detector
+
+
     return band_scan;       // return with the band
 }
 
@@ -1130,14 +1243,18 @@ void RadioManagement_HandlePttOnOff()
         else if (CatDriver_CatPttActive() == false)
         {
             // When CAT driver "pressed" PTT skip auto return to RX
-        	if (ts.tx_stop_req && is_demod_psk() && !psk_state.tx_ending)
+        	if (ts.tx_stop_req == true && is_demod_psk() && Psk_Modulator_GetState() == PSK_MOD_ACTIVE)
         	{
-        		psk_state.tx_ending = true;
+        		Psk_Modulator_SetState(PSK_MOD_POSTAMBLE);
         		ts.tx_stop_req = false;
         	}
         	else if(!(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || ts.cw_text_entry) || ts.tx_stop_req == true)
             {
-                // If we are in TX and ...
+        	    // we get here either if there is an explicit request to stop transmission no matter which mode we are in
+        	    // or if the mode relies on us to switch off after PTT has been released (we defines this by exclusion
+        	    // of modes which control transmission state via paddles or keyboard)
+
+        	    // If we are in TX
                 if(ts.txrx_mode == TRX_MODE_TX)
                 {
                     // ... the PTT line is released ...
@@ -1179,7 +1296,7 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
     case DEMOD_USB:
         if((ts.lsb_usb_auto_select))       // is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
         {
-            retval = RadioManagement_SSB_AutoSideBand(df.tune_new / TUNE_MULT) == demod_mode;       // is this a voice mode, subject to "auto" LSB/USB select?
+            retval = RadioManagement_SSB_AutoSideBand(df.tune_new) == demod_mode;       // is this a voice mode, subject to "auto" LSB/USB select?
         }
         else
         {
@@ -1194,7 +1311,7 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
         if((ts.lsb_usb_auto_select) && retval == true)       // is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
         {
             // TODO: this is only true for FreeDV, but since we have only FreeDV...
-            ts.digi_lsb = RadioManagement_SSB_AutoSideBand(df.tune_new / TUNE_MULT) == DEMOD_LSB;
+            ts.digi_lsb = RadioManagement_SSB_AutoSideBand(df.tune_new) == DEMOD_LSB;
             // is this a voice mode, subject to "auto" LSB/USB select?
         }
         break;
@@ -1253,12 +1370,16 @@ uint32_t RadioManagement_NextAlternativeDemodMode(uint32_t loc_mode)
         break;
     case DEMOD_SAM:
         ads.sam_sideband ++;
+
         // stereo SAM is only switchable if you have stereo modes enabled
-        uint8_t minus = 0;
 #ifdef USE_TWO_CHANNEL_AUDIO
-        minus = !ts.stereo_enable;
+        if (ts.stereo_enable == false && ads.sam_sideband == SAM_SIDEBAND_STEREO)
+        {
+            // skip if we have stereo disabled
+            ads.sam_sideband ++;
+        }
 #endif
-        if (ads.sam_sideband > (SAM_SIDEBAND_MAX - minus))
+        if (ads.sam_sideband >= SAM_SIDEBAND_MAX)
         {
             ads.sam_sideband = SAM_SIDEBAND_BOTH;
             retval = DEMOD_AM;
@@ -1354,21 +1475,21 @@ bool RadioManagement_USBActive(uint16_t dmod_mode)
 }
 
 
-static void RadioManagement_PowerFromADCValue(float val, float sensor_null, float coupling_calc,volatile float* pwr_ptr, volatile float* dbm_ptr)
+static void RadioManagement_PowerFromADCValue(float inval, float sensor_null, float coupling_calc,volatile float* pwr_ptr, volatile float* dbm_ptr)
 {
-    float pwr;
-    float dbm;
-    val *= SWR_ADC_VOLT_REFERENCE;    // get nominal A/D reference voltage
-    val /= SWR_ADC_FULL_SCALE;        // divide by full-scale A/D count to yield actual input voltage from detector
-    val += sensor_null;               // offset result
+    float32_t pwr;
+    const float32_t val = sensor_null + ((inval * SWR_ADC_VOLT_REFERENCE) / SWR_ADC_FULL_SCALE);
+    // get nominal A/D reference voltage
+    // divide by full-scale A/D count to yield actual input voltage from detector
+    // offset result
 
     if(val <= LOW_POWER_CALC_THRESHOLD)     // is this low power as evidenced by low voltage from the sensor?
     {
-        pwr = LOW_RF_PWR_COEFF_A + (LOW_RF_PWR_COEFF_B * val) + (LOW_RF_PWR_COEFF_C * powf(val,2 )) + (LOW_RF_PWR_COEFF_D * powf(val, 3));
+        pwr = LOW_RF_PWR_COEFF_A + (LOW_RF_PWR_COEFF_B * val) + (LOW_RF_PWR_COEFF_C * (val * val) ) + (LOW_RF_PWR_COEFF_D * powf(val, 3));
     }
     else            // it is high power
     {
-        pwr = HIGH_RF_PWR_COEFF_A + (HIGH_RF_PWR_COEFF_B * val) + (HIGH_RF_PWR_COEFF_C * powf(val, 2));
+        pwr = HIGH_RF_PWR_COEFF_A + (HIGH_RF_PWR_COEFF_B * val) + (HIGH_RF_PWR_COEFF_C * (val * val));
     }
     // calculate forward and reverse RF power in watts (p = a + bx + cx^2) for high power (above 50-60
 
@@ -1377,10 +1498,9 @@ static void RadioManagement_PowerFromADCValue(float val, float sensor_null, floa
         pwr = 0;
     }
 
-    dbm = (10 * (log10f(pwr))) + 30 + coupling_calc;
-    pwr = pow10f(dbm/10)/1000;
-    *pwr_ptr = pwr;
+    const float32_t dbm = (10 * (log10f(pwr))) + 30 + coupling_calc;
     *dbm_ptr = dbm;
+    *pwr_ptr = pow10f(dbm/10)/1000;
 }
 
 /*
@@ -1439,13 +1559,17 @@ bool RadioManagement_UpdatePowerAndVSWR()
 
         swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrtf(swrm.rev_pwr/swrm.fwd_pwr));
 
-        if (ts.debug_vswr_protection_threshold > 1)
+        if ( ts.debug_vswr_protection_threshold > 1 )
         {
-        	if(swrm.vswr > ts.debug_vswr_protection_threshold)
-        	{
-        	RadioManagement_DisablePaBias();
-        	swrm.high_vswr_detected = true;
-        	}
+            if ( swrm.vswr > ts.debug_vswr_protection_threshold )
+            {
+                RadioManagement_DisablePaBias ( );
+                swrm.high_vswr_detected = true;
+
+                // change output power to "PA_LEVEL_0_5W" when VSWR protection is active
+                uint8_t tx_band = RadioManagement_GetBand ( df.tune_new);
+                RadioManagement_SetPowerLevel ( tx_band, PA_LEVEL_0_5W );
+            }
         }
 
         retval = true;
@@ -1609,7 +1733,7 @@ void RadioManagement_ToggleVfoAB()
     {
         RadioManagement_SetDemodMode(vfo[vfo_new].band[ts.band].decod_mode);
     }
-    ts.nr_first_time = 1; // restart in case of VFO-Toggle
+    nr_params.first_time = 1; // restart in case of VFO-Toggle
 }
 
 /**

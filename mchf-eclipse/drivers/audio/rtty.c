@@ -4,7 +4,7 @@
  **                               UHSDR FIRMWARE                                    **
  **                                                                                 **
  **---------------------------------------------------------------------------------**
- **  Licence:        GNU GPLv3, see LICENSE.md                                                      **
+ **  Licence:        GNU GPLv3, see LICENSE.md                                      **
  ************************************************************************************/
 
 // Common
@@ -16,14 +16,11 @@
 #include <math.h>
 #include <limits.h>
 
-#include "audio_driver.h"
-#include "audio_management.h"
-#include "ui_configuration.h"
-#include "ui_driver.h"
+#include "softdds.h"
 #include "rtty.h"
-#include "radio_management.h"
-
-
+#include "ui_driver.h" // only necessary because of UiDriver_TextMsgPutChar
+#include "radio_management.h" // only necessary because of RadioManagement_Request_TxOff
+#include "uhsdr_digi_buffer.h"
 
 // bits 0-4 -> baudot, bit 5 1 == LETTER, 0 == NUMBER/FIGURE
 const uint8_t Ascii2Baudot[128] =
@@ -384,7 +381,7 @@ static rtty_lpf_config_t rtty_lp_12khz_50 =
 static rtty_mode_config_t  rtty_mode_current_config;
 
 
-void RttyDecoder_Init()
+void Rtty_Modem_Init(uint32_t output_sample_rate)
 {
 
 	// TODO: pass config as parameter and make it changeable via menu
@@ -428,8 +425,8 @@ void RttyDecoder_Init()
 	}
 
 	// configure DDS for transmission
-	softdds_setFreqDDS(&rttyDecoderData.tx_dds[0], rttyDecoderData.bpfSpaceConfig->freq, ts.samp_rate, 0);
-	softdds_setFreqDDS(&rttyDecoderData.tx_dds[1], rttyDecoderData.bpfMarkConfig->freq, ts.samp_rate, 0);
+	softdds_setFreqDDS(&rttyDecoderData.tx_dds[0], rttyDecoderData.bpfSpaceConfig->freq, output_sample_rate, 0);
+	softdds_setFreqDDS(&rttyDecoderData.tx_dds[1], rttyDecoderData.bpfMarkConfig->freq, output_sample_rate, 0);
 
 }
 
@@ -460,7 +457,7 @@ static int RttyDecoder_demodulator(float32_t sample)
 	space_mag *= space_mag;
 	mark_mag *= mark_mag;
 
-    if(ts.rtty_atc_enable)
+    if(rtty_ctrl_config.atc_disable == false)
 	{   // RTTY decoding with ATC = automatic threshold correction
 		// FIXME: space & mark seem to be swapped in the following code
 		// dirty fix
@@ -524,7 +521,6 @@ static int RttyDecoder_demodulator(float32_t sample)
 
 		v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
 
-		// MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
 	}
 	else
 	{   // RTTY without ATC, which works very well too!
@@ -536,7 +532,6 @@ static int RttyDecoder_demodulator(float32_t sample)
 
 		// lowpass filtering the summed line
 		v1 = RttyDecoder_lowPass(v1, rttyDecoderData.lpfConfig, &rttyDecoderData.lpfData);
-		// MchfBoard_GreenLed((line0 > 0)? LED_STATE_OFF:LED_STATE_ON);
 	}
 
 	return (v1 > 0)?0:1;
@@ -624,7 +619,7 @@ static const char RTTYLetters[] = "<E\nA SIU\nDRJNFCKTZLWHYPQOBG^MXV^";
 static const char RTTYSymbols[] = "<3\n- ,87\n$4#,.:(5+)2.60197.^./=^";
 
 
-void RttyDecoder_ProcessSample(float32_t sample)
+void Rtty_Demodulator_ProcessSample(float32_t sample)
 {
 
 	switch(rttyDecoderData.state)
@@ -733,62 +728,6 @@ rtty_tx_encoder_state_t  rtty_tx =
 
 };
 
-#define DIGIMODES_TX_BUFFER_SIZE  128
-
-static __IO uint8_t digimodes_tx_buffer[DIGIMODES_TX_BUFFER_SIZE];
-static __IO int32_t digimodes_tx_buffer_head = 0;
-static __IO int32_t digimodes_tx_tail = 0;
-
-uint8_t DigiModes_TxBufferHasData()
-{
-    int32_t len = digimodes_tx_buffer_head - digimodes_tx_tail;
-    return len < 0?len+DIGIMODES_TX_BUFFER_SIZE:len;
-}
-
-int DigiModes_TxBufferRemove(uint8_t* c_ptr)
-{
-	int ret = 0;
-
-    if (digimodes_tx_buffer_head != digimodes_tx_tail)
-    {
-        int c = digimodes_tx_buffer[digimodes_tx_tail];
-        digimodes_tx_tail = (digimodes_tx_tail + 1) % DIGIMODES_TX_BUFFER_SIZE;
-        *c_ptr = (uint8_t)c;
-        ret++;
-    }
-    return ret;
-}
-
-/* no room left in the buffer returns 0 */
-int DigiModes_TxBufferPutChar(uint8_t c)
-{
-	int ret = 0;
-    int32_t next_head = (digimodes_tx_buffer_head + 1) % DIGIMODES_TX_BUFFER_SIZE;
-
-    if (next_head != digimodes_tx_tail)
-    {
-        /* there is room */
-        digimodes_tx_buffer[digimodes_tx_buffer_head] = c;
-        digimodes_tx_buffer_head = next_head;
-        ret ++;
-    }
-    return ret;
-}
-
-void DigiModes_TxBufferPutSign(const char* s)
-{
-	DigiModes_TxBufferPutChar('<');
-	DigiModes_TxBufferPutChar(s[0]);
-	DigiModes_TxBufferPutChar(s[1]);
-	DigiModes_TxBufferPutChar('>');
-}
-
-void DigiModes_TxBufferReset()
-{
-    digimodes_tx_tail = digimodes_tx_buffer_head;
-}
-
-
 #define USE_RTTY_MSK
 #define RTTY_CODE_MODE_MASK (0b100000)
 #define RTTY_CODE_MODE_LETTER (RTTY_CODE_MODE_MASK)
@@ -862,12 +801,16 @@ int16_t Rtty_Modulator_GenSample()
 		if (rtty_tx.char_bit_idx == 0)
 		{
 			// load the character and add the stop bits;
-
 			bool bitsFilled = false;
-			while (DigiModes_TxBufferHasData() && bitsFilled == false)
+            uint8_t current_ascii;
+			while ( DigiModes_TxBufferRemove( &current_ascii, RTTY )
+			        && bitsFilled == false )
 			{
-			    uint8_t current_ascii;
-			    if (DigiModes_TxBufferRemove(&current_ascii))
+			    if (current_ascii == 0x04 ) //EOT
+			    {
+			        RadioManagement_Request_TxOff();
+			    }
+			    else
 			    {
 			        uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
 			        if (current_baudot > 0)
@@ -886,7 +829,7 @@ int16_t Rtty_Modulator_GenSample()
 #if 0
 				for (uint8_t idx = 0; idx < sizeof(rtty_test_string); idx++)
 				{
-					DigiModes_TxBufferPutChar(rtty_test_string[idx]);
+					DigiModes_TxBufferPutChar( rtty_test_string[idx] , CW );
 				}
 #endif
 			}

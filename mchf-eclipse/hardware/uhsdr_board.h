@@ -13,213 +13,24 @@
 ************************************************************************************/
 #ifndef __MCHF_BOARD_H
 #define __MCHF_BOARD_H
+
+#include "uhsdr_board_config.h"
 #include "uhsdr_mcu.h"
-/***
- * Please document all switches/parameters with what they are supposed to do and what values they can have.
- * Please use proper naming:
- * For capabilities of the software which can be enabled and disabled
- * use USE_<CAPABILITY/FEATURENAME>
- *
- * These should be defined using #define USE_CAPABILITY
- * or left undefined if not enabled so that these can be checked using #ifdef
- *
- * For related parameters DON'T USE USE_...
- *
- * In an ideal world please use PAR_<CAPABILITY/FEATURE>_<PARAMETERNAME> (we haven't done that yet)
- * Please don't define constant or local parameters here, only those a user (!) is supposed to change as part of
- * configuring a specific build variant.
- *
- */
-
-
-
-// Fast convolution filtering
-// experimental at the moment DD4WH, 2018_08_18
-//#define USE_CONVOLUTION
-
-// old LMS noise reduction
-// will probably never used any more
-//#define OBSOLETE_NR
-
-// this switches on the autonotch filter based on LMS algorithm
-// leave this switched on, until we have a new autonotch filter approach
-#define USE_LMS_AUTONOTCH
-
-// save processor time for the STM32F4
-// changes lowpass decimation filters to 89 taps instead of 199 taps
-// because they run at 48ksps, this is a considerable decrease in processing power
-#ifdef STM32F4
-//#define USE_SMALL_HILBERT_DECIMATION_FILTERS
-#endif
-
-// save processor time for the STM32F4
-// changes lowpass decimation filters to 89 taps instead of 199 taps
-// because they run at 48ksps, this is a considerable decrease in processing power
-// this is ONLY relevant for STM32F4 which has SPI !
-// in those machines when enabling NR and other features, ui slows down . . .
-// thus we should enable the small decimation filter in those machines
-
-
-/**
- * This parameter disables certain features / capabilites in order to achieve a minimum build size for
- * the 192k ram / 512k flash STM32F4 machines. Unless you have such a machine, leave this disabled.
- */
-// #define IS_SMALL_BUILD
-
-// some special switches
-//#define 	DEBUG_BUILD
-
-// if enabled the alternate (read new and better) noise reduction is active
-// this is the standard NR now (Febr 2018)
-#define USE_ALTERNATE_NR
-
-// you may optionally define the list of supported GFX drivers externally
-// if you just define EXTERNAL_USE_GFX_CONFIG and no USE_GFX_...
-// you will get a headless system using a dummy display driver
-#ifndef EXTERNAL_USE_GFX_CONFIG
-  #define USE_GFX_ILI932x
-  #define USE_GFX_ILI9486
-  // SSD1289 support is not yet working, also requires USE_GFX_ILI932x to be enabled for now.
-  // #define USE_GFX_SSD1289
-  #define USE_DISP_480_320
-#if defined(STM32F7) || defined(STM32H7)
-  #define USE_GFX_RA8875
-#endif
-#endif
-
-#if !defined(USE_GFX_ILI932x) && !defined(USE_GFX_ILI9486)
-#warning Both USE_GFX_ILI932x and USE_GFX_ILI9486 are disabled, no display driver will be available!
-#endif
-
-#define USE_FFT_1024
-
-#ifndef IS_SMALL_BUILD
-  #define USE_8bit_FONT
-  #define USE_PREDEFINED_WINDOW_DATA
-#endif
-
-// OPTION
-#define USE_RTTY_PROCESSOR
-
-// OPTION
-#define USE_USBHOST
-#ifdef USE_USBHOST
-// define additional USBHOST related "switches" only here!
-	// #define USE_USBDRIVE
-	#define USE_USBKEYBOARD
-#endif
-
-// OPTION
-// with IS_SMALL_BUILD we are not automatically including USE_FREEDV as it uses lot of memory both RAM and flash
-#ifndef IS_SMALL_BUILD
-    #define USE_FREEDV
-#endif
-// #define DEBUG_FREEDV
-// hardware specific switches
-
-
-// Unified the 3 graphics drivers.
-
-// OPTION
-
-// use the STM32 internal RTC with an external quartz and
-// M1 and F3 connected to PD14 and PD15 (D0 and D1 of LCD) instead of PC14 and PC15 (to which the 32768 Hz quartz has to be connected)
-#define USE_RTC_LSE
-
-// AT LEAST ONE GROUP START USE_OSC
-// multiple oscillators may be enabled, but only the first detected oscillator is issued
-// i.e. there is currently only support for a single oscillator in a TRX.
-// Support for LO based on SI570
-#define USE_OSC_SI570
-// Support for LO based on SI5351
-#define USE_OSC_SI5351A
-// AT LEAST ONE GROUP END USE_OSC
-
-#define USE_CONFIGSTORAGE_FLASH
-// OPTION TO USE FLASH BASED CONFIGURATION STORAGE
-
-// Option: If defined, high priority tasks are executed in the context of an PendSV interrupt
-// which gives finishing these tasks a priority over "normal", less real-time critical longer running user control tasks
-// such as display redraw.
-// In general this should be defined but in case of issues one may want to execute High Prio tasks not concurrently
-// to normal tasks, comment this in this case and see if the issue goes away. But this may cause other problems
-// of course.
-#define USE_PENDSV_FOR_HIGHPRIO_TASKS
-
-// OPTION: Enable handling of TX/RX switching in an interrupt. Provides very low latency switching
-// EXPERIMENTAL !!!
-#define USE_HIGH_PRIO_PTT
-
-#if !defined(USE_PENDSV_FOR_HIGHPRIO_TASKS) && defined(USE_HIGH_PRIO_PTT)
-#error USE_HIGH_PRIO_PTT requires USE_PENDSV_FOR_HIGHPRIO_TASKS
-#endif
-
-
-#include "uhsdr_mcu.h"
-// HW libs
-#ifdef STM32F7
-#include "stm32f7xx_hal_rcc.h"
-#include "stm32f7xx_hal_gpio.h"
-#include "stm32f7xx_hal_spi.h"
-#include "stm32f7xx_hal_dma.h"
-#include "stm32f7xx_hal_i2c.h"
-#include "stm32f7xx_hal_i2s.h"
-#include "stm32f7xx_hal_adc.h"
-#include "stm32f7xx_hal_dac.h"
-#include "stm32f7xx_hal_tim.h"
-#include "stm32f7xx_hal_rtc.h"
-#include "stm32f7xx_hal_pwr.h"
-#include "stm32f7xx_hal_flash.h"
-#include "core_cm7.h"
-#elif defined(STM32H7)
-#include "stm32h7xx_hal_rcc.h"
-#include "stm32h7xx_hal_gpio.h"
-#include "stm32h7xx_hal_spi.h"
-#include "stm32h7xx_hal_dma.h"
-#include "stm32h7xx_hal_i2c.h"
-#include "stm32h7xx_hal_i2s.h"
-#include "stm32h7xx_hal_adc.h"
-#include "stm32h7xx_hal_dac.h"
-#include "stm32h7xx_hal_tim.h"
-#include "stm32h7xx_hal_rtc.h"
-#include "stm32h7xx_hal_pwr.h"
-#include "stm32h7xx_hal_flash.h"
-#include "core_cm7.h"
-#else
-#include "stm32f4xx_hal_rcc.h"
-#include "stm32f4xx_hal_gpio.h"
-#include "stm32f4xx_hal_spi.h"
-#include "stm32f4xx_hal_dma.h"
-#include "stm32f4xx_hal_i2c.h"
-#include "stm32f4xx_hal_adc.h"
-#include "stm32f4xx_hal_dac.h"
-#include "stm32f4xx_hal_tim.h"
-#include "stm32f4xx_hal_rtc.h"
-#include "stm32f4xx_hal_pwr.h"
-#include "stm32f4xx_hal_flash.h"
-#include "core_cm4.h"
-#endif
-
-#include "freedv_api.h"
 
 #include "uhsdr_types.h"
 #include "audio_filter.h"
 #include "osc_interface.h"
 #include "ui_lcd_layouts.h"
 #include "ui_lcd_hy28.h"
-
-#include "comp.h"
-#include "dac.h"
-
-#include "uhsdr_board_config.h"
 #include "ui_vkeybrd.h"
+#include "audio_driver.h"
 
 struct mchf_waterfall
 {
     uint8_t	color_scheme;			// stores waterfall color scheme
     uint8_t	vert_step_size;		// vertical step size in waterfall mode
     // int32_t	offset;			// offset for waterfall display
-    ulong	contrast;			// contrast setting for waterfall display
+    uint32_t	contrast;			// contrast setting for waterfall display
 	uint8_t	speed;	// speed of update of the waterfall
 	// uint8_t	nosig_adjust;			// Adjustment for no signal adjustment conditions for waterfall
 	uint16_t scheduler;
@@ -228,185 +39,37 @@ struct mchf_waterfall
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 
-#define POWER_BUTTON_HOLD_TIME	1000000
-
 #define TRX_MODE_RX				0
 #define TRX_MODE_TX				1
 
-#define DEMOD_USB				0
-#define DEMOD_LSB				1
-#define DEMOD_CW				2
-#define DEMOD_AM				3
-#define	DEMOD_SAM				4
-#define	DEMOD_FM				5
-#define DEMOD_DIGI				6
+typedef enum {
+    DEMOD_USB       =   0,
+    DEMOD_LSB       =   1,
+    DEMOD_CW        =   2,
+    DEMOD_AM        =   3,
+    DEMOD_SAM       =   4,
+    DEMOD_FM        =   5,
+    DEMOD_DIGI		=   6,
 #ifdef USE_TWO_CHANNEL_AUDIO
-#define DEMOD_SSBSTEREO			7
-#define DEMOD_IQ				8
-#define DEMOD_MAX_MODE			8
-#else
-#define DEMOD_MAX_MODE			6
+    DEMOD_SSBSTEREO =   7,
+    DEMOD_IQ        =   8,
 #endif
+    DEMOD_NUM_MODE
+} DemodModes_t;
+
+#define DEMOD_MAX_MODE (DEMOD_NUM_MODE-1)
 
 // codec x demod
 // analog USB LSB CW AM FM SAM
 // FreeDV USB LSB -  -  -  -
 
 
-
-#define RTC_OSC_FREQ			32768
-
-#define	TCXO_OFF				0		// TXCO temperature compensation off
-#define	TCXO_ON					1		// TCXO temperature compensation on
-#define	TCXO_STOP				2		// Stop reading of temperature sensor
-#define	TCXO_TEMP_STATE_MAX		2		// Maximum setting for TCXO setting state
-
-// Transverter oscillator adds shift
-#define		TRANSVT_FREQ_A	 	42000000
-
-//
 #define		MIN_FREQ_CAL		-1499		// Minimum and maximum range of frequency calibration in 10xppm
 #define		MAX_FREQ_CAL		1499
-//
-// Total bands supported
-//
-#define	MIN_BANDS				0		// lowest band number
-#define	MAX_BANDS				17		// Highest band number:  17 = General coverage (RX only) band
-#define	MAX_BAND_NUM			(MAX_BANDS+1)		// Number of Bands
 
-//  multiplier to convert between dial_freq and tune_freq
-#define TUNE_MULT				4
+#define MAX_BANDS               17      // Highest band number:  17 = General coverage (RX only) band
+#define MAX_BAND_NUM            (MAX_BANDS+1)       // Number of Bands
 
-#define	KHZ_MULT			(TUNE_MULT*1000)	// multiplier to convert oscillator frequency or band size to display kHz, used below
-//
-// Bands definition
-// - ID
-// - SI570 startup freq
-// - size in Hz
-//
-#define	BAND_MODE_80			0
-#define	BAND_FREQ_80			3500*KHZ_MULT		// 3500 kHz
-#define	BAND_SIZE_80			500*KHZ_MULT		// 500 kHz in size (Region 2)
-//
-#define	BAND_MODE_60			1
-#define	BAND_FREQ_60			5250*KHZ_MULT		// 5250 kHz
-#define	BAND_SIZE_60			200*KHZ_MULT		// 200 kHz in size to allow different allocations
-//
-#define	BAND_MODE_40			2
-#define	BAND_FREQ_40			7000*KHZ_MULT		// 7000 kHz
-#define	BAND_SIZE_40			300*KHZ_MULT		// 300 kHz in size (Region 2)
-//
-#define	BAND_MODE_30			3
-#define	BAND_FREQ_30			10100*KHZ_MULT		// 10100 kHz
-#define	BAND_SIZE_30			50*KHZ_MULT		// 50 kHz in size
-//
-#define	BAND_MODE_20			4
-#define	BAND_FREQ_20			14000*KHZ_MULT		// 14000 kHz
-#define	BAND_SIZE_20			350*KHZ_MULT		// 350 kHz in size
-//
-#define	BAND_MODE_17			5
-#define	BAND_FREQ_17			18068*KHZ_MULT		// 18068 kHz
-#define	BAND_SIZE_17			100*KHZ_MULT		// 100 kHz in size
-//
-#define	BAND_MODE_15			6
-#define	BAND_FREQ_15			21000*KHZ_MULT		// 21000 kHz
-#define	BAND_SIZE_15			450*KHZ_MULT		// 450 kHz in size
-//
-#define	BAND_MODE_12			7
-#define	BAND_FREQ_12			24890*KHZ_MULT		// 24890 kHz
-#define	BAND_SIZE_12			100*KHZ_MULT		// 100 kHz in size
-//
-#define	BAND_MODE_10			8
-#define	BAND_FREQ_10			28000*KHZ_MULT		// 28000 kHz
-#define	BAND_SIZE_10			1700*KHZ_MULT		// 1700 kHz in size
-//
-#define	BAND_MODE_6			9
-#define	BAND_FREQ_6			50000*KHZ_MULT		// 50000 kHz
-#define	BAND_SIZE_6			2000*KHZ_MULT		// 2000 kHz in size (Region 2)
-//
-#define	BAND_MODE_4			10
-#define	BAND_FREQ_4			70000*KHZ_MULT		// 70000 kHz
-#define	BAND_SIZE_4			500*KHZ_MULT		// 500 kHz in size (Region 2)
-//
-#define	BAND_MODE_2			11
-#define	BAND_FREQ_2			144000*KHZ_MULT		// 144000 kHz
-#define	BAND_SIZE_2			2000*KHZ_MULT		// 2000 kHz in size (Region 1)
-//
-#define	BAND_MODE_70			12
-#define	BAND_FREQ_70			430000*KHZ_MULT		// 430000 kHz
-#define	BAND_SIZE_70			10000*KHZ_MULT		// 10000 kHz in size (Region 1)
-//
-#define	BAND_MODE_23			13
-#define	BAND_FREQ_23			450000*KHZ_MULT		// 1240000 kHz
-#define	BAND_SIZE_23			10000*KHZ_MULT		// 60000 kHz in size (Region 1)
-//
-#define	BAND_MODE_2200			14
-#define	BAND_FREQ_2200			135.7*KHZ_MULT		// 135.7 kHz
-#define	BAND_SIZE_2200			2.1*KHZ_MULT		// 2.1 kHz in size (Region 1)
-//
-#define	BAND_MODE_630			15
-#define	BAND_FREQ_630			472*KHZ_MULT		// 472 kHz
-#define	BAND_SIZE_630			7*KHZ_MULT		// 7 kHz in size (Region 1)
-//
-#define	BAND_MODE_160			16
-#define	BAND_FREQ_160			1800*KHZ_MULT		// 1810 kHz
-#define	BAND_SIZE_160			190*KHZ_MULT		// 190 kHz in size (Region 1)
-//
-#define	BAND_MODE_GEN			17			// General Coverage
-#define	BAND_FREQ_GEN			10000*KHZ_MULT		// 10000 kHz
-#define	BAND_SIZE_GEN			1*KHZ_MULT		// Dummy variable
-
-//
-//
-//
-//	Frequency limits for filters, in Hz, for bandpass filter selection - MODIFY AT YOUR OWN RISK!
-//
-#define	BAND_FILTER_UPPER_160		2500000				// Upper limit for 160 meter filter
-//
-#define	BAND_FILTER_UPPER_80		4250000				// Upper limit for 80 meter filter
-//
-#define	BAND_FILTER_UPPER_40		8000000				// Upper limit for 40/60 meter filter
-//
-#define	BAND_FILTER_UPPER_20		16000000			// Upper limit for 20/30 meter filter
-
-#define	BAND_FILTER_UPPER_10		32000000			// Upper limit for 10 meter filter
-//
-#define	BAND_FILTER_UPPER_6		40000000			// Upper limit for 6 meter filter
-//
-#define	BAND_FILTER_UPPER_4		70000000			// Upper limit for 4 meter filter
-//
-#define	DEFAULT_FREQ_OFFSET		4000				// Amount of offset (at LO freq) when loading "default" frequency
-//
-// encoder one
-typedef enum {
-    ENC_ONE_MODE_AUDIO_GAIN	 = 0,
-    ENC_ONE_MODE_RTTY_SPEED,
-    ENC_ONE_MODE_ST_GAIN,
-    ENC_ONE_MODE_CMP_LEVEL,
-    ENC_ONE_NUM_MODES
-} EncoderOneModes;
-//
-// encoder two
-typedef enum {
-    ENC_TWO_MODE_RF_GAIN =		0,
-    ENC_TWO_MODE_RTTY_SHIFT,
-    ENC_TWO_MODE_SIG_PROC,
-    ENC_TWO_MODE_NR,
-    ENC_TWO_MODE_NOTCH_F,
-    ENC_TWO_MODE_PEAK_F,
-    ENC_TWO_MODE_BASS_GAIN,
-    ENC_TWO_MODE_TREBLE_GAIN,
-    ENC_TWO_NUM_MODES
-} EncoderTwoModes;
-//
-// encoder three
-typedef enum {
-    ENC_THREE_MODE_RIT =			0,
-    ENC_THREE_MODE_CW_SPEED,
-    ENC_THREE_MODE_INPUT_CTRL,
-	ENC_THREE_MODE_PSK_SPEED,
-    ENC_THREE_NUM_MODES
-} EncoderThreeModes;
 
 // opposed to the RF_BRD_MCHF / RF_BRD_OVI40 which are
 // compile time constants, the FOUND_RF_BOARD_xx is a runtime detected property
@@ -421,24 +84,19 @@ typedef enum {
 #define CW_KEYER_MODE_ULTIMATE			3
 #define CW_KEYER_MAX_MODE				3
 
-// PA power level setting enumeration
-typedef enum
-{
-    PA_LEVEL_FULL = 0,
-    PA_LEVEL_5W,
-    PA_LEVEL_2W,
-    PA_LEVEL_1W,
-    PA_LEVEL_0_5W,
-    PA_LEVEL_TUNE_KEEP_CURRENT
-} mchf_power_level_t;
-//
-#define	PA_LEVEL_DEFAULT		PA_LEVEL_2W		// Default power level
-
 #define	SSB_TUNE_FREQ			750	// Frequency at which the SSB TX IQ gain and phase adjustment is to be done
 //
 #define VOICE_TX2RX_DELAY_DEFAULT			450	// Delay for switching when going from TX to RX (this is 0.66uS units)
 //
 
+// IQ source RX demodulation
+enum
+{
+    RX_IQ_CODEC = 0,    // IQ from codec
+    RX_IQ_DIGIQ,        // IQ from USB audio
+    RX_IQ_DIG,          // demodulated audio
+    RX_IQ_NUM
+};
 // Audio sources for TX modulation
 #define TX_AUDIO_MIC			0
 #define TX_AUDIO_LINEIN_L		1
@@ -548,20 +206,12 @@ typedef struct Gain_s
     uint8_t value;
     uint8_t max;
     uint8_t value_old;
-    float   active_value;
+    float32_t   active_value;
 } Gain;
-
-typedef enum {
-    IQ_TRANS_OFF = 0,
-    IQ_TRANS_ON,
-    IQ_TRANS_NUM
-} iq_trans_idx_t;
-
 
 typedef struct {
     int32_t value[IQ_TRANS_NUM];
-}
-iq_balance_data_t;
+} iq_balance_data_t;
 
 #define KEYER_BUTTONS 3
 #define KEYER_BUTTON_NONE -1
@@ -590,53 +240,19 @@ typedef struct vfo_reg_s
 //    uint32_t filter_mode;
 } VfoReg;
 
-typedef struct band_regs_s
-{
-    VfoReg band[MAX_BAND_NUM];
-    bool enabled[MAX_BAND_NUM]; // we store which band is to be used (or ignored)
-} BandRegs;
-
-enum
-{
-    // VFO_WORK = 0
-    VFO_A = 0,
-    VFO_B,
-    VFO_MAX
-};
-// Working register plus VFO A and VFO B registers.
-extern BandRegs vfo[VFO_MAX];
-
-
-typedef struct
-{
-    uint8_t mode;
-        uint8_t slope;
-        uint8_t hang_enable;
-        int     thresh;
-        int     hang_thresh;
-        int hang_time;
-        uint8_t action;
-        uint8_t switch_mode;
-        uint8_t hang_action;
-        int tau_decay[6];
-        int tau_hang_decay;
-} agc_wdsp_param_t;
-
-
 // Transceiver state public structure
 typedef struct TransceiverState
 {
     // Sampling rate public flag
-    ulong 	samp_rate;
+    uint32_t 	samp_rate;
 
     // Virtual pots public values
-    short  	rit_value;
+    int16_t  	rit_value;
 
 #define RX_AUDIO_SPKR 0
 #define RX_AUDIO_DIG  1
     Gain    rx_gain[2]; //ts.rx_gain[RX_AUDIO_SPKR].value
 
-    int 	rf_gain;			// RF gain control
     uint8_t lineout_gain;            // lineout gain to control lineout level
 
 
@@ -645,7 +261,6 @@ typedef struct TransceiverState
 #define RF_CODEC_GAIN_AUTO   9       // Default RF gain setting (9 = AUTO mode)
 
     uint8_t	rf_codec_gain;		// gain for codec (A/D converter) in receive mode
-    uint8_t 	nb_setting;
     uint8_t	cw_sidetone_gain;
     uint8_t	pa_bias;
     uint8_t	pa_cw_bias;
@@ -663,11 +278,8 @@ typedef struct TransceiverState
     int	freq_cal;				// frequency calibration
 
     // Frequency synthesizer
-    ulong	tune_freq;			// main synthesizer frequency
-    ulong	tune_freq_req;		// used to detect change of main synthesizer frequency
-
-    // Transceiver calibration mode flag
-    //uchar	calib_mode;
+    uint32_t	tune_freq;			// main synthesizer frequency
+    uint32_t	tune_freq_req;		// used to detect change of main synthesizer frequency
 
     // Transceiver menu mode variables
     uint8_t	menu_mode;		// TRUE if in menu mode
@@ -677,7 +289,9 @@ typedef struct TransceiverState
 
     // Ham band public flag
     // index of bands table in Flash
-    uint8_t 	band;
+    uint8_t 	band; // this band idx does not relate to the real frequency, it is a "just" a memory index.
+    uint8_t     band_effective; // the band the currently selected frequency is in (which may be different from the band memory idx);
+
     bool	rx_temp_mute;
     uint8_t	filter_band;		// filter selection band:  1= 80, 2= 60/40, 3=30/20, 4=17/15/12/10 - used for selection of power detector coefficient selection.
     //
@@ -701,8 +315,6 @@ typedef struct TransceiverState
     uint8_t	tx_meter_mode;				// meter mode
 
     // Audio filter ID
-    // uchar	filter_id;
-    //
     uint8_t   filter_select[AUDIO_FILTER_NUM];
 
 
@@ -710,11 +322,8 @@ typedef struct TransceiverState
     uint16_t   filter_path_mem[FILTER_MODE_MAX][FILTER_PATH_MEM_MAX];
 
     uint16_t  filter_path;
-    //
+    const FilterPathDescriptor *filters_p;
 
-    uint8_t	filter_cw_wide_disable;		// TRUE if wide filters are disabled in CW mode
-    uint8_t	filter_ssb_narrow_disable;	// TRUE if narrow filters are disabled in SSB modes
-    //
     uint16_t	demod_mode_disable;			// TRUE if AM mode is to be disabled
 #define DEMOD_AM_DISABLE    (0x0001)
 #define DEMOD_CW_DISABLE    (0x0002)
@@ -757,12 +366,15 @@ typedef struct TransceiverState
 #define CW_SIDETONE_FREQ_MIN        400
 #define CW_SIDETONE_FREQ_MAX        1000
 
-    ulong	audio_spkr_unmute_delay_count;
+    uint32_t	audio_spkr_unmute_delay_count;
 
-    uint8_t	power_level;
+    uint8_t	power_level; // an abstract power level id
+    int32_t power; // the actual request power in mW
+    bool    power_modified; // the actual power is lower than the requested power_level, e.g. because of out side band.
 
     uint8_t 	tx_audio_source;
-    ulong	tx_mic_gain_mult;
+    uint8_t     rx_iq_source;
+    uint32_t	tx_mic_gain_mult;
     uint8_t	tx_gain[TX_AUDIO_NUM];
     int16_t	tx_comp_level;			// Used to hold compression level which is used to calculate other values for compression.  0 = manual.
 
@@ -793,53 +405,34 @@ typedef struct TransceiverState
 
     struct mchf_waterfall waterfall;
 
-    //
-    bool	radio_config_menu_enable;	// TRUE if radio configuration menu is to be visible
-    //
     uint8_t	xverter_mode;		// TRUE if transverter mode active
-    ulong	xverter_offset;		// frequency offset for transverter (added to frequency display)
+    uint32_t	xverter_offset;		// frequency offset for transverter (added to frequency display)
 
     bool	refresh_freq_disp;		// TRUE if frequency display display is to be refreshed
     //
     // Calibration factors for output power, in percent (100 = 1.00)
     //
-#define ADJ_5W 0
+#define ADJ_REF_PWR 0
 #define ADJ_FULL_POWER 1
     uint8_t	pwr_adj[2][MAX_BAND_NUM];
     //
-    ulong	alc_decay;					// adjustable ALC release time - EEPROM read/write version
-    ulong	alc_decay_var;				// adjustable ALC release time - working variable version
-    ulong	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering - EEPROM read/write version
-    ulong	alc_tx_postfilt_gain_var;	// amount of gain after the TX audio filtering - working variable version
+    uint32_t	alc_decay;					// adjustable ALC release time - EEPROM read/write version
+    uint32_t	alc_decay_var;				// adjustable ALC release time - working variable version
+    uint32_t	alc_tx_postfilt_gain;		// amount of gain after the TX audio filtering - EEPROM read/write version
+    uint32_t	alc_tx_postfilt_gain_var;	// amount of gain after the TX audio filtering - working variable version
 
 // we can use AT least the upper 8 bits of freq_step_config for other purpose since these have not been used and are all initialized with 0)
 #define FREQ_STEP_SWAP_BTN	    0x10
 #define FREQ_STEP_SHOW_MARKER   0x01
     uint16_t	freq_step_config;			// configuration of step size (line, step button reversal) - setting any of the 4 upper bits -> step button switch, any of the lower bits -> frequency marker display enabled
 
-#define DSP_NR_ENABLE 	  		0x01	// DSP NR mode is on (| 1)
-#define DSP_NR_POSTAGC_ENABLE 	0x02	// DSP NR is to occur post AGC (| 2)
-#define DSP_NOTCH_ENABLE		0x04	// DSP Notch mode is on (| 4)
-#define DSP_NB_ENABLE			0x08	// DSP is to be displayed on screen instead of NB (| 8)
-#define DSP_MNOTCH_ENABLE		0x10	// Manual Notch enabled
-#define DSP_MPEAK_ENABLE		0x20	// Manual Peak enabled
+    uint8_t     digital_mode;               // holds actual digital mode
 
-    uint8_t	dsp_active;					// Used to hold various aspects of DSP mode selection
-    uint8_t	dsp_mode;					// holds the mode chosen in the DSP
-    uint16_t	dsp_mode_mask;				// holds the DSP mode mask (to be chosen by virtual dsp keyboard)
-	uint8_t	temp_nb;
-    uint8_t 	digital_mode;				// holds actual digital mode
-    uint8_t	dsp_active_toggle;			// holder used on the press-hold of button G2 to "remember" the previous setting
-    uint8_t	dsp_nr_strength;			// "Strength" of DSP Noise reduction - to be converted to "Mu" factor
-    ulong	dsp_nr_delaybuf_len;		// size of DSP noise reduction delay buffer
-    uint8_t	dsp_nr_numtaps;				// Number of FFT taps on the DSP Noise reduction
-    uint8_t	dsp_notch_numtaps;
-    uint8_t	dsp_notch_mu;				// mu adjust of notch DSP LMS
-    uint8_t	dsp_notch_delaybuf_len;		// size of DSP notch delay buffer
-    uint8_t dsp_inhibit;				// if != 0, DSP (NR, Notch) functions are inhibited.  Used during power-up and switching
+    dsp_params_t dsp;
 
-
-    uint8_t	lcd_backlight_brightness;	// LCD backlight brightness, 0-3:  0 = full, 3 = dimmest
+    uint8_t	lcd_backlight_brightness;	// LCD backlight dimming, 0-LCD_DIMMING_LEVEL_MAX:  0 = full, LCD_DIMMING_LEVEL_MAX = dimmest
+#define LCD_DIMMING_LEVEL_MAX 5
+#define LCD_DIMMING_LEVEL_MIN 0
 
 #define LCD_BLANKING_ENABLE 0x80
 #define LCD_BLANKING_TIMEMASK 0x0f
@@ -859,10 +452,10 @@ typedef struct TransceiverState
 
 
     uint8_t   low_power_config;        // for voltage colours and auto shutdown
-    ulong   low_power_shutdown_time;    // earliest time when auto shutdown can be executed
+    uint32_t   low_power_shutdown_time;    // earliest time when auto shutdown can be executed
     //
     uint8_t	tune_step;					// Used for press-and-hold tune step adjustment
-    ulong	tune_step_idx_holder;		// used to hold the original step size index during the press-and-hold
+    uint32_t	tune_step_idx_holder;		// used to hold the original step size index during the press-and-hold
     //
     bool	frequency_lock;				// TRUE if frequency knob is locked
     //
@@ -921,16 +514,12 @@ typedef struct TransceiverState
     uint16_t	version_number_minor;		// version number - minor - used to hold version number and detect change
     uint16_t	version_number_major;		// version number - build - used to hold version number and detect change
     uint16_t	version_number_release;		// version number - release - used to hold version number and detect change
-#ifdef OBSOLETE_AGC
-    uint8_t	nb_agc_time_const;			// used to calculate the AGC time constant
-#endif
     uint8_t	cw_offset_mode;				// CW offset mode (USB, LSB, etc.)
     bool	cw_lsb;					// flag used to indicate that CW is to operate in LSB when TRUE
     int32_t	iq_freq_mode;				// used to set/configure the I/Q frequency/conversion mode
     uint8_t	lsb_usb_auto_select;			// holds setting of LSB/USB auto-select above/below 10 MHz
-    bool	conv_sine_flag;				// FALSE until the sine tables for the frequency conversion have been built (normally zero, force 0 to rebuild)
-    ulong	last_tuning;				// this is a timer used to prevent too fast tuning per second
-    ulong	lcd_blanking_time;			// this holds the system time after which the LCD is blanked - if blanking is enabled
+    uint32_t	last_tuning;				// this is a timer used to prevent too fast tuning per second
+    uint32_t	lcd_blanking_time;			// this holds the system time after which the LCD is blanked - if blanking is enabled
     bool	lcd_blanking_flag;			// if TRUE, the LCD is blanked completely (e.g. backlight is off)
     bool	xvtr_adjust_flag;			// set TRUE if transverter offset adjustment is in process
     bool	SpectrumResize_flag;		// set TRUE if waterfall/spectrum resize request from touchscreen action
@@ -939,10 +528,10 @@ typedef struct TransceiverState
     uint32_t SpectrumResize_timer;		//
 #define VFO_MEM_MODE_SPLIT 0x80
 #define VFO_MEM_MODE_VFO_B 0x40
-    ulong	vfo_mem_mode;				// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
+    uint32_t	vfo_mem_mode;				// this is used to record the VFO/memory mode (0 = VFO "A" = backwards compatibility)
     // LSB+6 (0x40):  0 = VFO A, 1 = VFO B
     // LSB+7 (0x80): 0 = normal mode, 1 = Split mode (e.g. LSB=0:  RX=A, TX=B;  LSB=1:  RX=B, TX=A)
-    ulong	voltmeter_calibrate;			// used to calibrate the voltmeter
+    uint32_t	voltmeter_calibrate;			// used to calibrate the voltmeter
 
 
     bool	dvmode;					// TRUE if alternate (stripped-down) RX and TX functions (USB-only) are to be used
@@ -953,16 +542,17 @@ typedef struct TransceiverState
     bool	audio_dac_muting_flag;			// when TRUE, audio is to be muted after PTT/keyup
     bool	vfo_mem_flag;				// when TRUE, memory mode is enabled
     bool	mem_disp;				// when TRUE, memory display is enabled
-    ulong	fm_subaudible_tone_gen_select;		// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
-    uint8_t	fm_tone_burst_mode;			// this is the setting for the tone burst generator
-    ulong	fm_tone_burst_timing;			// this is used to time/schedule the duration of a tone burst
-    uint8_t	fm_sql_threshold;			// squelch threshold "dial" setting
-//	uchar	fm_rx_bandwidth;			// bandwidth setting for FM reception
-    ulong	fm_subaudible_tone_det_select;		// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
-    bool	beep_active;				// TRUE if beep is active
-    ulong	beep_frequency;				// beep frequency, in Hz
-    ulong	beep_timing;				// used to time/schedule the duration of a keyboard beep
-    uint8_t	beep_loudness;				// loudness of the keyboard/CW sidetone test beep
+
+    uint32_t    fm_subaudible_tone_gen_select;		// lookup ("tone number") used to index the table tone generation (0 corresponds to "tone disabled")
+    uint8_t     fm_tone_burst_mode;			// this is the setting for the tone burst generator
+    uint32_t    fm_tone_burst_timing;			// this is used to time/schedule the duration of a tone burst
+    uint8_t     fm_sql_threshold;			// squelch threshold "dial" setting
+    uint32_t    fm_subaudible_tone_det_select;		// lookup ("tone number") used to index the table for tone detection (0 corresponds to "disabled")
+
+    // key beep. Enabled via FLAGS2 !
+    uint32_t    beep_frequency;				// beep frequency, in Hz
+    uint8_t     beep_loudness;				// loudness of the key beep
+    uint32_t    beep_timing;                // countdown timer, used to activate beep and time the duration of a keyboard beep, in 1/100 ms
 
 #define EEPROM_SER_NONE 0
 #define EEPROM_SER_WRONG_SIG 1
@@ -983,15 +573,9 @@ typedef struct TransceiverState
     uint8_t	power_temp;				// temporary tx power if tune is different from actual tx power
     uint8_t	cat_band_index;			// buffered bandindex before first CAT command arrived
     uint8_t	xlat;					// CAT <> IQ-Audio
-    ulong	notch_frequency;		// frequency of the manual notch filter
-    ulong	peak_frequency;			// frequency of the manual peak filter
-    int		bass_gain;				// gain of the low shelf EQ filter
-    int		treble_gain;			// gain of the high shelf EQ filter
-    int		tx_bass_gain;			// gain of the TX low shelf EQ filter
-    int		tx_treble_gain;			// gain of the TX high shelf EQ filter
 
 //    bool	dBm_Hz_Test;			// for testing only
-//    ulong	dBm_count;				// timer for calculating RX dBm
+//    uint32_t	dBm_count;				// timer for calculating RX dBm
     uint8_t 	display_dbm;			// display dbm or dbm/Hz or OFF
     uint8_t	s_meter;				// defines S-Meter style/configuration
 	uint8_t	meter_colour_up;
@@ -1002,15 +586,16 @@ typedef struct TransceiverState
 	// twinpeak_tested = 2 --> wait for system to warm up
     // twinpeak_tested = 0 --> go and test the IQ phase
     // twinpeak_tested = 1 --> tested, verified, go and have a nice day!
+	// twinpeak_tested = 8 -> we are waiting for the main loop to execute I2S restart
 #define TWINPEAKS_WAIT 2
 #define TWINPEAKS_DONE 1
 #define TWINPEAKS_SAMPLING 0
-#define TWINPEAKS_UNCORRECTABLE 4
+#define TWINPEAKS_UNCORRECTABLE 3
+#define TWINPEAKS_CODEC_RESTART 4
 	uint8_t twinpeaks_tested;
 
-	agc_wdsp_param_t agc_wdsp_conf;
 
-    int dbm_constant;
+    int32_t dbm_constant;
 
 //#define DISPLAY_S_METER_STD   0
 #define DISPLAY_S_METER_DBM   1
@@ -1027,7 +612,7 @@ typedef struct TransceiverState
 
     uint32_t audio_int_counter;		// used for encoder timing - test DL2FW
     bool encoder3state;
-    int bc_band;
+    int32_t bc_band;
 
     Oscillator_ResultCodes_t last_lo_result;			// used in dynamic tuning to hold frequency color
 
@@ -1040,13 +625,8 @@ typedef struct TransceiverState
 #define STREAM_TX_AUDIO_SRC     1  // send source audio stream (from CODEC)
 #define STREAM_TX_AUDIO_FILT    2  // send processed audio stream (after filtering)
 #define STREAM_TX_AUDIO_DIGIQ   3  // send final IQ signal
-#define STREAM_TX_AUDIO_NUM   4  // how many choices
-
-	// Freedv Test DL2FW
-	bool	FDV_TX_encode_ready;
-	int	FDV_TX_samples_ready;
-	uint16_t FDV_TX_out_start_pt;
-	uint16_t FDV_TX_in_start_pt;
+#define STREAM_TX_AUDIO_GENIQ   4  // generated "clean" IQ signal before final scaling and IQ phase/balance adjust
+#define STREAM_TX_AUDIO_NUM     5  // how many choices
 
     bool    digi_lsb;                 // flag used to indicate that mcHF is to operate in LSB when TRUE
 
@@ -1062,7 +642,6 @@ typedef struct TransceiverState
     int16_t rtc_calib; // ppm variation value, unit 1 ppm
     bool vbat_present; // we detected a working vbat mod
     bool codec_present; // we detected a working codec
-	bool new_nb; // new noise blanker
 	bool rtty_atc_enable; // is ATC enabled for RTTY decoding? (for testing!)
 
 	uint8_t enable_rtty_decode; // new rtty encoder (experimental)
@@ -1078,36 +657,13 @@ typedef struct TransceiverState
 #ifdef USE_LEAKY_LMS
 	bool enable_leaky_LMS;
 #endif
-	float32_t nr_alpha; // alpha smoothing constant for spectral noise reduction
-	int16_t nr_alpha_int;
-	float32_t nr_beta; // beta smoothing constant for spectral noise reduction
-	int16_t nr_beta_int;
-//	float32_t nr_vad_thresh; // threshold for voice activity detector in spectral noise reduction
-//	uint32_t nr_vad_thresh_int;
-	bool nr_enable; // enable spectral noise reduction
-	uint8_t nr_first_time; // set to 1 for initialization of the NR variables
-//	bool nr_gain_smooth_enable; // enable gain smoothing
-//	float32_t nr_gain_smooth_alpha; // smoothing constant for gain smoothing in the spectral noise reduction
-//	int16_t nr_gain_smooth_alpha_int;
-//	bool nr_long_tone_enable; // enable elimination of long tones in the spectral NR algorithm
-//	float32_t nr_long_tone_alpha; // time constant for long tone detection
-//	uint32_t nr_long_tone_alpha_int; // time constant for long tone detection
-//	int16_t nr_long_tone_thresh; // threshold for long tone detection
-//	bool nr_long_tone_reset; // used to reset gains of the long tone detection to 1.0
-//	int16_t nr_vad_delay; // how many frames to delay the noise estimate after VAD has detected NOISE
-//	int16_t nr_mode;
 
-	bool nr_fft_256_enable; // debugging: enable FFT256 instead of FFT128 for spectral NR
-	uint16_t NR_FFT_L; // resulting FFT length: 128 or 256
-	uint8_t NR_FFT_LOOP_NO;
-	bool NR_decimation_enable; // set to true, if we want to use another decimation step for the spectral NR leading to 6ksps sample rate
 	uint8_t debug_si5351a_pllreset;
 	uint16_t graticulePowerupYpos;	//initial (after powerup) position of graticule (frequency bar)
 	const LcdLayout* Layout;				//current lcd layout (set by lcd detection routine)
 	uint8_t FreqDisplayFont;		//0= old thin font, 1=new bold 8 bit (if available)
 
 	RfBoard_t rf_board; // the detected rf board connected to the control logic
-	bool si570_is_present;
 	uint8_t special_functions_enabled;
 	bool txrx_switching_enabled;
 
@@ -1121,8 +677,13 @@ extern __IO TransceiverState ts;
 //DL2FW UGLY test for FREEDV - some globals :-(
 
 
+	// noise reduction gain display in spectrum
+    int16_t  nr_gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
+    //                                           3 = display bin gain multiplied with long_tone_gain
 
-//end DL2FW UGLY test for FREEDV - some globals :-(
+} TransceiverState;
+
+extern __IO TransceiverState ts;
 
 #define	POWERDOWN_DELAY_COUNT	30	// Delay in main service loop for the "last second" before power-down - to allow EEPROM write to complete
 
@@ -1137,7 +698,7 @@ extern __IO TransceiverState ts;
 
 #define non_os_delay()						\
 do {							\
-  register unsigned int i;				\
+  register uint32_t i;				\
   for (i = 0; i < 1000000; ++i)				\
     __asm__ __volatile__ ("nop\n\t":::"memory");	\
 } while (0)
@@ -1151,97 +712,9 @@ typedef enum {
     LED_STATE_TOGGLE = 2
 } ledstate_t;
 
-inline void Board_GreenLed(ledstate_t state)
-{
-    switch(state)
-    {
-    case LED_STATE_ON:
-        GPIO_SetBits(GREEN_LED_PIO, GREEN_LED);
-        break;
-    case LED_STATE_OFF:
-        GPIO_ResetBits(GREEN_LED_PIO, GREEN_LED);
-        break;
-    default:
-        GPIO_ToggleBits(GREEN_LED_PIO, GREEN_LED);
-        break;
-    }
-}
 
-inline void Board_RedLed(ledstate_t state)
-{
-    switch(state)
-    {
-    case LED_STATE_ON:
-        GPIO_SetBits(RED_LED_PIO, RED_LED);
-        break;
-    case LED_STATE_OFF:
-        GPIO_ResetBits(RED_LED_PIO, RED_LED);
-        break;
-    default:
-        GPIO_ToggleBits(RED_LED_PIO, RED_LED);
-        break;
-    }
-}
 
-#ifdef UI_BRD_OVI40
-inline void Board_BlueLed(ledstate_t state)
-{
-    switch(state)
-    {
-    case LED_STATE_ON:
-        GPIO_SetBits(BLUE_LED_PIO, BLUE_LED);
-        break;
-    case LED_STATE_OFF:
-        GPIO_ResetBits(BLUE_LED_PIO, BLUE_LED);
-        break;
-    default:
-        GPIO_ToggleBits(BLUE_LED_PIO, BLUE_LED);
-        break;
-    }
-}
-#endif
-/**
- * @brief sets the hw ptt line and by this switches the mcHF board signal path between rx and tx configuration
- * @param tx_enable true == TX Paths, false == RX Paths
- */
-inline void Board_EnableTXSignalPath(bool tx_enable)
-{
-    // to make switching as noiseless as possible, make sure the codec lineout is muted/produces zero output before switching
-    if (tx_enable)
-    {
-        GPIO_SetBits(PTT_CNTR_PIO,PTT_CNTR);     // TX on and switch CODEC audio paths
-        // Antenna Direction Output
-        // BPF Direction Output (U1,U2)
-        // PTT Optocoupler LED On (ACC Port) (U6)
-        // QSD Mixer Output Disable (U15)
-        // QSE Mixer Output Enable (U17)
-        // Codec LineIn comes from mcHF LineIn Socket (U3)
-        // Codec LineOut connected to QSE mixer (IQ Out) (U3a)
-    }
-    else
-    {
-        GPIO_ResetBits(PTT_CNTR_PIO,PTT_CNTR); // TX off
-        // Antenna Direction Input
-        // BPF Direction Input (U1,U2)
-        // PTT Optocoupler LED Off (ACC Port) (U6)
-        // QSD Mixer Output Enable (U15)
-        // QSE Mixer Output Disable (U17)
-        // Codec LineIn comes from RF Board QSD mixer (IQ In) (U3)
-        // Codec LineOut disconnected from QSE mixer  (IQ Out) (U3a)
-    }
-}
-
-/**
- * @brief set PA bias at the LM2931CDG (U18) using DAC Channel 2
- */
-inline void Board_SetPaBiasValue(uint16_t bias)
-{
-    // Set DAC Channel 1 DHR12L register
-    // DAC_SetChannel2Data(DAC_Align_8b_R,bias);
-    HAL_DAC_SetValue(&hdac, DAC_CHANNEL_2, DAC_ALIGN_8B_R, bias);
-
-}
-
+void Board_SetPaBiasValue(uint16_t bias);
 void Board_HandlePowerDown();
 
 void Board_SelectLpfBpf(uint8_t group);
@@ -1252,53 +725,59 @@ void Board_PostInit();
 void Board_Reboot();
 void Board_Powerdown();
 
+void Board_EnableTXSignalPath(bool tx_enable);
 
-/**
- * Is the hardware contact named DAH pressed
- */
-inline bool Board_PttDahLinePressed() {
-    return  !HAL_GPIO_ReadPin(PADDLE_DAH_PIO,PADDLE_DAH);
-}
+void Board_GreenLed(ledstate_t state);
+void Board_RedLed(ledstate_t state);
 
-/**
- * Is the hardware contact named DIT pressed
- */
-inline bool Board_DitLinePressed() {
-    return  !HAL_GPIO_ReadPin(PADDLE_DIT_PIO,PADDLE_DIT);
-}
+#ifdef UI_BRD_OVI40
+void Board_BlueLed(ledstate_t state);
+#endif
 
-unsigned int Board_RamSizeGet();
+bool Board_PttDahLinePressed();
+bool Board_DitLinePressed();
+
+uint32_t Board_RamSizeGet();
 void Board_RamSizeDetection();
-void Board_TouchscreenInit();
 const char* Board_BootloaderVersion();
+
 // in main.c
-void CriticalError(ulong error);
+void CriticalError(uint32_t error);
 
 bool is_vfo_b();
 
-inline bool is_ssb_tx_filter_enabled() {
+static inline bool is_ssb_tx_filter_enabled() {
 	return (ts.tx_filter != 0);
 	//    return (ts.flags1 & FLAGS1_SSB_TX_FILTER_DISABLE) == false;
 }
 
-inline bool is_ssb(const uint32_t dmod_mode) {
+static inline bool is_ssb(const uint32_t dmod_mode) {
     return (dmod_mode == DEMOD_LSB || dmod_mode == DEMOD_USB);
 }
 
-inline bool is_splitmode()
+static inline bool is_splitmode()
 {
     return (ts.vfo_mem_mode & VFO_MEM_MODE_SPLIT) != 0;
 }
 
-inline bool is_scopemode()
+static inline bool is_scopemode()
 {
     return (ts.flags1 & FLAGS1_SCOPE_ENABLED) != 0;
 }
 
-inline bool is_waterfallmode()
+static inline bool is_waterfallmode()
 {
     return (ts.flags1 & FLAGS1_WFALL_ENABLED) != 0;
 }
+
+bool is_dsp_nb_active();
+bool is_dsp_nb();
+bool is_dsp_nr();
+bool is_dsp_nr_postagc();
+bool is_dsp_notch();
+bool is_dsp_mnotch();
+bool is_dsp_mpeak();
+
 
 #ifdef USE_PENDSV_FOR_HIGHPRIO_TASKS
 extern void UiDriver_TaskHandler_HighPrioTasks();

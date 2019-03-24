@@ -31,11 +31,12 @@ extern arm_fir_instance_f32    Fir_Rx_Hilbert_Q;
 extern arm_fir_instance_f32    Fir_Rx_Hilbert_I;
 extern arm_fir_instance_f32    Fir_TxFreeDV_Interpolate_Q;
 extern arm_fir_instance_f32    Fir_TxFreeDV_Interpolate_I;
-extern arm_fir_decimate_instance_f32 FirDecim_RxSam_I;
-extern arm_fir_decimate_instance_f32 FirDecim_RxSam_Q;
+extern arm_fir_decimate_instance_f32 DECIMATE_RX_I;
+extern arm_fir_decimate_instance_f32 DECIMATE_RX_Q;
 
-void 	AudioFilter_InitRxHilbertFIR(uint8_t dmod_mode);
-void 	AudioFilter_InitTxHilbertFIR(void);
+
+void 	AudioFilter_SetRxHilbertAndDecimationFIR(uint8_t dmod_mode);
+void 	AudioFilter_SetTxHilbertFIR(void);
 
 enum
 {
@@ -173,6 +174,5 @@ typedef struct
 void AudioFilter_CalcGoertzel(Goertzel* g, float32_t freq, const uint32_t size, const float goertzel_coeff, float32_t samplerate);
 void AudioFilter_GoertzelInput(Goertzel* goertzel, float32_t in);
 float32_t AudioFilter_GoertzelEnergy(Goertzel* goertzel);
-
 
 #endif /* DRIVERS_AUDIO_AUDIO_FILTER_H_ */

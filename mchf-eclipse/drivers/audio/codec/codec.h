@@ -15,8 +15,12 @@
 #ifndef __CODEC_H
 #define __CODEC_H
 
-#define WORD_SIZE_16 					0
-#define WORD_SIZE_32 					1
+typedef enum
+{
+    WORD_SIZE_16 =	0,
+    WORD_SIZE_24 =  2,
+    WORD_SIZE_32 =  3,
+} CodecSampleWidth_t;
 
 #include "ui_configuration.h"
 #ifdef UI_BRD_MCHF
@@ -40,7 +44,7 @@ void 	 Codec_LineInGainAdj(uint8_t gain);
 void     Codec_IQInGainAdj(uint8_t gain);
 void 	 Codec_MuteDAC(bool state);
 
-uint32_t Codec_Reset(uint32_t AudioFreq,uint32_t word_size);
+uint32_t Codec_Reset(uint32_t AudioFreq);
 void     Codec_RestartI2S();
 void     Codec_TxSidetoneSetgain(uint8_t mode);
 void     Codec_SwitchMicTxRxMode(uint8_t mode);

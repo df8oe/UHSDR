@@ -15,7 +15,6 @@
 #ifndef DRIVERS_UI_UI_CONFIGURATION_H_
 #define DRIVERS_UI_UI_CONFIGURATION_H_
 #include "uhsdr_board.h"
-#include "eeprom.h"
 
 enum
 {
@@ -64,14 +63,9 @@ void		UiConfiguration_UpdateMacroCap(void);
 //
 #define USB_FREQ_THRESHOLD  (10000000)    // dial frequency at and above which the default is USB, Hz
 //
-#define MAX_RF_ATTEN        15      // Maximum setting for RF attenuation
 //
 #define MIN_RIT_VALUE       -60     // Minimum RIT Value -1.2 kHz
 #define MAX_RIT_VALUE       60      // Maximum RIT Value +1.2 kHz
-//
-#define MAX_RF_GAIN         50      // Maximum RF gain setting
-#define DEFAULT_RF_GAIN     50      // Default RF gain setting
-
 
 #define LINEOUT_GAIN_DEFAULT    0x49    // Default lineout gain setting in dB steps
 #define LINEOUT_GAIN_MIN        1       //  min lineout gain setting in dB steps
@@ -333,8 +327,8 @@ void		UiConfiguration_UpdateMacroCap(void);
 //
 #define EEPROM_SPECTRUM_MAGNIFY				149     // TRUE if spectrum scope is to be magnified
 //
-#define EEPROM_WIDE_FILT_CW_DISABLE			150     // TRUE if wide filters are to be disabled in CW mode
-#define EEPROM_NARROW_FILT_SSB_DISABLE		151     // TRUE if narrow filters are to be disabled in SSB mode
+//#define EEPROM_WIDE_FILT_CW_DISABLE			150     // TRUE if wide filters are to be disabled in CW mode
+//#define EEPROM_NARROW_FILT_SSB_DISABLE		151     // TRUE if narrow filters are to be disabled in SSB mode
 //
 #define EEPROM_AM_MODE_DISABLE				152     // TRUE if AM mode is to be disabled
 //
@@ -616,11 +610,6 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_FIRST_UNUSED 				427		// change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
-
-
-#if (MAX_VAR_ADDR > NB_OF_VAR)
-    #error "Too many eeprom variables defined in ui_configuration.h (MAX_VAR_ADDR > NB_OF_VAR ). Please change maximum number of vars in eeprom.h"
-#endif
 
 // Note: EEPROM addresses up to 383 are currently defined. If this value is passed you
 // need to modify virtual EEPROM routines otherwise system may crash

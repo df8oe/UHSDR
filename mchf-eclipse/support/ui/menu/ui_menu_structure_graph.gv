@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2018-12-12T08:42:43  by "./ui_menu_structure_graph.py"
+#  generated at  2019-02-27T17:50:12  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2018-12-12T08:42:43  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2019-02-27T17:50:12  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1112,13 +1112,13 @@
              shape = record
              ];
         
-        "INFO_SI570" [
-             label = "INFO_SI570 | SI570"
+        "INFO_OSC_NAME" [
+             label = "INFO_OSC_NAME | Oscillator"
              shape = record
              ];
         
-        "INFO_SI5351A" [
-             label = "INFO_SI5351A | SI5351A"
+        "INFO_SI570" [
+             label = "INFO_SI570 | SI570"
              shape = record
              ];
         
@@ -1377,6 +1377,26 @@
              shape = record
              ];
         
+        "MENU_DEBUG_VSWR_PROTECTION_THRESHOLD" [
+             label = "MENU_DEBUG_VSWR_PROTECTION_THRESHOLD | VSWR Protect. threshold"
+             shape = record
+             ];
+        
+        "CONFIG_RESET_SER_EEPROM_SIGNATURE" [
+             label = "CONFIG_RESET_SER_EEPROM_SIGNATURE | Rst Conf EEPROM"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_FREEDV_MODE" [
+             label = "MENU_DEBUG_FREEDV_MODE | FreeDV Mode"
+             shape = record
+             ];
+        
+        "MENU_DEBUG_FREEDV_SQL_THRESHOLD" [
+             label = "MENU_DEBUG_FREEDV_SQL_THRESHOLD | FreeDV Squelch threshold"
+             shape = record
+             ];
+        
         "0" [
              label = "0 | M0NKA  (Chris) mcHF founder"
              shape = record
@@ -1459,6 +1479,11 @@
         
         "0" [
              label = "0 | ex UA9YPF (Yuri)"
+             shape = record
+             ];
+        
+        "0" [
+             label = "0 | RV9YW  (Max)"
              shape = record
              ];
         
@@ -1862,9 +1887,9 @@
             
             MENU_SYSINFO -> INFO_DISPLAY_CTRL
             
-            MENU_SYSINFO -> INFO_SI570
+            MENU_SYSINFO -> INFO_OSC_NAME
             
-            MENU_SYSINFO -> INFO_SI5351A
+            MENU_SYSINFO -> INFO_SI570
             
             MENU_SYSINFO -> INFO_EEPROM
             
@@ -2018,6 +2043,14 @@
             
             MENU_DEBUG -> CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF
             
+            MENU_DEBUG -> MENU_DEBUG_VSWR_PROTECTION_THRESHOLD
+            
+            MENU_DEBUG -> CONFIG_RESET_SER_EEPROM_SIGNATURE
+            
+            MENU_DEBUG -> MENU_DEBUG_FREEDV_MODE
+            
+            MENU_DEBUG -> MENU_DEBUG_FREEDV_SQL_THRESHOLD
+            
         }  ## END subgraph MENU_HALL_OF_FAME
     
         #  -  -  -  -
@@ -2026,6 +2059,8 @@
             label = "MENU_HALL_OF_FAME beef.0f.dead.e5e1"
 
     
+            MENU_HALL_OF_FAME -> 0
+            
             MENU_HALL_OF_FAME -> 0
             
             MENU_HALL_OF_FAME -> 0
