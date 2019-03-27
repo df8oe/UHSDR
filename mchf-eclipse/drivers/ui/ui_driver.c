@@ -1238,7 +1238,14 @@ void UiAction_ToggleVfoAB()
 
 	uint32_t old_dmod_mode = ts.dmod_mode;
 
+	/**
+	 * @warning - The two functions below call the same function
+	 * -> RadioManagement_SetDemodMode() at the end,
+	 * so some reorganization should be done to better handle switching modes,
+	 * in a more central way...
+	 */
 	RadioManagement_ToggleVfoAB();
+	UiDriver_SetDemodMode( ts.dmod_mode );
 
 	UiDriver_FButton_F4ActiveVFO();
 
