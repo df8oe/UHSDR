@@ -4265,7 +4265,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         case MENU_DEBUG_VSWR_PROTECTION_THRESHOLD:
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.debug_vswr_protection_threshold,
                     1,
-                    6,
+                   10,
                     1,
                     1);
             if (ts.debug_vswr_protection_threshold < 2)
