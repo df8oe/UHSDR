@@ -10,7 +10,7 @@
 <title>mcHF_menus</title>
 <polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-13418.2696 752,-13418.2696 752,4 -4,4"/>
 <text text-anchor="middle" x="374" y="-22.8" font-family="Times,serif" font-size="14.00" fill="#000000">mcHF v.. &#45; Menus Overview</text>
-<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00" fill="#000000">generated at &#160;2019&#45;02&#45;27T17:50:12 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
+<text text-anchor="middle" x="374" y="-7.8" font-family="Times,serif" font-size="14.00" fill="#000000">generated at &#160;2019&#45;04&#45;07T09:20:02 &#160;by &quot;./ui_menu_structure_graph.py&quot;</text>
 <!-- MENU_TOP -->
 <g id="node1" class="node">
 <title>MENU_TOP</title>
@@ -3778,7 +3778,7 @@
 <polygon fill="none" stroke="#000000" points="388,-260.7696 388,-306.7696 723,-306.7696 723,-260.7696 388,-260.7696"/>
 <text text-anchor="middle" x="555.5" y="-291.5696" font-family="Times,serif" font-size="14.00" fill="#000000">MENU_DEBUG_VSWR_PROTECTION_THRESHOLD</text>
 <polyline fill="none" stroke="#000000" points="388,-283.7696 723,-283.7696 "/>
-<text text-anchor="middle" x="555.5" y="-268.5696" font-family="Times,serif" font-size="14.00" fill="#000000">VSWR Protect. threshold</text>
+<text text-anchor="middle" x="555.5" y="-268.5696" font-family="Times,serif" font-size="14.00" fill="#000000">VSWR Protect.threshold</text>
 </g>
 <!-- MENU_DEBUG&#45;&gt;MENU_DEBUG_VSWR_PROTECTION_THRESHOLD -->
 <g id="edge244" class="edge">

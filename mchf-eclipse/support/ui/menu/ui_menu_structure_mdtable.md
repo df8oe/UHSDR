@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2019-02-27T17:50:15  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2019-04-07T09:20:04  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2019-02-27T17:50:15  by "./ui_menu_structure_mdtable.py"
+generated at  2019-04-07T09:20:04  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -315,7 +315,7 @@ generated at  2019-02-27T17:50:15  by "./ui_menu_structure_mdtable.py"
 | **TX IQ Phase   (15m,CW)**    (       CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz. | 
 | **TX IQ Balance (10mUp,CW)**  (     CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz. | 
 | **TX IQ Phase   (10mUp,CW)**  (    CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz. | 
-| **VSWR Protect. threshold**   (       MENU_DEBUG_VSWR_PROTECTION_THRESHOLD) | If not OFF, on TX/tune the bias of PA will be down to 0 when exceeding the specified value of VSWR | 
+| **VSWR Protect.threshold**    (       MENU_DEBUG_VSWR_PROTECTION_THRESHOLD) | If not OFF, on TX/tune the bias of PA will be down to 0 etc when exceeding the specified value of VSWR | 
 | **Rst Conf EEPROM**           (          CONFIG_RESET_SER_EEPROM_SIGNATURE) | Clear the EEPROMi signature but keep all config values. This is mainly for debugging purposes). | 
 | **FreeDV Mode**               (                     MENU_DEBUG_FREEDV_MODE) | Change active FreeDV mode. Please note, you have to reboot to activate new mode | 
 | **FreeDV Squelch threshold**  (            MENU_DEBUG_FREEDV_SQL_THRESHOLD) | If not OFF, FreeDV will squelch if detected SNR is below set value. | 
