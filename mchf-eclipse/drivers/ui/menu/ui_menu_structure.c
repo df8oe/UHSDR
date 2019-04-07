@@ -459,7 +459,7 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF, NULL, "TX IQ Phase   (15m,CW)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz.") },
     { MENU_DEBUG, MENU_ITEM, CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF, NULL, "TX IQ Balance (10mUp,CW)", UiMenuDesc("IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz.") },
     { MENU_DEBUG, MENU_ITEM, CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF, NULL, "TX IQ Phase   (10mUp,CW)", UiMenuDesc("IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_VSWR_PROTECTION_THRESHOLD, NULL, "VSWR Protect. threshold", UiMenuDesc("If not OFF, on TX/tune the bias of PA will be down to 0 when exceeding the specified value of VSWR") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_VSWR_PROTECTION_THRESHOLD, NULL, "VSWR Protect.threshold", UiMenuDesc("If not OFF, on TX/tune the bias of PA will be down to 0 etc when exceeding the specified value of VSWR") }, 
     { MENU_DEBUG, MENU_ITEM, CONFIG_RESET_SER_EEPROM_SIGNATURE, NULL, "Rst Conf EEPROM", UiMenuDesc("Clear the EEPROMi signature but keep all config values. This is mainly for debugging purposes).") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_FREEDV_MODE, NULL, "FreeDV Mode", UiMenuDesc("Change active FreeDV mode. Please note, you have to reboot to activate new mode") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_FREEDV_SQL_THRESHOLD, NULL, "FreeDV Squelch threshold", UiMenuDesc("If not OFF, FreeDV will squelch if detected SNR is below set value.") },
