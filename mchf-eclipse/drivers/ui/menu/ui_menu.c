@@ -4319,6 +4319,10 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             }
             break;
 #endif
+        case MENU_DEBUG_SMOOTH_DYN_TUNE:
+            var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.smooth_dyn_tune,0,options,&clr);
+            break;
+
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;
