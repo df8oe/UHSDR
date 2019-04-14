@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2019-04-07T09:20:02  by "./ui_menu_structure_graph.py"
+#  generated at  2019-04-14T10:01:59  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2019-04-07T09:20:02  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2019-04-14T10:01:59  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1397,6 +1397,11 @@
              shape = record
              ];
         
+        "MENU_DEBUG_SMOOTH_DYN_TUNE" [
+             label = "MENU_DEBUG_SMOOTH_DYN_TUNE | Smooth dynamic tune"
+             shape = record
+             ];
+        
         "0" [
              label = "0 | M0NKA  (Chris) mcHF founder"
              shape = record
@@ -1484,6 +1489,11 @@
         
         "0" [
              label = "0 | RV9YW  (Max)"
+             shape = record
+             ];
+        
+        "0" [
+             label = "0 | M0LNG  (Martin)"
              shape = record
              ];
         
@@ -2051,6 +2061,8 @@
             
             MENU_DEBUG -> MENU_DEBUG_FREEDV_SQL_THRESHOLD
             
+            MENU_DEBUG -> MENU_DEBUG_SMOOTH_DYN_TUNE
+            
         }  ## END subgraph MENU_HALL_OF_FAME
     
         #  -  -  -  -
@@ -2059,6 +2071,8 @@
             label = "MENU_HALL_OF_FAME beef.0f.dead.e5e1"
 
     
+            MENU_HALL_OF_FAME -> 0
+            
             MENU_HALL_OF_FAME -> 0
             
             MENU_HALL_OF_FAME -> 0
