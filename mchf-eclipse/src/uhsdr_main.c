@@ -315,6 +315,8 @@ void TransceiverStateInit(void)
 
     ts.debug_vswr_protection_threshold = 1; // OFF
 
+	ts.smooth_dyn_tune = false; // Smooth dynamic tune is OFF
+
     ts.band_effective = 255; // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
 }
 

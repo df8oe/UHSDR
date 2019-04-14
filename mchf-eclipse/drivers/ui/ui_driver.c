@@ -3346,20 +3346,46 @@ static bool UiDriver_CheckFrequencyEncoder()
 
 		if (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)   // check if dynamic tuning has been activated by touchscreen
 		{
-			if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
-			{
-				enc_multiplier = 10;    // turning medium speed -> increase speed by 10
-			}
+		    if (!ts.smooth_dyn_tune)        // Smooth dynamic tune is OFF
+				if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
+				{
+					enc_multiplier = 10;    // turning medium speed -> increase speed by 10
+				}
 
-			if ((enc_speed_avg > 160) || (enc_speed_avg < (-160)))
-			{
-				enc_multiplier = 40;    //turning fast speed -> increase speed by 100
-			}
+				if ((enc_speed_avg > 160) || (enc_speed_avg < (-160)))
+				{
+					enc_multiplier = 40;    //turning fast speed -> increase speed by 100
+				}
 
-			if ((enc_speed_avg > 300) || (enc_speed_avg < (-300)))
-			{
-				enc_multiplier = 100;    //turning fast speed -> increase speed by 100
-			}
+				if ((enc_speed_avg > 300) || (enc_speed_avg < (-300)))
+				{
+					enc_multiplier = 100;    //turning fast speed -> increase speed by 100
+				}
+            else
+                if      ((enc_speed_avg > 350) || (enc_speed_avg < (-350)))
+                {
+                    enc_multiplier = 100;    // turning medium speed -> increase speed by 100
+                }
+                else if ((enc_speed_avg > 250) || (enc_speed_avg < (-250)))
+                {
+                    enc_multiplier =  50;    //turning fast speed -> increase speed by 50
+                }
+                else if ((enc_speed_avg > 180) || (enc_speed_avg < (-180)))
+                {
+                    enc_multiplier =  12;    //turning fast speed -> increase speed by 12
+                }
+                else if ((enc_speed_avg >  90) || (enc_speed_avg < (- 90)))
+                {
+                    enc_multiplier =   6;    //turning fast speed -> increase speed by 6
+                }
+                else if ((enc_speed_avg >  45) || (enc_speed_avg < (- 45)))
+                {
+                    enc_multiplier =   3;    //turning fast speed -> increase speed by 3
+                }
+                else if ((enc_speed_avg >  30) || (enc_speed_avg < (- 30)))
+                {
+                    enc_multiplier =   2;    //turning fast speed -> increase speed by 2
+                }
 
 			if ((df.tuning_step == 10000) && (enc_multiplier > 10))
 			{
@@ -3506,19 +3532,44 @@ static void UiDriver_CheckEncoderTwo()
 
 				enc_multiplier = 1; //set standard speed
 
-				if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
-				{
-					enc_multiplier = 10;    // turning medium speed -> increase speed by 10
-				}
-				if ((enc_speed_avg > 150) || (enc_speed_avg < (-150)))
-				{
-					enc_multiplier = 30;    //turning fast speed -> increase speed by 100
-				}
-				if ((enc_speed_avg > 300) || (enc_speed_avg < (-300)))
-				{
-					enc_multiplier = 100;    //turning fast speed -> increase speed by 100
-				}
-
+				if (!ts.smooth_dyn_tune)        // Smooth dynamic tune is OFF
+					if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
+					{
+						enc_multiplier = 10;    // turning medium speed -> increase speed by 10
+					}
+					if ((enc_speed_avg > 150) || (enc_speed_avg < (-150)))
+					{
+						enc_multiplier = 30;    //turning fast speed -> increase speed by 100
+					}
+					if ((enc_speed_avg > 300) || (enc_speed_avg < (-300)))
+					{
+						enc_multiplier = 100;    //turning fast speed -> increase speed by 100
+					}
+                else
+                    if      ((enc_speed_avg > 350) || (enc_speed_avg < (-350)))
+                    {
+                        enc_multiplier = 100;    // turning medium speed -> increase speed by 100
+                    }
+                    else if ((enc_speed_avg > 250) || (enc_speed_avg < (-250)))
+                    {
+                        enc_multiplier =  50;    //turning fast speed -> increase speed by 50
+                    }
+                    else if ((enc_speed_avg > 180) || (enc_speed_avg < (-180)))
+                    {
+                        enc_multiplier =  12;    //turning fast speed -> increase speed by 12
+                    }
+                    else if ((enc_speed_avg >  90) || (enc_speed_avg < (- 90)))
+                    {
+                        enc_multiplier =   6;    //turning fast speed -> increase speed by 6
+                    }
+                    else if ((enc_speed_avg >  45) || (enc_speed_avg < (- 45)))
+                    {
+                        enc_multiplier =   3;    //turning fast speed -> increase speed by 3
+                    }
+                    else if ((enc_speed_avg >  30) || (enc_speed_avg < (- 30)))
+                    {
+                        enc_multiplier =   2;    //turning fast speed -> increase speed by 2
+                    }
 
 				// used for notch and peak
 				float32_t MAX_FREQ = 5000.0;
