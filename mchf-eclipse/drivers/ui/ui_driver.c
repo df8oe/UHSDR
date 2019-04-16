@@ -6058,7 +6058,7 @@ void UiAction_ChangeLowerMeterUp()
  * @param dsp_mode a valid dsp mode id
  * @return true if dsp_mode is currently available, false otherwise
  */
-static bool UiDriver_IsDspModePermitted(uint16_t dsp_mode)
+static bool UiDriver_IsDspModePermitted(dsp_mode_t dsp_mode)
 {
     bool neg_retval = dsp_mode >= DSP_SWITCH_MAX;
 
@@ -6066,10 +6066,10 @@ static bool UiDriver_IsDspModePermitted(uint16_t dsp_mode)
     neg_retval |= ts.dmod_mode == DEMOD_CW && ( dsp_mode == DSP_SWITCH_NR_AND_NOTCH || dsp_mode == DSP_SWITCH_NOTCH);
 
     // prevent NR AND NOTCH, when in AM and decimation rate equals 2 --> high CPU load)
-    neg_retval |= (dsp_mode == DSP_SWITCH_NR_AND_NOTCH) && (ts.dmod_mode == DEMOD_AM) && (ts.filters_p->sample_rate_dec == RX_DECIMATION_RATE_24KHZ);
+    neg_retval |= (dsp_mode == DSP_SWITCH_NR_AND_NOTCH) && (ts.dmod_mode == DEMOD_AM) && (ads.decimated_freq >= 24000);
 
     // prevent using a mode not enabled in the dsp mode selection (i.e. user configured it to be not used, although available)
-    neg_retval |= (ts.dsp.mode_mask&(1<<ts.dsp.mode)) == 0;
+    neg_retval |= (ts.dsp.mode_mask&(1<<dsp_mode)) == 0;
 
     // not forbidden, so return true;
     return neg_retval == false;
