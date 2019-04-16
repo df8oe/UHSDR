@@ -495,15 +495,19 @@ extern uint32_t fm_tone_burst_freq[FM_TONE_BURST_MAX+1];
 #define	DSP_NOTCH_MU_DEFAULT		10//25		// default convergence setting for the notch
 #endif
 
-#define DSP_SWITCH_OFF				0
-#define DSP_SWITCH_NR				1
-#define DSP_SWITCH_NOTCH			2
-#define DSP_SWITCH_NR_AND_NOTCH		3
-#define DSP_SWITCH_NOTCH_MANUAL		4
-#define DSP_SWITCH_PEAK_FILTER		5
-#define DSP_SWITCH_BASS				98
-#define DSP_SWITCH_TREBLE			99
-#define DSP_SWITCH_MAX				6 // bass & treble not used here
+typedef enum
+{
+    DSP_SWITCH_OFF			=	0,
+    DSP_SWITCH_NR,
+    DSP_SWITCH_NOTCH,
+    DSP_SWITCH_NR_AND_NOTCH,
+    DSP_SWITCH_NOTCH_MANUAL,
+    DSP_SWITCH_PEAK_FILTER,
+    DSP_SWITCH_MAX,				// bass & treble not used here
+    DSP_SWITCH_BASS          =   98,
+    DSP_SWITCH_TREBLE        =   99,
+} dsp_mode_t;
+
 #define DSP_SWITCH_MODEMASK_ENABLE_MASK             ((1<<DSP_SWITCH_MAX)-1)
 #define DSP_SWITCH_MODEMASK_ENABLE_DEFAULT              ((1<<DSP_SWITCH_MAX)-1)
 #define DSP_SWITCH_MODEMASK_ENABLE_DSPOFF           (1<<DSP_SWITCH_OFF)
