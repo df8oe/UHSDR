@@ -1789,7 +1789,7 @@ void UiSpectrum_InitCwSnapDisplay (bool visible)
 	{
 		color = Black;
 		// also erase yellow indicator
-        UiLcdHy28_DrawFullRect(ts.Layout->SNAP_CARRIER.x-27, ts.Layout->SNAP_CARRIER.y, 6, 57, Black);
+        UiLcdHy28_DrawFullRect(ts.Layout->SNAP_CARRIER.x-27, ts.Layout->SNAP_CARRIER.y, 6, 58, Black);
 	}
 	//Horizontal lines of box
 	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x-27,
