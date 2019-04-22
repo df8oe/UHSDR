@@ -3347,6 +3347,7 @@ static bool UiDriver_CheckFrequencyEncoder()
 		if (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)   // check if dynamic tuning has been activated by touchscreen
 		{
 		    if (!ts.smooth_dyn_tune)        // Smooth dynamic tune is OFF
+			{
 				if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
 				{
 					enc_multiplier = 10;    // turning medium speed -> increase speed by 10
@@ -3361,7 +3362,9 @@ static bool UiDriver_CheckFrequencyEncoder()
 				{
 					enc_multiplier = 100;    //turning fast speed -> increase speed by 100
 				}
+			}
             else
+            {
                 if      ((enc_speed_avg > 350) || (enc_speed_avg < (-350)))
                 {
                     enc_multiplier = 100;    // turning medium speed -> increase speed by 100
@@ -3386,6 +3389,7 @@ static bool UiDriver_CheckFrequencyEncoder()
                 {
                     enc_multiplier =   2;    //turning fast speed -> increase speed by 2
                 }
+			}
 
 			if ((df.tuning_step == 10000) && (enc_multiplier > 10))
 			{
@@ -3533,6 +3537,7 @@ static void UiDriver_CheckEncoderTwo()
 				enc_multiplier = 1; //set standard speed
 
 				if (!ts.smooth_dyn_tune)        // Smooth dynamic tune is OFF
+				{
 					if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
 					{
 						enc_multiplier = 10;    // turning medium speed -> increase speed by 10
@@ -3545,7 +3550,9 @@ static void UiDriver_CheckEncoderTwo()
 					{
 						enc_multiplier = 100;    //turning fast speed -> increase speed by 100
 					}
+				}
                 else
+                {
                     if      ((enc_speed_avg > 350) || (enc_speed_avg < (-350)))
                     {
                         enc_multiplier = 100;    // turning medium speed -> increase speed by 100
@@ -3570,6 +3577,7 @@ static void UiDriver_CheckEncoderTwo()
                     {
                         enc_multiplier =   2;    //turning fast speed -> increase speed by 2
                     }
+				}
 
 				// used for notch and peak
 				float32_t MAX_FREQ = 5000.0;
