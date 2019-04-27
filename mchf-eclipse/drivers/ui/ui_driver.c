@@ -3346,7 +3346,7 @@ static bool UiDriver_CheckFrequencyEncoder()
 
 		if (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)   // check if dynamic tuning has been activated by touchscreen
 		{
-		    if (!ts.smooth_dyn_tune)        // Smooth dynamic tune is OFF
+		    if (!(ts.expflags1 & EXPFLAGS1_SMOOTH_DYNAMIC_TUNE))        // Smooth dynamic tune is OFF
 			{
 				if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
 				{
@@ -3536,7 +3536,7 @@ static void UiDriver_CheckEncoderTwo()
 
 				enc_multiplier = 1; //set standard speed
 
-				if (!ts.smooth_dyn_tune)        // Smooth dynamic tune is OFF
+				if (!(ts.expflags1 & EXPFLAGS1_SMOOTH_DYNAMIC_TUNE))        // Smooth dynamic tune is OFF
 				{
 					if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
 					{
