@@ -486,6 +486,25 @@ typedef struct TransceiverState
 #define FLAGS1_REVERSE_X_TOUCHSCREEN	0x4000  // 1 = X direcction of touchscreen is mirrored
 #define FLAGS1_REVERSE_Y_TOUCHSCREEN	0x8000  // 1 = Y direcction of touchscreen is mirrored
 
+    uint16_t    expflags1;              // Used to hold flags for options in Debag/Expert menu, stored in EEPROM location "EEPROM_EXPFLAGS1"
+#define EXPFLAGS1_SMOOTH_DYNAMIC_TUNE   0x01    // 1 = Smooth dynamic tune is ON
+// #define EXPFLAGS1_RESERVE_1          0x02    // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_2          0x04    // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_3          0x08    // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_4          0x10    // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_5          0x20    // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_6          0x40    // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_7          0x80    // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_8          0x100   // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_9          0x200   // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_10         0x400   // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_11         0x800   // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_12         0x1000  // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_13         0x2000  // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_14         0x4000  // Reserve flag for options in Debag/Expert menu
+// #define EXPFLAGS1_RESERVE_15         0x8000  // Reserve flag for options in Debag/Expert menu
+#define EXPFLAGS1_CONFIG_DEFAULT        0x0000  // Default flags state
+
 #ifdef UI_BRD_MCHF
     // the default screen needs no reversed touch
 #define FLAGS1_CONFIG_DEFAULT (FLAGS1_WFALL_ENABLED|FLAGS1_SCOPE_ENABLED)
@@ -674,7 +693,6 @@ typedef struct TransceiverState
 	// noise reduction gain display in spectrum
     int16_t  nr_gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
     //                                           3 = display bin gain multiplied with long_tone_gain
-	bool smooth_dyn_tune; // Smooth dynamic tune is active?
 
 } TransceiverState;
 
