@@ -694,6 +694,18 @@ typedef struct TransceiverState
     int16_t  nr_gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
     //                                           3 = display bin gain multiplied with long_tone_gain
 
+	bool lotx_dacs_present;           // TX LO Supression DACs MCP4725 (x096/x97) is present?
+	int16_t cal_lo_tx_supr0[17];      // Band calibrated values for DACs MCP4725
+	int16_t cal_lo_tx_supr1[17];      // Band calibrated values for DACs MCP4725
+	uint8_t band_lo_tx_supr;          // The band the currently selected frequency is in (CB bands == 24/28 MHz)
+    uint8_t band_lo_tx_supr_old;      // Old value
+#define MIN_LO_TX_SUPR_BALANCE  1000  // Minimum setting for TX LO Supression balance
+#define MAX_LO_TX_SUPR_BALANCE  3048  // Maximum setting for TX LO Supression balance
+#define LO_TX_SUPR_DAC0_WRITE     192 //address I2C2
+#define LO_TX_SUPR_DAC0_READ      193 //address I2C2
+#define LO_TX_SUPR_DAC1_WRITE     194 //address I2C2
+#define LO_TX_SUPR_DAC1_READ      195 //address I2C2
+
 } TransceiverState;
 
 extern __IO TransceiverState ts;
@@ -797,3 +809,7 @@ extern void UiDriver_TaskHandler_HighPrioTasks();
 #endif
 
 #endif
+
+// For DACs MCP4725 - on band carrier TX depression
+uint16_t LO_TX_SUPR_DAC_WriteReg(uint8_t qitem, uint16_t cal_value);
+void LO_TX_SUPR_DAC_GetBand(uint32_t freq);

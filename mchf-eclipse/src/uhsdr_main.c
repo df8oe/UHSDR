@@ -317,6 +317,15 @@ void TransceiverStateInit(void)
 
     //CONFIG LOADED:ts.expflags1 = 0; // Used to hold flags for options in Debag/Expert menu, stored in EEPROM location "EEPROM_EXPFLAGS1"
 
+    ts.lotx_dacs_present = false; // TX LO Supression DACs MCP4725 (x096/x097) is not present
+    for (int idx = 0; idx < 17; idx++) // Band calibrated values for DACs MCP4725
+    {
+        ts.cal_lo_tx_supr0[idx] = 2048; // Half of +5V for each
+        ts.cal_lo_tx_supr1[idx] = 2048; // Half of +5V for each
+    }
+    ts.band_lo_tx_supr = 255; // This is an invalid band number (the band of currently selected frequency (CB band 27 MHz == 28 MHz))
+    ts.band_lo_tx_supr_old = 255; // This is an invalid band number - old value
+
     ts.band_effective = 255; // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
 }
 
@@ -419,6 +428,9 @@ int mchfMain(void)
 
 
     ts.rx_gain[RX_AUDIO_SPKR].value_old = 0;		// Force update of volume control
+
+	// TX LO Supression DACs MCP4725 (x096/x097) is present?
+    ts.lotx_dacs_present = (UhsdrHw_I2C_DeviceReady(SERIALEEPROM_I2C,LO_TX_SUPR_DAC0_WRITE) == HAL_OK) && (UhsdrHw_I2C_DeviceReady(SERIALEEPROM_I2C,LO_TX_SUPR_DAC1_WRITE) == HAL_OK);
 
 #ifdef USE_FREEDV
     FreeDV_Init();

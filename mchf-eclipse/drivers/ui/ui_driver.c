@@ -2384,6 +2384,10 @@ void UiDriver_DisplayBandForFreq(uint32_t freq)
 		UiDriver_HandlePowerLevelChange(band_scan, ts.power_level); // also validate power level if band changes
 	}
 	ts.band_effective = band_scan;
+	if (ts.lotx_dacs_present)
+	{
+	    LO_TX_SUPR_DAC_GetBand(freq);
+	}
 }
 
 

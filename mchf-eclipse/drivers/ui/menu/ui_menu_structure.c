@@ -391,6 +391,7 @@ const MenuDescriptor infoGroup[] =
     { MENU_SYSINFO, MENU_INFO, INFO_CODEC_TWINPEAKS, NULL,"Audio Codec Twinpeaks Corr.", UiMenuDesc("In some cases the audio codec needs to be restarted to produce correct IQ. The IQ auto correction detects this. If this fixes the problem, Done is displayed, Failed otherwise") },
     { MENU_SYSINFO, MENU_INFO, INFO_VBAT, NULL,"Backup RAM Battery", UiMenuDesc("Battery Support for Backup RAM present?") },
     { MENU_SYSINFO, MENU_INFO, INFO_RTC, NULL,"Real Time Clock", UiMenuDesc("Battery Supported Real Time Clock present?") },
+	{ MENU_SYSINFO, MENU_INFO, INFO_LO_TX_SUPR_DACs, NULL,"LO_TX Supression DACs", UiMenuDesc("LO_TX Supression DACs (0/1) are present?") },
     { MENU_SYSINFO, MENU_INFO, INFO_LICENCE, NULL,"FW license", UiMenuDesc("Display license of firmware") },
     { MENU_SYSINFO, MENU_INFO, INFO_HWLICENCE, NULL,"HW license", UiMenuDesc("Display license of hardware") },
 
@@ -464,6 +465,8 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_FREEDV_MODE, NULL, "FreeDV Mode", UiMenuDesc("Change active FreeDV mode. Please note, you have to reboot to activate new mode") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_FREEDV_SQL_THRESHOLD, NULL, "FreeDV Squelch threshold", UiMenuDesc("If not OFF, FreeDV will squelch if detected SNR is below set value.") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_SMOOTH_DYN_TUNE, NULL, "Smooth dynamic tune", UiMenuDesc("Activate smooth dynamic tune.") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CAL_LO_TX_SUPR_0, NULL, "Cal.LO_TX Supression C0", UiMenuDesc("Calibration of LO_TX Supression on every band via balancing of TX mixer, channel 0") },
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CAL_LO_TX_SUPR_1, NULL, "Cal.LO_TX Supression C1", UiMenuDesc("Calibration of LO_TX Supression on every band via balancing of TX mixer, channel 1") },
 
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };

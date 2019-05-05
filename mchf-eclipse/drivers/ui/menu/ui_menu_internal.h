@@ -316,6 +316,9 @@ enum
     CONFIG_SMETER_ATTACK,
     CONFIG_SMETER_DECAY,
     MENU_DEBUG_SMOOTH_DYN_TUNE,
+    INFO_LO_TX_SUPR_DACs,
+    MENU_DEBUG_CAL_LO_TX_SUPR_0,
+    MENU_DEBUG_CAL_LO_TX_SUPR_1,
     MAX_RADIO_CONFIG_ITEM   // Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
 

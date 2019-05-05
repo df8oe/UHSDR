@@ -757,3 +757,34 @@ bool Board_PttDahLinePressed() {
 bool Board_DitLinePressed() {
     return  !HAL_GPIO_ReadPin(PADDLE_DIT_PIO,PADDLE_DIT);
 }
+
+// For DACs MCP4725 - on band carrier TX depression
+uint16_t LO_TX_SUPR_DAC_WriteReg(uint8_t qitem, uint16_t cal_value)
+{
+    uint8_t write_address = qitem?LO_TX_SUPR_DAC1_WRITE:LO_TX_SUPR_DAC0_WRITE;
+    uint8_t write_data[2] =
+        {
+                (cal_value & 0x00FFFFFF) >> 4,
+                (cal_value & 0x00FFFFFF) << 8
+        };
+    return UhsdrHw_I2C_WriteBlock(SERIALEEPROM_I2C, write_address, 64, 1, write_data, 2);
+}
+// For band LO TX Supression  (CB band 27 MHz == 28 MHz, CB 26 MHz == 24 MHz)
+void LO_TX_SUPR_DAC_GetBand(uint32_t freq)
+{
+    ts.band_lo_tx_supr = ts.band_effective;
+    if ((freq >= 26965000) && (freq <= 27405000))
+    {
+        ts.band_lo_tx_supr = 8; // CB band 27 MHz == 28 MHz calibration
+    }
+    if ((freq >= 25670000) && (freq <= 26100000))
+    {
+        ts.band_lo_tx_supr = 7; // CB band 26 MHz == 24 MHz calibration
+    }
+    if (ts.band_lo_tx_supr != ts.band_lo_tx_supr_old)
+    {
+        LO_TX_SUPR_DAC_WriteReg(0, ts.cal_lo_tx_supr0[ts.band_lo_tx_supr]); // Set the DAC0 voltage
+        LO_TX_SUPR_DAC_WriteReg(1, ts.cal_lo_tx_supr1[ts.band_lo_tx_supr]); // Set the DAC1 voltage
+        ts.band_lo_tx_supr_old = ts.band_lo_tx_supr;
+    }
+}

@@ -672,6 +672,12 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         }
     }
     break;
+	case INFO_LO_TX_SUPR_DACs:
+    {
+        snprintf(out,32, "%s", ts.lotx_dacs_present?"Yes":"N/A");
+    }
+    break;
+
     case INFO_LICENCE:
     {
         snprintf(out,32, "%s", UHSDR_LICENCE);
@@ -4323,7 +4329,74 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.expflags1,0,options,&clr, EXPFLAGS1_SMOOTH_DYNAMIC_TUNE);
             clr = White;
             break;
+        case MENU_DEBUG_CAL_LO_TX_SUPR_0:
+            if ((!ts.lotx_dacs_present) || (ts.band_lo_tx_supr == BAND_MODE_GEN))
+            {
+                clr = Orange;
+                txt_ptr = "N/A";
+                break;
+            }
 
+            if (ts.lotx_dacs_present) //(ts.txrx_mode == TRX_MODE_TX)  // only allow adjustment if in right mode
+            {
+                var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.cal_lo_tx_supr0[ts.band_lo_tx_supr],
+                    MIN_LO_TX_SUPR_BALANCE,
+                    MAX_LO_TX_SUPR_BALANCE,
+                    2048,
+                    1);
+            }
+            else        // Orange if not in correct mode
+            {
+                *clr_ptr = Orange;
+            }
+            if (ts.cal_lo_tx_supr0[ts.band_lo_tx_supr] == 2048)
+            {
+                snprintf(options,32, " OFF");
+            }
+            else
+            {
+            snprintf(options,32, "%4d", ts.cal_lo_tx_supr0[ts.band_lo_tx_supr]);
+            }
+
+            if(var_change)
+            {
+                LO_TX_SUPR_DAC_WriteReg(0, ts.cal_lo_tx_supr0[ts.band_lo_tx_supr]); // Set the DAC0 voltage
+            }
+            break;
+        case MENU_DEBUG_CAL_LO_TX_SUPR_1:
+            if ((!ts.lotx_dacs_present) || (ts.band_lo_tx_supr == BAND_MODE_GEN))
+            {
+                clr = Orange;
+                txt_ptr = "N/A";
+                break;
+            }
+
+            if (ts.lotx_dacs_present) //(ts.txrx_mode == TRX_MODE_TX)  // only allow adjustment if in right mode
+            {
+                var_change = UiDriverMenuItemChangeInt16(var, mode, &ts.cal_lo_tx_supr1[ts.band_lo_tx_supr],
+                    MIN_LO_TX_SUPR_BALANCE,
+                    MAX_LO_TX_SUPR_BALANCE,
+                    2048,
+                    1);
+            }
+            else        // Orange if not in correct mode
+            {
+                *clr_ptr = Orange;
+            }
+            if (ts.cal_lo_tx_supr1[ts.band_lo_tx_supr] == 2048)
+            {
+                snprintf(options,32, " OFF");
+            }
+            else
+            {
+            snprintf(options,32, "%4d", ts.cal_lo_tx_supr1[ts.band_lo_tx_supr]);
+            }
+
+            if(var_change)
+            {
+                LO_TX_SUPR_DAC_WriteReg(0, ts.cal_lo_tx_supr1[ts.band_lo_tx_supr]); // Set the DAC1 voltage
+            }
+            break;
     default:                        // Move to this location if we get to the bottom of the table!
         txt_ptr = "ERROR!";
         break;

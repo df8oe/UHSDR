@@ -608,7 +608,41 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_TX_IQ_10M_UP_PHASE_BALANCE_TRANS_OFF	425
 #define EEPROM_VSWR_PROTECTION_THRESHOLD            426
 #define EEPROM_EXPFLAGS1                            427     // Flags for options in Debag/Expert menu - see variable "expflags1"
-#define EEPROM_FIRST_UNUSED                         428		// change this if new value ids are introduced, must be correct at any time
+#define EEPROM_LO_TX_SUPR0_0                         428
+#define EEPROM_LO_TX_SUPR0_1                         429
+#define EEPROM_LO_TX_SUPR0_2                         430
+#define EEPROM_LO_TX_SUPR0_3                         431
+#define EEPROM_LO_TX_SUPR0_4                         432
+#define EEPROM_LO_TX_SUPR0_5                         433
+#define EEPROM_LO_TX_SUPR0_6                         434
+#define EEPROM_LO_TX_SUPR0_7                         435
+#define EEPROM_LO_TX_SUPR0_8                         436
+#define EEPROM_LO_TX_SUPR0_9                         437
+#define EEPROM_LO_TX_SUPR0_10                        438
+#define EEPROM_LO_TX_SUPR0_11                        439
+#define EEPROM_LO_TX_SUPR0_12                        440
+#define EEPROM_LO_TX_SUPR0_13                        441
+#define EEPROM_LO_TX_SUPR0_14                        442
+#define EEPROM_LO_TX_SUPR0_15                        443
+#define EEPROM_LO_TX_SUPR0_16                        444
+#define EEPROM_LO_TX_SUPR1_0                         445
+#define EEPROM_LO_TX_SUPR1_1                         446
+#define EEPROM_LO_TX_SUPR1_2                         447
+#define EEPROM_LO_TX_SUPR1_3                         448
+#define EEPROM_LO_TX_SUPR1_4                         449
+#define EEPROM_LO_TX_SUPR1_5                         450
+#define EEPROM_LO_TX_SUPR1_6                         451
+#define EEPROM_LO_TX_SUPR1_7                         452
+#define EEPROM_LO_TX_SUPR1_8                         453
+#define EEPROM_LO_TX_SUPR1_9                         454
+#define EEPROM_LO_TX_SUPR1_10                        455
+#define EEPROM_LO_TX_SUPR1_11                        456
+#define EEPROM_LO_TX_SUPR1_12                        457
+#define EEPROM_LO_TX_SUPR1_13                        458
+#define EEPROM_LO_TX_SUPR1_14                        459
+#define EEPROM_LO_TX_SUPR1_15                        460
+#define EEPROM_LO_TX_SUPR1_16                        461
+#define EEPROM_FIRST_UNUSED                         462		// change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
