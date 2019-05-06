@@ -318,7 +318,7 @@ void TransceiverStateInit(void)
     //CONFIG LOADED:ts.expflags1 = 0; // Used to hold flags for options in Debag/Expert menu, stored in EEPROM location "EEPROM_EXPFLAGS1"
 
     ts.lotx_dacs_present = false; // TX LO Supression DACs MCP4725 (x096/x097) is not present
-    for (int idx = 0; idx < 17; idx++) // Band calibrated values for DACs MCP4725
+    for (int idx = 0; idx < 18; idx++) // Band calibrated values for DACs MCP4725
     {
         ts.cal_lo_tx_supr0[idx] = 2048; // Half of +5V for each
         ts.cal_lo_tx_supr1[idx] = 2048; // Half of +5V for each
