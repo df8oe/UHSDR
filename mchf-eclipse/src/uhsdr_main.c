@@ -141,7 +141,7 @@ void TransceiverStateInit(void)
 
     //CONFIG LOADED: ts.band		  		= BAND_MODE_20;			// band from eeprom
     ts.rx_temp_mute		= false;					// used in muting audio during band change
-    ts.filter_band		= 0;					// used to indicate the bpf filter selection for power detector coefficient selection
+    ts.filter_band		= FILTER_BAND_UNKNOWN;	// used to indicate the bpf filter selection for power detector coefficient selection
     ts.dmod_mode 		= DEMOD_USB;				// demodulator mode
     //CONFIG LOADED: ts.rx_gain[RX_AUDIO_SPKR].value = AUDIO_GAIN_DEFAULT;
     ts.rx_gain[RX_AUDIO_DIG].value		= DIG_GAIN_DEFAULT;

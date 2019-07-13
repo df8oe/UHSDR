@@ -725,11 +725,11 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcess
     return tchange;
 }
 
-bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, MenuProcessingMode_t mode, uint8_t filter_band, char* options, uint32_t* clr_ptr)
+bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, MenuProcessingMode_t mode, uint8_t coupling_band, char* options, uint32_t* clr_ptr)
 {
     bool tchange = false;
-    volatile uint8_t *adj_ptr = &swrm.coupling_calc[filter_band];
-    if(ts.filter_band == filter_band)	 	// is this band selected?
+    volatile uint8_t *adj_ptr = &swrm.coupling_calc[coupling_band];
+    if(ts.coupling_band == coupling_band)	 	// is this band selected?
     {
         tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
                                               SWR_COUPLING_MIN,
@@ -738,7 +738,7 @@ bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, Menu
                                               1
                                              );
     }
-    if((ts.txrx_mode != TRX_MODE_TX) || (ts.filter_band != filter_band))	// Orange if not in TX mode or NOT on this band
+    if((ts.txrx_mode != TRX_MODE_TX) || (ts.coupling_band != coupling_band))	// Orange if not in TX mode or NOT on this band
         *clr_ptr = Orange;
     sprintf(options, "  %u", *adj_ptr);
     return tchange;

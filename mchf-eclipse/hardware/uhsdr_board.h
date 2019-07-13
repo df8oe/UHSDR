@@ -294,6 +294,8 @@ typedef struct TransceiverState
 
     bool	rx_temp_mute;
     uint8_t	filter_band;		// filter selection band:  1= 80, 2= 60/40, 3=30/20, 4=17/15/12/10 - used for selection of power detector coefficient selection.
+#define FILTER_BAND_UNKNOWN 255 // used to indicate that we don't know how the BPF is set
+    uint8_t coupling_band;      // which tx wattmeter coupling factor value to use
     //
     // Receive/Transmit public flag
     uint8_t 	txrx_mode;

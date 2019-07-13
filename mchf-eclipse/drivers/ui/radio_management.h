@@ -297,7 +297,6 @@ bool RadioManagement_FreqIsInBand(const BandInfo* bandinfo, const uint32_t freq)
 bool RadioManagement_SetPowerLevel(band_mode_t band, power_level_t power_level);
 bool RadioManagement_Tune(bool tune);
 bool RadioManagement_UpdatePowerAndVSWR();
-void RadioManagement_SetHWFiltersForFrequency(ulong freq);
 void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec);
 bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8_t txrx_mode);
 void RadioManagement_HandlePttOnOff();

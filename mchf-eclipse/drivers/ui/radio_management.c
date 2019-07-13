@@ -83,17 +83,6 @@ DialFrequency               df;
 //
 //
 //
-//  Frequency limits for filters, in Hz, for bandpass filter selection - MODIFY AT YOUR OWN RISK!
-//
-#define BAND_FILTER_UPPER_160       2500000             // Upper limit for 160 meter filter
-#define BAND_FILTER_UPPER_80        4250000             // Upper limit for 80 meter filter
-#define BAND_FILTER_UPPER_40        8000000             // Upper limit for 40/60 meter filter
-#define BAND_FILTER_UPPER_20        16000000            // Upper limit for 20/30 meter filter
-#define BAND_FILTER_UPPER_10        32000000            // Upper limit for 10 meter filter
-#define BAND_FILTER_UPPER_6     40000000            // Upper limit for 6 meter filter
-#define BAND_FILTER_UPPER_4     70000000            // Upper limit for 4 meter filter
-
-
 const BandInfo bandInfo[] =
 {
     { .tune = 3500000, .size = 500000, .name = "80m"} , // Region 2
@@ -166,6 +155,8 @@ const digital_mode_desc_t digimodes[DigitalMode_Num_Modes] =
     { "BPSK"    , true },
 };
 
+static void RadioManagement_SetCouplingForFrequency(uint32_t freq);
+static void RadioManagement_SetHWFiltersForFrequency(uint32_t freq);
 
 
 /**
@@ -578,6 +569,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
 
             uint32_t tune_freq_real = ts.tune_freq;
 
+            RadioManagement_SetCouplingForFrequency(tune_freq_real);    // adjust wattmeter coupling factor
             RadioManagement_SetHWFiltersForFrequency(tune_freq_real);  // check the filter status with the new frequency update
             AudioManagement_CalcIqPhaseGainAdjust(tune_freq_real);
 
@@ -874,20 +866,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         {
             Codec_SwitchTxRxMode(txrx_mode_final);
 
-            if (txrx_mode_final == TRX_MODE_RX)
-            {
-                // Assure that TX->RX timer gets reset at the end of an element
-                // TR->RX audio un-muting timer and Audio/AGC De-Glitching handler
-#if 0
-                if (ts.tx_audio_source == TX_AUDIO_MIC && (ts.dmod_mode != DEMOD_CW))
-                {
-                    ts.audio_spkr_unmute_delay_count = VOICE_TX2RX_DELAY_DEFAULT;  // set time delay in SSB mode with MIC
-                    ts.audio_processor_input_mute_counter = VOICE_TX2RX_DELAY_DEFAULT;
-                }
-#endif
-
-            }
-            else
+            if (txrx_mode_final == TRX_MODE_TX)
             {
                 RadioManagement_SetPaBias();
                 uint32_t input_mute_time = 0, dac_mute_time = 0, dac_mute_time_mode = 0, input_mute_time_mode = 0; // aka 1.3ms
@@ -955,65 +934,27 @@ bool RadioManagement_CalculateCWSidebandMode()
 }
 
 
-void RadioManagement_ChangeBandFilter(uchar band)
-{
-    // here the bands are mapped to the hardware functions to enable the proper
-    // filter configuration for a given band
-
-    switch(band)
-    {
-    case BAND_MODE_2200:
-    case BAND_MODE_630:
-    case BAND_MODE_160:
-    case BAND_MODE_80:
-        Board_SelectLpfBpf(0);
-        break;
-
-    case BAND_MODE_60:
-    case BAND_MODE_40:
-        Board_SelectLpfBpf(1);
-        break;
-
-    case BAND_MODE_30:
-    case BAND_MODE_20:
-        Board_SelectLpfBpf(2);
-        break;
-
-    case BAND_MODE_17:
-    case BAND_MODE_15:
-    case BAND_MODE_12:
-    case BAND_MODE_10:
-    case BAND_MODE_6:
-    case BAND_MODE_4:
-        Board_SelectLpfBpf(3);
-        break;
-
-    default:
-        break;
-    }
-  nr_params.first_time = 1; // in case of any Bandfilter change restart the NR routine
-}
 typedef struct BandFilterDescriptor
 {
     uint32_t upper;
-    uint16_t filter_band;
     uint16_t band_mode;
 } BandFilterDescriptor;
 
-#define BAND_FILTER_NUM 7
+// TODO: This code below approach assumes that all filter hardware uses a set of separate filter banks
+// other approaches such as configurable filters need a different approach, should be factored out
+// into some hardware abstraction at some point
 
 // The descriptor array below has to be ordered from the lowest BPF frequency filter
 // to the highest.
-static const BandFilterDescriptor bandFilters[BAND_FILTER_NUM] =
+static const BandFilterDescriptor mchf_rf_bandFilters[] =
 {
-    { BAND_FILTER_UPPER_160, COUPLING_160M, BAND_MODE_160 },
-    { BAND_FILTER_UPPER_80,  COUPLING_80M, BAND_MODE_80 },
-    { BAND_FILTER_UPPER_40,  COUPLING_40M, BAND_MODE_40 },
-    { BAND_FILTER_UPPER_20,  COUPLING_20M, BAND_MODE_20 },
-    { BAND_FILTER_UPPER_10,  COUPLING_15M, BAND_MODE_10 },
-    { BAND_FILTER_UPPER_6,  COUPLING_6M, BAND_MODE_6 }
+    { 4000000,  0 },
+    { 8000000,  1 },
+    { 1600000,  2 },
+    { 3200000,  3 },
 };
 
+const int BAND_FILTER_NUM = sizeof(mchf_rf_bandFilters)/sizeof(BandFilterDescriptor);
 
 
 /**
@@ -1024,17 +965,61 @@ static const BandFilterDescriptor bandFilters[BAND_FILTER_NUM] =
  *
  * @warning  If the frequency given in @p freq is too high for any of the filters, no filter change is executed.
  */
-void RadioManagement_SetHWFiltersForFrequency(ulong freq)
+static void RadioManagement_SetHWFiltersForFrequency(uint32_t freq)
 {
-    int idx;
-    for (idx = 0; idx < BAND_FILTER_NUM; idx++)
+    for (int idx = 0; idx < BAND_FILTER_NUM; idx++)
     {
-        if(freq < bandFilters[idx].upper)       // are we low enough if frequency for this band filter?
+        if(freq < mchf_rf_bandFilters[idx].upper)       // are we low enough if frequency for this band filter?
         {
-            if(ts.filter_band != bandFilters[idx].filter_band)
+            if(ts.filter_band != mchf_rf_bandFilters[idx].band_mode)
             {
-                RadioManagement_ChangeBandFilter(bandFilters[idx].band_mode);   // yes - set to desired band configuration
-                ts.filter_band = bandFilters[idx].filter_band;
+                Board_SelectLpfBpf(mchf_rf_bandFilters[idx].band_mode);
+                ts.filter_band = mchf_rf_bandFilters[idx].band_mode;
+                nr_params.first_time = 1; // in case of any Bandfilter change restart the NR routine
+            }
+            break;
+        }
+    }
+}
+
+typedef struct
+{
+    uint32_t upper;
+    uint16_t coupling_band;
+} CouplingDescriptor;
+
+static const CouplingDescriptor mchf_rf_coupling[] =
+{
+    { 200000,  COUPLING_2200M},
+    { 600000,  COUPLING_630M},
+    { 2500000, COUPLING_160M},
+    { 4250000, COUPLING_80M},
+    { 8000000, COUPLING_40M},
+    { 1600000, COUPLING_20M},
+    { 3200000, COUPLING_15M},
+    { 6000000, COUPLING_6M},
+};
+
+const int COUPLING_NUM = sizeof(mchf_rf_coupling)/sizeof(CouplingDescriptor);
+
+
+/**
+ * @brief Select and activate the correct coupling factor for the wattmeter for the frequency given in @p freq
+ *
+ *
+ * @param freq The frequency in Hz
+ *
+ * @warning  If the frequency given in @p freq is too high , no change is executed.
+ */
+static void RadioManagement_SetCouplingForFrequency(uint32_t freq)
+{
+    for (int idx = 0; idx < COUPLING_NUM; idx++)
+    {
+        if(freq < mchf_rf_coupling[idx].upper)       // are we low enough if frequency for this coupling factor?
+        {
+            if(ts.coupling_band != mchf_rf_coupling[idx].coupling_band)
+            {
+                ts.coupling_band = mchf_rf_coupling[idx].coupling_band;
             }
             break;
         }
@@ -1538,7 +1523,7 @@ bool RadioManagement_UpdatePowerAndVSWR()
     else
     {
         // obtain and calculate power meter coupling coefficients
-        coupling_calc = (swrm.coupling_calc[ts.filter_band] - 100.0)/10.0;
+        coupling_calc = (swrm.coupling_calc[ts.coupling_band] - 100.0)/10.0;
         // offset to zero and rescale to 0.1 dB/unit
 
 
