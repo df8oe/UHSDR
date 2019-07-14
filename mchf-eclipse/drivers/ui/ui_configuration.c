@@ -497,7 +497,7 @@ static uint16_t UiWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint
     return retval;
 }
 
-static uint32_t UiConfiguration_LimitFrequency(const BandInfo* bandInfo, const uint32_t freq, bool set_to_default)
+static uint32_t UiConfiguration_LimitFrequency(BandInfo_c* bandInfo, const uint32_t freq, bool set_to_default)
 {
     uint32_t retval = freq;
 
@@ -538,11 +538,11 @@ void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uin
             load_default);
 
     // Try to read Freq saved values
-    UiReadSettingEEPROM_UInt32(band_freq_high + i, band_freq_low + i,&value32,bandInfo[i].tune + DEFAULT_FREQ_OFFSET,0,0xffffffff, load_default);
+    UiReadSettingEEPROM_UInt32(band_freq_high + i, band_freq_low + i,&value32,bandInfo[i]->tune + DEFAULT_FREQ_OFFSET,0,0xffffffff, load_default);
     {
         // We make sure to read only frequency which are permitted for band in given
         // configuration.
-        vforeg->dial_value = UiConfiguration_LimitFrequency(&bandInfo[i],value32, load_default);
+        vforeg->dial_value = UiConfiguration_LimitFrequency(bandInfo[i],value32, load_default);
     }
 }
 
@@ -907,7 +907,7 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
         // We have loaded from eeprom the last used band, but can't just
         // load saved frequency, as it could be out of band, so do a
         // boundary check first (also check to see if defaults should be loaded)
-        df.tune_new = UiConfiguration_LimitFrequency(&bandInfo[ts.band], value32, load_eeprom_defaults || load_freq_mode_defaults);
+        df.tune_new = UiConfiguration_LimitFrequency(bandInfo[ts.band], value32, load_eeprom_defaults || load_freq_mode_defaults);
     }
     // Try to read saved per-band values for frequency, mode and filter
 

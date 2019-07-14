@@ -1686,7 +1686,7 @@ static void UiDriver_DisplayMemoryLabel()
 	uint32_t col = White;
 	if (ts.band < MAX_BAND_NUM && ts.cat_band_index == 255)
 	{
-		snprintf(txt,12,"Bnd%s ", bandInfo[ts.band].name);
+		snprintf(txt,12,"Bnd%s ", bandInfo[ts.band]->name);
 	}
 	if (ts.cat_band_index != 255)		// no band storage place active because of "CAT running in sandbox"
 	{
@@ -2342,8 +2342,8 @@ static void UiDriver_InitFrequency()
 		vfo[VFO_B].band[i].decod_mode = DEMOD_LSB;
 	}
 	// Init frequency publics(set diff values so update on LCD will be done)
-	df.tune_old 	= bandInfo[ts.band].tune;
-	df.tune_new 	= bandInfo[ts.band].tune;
+	df.tune_old 	= bandInfo[ts.band]->tune;
+	df.tune_new 	= bandInfo[ts.band]->tune;
 	df.selected_idx = 3; 		// 1 Khz startup step
 	df.tuning_step	= tune_steps[df.selected_idx];
 	df.temp_factor	= 0;
@@ -3195,7 +3195,7 @@ void UiDriver_UpdateBand(uint16_t vfo_sel, uint8_t curr_band_index, uint8_t new_
 		}
 		else
 		{
-			df.tune_new = bandInfo[curr_band_index].tune; 					// Load new frequency from startup
+			df.tune_new = bandInfo[curr_band_index]->tune; 					// Load new frequency from startup
 		}
 
 		bool new_lsb = RadioManagement_CalculateCWSidebandMode();
