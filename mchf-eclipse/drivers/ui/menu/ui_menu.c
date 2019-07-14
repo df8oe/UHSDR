@@ -701,7 +701,8 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcess
      volatile uint8_t* adj_ptr = &ts.pwr_adj[pa_level == PA_LEVEL_FULL?ADJ_FULL_POWER:ADJ_REF_PWR][band_mode];
 
     bool tchange = false;
-    if((band_mode == RadioManagement_GetBand(df.tune_old)) && (ts.power_level == pa_level))
+    const BandInfo* band = RadioManagement_GetBand(df.tune_old);
+    if((band_mode == band->band_mode) && (ts.power_level == pa_level))
     {
         tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
                                               TX_POWER_FACTOR_MIN,
@@ -712,7 +713,7 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcess
 
         if(tchange)	 		// did something change?
         {
-            RadioManagement_SetPowerLevel(band_mode, pa_level);	// yes, update the power factor
+            RadioManagement_SetPowerLevel(band, pa_level);	// yes, update the power factor
         }
     }
     else
@@ -725,11 +726,11 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcess
     return tchange;
 }
 
-bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, MenuProcessingMode_t mode, uint8_t filter_band, char* options, uint32_t* clr_ptr)
+bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, MenuProcessingMode_t mode, uint8_t coupling_band, char* options, uint32_t* clr_ptr)
 {
     bool tchange = false;
-    volatile uint8_t *adj_ptr = &swrm.coupling_calc[filter_band];
-    if(ts.filter_band == filter_band)	 	// is this band selected?
+    volatile uint8_t *adj_ptr = &swrm.coupling_calc[coupling_band];
+    if(ts.coupling_band == coupling_band)	 	// is this band selected?
     {
         tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
                                               SWR_COUPLING_MIN,
@@ -738,7 +739,7 @@ bool __attribute__ ((noinline))  UiDriverMenuBandRevCouplingAdjust(int var, Menu
                                               1
                                              );
     }
-    if((ts.txrx_mode != TRX_MODE_TX) || (ts.filter_band != filter_band))	// Orange if not in TX mode or NOT on this band
+    if((ts.txrx_mode != TRX_MODE_TX) || (ts.coupling_band != coupling_band))	// Orange if not in TX mode or NOT on this band
         *clr_ptr = Orange;
     sprintf(options, "  %u", *adj_ptr);
     return tchange;
@@ -4175,6 +4176,16 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         snprintf(options,32,"     %s",digimodes[ts.digital_mode].label);
         clr = digimodes[ts.digital_mode].enabled?White:Red;
         break;
+    case MENU_DEBUG_BANDEF_SELECT:
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &bandinfo_idx,0,BAND_INFO_SET_NUM-1,0,1);
+        if (var_change)
+        {
+            bandInfo = bandInfos[bandinfo_idx].bands;
+            UiDriver_UpdateDisplayAfterParamChange();
+        }
+        snprintf(options,32,"     %s",bandInfos[bandinfo_idx].name);
+        break;
+
     case CONFIG_CAT_PTT_RTS:
         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_ptt_rts,0,options,&clr);
         break;

@@ -172,9 +172,29 @@ typedef struct BandInfo
     uint32_t tune;
     uint32_t size;
     const char* name;
+    uint32_t band_mode;
 } BandInfo;
 
-extern const BandInfo bandInfo[MAX_BAND_NUM];
+/**
+ *
+ * @param band
+ * @return true if band is the so called generic band (everything which is not ham tx)
+ */
+static inline bool RadioManagement_IsGenericBand(const BandInfo* band)
+{
+    return band->size == 0;
+}
+
+typedef struct
+{
+    const BandInfo* bands;
+    const char* name;
+} BandInfoSet;
+
+extern const BandInfoSet bandInfos[];
+extern const int BAND_INFO_SET_NUM;
+extern uint8_t bandinfo_idx;
+extern const BandInfo *bandInfo;
 
 typedef struct band_regs_s
 {
@@ -292,12 +312,11 @@ inline bool RadioManagement_IsTxDisabledBy(uint8_t whom)
 }
 
 uint32_t RadioManagement_GetRealFreqTranslationMode(uint32_t txrx_mode, uint32_t dmod_mode, uint32_t iq_freq_mode);
-band_mode_t RadioManagement_GetBand(ulong freq);
+const BandInfo* RadioManagement_GetBand(ulong freq);
 bool RadioManagement_FreqIsInBand(const BandInfo* bandinfo, const uint32_t freq);
-bool RadioManagement_SetPowerLevel(band_mode_t band, power_level_t power_level);
+bool RadioManagement_SetPowerLevel(const BandInfo* band, power_level_t power_level);
 bool RadioManagement_Tune(bool tune);
 bool RadioManagement_UpdatePowerAndVSWR();
-void RadioManagement_SetHWFiltersForFrequency(ulong freq);
 void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec);
 bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8_t txrx_mode);
 void RadioManagement_HandlePttOnOff();

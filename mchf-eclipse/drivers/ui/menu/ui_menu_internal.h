@@ -316,6 +316,7 @@ enum
     CONFIG_SMETER_ATTACK,
     CONFIG_SMETER_DECAY,
     MENU_DEBUG_SMOOTH_DYN_TUNE,
+    MENU_DEBUG_BANDEF_SELECT,
     MAX_RADIO_CONFIG_ITEM   // Number of radio configuration menu items - This must ALWAYS remain as the LAST item!
 };
 

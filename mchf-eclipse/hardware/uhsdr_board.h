@@ -240,6 +240,8 @@ typedef struct vfo_reg_s
 //    uint32_t filter_mode;
 } VfoReg;
 
+typedef struct BandInfo BandInfo; // forward declaration of BandInfo data type, we need this to be able to make a pointer to it.
+
 // Transceiver state public structure
 typedef struct TransceiverState
 {
@@ -289,11 +291,13 @@ typedef struct TransceiverState
 
     // Ham band public flag
     // index of bands table in Flash
-    uint8_t 	band; // this band idx does not relate to the real frequency, it is a "just" a memory index.
-    uint8_t     band_effective; // the band the currently selected frequency is in (which may be different from the band memory idx);
+    uint8_t 	        band; // this band idx does not relate to the real frequency, it is a "just" a memory index.
+    const BandInfo*     band_effective; // the band the currently selected frequency is in (which may be different from the band memory idx);
 
     bool	rx_temp_mute;
     uint8_t	filter_band;		// filter selection band:  1= 80, 2= 60/40, 3=30/20, 4=17/15/12/10 - used for selection of power detector coefficient selection.
+#define FILTER_BAND_UNKNOWN 255 // used to indicate that we don't know how the BPF is set
+    uint8_t coupling_band;      // which tx wattmeter coupling factor value to use
     //
     // Receive/Transmit public flag
     uint8_t 	txrx_mode;

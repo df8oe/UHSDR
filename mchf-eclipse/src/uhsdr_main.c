@@ -141,7 +141,7 @@ void TransceiverStateInit(void)
 
     //CONFIG LOADED: ts.band		  		= BAND_MODE_20;			// band from eeprom
     ts.rx_temp_mute		= false;					// used in muting audio during band change
-    ts.filter_band		= 0;					// used to indicate the bpf filter selection for power detector coefficient selection
+    ts.filter_band		= FILTER_BAND_UNKNOWN;	// used to indicate the bpf filter selection for power detector coefficient selection
     ts.dmod_mode 		= DEMOD_USB;				// demodulator mode
     //CONFIG LOADED: ts.rx_gain[RX_AUDIO_SPKR].value = AUDIO_GAIN_DEFAULT;
     ts.rx_gain[RX_AUDIO_DIG].value		= DIG_GAIN_DEFAULT;
@@ -317,7 +317,7 @@ void TransceiverStateInit(void)
 
     //CONFIG LOADED:ts.expflags1 = 0; // Used to hold flags for options in Debag/Expert menu, stored in EEPROM location "EEPROM_EXPFLAGS1"
 
-    ts.band_effective = 255; // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
+    ts.band_effective = NULL; // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
 }
 
 // #include "Trace.h"
