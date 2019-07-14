@@ -317,7 +317,7 @@ void TransceiverStateInit(void)
 
     //CONFIG LOADED:ts.expflags1 = 0; // Used to hold flags for options in Debag/Expert menu, stored in EEPROM location "EEPROM_EXPFLAGS1"
 
-    ts.band_effective = 255; // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
+    ts.band_effective = NULL; // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
 }
 
 // #include "Trace.h"

@@ -85,10 +85,10 @@ static void     UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color,ushort mode)
 static bool 	UiDriver_IsButtonPressed(ulong button_num);
 static void		UiDriver_TimeScheduler();				// Also handles audio gain and switching of audio on return from TX back to RX
 static void 	UiDriver_ChangeToNextDemodMode(bool select_alternative_mode);
-static void 	UiDriver_ChangeBand(uchar is_up);
+static void 	UiDriver_ChangeBand(bool is_up);
 static bool 	UiDriver_CheckFrequencyEncoder();
 
-static void     UiDriver_DisplayBand(uchar band);
+static void     UiDriver_DisplayBand(const BandInfo* band);
 static void     UiDriver_DisplayBandForFreq(uint32_t freq);
 
 static void     UiDriver_DisplayEncoderOneMode();
@@ -131,7 +131,7 @@ static bool	    UiDriver_TouchscreenCalibration();
 
 static void     UiDriver_PowerDownCleanup(bool saveConfiguration);
 
-static void UiDriver_HandlePowerLevelChange(band_mode_t band, uint8_t power_level);
+static void UiDriver_HandlePowerLevelChange(const BandInfo* band, uint8_t power_level);
 static void UiDriver_HandleBandButtons(uint16_t button);
 
 static void UiDriver_KeyTestScreen();
@@ -797,7 +797,7 @@ void UiDriver_SpectrumChangeLayoutParameters()
  * Sets a power level and updates the display accordingly.
  * @param power_level
  */
-void UiDriver_HandlePowerLevelChange(band_mode_t band, uint8_t power_level)
+void UiDriver_HandlePowerLevelChange(const BandInfo* band, uint8_t power_level)
 {
 	if (RadioManagement_SetPowerLevel(band,power_level))
 	{
@@ -812,12 +812,12 @@ void UiDriver_HandlePowerLevelChange(band_mode_t band, uint8_t power_level)
 void UiDriver_HandleBandButtons(uint16_t button)
 {
 
-	static const int BAND_DOWN = 0;
-	static const int BAND_UP = 1;
+	static const bool BAND_DOWN = false;
+	static const bool BAND_UP = true;
 
 	bool buttondirSwap = (ts.flags1 & FLAGS1_SWAP_BAND_BTN)?true:false;
-	uint8_t dir;
 
+	bool dir;
 
 	if (button == BUTTON_BNDM)
 	{
@@ -1699,19 +1699,20 @@ static void UiDriver_DisplayMemoryLabel()
  * Display the ham or broadcast band name of the currently selected band
  * @param band the band id, last band id is BAND_MODE_GEN, which is everything outside ham bands
  */
-static void UiDriver_DisplayBand(uchar band)
+static void UiDriver_DisplayBand(const BandInfo* band)
 {
-	const char* bandName;
-	bool print_bc_name = true;
-	int idx;
 
-	if (band < MAX_BAND_NUM)
+	if (band != NULL)
 	{
+	    const char* bandName;
+	    bool print_bc_name = true;
+
 		uint16_t col = Orange; // default color for non-bc band
 
 		// only if we are not in a ham band, we check the name of a broadcast band
-		if (band == BAND_MODE_GEN)
+		if (RadioManagement_IsGenericBand(band))
 		{
+		    int idx;
 			for (idx = 0; bandGenInfo[idx].start !=0; idx++)
 			{
 				if (df.tune_old >= bandGenInfo[idx].start && df.tune_old < bandGenInfo[idx].end)
@@ -1743,7 +1744,7 @@ static void UiDriver_DisplayBand(uchar band)
 		else
 		{
 			print_bc_name = true;
-			bandName = bandInfo[band].name;
+			bandName = band->name;
 			ts.bc_band = 0xff;
 		}
 		if (print_bc_name)
@@ -1830,9 +1831,6 @@ static void UiDriver_CreateDesktop()
 
 	// Clear display
 	UiLcdHy28_LcdClear(Black);
-
-	// Create Band value
-	UiDriver_DisplayBand(ts.band);
 
 	// Frequency
 	UiDriver_CreateMainFreqDisplay();
@@ -2376,14 +2374,16 @@ static void UiDriver_InitFrequency()
 void UiDriver_DisplayBandForFreq(uint32_t freq)
 {
 	// here we maintain our local state of the last band shown
-	uint8_t band_scan = RadioManagement_GetBand(freq);
-	if(band_scan != ts.band_effective || band_scan == BAND_MODE_GEN)        // yes, did the band actually change?
-	{
+    const BandInfo* band = RadioManagement_GetBand(freq);
 
-		UiDriver_DisplayBand(band_scan);    // yes, update the display with the current band
-		UiDriver_HandlePowerLevelChange(band_scan, ts.power_level); // also validate power level if band changes
+    // yes, did the tx band actually change?
+    // or are we in the generic band (i.e. outside tx bands)
+	if(band != ts.band_effective || RadioManagement_IsGenericBand(band))
+	{
+		UiDriver_DisplayBand(band);    // yes, update the display with the current band
+		UiDriver_HandlePowerLevelChange(band, ts.power_level); // also validate power level if band changes
 	}
-	ts.band_effective = band_scan;
+	ts.band_effective = band;
 }
 
 
@@ -3229,14 +3229,12 @@ void UiDriver_UpdateBand(uint16_t vfo_sel, uint8_t curr_band_index, uint8_t new_
  * @brief initiate band change.
  * @param is_up select the next higher band, otherwise go to the next lower band
  */
-static void UiDriver_ChangeBand(uchar is_up)
+static void UiDriver_ChangeBand(bool is_up)
 {
 
 	// Do not allow band change during TX
 	if(ts.txrx_mode != TRX_MODE_TX)
 	{
-
-
 
 		uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 
@@ -3259,34 +3257,16 @@ static void UiDriver_ChangeBand(uchar is_up)
 		uint8_t   new_band_index = curr_band_index;     // index of the new selected band
 		// in case of no other band enabled, we stay in this band
 
-		// Handle direction
-		if(is_up)
+		// we start checking the index following (is_up) or preceding (!is_up) the current one
+		// until we reach an enabled band
+		for (int idx  = 1; idx <= MAX_BANDS; idx++)
 		{
-		    // we start checking the index following the current one
-		    // until we reach an enabled band
-		    for (int idx  = 1; idx <= MAX_BANDS; idx++)
+		    uint32_t test_idx = (curr_band_index + ((is_up == true) ? idx : (MAX_BANDS-idx)))% MAX_BANDS;
+		    if (vfo[vfo_sel].enabled[test_idx])
 		    {
-		        uint32_t test_idx = (curr_band_index + idx) % MAX_BANDS;
-		        if (vfo[vfo_sel].enabled[test_idx])
-		        {
-		            new_band_index = test_idx;
-		            break; // we found the first enabled band following the current one
-		        }
+		        new_band_index = test_idx;
+		        break; // we found the first enabled band following the current one
 		    }
-		}
-		else
-		{
-            // we start checking the index before the current one
-            // until we reach an enabled band
-            for (int idx = MAX_BANDS-1; idx >= 0; idx--)
-            {
-                uint32_t test_idx = (curr_band_index + idx) % MAX_BANDS;
-                if (vfo[vfo_sel].enabled[test_idx])
-                {
-                    new_band_index = test_idx;
-                    break; // we found the first enabled band before the current one
-                }
-            }
 		}
 
 		UiDriver_UpdateBand(vfo_sel, curr_band_index, new_band_index);
