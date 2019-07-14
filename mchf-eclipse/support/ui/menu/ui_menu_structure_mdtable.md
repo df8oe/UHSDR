@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2019-07-11T08:07:16  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2019-07-14T15:02:44  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2019-07-11T08:07:16  by "./ui_menu_structure_mdtable.py"
+generated at  2019-07-14T15:02:44  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -320,6 +320,7 @@ generated at  2019-07-11T08:07:16  by "./ui_menu_structure_mdtable.py"
 | **FreeDV Mode**               (                     MENU_DEBUG_FREEDV_MODE) | Change active FreeDV mode. Please note, you have to reboot to activate new mode | 
 | **FreeDV Squelch threshold**  (            MENU_DEBUG_FREEDV_SQL_THRESHOLD) | If not OFF, FreeDV will squelch if detected SNR is below set value. | 
 | **Smooth dynamic tune**       (                 MENU_DEBUG_SMOOTH_DYN_TUNE) | Activate smooth dynamic tune.                  | 
+| **Band Definition**           (                   MENU_DEBUG_BANDEF_SELECT) | Select which band definition to use for ham bands (Original UHSDR or IARU Region 1 - 3 | 
 
 
 [//]: # ( EOFILE                                                                       )

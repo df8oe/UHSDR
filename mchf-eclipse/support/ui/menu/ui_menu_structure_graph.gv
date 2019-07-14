@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2019-07-11T08:07:13  by "./ui_menu_structure_graph.py"
+#  generated at  2019-07-14T15:02:39  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2019-07-11T08:07:13  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2019-07-14T15:02:39  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1402,6 +1402,11 @@
              shape = record
              ];
         
+        "MENU_DEBUG_BANDEF_SELECT" [
+             label = "MENU_DEBUG_BANDEF_SELECT | Band Definition"
+             shape = record
+             ];
+        
         "0" [
              label = "0 | M0NKA  (Chris) mcHF founder"
              shape = record
@@ -2062,6 +2067,8 @@
             MENU_DEBUG -> MENU_DEBUG_FREEDV_SQL_THRESHOLD
             
             MENU_DEBUG -> MENU_DEBUG_SMOOTH_DYN_TUNE
+            
+            MENU_DEBUG -> MENU_DEBUG_BANDEF_SELECT
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
