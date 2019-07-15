@@ -381,23 +381,21 @@ static void UiVk_BndSelVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 	}
 	else
 	{
-		uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
-		if(vfo[vfo_sel].enabled[param])
+		if(band_enabled[param])
 		{
-			UiDriver_UpdateBand(vfo_sel,ts.band,param);
+			UiDriver_SelectBandMemory(get_active_vfo(), param);
 		}
 	}
 }
 
 static uint8_t UiVk_BndSelVKeyInitTypeDraw(uint8_t KeyNum, uint32_t param)
 {
-	uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 	uint8_t Keystate=Vbtn_State_Normal;
-	if((!vfo[vfo_sel].enabled[param]) && (param!=255))
+	if((!band_enabled[param]) && (param!=255))
 	{
 		Keystate=Vbtn_State_Disabled;
 	}
-	else if(param==ts.band)
+	else if(param==ts.band->band_mode)
 	{
 		Keystate=Vbtn_State_Pressed;
 	}
@@ -473,9 +471,9 @@ void UiVk_RedrawBndSelVirtualKeys()
 	if((ts.VirtualKeysShown_flag)  &&
 			((ts.VirtualKeyPad==&Keypad_BndSel480x320) || (ts.VirtualKeyPad==&Keypad_BndSel320x240)) )
 	{
-		if(prev_BndSel!=ts.band)
+		if(prev_BndSel!=ts.band->band_mode)
 		{
-			prev_BndSel=ts.band;
+			prev_BndSel=ts.band->band_mode;
 			UiVk_DrawVKeypad();
 		}
 	}
@@ -549,7 +547,7 @@ static void UiVk_FSetNumKeyUpdate()
 	UiVk_EnableFrequencySet=1;
 	if(UiVk_BandChangeEN==0)
 	{
-		if( RadioManagement_FreqIsInBand(bandInfo[ts.band],freq) == false)
+		if( RadioManagement_FreqIsInBand(ts.band,freq) == false)
 		{
 			textColor=RGB(0xff,0xff,0x00);
 			UiVk_EnableFrequencySet=0;		//disable frequency setting because out of current band is not allowed
@@ -632,27 +630,26 @@ static void UiVk_FSetNumKeyVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 		{
 			uint32_t freq=atoi(UiVk_FreqEditText);
 
-			uint8_t band_scan=ts.band;
+			uint8_t band_scan=ts.band->band_mode;
 
 			if(UiVk_BandChangeEN)
 			{
-				uint8_t old_band_scan=band_scan;
-				for(band_scan = 0; band_scan < MAX_BANDS; band_scan++)
+				const BandInfo* bi = RadioManagement_GetBand(freq);
+
+				// are we in a known band AND the related band memory is enabled ? -> we change to the related band memory idx,
+				// otherwise we stay in current band memory
+				if(RadioManagement_IsGenericBand(bi) == false && band_enabled[bi->band_mode] == true)
 				{
-					if(RadioManagement_FreqIsInBand(bandInfo[band_scan],freq))   // Is this frequency within this band?
-					{
-						break;  // yes - stop the scan
-					}
-				}
-				if(band_scan==MAX_BANDS)
-				{
-					band_scan=old_band_scan;		//out of band, so we change frequency of current band
+					band_scan= bi->band_mode;
 				}
 			}
 
-			uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
+			// we change the frequency stored in the band memory and then
+			// switch to this band memory (which implicitly
+			// changes the frequency).
+            uint16_t vfo_sel = get_active_vfo();
 			vfo[vfo_sel].band[band_scan].dial_value=freq;
-			UiDriver_UpdateBand(vfo_sel,ts.band,band_scan);
+			UiDriver_SelectBandMemory(vfo_sel, band_scan);
 		}
 		break;
 	default:

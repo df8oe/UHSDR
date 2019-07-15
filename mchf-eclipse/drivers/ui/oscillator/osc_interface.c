@@ -57,6 +57,16 @@ static bool              OscDummy_ReadyForIrqCall()
     return true;
 }
 
+static uint32_t OscDummy_getMinFrequency()
+{
+    return 1; // 1 Hz
+}
+
+static uint32_t OscDummy_getMaxFrequency()
+{
+    return UINT32_MAX-1;
+}
+
 
 const OscillatorInterface_t osc_dummy =
 {
@@ -69,6 +79,8 @@ const OscillatorInterface_t osc_dummy =
 		.readyForIrqCall = OscDummy_ReadyForIrqCall,
         .name = "Dummy",
         .type = OSC_DUMMY,
+        .getMinFrequency = OscDummy_getMinFrequency,
+		.getMaxFrequency = OscDummy_getMaxFrequency,
 };
 
 static void OscDummy_Init()

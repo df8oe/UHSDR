@@ -196,25 +196,26 @@ extern const int BAND_INFO_SET_NUM;
 extern uint8_t bandinfo_idx;
 
 typedef const BandInfo BandInfo_c;
-BandInfo_c **bandInfo;
-
-extern const BandInfo **bandInfo;
+extern BandInfo_c **bandInfo;
 
 typedef struct band_regs_s
 {
     VfoReg band[MAX_BAND_NUM];
-    bool enabled[MAX_BAND_NUM]; // we store which band is to be used (or ignored)
 } BandRegs;
 
-enum
+bool band_enabled[MAX_BAND_NUM]; // we store which band is to be used (or ignored)
+
+typedef enum
 {
     // VFO_WORK = 0
     VFO_A = 0,
     VFO_B,
     VFO_MAX
-};
+} vfo_name_t;
 // Working register plus VFO A and VFO B registers.
 extern BandRegs vfo[VFO_MAX];
+
+vfo_name_t get_active_vfo();
 
 
 // SWR and RF power meter public
@@ -318,6 +319,7 @@ inline bool RadioManagement_IsTxDisabledBy(uint8_t whom)
 uint32_t RadioManagement_GetRealFreqTranslationMode(uint32_t txrx_mode, uint32_t dmod_mode, uint32_t iq_freq_mode);
 const BandInfo* RadioManagement_GetBand(ulong freq);
 bool RadioManagement_FreqIsInBand(BandInfo_c * bandinfo, const uint32_t freq);
+const BandInfo* RadioManagement_GetBandInfo(uint8_t new_band_index);
 bool RadioManagement_SetPowerLevel(const BandInfo* band, power_level_t power_level);
 bool RadioManagement_Tune(bool tune);
 bool RadioManagement_UpdatePowerAndVSWR();

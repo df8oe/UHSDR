@@ -1057,7 +1057,7 @@ static void CatDriver_HandleCommands()
             bc = 1;
             if(ts.flags1 & FLAGS1_CAT_IN_SANDBOX)           // if running in sandbox store active band
             {
-                ts.cat_band_index = ts.band;
+                ts.cat_band_index = ts.band->band_mode;
             }
         }
         break;
@@ -1164,7 +1164,7 @@ static void CatDriver_HandleCommands()
             {
                 if(ts.flags1 & FLAGS1_CAT_IN_SANDBOX)           // if running in sandbox store active band
                 {
-                    ts.cat_band_index = ts.band;
+                    ts.cat_band_index = ts.band->band_mode;
                 }
                 RadioManagement_FmDevSet5khz(new_fmdev5khz);
                 ts.cw_lsb = new_cwlsb;

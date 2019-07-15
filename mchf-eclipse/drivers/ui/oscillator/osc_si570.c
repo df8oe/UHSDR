@@ -605,6 +605,16 @@ static bool Oscillator_IsPresent()
     return os.present;
 }
 
+static uint32_t Si570_getMinFrequency()
+{
+    return SI570_HARD_MIN_FREQ/4;
+}
+
+static uint32_t Si570_getMaxFrequency()
+{
+    return SI570_HARD_MAX_FREQ/4;
+}
+
 const OscillatorInterface_t osc_si570 =
 {
 		.init = Si570_Init,
@@ -616,6 +626,8 @@ const OscillatorInterface_t osc_si570 =
 		.readyForIrqCall = Si570_ReadyForIrqCall,
 		.name = "Si570",
 		.type = OSC_SI570,
+		.getMinFrequency = Si570_getMinFrequency,
+		.getMaxFrequency = Si570_getMaxFrequency,
 };
 
 

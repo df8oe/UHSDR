@@ -13,6 +13,7 @@
  ************************************************************************************/
 
 // Common
+#include <assert.h>
 #include "radio_management.h"
 #include "profiling.h"
 #include "adc.h"
@@ -215,6 +216,29 @@ BandInfo_c **bandInfo = bandInfo_combined;
 
 uint8_t bandinfo_idx; // default init with 0 is fine
 
+/**
+ * Searches the band info for a given band memory index
+ * This relieves us from ordering the vfo band memories exactly like the
+ * band infos.
+ *
+ * @param new_band_index
+ * @return the band with the provided index or if this is not found, the current bandInfo
+ */
+const BandInfo* RadioManagement_GetBandInfo(uint8_t new_band_index)
+{
+    const BandInfo* bi = ts.band;
+
+    for (int idx = 0; idx < MAX_BANDS; idx ++)
+    {
+        if (bandInfo[idx]->band_mode == new_band_index)
+        {
+            bi = bandInfo[idx];
+            break;
+        }
+    }
+    return bi;
+}
+
 // this structure MUST match the order of entries in power_level_t !
 static const power_level_desc_t mchf_rf_power_levels[] =
 {
@@ -341,9 +365,9 @@ static bool RadioManagement_SetBandPowerFactor(const BandInfo* band, int32_t pow
         // TX outside bands **very dirty hack**
         //  FIXME: calculate based on 2 frequency points close the selected frequency, should be inter-/extrapolated
         float32_t adj_min = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_80];
-        uint32_t freq_min = bandInfo[BAND_MODE_80]->tune;
+        uint32_t freq_min = RadioManagement_GetBandInfo(BAND_MODE_80)->tune;
         float32_t adj_max = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_10];
-        uint32_t freq_max = bandInfo[BAND_MODE_10]->tune;
+        uint32_t freq_max = RadioManagement_GetBandInfo(BAND_MODE_10)->tune;
         float32_t delta_f = (float32_t)df.tune_old - (float32_t)freq_min; // we must convert to a signed type
         float32_t delta_points = freq_max - freq_min;
 
@@ -734,7 +758,7 @@ uint32_t RadioManagement_GetTXDialFrequency()
             {
                 vfo_tx = VFO_B;
             }
-            retval = vfo[vfo_tx].band[ts.band].dial_value;    // load with VFO-A frequency
+            retval = vfo[vfo_tx].band[ts.band->band_mode].dial_value;    // load with VFO-A frequency
         }
         else
         {
@@ -767,7 +791,7 @@ uint32_t RadioManagement_GetRXDialFrequency()
             {
                 vfo_rx = VFO_A;
             }
-            baseval = vfo[vfo_rx].band[ts.band].dial_value;    // load with VFO-A frequency
+            baseval = vfo[vfo_rx].band[ts.band->band_mode].dial_value;    // load with VFO-A frequency
         }
         else
         {
@@ -856,13 +880,13 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
         {
             if(ts.txrx_mode == TRX_MODE_RX)                         // did we want to enter TX mode?
             {
-                vfo[vfo_rx].band[ts.band].dial_value = df.tune_new; // yes - save current RX frequency in RX VFO location
+                vfo[vfo_rx].band[ts.band->band_mode].dial_value = df.tune_new; // yes - save current RX frequency in RX VFO location
             }
-            tune_new = vfo[vfo_tx].band[ts.band].dial_value;    // load with TX VFO frequency
+            tune_new = vfo[vfo_tx].band[ts.band->band_mode].dial_value;    // load with TX VFO frequency
         }
         else                    // we are in RX mode
         {
-            tune_new = vfo[vfo_rx].band[ts.band].dial_value;    // load with RX VFO frequency
+            tune_new = vfo[vfo_rx].band[ts.band->band_mode].dial_value;    // load with RX VFO frequency
         }
     }
     else
@@ -1126,10 +1150,7 @@ static void RadioManagement_SetCouplingForFrequency(uint32_t freq)
     {
         if(freq < mchf_rf_coupling[idx].upper)       // are we low enough if frequency for this coupling factor?
         {
-            if(ts.coupling_band != mchf_rf_coupling[idx].coupling_band)
-            {
-                ts.coupling_band = mchf_rf_coupling[idx].coupling_band;
-            }
+            ts.coupling_band = mchf_rf_coupling[idx].coupling_band;
             break;
         }
     }
@@ -1235,40 +1256,44 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
  */
 bool RadioManagement_FreqIsInBand(const BandInfo* bandinfo, const uint32_t freq)
 {
+    assert(bandinfo != NULL);
     return (freq >= bandinfo->tune) && (freq <= (bandinfo->tune + bandinfo->size));
 }
 
 /**
  * Identify ham band for a given frequency
  * @param freq in Hz
- * @return the ham band or BAND_MODE_GEN if not a known ham band
+ * @return the ham band info or generic band info if not a known ham band
  */
 const BandInfo* RadioManagement_GetBand(uint32_t freq)
 {
-    static band_mode_t band_scan_old = BAND_MODE_GEN;
-    band_mode_t   band_scan;
+    static const BandInfo* band_scan_old = &bi_gen_all;
 
-    band_scan = BAND_MODE_GEN;
+    const BandInfo*   band_scan = &bi_gen_all;
+    // generic band, which we return if we can't find a match
+
 
     // first try the previously selected band, and see if it is an match
-    if (band_scan_old != BAND_MODE_GEN && RadioManagement_FreqIsInBand(bandInfo[band_scan_old], freq))
+    if (RadioManagement_FreqIsInBand(band_scan_old, freq) == true)
     {
         band_scan = band_scan_old;
     }
     else
     {
-        for(band_scan = 0; band_scan < MAX_BANDS; band_scan++)
+        // search trough all bands, except the generic band (which is last)
+        for(int band_idx = 0; band_idx < MAX_BANDS; band_idx++)
         {
-            if(RadioManagement_FreqIsInBand(bandInfo[band_scan],freq))   // Is this frequency within this band?
+            if(RadioManagement_FreqIsInBand(bandInfo[band_idx],freq))   // Is this frequency within this band?
             {
+                band_scan = bandInfo[band_idx];
                 break;  // yes - stop the scan
             }
         }
-        band_scan_old = band_scan;  // update band change detector
     }
 
+    band_scan_old = band_scan; // remember last result
 
-    return bandInfo[band_scan];       // return with the band
+    return band_scan;       // return with the band
 }
 
 uint32_t RadioManagement_SSB_AutoSideBand(uint32_t freq) {
@@ -1414,7 +1439,7 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
         break;
     case DEMOD_FM:
         // FIXME: ts.lsb_usb_auto_select acts as fm select here. Rename!
-        retval = (ts.iq_freq_mode != FREQ_IQ_CONV_MODE_OFF) && (((ts.flags2 & FLAGS2_FM_MODE_ENABLE) != 0) || (ts.band == BAND_MODE_10 && ts.lsb_usb_auto_select));   // is FM enabled?
+        retval = (ts.iq_freq_mode != FREQ_IQ_CONV_MODE_OFF) && (((ts.flags2 & FLAGS2_FM_MODE_ENABLE) != 0) || (ts.band->band_mode == BAND_MODE_10 && ts.lsb_usb_auto_select));   // is FM enabled?
         break;
     case DEMOD_SAM:
         retval =( ts.flags1 & FLAGS1_SAM_ENABLE) != 0;        // is SAM enabled?
@@ -1812,19 +1837,19 @@ void RadioManagement_ToggleVfoAB()
         vfo_new = VFO_B;
         vfo_active = VFO_A;
     }
-    vfo[vfo_active].band[ts.band].dial_value = df.tune_old; //band_dial_value[ts.band];     // save "VFO B" settings
-    vfo[vfo_active].band[ts.band].decod_mode = ts.dmod_mode;    //band_decod_mode[ts.band];
-    vfo[vfo_active].band[ts.band].digital_mode = ts.digital_mode;
+    vfo[vfo_active].band[ts.band->band_mode].dial_value = df.tune_old; //band_dial_value[ts.band];     // save "VFO B" settings
+    vfo[vfo_active].band[ts.band->band_mode].decod_mode = ts.dmod_mode;    //band_decod_mode[ts.band];
+    vfo[vfo_active].band[ts.band->band_mode].digital_mode = ts.digital_mode;
 
-    df.tune_new = vfo[vfo_new].band[ts.band].dial_value;
+    df.tune_new = vfo[vfo_new].band[ts.band->band_mode].dial_value;
 
-    bool digitalModeDiffers = ts.digital_mode != vfo[vfo_new].band[ts.band].digital_mode;
-    bool newIsDigitalMode = vfo[vfo_new].band[ts.band].decod_mode == DEMOD_DIGI;
-    ts.digital_mode = vfo[vfo_new].band[ts.band].digital_mode;
+    bool digitalModeDiffers = ts.digital_mode != vfo[vfo_new].band[ts.band->band_mode].digital_mode;
+    bool newIsDigitalMode = vfo[vfo_new].band[ts.band->band_mode].decod_mode == DEMOD_DIGI;
+    ts.digital_mode = vfo[vfo_new].band[ts.band->band_mode].digital_mode;
 
-    if(ts.dmod_mode != vfo[vfo_new].band[ts.band].decod_mode || (newIsDigitalMode &&  digitalModeDiffers) )
+    if(ts.dmod_mode != vfo[vfo_new].band[ts.band->band_mode].decod_mode || (newIsDigitalMode &&  digitalModeDiffers) )
     {
-        RadioManagement_SetDemodMode(vfo[vfo_new].band[ts.band].decod_mode);
+        RadioManagement_SetDemodMode(vfo[vfo_new].band[ts.band->band_mode].decod_mode);
     }
     nr_params.first_time = 1; // restart in case of VFO-Toggle
 }
