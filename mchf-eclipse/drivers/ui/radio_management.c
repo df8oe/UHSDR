@@ -1057,10 +1057,10 @@ typedef struct BandFilterDescriptor
 // to the highest.
 static const BandFilterDescriptor mchf_rf_bandFilters[] =
 {
-    { 4000000,  0 },
-    { 8000000,  1 },
-    { 1600000,  2 },
-    { 3200000,  3 },
+    {  4000000,  0 },
+    {  8000000,  1 },
+    { 16000000,  2 },
+    { 32000000,  3 },
 };
 
 const int BAND_FILTER_NUM = sizeof(mchf_rf_bandFilters)/sizeof(BandFilterDescriptor);
