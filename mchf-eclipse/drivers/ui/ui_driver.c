@@ -3178,12 +3178,12 @@ static void UiDriver_ChangeToNextDemodMode(bool select_alternative_mode)
 }
 
 /**
- * @brief band change
- * @param vfo_sel	VFO A/B
- * @param curr_band_index
+ * @brief band memory switch. Sets VFO to use the values of specified band memory. Does not store "old" values.
+ *
+ * @param vfo_sel	which VFO A/B to use
  * @param new_band_index
  */
-void UiDriver_UpdateBand(uint16_t vfo_sel, uint8_t curr_band_index, uint8_t new_band_index)
+void UiDriver_UpdateBand(uint16_t vfo_sel, uint8_t new_band_index)
 {
 
 		// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
@@ -3195,7 +3195,7 @@ void UiDriver_UpdateBand(uint16_t vfo_sel, uint8_t curr_band_index, uint8_t new_
 		}
 		else
 		{
-			df.tune_new = bandInfo[curr_band_index]->tune; 					// Load new frequency from startup
+			df.tune_new = bandInfo[new_band_index]->tune; 					// Load new frequency from startup
 		}
 
 		bool new_lsb = RadioManagement_CalculateCWSidebandMode();
@@ -3269,7 +3269,7 @@ static void UiDriver_ChangeBand(bool is_up)
 		    }
 		}
 
-		UiDriver_UpdateBand(vfo_sel, curr_band_index, new_band_index);
+		UiDriver_UpdateBand(vfo_sel, new_band_index);
 	}
 }
 

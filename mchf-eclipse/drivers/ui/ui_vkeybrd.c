@@ -384,7 +384,7 @@ static void UiVk_BndSelVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 		uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 		if(vfo[vfo_sel].enabled[param])
 		{
-			UiDriver_UpdateBand(vfo_sel,ts.band,param);
+			UiDriver_UpdateBand(vfo_sel, param);
 		}
 	}
 }
@@ -636,23 +636,22 @@ static void UiVk_FSetNumKeyVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 
 			if(UiVk_BandChangeEN)
 			{
-				uint8_t old_band_scan=band_scan;
-				for(band_scan = 0; band_scan < MAX_BANDS; band_scan++)
+				const BandInfo* bi = RadioManagement_GetBand(freq);
+
+				// are we in a known band? -> we change to the related band memory idx,
+				// otherwise we stay in current band memory
+				if(RadioManagement_IsGenericBand(bi) == false)
 				{
-					if(RadioManagement_FreqIsInBand(bandInfo[band_scan],freq))   // Is this frequency within this band?
-					{
-						break;  // yes - stop the scan
-					}
-				}
-				if(band_scan==MAX_BANDS)
-				{
-					band_scan=old_band_scan;		//out of band, so we change frequency of current band
+					band_scan= bi->band_mode;
 				}
 			}
 
+			// we change the frequency stored in the band memory and then
+			// switch to this band memory (which implicitly
+			// changes the frequency).
 			uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 			vfo[vfo_sel].band[band_scan].dial_value=freq;
-			UiDriver_UpdateBand(vfo_sel,ts.band,band_scan);
+			UiDriver_UpdateBand(vfo_sel, band_scan);
 		}
 		break;
 	default:
