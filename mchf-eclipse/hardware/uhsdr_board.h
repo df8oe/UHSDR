@@ -291,7 +291,7 @@ typedef struct TransceiverState
 
     // Ham band public flag
     // index of bands table in Flash
-    uint8_t 	        band; // this band idx does not relate to the real frequency, it is a "just" a memory index.
+    const BandInfo*     band; // this band does not relate to the real frequency, it "just" a band memory.
     const BandInfo*     band_effective; // the band the currently selected frequency is in (which may be different from the band memory idx);
 
     bool	rx_temp_mute;

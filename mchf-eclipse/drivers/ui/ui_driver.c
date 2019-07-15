@@ -965,7 +965,7 @@ void UiDriver_Init()
 
 	osc->setPPM((float)ts.freq_cal/10.0);
 
-	df.tune_new = vfo[get_active_vfo()].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
+	df.tune_new = vfo[get_active_vfo()].band[ts.band->band_mode].dial_value;		// init "tuning dial" frequency based on restored settings
 	df.tune_old = 0; // with this we force a frequency change once the main loop becomes active
 
 	ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();			// determine CW sideband mode from the restored frequency
@@ -977,7 +977,7 @@ void UiDriver_Init()
 
 	// Reset inter driver requests flag
 	ts.LcdRefreshReq	= 0;
-	ts.new_band 		= ts.band;
+	ts.new_band 		= ts.band->band_mode;
 	df.step_new 		= df.tuning_step;
 
 	// Extra HW init
@@ -1216,11 +1216,11 @@ void UiAction_CopyVfoAB()
 	VfoReg* vfo_store;
 	if(is_vfo_b())      // are we in VFO B mode?
 	{
-		vfo_store = &vfo[VFO_A].band[ts.band];
+		vfo_store = &vfo[VFO_A].band[ts.band->band_mode];
 	}
 	else        // we were in VFO A mode
 	{
-		vfo_store = &vfo[VFO_B].band[ts.band];
+		vfo_store = &vfo[VFO_B].band[ts.band->band_mode];
 	}
 	vfo_store->dial_value = df.tune_new;
 	vfo_store->decod_mode = ts.dmod_mode;                   // copy active VFO settings into other VFO
@@ -1688,9 +1688,9 @@ static void UiDriver_DisplayMemoryLabel()
 {
 	char txt[12];
 	uint32_t col = White;
-	if (ts.band < MAX_BAND_NUM && ts.cat_band_index == 255)
+	if (ts.band->band_mode < MAX_BAND_NUM && ts.cat_band_index == 255)
 	{
-		snprintf(txt,12,"Bnd%s ", bandInfo[ts.band]->name);
+		snprintf(txt,12,"Bnd%s ", ts.band->name);
 	}
 	if (ts.cat_band_index != 255)		// no band storage place active because of "CAT running in sandbox"
 	{
@@ -2330,8 +2330,8 @@ static void UiDriver_InitFrequency()
 	}
 
 	// Init frequency publics(set diff values so update on LCD will be done)
-	df.tune_old 	= bandInfo[ts.band]->tune;
-	df.tune_new 	= bandInfo[ts.band]->tune;
+	df.tune_old 	= 0;
+	df.tune_new 	= 3500001;
 	df.selected_idx = 3; 		// 1 Khz startup step
 	df.tuning_step	= tune_steps[df.selected_idx];
 	df.temp_factor	= 0;
@@ -3171,20 +3171,11 @@ static void UiDriver_ChangeToNextDemodMode(bool select_alternative_mode)
  * @param vfo_sel	which VFO A/B to use
  * @param new_band_index
  */
-void UiDriver_UpdateBand(uint16_t vfo_sel, uint8_t new_band_index)
+void UiDriver_SelectBandMemory(uint16_t vfo_sel, uint8_t new_band_index)
 {
 
 		// TODO: There is a strong similarity to code in UiDriverProcessFunctionKeyClick around line 2053
-		// Load frequency value - either from memory or default for
-		// the band if this is first band selection
-		if(vfo[vfo_sel].band[new_band_index].dial_value != 0xFFFFFFFF)
-		{
-			df.tune_new = vfo[vfo_sel].band[new_band_index].dial_value;	// Load value from VFO
-		}
-		else
-		{
-			df.tune_new = bandInfo[new_band_index]->tune; 					// Load new frequency from startup
-		}
+		df.tune_new = vfo[vfo_sel].band[new_band_index].dial_value;	// Load value from VFO
 
 		bool new_lsb = RadioManagement_CalculateCWSidebandMode();
 
@@ -3206,8 +3197,9 @@ void UiDriver_UpdateBand(uint16_t vfo_sel, uint8_t new_band_index)
 			RadioManagement_SetDemodMode(new_dmod_mode);
 		}
 
-		// Finally update public flag
-		ts.band = new_band_index;
+		// Finally update public flag by setting the
+		// appropriate bandInfo
+		ts.band = RadioManagement_GetBandInfo(new_band_index);
 
 		UiDriver_UpdateDisplayAfterParamChange();    // because mode/filter may have changed
 		UiVk_Redraw();		//virtual keypads call (refresh purpose)
@@ -3226,7 +3218,7 @@ static void UiDriver_ChangeBand(bool is_up)
 
 		vfo_name_t vfo_sel = get_active_vfo();
 
-		uint8_t curr_band_index = ts.band; // index in band table of currently selected band
+		uint8_t curr_band_index = ts.band->band_mode; // index in band table of currently selected band
 
 
 		// Save old band values
@@ -3257,7 +3249,7 @@ static void UiDriver_ChangeBand(bool is_up)
 		    }
 		}
 
-		UiDriver_UpdateBand(vfo_sel, new_band_index);
+		UiDriver_SelectBandMemory(vfo_sel, new_band_index);
 	}
 }
 

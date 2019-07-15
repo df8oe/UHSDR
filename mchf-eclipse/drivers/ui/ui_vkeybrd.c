@@ -383,7 +383,7 @@ static void UiVk_BndSelVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 	{
 		if(band_enabled[param])
 		{
-			UiDriver_UpdateBand(get_active_vfo(), param);
+			UiDriver_SelectBandMemory(get_active_vfo(), param);
 		}
 	}
 }
@@ -395,7 +395,7 @@ static uint8_t UiVk_BndSelVKeyInitTypeDraw(uint8_t KeyNum, uint32_t param)
 	{
 		Keystate=Vbtn_State_Disabled;
 	}
-	else if(param==ts.band)
+	else if(param==ts.band->band_mode)
 	{
 		Keystate=Vbtn_State_Pressed;
 	}
@@ -471,9 +471,9 @@ void UiVk_RedrawBndSelVirtualKeys()
 	if((ts.VirtualKeysShown_flag)  &&
 			((ts.VirtualKeyPad==&Keypad_BndSel480x320) || (ts.VirtualKeyPad==&Keypad_BndSel320x240)) )
 	{
-		if(prev_BndSel!=ts.band)
+		if(prev_BndSel!=ts.band->band_mode)
 		{
-			prev_BndSel=ts.band;
+			prev_BndSel=ts.band->band_mode;
 			UiVk_DrawVKeypad();
 		}
 	}
@@ -547,7 +547,7 @@ static void UiVk_FSetNumKeyUpdate()
 	UiVk_EnableFrequencySet=1;
 	if(UiVk_BandChangeEN==0)
 	{
-		if( RadioManagement_FreqIsInBand(bandInfo[ts.band],freq) == false)
+		if( RadioManagement_FreqIsInBand(ts.band,freq) == false)
 		{
 			textColor=RGB(0xff,0xff,0x00);
 			UiVk_EnableFrequencySet=0;		//disable frequency setting because out of current band is not allowed
@@ -630,7 +630,7 @@ static void UiVk_FSetNumKeyVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 		{
 			uint32_t freq=atoi(UiVk_FreqEditText);
 
-			uint8_t band_scan=ts.band;
+			uint8_t band_scan=ts.band->band_mode;
 
 			if(UiVk_BandChangeEN)
 			{
@@ -649,7 +649,7 @@ static void UiVk_FSetNumKeyVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 			// changes the frequency).
             uint16_t vfo_sel = get_active_vfo();
 			vfo[vfo_sel].band[band_scan].dial_value=freq;
-			UiDriver_UpdateBand(vfo_sel, band_scan);
+			UiDriver_SelectBandMemory(vfo_sel, band_scan);
 		}
 		break;
 	default:

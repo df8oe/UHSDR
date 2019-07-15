@@ -888,10 +888,16 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
 
     // ------------------------------------------------------------------------------------
     // Try to read Band and Mode saved values, but read freq-limit-settings before
+    uint8_t band_mem_idx;
     UiReadSettingEEPROM_UInt8x2_Split(EEPROM_BAND_MODE,
             &ts.dmod_mode, DEMOD_LSB, 0, DEMOD_MAX_MODE,
-            &ts.band, BAND_MODE_80, 0, MAX_BANDS -1,
+            &band_mem_idx, BAND_MODE_80, 0, MAX_BANDS -1,
             load_eeprom_defaults);
+
+    // restore the bandInfo for a given band info set and band memory index
+    bandInfo = bandInfos[bandinfo_idx].bands;
+    ts.band = RadioManagement_GetBandInfo(band_mem_idx);
+
 
     // demodulator mode might not be right for saved band!
     if(load_freq_mode_defaults)       // freq defaults to be loaded?
@@ -907,7 +913,7 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
         // We have loaded from eeprom the last used band, but can't just
         // load saved frequency, as it could be out of band, so do a
         // boundary check first (also check to see if defaults should be loaded)
-        df.tune_new = UiConfiguration_LimitFrequency(bandInfo[ts.band], value32, load_eeprom_defaults || load_freq_mode_defaults);
+        df.tune_new = UiConfiguration_LimitFrequency(ts.band, value32, load_eeprom_defaults || load_freq_mode_defaults);
     }
     // Try to read saved per-band values for frequency, mode and filter
 
@@ -973,16 +979,16 @@ uint16_t UiConfiguration_SaveEepromValues(void)
             ConfigStorage_CopySerial2RAMCache();
         }
 
-        if(ts.band < (MAX_BANDS) && ts.cat_band_index == 255)			// not in a sandbox
+        if(RadioManagement_IsGenericBand(ts.band) == false && ts.cat_band_index == 255)			// not in a sandbox
         {
             // save current band/frequency/mode settings
-            vfo[get_active_vfo()].band[ts.band].dial_value = df.tune_new;
+            vfo[get_active_vfo()].band[ts.band->band_mode].dial_value = df.tune_new;
             // Save decode mode
-            vfo[get_active_vfo()].band[ts.band].decod_mode = dmod_mode;
+            vfo[get_active_vfo()].band[ts.band->band_mode].decod_mode = dmod_mode;
 
             // TODO: move value to a static variable, so that it can be read/written with standard approach
             retval = UiWriteSettingEEPROM_UInt8x2(EEPROM_BAND_MODE,
-                                       ((uint16_t)ts.band| dmod_mode << 8));
+                                       ((uint16_t)ts.band->band_mode| dmod_mode << 8));
 
             // TODO: move value to a static variable, so that it can be read/written with standard approach
             if (retval == HAL_OK)
