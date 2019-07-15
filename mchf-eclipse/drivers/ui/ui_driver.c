@@ -2281,15 +2281,30 @@ void UiDriver_InitBandSet()
 {
     // TODO: Do this setting based on the detected RF board capabilities
     // set the enabled bands
+    uint32_t min_osc = osc->getMinFrequency();
+    uint32_t max_osc = osc->getMaxFrequency();
+
+    // first we enabled all bands for rx based on the reported tuning frequency range
+    // please note, that this may enabled bands not really usable
+    // as other limitations of the hardware such as lpf/bpf limits
+    // etc. may apply. For instance, the standard MCHF RF has RX BPF/LPF
+    // limiting RX above 32 Mhz.
+
+    // the PA itself has its own limits which are checked before transmitting
+    // so we don't care here about these limits
+
     for(int i = 0; i < MAX_BANDS; i++)
     {
-        band_enabled[i] = true; // we enable all bands but right below we turn off a few
-        band_enabled[i] = true;
+        const BandInfo* bi = RadioManagement_GetBandInfo(i);
+        band_enabled[i] = ((bi->tune >= min_osc) && ((bi->size + bi->tune) <= max_osc));
     }
 
     switch (ts.rf_board)
     {
     case FOUND_RF_BOARD_MCHF:
+        // here you can enable or disable based on additional hardware capabilities
+        // but this should only be used with care
+        /*
         band_enabled[BAND_MODE_23] = false;
         band_enabled[BAND_MODE_70] = false;
         band_enabled[BAND_MODE_2] = false;
@@ -2297,10 +2312,13 @@ void UiDriver_InitBandSet()
         band_enabled[BAND_MODE_6] = false;
         band_enabled[BAND_MODE_630] = false;
         band_enabled[BAND_MODE_2200] = false;
+        */
         break;
     case FOUND_RF_BOARD_OVI40:
+        /*
         band_enabled[BAND_MODE_23] = false;
         band_enabled[BAND_MODE_70] = false;
+        */
         break;
     }
 }

@@ -53,6 +53,8 @@ typedef struct
 	Oscillator_ResultCodes_t (*changeToNextFrequency)();
 	bool 			  (*isNextStepLarge)();
 	bool              (*readyForIrqCall)();
+	uint32_t    (*getMinFrequency)();
+	uint32_t    (*getMaxFrequency)();
     const char*  name;
     const Oscillator_Type_t  type;
 

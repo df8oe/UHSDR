@@ -415,6 +415,22 @@ bool Si5351a_ReadyForIrqCall()
     return (SI5351A_I2C->Lock == HAL_UNLOCKED);
 }
 
+// FIXME: The limits assume a 4x johnson counter, not the
+// also working internal QSD generation
+
+static uint32_t Si5351a_getMinFrequency()
+{
+    return SI5351_MIN_PLL / (SI5351_MAX_DIVIDER / 4);
+}
+
+static uint32_t Si5351a_getMaxFrequency()
+{
+    // this is an experimental value
+    // outside the spec sheet but still
+    // most if not all Si5351a can do it.
+    return 290000000 / 4;
+}
+
 const OscillatorInterface_t osc_si5351a =
 {
 		.init = Si5351a_Init,
@@ -426,6 +442,8 @@ const OscillatorInterface_t osc_si5351a =
 		.readyForIrqCall = Si5351a_ReadyForIrqCall,
         .name = "Si5351a",
         .type = OSC_SI5351A,
+        .getMinFrequency = Si5351a_getMinFrequency,
+        .getMaxFrequency = Si5351a_getMaxFrequency,
 };
 
 void Si5351a_Init()
