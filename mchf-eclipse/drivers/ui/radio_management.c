@@ -13,6 +13,7 @@
  ************************************************************************************/
 
 // Common
+#include <assert.h>
 #include "radio_management.h"
 #include "profiling.h"
 #include "adc.h"
@@ -1126,10 +1127,7 @@ static void RadioManagement_SetCouplingForFrequency(uint32_t freq)
     {
         if(freq < mchf_rf_coupling[idx].upper)       // are we low enough if frequency for this coupling factor?
         {
-            if(ts.coupling_band != mchf_rf_coupling[idx].coupling_band)
-            {
-                ts.coupling_band = mchf_rf_coupling[idx].coupling_band;
-            }
+            ts.coupling_band = mchf_rf_coupling[idx].coupling_band;
             break;
         }
     }
@@ -1235,40 +1233,44 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
  */
 bool RadioManagement_FreqIsInBand(const BandInfo* bandinfo, const uint32_t freq)
 {
+    assert(bandinfo != NULL);
     return (freq >= bandinfo->tune) && (freq <= (bandinfo->tune + bandinfo->size));
 }
 
 /**
  * Identify ham band for a given frequency
  * @param freq in Hz
- * @return the ham band or BAND_MODE_GEN if not a known ham band
+ * @return the ham band info or generic band info if not a known ham band
  */
 const BandInfo* RadioManagement_GetBand(uint32_t freq)
 {
-    static band_mode_t band_scan_old = BAND_MODE_GEN;
-    band_mode_t   band_scan;
+    static const BandInfo* band_scan_old = &bi_gen_all;
 
-    band_scan = BAND_MODE_GEN;
+    const BandInfo*   band_scan = &bi_gen_all;
+    // generic band, which we return if we can't find a match
+
 
     // first try the previously selected band, and see if it is an match
-    if (band_scan_old != BAND_MODE_GEN && RadioManagement_FreqIsInBand(bandInfo[band_scan_old], freq))
+    if (RadioManagement_FreqIsInBand(band_scan_old, freq) == true)
     {
         band_scan = band_scan_old;
     }
     else
     {
-        for(band_scan = 0; band_scan < MAX_BANDS; band_scan++)
+        // search trough all bands, except the generic band (which is last)
+        for(int band_idx = 0; band_idx < MAX_BANDS; band_idx++)
         {
-            if(RadioManagement_FreqIsInBand(bandInfo[band_scan],freq))   // Is this frequency within this band?
+            if(RadioManagement_FreqIsInBand(bandInfo[band_idx],freq))   // Is this frequency within this band?
             {
+                band_scan = bandInfo[band_idx];
                 break;  // yes - stop the scan
             }
         }
-        band_scan_old = band_scan;  // update band change detector
     }
 
+    band_scan_old = band_scan; // remember last result
 
-    return bandInfo[band_scan];       // return with the band
+    return band_scan;       // return with the band
 }
 
 uint32_t RadioManagement_SSB_AutoSideBand(uint32_t freq) {

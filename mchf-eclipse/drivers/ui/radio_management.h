@@ -203,18 +203,21 @@ extern const BandInfo **bandInfo;
 typedef struct band_regs_s
 {
     VfoReg band[MAX_BAND_NUM];
-    bool enabled[MAX_BAND_NUM]; // we store which band is to be used (or ignored)
 } BandRegs;
 
-enum
+bool band_enabled[MAX_BAND_NUM]; // we store which band is to be used (or ignored)
+
+typedef enum
 {
     // VFO_WORK = 0
     VFO_A = 0,
     VFO_B,
     VFO_MAX
-};
+} vfo_name_t;
 // Working register plus VFO A and VFO B registers.
 extern BandRegs vfo[VFO_MAX];
+
+vfo_name_t get_active_vfo();
 
 
 // SWR and RF power meter public

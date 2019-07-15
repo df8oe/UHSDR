@@ -381,19 +381,17 @@ static void UiVk_BndSelVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 	}
 	else
 	{
-		uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
-		if(vfo[vfo_sel].enabled[param])
+		if(band_enabled[param])
 		{
-			UiDriver_UpdateBand(vfo_sel, param);
+			UiDriver_UpdateBand(get_active_vfo(), param);
 		}
 	}
 }
 
 static uint8_t UiVk_BndSelVKeyInitTypeDraw(uint8_t KeyNum, uint32_t param)
 {
-	uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
 	uint8_t Keystate=Vbtn_State_Normal;
-	if((!vfo[vfo_sel].enabled[param]) && (param!=255))
+	if((!band_enabled[param]) && (param!=255))
 	{
 		Keystate=Vbtn_State_Disabled;
 	}
@@ -638,9 +636,9 @@ static void UiVk_FSetNumKeyVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 			{
 				const BandInfo* bi = RadioManagement_GetBand(freq);
 
-				// are we in a known band? -> we change to the related band memory idx,
+				// are we in a known band AND the related band memory is enabled ? -> we change to the related band memory idx,
 				// otherwise we stay in current band memory
-				if(RadioManagement_IsGenericBand(bi) == false)
+				if(RadioManagement_IsGenericBand(bi) == false && band_enabled[bi->band_mode] == true)
 				{
 					band_scan= bi->band_mode;
 				}
@@ -649,7 +647,7 @@ static void UiVk_FSetNumKeyVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 			// we change the frequency stored in the band memory and then
 			// switch to this band memory (which implicitly
 			// changes the frequency).
-			uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
+            uint16_t vfo_sel = get_active_vfo();
 			vfo[vfo_sel].band[band_scan].dial_value=freq;
 			UiDriver_UpdateBand(vfo_sel, band_scan);
 		}

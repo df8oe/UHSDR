@@ -379,6 +379,10 @@ bool is_vfo_b()
 	return (ts.vfo_mem_mode & VFO_MEM_MODE_VFO_B) != 0;
 }
 
+vfo_name_t get_active_vfo()
+{
+    return is_vfo_b()?VFO_B:VFO_A;
+}
 // FIXME: The DSP stuff should go in a separate file
 /**
  *
@@ -961,7 +965,7 @@ void UiDriver_Init()
 
 	osc->setPPM((float)ts.freq_cal/10.0);
 
-	df.tune_new = vfo[is_vfo_b()?VFO_B:VFO_A].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
+	df.tune_new = vfo[get_active_vfo()].band[ts.band].dial_value;		// init "tuning dial" frequency based on restored settings
 	df.tune_old = 0; // with this we force a frequency change once the main loop becomes active
 
 	ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();			// determine CW sideband mode from the restored frequency
@@ -2279,37 +2283,24 @@ void UiDriver_InitBandSet()
     // set the enabled bands
     for(int i = 0; i < MAX_BANDS; i++)
     {
-        vfo[VFO_A].enabled[i] = true; // we enable all bands but right below we turn off a few
-        vfo[VFO_B].enabled[i] = true;
+        band_enabled[i] = true; // we enable all bands but right below we turn off a few
+        band_enabled[i] = true;
     }
 
     switch (ts.rf_board)
     {
     case FOUND_RF_BOARD_MCHF:
-        vfo[VFO_A].enabled[BAND_MODE_2] = false;
-        vfo[VFO_B].enabled[BAND_MODE_2] = false;
-        vfo[VFO_A].enabled[BAND_MODE_70] = false;
-        vfo[VFO_B].enabled[BAND_MODE_70] = false;
-        vfo[VFO_A].enabled[BAND_MODE_23] = false;
-        vfo[VFO_B].enabled[BAND_MODE_23] = false;
-        vfo[VFO_A].enabled[BAND_MODE_23] = false;
-        vfo[VFO_B].enabled[BAND_MODE_23] = false;
-        vfo[VFO_A].enabled[BAND_MODE_4] = false;
-        vfo[VFO_B].enabled[BAND_MODE_4] = false;
-        vfo[VFO_A].enabled[BAND_MODE_6] = false;
-        vfo[VFO_B].enabled[BAND_MODE_6] = false;
-        vfo[VFO_A].enabled[BAND_MODE_630] = false;
-        vfo[VFO_B].enabled[BAND_MODE_630] = false;
-        vfo[VFO_A].enabled[BAND_MODE_2200] = false;
-        vfo[VFO_B].enabled[BAND_MODE_2200] = false;
+        band_enabled[BAND_MODE_23] = false;
+        band_enabled[BAND_MODE_70] = false;
+        band_enabled[BAND_MODE_2] = false;
+        band_enabled[BAND_MODE_4] = false;
+        band_enabled[BAND_MODE_6] = false;
+        band_enabled[BAND_MODE_630] = false;
+        band_enabled[BAND_MODE_2200] = false;
         break;
     case FOUND_RF_BOARD_OVI40:
-        vfo[VFO_A].enabled[BAND_MODE_70] = false;
-        vfo[VFO_B].enabled[BAND_MODE_70] = false;
-        vfo[VFO_A].enabled[BAND_MODE_23] = false;
-        vfo[VFO_B].enabled[BAND_MODE_23] = false;
-        vfo[VFO_A].enabled[BAND_MODE_23] = false;
-        vfo[VFO_B].enabled[BAND_MODE_23] = false;
+        band_enabled[BAND_MODE_23] = false;
+        band_enabled[BAND_MODE_70] = false;
         break;
     }
 }
@@ -2319,10 +2310,8 @@ void UiDriver_InitBandSet()
 //* Object              : set default values, some could be overwritten later
 static void UiDriver_InitFrequency()
 {
-	ulong i;
-
 	// Clear band values array
-	for(i = 0; i < MAX_BANDS; i++)
+	for(int i = 0; i < MAX_BANDS; i++)
 	{
 		vfo[VFO_A].band[i].dial_value = 0xFFFFFFFF;	// clear dial values
 		vfo[VFO_A].band[i].decod_mode = DEMOD_USB; 	// clear decode mode
@@ -2332,15 +2321,14 @@ static void UiDriver_InitFrequency()
         vfo[VFO_B].band[i].decod_mode = DigitalMode_None;   // clear decode mode
 	}
 
-
-
 	// Lower bands default to LSB mode
 	// TODO: This needs to be checked, some even lower bands have higher numbers now
-	for(i = 0; i < 4; i++)
+	for(int i = 0; i < 4; i++)
 	{
 		vfo[VFO_A].band[i].decod_mode = DEMOD_LSB;
 		vfo[VFO_B].band[i].decod_mode = DEMOD_LSB;
 	}
+
 	// Init frequency publics(set diff values so update on LCD will be done)
 	df.tune_old 	= bandInfo[ts.band]->tune;
 	df.tune_new 	= bandInfo[ts.band]->tune;
@@ -3236,7 +3224,7 @@ static void UiDriver_ChangeBand(bool is_up)
 	if(ts.txrx_mode != TRX_MODE_TX)
 	{
 
-		uint16_t vfo_sel = is_vfo_b()?VFO_B:VFO_A;
+		vfo_name_t vfo_sel = get_active_vfo();
 
 		uint8_t curr_band_index = ts.band; // index in band table of currently selected band
 
@@ -3244,7 +3232,7 @@ static void UiDriver_ChangeBand(bool is_up)
 		// Save old band values
 		if(curr_band_index < (MAX_BANDS) && ts.cat_band_index == 255)
 		{
-			// Save dial
+			// Save dial, but only if we are not in "CAT mode"
 			vfo[vfo_sel].band[curr_band_index].dial_value = df.tune_old;
 			vfo[vfo_sel].band[curr_band_index].decod_mode = ts.dmod_mode;
 			vfo[vfo_sel].band[curr_band_index].digital_mode = ts.digital_mode;
@@ -3262,7 +3250,7 @@ static void UiDriver_ChangeBand(bool is_up)
 		for (int idx  = 1; idx <= MAX_BANDS; idx++)
 		{
 		    uint32_t test_idx = (curr_band_index + ((is_up == true) ? idx : (MAX_BANDS-idx)))% MAX_BANDS;
-		    if (vfo[vfo_sel].enabled[test_idx])
+		    if (band_enabled[test_idx])
 		    {
 		        new_band_index = test_idx;
 		        break; // we found the first enabled band following the current one
