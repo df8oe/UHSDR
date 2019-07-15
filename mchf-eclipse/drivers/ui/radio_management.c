@@ -112,92 +112,92 @@ static const BandInfo bi_gen_all =     { .tune = 0,            .size = 0,       
 // the maximum band size from the 3 different IARU regions
 // IMPORTANT: Right now the order of bands in the list is fixed to the order of BAND_MODE_xxx (low to high)
 // TODO: Make this list ordered by frequency
-static const BandInfo bandInfo_combined[MAX_BAND_NUM] =
+static const BandInfo *bandInfo_combined[MAX_BAND_NUM] = 
 {
-    bi_80m_r2,
-    bi_60m_gen,
-    bi_40m_r2_3,
-    bi_30m_all,
-    bi_20m_all,
-    bi_17m_all,
-    bi_15m_all,
-    bi_12m_all,
-    bi_10m_all,
-    bi_6m_r2_3,
-    bi_4m_gen,
-    bi_2m_r2_3,
-    bi_70cm_r2_3,
-    bi_23cm_all,
-    bi_2200m_all,
-    bi_630m_all,
-    bi_160m_all,
-    bi_gen_all,
+    &bi_80m_r2,
+    &bi_60m_gen,
+    &bi_40m_r2_3,
+    &bi_30m_all,
+    &bi_20m_all,
+    &bi_17m_all,
+    &bi_15m_all,
+    &bi_12m_all,
+    &bi_10m_all,
+    &bi_6m_r2_3,
+    &bi_4m_gen,
+    &bi_2m_r2_3,
+    &bi_70cm_r2_3,
+    &bi_23cm_all,
+    &bi_2200m_all,
+    &bi_630m_all,
+    &bi_160m_all,
+    &bi_gen_all,
 };
 
-static const BandInfo bandInfo_region1[MAX_BAND_NUM] =
+static const BandInfo* bandInfo_region1[MAX_BAND_NUM] =
 {
-        bi_80m_r1,
-        bi_60m_gen, // should cover all regions
-        bi_40m_r1,
-        bi_30m_all,
-        bi_20m_all,
-        bi_17m_all,
-        bi_15m_all,
-        bi_12m_all,
-        bi_10m_all,
-        bi_6m_r2_3,
-        bi_4m_gen,
-        bi_2m_r1,
-        bi_70cm_r1,
-        bi_23cm_all,
-        bi_2200m_all,
-        bi_630m_all,
-        bi_160m_all,
-        bi_gen_all,
+        &bi_80m_r1,
+        &bi_60m_gen, // should cover all regions
+        &bi_40m_r1,
+        &bi_30m_all,
+        &bi_20m_all,
+        &bi_17m_all,
+        &bi_15m_all,
+        &bi_12m_all,
+        &bi_10m_all,
+        &bi_6m_r2_3,
+        &bi_4m_gen,
+        &bi_2m_r1,
+        &bi_70cm_r1,
+        &bi_23cm_all,
+        &bi_2200m_all,
+        &bi_630m_all,
+        &bi_160m_all,
+        &bi_gen_all,
 };
 
-static const BandInfo bandInfo_region2[MAX_BAND_NUM] =
+static const BandInfo* bandInfo_region2[MAX_BAND_NUM] =
 {
-        bi_80m_r2,
-        bi_60m_gen, // should cover all regions
-        bi_40m_r2_3,
-        bi_30m_all,
-        bi_20m_all,
-        bi_17m_all,
-        bi_15m_all,
-        bi_12m_all,
-        bi_10m_all,
-        bi_6m_r2_3,
-        bi_4m_gen,
-        bi_2m_r2_3,
-        bi_70cm_r2_3,
-        bi_23cm_all,
-        bi_2200m_all,
-        bi_630m_all,
-        bi_160m_all,
-        bi_gen_all,
+        &bi_80m_r2,
+        &bi_60m_gen, // should cover all regions
+        &bi_40m_r2_3,
+        &bi_30m_all,
+        &bi_20m_all,
+        &bi_17m_all,
+        &bi_15m_all,
+        &bi_12m_all,
+        &bi_10m_all,
+        &bi_6m_r2_3,
+        &bi_4m_gen,
+        &bi_2m_r2_3,
+        &bi_70cm_r2_3,
+        &bi_23cm_all,
+        &bi_2200m_all,
+        &bi_630m_all,
+        &bi_160m_all,
+        &bi_gen_all,
 };
 
-static const BandInfo bandInfo_region3[MAX_BAND_NUM] =
+static const BandInfo* bandInfo_region3[MAX_BAND_NUM] =
 {
-        bi_80m_r3,
-        bi_60m_gen, // should cover all regions
-        bi_40m_r2_3,
-        bi_30m_all,
-        bi_20m_all,
-        bi_17m_all,
-        bi_15m_all,
-        bi_12m_all,
-        bi_10m_all,
-        bi_6m_r2_3,
-        bi_4m_gen,
-        bi_2m_r2_3,
-        bi_70cm_r2_3,
-        bi_23cm_all,
-        bi_2200m_all,
-        bi_630m_all,
-        bi_160m_all,
-        bi_gen_all,
+        &bi_80m_r3,
+        &bi_60m_gen, // should cover all regions
+        &bi_40m_r2_3,
+        &bi_30m_all,
+        &bi_20m_all,
+        &bi_17m_all,
+        &bi_15m_all,
+        &bi_12m_all,
+        &bi_10m_all,
+        &bi_6m_r2_3,
+        &bi_4m_gen,
+        &bi_2m_r2_3,
+        &bi_70cm_r2_3,
+        &bi_23cm_all,
+        &bi_2200m_all,
+        &bi_630m_all,
+        &bi_160m_all,
+        &bi_gen_all,
 };
 
 // finally we list all of them in a table and give them names for the menu
@@ -211,7 +211,8 @@ const BandInfoSet bandInfos[] =
 
 const int BAND_INFO_SET_NUM = sizeof(bandInfos)/sizeof(BandInfoSet);
 
-const BandInfo *bandInfo = bandInfos[0].bands;
+BandInfo_c **bandInfo = bandInfo_combined;
+
 uint8_t bandinfo_idx; // default init with 0 is fine
 
 // this structure MUST match the order of entries in power_level_t !
@@ -340,9 +341,9 @@ static bool RadioManagement_SetBandPowerFactor(const BandInfo* band, int32_t pow
         // TX outside bands **very dirty hack**
         //  FIXME: calculate based on 2 frequency points close the selected frequency, should be inter-/extrapolated
         float32_t adj_min = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_80];
-        uint32_t freq_min = bandInfo[BAND_MODE_80].tune;
+        uint32_t freq_min = bandInfo[BAND_MODE_80]->tune;
         float32_t adj_max = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_10];
-        uint32_t freq_max = bandInfo[BAND_MODE_10].tune;
+        uint32_t freq_max = bandInfo[BAND_MODE_10]->tune;
         float32_t delta_f = (float32_t)df.tune_old - (float32_t)freq_min; // we must convert to a signed type
         float32_t delta_points = freq_max - freq_min;
 
@@ -1250,7 +1251,7 @@ const BandInfo* RadioManagement_GetBand(uint32_t freq)
     band_scan = BAND_MODE_GEN;
 
     // first try the previously selected band, and see if it is an match
-    if (band_scan_old != BAND_MODE_GEN && RadioManagement_FreqIsInBand(&bandInfo[band_scan_old], freq))
+    if (band_scan_old != BAND_MODE_GEN && RadioManagement_FreqIsInBand(bandInfo[band_scan_old], freq))
     {
         band_scan = band_scan_old;
     }
@@ -1258,7 +1259,7 @@ const BandInfo* RadioManagement_GetBand(uint32_t freq)
     {
         for(band_scan = 0; band_scan < MAX_BANDS; band_scan++)
         {
-            if(RadioManagement_FreqIsInBand(&bandInfo[band_scan],freq))   // Is this frequency within this band?
+            if(RadioManagement_FreqIsInBand(bandInfo[band_scan],freq))   // Is this frequency within this band?
             {
                 break;  // yes - stop the scan
             }
@@ -1267,7 +1268,7 @@ const BandInfo* RadioManagement_GetBand(uint32_t freq)
     }
 
 
-    return &bandInfo[band_scan];       // return with the band
+    return bandInfo[band_scan];       // return with the band
 }
 
 uint32_t RadioManagement_SSB_AutoSideBand(uint32_t freq) {
