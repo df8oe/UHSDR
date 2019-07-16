@@ -8,10 +8,18 @@ The project is licensed under GPLv3 and is being developed within an open commun
 
 ### Getting Started
 
-Soon we'll point here to a document describing how to setup an environment to compile, upload and debug firmware. 
+The easiest way to get started and build your own firmware is to use gitpod. 
+*  Fork this repository in your own GitHub account
+*  Open this fork in the browser, press the "gitpod" button and follow the instructions to get an gitpod account
+*  Once you see the gitpod workspace
+```
+cd mchf-eclipse
+make all
+```
+* Download the resulting binary `fw-mchf.bin`
+* Now it is time to learn how to use git (with gitpod) in order to contribute your own changes.
 
-Meanwhile you may try the available .bin files and follow the instructions in the 
-mchf-eclipse/bootloader/readme.txt how to upload these. 
+For more information and details how to build and debug on your own machine, see the [Wiki](https://github.com/df8oe/UHSDR/wiki/Topics:-UHSDR-SW-Development)
 
 ### Pull-requests
 
