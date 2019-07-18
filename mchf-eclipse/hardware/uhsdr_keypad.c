@@ -72,7 +72,7 @@ const Keypad_KeyPhys_t bm_set_normal_arr[] =
         {BUTTON_E2_PIO,     BUTTON_E2,      BUTTON_E2_PRESSED,      "E2"},
         {BUTTON_E3_PIO,     BUTTON_E3,      BUTTON_E3_PRESSED,      "E3"},
         {BUTTON_E4_PIO,     BUTTON_E4,      BUTTON_E4_PRESSED,      "E4"},
-        {BUTTON_S18_PIO,    BUTTON_S18,     BUTTON_NOP,             "S18"},
+        {BUTTON_S18_PIO,    BUTTON_S18,     BUTTON_L1_PRESSED,      "S18"},
         {BUTTON_S19_PIO,    BUTTON_S19,     BUTTON_F6_PRESSED,      "S19"},
 #endif
         // this must be the last entry
@@ -140,6 +140,7 @@ const UhsdrButtonLogical_t buttons[BUTTON_NUM] =
         {BUTTON_E3_PRESSED,     "E3" },
         {BUTTON_E4_PRESSED,     "E4" },
         {BUTTON_F6_PRESSED,     "F6" },
+        {BUTTON_L1_PRESSED,     "L1" },
 #endif
 };
 

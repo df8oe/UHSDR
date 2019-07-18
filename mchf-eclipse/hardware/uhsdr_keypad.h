@@ -38,6 +38,7 @@ enum
     BUTTON_E2_PRESSED,      // encoder 1 click
     BUTTON_E3_PRESSED,      // encoder 1 click
     BUTTON_E4_PRESSED,      // encoder 1 click
+    BUTTON_L1_PRESSED,		// and again one more function button
 #endif
     //      init code relies on this
     BUTTON_NUM, // How many buttons we have defined

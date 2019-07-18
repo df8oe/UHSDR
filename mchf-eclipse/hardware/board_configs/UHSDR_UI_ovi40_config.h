@@ -368,8 +368,8 @@
 #define BUTTON_E3               GPIO_PIN_10
 #define BUTTON_E3_PIO           GPIOF
 // pin 11
-#define BUTTON_S18              GPIO_PIN_11
-#define BUTTON_S18_PIO          GPIOF
+#define BUTTON_S19              GPIO_PIN_11
+#define BUTTON_S19_PIO          GPIOF
 // pin 12
 #define BLUE_LED                GPIO_PIN_12
 #define BLUE_LED_PIO            GPIOF
@@ -426,7 +426,7 @@
 
 // PORT H
 // pin1
-#define BUTTON_S19              GPIO_PIN_1
-#define BUTTON_S19_PIO          GPIOH
+#define BUTTON_S18              GPIO_PIN_1
+#define BUTTON_S18_PIO          GPIOH
 
 #endif // __UHSDR_UI_OVI40_CONFIG_H
