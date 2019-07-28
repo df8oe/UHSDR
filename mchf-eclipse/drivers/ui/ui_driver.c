@@ -2728,7 +2728,7 @@ static void UiDriver_ShowTxErrorMessages()
 		
 		if (no_bias && no_tx_power) 
 		{ 
-			txp = "No TX power and no bias.\nCheck PA calibration!" 
+			txp = "No TX power and no bias.\nCheck PA calibration!";
 		} 
 		else if (no_bias) 
 		{
