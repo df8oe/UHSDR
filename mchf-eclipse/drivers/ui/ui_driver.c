@@ -2713,20 +2713,60 @@ static void UiDriver_ShowTxErrorMessages()
     // if there is no power factor ( == no output power)
     // or effective bias is 0 (== no or very distorted output)
     // inform operator
-    if (RadioManagement_IsTxDisabled() == false &&
-            (
-                ts.tx_power_factor == 0
-                || (ts.dmod_mode != DEMOD_CW && ts.pa_bias == 0)
-                || (ts.dmod_mode == DEMOD_CW && ts.pa_cw_bias == 0 && ts.pa_bias == 0)
-            )
-        )
+	const bool no_tx_power = ts.tx_power_factor == 0;
+	const bool no_bias = (ts.dmod_mode != DEMOD_CW && ts.pa_bias == 0) || (ts.dmod_mode == DEMOD_CW && ts.pa_cw_bias == 0 && ts.pa_bias == 0);
+	
+
+    if (RadioManagement_IsTxDisabled() == false && (no_tx_power || no_bias))
     {
         UiDriver_DisplayMessageStart();
+		int display_time = 3000;
+		
         const uint16_t scope_middle_y = sd.Slayout->full.h/2+sd.Slayout->full.y;
-        const char* txp = "No TX Power\nCheck PA calibration!";
-        UiLcdHy28_PrintTextCentered(sd.Slayout->full.x, scope_middle_y-6, sd.Slayout->full.w,txp,Red,Black,0);
+        
+		const char* txp = NULL;
+		
+		if (no_bias && no_tx_power) 
+		{ 
+			txp = "No TX power and no bias.\nCheck PA calibration!";
+		} 
+		else if (no_bias) 
+		{
+			txp = "PA BIAS is 0.\nAdjust Bias before TX!";
+		} 
+		else if (no_tx_power)
+		{
+			txp = "PA TX Power Factor is 0.\nAdjust TX power for band!";
+		}
+		
+		if(ts.menu_mode)
+		{
+			// we assume tune is used for power calibration when in menu mode
+			if (ts.tune)
+			{
+				// we disable display of error message if bias is set.
+				if (no_bias == false)
+				{
+					txp = NULL;
+				}
+				else
+				{
+					txp = "PA BIAS is 0.\nAdjust Bias before TX!";
+				}
+			}
+			else
+			{
+				// shorter display time 
+				display_time = 1000;
+			}
+		}
+    	
+		if (display_time > 0 && txp != NULL)
+		{
+        	UiLcdHy28_PrintTextCentered(sd.Slayout->full.x, scope_middle_y-6, sd.Slayout->full.w,txp,Red,Black,0);
 
-        HAL_Delay(3000);
+        	HAL_Delay(display_time);
+		}
         UiDriver_DisplayMessageStop();
     }
 }
