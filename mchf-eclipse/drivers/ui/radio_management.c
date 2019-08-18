@@ -1132,9 +1132,9 @@ static const CouplingDescriptor mchf_rf_coupling[] =
     { 2500000, COUPLING_160M},
     { 4250000, COUPLING_80M},
     { 8000000, COUPLING_40M},
-    { 1600000, COUPLING_20M},
-    { 3200000, COUPLING_15M},
-    { 6000000, COUPLING_6M},
+    { 16000000, COUPLING_20M},
+    { 32000000, COUPLING_15M},
+    { 60000000, COUPLING_6M},
 };
 
 const int COUPLING_NUM = sizeof(mchf_rf_coupling)/sizeof(CouplingDescriptor);
