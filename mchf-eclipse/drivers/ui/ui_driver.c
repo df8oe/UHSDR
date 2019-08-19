@@ -1690,12 +1690,13 @@ static void UiDriver_DisplayMemoryLabel()
 	uint32_t col = White;
 	if (ts.band->band_mode < MAX_BAND_NUM && ts.cat_band_index == 255)
 	{
-		snprintf(txt,12,"Bnd%s ", ts.band->name);
+		snprintf(txt,12,"Bnd%s   ", ts.band->name);
 	}
 	if (ts.cat_band_index != 255)		// no band storage place active because of "CAT running in sandbox"
 	{
-		snprintf(txt,12,"  CAT  ");
+		snprintf(txt,12,"  CAT   ");
 	}
+	txt[8]='\0'; // "Bnd" + 4digits + "m" = max 8 characters. We make sure the string is never longer than that.
 	UiLcdHy28_PrintText(ts.Layout->MEMORYLABEL.x,  ts.Layout->MEMORYLABEL.y,txt,col,Black,0);
 }
 
