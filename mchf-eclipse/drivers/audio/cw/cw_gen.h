@@ -16,15 +16,15 @@
 
 #include "arm_math.h"
 
-// Exports
 void    CwGen_Init();
 
 void    CwGen_PrepareTx();
 void    CwGen_SetSpeed();
 
-bool    CwGen_TimersActive();
 bool    CwGen_Process( float32_t *i_buffer, float32_t *q_buffer, uint32_t size );
 
+// As showed tests calling them (CwGen_DahIRQ & CwGen_DitIRQ) is matter only for Ultimatic mode.
+// After change code to work in this mode w/o them, these extra dependencies with low-level layers could be removed.
 void    CwGen_DahIRQ();
 void    CwGen_DitIRQ();
 

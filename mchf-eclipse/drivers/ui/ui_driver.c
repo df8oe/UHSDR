@@ -6563,11 +6563,14 @@ static void UiAction_PlayKeyerBtnN(int8_t n)
 		 * to put there terminator
 		 */
 		while (( ++c <= KEYER_MACRO_LEN - 1 ) && DigiModes_TxBufferRemove( pmacro, UI ))
-		{ pmacro++; }
+		{
+		    pmacro++;
+		}
 		*pmacro = '\0';
 
 		// strip out the spaces from the end of line
-		while(( pmacro != ts.keyer_mode.macro[n] ) && *--pmacro == ' ' ) {
+		while(( pmacro != ts.keyer_mode.macro[n] ) && *--pmacro == ' ' )
+		{
 			*pmacro = '\0';
 		}
 
