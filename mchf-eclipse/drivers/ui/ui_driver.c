@@ -2538,9 +2538,9 @@ static void UiDriver_UpdateFreqDisplay(ulong dial_freq, uint8_t* dial_digits, ul
 {
 	{
 
-#define MAX_DIGITS 9
+#define MAX_DIGITS 10
 		ulong dial_freq_temp;
-		int8_t pos_mult[MAX_DIGITS] = {9, 8, 7, 5, 4, 3, 1, 0, -1};
+		int8_t pos_mult[] = {9, 8, 7, 5, 4, 3, 1, 0, -1, -3};
 		uint32_t idx;
 		uint8_t digits[MAX_DIGITS];
 		char digit[2];
@@ -2624,8 +2624,6 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 	{
 		dial_freq *= (ulong)ts.xverter_mode;	// yes - scale by LO multiplier
 		dial_freq += ts.xverter_offset;	// add transverter frequency offset
-		if(dial_freq > 1000000000)		// over 1000 MHz?
-			dial_freq -= 1000000000;		// yes, offset to prevent overflow of display
 		if(ts.xverter_mode && mode != UFM_SECONDARY)	// if in transverter mode, frequency is yellow unless we do the secondary display
 			color = Yellow;
 	}

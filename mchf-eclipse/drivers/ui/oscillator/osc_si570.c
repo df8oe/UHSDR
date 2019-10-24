@@ -607,14 +607,31 @@ static bool Oscillator_IsPresent()
 
 static uint32_t Si570_getMinFrequency()
 {
+#ifdef RF_BRD_LAPWING
+    return 1240000000L;
+#else
     return SI570_HARD_MIN_FREQ/4;
+#endif
 }
 
 static uint32_t Si570_getMaxFrequency()
 {
+#ifdef RF_BRD_LAPWING
+    return 1300000000L;
+#else
     return SI570_HARD_MAX_FREQ/4;
+#endif
 }
 
+static uint32_t Si570_translateExt2Osc(uint32_t freq)
+{
+#ifdef RF_BRD_LAPWING
+    return freq - 1124500000L;
+#else
+    return freq * 4;
+    // frequency multiplied with 4 since we drive a johnson counter for phased clock generation
+#endif
+}
 const OscillatorInterface_t osc_si570 =
 {
 		.init = Si570_Init,
@@ -702,7 +719,7 @@ void Si570_Init()
 
 /**
  * @brief prepares all necessary information for the next frequency change
- * @param freq frequency in Hz to which the LO should be tuned. This is the true LO frequency, i.e. four times the center frequency of the IQ signal
+ * @param freq frequency in Hz to which the LO should be tuned.
  * @param calib the calibration correction value for the real vs. data sheet frequency of the Si570.
  * @param temp_factor the SoftTCXO code calculates a temperature correct value which is used to make a virtual tcxo out of the Si570.
  *
@@ -715,8 +732,7 @@ static Oscillator_ResultCodes_t Si570_PrepareNextFrequency(ulong freq, int temp_
     if (osc->isPresent() == true) {
         float64_t  freq_calc, temp_scale;
 
-        freq_calc = freq * 4.0;
-        // frequency multiplied with 4 since we drive a johnson counter for phased clock generation
+        freq_calc = Si570_translateExt2Osc(freq);
 
         temp_scale = ((float64_t)temp_factor)/14000000.0;
         // calculate scaling factor for the temperature correction (referenced to 14.000 MHz)

@@ -26,8 +26,8 @@
 #if !defined(BOOTLOADER_BUILD)
 // The rf boards we want to support, but the bootloader should compile for all if possible.
 // so we don't tell the bootloader which one we have
-    #if !defined(RF_BRD_OVI40) && !defined(RF_BRD_MCHF)
-        #error At least one rf board must be selected: RF_BRD_MCHF, RF_BRD_OVI40
+    #if !defined(RF_BRD_OVI40) && !defined(RF_BRD_MCHF) && !defined(RF_BRD_LAPWING)
+        #error At least one rf board must be selected: RF_BRD_MCHF, RF_BRD_OVI40, RF_BRD_LAPWING
     #else
         #if defined(RF_BRD_OVI40)
             #include "UHSDR_RF_ovi40_config.h"
