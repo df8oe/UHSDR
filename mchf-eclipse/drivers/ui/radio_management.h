@@ -100,18 +100,16 @@ inline bool RadioManagement_TcxoIsFahrenheit()
 typedef enum
 {
     PA_LEVEL_FULL = 0,
-    PA_LEVEL_5W,
-    PA_LEVEL_2W,
-    PA_LEVEL_1W,
-    PA_LEVEL_0_5W,
+    PA_LEVEL_HIGH,
+    PA_LEVEL_MEDIUM,
+    PA_LEVEL_LOW,
+    PA_LEVEL_MINIMAL,
     PA_LEVEL_TUNE_KEEP_CURRENT
 } power_level_t;
 
 
 typedef struct {
     power_level_t id;
-    char* name;
-    float32_t power_factor;
     int32_t   mW;
 } power_level_desc_t;
 
@@ -122,8 +120,20 @@ typedef struct {
 
 extern const pa_power_levels_info_t mchf_power_levelsInfo;
 
+typedef struct
+{
+    char* name;
+    float32_t  reference_power;
+    uint32_t  max_freq;
+    uint32_t  min_freq;
+    int32_t max_am_power;
+    int32_t max_power; // power level upper limit, used for display
+} pa_info_t;
 
-#define PA_LEVEL_DEFAULT        PA_LEVEL_2W     // Default power level
+extern const pa_info_t mchf_pa;
+
+
+#define PA_LEVEL_DEFAULT        PA_LEVEL_MEDIUM     // Default power level
 
 #define DEFAULT_FREQ_OFFSET     3000              // Amount of offset (at LO freq) when loading "default" frequency
 

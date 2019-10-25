@@ -241,6 +241,7 @@ void Codec_RestartI2S();
 uint32_t UiDriver_GetActiveDSPFunctions();
 void UiDriver_UpdateDSPmode(uint8_t new_dsp_mode);
 bool UiDriver_CheckTouchRegion(const UiArea_t* tr_p);
+void UiDriver_Power2String(char* txt, size_t txt_len,uint32_t power_mW);
 
 uint32_t UiDriver_GetNBColor();
 

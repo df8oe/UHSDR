@@ -612,13 +612,13 @@ bool CatDriver_Ft817_EEPROM_RW_Func(bool readEEPROM, uint16_t addr, uint8_t* dat
             uint8_t powerlevel = 0;
             switch (ts.power_level)
             {
-            case PA_LEVEL_0_5W:
+            case PA_LEVEL_MINIMAL:
                 powerlevel = 3;
                 break;
-            case PA_LEVEL_1W:
+            case PA_LEVEL_LOW:
                 powerlevel = 2;
                 break;
-            case PA_LEVEL_2W:
+            case PA_LEVEL_MEDIUM:
                 powerlevel = 1;
                 break;
             default:
