@@ -15,6 +15,7 @@
 // Common
 #include "uhsdr_board.h"
 #include "profiling.h"
+#include <assert.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1924,42 +1925,55 @@ static void UiDriver_DeleteSMeterLabels()
 
 static void UiDriver_DrawPowerMeterLabels()
 {
-	uchar   i;
-	char    num[20];
+
+    const uint16_t y_pos = (ts.Layout->SM_IND.y + 5);
+    const uint16_t x_pos = (ts.Layout->SM_IND.x + 18);
+
+    const uint16_t PWR_INCR = 1; // each increment represents 1 W.
 
 	// Leading text
-	UiLcdHy28_PrintText(((ts.Layout->SM_IND.x + 18) - 12),(ts.Layout->SM_IND.y + 5),"P",  White,Black,4);
 
-	UiLcdHy28_PrintText((ts.Layout->SM_IND.x + 185),(ts.Layout->SM_IND.y + 5)," W",White,Black,4);
+	UiLcdHy28_PrintText(x_pos - 12 , y_pos,"P" , White, Black, 4);
+	UiLcdHy28_PrintText(x_pos + 167, y_pos," W", White, Black, 4);
 
 	// Draw middle line
-	UiLcdHy28_DrawStraightLineDouble((ts.Layout->SM_IND.x + 18),(ts.Layout->SM_IND.y + 20),170,LCD_DIR_HORIZONTAL,White);
-	// S Meter -> Y + 20
+	UiLcdHy28_DrawStraightLineDouble(x_pos, y_pos + 15, 170, LCD_DIR_HORIZONTAL, White);
 
 	// Draw s markers on middle white line
-	for(i = 0; i < 12; i++)
+	for(int i = 0; i < 12; i++)
 	{
-		uint8_t v_s;
-		if(i < 10)
+
+		uint8_t pwr_val = i * PWR_INCR;
+
+        char    num[3];
+
+		if(pwr_val < 10)
 		{
-			num[0] = i + 0x30;
+			num[0] = pwr_val + 0x30;
 			num[1] = 0;
+		}
+		else if (pwr_val < 100)
+		{
+			num[0] = pwr_val/10 + 0x30;
+			num[1] = pwr_val%10 + 0x30;
+			num[2] = 0;
 		}
 		else
 		{
-			num[0] = i/10 + 0x30;
-			num[1] = i%10 + 0x30;
-			num[2] = 0;
+		    num[0] = 0; // no value display for larger values
 		}
 
-		// Draw s text, only odd numbers
-		if(!(i%2))
+		// Only every second value is displayed as number,
+		// even indicies are used
+		if(i%2 == 0)
 		{
-			UiLcdHy28_PrintText(((ts.Layout->SM_IND.x + 18) - 3 + i*15),(ts.Layout->SM_IND.y + 5),num,White,Black,4);
+			UiLcdHy28_PrintText((x_pos - 3 + i*15), y_pos, num, White,Black,4);
 		}
-		// Lines
-		v_s=(i%2)?3:5;
-		UiLcdHy28_DrawStraightLineDouble(((ts.Layout->SM_IND.x + 18) + i*15),((ts.Layout->SM_IND.y + 20) - v_s),v_s,LCD_DIR_VERTICAL,White);
+
+		// Lines, even indicies are shorter to make room for numbers
+		uint8_t v_s= (i%2 != 0)? 3 : 5;
+
+		UiLcdHy28_DrawStraightLineDouble((x_pos + i*15),(y_pos + 15) - v_s, v_s, LCD_DIR_VERTICAL, White);
 	}
 
 
@@ -2161,23 +2175,19 @@ typedef struct MeterState_s
 
 static MeterState meters[METER_NUM];
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverUpdateBtmMeter
-//* Object              : redraw indicator
-//* Input Parameters    : val=indicated value, warn=red warning threshold
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
-
+/**
+ * Displays a horizontal meter bar as dash segments.
+ *
+ * @param val value to display. Max value (100%) is SMETER_MAX_LEVEL, higher values are cut off.
+ * @param warn At which value shall value is in red color. 0 to disable.
+ * @param color_norm default, non-warning color
+ * @param meterId index of the meter in the internal meter data storage.
+ */
 static void UiDriver_UpdateMeter(uchar val, uchar warn, uint32_t color_norm, uint8_t meterId)
 {
-	uchar     i;
-	const uint8_t v_s = 3;
-	uint32_t       col = color_norm;
-	uint8_t from, to;
-	uint8_t from_warn = 255;
+    assert(meterId < METER_NUM);
 
-	uint16_t ypos = meterId==METER_TOP?(ts.Layout->SM_IND.y + 28):(ts.Layout->SM_IND.y + 51 - BTM_MINUS);
+	uint8_t from_warn = 255;
 
 	// limit meter
 	if(val > SMETER_MAX_LEVEL)
@@ -2204,6 +2214,7 @@ static void UiDriver_UpdateMeter(uchar val, uchar warn, uint32_t color_norm, uin
 
 	if(val != meters[meterId].last || from_warn != 255)
 	{
+	    uint8_t from, to;
 
 		// decide if we need to draw more boxes or delete some
 		if (val > meters[meterId].last)
@@ -2230,7 +2241,18 @@ static void UiDriver_UpdateMeter(uchar val, uchar warn, uint32_t color_norm, uin
 			from = 1;
 		}
 
-		for(i = from; i < to; i++)
+	    uint32_t col = color_norm;
+	    // at start: use the requested value color
+
+	    // the code below is responsible for location and size of the dash segments
+        // and the drawing
+
+        // which of the 2 positions our bar will have
+        const uint16_t ypos = meterId==METER_TOP?(ts.Layout->SM_IND.y + 28):(ts.Layout->SM_IND.y + 51 - BTM_MINUS);
+        // segment line
+        const uint8_t v_s = 3; // segment length
+
+		for(int i = from; i < to; i++)
 		{
 			if (i>val)
 			{
@@ -2240,8 +2262,8 @@ static void UiDriver_UpdateMeter(uchar val, uchar warn, uint32_t color_norm, uin
 			{
 				col = Red2;                 // yes - display values above that color in red
 			}
-			// Lines
-			UiLcdHy28_DrawStraightLineTriple(((ts.Layout->SM_IND.x + 18) + i*5),(ypos - v_s),v_s,LCD_DIR_VERTICAL,col);
+
+			UiLcdHy28_DrawStraightLineTriple(((ts.Layout->SM_IND.x + 18) + i*(v_s + 2)),(ypos - v_s),v_s,LCD_DIR_VERTICAL,col);
 		}
 
 		meters[meterId].last = val;
@@ -2254,7 +2276,7 @@ static void UiDriver_UpdateTopMeterA(uchar val)
 {
 	ulong clr;
 	UiMenu_MapColors(ts.meter_colour_up,NULL,&clr);
-	UiDriver_UpdateMeter(val,SMETER_MAX_LEVEL+1,clr,METER_TOP);
+	UiDriver_UpdateMeter(val,0,clr,METER_TOP);
 }
 
 /**
