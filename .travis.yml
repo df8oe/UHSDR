@@ -33,11 +33,14 @@ script:
     - mkdir -p mchf-eclipse/build/fw-f4-ili9486-480
     - mkdir -p mchf-eclipse/build/fw-f4-small
     - mkdir -p mchf-eclipse/build/fw-h7
+    - mkdir -p mchf-eclipse/build/fw-f7-lapwing
     - cd $BUILDLOC/fw-h7
     - cd ../bl-h7
     - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" CONFIGFLAGS="-DUI_BRD_OVI40" bootloader 
     - cd ../fw-h7
     - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_MCHF -DRF_BRD_OVI40" all 
+    - cd ../fw-f7-lapwing
+    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="F7" TRX_ID="lapf7" TRX_NAME="LAPWING" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_LAPWING" all 
     - cd ../fw-f4 
     - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF" all
     - cd ../bl-f4

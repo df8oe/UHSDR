@@ -500,6 +500,15 @@ static uint16_t UiWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint
 static uint32_t UiConfiguration_LimitFrequency(BandInfo_c* bandInfo, const uint32_t freq, bool set_to_default)
 {
     uint32_t retval = freq;
+    bool do_reset = false;
+
+#ifndef USE_MEMORY_MODE
+        // Load default for this band
+    const uint32_t resetval = bandInfo->tune + DEFAULT_FREQ_OFFSET;
+#else
+    const uint32_t resetval = DEFAULT_MEMORY_FREQ;
+#endif
+
 
     // this code handles the migration of stored frequency settings from the older approach to/from the newer
     // approach. We will have to introduce the newer approach with firmware 2.11.0 in order not to cause
@@ -514,18 +523,20 @@ static uint32_t UiConfiguration_LimitFrequency(BandInfo_c* bandInfo, const uint3
 
     if(set_to_default)
     {
-        // Load default for this band
-        retval = bandInfo->tune + DEFAULT_FREQ_OFFSET;
+        do_reset = true;
     }
     else
     {
-        if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) == 0 && RadioManagement_FreqIsInBand(bandInfo,retval) == false)       // xxxx relax memory-save frequency restrictions and is it within the allowed range?
+        if((ts.flags2 & FLAGS2_FREQ_MEM_LIMIT_RELAX) == 0)
         {
-            // Load default for this band
-            retval = bandInfo->tune + DEFAULT_FREQ_OFFSET;
+#ifndef USE_MEMORY_MODE
+            do_reset = RadioManagement_FreqIsInBand(bandInfo,retval) == false;       // xxxx relax memory-save frequency restrictions and is it within the allowed range?
+#else
+            do_reset = RadioManagement_FreqIsInEnabledBand(retval) == false;
+#endif
         }
     }
-    return retval;
+    return do_reset == true? resetval : retval;
 }
 
 void UiReadSettingsBandMode(const uint8_t i, const uint16_t band_mode, const uint16_t band_freq_high, const uint16_t  band_freq_low, VfoReg* vforeg, bool load_default)

@@ -26,14 +26,32 @@
 // -------------------------------------------------------------------------------------
 // Local Oscillator
 // ------------------
+/* There are two supported alternative choices for the Si570:
+     USE_SI570_CMOS     frequencies up to 160/220 Mhz, used in most boards
+     USE_SI570_CGRADE   frequencies up to 280 Mhz, used in Lapwing
+*/
+#ifndef RF_BRD_LAPWING
+    #define USE_SI570_CMOS
+#else
+    #define USE_SI570_CGRADE
+#endif
 
-// The SI570 Min/Max frequencies are 4x the actual tuning frequencies
-#define SI570_MIN_FREQ          10000000    // 10=2.5 MHz
-#define SI570_MAX_FREQ          160000000   // 160=40 Mhz
-//
-// These are "hard limit" frequencies below/above which the synthesizer cannot be adjusted or else the system may crash
-#define SI570_HARD_MIN_FREQ     3500000     // 3.5=  0.875 MHz
-#define SI570_HARD_MAX_FREQ     220000000   // 220=55 MHz
+// The SI570 Min/Max frequencies id spec sheet
+// The "hard limits" frequencies below/above which the synthesizer cannot be adjusted or else the system may crash
+// Lower limits apply to all cases
+
+#define SI570_MIN_FREQ          10000000    //10.0=2.5 MHz
+#define SI570_HARD_MIN_FREQ     3500000     // 3.5=0.875 MHz
+
+#ifdef USE_SI570_CGRADE
+    #define SI570_MAX_FREQ          280000000   // 280=70 Mhz
+    #define SI570_HARD_MAX_FREQ     280000000   // 280=70 MHz
+#endif
+
+#ifdef USE_SI570_CMOS
+    #define SI570_MAX_FREQ          160000000   // 160=40 Mhz
+    #define SI570_HARD_MAX_FREQ     220000000   // 220=55 MHz
+#endif
 
 #define SI570_RECALL            (1<<0)
 #define SI570_FREEZE_DCO        (1<<4)
@@ -607,14 +625,31 @@ static bool Oscillator_IsPresent()
 
 static uint32_t Si570_getMinFrequency()
 {
+#ifdef RF_BRD_LAPWING
+    return 1240000000L;
+#else
     return SI570_HARD_MIN_FREQ/4;
+#endif
 }
 
 static uint32_t Si570_getMaxFrequency()
 {
+#ifdef RF_BRD_LAPWING
+    return 1300000000L;
+#else
     return SI570_HARD_MAX_FREQ/4;
+#endif
 }
 
+static uint32_t Si570_translateExt2Osc(uint32_t freq)
+{
+#ifdef RF_BRD_LAPWING
+    return freq - 1124500000L;
+#else
+    return freq * 4;
+    // frequency multiplied with 4 since we drive a johnson counter for phased clock generation
+#endif
+}
 const OscillatorInterface_t osc_si570 =
 {
 		.init = Si570_Init,
@@ -702,7 +737,7 @@ void Si570_Init()
 
 /**
  * @brief prepares all necessary information for the next frequency change
- * @param freq frequency in Hz to which the LO should be tuned. This is the true LO frequency, i.e. four times the center frequency of the IQ signal
+ * @param freq frequency in Hz to which the LO should be tuned.
  * @param calib the calibration correction value for the real vs. data sheet frequency of the Si570.
  * @param temp_factor the SoftTCXO code calculates a temperature correct value which is used to make a virtual tcxo out of the Si570.
  *
@@ -715,8 +750,7 @@ static Oscillator_ResultCodes_t Si570_PrepareNextFrequency(ulong freq, int temp_
     if (osc->isPresent() == true) {
         float64_t  freq_calc, temp_scale;
 
-        freq_calc = freq * 4.0;
-        // frequency multiplied with 4 since we drive a johnson counter for phased clock generation
+        freq_calc = Si570_translateExt2Osc(freq);
 
         temp_scale = ((float64_t)temp_factor)/14000000.0;
         // calculate scaling factor for the temperature correction (referenced to 14.000 MHz)

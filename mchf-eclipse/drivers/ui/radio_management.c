@@ -1265,12 +1265,34 @@ void RadioManagement_SetDemodMode(uint8_t new_mode)
 }
 
 /**
+ *  * Is the given frequency in the limits of a band?
+ * @param bandInfo* ptr to band info for this band
  * @param freq the frequency to check
  */
 bool RadioManagement_FreqIsInBand(const BandInfo* bandinfo, const uint32_t freq)
 {
     assert(bandinfo != NULL);
     return (freq >= bandinfo->tune) && (freq <= (bandinfo->tune + bandinfo->size));
+}
+
+/**
+ * Is the given frequency in an enabled band?
+ * @param freq the frequency to check
+ * @returns true if in any of the currently enabled bands
+ */
+bool RadioManagement_FreqIsInEnabledBand ( uint32_t freq )
+{
+    bool retval = false;
+    for ( int idx = 0; idx < MAX_BAND_NUM; idx++ )
+    {
+        if ( band_enabled[idx] )
+        {
+            retval = true;
+            RadioManagement_FreqIsInBand( bandInfo[idx], freq);
+            break; // we found the first enabled band following the current one
+        }
+    }
+    return retval;
 }
 
 /**
