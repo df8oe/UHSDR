@@ -329,6 +329,7 @@ inline bool RadioManagement_IsTxDisabledBy(uint8_t whom)
 uint32_t RadioManagement_GetRealFreqTranslationMode(uint32_t txrx_mode, uint32_t dmod_mode, uint32_t iq_freq_mode);
 const BandInfo* RadioManagement_GetBand(ulong freq);
 bool RadioManagement_FreqIsInBand(BandInfo_c * bandinfo, const uint32_t freq);
+bool RadioManagement_FreqIsInEnabledBand ( uint32_t freq );
 const BandInfo* RadioManagement_GetBandInfo(uint8_t new_band_index);
 bool RadioManagement_SetPowerLevel(const BandInfo* band, power_level_t power_level);
 bool RadioManagement_Tune(bool tune);

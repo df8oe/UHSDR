@@ -1691,7 +1691,14 @@ static void UiDriver_DisplayMemoryLabel()
 	uint32_t col = White;
 	if (ts.band->band_mode < MAX_BAND_NUM && ts.cat_band_index == 255)
 	{
-		snprintf(txt,12,"Bnd%s   ", ts.band->name);
+
+#ifdef USE_MEMORY_MODE
+	    // Enable all band memories, don't use band names
+        snprintf(txt,12,"Mem%02d   ", ts.band->band_mode);
+#else
+        // Each memory has its designated band, use that as band
+        snprintf(txt,12,"Bnd%s   ", ts.band->name);
+#endif
 	}
 	if (ts.cat_band_index != 255)		// no band storage place active because of "CAT running in sandbox"
 	{
@@ -3332,7 +3339,9 @@ static void UiDriver_ChangeBand(bool is_up)
 		for (int idx  = 1; idx <= MAX_BANDS; idx++)
 		{
 		    uint32_t test_idx = (curr_band_index + ((is_up == true) ? idx : (MAX_BANDS-idx)))% MAX_BANDS;
+#ifndef USE_MEMORY_MODE
 		    if (band_enabled[test_idx])
+#endif
 		    {
 		        new_band_index = test_idx;
 		        break; // we found the first enabled band following the current one
