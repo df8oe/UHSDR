@@ -24,6 +24,9 @@
 #include "uhsdr_types.h"
 #include "uhsdr_board.h"
 // Frequency public structure
+
+#define MAX_DIGITS 10
+
 typedef struct DialFrequency
 {
     // pot values
@@ -52,9 +55,9 @@ typedef struct DialFrequency
 
 
     // Virtual segments
-    uint8_t dial_digits[9];
+    uint8_t dial_digits[MAX_DIGITS];
     // Second display
-    uint8_t sdial_digits[9];
+    uint8_t sdial_digits[MAX_DIGITS];
 
 } DialFrequency;
 

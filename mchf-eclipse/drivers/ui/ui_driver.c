@@ -1599,13 +1599,13 @@ void UiDriver_DisplayDemodMode()
 void UiDriver_DisplayFreqStepSize()
 {
 
-	int	line_loc;
 	static	bool	step_line = 0;	// used to indicate the presence of a step line
-	uint32_t	color;
-	uint32_t 	stepsize_background;
 
-	color = ts.tune_step?Cyan:White;		// is this a "Temporary" step size from press-and-hold?
-	stepsize_background = (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)?Blue:Black;
+	const uint16_t font_width = is_splitmode()?SMALL_FONT_WIDTH:LARGE_FONT_WIDTH;
+    const uint16_t x_pos = is_splitmode()?ts.Layout->TUNE_SPLIT_FREQ_X:ts.Layout->TUNE_FREQ.x;
+
+	const uint32_t color = ts.tune_step?Cyan:White;		// is this a "Temporary" step size from press-and-hold?
+	const uint32_t stepsize_background = (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)?Blue:Black;
 	// dynamic_tuning active -> yes, display on Grey3
 
 	if(step_line)	 	// Remove underline indicating step size if one had been drawn
@@ -1617,40 +1617,33 @@ void UiDriver_DisplayFreqStepSize()
 	// Blank old step size
 	// UiLcdHy28_DrawFullRect(POS_TUNE_STEP_X,POS_TUNE_STEP_Y-1,POS_TUNE_STEP_MASK_H,POS_TUNE_STEP_MASK_W,stepsize_background);
 
-	{
-		char step_name[10];
+	char step_name[10];
+	// I know the code below will not win the price for the most readable code
+	// ever. But it does the job of display any freq step somewhat reasonable.
+	// khz/Mhz only whole  khz/Mhz is shown, no fraction
+	// showing fractions would require some more coding, which is not yet necessary
+	const int32_t pow10 = log10f(df.tuning_step);
+	const int32_t digit_group = pow10/3;
+	const int32_t digit_idx = pow10%3;
 
-		// I know the code below will not win the price for the most readable code
-		// ever. But it does the job of display any freq step somewhat reasonable.
-		// khz/Mhz only whole  khz/Mhz is shown, no fraction
-		// showing fractions would require some more coding, which is not yet necessary
-		const uint32_t pow10 = log10f(df.tuning_step);
-		line_loc = 9 - pow10 - pow10/3;
-		if (line_loc < 0)
-		{
-			line_loc = -1;
-		}
-		const char* stepUnitPrefix[] = { "","k","M","G","T"};
-		snprintf(step_name,10,"%d%sHz",(int)(df.tuning_step/exp10((pow10/3)*3)), stepUnitPrefix[pow10/3]);
+	const char* stepUnitPrefix[] = { "","k","M","G","T"};
+	snprintf(step_name,10,"%d%sHz",(int)(df.tuning_step/exp10((digit_group)*3)), stepUnitPrefix[digit_group]);
 
-		UiLcdHy28_PrintTextCentered(ts.Layout->TUNE_STEP.x,ts.Layout->TUNE_STEP.y,ts.Layout->TUNE_STEP.w,step_name,color,stepsize_background,0);
-	}
-	//
-	if((ts.freq_step_config & FREQ_STEP_SHOW_MARKER) && line_loc >= 0)	 		// is frequency step marker line enabled?
+	UiLcdHy28_PrintTextCentered(ts.Layout->TUNE_STEP.x,ts.Layout->TUNE_STEP.y,ts.Layout->TUNE_STEP.w,step_name,color,stepsize_background,0);
+
+	if(ts.freq_step_config & FREQ_STEP_SHOW_MARKER && pow10 < MAX_DIGITS)          // is frequency step marker line enabled?
 	{
-		if(is_splitmode())
-		{
-			UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_SPLIT_FREQ_X + (SMALL_FONT_WIDTH * line_loc)),(ts.Layout->TUNE_FREQ.y + 24),(SMALL_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
-		}
-		else
-		{
-			UiLcdHy28_DrawStraightLineDouble((ts.Layout->TUNE_FREQ.x + (LARGE_FONT_WIDTH * line_loc)),(ts.Layout->TUNE_FREQ.y + 24),(LARGE_FONT_WIDTH),LCD_DIR_HORIZONTAL,White);
-		}
-		step_line = 1;	// indicate that a line under the step size had been drawn
+
+	    const int32_t group_space = font_width * 3 + font_width/2; //3 digits plus a half width dot
+
+	    const uint32_t line_pos = (9 * font_width) - (digit_group * group_space) - (digit_idx * font_width);
+
+	    UiLcdHy28_DrawStraightLineDouble(x_pos + line_pos, (ts.Layout->TUNE_FREQ.y + 24),font_width,LCD_DIR_HORIZONTAL,White);
+	    step_line = 1;	// indicate that a line under the step size had been drawn
 	}
 	else	// marker line not enabled
 	{
-		step_line = 0;	// we don't need to erase "step size" marker line in the future
+	    step_line = 0;	// we don't need to erase "step size" marker line in the future
 	}
 }
 
@@ -2545,45 +2538,54 @@ static void UiDriver_UpdateFreqDisplay(ulong dial_freq, uint8_t* dial_digits, ul
 {
 	{
 
-#define MAX_DIGITS 10
-		ulong dial_freq_temp;
-		int8_t pos_mult[] = {9, 8, 7, 5, 4, 3, 1, 0, -1, -3};
-		uint32_t idx;
 		uint8_t digits[MAX_DIGITS];
-		char digit[2];
 		uint8_t last_non_zero = 0;
 
 		// Terminate string for digit
+        char digit[2];
 		digit[1] = 0;
+
 		// calculate the digits
-		dial_freq_temp = dial_freq;
-		for (idx = 0; idx < MAX_DIGITS; idx++)
+		uint32_t dial_freq_temp = dial_freq;
+		for (uint32_t idx = 0; idx < MAX_DIGITS; idx++)
 		{
 			digits[idx] = dial_freq_temp % 10;
 			dial_freq_temp /= 10;
 			if (digits[idx] != 0) last_non_zero = idx;
 		}
-		for (idx = 0; idx < MAX_DIGITS; idx++)
+
+        const uint16_t group_space = 3* font_width + font_width/2;
+
+        const uint16_t x_right = pos_x_loc + (9* font_width);
+
+        for (uint32_t idx = 3; idx < MAX_DIGITS; idx+=3)
+        {
+            bool noshow = last_non_zero < idx;
+            int digit_group = idx / 3; // we group every 3 digits
+
+            digit[0] = noshow?' ':'.';
+            UiLcdHy28_PrintText(x_right - (digit_group * group_space) + font_width/2 + 1  ,pos_y_loc,digit,color,Black,digit_size);
+        }
+#if 1
+		for (uint32_t idx = 0; idx < MAX_DIGITS; idx++)
 		{
 			// -----------------------
 			// See if digit needs update
 			if ((digits[idx] != dial_digits[idx]) || ts.refresh_freq_disp)
 			{
+			    int digit_group = idx / 3; // we group every 3 digits
+			    int digit_idx = idx % 3;
+
+
+
 				bool noshow = idx > last_non_zero;
 				// don't show leading zeros, except for the 0th digits
 				digit[0] = noshow?' ':0x30 + (digits[idx] & 0x0F);
 				// Update segment
-				UiLcdHy28_PrintText((pos_x_loc + pos_mult[idx] * font_width), pos_y_loc, digit, color, Black, digit_size);
+				UiLcdHy28_PrintText(x_right -  digit_idx * font_width - (digit_group * group_space), pos_y_loc, digit, color, Black, digit_size);
 			}
 		}
-
-		for (idx = 3; idx < MAX_DIGITS; idx+=3)
-		{
-			bool noshow = last_non_zero < idx;
-			digit[0] = noshow?' ':'.';
-			UiLcdHy28_PrintText(pos_x_loc+ (pos_mult[idx]+1) * font_width,pos_y_loc,digit,color,Black,digit_size);
-		}
-
+#endif
 	}
 }
 
