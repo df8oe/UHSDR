@@ -242,11 +242,11 @@ const BandInfo* RadioManagement_GetBandInfo(uint8_t new_band_index)
 // this structure MUST match the order of entries in power_level_t !
 static const power_level_desc_t mchf_rf_power_levels[] =
 {
-        { .id = PA_LEVEL_FULL, .name = "FULL", .power_factor = 1.0   , .mW = 0,   }, // we use 0 to indicate max power
-        { .id = PA_LEVEL_5W,   .name = "5W"  , .power_factor = 1.0   , .mW = 5000, },
-        { .id = PA_LEVEL_2W,   .name = "2W"  , .power_factor = 0.6324, .mW = 2000, },
-        { .id = PA_LEVEL_1W,   .name = "1W"  , .power_factor = 0.447 , .mW = 1000, },
-        { .id = PA_LEVEL_0_5W, .name = "0.5W"  , .power_factor = 0.316 , .mW =  500, },
+        { .id = PA_LEVEL_FULL,   .mW = 0,    }, // we use 0 to indicate max power
+        { .id = PA_LEVEL_HIGH,   .mW = 5000, },
+        { .id = PA_LEVEL_MEDIUM, .mW = 2000, },
+        { .id = PA_LEVEL_LOW,    .mW = 1000, },
+        { .id = PA_LEVEL_MINIMAL,.mW =  500, },
 };
 
 
@@ -256,23 +256,30 @@ const pa_power_levels_info_t mchf_power_levelsInfo =
         .count = sizeof(mchf_rf_power_levels)/sizeof(*mchf_rf_power_levels),
 };
 
-typedef struct
-{
-    char* name;
-    float32_t  reference_power;
-    int32_t  max_freq;
-    int32_t  min_freq;
-    int32_t max_am_power;
-} pa_info_t;
-
-static const pa_info_t mchf_pa =
+#ifdef RF_BRD_MCHF
+const pa_info_t mchf_pa =
 {
         .name  = "mcHF PA",
         .reference_power = 5000.0,
         .max_freq = 32000000,
         .min_freq =  1800000,
-        .max_am_power = 2000.0,
+        .max_am_power = 2000,
+        .max_power = 10000,
 };
+#endif  // RF_BRD_MCHF
+
+
+#ifdef RF_BRD_LAPWING
+const pa_info_t mchf_pa =
+{
+        .name  = "Lapwing PA",
+        .reference_power = 5000.0,
+        .max_freq = 1300 * 1000000,
+        .min_freq = 1240 * 1000000,
+        .max_am_power = 2000,
+        .max_power = 20000,
+};
+#endif // LAPWING
 
 
 
@@ -333,7 +340,7 @@ void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec)
 
 
 /**
- * Returns the scaling which needs to be applied to the standard signal levl (which delivers the PA_REFERENCE_POWER)
+ * Returns the scaling which needs to be applied to the standard signal level (which delivers the PA_REFERENCE_POWER)
  * in order to output  the request power.
  * @param powerMw requested power in mW. mW =< 0.0 returns scale 1
  * @return scaling (gain)
@@ -1692,7 +1699,7 @@ bool RadioManagement_UpdatePowerAndVSWR()
                 swrm.high_vswr_detected = true;
 
                 // change output power to "PA_LEVEL_0_5W" when VSWR protection is active
-                RadioManagement_SetPowerLevel ( RadioManagement_GetBand ( df.tune_new), PA_LEVEL_0_5W );
+                RadioManagement_SetPowerLevel ( RadioManagement_GetBand ( df.tune_new), PA_LEVEL_MINIMAL );
             }
         }
 

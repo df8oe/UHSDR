@@ -2963,55 +2963,55 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 
 
     case CONFIG_2200M_5W_ADJUST:        // 2200m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_630M_5W_ADJUST:     // 630m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_630, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_630, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_160M_5W_ADJUST:     // 160m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_160, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_160, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_80M_5W_ADJUST:      // 80m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_80, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_80, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_60M_5W_ADJUST:      // 60m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_60, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_60, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_40M_5W_ADJUST:      // 40m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_40, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_40, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_30M_5W_ADJUST:      // 30m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_30, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_30, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_20M_5W_ADJUST:      // 20m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_20, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_20, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_17M_5W_ADJUST:      // 17m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_17, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_17, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_15M_5W_ADJUST:      // 15m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_15, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_15, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_12M_5W_ADJUST:      // 12m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_12, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_12, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_10M_5W_ADJUST:      // 10m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_10, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_10, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_6M_5W_ADJUST:       // 6m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_6, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_6, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_4M_5W_ADJUST:       // 4m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_4, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_4, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_2M_5W_ADJUST:       // 2m 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_70CM_5W_ADJUST:     // 70cm 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_70, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_70, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_23CM_5W_ADJUST:     // 23cm 5 watt adjust
-        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_5W, options, &clr);
+        UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_2200M_FULL_POWER_ADJUST:        // 2200m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_FULL, options, &clr);
@@ -3390,32 +3390,23 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         }
         ts.menu_var_changed = temp_var_u8;
         break;
+
         case CONFIG_TUNE_POWER_LEVEL: // set power for antenne tuning
             var_change = UiDriverMenuItemChangeUInt8(var*(-1), mode, &ts.tune_power_level,
                                                   0,
                                                   PA_LEVEL_TUNE_KEEP_CURRENT,
                                                   PA_LEVEL_TUNE_KEEP_CURRENT,
                                                   1);
-            switch(ts.tune_power_level)
+
+            if (ts.tune_power_level < mchf_power_levelsInfo.count)
             {
-            case PA_LEVEL_FULL:
-                txt_ptr = "FULL POWER";
-                break;
-            case PA_LEVEL_5W:
-                txt_ptr = "        5W";
-                break;
-            case PA_LEVEL_2W:
-                txt_ptr = "        2W";
-                break;
-            case PA_LEVEL_1W:
-                txt_ptr = "        1W";
-                break;
-            case PA_LEVEL_0_5W:
-                txt_ptr = "      0.5W";
-                break;
-            case PA_LEVEL_TUNE_KEEP_CURRENT:
+                char txt[5];
+                UiDriver_Power2String(txt,sizeof(txt),mchf_power_levelsInfo.levels[ts.tune_power_level].mW);
+                snprintf(options,32,"       %s",txt);
+            }
+            else
+            {
                 txt_ptr = " as TX PWR";
-                break;
             }
             break;
 #if 0

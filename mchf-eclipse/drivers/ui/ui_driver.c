@@ -1929,7 +1929,10 @@ static void UiDriver_DrawPowerMeterLabels()
     const uint16_t y_pos = (ts.Layout->SM_IND.y + 5);
     const uint16_t x_pos = (ts.Layout->SM_IND.x + 18);
 
-    const uint16_t PWR_INCR = 1; // each increment represents 1 W.
+    const int32_t maxW = ((mchf_pa.max_power > 5000) ? mchf_pa.max_power : 5000)  / 1000;
+
+    // get the pwr increment in next integer number of 0.5W steps
+    const float32_t PWR_INCR = (maxW % 5 == 0)? (maxW/10.0) : (maxW/5+1)/2.0  ; //.
 
 	// Leading text
 
@@ -1943,9 +1946,9 @@ static void UiDriver_DrawPowerMeterLabels()
 	for(int i = 0; i < 12; i++)
 	{
 
-		uint8_t pwr_val = i * PWR_INCR;
+		uint16_t pwr_val = i * PWR_INCR;
 
-        char    num[3];
+        char    num[4];
 
 		if(pwr_val < 10)
 		{
@@ -1958,16 +1961,24 @@ static void UiDriver_DrawPowerMeterLabels()
 			num[1] = pwr_val%10 + 0x30;
 			num[2] = 0;
 		}
+        else if (pwr_val < 1000)
+        {
+            num[0] = pwr_val/100 + 0x30;
+            num[1] = (pwr_val%100)/10 + 0x30;
+            num[2] = pwr_val%10 + 0x30;
+            num[3] = 0;
+        }
 		else
 		{
 		    num[0] = 0; // no value display for larger values
 		}
+		const int dw = UiLcdHy28_TextWidth(num,4);
 
 		// Only every second value is displayed as number,
 		// even indicies are used
 		if(i%2 == 0)
 		{
-			UiLcdHy28_PrintText((x_pos - 3 + i*15), y_pos, num, White,Black,4);
+			UiLcdHy28_PrintText((x_pos - dw/2 + i*15), y_pos, num, White,Black,4);
 		}
 
 		// Lines, even indicies are shorter to make room for numbers
@@ -4494,29 +4505,38 @@ static void UiDriver_DisplayModulationType()
 	}
 	//fdv_clear_display();
 }
+/**
+ * Converts a power value in mW into useful null-terminated string
+ * @param txt char array of at least 5 characters
+ * @param txt_len length of txt array
+ * @param power_mW power value, if 0 result is "FULL"
+ */
+void UiDriver_Power2String(char* txt, size_t txt_len,uint32_t power_mW)
+{
+    if (power_mW == 0 )
+    {
+        snprintf(txt,txt_len,"FULL");
+    }
+    else if (power_mW < 100)
+    {
+        snprintf(txt,txt_len,"%ldmW",power_mW);
+    }
+    else if (power_mW < 1000)
+    {
+        snprintf(txt,txt_len,"0.%ldW",power_mW/100);
+    }
+    else
+    {
+        snprintf(txt,txt_len,"%ldW",power_mW/1000);
+    }
+}
 
 static void UiDriver_DisplayPowerLevel()
 {
     uint16_t fg_clr = White;
     char txt[5];
-    char* txt_ptr = txt;
 
-    if (ts.power == 0 )
-    {
-        txt_ptr = "FULL";
-    }
-    else if (ts.power < 100)
-    {
-        snprintf(txt,sizeof(txt),"%ldmW",ts.power);
-    }
-    else if (ts.power < 1000)
-    {
-        snprintf(txt,sizeof(txt),"0.%ldW",ts.power/100);
-    }
-    else
-    {
-        snprintf(txt,sizeof(txt),"%ldW",ts.power/1000);
-    }
+    UiDriver_Power2String(txt,sizeof(txt),ts.power);
 
     uint16_t bg_clr = Blue; // normal operation
 
@@ -4537,7 +4557,7 @@ static void UiDriver_DisplayPowerLevel()
         bg_clr = Orange;
     }
 
-	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->PW_IND.w,txt_ptr,fg_clr,bg_clr,0);
+	UiLcdHy28_PrintTextCentered((ts.Layout->PW_IND.x),(ts.Layout->PW_IND.y),ts.Layout->PW_IND.w,txt,fg_clr,bg_clr,0);
 }
 
 static void UiDriver_DisplayDbm()
