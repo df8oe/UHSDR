@@ -753,10 +753,6 @@ static void UiDriver_ToggleDigitalMode()
  */
 void UiDriver_FrequencyUpdateLOandDisplay(bool full_update)
 {
-	if (full_update)
-	{
-		ts.refresh_freq_disp = 1;           // update ALL digits
-	}
 	if(is_splitmode())
 	{
 		// SPLIT mode
@@ -767,7 +763,6 @@ void UiDriver_FrequencyUpdateLOandDisplay(bool full_update)
 	{
 		UiDriver_UpdateFrequency(false,UFM_AUTOMATIC);
 	}
-	ts.refresh_freq_disp = 0;           // update ALL digits
 }
 
 void UiDriver_DebugInfo_DisplayEnable(bool enable)
@@ -2367,10 +2362,10 @@ static void UiDriver_InitFrequency()
 	{
 		vfo[VFO_A].band[i].dial_value = 0xFFFFFFFF;	// clear dial values
 		vfo[VFO_A].band[i].decod_mode = DEMOD_USB; 	// clear decode mode
-        vfo[VFO_A].band[i].decod_mode = DigitalMode_None;   // clear decode mode
+        vfo[VFO_A].band[i].digital_mode = DigitalMode_None;   // clear digital mode
 		vfo[VFO_B].band[i].dial_value = 0xFFFFFFFF;  // clear dial values
 		vfo[VFO_B].band[i].decod_mode = DEMOD_USB;   // clear decode mode
-        vfo[VFO_B].band[i].decod_mode = DigitalMode_None;   // clear decode mode
+        vfo[VFO_B].band[i].digital_mode = DigitalMode_None;   // clear digital mode
 	}
 
 	// Lower bands default to LSB mode
@@ -2384,24 +2379,13 @@ static void UiDriver_InitFrequency()
 	// Init frequency publics(set diff values so update on LCD will be done)
 	df.tune_old 	= 0;
 	df.tune_new 	= 3500001;
-	df.selected_idx = 3; 		// 1 Khz startup step
+	df.selected_idx = T_STEP_1KHZ_IDX; 		// 1 Khz startup step
 	df.tuning_step	= tune_steps[df.selected_idx];
 	df.temp_factor	= 0;
 	df.temp_factor_changed = false;
 	df.temp_enabled = 0;		// startup state of TCXO
 
 	UiDriver_InitBandSet();
-
-	// Set virtual segments initial value (diff than zero!)
-	df.dial_digits[8]	= 0;
-	df.dial_digits[7]	= 0;
-	df.dial_digits[6]	= 0;
-	df.dial_digits[5]	= 0;
-	df.dial_digits[4]	= 0;
-	df.dial_digits[3]	= 0;
-	df.dial_digits[2]	= 0;
-	df.dial_digits[1]	= 0;
-	df.dial_digits[0]	= 0;
 }
 
 /**
@@ -2534,59 +2518,49 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 
 
 
-static void UiDriver_UpdateFreqDisplay(ulong dial_freq, uint8_t* dial_digits, ulong pos_x_loc, ulong font_width, ulong pos_y_loc, ushort color, uchar digit_size)
+static void UiDriver_UpdateFreqDisplay(uint32_t dial_freq, uint32_t pos_x_loc, uint32_t pos_y_loc, uint16_t color, uint8_t digit_font)
 {
-	{
+    uint8_t digits[MAX_DIGITS];
+    uint8_t last_non_zero = 0;
+    uint8_t font_width = digit_font == 0 ? SMALL_FONT_WIDTH : LARGE_FONT_WIDTH;
 
-		uint8_t digits[MAX_DIGITS];
-		uint8_t last_non_zero = 0;
+    // Terminate string for digit
+    char digit[2];
+    digit[1] = 0;
 
-		// Terminate string for digit
-        char digit[2];
-		digit[1] = 0;
+    // calculate the digits
+    uint32_t dial_freq_temp = dial_freq;
+    for (uint32_t idx = 0; idx < MAX_DIGITS; idx++)
+    {
+        digits[idx] = dial_freq_temp % 10;
+        dial_freq_temp /= 10;
+        if (digits[idx] != 0) last_non_zero = idx;
+    }
 
-		// calculate the digits
-		uint32_t dial_freq_temp = dial_freq;
-		for (uint32_t idx = 0; idx < MAX_DIGITS; idx++)
-		{
-			digits[idx] = dial_freq_temp % 10;
-			dial_freq_temp /= 10;
-			if (digits[idx] != 0) last_non_zero = idx;
-		}
+    const uint16_t group_space = 3* font_width + font_width/2;
 
-        const uint16_t group_space = 3* font_width + font_width/2;
+    const uint16_t x_right = pos_x_loc + (9* font_width);
 
-        const uint16_t x_right = pos_x_loc + (9* font_width);
+    for (uint32_t idx = 3; idx < MAX_DIGITS; idx+=3)
+    {
+        bool noshow = last_non_zero < idx;
+        int digit_group = idx / 3; // we group every 3 digits
 
-        for (uint32_t idx = 3; idx < MAX_DIGITS; idx+=3)
-        {
-            bool noshow = last_non_zero < idx;
-            int digit_group = idx / 3; // we group every 3 digits
+        digit[0] = noshow?' ':'.';
+        UiLcdHy28_PrintText(x_right - (digit_group * group_space) + font_width/2 + 1  ,pos_y_loc,digit,color,Black,digit_font);
+    }
 
-            digit[0] = noshow?' ':'.';
-            UiLcdHy28_PrintText(x_right - (digit_group * group_space) + font_width/2 + 1  ,pos_y_loc,digit,color,Black,digit_size);
-        }
-#if 1
-		for (uint32_t idx = 0; idx < MAX_DIGITS; idx++)
-		{
-			// -----------------------
-			// See if digit needs update
-			if ((digits[idx] != dial_digits[idx]) || ts.refresh_freq_disp)
-			{
-			    int digit_group = idx / 3; // we group every 3 digits
-			    int digit_idx = idx % 3;
+    for (uint32_t idx = 0; idx < MAX_DIGITS; idx++)
+    {
+        int digit_group = idx / 3; // we group every 3 digits
+        int digit_idx = idx % 3;
 
-
-
-				bool noshow = idx > last_non_zero;
-				// don't show leading zeros, except for the 0th digits
-				digit[0] = noshow?' ':0x30 + (digits[idx] & 0x0F);
-				// Update segment
-				UiLcdHy28_PrintText(x_right -  digit_idx * font_width - (digit_group * group_space), pos_y_loc, digit, color, Black, digit_size);
-			}
-		}
-#endif
-	}
+        bool noshow = idx > last_non_zero;
+        // don't show leading zeros, except for the 0th digits
+        digit[0] = noshow?' ':0x30 + (digits[idx] & 0x0F);
+        // Update segment
+        UiLcdHy28_PrintText(x_right -  digit_idx * font_width - (digit_group * group_space), pos_y_loc, digit, color, Black, digit_font);
+    }
 }
 
 //*----------------------------------------------------------------------------
@@ -2597,44 +2571,38 @@ static void UiDriver_UpdateFreqDisplay(ulong dial_freq, uint8_t* dial_digits, ul
 //* Output Parameters   :
 //* Functions called    :
 //*----------------------------------------------------------------------------
-static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
+static void UiDriver_UpdateLcdFreq(uint32_t dial_freq, uint16_t color, uint16_t mode)
 {
-	uchar		digit_size;
-	ulong		pos_y_loc;
-	ulong		pos_x_loc;
-	ulong		font_width;
-	uint8_t*		digits_ptr;
+	uint8_t		digit_font;
 
-	//
-	//
 	if(ts.frequency_lock)
 	{
 		// Frequency is locked - change color of display
 		color = Grey;
 	}
 
-	//
 	if(mode == UFM_AUTOMATIC)
 	{
-		if(is_splitmode())  	// in "split" mode?
-		{
-			mode = UFM_SMALL_RX;				// yes - update upper, small digits (receive frequency)
-		}
-		else
-		{
-			mode = UFM_LARGE;				// NOT in split mode:  large, normal-sized digits
-		}
+	    mode = is_splitmode() ? UFM_SMALL_RX : UFM_LARGE;
+		// in "split" mode?
+		// yes - update upper, small digits (receive frequency)
+		// no  - large, normal-sized digits
 	}
 
-	// if (mode != UFM_SECONDARY) {
-	ts.refresh_freq_disp = true; //because of coloured digits...
-	// }
+	uint32_t disp_freq;
+
 	if(ts.xverter_mode)	 	// transverter mode active?
 	{
-		dial_freq *= (ulong)ts.xverter_mode;	// yes - scale by LO multiplier
-		dial_freq += ts.xverter_offset;	// add transverter frequency offset
-		if(ts.xverter_mode && mode != UFM_SECONDARY)	// if in transverter mode, frequency is yellow unless we do the secondary display
-			color = Yellow;
+		disp_freq = dial_freq * ts.xverter_mode + ts.xverter_offset;
+		// yes - scale by LO multiplier and add transverter frequency offset
+		if(ts.xverter_mode && mode != UFM_SECONDARY)	// if in transverter mode, frequency is blue2 unless we do the secondary display
+		{
+			color = Blue2;
+		}
+	}
+	else
+	{
+	    disp_freq = dial_freq;
 	}
 
 	// Handle frequency display offset in "CW RX" modes
@@ -2647,65 +2615,59 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 		case CW_OFFSET_AUTO_RX:	// in "auto" mode with display offset?
 			if(ts.cw_lsb)
 			{
-				dial_freq -= ts.cw_sidetone_freq;		// yes - LSB - lower display frequency by sidetone amount
+				disp_freq -= ts.cw_sidetone_freq;		// yes - LSB - lower display frequency by sidetone amount
 			}
 			else
 			{
-				dial_freq += ts.cw_sidetone_freq;		// yes - USB - raise display frequency by sidetone amount
+				disp_freq += ts.cw_sidetone_freq;		// yes - USB - raise display frequency by sidetone amount
 			}
 			break;
 		}
 	}
 
+    uint16_t       pos_y_loc;
+    uint16_t       pos_x_loc;
+
 	switch(mode)
 	{
 	case UFM_SMALL_RX:
-		digits_ptr  = df.dial_digits;
-		digit_size = 0;
+		digit_font = 0;
 		pos_y_loc = ts.Layout->TUNE_FREQ.y;
 		pos_x_loc = ts.Layout->TUNE_SPLIT_FREQ_X;
-		font_width = SMALL_FONT_WIDTH;
 		break;
 	case UFM_SMALL_TX:					// small digits in lower location
-		digits_ptr  = df.dial_digits;
-		digit_size = 0;
+		digit_font = 0;
 		pos_y_loc = ts.Layout->TUNE_SPLIT_FREQ_Y_TX;
 		pos_x_loc = ts.Layout->TUNE_SPLIT_FREQ_X;
-		font_width = SMALL_FONT_WIDTH;
 		break;
 	case UFM_SECONDARY:
-		digits_ptr  = df.sdial_digits;
-		digit_size = 0;
+		digit_font = 0;
 		pos_y_loc = ts.Layout->TUNE_SFREQ.y;
 		pos_x_loc = ts.Layout->TUNE_SFREQ.x;
-		font_width = SMALL_FONT_WIDTH;
 		break;
 	case UFM_LARGE:
 	default:			// default:  normal sized (large) digits
-		digits_ptr  = df.dial_digits;
 #ifdef USE_8bit_FONT
-		digit_size=ts.FreqDisplayFont==0?1:5;
+		digit_font=ts.FreqDisplayFont==0?1:5;
 #else
-		digit_size = 1;
+		digit_font = 1;
 #endif
 		pos_y_loc = ts.Layout->TUNE_FREQ.y;
 		pos_x_loc = ts.Layout->TUNE_FREQ.x;
-		font_width = LARGE_FONT_WIDTH;
 	}
+
 	// in SAM mode, never display any RIT etc., but
 	// use small display for display of the carrier frequency that the PLL has locked to
-	if(((ts.dmod_mode == DEMOD_SAM && mode == UFM_SMALL_RX) || (ts.dmod_mode == DEMOD_SAM && mode == UFM_SECONDARY)))
+	if(ts.dmod_mode == DEMOD_SAM && (mode == UFM_SMALL_RX || mode == UFM_SECONDARY))
 	{
-		digits_ptr  = df.sdial_digits;
-		digit_size = 0;
+		digit_font = 0;
 		pos_y_loc = ts.Layout->TUNE_SFREQ.y;
 		pos_x_loc = ts.Layout->TUNE_SFREQ.x;
-		font_width = SMALL_FONT_WIDTH;
-		UiDriver_UpdateFreqDisplay(dial_freq + ads.carrier_freq_offset, digits_ptr, pos_x_loc, font_width, pos_y_loc, Yellow, digit_size);
+		disp_freq += ads.carrier_freq_offset;
+		color = Yellow;
 	}
-	else {
-		UiDriver_UpdateFreqDisplay(dial_freq, digits_ptr, pos_x_loc, font_width, pos_y_loc, color, digit_size);
-	}
+
+    UiDriver_UpdateFreqDisplay(disp_freq, pos_x_loc, pos_y_loc, color, digit_font);
 }
 
 //*----------------------------------------------------------------------------
@@ -2717,8 +2679,11 @@ static void UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color, ushort mode)
 //*----------------------------------------------------------------------------
 void UiDriver_ChangeTuningStep(uchar is_up)
 {
-	ulong 	idx = df.selected_idx;
-	uint8_t idx_limit = T_STEP_MAX_STEPS -1;
+    const int8_t step = is_up ? +1 : -1;
+
+	uint32_t idx = df.selected_idx;
+
+	uint8_t idx_limit = T_STEP_MAX_STEPS;
 
 	if((!ts.xvtr_adjust_flag) && (!ts.xverter_mode))
 	{
@@ -2726,19 +2691,12 @@ void UiDriver_ChangeTuningStep(uchar is_up)
 		idx_limit = T_STEP_100KHZ_IDX;
 	}
 
-	if(is_up)
+	idx = (idx + step + idx_limit) % idx_limit;
+
+	// 9kHz step only on MW and LW, skip otherwise
+	if(idx == T_STEP_9KHZ_IDX && ((df.tune_old) > 1600001))
 	{
-		idx= (idx>=idx_limit)?0:idx+1;
-		// 9kHz step only on MW and LW
-		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old) > 1600001))
-			idx ++;
-	}
-	else
-	{
-		idx= (idx==0)?idx_limit:idx-1;
-		// 9kHz step only on MW and LW
-		if(idx == T_STEP_9KHZ_IDX && ((df.tune_old) > 1600001))
-			idx --;
+			idx++;
 	}
 
 	df.tuning_step	= tune_steps[idx];

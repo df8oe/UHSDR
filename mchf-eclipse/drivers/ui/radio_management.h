@@ -53,12 +53,6 @@ typedef struct DialFrequency
 #define TCXO_UNIT_C 0x00
 #define TCXO_UNIT_F 0x10
 
-
-    // Virtual segments
-    uint8_t dial_digits[MAX_DIGITS];
-    // Second display
-    uint8_t sdial_digits[MAX_DIGITS];
-
 } DialFrequency;
 
 // ------------------------------------------------
