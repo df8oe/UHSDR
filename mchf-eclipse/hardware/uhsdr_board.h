@@ -412,7 +412,6 @@ typedef struct TransceiverState
     uint8_t	xverter_mode;		// TRUE if transverter mode active
     uint32_t	xverter_offset;		// frequency offset for transverter (added to frequency display)
 
-    bool	refresh_freq_disp;		// TRUE if frequency display display is to be refreshed
     //
     // Calibration factors for output power, in percent (100 = 1.00)
     //

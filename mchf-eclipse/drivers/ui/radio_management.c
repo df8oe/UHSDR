@@ -652,7 +652,7 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
     // Calculate actual tune frequency
     ts.tune_freq_req = RadioManagement_Dial2TuneFrequency(dial_freq, txrx_mode);
 
-    if((ts.tune_freq != ts.tune_freq_req) || (ts.refresh_freq_disp) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
+    if((ts.tune_freq != ts.tune_freq_req) || df.temp_factor_changed || force_update )  // did the frequency NOT change and display refresh NOT requested??
     {
 
         if(ts.sysclock-ts.last_tuning > 5 || ts.last_tuning == 0)     // prevention for SI570 crash due too fast frequency changes
