@@ -2681,14 +2681,14 @@ void UiDriver_ChangeTuningStep(uchar is_up)
 {
     const int8_t step = is_up ? +1 : -1;
 
-	uint32_t idx = df.selected_idx;
+	int32_t idx = df.selected_idx;
 
-	uint8_t idx_limit = T_STEP_MAX_STEPS;
+	int8_t idx_limit = T_STEP_MAX_STEPS;
 
 	if((!ts.xvtr_adjust_flag) && (!ts.xverter_mode))
 	{
 		// are we NOT in "transverter adjust" or transverter mode *NOT* on?
-		idx_limit = T_STEP_100KHZ_IDX;
+		idx_limit = T_STEP_1MHZ_IDX;
 	}
 
 	idx = (idx + step + idx_limit) % idx_limit;
