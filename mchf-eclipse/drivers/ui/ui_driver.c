@@ -2696,7 +2696,7 @@ void UiDriver_ChangeTuningStep(uchar is_up)
 	// 9kHz step only on MW and LW, skip otherwise
 	if(idx == T_STEP_9KHZ_IDX && ((df.tune_old) > 1600001))
 	{
-			idx++;
+			idx+= step;
 	}
 
 	df.tuning_step	= tune_steps[idx];
