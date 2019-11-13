@@ -607,7 +607,7 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_TX_IQ_10M_UP_GAIN_BALANCE_TRANS_OFF	424
 #define EEPROM_TX_IQ_10M_UP_PHASE_BALANCE_TRANS_OFF	425
 #define EEPROM_VSWR_PROTECTION_THRESHOLD            426
-#define EEPROM_EXPFLAGS1                            427     // Flags for options in Debag/Expert menu - see variable "expflags1"
+#define EEPROM_EXPFLAGS1                            427     // Flags for options in Debug/Expert menu - see variable "expflags1"
 #define EEPROM_FIRST_UNUSED                         428		// change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
