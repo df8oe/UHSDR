@@ -1581,20 +1581,26 @@ static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
 static void UiLcdHy28_DrawChar_8bit(ushort x, ushort y, char symb,ushort Color, ushort bkColor,const sFONT *cf)
 {
 
-    const uint8_t charIdx = symb - cf->firstCode;
-    const uint8_t FontDefaultSize = cf->Width;
-    const uint8_t Font_H = (symb==0x20)? cf->Height : cf->heightTable[charIdx];
-    const uint8_t Font_W = (symb==0x20)? 4 : cf->widthTable[charIdx];
+    const uint16_t charIdx = (symb >= 0x20 && symb < cf->maxCode)? cf->offsetTable[symb - cf->firstCode] : 0xFFFF;
 
-    const uint16_t charSpacing = 1;
+    const uint8_t Font_H = cf->Height;
+    symbolData_t* sym_ptr = charIdx == 0xFFFF? NULL:((symbolData_t*)cf->table)+charIdx;
 
-    UiLcdHy28_BulkPixel_OpenWrite(x, FontDefaultSize+charSpacing, y, Font_H);
+    const uint8_t Font_W = sym_ptr == NULL? cf->Width:sym_ptr->width;
 
-    if(symb==0x20)
+    const uint16_t charSpacing = cf->Spacing;
+
+    UiLcdHy28_BulkPixel_OpenWrite(x, Font_W+charSpacing, y, Font_H);
+
+    if(sym_ptr == NULL) // NON EXISTING SYMBOL
     {
-        for(uint8_t cntrY=0;cntrY<cf->Height;cntrY++)
+        for(int cntrY=0;cntrY < Font_H; cntrY++)
         {
-            for(uint8_t cntrX=0;cntrX<(FontDefaultSize+charSpacing);cntrX++)
+            for(int cntrX=0; cntrX < Font_W; cntrX++)
+            {
+                UiLcdHy28_BulkPixel_Put(Color);
+            }
+            for(int cntrX=0; cntrX < charSpacing; cntrX++)
             {
                 UiLcdHy28_BulkPixel_Put(bkColor);
             }
@@ -1602,7 +1608,6 @@ static void UiLcdHy28_DrawChar_8bit(ushort x, ushort y, char symb,ushort Color, 
     }
     else
     {
-
         //gray shaded font type
         const int32_t ColBG_R=(bkColor>>11)&0x1f;
         const int32_t ColBG_G=(bkColor>>5)&0x3f;
@@ -1612,8 +1617,7 @@ static void UiLcdHy28_DrawChar_8bit(ushort x, ushort y, char symb,ushort Color, 
         const int32_t ColFG_G=((Color>>5)&0x3f)  - ColBG_G;
         const int32_t ColFG_B=(Color&0x1f) - ColBG_B;
 
-        uint8_t *FontData=(uint8_t*)cf->table;
-        FontData+=cf->offsetTable[charIdx];
+        uint8_t *FontData=(uint8_t*)sym_ptr->data;
 
         for(uint8_t cntrY=0;cntrY<Font_H;cntrY++)
         {
@@ -1651,7 +1655,7 @@ static void UiLcdHy28_DrawChar_8bit(ushort x, ushort y, char symb,ushort Color, 
             }
 
             // add spacing behind the character data
-            for(int n=Font_W; n < FontDefaultSize + charSpacing ; n++)
+            for(int n=Font_W; n < Font_W + charSpacing ; n++)
             {
                 UiLcdHy28_BulkPixel_Put(bkColor);
             }
@@ -1873,35 +1877,26 @@ uint16_t UiLcdHy28_CharWidth(const char c, uint8_t font)
 /**
  * @returns pixelwidth of a text of given length
  */
-static uint16_t UiLcdHy28_TextWidthLen(const char *str_start, uint16_t len, uchar font)
+static uint16_t UiLcdHy28_TextWidthLen(const char *str_start, uint16_t len, uint8_t font)
 {
 
-    uint16_t retval = 0;
-
     const sFONT   *cf = UiLcdHy28_Font(font);
-    int8_t Xshift =  cf->Width - ((cf->Width == 8 && cf->Height == 8)?1:0);
 
-    if (str_start != NULL)
-    {
-        retval = len * Xshift;
-    }
-    return retval;
+    int8_t char_width =  (cf->Width + cf->Spacing) - ((cf->Width == 8 && cf->Height == 8)?1:0);
+
+    return (str_start != NULL) ? (len * char_width)  : 0;
 }
 
 
 /**
- * @returns pixelwidth of a text of given length
+ * @returns pixelwidth of a text of given length or 0 for NULLPTR
  */
 uint16_t UiLcdHy28_TextWidth(const char *str_start, uchar font)
 {
-
-    uint16_t retval = 0;
-
-    if (str_start != NULL)
-    {
-        retval = UiLcdHy28_TextWidthLen(str_start,strlen(str_start), font);
-    }
-    return retval;
+    return (str_start != NULL) ?
+            UiLcdHy28_TextWidthLen(str_start,strlen(str_start), font)
+            :
+            0;
 }
 
 static void UiLcdHy28_PrintTextRightLen(uint16_t Xpos, uint16_t Ypos, const char *str, uint16_t len, const uint32_t clr_fg, const uint32_t clr_bg,uint8_t font)

@@ -1598,15 +1598,18 @@ void UiDriver_DisplayFreqStepSize()
 
 	const uint16_t font_width = is_splitmode()?SMALL_FONT_WIDTH:LARGE_FONT_WIDTH;
     const uint16_t x_pos = is_splitmode()?ts.Layout->TUNE_SPLIT_FREQ_X:ts.Layout->TUNE_FREQ.x;
-
+    const uint16_t x_right = x_pos + (9* font_width);
 	const uint32_t color = ts.tune_step?Cyan:White;		// is this a "Temporary" step size from press-and-hold?
 	const uint32_t stepsize_background = (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)?Blue:Black;
 	// dynamic_tuning active -> yes, display on Grey3
 
 	if(step_line)	 	// Remove underline indicating step size if one had been drawn
 	{
-		UiLcdHy28_DrawStraightLineDouble(ts.Layout->TUNE_FREQ.x,(ts.Layout->TUNE_FREQ.y + 24),(LARGE_FONT_WIDTH*10),LCD_DIR_HORIZONTAL,Black);
-		UiLcdHy28_DrawStraightLineDouble(ts.Layout->TUNE_SPLIT_FREQ_X,(ts.Layout->TUNE_FREQ.y + 24),(SMALL_FONT_WIDTH*10),LCD_DIR_HORIZONTAL,Black);
+        const int32_t space_l = 3*(LARGE_FONT_WIDTH * 3 + LARGE_FONT_WIDTH/2); //3 digits plus a half width dot
+        const int32_t space_s = 3*(SMALL_FONT_WIDTH * 3 + SMALL_FONT_WIDTH/2); //3 digits plus a half width dot
+
+		UiLcdHy28_DrawStraightLineDouble(ts.Layout->TUNE_FREQ.x,(ts.Layout->TUNE_FREQ.y + 24),space_l,LCD_DIR_HORIZONTAL,Black);
+		UiLcdHy28_DrawStraightLineDouble(ts.Layout->TUNE_SPLIT_FREQ_X,(ts.Layout->TUNE_FREQ.y + 24),space_s,LCD_DIR_HORIZONTAL,Black);
 	}
 
 	// Blank old step size
@@ -1626,14 +1629,14 @@ void UiDriver_DisplayFreqStepSize()
 
 	UiLcdHy28_PrintTextCentered(ts.Layout->TUNE_STEP.x,ts.Layout->TUNE_STEP.y,ts.Layout->TUNE_STEP.w,step_name,color,stepsize_background,0);
 
-	if(ts.freq_step_config & FREQ_STEP_SHOW_MARKER && pow10 < MAX_DIGITS)          // is frequency step marker line enabled?
+	if((ts.freq_step_config & FREQ_STEP_SHOW_MARKER) && pow10 < MAX_DIGITS)          // is frequency step marker line enabled?
 	{
 
-	    const int32_t group_space = font_width * 3 + font_width/2; //3 digits plus a half width dot
+	    const int32_t group_space = (font_width * 3) + font_width/2; //3 digits plus a half width dot
 
-	    const uint32_t line_pos = (9 * font_width) - (digit_group * group_space) - (digit_idx * font_width);
+	    const uint32_t line_pos =  x_right -  digit_idx * font_width - (digit_group * group_space);
 
-	    UiLcdHy28_DrawStraightLineDouble(x_pos + line_pos, (ts.Layout->TUNE_FREQ.y + 24),font_width,LCD_DIR_HORIZONTAL,White);
+	    UiLcdHy28_DrawStraightLineDouble(line_pos, (ts.Layout->TUNE_FREQ.y + 24),font_width,LCD_DIR_HORIZONTAL,White);
 	    step_line = 1;	// indicate that a line under the step size had been drawn
 	}
 	else	// marker line not enabled
@@ -2522,7 +2525,7 @@ static void UiDriver_UpdateFreqDisplay(uint32_t dial_freq, uint32_t pos_x_loc, u
 {
     uint8_t digits[MAX_DIGITS];
     uint8_t last_non_zero = 0;
-    uint8_t font_width = digit_font == 0 ? SMALL_FONT_WIDTH : LARGE_FONT_WIDTH;
+    const uint8_t font_width = UiLcdHy28_TextWidth("0",digit_font);
 
     // Terminate string for digit
     char digit[2];
@@ -2546,8 +2549,16 @@ static void UiDriver_UpdateFreqDisplay(uint32_t dial_freq, uint32_t pos_x_loc, u
         bool noshow = last_non_zero < idx;
         int digit_group = idx / 3; // we group every 3 digits
 
-        digit[0] = noshow?' ':'.';
-        UiLcdHy28_PrintText(x_right - (digit_group * group_space) + font_width/2 + 1  ,pos_y_loc,digit,color,Black,digit_font);
+        digit[0] = '.';
+        uint32_t dot_clr = noshow?Black:color;
+        if (digit_font != 5)
+        {
+            UiLcdHy28_PrintText(x_right - (digit_group * group_space) + font_width/2 + 1  ,pos_y_loc,digit,dot_clr,Black,digit_font);
+        }
+        else
+        {
+            UiLcdHy28_PrintText(x_right - (digit_group * group_space) + font_width ,pos_y_loc,digit,dot_clr,Black,digit_font);
+        }
     }
 
     for (uint32_t idx = 0; idx < MAX_DIGITS; idx++)
@@ -2557,9 +2568,10 @@ static void UiDriver_UpdateFreqDisplay(uint32_t dial_freq, uint32_t pos_x_loc, u
 
         bool noshow = idx > last_non_zero;
         // don't show leading zeros, except for the 0th digits
-        digit[0] = noshow?' ':0x30 + (digits[idx] & 0x0F);
+        digit[0] = noshow?'0':0x30 + (digits[idx] & 0x0F);
+        uint32_t digit_clr = noshow?Black:color;
         // Update segment
-        UiLcdHy28_PrintText(x_right -  digit_idx * font_width - (digit_group * group_space), pos_y_loc, digit, color, Black, digit_font);
+        UiLcdHy28_PrintText(x_right -  digit_idx * font_width - (digit_group * group_space), pos_y_loc, digit, digit_clr, Black, digit_font);
     }
 }
 
