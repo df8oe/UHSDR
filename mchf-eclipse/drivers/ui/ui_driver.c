@@ -6366,23 +6366,23 @@ void UiAction_ChangeFrequencyByTouch()
 {
 	if (ts.frequency_lock == false)
 	{
-		int step = 2000;				// adjust to 500Hz
+		int step = 500;				// adjust to 500Hz
 
 		if(sd.magnify == 3)
 		{
-			step = 400;					// adjust to 100Hz
+			step = 100;					// adjust to 100Hz
 		}
 		if(sd.magnify == 4)
 		{
-			step = 40;					// adjust to 10Hz
+			step = 10;					// adjust to 10Hz
 		}
 		if(sd.magnify == 5)
 		{
-			step = 4;					// adjust to 1Hz
+			step = 1;					// adjust to 1Hz
 		}
 		if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM)
 		{
-			step = 20000;				// adjust to 5KHz
+			step = 5000;				// adjust to 5KHz
 		}
 
 		//int16_t line =sd.marker_pos[0] + UiSpectrum_GetSpectrumStartX();
