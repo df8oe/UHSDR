@@ -346,9 +346,6 @@ int mchfMain(void)
     ///trace_puts("Hello mcHF World!");
     // trace_printf(" %u\n", 1u);
 
-
-    *(__IO uint32_t*)(SRAM2_BASE) = 0x0;	// clearing delay prevent for bootloader
-
     // Set default transceiver state
     TransceiverStateInit();
 

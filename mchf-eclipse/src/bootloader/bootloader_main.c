@@ -309,27 +309,9 @@ int Bootloader_Main()
 	  ;
 	}
 
-	#ifdef SBLA
-	  *(uint32_t*)(SRAM2_BASE+5) = 0x29;	// signature for DF8OE development features
-	#endif
-	#ifdef SBLS
-	  *(uint32_t*)(SRAM2_BASE+10) = 0x29;	// signature for special beta-testing features
-	#endif
-
     /* initialization */
     BSP_Init();
 
-#if 0
-    mcHF_PowerHoldOff();
-
-
-    if( *(uint32_t*)(SRAM2_BASE) != 0x55)		// no reboot requested?
-    {
-        // we wait for a longer time
-        HAL_Delay(300);
-    }
-#else
-#endif
     Bootloader_PowerHoldOn();
     HAL_Delay(50);
 

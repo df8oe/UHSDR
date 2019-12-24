@@ -2353,6 +2353,24 @@ void UiDriver_InitBandSet()
         */
         break;
     }
+
+	const char* test = Board_BootloaderVersion();
+	char res = 0;
+	for (int i=0; i<20;i++)			// find last character in bootloader string
+	{
+		if(test[i] == 0)
+		{
+			res = test[i-1];
+			break;
+		}
+	}
+	if(res == 0x61)					// if it is an "a" ==> DF8OE version, enable all bands
+	{
+  		for(int i = 0; i < MAX_BANDS; i++)
+  		{
+      		band_enabled[i] = true;
+  		}
+	}
 }
 
 //*----------------------------------------------------------------------------
