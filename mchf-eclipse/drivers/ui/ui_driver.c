@@ -1769,7 +1769,7 @@ static void UiDriver_CreateMainFreqDisplay()
     const uint16_t font_width = LARGE_FONT_WIDTH;
     const uint16_t x_right = ts.Layout->TUNE_FREQ.x + (9* font_width);
     const int32_t group_space = (font_width * 3) + font_width/2; //3 digits plus a half width dot
-    const uint32_t box_width =  x_right -  1 * font_width - (3 * group_space); // 3 x 3 digits in a group with a dot + 1 x single digit == 10 digits
+    const uint32_t box_width =  font_width + (3 * group_space); // 3 x 3 digits in a group with a dot + 1 x single digit == 10 digits
 
     UiLcdHy28_DrawFullRect(x_right - box_width,ts.Layout->TUNE_FREQ.y,24, box_width, Black);
     // clear frequency display area for large digits, which is also the max area for split
