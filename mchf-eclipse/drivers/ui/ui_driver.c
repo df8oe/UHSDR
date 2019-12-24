@@ -1590,7 +1590,10 @@ void UiDriver_DisplayDemodMode()
 	UiDriver_DisplayModulationType();
 }
 
-
+/**
+ * This function gives a visual indication of the selected step size for the tuning knob. It draws a line under the respective digit in the frequency.
+ * This function is closely coupled to the code for displaying the frequency digits.
+ */
 void UiDriver_DisplayFreqStepSize()
 {
 
@@ -1759,19 +1762,21 @@ static void UiDriver_DisplayBand(const BandInfo* band)
 	}
 }
 
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverInitMainFreqDisplay
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
 static void UiDriver_CreateMainFreqDisplay()
 {
-	UiDriver_FButton_F3MemSplit();
+    // TODO: Adjust ts.Layout->TUNE_FREQ.x to match 10 digits display approach, would simplify code
+    const uint16_t font_width = LARGE_FONT_WIDTH;
+    const uint16_t x_right = ts.Layout->TUNE_FREQ.x + (9* font_width);
+    const int32_t group_space = (font_width * 3) + font_width/2; //3 digits plus a half width dot
+    const uint32_t box_width =  x_right -  1 * font_width - (3 * group_space); // 3 x 3 digits in a group with a dot + 1 x single digit == 10 digits
+
+    UiLcdHy28_DrawFullRect(x_right - box_width,ts.Layout->TUNE_FREQ.y,24, box_width, Black);
+    // clear frequency display area for large digits, which is also the max area for split
+
+    UiDriver_FButton_F3MemSplit();
 	if((is_splitmode()))	 	// are we in SPLIT mode?
 	{
-		UiLcdHy28_PrintText(ts.Layout->TUNE_FREQ.x-16,ts.Layout->TUNE_FREQ.y,"          ",White,Black,1);	// clear large frequency digits
 		UiDriver_DisplaySplitFreqLabels();
 	}
 	UiDriver_DisplayFreqStepSize();
