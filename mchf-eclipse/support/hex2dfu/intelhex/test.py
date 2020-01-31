@@ -42,7 +42,11 @@ import sys
 import tempfile
 import unittest
 
-from compat import asbytes, asstr
+# from compat import asbytes, asstr
+from . import compat
+asbytes = compat.asbytes
+asstr = compat.asstr
+
 import intelhex
 from intelhex import IntelHex, \
                      IntelHexError, \
@@ -376,7 +380,7 @@ class TestIntelHexBase(unittest.TestCase):
         """
         try:
             callableObj(*args, **kwargs)
-        except excClass, exc:
+        except excClass as exc:
             excMsg = str(exc)
             if not msg:
                 # No message provided: any message is fine.
@@ -422,7 +426,7 @@ class TestIntelHex(TestIntelHexBase):
 
     def test_init_from_file(self):
         ih = IntelHex(self.f)
-        for addr in xrange(len(bin8)):
+        for addr in range(len(bin8)):
             expected = bin8[addr]
             actual = ih[addr]
             self.assertEqual(expected, actual,
@@ -432,7 +436,7 @@ class TestIntelHex(TestIntelHexBase):
     def test_hex_fromfile(self):
         ih = IntelHex()
         ih.fromfile(self.f, format='hex')
-        for addr in xrange(len(bin8)):
+        for addr in range(len(bin8)):
             expected = bin8[addr]
             actual = ih[addr]
             self.assertEqual(expected, actual,
@@ -700,7 +704,7 @@ class TestIntelHex(TestIntelHexBase):
         #
         def ihex(size=8):
             ih = IntelHex()
-            for i in xrange(size):
+            for i in range(size):
                 ih[i] = i
             return ih
         ih = ihex(8)
@@ -866,7 +870,7 @@ class TestIntelHexGetPutString(TestIntelHexBase):
 
     def setUp(self):
         self.ih = IntelHex()
-        for i in xrange(10):
+        for i in range(10):
             self.ih[i] = i
 
     def test_gets(self):
@@ -1378,7 +1382,7 @@ class TestHex2Bin(unittest.TestCase):
     def test_hex2bin(self):
         ih = hex2bin(self.fin, self.fout)
         data = array.array('B', asbytes(self.fout.getvalue()))
-        for addr in xrange(len(bin8)):
+        for addr in range(len(bin8)):
             expected = bin8[addr]
             actual = data[addr]
             self.assertEqual(expected, actual,

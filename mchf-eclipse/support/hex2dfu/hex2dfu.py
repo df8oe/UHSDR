@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 #
 # Intel HEX to ST microelectronics DfuSe file converter
 # Copyright (C)2015 Thomas Kindler <mail@t-kindler.de>
@@ -29,7 +29,7 @@ def load_hex():
     :return:    intelhex object
     """
     if args.verbose:
-        print "Loading %s..." % args.source
+        print ("Loading %s..." % args.source)
 
     try:
         ih = IntelHex()
@@ -39,13 +39,13 @@ def load_hex():
         else:
             ih.loadbin(args.source, args.start_addr)
 
-    except Exception, e:
-        print e
+    except Exception as e:
+        print (e)
         exit(1)
 
     if args.verbose:
-        print "  Start: 0x%08x" % ih.minaddr()
-        print "  End  : 0x%08x" % ih.maxaddr()
+        print ("  Start: 0x%08x" % ih.minaddr())
+        print ("  End  : 0x%08x" % ih.maxaddr())
 
     return ih
 
@@ -58,9 +58,9 @@ def save_dfu(ih):
     :param ih:  intelhex object
     """
     if args.verbose:
-        print "Saving %s..." % args.target
-        print "  Device ID: 0x%04x:0x%04x" % (args.vid, args.pid)
-        print "  Target name: %s" % args.target_name
+        print ("Saving %s..." % args.target)
+        print ("  Device ID: 0x%04x:0x%04x" % (args.vid, args.pid))
+        print ("  Target name: %s" % args.target_name)
 
     # Image element
     #
@@ -70,7 +70,7 @@ def save_dfu(ih):
         "<II",
         ih.minaddr(),       # dwElementAddress
         len(image_data)     # dwElementSize
-    ) + image_data          # Data
+    ) + bytes(image_data,"utf-8")          # Data
 
     # Target prefix
     #
@@ -118,8 +118,8 @@ def save_dfu(ih):
     try:
         open(args.target, "wb").write(data)
 
-    except Exception, e:
-        print e
+    except Exception as e:
+        print (e)
         exit(1)
 
 
@@ -187,13 +187,13 @@ if args.target == None:
 
 if args.format == "bin":
     if args.start_addr == None:
-        print "option --start required for binary files"
+        print ("option --start required for binary files")
         exit(1)
 
     args.start_addr = int(args.start_addr, 0)
 else:
     if args.start_addr != None:
-        print "option --start not allowed for hex files"
+        print ("option --start not allowed for hex files")
         exit(1)
 
 
