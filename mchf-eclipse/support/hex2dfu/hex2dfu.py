@@ -64,13 +64,17 @@ def save_dfu(ih):
 
     # Image element
     #
-    image_data = ih.tobinstr()
+    image_data = ih.tobinarray()
+
+    if len(image_data) != len(bytes(image_data)):
+        # catch and correct python2.7 issue using this hack
+        image_data = ih.tobinstr()
 
     data = struct.pack(
         "<II",
         ih.minaddr(),       # dwElementAddress
         len(image_data)     # dwElementSize
-    ) + bytes(image_data,"utf-8")          # Data
+    ) + bytes(image_data)   # Data
 
     # Target prefix
     #
