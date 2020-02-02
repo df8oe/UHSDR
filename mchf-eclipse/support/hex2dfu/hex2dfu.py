@@ -64,13 +64,13 @@ def save_dfu(ih):
 
     # Image element
     #
-    image_data = ih.tobinstr()
+    image_data = ih.tobinarray()
 
     data = struct.pack(
         "<II",
         ih.minaddr(),       # dwElementAddress
         len(image_data)     # dwElementSize
-    ) + bytes(image_data,"utf-8")          # Data
+    ) + bytes(image_data)   # Data
 
     # Target prefix
     #
