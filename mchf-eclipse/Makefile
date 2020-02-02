@@ -215,7 +215,7 @@ CC      = $(VPRE)$(PREFIX)arm-none-eabi-gcc
 CXX     = $(VPRE)$(PREFIX)arm-none-eabi-g++
 OC      = $(VPRE)$(PREFIX)arm-none-eabi-objcopy
 SZ      = $(VPRE)$(PREFIX)arm-none-eabi-size
-HEX2DFU = $(VPRE)python $(ROOTLOC)/support/hex2dfu/hex2dfu.py
+HEX2DFU = $(VPRE)python3 $(ROOTLOC)/support/hex2dfu/hex2dfu.py
 
 POSTCOMPILE = @mv -f $*.Td $*.d && touch $@
 DEPFLAGS = -MT $@ -MMD -MP -MF $*.Td
