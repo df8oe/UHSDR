@@ -383,8 +383,8 @@ typedef struct TransceiverState
 
 #define MIC_BOOST_DEFAULT		 0	// 0 dB boost (no boost)
 #define MIC_BOOST_MIN			 0
-#define MIC_BOOST_DYNAMIC       15  // 15 dB boost ( 31.6)
-#define MIC_BOOST_MAX			24	// 24 dB boost (251.2)
+#define MIC_BOOST_DYNAMIC       14  // 14 dB boost ( 25.1)
+#define MIC_BOOST_MAX			20	// 20 dB boost (100.0) {more is not better}
 //
     uint32_t	tx_mic_gain_mult;
     uint8_t	tx_gain[TX_AUDIO_NUM];

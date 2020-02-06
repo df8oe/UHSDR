@@ -626,7 +626,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
       		snprintf(out,32, "D%s", UHSDR_VERSION+4);
 		  #endif
 		#else
-			snprintf(out,32, "X%s", UHSDR_VERSION+4); // eXperimental fw build
+			snprintf(out,32, "%s", UHSDR_VERSION+4);
     	#endif
     }
     break;
@@ -1488,11 +1488,11 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             }
         }
         break;
-    case MENU_MIC_TYPE:    // selecting a mic type determines a mic boost level (for now, just two boost gains)
+    case MENU_MIC_TYPE:    // selecting a mic type determines a mic boost level (for now: one of two boost gains)
         UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_mic_boost,
                                     0,
-                                    MIC_BOOST_DYNAMIC, // 15 dB (Dynamic)
-                                    MIC_BOOST_DEFAULT, // 0 dB (Electret)
+                                    MIC_BOOST_DYNAMIC, // 14 dB (Dynamic)
+                                    MIC_BOOST_DEFAULT, //  0 dB (Electret)
                                     1
                                    );
         //
