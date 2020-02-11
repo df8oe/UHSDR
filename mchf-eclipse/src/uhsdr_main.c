@@ -171,7 +171,9 @@ void TransceiverStateInit(void)
     ts.menu_mode		= 0;					// menu mode
     ts.menu_item		= 0;					// menu item selection
     ts.menu_var			= 0;					// menu item change variable
-    ts.menu_var_changed	= 0;					// TRUE if a menu variable was changed and that an EEPROM save should be done
+    ts.menu_var_changed	        = 0;				// TRUE if a menu variable was changed and that an EEPROM save should be done
+
+    //NO INIT NEEDED? SET BEFORE USE? ts.tx_mic_boost             = MIC_BOOST_DEFAULT;		// no extra gain. electret element assumed
 
     //CONFIG LOADED:ts.tx_audio_source	= TX_AUDIO_MIC;				// default source is microphone
     //NO INIT NEEDED, SET BEFORE USE: ts.tx_mic_gain_mult	= MIC_GAIN_DEFAULT;			// actual operating value for microphone gain

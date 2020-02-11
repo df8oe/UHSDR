@@ -378,6 +378,14 @@ typedef struct TransceiverState
 
     uint8_t 	tx_audio_source;
     uint8_t     rx_iq_source;
+//
+    uint8_t     tx_mic_boost;		// in dB
+
+#define MIC_BOOST_DEFAULT		 0	// 0 dB boost (no boost)
+#define MIC_BOOST_MIN			 0
+#define MIC_BOOST_DYNAMIC       14  // 14 dB boost ( 25.1)
+#define MIC_BOOST_MAX			20	// 20 dB boost (100.0) {more is not better}
+//
     uint32_t	tx_mic_gain_mult;
     uint8_t	tx_gain[TX_AUDIO_NUM];
     int16_t	tx_comp_level;			// Used to hold compression level which is used to calculate other values for compression.  0 = manual.
@@ -470,8 +478,8 @@ typedef struct TransceiverState
 #define TX_DISABLE_RXMODE       8
     uint8_t	tx_disable;		// >0 if no transmit permitted, use RadioManagement_IsTxDisabled() to get boolean
 
-
     uint16_t	flags1;					// Used to hold individual status flags, stored in EEPROM location "EEPROM_FLAGS1"
+
 #define FLAGS1_TX_AUTOSWITCH_UI_DISABLE 0x01    // if on-screen AFG/(STG/CMP) and WPM/(MIC/LIN) indicators are changed on TX
 #define FLAGS1_SWAP_BAND_BTN			0x02    // if BAND-/BAND+ buttons are to be swapped in their positions
 #define FLAGS1_MUTE_LINEOUT_TX			0x04    // if TX audio output from LINE OUT is to be muted during transmit (audio output only enabled when translate mode is DISABLED

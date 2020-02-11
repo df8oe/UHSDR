@@ -359,7 +359,11 @@ static void TxProcessor_AudioBufferFill(audio_block_t a_block, AudioSample_t * c
         case TX_AUDIO_MIC:
         {
             gain_calc = ts.tx_mic_gain_mult;     // We are in MIC In mode:  Calculate Microphone gain
-            gain_calc /= MIC_GAIN_RESCALE;              // rescale microphone gain to a reasonable range
+            gain_calc /= MIC_GAIN_RESCALE;       // rescale microphone gain to a reasonable range
+	    if(ts.tx_mic_boost > 0)
+	    { // value is either 14 dB (g=25.1) or 0 dB (g=1) right now
+	      gain_calc += 25.1;
+	    }
         }
         break;
         case TX_AUDIO_DIG:
