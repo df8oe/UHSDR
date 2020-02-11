@@ -2504,6 +2504,15 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
     case CONFIG_BAND_BUTTON_SWAP:   // Swap position of Band+ and Band- buttons
         var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.flags1,0,options,&clr, FLAGS1_SWAP_BAND_BTN);
         break;
+    case CONFIG_BANDEF_SELECT:
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &bandinfo_idx,0,BAND_INFO_SET_NUM-1,0,1);
+        if (var_change)
+        {
+            bandInfo = bandInfos[bandinfo_idx].bands;
+            UiDriver_UpdateDisplayAfterParamChange();
+        }
+        snprintf(options,32,"     %s",bandInfos[bandinfo_idx].name);
+        break;
     case CONFIG_TX_DISABLE: // Step size button swap on/off
     {
         uint16_t flag = ts.tx_disable;
@@ -2801,6 +2810,21 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
     UI_MENU_CONFIG_IQ_TX_ADJ(10M)
     UI_MENU_CONFIG_IQ_TX_ADJ(10M_UP)
 
+        case CONFIG_VSWR_PROTECTION_THRESHOLD:
+            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.vswr_protection_threshold,
+                    1,
+                   10,
+                    1,
+                    1);
+            if (ts.vswr_protection_threshold < 2)
+            {
+                txt_ptr = "OFF";
+            }
+            else
+            {
+                snprintf(options,32,"     %d",ts.vswr_protection_threshold);
+            }
+            break;
 
     case CONFIG_CW_PA_BIAS:     // CW PA Bias adjust
         if((ts.tune) || (ts.txrx_mode == TRX_MODE_TX))      // enable only in TUNE mode
@@ -4184,15 +4208,6 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         snprintf(options,32,"     %s",digimodes[ts.digital_mode].label);
         clr = digimodes[ts.digital_mode].enabled?White:Red;
         break;
-    case MENU_DEBUG_BANDEF_SELECT:
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &bandinfo_idx,0,BAND_INFO_SET_NUM-1,0,1);
-        if (var_change)
-        {
-            bandInfo = bandInfos[bandinfo_idx].bands;
-            UiDriver_UpdateDisplayAfterParamChange();
-        }
-        snprintf(options,32,"     %s",bandInfos[bandinfo_idx].name);
-        break;
 
     case CONFIG_CAT_PTT_RTS:
         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_ptt_rts,0,options,&clr);
@@ -4281,21 +4296,6 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             snprintf(options,32,"     %d",sm.config.alphaSplit.DecayAlpha);
             break;
 
-        case MENU_DEBUG_VSWR_PROTECTION_THRESHOLD:
-            var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.debug_vswr_protection_threshold,
-                    1,
-                   10,
-                    1,
-                    1);
-            if (ts.debug_vswr_protection_threshold < 2)
-            {
-                txt_ptr = "OFF";
-            }
-            else
-            {
-                snprintf(options,32,"     %d",ts.debug_vswr_protection_threshold);
-            }
-            break;
 
 #ifdef USE_FREEDV
         case MENU_DEBUG_FREEDV_MODE:

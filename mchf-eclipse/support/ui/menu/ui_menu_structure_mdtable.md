@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2019-07-15T15:44:19  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2020-02-11T08:55:37  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2019-07-15T15:44:19  by "./ui_menu_structure_mdtable.py"
+generated at  2020-02-11T08:55:37  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -43,6 +43,7 @@ generated at  2019-07-15T15:44:19  by "./ui_menu_structure_mdtable.py"
 | **AGC WDSP Hang Decay**       (               MENU_AGC_WDSP_TAU_HANG_DECAY) | Time constant for the Hang AGC decay (speed of recovery of the AGC gain after hang time has expired) in milliseconds. | 
 | **RX Codec Gain**             (                       MENU_CODEC_GAIN_MODE) | Sets the Codec IQ signal gain. Higher values represent higher gain. If set to AUTO the mcHF controls the gain so that the best dynamic range is used. | 
 | **RX/TX Freq Xlate**          (                          MENU_RX_FREQ_CONV) | Controls offset of the receiver IQ signal base frequency from the dial frequency. Use of +/-12Khz is recommended. Switching it to OFF is not recommended as it disables certain features. | 
+| **Mic Type**                  (                              MENU_MIC_TYPE) | Microphone type. Electret or Dynamic. ELECTRET is recommended. Selecting DYNAMIC when an Electret mic is present will likely cause terrible audio distortion | 
 | **Mic Input Gain**            (                              MENU_MIC_GAIN) | Microphone gain. Also changeable via Encoder 3 if Microphone is selected as Input | 
 | **Line Input Gain**           (                             MENU_LINE_GAIN) | LineIn gain. Also changeable via Encoder 3 if LineIn Left (L>L) or LineIn Right (L>R) is selected as Input | 
 | **TX Audio Compress**         (                  MENU_TX_COMPRESSION_LEVEL) | Control the TX audio compressor. Higher values give more compression. Set to CUSTOM for user defined compression parameters. See below. Also changeable via Encoder 1 (CMP). | 
@@ -61,6 +62,7 @@ generated at  2019-07-15T15:44:19  by "./ui_menu_structure_mdtable.py"
     
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **Band Definition**           (                       CONFIG_BANDEF_SELECT) | Select which band definition to use for ham bands (Original UHSDR or IARU Region 1 - 3 | 
 | **Save Out-Of-Band Freq.**    (                CONFIG_FREQ_MEM_LIMIT_RELAX) | Select ON to save and restore frequencies which do not fit into the band during configuration saving (Power-Off or long press on Menu button) | 
 | **TX on Out-Of-Band Freq.**   (                       CONFIG_TX_OUT_ENABLE) | Permit low power transmission even if the frequency is out of the official ham bands. DO NOT USE WITH CONNECTED ANTENNA! Use a dummy load! | 
 | **Transmit Disable**          (                          CONFIG_TX_DISABLE) | Disable all transmissions unconditionally. In CW you will be able to hear a sidetone but no transmission is made. | 
@@ -105,6 +107,18 @@ generated at  2019-07-15T15:44:19  by "./ui_menu_structure_mdtable.py"
 | **TX IQ Phase   (80m,CW)**    (       CONFIG_80M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
 | **TX IQ Balance (10m,CW)**    (        CONFIG_10M_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
 | **TX IQ Phase   (10m,CW)**    (       CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for CW transmissions (and all transmission if frequency translation is OFF).See Wiki Adjustments and Calibration. | 
+| **TX IQ Balance (20m)**       (                  CONFIG_20M_TX_IQ_GAIN_BAL) | IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 14.100 MHz. | 
+| **TX IQ Phase   (20m)**       (                 CONFIG_20M_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 14.100 MHz. | 
+| **TX IQ Balance (15m)**       (                  CONFIG_15M_TX_IQ_GAIN_BAL) | IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 21.100 MHz. | 
+| **TX IQ Phase   (15m)**       (                 CONFIG_15M_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 21.100 MHz. | 
+| **TX IQ Balance (10mUp)**     (               CONFIG_10M_UP_TX_IQ_GAIN_BAL) | IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 29.650 MHz. | 
+| **TX IQ Phase   (10mUp)**     (              CONFIG_10M_UP_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 29.650 MHz. | 
+| **TX IQ Balance (20m,CW)**    (        CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 14.100 MHz. | 
+| **TX IQ Phase   (20m,CW)**    (       CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 14.100 MHz. | 
+| **TX IQ Balance (15m,CW)**    (        CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz. | 
+| **TX IQ Phase   (15m,CW)**    (       CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz. | 
+| **TX IQ Balance (10mUp,CW)**  (     CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz. | 
+| **TX IQ Phase   (10mUp,CW)**  (    CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz. | 
 | **DSP NR BufLen**             (   CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH) | DSP LMS noise reduction: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources. | 
 | **DSP NR FIR NumTaps**        (                  CONFIG_DSP_NR_FFT_NUMTAPS) | DSP LMS noise reduction: Number of taps in the DSP noise reduction FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF. | 
 | **DSP NR Post-AGC**           (              CONFIG_DSP_NR_POST_AGC_SELECT) | DSP LMS noise reduction: Perform the DSP LMS noise reduction BEFORE or AFTER the AGC. NO = before AGC, YES = after AGC. | 
@@ -202,6 +216,7 @@ generated at  2019-07-15T15:44:19  by "./ui_menu_structure_mdtable.py"
 | **CW PA Bias (If >0 )**       (                          CONFIG_CW_PA_BIAS) | If set to a value above 0, this BIAS is used during CW transmission; otherwise normal BIAS is used during CW | 
 | **Reduce Power on Low Bands** (           CONFIG_REDUCE_POWER_ON_LOW_BANDS) | If set (recommended!)  frequencies below 8Mhz (40m or lower) require higher power adjust values (four times). This permits better control of generated power on these frequencies. | 
 | **Reduce Power on High Bands** (          CONFIG_REDUCE_POWER_ON_HIGH_BANDS) | If set frequencies above 8Mhz (30m or higher) require higher power adjust values (four times). This permits better control of generated power on these frequencies. | 
+| **VSWR Protect.threshold**    (           CONFIG_VSWR_PROTECTION_THRESHOLD) | If not OFF, on TX/tune the bias of PA will be down to 0 etc when exceeding the specified value of VSWR | 
 | **PA Bias**                   (                             CONFIG_PA_BIAS) | Defines the BIAS value of the PA. See Adjustment and Calibration for more information. | 
 | **2200m 5W PWR Adjust**       (                     CONFIG_2200M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
 | **630m  5W PWR Adjust**       (                      CONFIG_630M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
@@ -303,24 +318,10 @@ generated at  2019-07-15T15:44:19  by "./ui_menu_structure_mdtable.py"
 | **HMC1023 Opamp Bias**        (                   MENU_DEBUG_HMC1023_OPAMP) | Debug Setting: Switch LPF HMC1023LP5E Opamp Bias | 
 | **HMC1023 Driver Bias**       (                    MENU_DEBUG_HMC1023_DRVR) | Debug Setting: Set HMC1023 Driver Bias         | 
 | **Trigger Twinpeaks Corr.**   (              MENU_DEBUG_TWINPEAKS_CORR_RUN) | Trigger Twinpeaks Correction Manually if IQ Auto Correction is enabled, otherwise you will see 'Not Possible' | 
-| **TX IQ Balance (20m)**       (                  CONFIG_20M_TX_IQ_GAIN_BAL) | IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 14.100 MHz. | 
-| **TX IQ Phase   (20m)**       (                 CONFIG_20M_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 14.100 MHz. | 
-| **TX IQ Balance (15m)**       (                  CONFIG_15M_TX_IQ_GAIN_BAL) | IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 21.100 MHz. | 
-| **TX IQ Phase   (15m)**       (                 CONFIG_15M_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 21.100 MHz. | 
-| **TX IQ Balance (10mUp)**     (               CONFIG_10M_UP_TX_IQ_GAIN_BAL) | IQ Balance Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 29.650 MHz. | 
-| **TX IQ Phase   (10mUp)**     (              CONFIG_10M_UP_TX_IQ_PHASE_BAL) | IQ Phase Adjust for all transmission if frequency translation is NOT OFF. Calibrate on 29.650 MHz. | 
-| **TX IQ Balance (20m,CW)**    (        CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 14.100 MHz. | 
-| **TX IQ Phase   (20m,CW)**    (       CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 14.100 MHz. | 
-| **TX IQ Balance (15m,CW)**    (        CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz. | 
-| **TX IQ Phase   (15m,CW)**    (       CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 21.100 MHz. | 
-| **TX IQ Balance (10mUp,CW)**  (     CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF) | IQ Balance Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz. | 
-| **TX IQ Phase   (10mUp,CW)**  (    CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF) | IQ Phase Adjust for all transmission if frequency translation is OFF. Calibrate on 29.650 MHz. | 
-| **VSWR Protect.threshold**    (       MENU_DEBUG_VSWR_PROTECTION_THRESHOLD) | If not OFF, on TX/tune the bias of PA will be down to 0 etc when exceeding the specified value of VSWR | 
 | **Rst Conf EEPROM**           (          CONFIG_RESET_SER_EEPROM_SIGNATURE) | Clear the EEPROMi signature but keep all config values. This is mainly for debugging purposes). | 
 | **FreeDV Mode**               (                     MENU_DEBUG_FREEDV_MODE) | Change active FreeDV mode. Please note, you have to reboot to activate new mode | 
 | **FreeDV Squelch threshold**  (            MENU_DEBUG_FREEDV_SQL_THRESHOLD) | If not OFF, FreeDV will squelch if detected SNR is below set value. | 
 | **Smooth dynamic tune**       (                 MENU_DEBUG_SMOOTH_DYN_TUNE) | Activate smooth dynamic tune.                  | 
-| **Band Definition**           (                   MENU_DEBUG_BANDEF_SELECT) | Select which band definition to use for ham bands (Original UHSDR or IARU Region 1 - 3 | 
 
 
 [//]: # ( EOFILE                                                                       )

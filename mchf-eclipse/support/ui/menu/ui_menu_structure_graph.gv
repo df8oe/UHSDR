@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2019-07-15T15:44:15  by "./ui_menu_structure_graph.py"
+#  generated at  2020-02-11T08:55:34  by "./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2019-07-15T15:44:15  by \"./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2020-02-11T08:55:34  by \"./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -197,6 +197,11 @@
              shape = record
              ];
         
+        "MENU_MIC_TYPE" [
+             label = "MENU_MIC_TYPE | Mic Type"
+             shape = record
+             ];
+        
         "MENU_MIC_GAIN" [
              label = "MENU_MIC_GAIN | Mic Input Gain"
              shape = record
@@ -254,6 +259,11 @@
         
         "MENU_RESTORE_CONFIG" [
              label = "MENU_RESTORE_CONFIG | Restore Config"
+             shape = record
+             ];
+        
+        "CONFIG_BANDEF_SELECT" [
+             label = "CONFIG_BANDEF_SELECT | Band Definition"
              shape = record
              ];
         
@@ -474,6 +484,66 @@
         
         "CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF" [
              label = "CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (10m,CW)"
+             shape = record
+             ];
+        
+        "CONFIG_20M_TX_IQ_GAIN_BAL" [
+             label = "CONFIG_20M_TX_IQ_GAIN_BAL | TX IQ Balance (20m)"
+             shape = record
+             ];
+        
+        "CONFIG_20M_TX_IQ_PHASE_BAL" [
+             label = "CONFIG_20M_TX_IQ_PHASE_BAL | TX IQ Phase   (20m)"
+             shape = record
+             ];
+        
+        "CONFIG_15M_TX_IQ_GAIN_BAL" [
+             label = "CONFIG_15M_TX_IQ_GAIN_BAL | TX IQ Balance (15m)"
+             shape = record
+             ];
+        
+        "CONFIG_15M_TX_IQ_PHASE_BAL" [
+             label = "CONFIG_15M_TX_IQ_PHASE_BAL | TX IQ Phase   (15m)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_UP_TX_IQ_GAIN_BAL" [
+             label = "CONFIG_10M_UP_TX_IQ_GAIN_BAL | TX IQ Balance (10mUp)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_UP_TX_IQ_PHASE_BAL" [
+             label = "CONFIG_10M_UP_TX_IQ_PHASE_BAL | TX IQ Phase   (10mUp)"
+             shape = record
+             ];
+        
+        "CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF" [
+             label = "CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (20m,CW)"
+             shape = record
+             ];
+        
+        "CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF" [
+             label = "CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (20m,CW)"
+             shape = record
+             ];
+        
+        "CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF" [
+             label = "CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (15m,CW)"
+             shape = record
+             ];
+        
+        "CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF" [
+             label = "CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (15m,CW)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF" [
+             label = "CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (10mUp,CW)"
+             shape = record
+             ];
+        
+        "CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF" [
+             label = "CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (10mUp,CW)"
              shape = record
              ];
         
@@ -839,6 +909,11 @@
         
         "CONFIG_REDUCE_POWER_ON_HIGH_BANDS" [
              label = "CONFIG_REDUCE_POWER_ON_HIGH_BANDS | Reduce Power on High Bands"
+             shape = record
+             ];
+        
+        "CONFIG_VSWR_PROTECTION_THRESHOLD" [
+             label = "CONFIG_VSWR_PROTECTION_THRESHOLD | VSWR Protect.threshold"
              shape = record
              ];
         
@@ -1317,71 +1392,6 @@
              shape = record
              ];
         
-        "CONFIG_20M_TX_IQ_GAIN_BAL" [
-             label = "CONFIG_20M_TX_IQ_GAIN_BAL | TX IQ Balance (20m)"
-             shape = record
-             ];
-        
-        "CONFIG_20M_TX_IQ_PHASE_BAL" [
-             label = "CONFIG_20M_TX_IQ_PHASE_BAL | TX IQ Phase   (20m)"
-             shape = record
-             ];
-        
-        "CONFIG_15M_TX_IQ_GAIN_BAL" [
-             label = "CONFIG_15M_TX_IQ_GAIN_BAL | TX IQ Balance (15m)"
-             shape = record
-             ];
-        
-        "CONFIG_15M_TX_IQ_PHASE_BAL" [
-             label = "CONFIG_15M_TX_IQ_PHASE_BAL | TX IQ Phase   (15m)"
-             shape = record
-             ];
-        
-        "CONFIG_10M_UP_TX_IQ_GAIN_BAL" [
-             label = "CONFIG_10M_UP_TX_IQ_GAIN_BAL | TX IQ Balance (10mUp)"
-             shape = record
-             ];
-        
-        "CONFIG_10M_UP_TX_IQ_PHASE_BAL" [
-             label = "CONFIG_10M_UP_TX_IQ_PHASE_BAL | TX IQ Phase   (10mUp)"
-             shape = record
-             ];
-        
-        "CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF" [
-             label = "CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (20m,CW)"
-             shape = record
-             ];
-        
-        "CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF" [
-             label = "CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (20m,CW)"
-             shape = record
-             ];
-        
-        "CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF" [
-             label = "CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (15m,CW)"
-             shape = record
-             ];
-        
-        "CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF" [
-             label = "CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (15m,CW)"
-             shape = record
-             ];
-        
-        "CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF" [
-             label = "CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF | TX IQ Balance (10mUp,CW)"
-             shape = record
-             ];
-        
-        "CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF" [
-             label = "CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF | TX IQ Phase   (10mUp,CW)"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_VSWR_PROTECTION_THRESHOLD" [
-             label = "MENU_DEBUG_VSWR_PROTECTION_THRESHOLD | VSWR Protect.threshold"
-             shape = record
-             ];
-        
         "CONFIG_RESET_SER_EEPROM_SIGNATURE" [
              label = "CONFIG_RESET_SER_EEPROM_SIGNATURE | Rst Conf EEPROM"
              shape = record
@@ -1399,11 +1409,6 @@
         
         "MENU_DEBUG_SMOOTH_DYN_TUNE" [
              label = "MENU_DEBUG_SMOOTH_DYN_TUNE | Smooth dynamic tune"
-             shape = record
-             ];
-        
-        "MENU_DEBUG_BANDEF_SELECT" [
-             label = "MENU_DEBUG_BANDEF_SELECT | Band Definition"
              shape = record
              ];
         
@@ -1508,6 +1513,8 @@
             label = "MENU_CONF beef.0f.dead.e5e1"
 
     
+            MENU_CONF -> CONFIG_BANDEF_SELECT
+            
             MENU_CONF -> CONFIG_FREQ_MEM_LIMIT_RELAX
             
             MENU_CONF -> CONFIG_TX_OUT_ENABLE
@@ -1595,6 +1602,30 @@
             MENU_CONF -> CONFIG_10M_TX_IQ_GAIN_BAL_TRANS_OFF
             
             MENU_CONF -> CONFIG_10M_TX_IQ_PHASE_BAL_TRANS_OFF
+            
+            MENU_CONF -> CONFIG_20M_TX_IQ_GAIN_BAL
+            
+            MENU_CONF -> CONFIG_20M_TX_IQ_PHASE_BAL
+            
+            MENU_CONF -> CONFIG_15M_TX_IQ_GAIN_BAL
+            
+            MENU_CONF -> CONFIG_15M_TX_IQ_PHASE_BAL
+            
+            MENU_CONF -> CONFIG_10M_UP_TX_IQ_GAIN_BAL
+            
+            MENU_CONF -> CONFIG_10M_UP_TX_IQ_PHASE_BAL
+            
+            MENU_CONF -> CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF
+            
+            MENU_CONF -> CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF
+            
+            MENU_CONF -> CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF
+            
+            MENU_CONF -> CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF
+            
+            MENU_CONF -> CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF
+            
+            MENU_CONF -> CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF
             
             MENU_CONF -> CONFIG_DSP_NR_DECORRELATOR_BUFFER_LENGTH
             
@@ -1708,6 +1739,8 @@
             
             MENU_BASE -> MENU_RX_FREQ_CONV
             
+            MENU_BASE -> MENU_MIC_TYPE
+            
             MENU_BASE -> MENU_MIC_GAIN
             
             MENU_BASE -> MENU_LINE_GAIN
@@ -1777,6 +1810,8 @@
             MENU_POW -> CONFIG_REDUCE_POWER_ON_LOW_BANDS
             
             MENU_POW -> CONFIG_REDUCE_POWER_ON_HIGH_BANDS
+            
+            MENU_POW -> CONFIG_VSWR_PROTECTION_THRESHOLD
             
             MENU_POW -> CONFIG_PA_BIAS
             
@@ -2034,32 +2069,6 @@
             
             MENU_DEBUG -> MENU_DEBUG_TWINPEAKS_CORR_RUN
             
-            MENU_DEBUG -> CONFIG_20M_TX_IQ_GAIN_BAL
-            
-            MENU_DEBUG -> CONFIG_20M_TX_IQ_PHASE_BAL
-            
-            MENU_DEBUG -> CONFIG_15M_TX_IQ_GAIN_BAL
-            
-            MENU_DEBUG -> CONFIG_15M_TX_IQ_PHASE_BAL
-            
-            MENU_DEBUG -> CONFIG_10M_UP_TX_IQ_GAIN_BAL
-            
-            MENU_DEBUG -> CONFIG_10M_UP_TX_IQ_PHASE_BAL
-            
-            MENU_DEBUG -> CONFIG_20M_TX_IQ_GAIN_BAL_TRANS_OFF
-            
-            MENU_DEBUG -> CONFIG_20M_TX_IQ_PHASE_BAL_TRANS_OFF
-            
-            MENU_DEBUG -> CONFIG_15M_TX_IQ_GAIN_BAL_TRANS_OFF
-            
-            MENU_DEBUG -> CONFIG_15M_TX_IQ_PHASE_BAL_TRANS_OFF
-            
-            MENU_DEBUG -> CONFIG_10M_UP_TX_IQ_GAIN_BAL_TRANS_OFF
-            
-            MENU_DEBUG -> CONFIG_10M_UP_TX_IQ_PHASE_BAL_TRANS_OFF
-            
-            MENU_DEBUG -> MENU_DEBUG_VSWR_PROTECTION_THRESHOLD
-            
             MENU_DEBUG -> CONFIG_RESET_SER_EEPROM_SIGNATURE
             
             MENU_DEBUG -> MENU_DEBUG_FREEDV_MODE
@@ -2067,8 +2076,6 @@
             MENU_DEBUG -> MENU_DEBUG_FREEDV_SQL_THRESHOLD
             
             MENU_DEBUG -> MENU_DEBUG_SMOOTH_DYN_TUNE
-            
-            MENU_DEBUG -> MENU_DEBUG_BANDEF_SELECT
             
         }  ## END subgraph MENU_HALL_OF_FAME
     

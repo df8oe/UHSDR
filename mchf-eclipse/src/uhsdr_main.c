@@ -314,7 +314,7 @@ void TransceiverStateInit(void)
 
     ts.debug_si5351a_pllreset = 2;		//start with "reset on IQ Divider"
 
-    ts.debug_vswr_protection_threshold = 1; // OFF
+    ts.vswr_protection_threshold = 1; // OFF
 
     //CONFIG LOADED:ts.expflags1 = 0; // Used to hold flags for options in Debug/Expert menu, stored in EEPROM location "EEPROM_EXPFLAGS1"
 

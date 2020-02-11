@@ -699,7 +699,7 @@ typedef struct TransceiverState
 
 	bool paddles_active; // setting this to false disables processing of external gpio interrupts (right now just the paddles/PTT)
 
-    uint8_t debug_vswr_protection_threshold; // 1 - protection OFF
+    uint8_t vswr_protection_threshold; // 1 - protection OFF
 
 	// noise reduction gain display in spectrum
     int16_t  nr_gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
