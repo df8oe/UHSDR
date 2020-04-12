@@ -25,7 +25,7 @@
 #include "uhsdr_board.h"
 // Frequency public structure
 
-#define MAX_DIGITS 10
+#define MAX_DIGITS 11
 
 typedef struct DialFrequency
 {
@@ -361,6 +361,10 @@ void RadioManagement_FmDevSet5khz(bool is5khz);
 uint32_t RadioManagement_GetTXDialFrequency();
 uint32_t RadioManagement_GetRXDialFrequency();
 int32_t  RadioManagement_GetCWDialOffset();
+
+bool     RadioManagement_Transverter_IsEnabled();
+uint64_t RadioManagement_Transverter_GetFreq(const uint32_t dial_freq, const uint8_t trx_mode);
+
 
 void RadioManagement_Request_TxOn();
 void RadioManagement_Request_TxOff();

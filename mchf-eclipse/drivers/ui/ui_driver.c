@@ -1151,18 +1151,11 @@ static inline void UiDriver_FButton_F4ActiveVFO()
 static inline void UiDriver_FButton_F5Tune()
 {
 	const char* cap;
-	uint32_t color;
-	color = RadioManagement_IsTxDisabled() ? Grey1 : (ts.tune ? Red : White);
+
+	uint32_t color = RadioManagement_IsTxDisabled() ? Grey1 : (ts.tune ? Red : White);
 	if (ts.keyer_mode.active)
 	{
-		if (ts.buffered_tx)
-		{
-			cap = "TXRX B";
-		}
-		else
-		{
-			cap = "TXRX U";
-		}
+		cap = ts.buffered_tx ? "TXRX B" : "TXRX U";
 	}
 	else
 	{
@@ -1190,13 +1183,13 @@ void UiDriver_DisplaySplitFreqLabels()
 	const char *split_rx, *split_tx;
 	if (!(is_vfo_b()))
 	{
-		split_rx = "(A) RX->";  // Place identifying marker for RX frequency
-		split_tx = "(B) TX->";  // Place identifying marker for TX frequency
+		split_rx = "(A) RX>";  // Place identifying marker for RX frequency
+		split_tx = "(B) TX>";  // Place identifying marker for TX frequency
 	}
 	else
 	{
-		split_rx = "(B) RX->";  // Place identifying marker for RX frequency
-		split_tx = "(A) TX->";  // Place identifying marker for TX frequency
+		split_rx = "(B) RX>";  // Place identifying marker for RX frequency
+		split_tx = "(A) TX>";  // Place identifying marker for TX frequency
 	}
 	UiLcdHy28_PrintText(ts.Layout->TUNE_SPLIT_MARKER_X - (SMALL_FONT_WIDTH * 5),
 			ts.Layout->TUNE_FREQ.y, split_rx, RX_Grey, Black,
@@ -1208,16 +1201,9 @@ void UiDriver_DisplaySplitFreqLabels()
 
 void UiAction_CopyVfoAB()
 {
-	// not in menu mode:  Make VFO A = VFO B or VFO B = VFO A, as appropriate
-	VfoReg* vfo_store;
-	if(is_vfo_b())      // are we in VFO B mode?
-	{
-		vfo_store = &vfo[VFO_A].band[ts.band->band_mode];
-	}
-	else        // we were in VFO A mode
-	{
-		vfo_store = &vfo[VFO_B].band[ts.band->band_mode];
-	}
+	// Make VFO A = VFO B or VFO B = VFO A, as appropriate
+	VfoReg* vfo_store = &vfo[is_vfo_b()? VFO_A : VFO_B].band[ts.band->band_mode];
+
 	vfo_store->dial_value = df.tune_new;
 	vfo_store->decod_mode = ts.dmod_mode;                   // copy active VFO settings into other VFO
 	vfo_store->digital_mode = ts.digital_mode;
@@ -2544,7 +2530,7 @@ void UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode
 
 
 
-static void UiDriver_UpdateFreqDisplay(uint32_t dial_freq, uint32_t pos_x_loc, uint32_t pos_y_loc, uint16_t color, uint8_t digit_font)
+static void UiDriver_UpdateFreqDisplay(uint64_t dial_freq, uint32_t pos_x_loc, uint32_t pos_y_loc, uint16_t color, uint8_t digit_font)
 {
     uint8_t digits[MAX_DIGITS];
     uint8_t last_non_zero = 0;
@@ -2555,7 +2541,7 @@ static void UiDriver_UpdateFreqDisplay(uint32_t dial_freq, uint32_t pos_x_loc, u
     digit[1] = 0;
 
     // calculate the digits
-    uint32_t dial_freq_temp = dial_freq;
+    uint64_t dial_freq_temp = dial_freq;
     for (uint32_t idx = 0; idx < MAX_DIGITS; idx++)
     {
         digits[idx] = dial_freq_temp % 10;
@@ -2608,8 +2594,6 @@ static void UiDriver_UpdateFreqDisplay(uint32_t dial_freq, uint32_t pos_x_loc, u
 //*----------------------------------------------------------------------------
 static void UiDriver_UpdateLcdFreq(uint32_t dial_freq, uint16_t color, uint16_t mode)
 {
-	uint8_t		digit_font;
-
 	if(ts.frequency_lock)
 	{
 		// Frequency is locked - change color of display
@@ -2624,16 +2608,21 @@ static void UiDriver_UpdateLcdFreq(uint32_t dial_freq, uint16_t color, uint16_t 
 		// no  - large, normal-sized digits
 	}
 
-	uint32_t disp_freq;
+	uint64_t disp_freq;
 
-	if(ts.xverter_mode)	 	// transverter mode active?
+	// if in transverter mode, main display shows translated frequencies  in blue2
+	// the secondary display will always show the real untranslated frequency
+
+	if(RadioManagement_Transverter_IsEnabled() && mode != UFM_SECONDARY)	 	// transverter mode active?
 	{
-		disp_freq = dial_freq * ts.xverter_mode + ts.xverter_offset;
-		// yes - scale by LO multiplier and add transverter frequency offset
-		if(ts.xverter_mode && mode != UFM_SECONDARY)	// if in transverter mode, frequency is blue2 unless we do the secondary display
-		{
-			color = Blue2;
-		}
+	    uint8_t txrx_mode = (mode == UFM_LARGE) ?
+	            ts.txrx_mode
+	            :
+	            (mode == UFM_SMALL_TX ? TRX_MODE_TX : TRX_MODE_RX);
+
+		disp_freq = RadioManagement_Transverter_GetFreq(dial_freq, txrx_mode);
+		// scale by LO multiplier and add transverter frequency offset
+		color = Blue2;
 	}
 	else
 	{
@@ -2662,6 +2651,8 @@ static void UiDriver_UpdateLcdFreq(uint32_t dial_freq, uint16_t color, uint16_t 
 
     uint16_t       pos_y_loc;
     uint16_t       pos_x_loc;
+    uint8_t     digit_font;
+
 
 	switch(mode)
 	{
@@ -7515,6 +7506,26 @@ void UiDriver_TaskHandler_MainTasks()
 			    RadioManagement_TxRxSwitching_Disable();
 				RadioManagement_ChangeFrequency(false,df.tune_new, ts.txrx_mode);
 				RadioManagement_TxRxSwitching_Enable();
+			}
+			else {
+			    // this handles cases in which switch from tx to rx and vice versa
+			    // changes the displayed frequency. This is currently only the case
+			    // if in xverter mode and we have tx_offset != rx_offset and is not
+			    // split mode.
+			    static uint8_t last_seen_txrx_mode = TRX_MODE_RX;
+			    if (ts.txrx_mode != last_seen_txrx_mode)
+			    {
+                    last_seen_txrx_mode = ts.txrx_mode;
+                    if (RadioManagement_Transverter_IsEnabled()
+                            && is_splitmode() == false
+                            && ts.xverter_offset_tx != 0 // tx offset enabled
+                            && ts.xverter_offset != ts.xverter_offset_tx) // and not equal rx
+                    {
+                        RadioManagement_TxRxSwitching_Disable();
+                        UiDriver_FrequencyUpdateLOandDisplay(false);
+                        RadioManagement_TxRxSwitching_Enable();
+                    }
+			    }
 			}
 			break;
 		case STATE_PROCESS_KEYBOARD:
