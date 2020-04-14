@@ -12,13 +12,13 @@ if [ "$1" == "test" ]; then
   mkdir ../handbook-test 2>/dev/null
 	cp -v uhsdr-logo.png support/ui/menu > /dev/zero
 	(cd support/ui/menu  \
-		&&  ./ui_menu_structure_c2py.py | python -  \
-		&&  ./ui_menu_structure_graph.py > ../../../../handbook-test/ui_menu_structure_graph.gv  \
+		&&  python2 ./ui_menu_structure_c2py.py | python -  \
+		&&  python2 ./ui_menu_structure_graph.py > ../../../../handbook-test/ui_menu_structure_graph.gv  \
 		&&  dot -Tsvg -o../../../../handbook-test/ui_menu_structure_graph.svg  ../../../../handbook-test/ui_menu_structure_graph.gv  \
 		&&  dot -Tpng -o../../../../handbook-test/ui_menu_structure_graph.png  ../../../../handbook-test/ui_menu_structure_graph.gv \
 	)
 	(cd support/ui/menu  \
-		&&  ./ui_menu_structure_mdtable.py > ../../../../handbook-test/ui_menu_structure_mdtable.md \
+		&&  python2 ./ui_menu_structure_mdtable.py > ../../../../handbook-test/ui_menu_structure_mdtable.md \
 	)
 	echo "menu-handbook-test build completed."
 	exit 0
@@ -31,13 +31,13 @@ else
 	echo "building menu-handbook..."
 	cp -v uhsdr-logo.png support/ui/menu > /dev/zero
 	(cd support/ui/menu  \
-		&&  ./ui_menu_structure_c2py.py | python -  \
-		&&  ./ui_menu_structure_graph.py > ui_menu_structure_graph.gv  \
+		&&  python2 ./ui_menu_structure_c2py.py | python -  \
+		&&  python2 ./ui_menu_structure_graph.py > ui_menu_structure_graph.gv  \
 		&&  dot -Tsvg -oui_menu_structure_graph.svg  ui_menu_structure_graph.gv  \
 		&&  dot -Tpng -oui_menu_structure_graph.png  ui_menu_structure_graph.gv \
 	)
 	(cd support/ui/menu  \
-		&&  ./ui_menu_structure_mdtable.py > ui_menu_structure_mdtable.md \
+		&&  python2 ./ui_menu_structure_mdtable.py > ui_menu_structure_mdtable.md \
 	)
 	(echo $(stat -c%y drivers/ui/menu/ui_menu_structure.c) > support/ui/menu/menu-handbook-build.timestamp)
 	echo "menu-handbook build completed."
