@@ -129,7 +129,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     UI_C_RX_IQ_ADJ(10M)
 
     { ConfigEntry_UInt8 | Calib_Val, EEPROM_SENSOR_NULL,&swrm.sensor_null,SENSOR_NULL_DEFAULT,SENSOR_NULL_MIN,SENSOR_NULL_MAX},
-    { ConfigEntry_UInt8, EEPROM_XVERTER_DISP,&ts.xverter_mode,0,0,XVERTER_MULT_MAX},
+    { ConfigEntry_UInt32_16, EEPROM_XVERTER_DISP,&ts.xverter_mode,0,0,XVERTER_MULT_MAX},
     { ConfigEntry_UInt8, EEPROM_SPECTRUM_MAGNIFY,&sd.magnify,MAGNIFY_DEFAULT,MAGNIFY_MIN,MAGNIFY_MAX},
     // { ConfigEntry_UInt8, EEPROM_WIDE_FILT_CW_DISABLE,&ts.filter_cw_wide_disable,1,0,1},
     // { ConfigEntry_UInt8, EEPROM_NARROW_FILT_SSB_DISABLE,&ts.filter_ssb_narrow_disable,1,0,1},
@@ -938,6 +938,7 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
 
 
     UiReadSettingEEPROM_UInt32( EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,&ts.xverter_offset,0,0,XVERTER_OFFSET_MAX, load_eeprom_defaults);
+    UiReadSettingEEPROM_UInt32( EEPROM_XVERTER_OFFSET_TX_HIGH,EEPROM_XVERTER_OFFSET_TX_LOW,&ts.xverter_offset_tx,0,0,XVERTER_OFFSET_MAX, load_eeprom_defaults);
 
     UiReadSettingEEPROM_Filter(load_eeprom_defaults);
 

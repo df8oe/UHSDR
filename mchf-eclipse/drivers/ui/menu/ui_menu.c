@@ -2938,24 +2938,27 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         }
         break;
     case CONFIG_XVTR_OFFSET_MULT:   // Transverter Frequency Display Offset/Multiplier Mode On/Off
-        var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.xverter_mode,
+
+        temp_var_u8 = ts.xverter_mode & 0xf;
+        var_change = UiDriverMenuItemChangeUInt8(var, mode, &temp_var_u8,
                                               0,
                                               XVERTER_MULT_MAX,
                                               0,
                                               1);
+        ts.xverter_mode = (ts.xverter_mode & 0xfffffff0) | temp_var_u8;
         if(var_change)          // change?
         {
             UiDriver_FrequencyUpdateLOandDisplay(true);
         }
 
-        if(ts.xverter_mode)
+        if(temp_var_u8)
         {
-            snprintf(options,32, " ON x%u", ts.xverter_mode);   // Display on/multiplication factor
-            clr = Red;
+            snprintf(options,32, " ON x%u", (uint)ts.xverter_mode);   // Display on/multiplication factor
         }
         else
         {
-            txt_ptr = "    OFF";
+            txt_ptr = "     OFF";
+            clr = Orange;
         }
         break;
     case CONFIG_XVTR_FREQUENCY_OFFSET:      // Adjust transverter Frequency offset
@@ -2994,12 +2997,64 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             UiDriver_FrequencyUpdateLOandDisplay(true);
         }
 
-        if(ts.xverter_mode) // transvert mode active?
+        if(RadioManagement_Transverter_IsEnabled() == false) // transvert mode inactive?
         {
-            clr = Red;      // make number red to alert user of this!
+            clr = Orange;      // make number red to alert user of this!
         }
 
-        snprintf(options,32, " %9uHz", (uint)ts.xverter_offset);    // print with nine digits
+        uint32_t offset_offset = ts.xverter_offset > XVERTER_OFFSET_MAX_HZ? ((XVERTER_OFFSET_MAX_HZ)-(XVERTER_OFFSET_MAX_HZ)/1000):0;
+        snprintf(options,32, ts.xverter_offset > XVERTER_OFFSET_MAX_HZ? " %9ukHz" : "   %9uHz", (uint)(ts.xverter_offset-offset_offset));    // print with nine digits
+        break;
+    case CONFIG_XVTR_FREQUENCY_OFFSET_TX:      // Adjust transverter tx Frequency offset
+        if(var >= 1)        // setting increase?
+        {
+            ts.menu_var_changed = 1;    // indicate that a change has occurred
+            ts.xverter_offset_tx += df.tuning_step;
+            var_change = 1;
+        }
+        else if(var <= -1)      // setting decrease?
+        {
+            ts.menu_var_changed = 1;    // indicate that a change has occurred
+            if(ts.xverter_offset_tx >= df.tuning_step) // subtract only if we have room to do so
+            {
+                ts.xverter_offset_tx -= df.tuning_step;
+            }
+            else
+            {
+                ts.xverter_offset_tx = 0;              // else set to zero
+            }
+
+            var_change = 1;
+        }
+        if(ts.xverter_offset_tx > XVERTER_OFFSET_MAX)
+        {
+            ts.xverter_offset_tx  = XVERTER_OFFSET_MAX;
+        }
+        if(mode == MENU_PROCESS_VALUE_SETDEFAULT)
+        {
+            ts.menu_var_changed = 1;    // indicate that a change has occurred
+            ts.xverter_offset_tx = 0;      // default for this option is to zero it out
+            var_change = 1;
+        }
+        if(var_change)          // change?
+        {
+            UiDriver_FrequencyUpdateLOandDisplay(true);
+        }
+
+        if(RadioManagement_Transverter_IsEnabled() == false) // transvert mode inactive?
+        {
+            clr = Orange;      // make number red to alert user of this!
+        }
+
+        if (ts.xverter_offset_tx != 0)
+        {
+            uint32_t offset_offset = ts.xverter_offset_tx > XVERTER_OFFSET_MAX_HZ? ((XVERTER_OFFSET_MAX_HZ)-(XVERTER_OFFSET_MAX_HZ)/1000):0;
+            snprintf(options,32, ts.xverter_offset_tx > XVERTER_OFFSET_MAX_HZ? " %9ukHz" : "   %9uHz", (uint)(ts.xverter_offset_tx-offset_offset));    // print with nine digits
+        }
+        else
+        {
+            txt_ptr = "    Same as RX";
+        }
         break;
 
 
