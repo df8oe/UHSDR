@@ -1916,3 +1916,18 @@ bool RadioManagement_TxPermitted()
 {
     return ts.dmod_mode != DEMOD_SAM && RadioManagement_IsTxDisabled();
 }
+
+bool RadioManagement_Transverter_IsEnabled()
+{
+    return (ts.xverter_mode & 0xf) > 0;
+    }
+
+uint64_t RadioManagement_Transverter_GetFreq(const uint32_t dial_freq, const uint8_t trx_mode)
+{
+    uint32_t xverter_offset = (ts.xverter_offset_tx != 0 && trx_mode == TRX_MODE_TX) ? ts.xverter_offset_tx : ts.xverter_offset;
+
+    uint64_t offset_multiplier = xverter_offset>XVERTER_OFFSET_MAX_HZ? 1000 : 1;
+    uint64_t offset_offset = xverter_offset - (xverter_offset>XVERTER_OFFSET_MAX_HZ ? ((XVERTER_OFFSET_MAX_HZ)-XVERTER_OFFSET_MAX_HZ/1000)  : 0);
+
+    return dial_freq * ts.xverter_mode + offset_offset * offset_multiplier;
+}

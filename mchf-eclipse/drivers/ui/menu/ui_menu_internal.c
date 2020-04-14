@@ -51,7 +51,7 @@ const MenuGroupDescriptor* UiMenu_GetGroupForGroupEntry(const MenuDescriptor* me
     return me==NULL?NULL:&groups[me->number];
 }
 
-inline bool UiMenu_IsEnabled(const MenuDescriptor *entry)
+bool UiMenu_IsEnabled(const MenuDescriptor *entry)
 {
     return entry==NULL?false:(entry->enabled != NULL?*entry->enabled:true);
 }

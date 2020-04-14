@@ -103,7 +103,8 @@ void		UiConfiguration_UpdateMacroCap(void);
 //
 
 #define XVERTER_MULT_MAX        10      // maximum LO multipler in xverter mode
-#define XVERTER_OFFSET_MAX      999000000   // Maximum transverter offset (999 MHz)
+#define XVERTER_OFFSET_MAX_HZ    999999000   //  transverter offset is in Hz (999,999,999 Hz), above khz
+#define XVERTER_OFFSET_MAX      1019999999   // Maximum transverter offset (19,999,999,999 kHz ~ 20 Ghz)
 //
 #define AUTO_LSB_USB_OFF        0
 #define AUTO_LSB_USB_ON         1
@@ -608,7 +609,10 @@ void		UiConfiguration_UpdateMacroCap(void);
 #define EEPROM_TX_IQ_10M_UP_PHASE_BALANCE_TRANS_OFF	425
 #define EEPROM_VSWR_PROTECTION_THRESHOLD            426
 #define EEPROM_EXPFLAGS1                            427     // Flags for options in Debug/Expert menu - see variable "expflags1"
-#define EEPROM_FIRST_UNUSED                         428		// change this if new value ids are introduced, must be correct at any time
+#define EEPROM_XVERTER_OFFSET_TX_HIGH               428     // Secondary frequency by which the display is offset for transverter use, high word
+#define EEPROM_XVERTER_OFFSET_TX_LOW                429     // Secondary frequency by which the display is offset for transverter use, low word
+
+#define EEPROM_FIRST_UNUSED                         430		// change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 

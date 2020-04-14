@@ -138,7 +138,9 @@ const MenuDescriptor confGroup[] =
 
     // Transverter Configuration
     { MENU_CONF, MENU_ITEM, CONFIG_XVTR_OFFSET_MULT, NULL, "XVTR Offs/Mult", UiMenuDesc("When connecting to a transverter, set this to 1 and set the XVERTER Offset to the LO Frequency of it. The mcHF frequency is multiplied by this factor before the offset is added, so anything but 1 will result in each Hz in the mcHF being displayed as 2 to 10 Hz change on display.") },
-    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_FREQUENCY_OFFSET, NULL, "XVTR Offset", UiMenuDesc("When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz") },
+    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_FREQUENCY_OFFSET, NULL, "XVTR Offs. RX", UiMenuDesc("When transverter mode is enabled, this value is added to the mcHF frequency after being multiplied with the XVTR Offs/Mult. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz") },
+    // { MENU_CONF, MENU_ITEM, CONFIG_XVTR_OFFSET_MULT, NULL, "XVTR Offs/Mult", UiMenuDesc("When connecting to a transverter, set this to 1 and set the XVERTER Offset to the LO Frequency of it. The mcHF frequency is multiplied by this factor before the offset is added, so anything but 1 will result in each Hz in the mcHF being displayed as 2 to 10 Hz change on display.") },
+    { MENU_CONF, MENU_ITEM, CONFIG_XVTR_FREQUENCY_OFFSET_TX, NULL, "XVTR Offs. TX", UiMenuDesc("When transverter mode is enabled, this value is added to the displayed mcHF TX frequency after being multiplied with the XVTR Offs/Mult. Setting it to 0 uses RX offset for TX. Use Step+ to set a good step width, much less turns with the dial knob if it is set to 1Mhz") },
 
     // Button Handling Setup
     { MENU_CONF, MENU_ITEM, CONFIG_STEP_SIZE_BUTTON_SWAP, NULL, "Step Button Swap", UiMenuDesc("If ON, Step- behaves like Step+ and vice versa.") },
