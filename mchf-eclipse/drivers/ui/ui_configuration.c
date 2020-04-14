@@ -1035,6 +1035,10 @@ uint16_t UiConfiguration_SaveEepromValues(void)
         {
             retval = UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset);
         }
+        if (retval == HAL_OK)
+        {
+            retval = UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_TX_HIGH,EEPROM_XVERTER_OFFSET_TX_LOW,ts.xverter_offset_tx);
+        }
 
         if (retval == HAL_OK)
         {
