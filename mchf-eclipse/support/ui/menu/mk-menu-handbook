@@ -2,6 +2,7 @@
 
 # 2017-01-01 HB9ocq - removed WA (escape commas)
 
+PYTHON=${PYTHON:-python}
 
 # automated build only by DF8OE
 if [ "$1" == "auto" ] && [ ! -f ../DF8OE ]; then
@@ -31,13 +32,13 @@ else
 	echo "building menu-handbook..."
 	cp -v uhsdr-logo.png support/ui/menu > /dev/zero
 	(cd support/ui/menu  \
-		&&  python2 ./ui_menu_structure_c2py.py | python -  \
-		&&  python2 ./ui_menu_structure_graph.py > ui_menu_structure_graph.gv  \
+		&&  ${PYTHON} ./ui_menu_structure_c2py.py | ${PYTHON} -  \
+		&&  ${PYTHON} ./ui_menu_structure_graph.py > ui_menu_structure_graph.gv  \
 		&&  dot -Tsvg -oui_menu_structure_graph.svg  ui_menu_structure_graph.gv  \
 		&&  dot -Tpng -oui_menu_structure_graph.png  ui_menu_structure_graph.gv \
 	)
 	(cd support/ui/menu  \
-		&&  python2 ./ui_menu_structure_mdtable.py > ui_menu_structure_mdtable.md \
+		&&  ${PYTHON} ./ui_menu_structure_mdtable.py > ui_menu_structure_mdtable.md \
 	)
 	(echo $(stat -c%y drivers/ui/menu/ui_menu_structure.c) > support/ui/menu/menu-handbook-build.timestamp)
 	echo "menu-handbook build completed."

@@ -34,7 +34,7 @@ INPUT_C_SRC = MCHF_BASEDIR + r"drivers/ui/menu/ui_menu_structure.c"
 MAJ = subprocess.check_output('cat ' + MCHF_VERSIONFILE + ' | cut -d " " -f 2 | grep "TRX4M" | egrep -e "^[^#]" | grep "MAJOR" | cut -d "\\"" -f 2 | tr -d $"\n"', shell = True)
 MIN = subprocess.check_output('cat ' + MCHF_VERSIONFILE + ' | cut -d " " -f 2 | grep "TRX4M" | egrep -e "^[^#]" | grep "MINOR" | cut -d "\\"" -f 2 | tr -d $"\n"', shell = True)
 REL = subprocess.check_output('cat ' + MCHF_VERSIONFILE + ' | cut -d " " -f 2 | grep "TRX4M" | egrep -e "^[^#]" | grep "RELEASE" | cut -d "\\"" -f 2 | tr -d $"\n"', shell = True)
-BUILD_ID = MAJ + "." + MIN + "." + REL
+BUILD_ID = MAJ.decode() + "." + MIN.decode() + "." + REL.decode()
 
 # reading version from mchf.bin
 #BUILD_ID = subprocess.check_output('grep -aPo "(?<=fwv-)[^fwt]+" ../../../mchf.bin | cut -d "" -f 1 | tr -d $"\n"', shell = True)
