@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2020-04-17T14:55:28  by "./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2020-04-21T08:14:58  by "./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2020-04-17T14:55:28  by "./ui_menu_structure_mdtable.py"
+generated at  2020-04-21T08:14:58  by "./ui_menu_structure_mdtable.py"
 
 
 
@@ -264,6 +264,18 @@ generated at  2020-04-17T14:55:28  by "./ui_menu_structure_mdtable.py"
 | **2m   Coupling Adj.**        (             CONFIG_FWD_REV_COUPLING_2M_ADJ) | Power Meter Adjustment factor for the 2m band power values. See Wiki. | 
 | **70cm Coupling Adj.**        (           CONFIG_FWD_REV_COUPLING_70CM_ADJ) | Power Meter Adjustment factor for the 70cm band power values. See Wiki. | 
 | **23cm Coupling Adj.**        (           CONFIG_FWD_REV_COUPLING_23CM_ADJ) | Power Meter Adjustment factor for the 23cm band power values. See Wiki. | 
+
+
+## Touchscreen via Menu (`MENU_MEN2TOUCH`)
+    
+| LABEL                         (                                         NR) | DESCRIPTION                                    | 
+| --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **Dynamic Tune**              (                           MENU_DYNAMICTUNE) | Toggles dynamic tune mode                      | 
+| **Mic/Line Select**           (                         MENU_MIC_LINE_MODE) | Select the required signal input for transmit (except in CW). Also changeable via long press on M3 | 
+| **Spectrum Type**             (                         MENU_SPECTRUM_MODE) | Select if you want a scope-like or a waterfall-like (actually a fountain) display | 
+| **Spectrum Magnify**          (                      MENU_SPECTRUM_MAGNIFY) | Select level of magnification (1x, 2x, 4x, 8x, 16x, 32x) of spectrum and waterfall display. Also changeable via touch screen. Refresh rate is much slower with high magnification settings. The dBm display has its maximum accuracy in magnify 1x setting. | 
+| **Restart Codec**             (                         MENU_RESTART_CODEC) | Sometimes there is a problem with the I2S IQ signal stream from the Codec, resulting in mirrored signal reception. Restarting the CODEC Stream will cure that problem. Try more than once, if first call did not help. | 
+| **Digital Mode**              (                   MENU_DIGITAL_MODE_SELECT) | Select the active digital mode (FreeDV,RTTY, ...). | 
 
 
 ## System Info (`MENU_SYSINFO`)
