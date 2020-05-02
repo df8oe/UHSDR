@@ -401,6 +401,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/freedv/pack.c</locationURI>
 		</link>
 		<link>
+			<name>mchf-eclipse/drivers/freedv/phase.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/freedv/phase.c</locationURI>
+		</link>
+		<link>
 			<name>mchf-eclipse/drivers/freedv/phi0.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/drivers/freedv/phi0.c</locationURI>
@@ -2474,6 +2479,11 @@
 			<name>mchf-eclipse/basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/TransformFunctions/arm_bitreversal.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/TransformFunctions/arm_bitreversal.c</locationURI>
+		</link>
+		<link>
+			<name>mchf-eclipse/basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/TransformFunctions/arm_bitreversal2.S</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/mchf-eclipse/basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/TransformFunctions/arm_bitreversal2.S</locationURI>
 		</link>
 		<link>
 			<name>mchf-eclipse/basesw/mcHF/Drivers/CMSIS/DSP_Lib/Source/TransformFunctions/arm_cfft_f32.c</name>
