@@ -22,5 +22,9 @@ Troubleshooting
 - Fix for functions with wrong inline definition - use optimization (O1 at least), more info:
 	https://stackoverflow.com/questions/41218006/gcc-fails-to-inline-functions-without-o2
 
+For any problems compiling under windows please drop me a mail at: djchrismarc at gmail.
 
+Thank you!
+
+Krassi Atanassov, M0NKA
 
