@@ -1,7 +1,7 @@
 Introduction 
 
-This directory contains SW4STM32 compatible project that allows easy import and building the source
-on Windows systems
+This directory contains SW4STM32 and CubeIDE compatible project that allows easy import to any
+of those tools
 
 Import into SW4STM32 IDE
 
@@ -12,7 +12,10 @@ Import into SW4STM32 IDE
 
 Import into STM32CubeIDE
 
-- not possible ATM
+- In the File menu, select 'Import...'
+- Chose 'Import ac6 System Workbench for STM32 Project' and click Next
+- Select root directory: "root\SW4STM32\mchf-uhsdr", 'Detect and configure project natures' selected
+- Click Finish
 
 Troubleshooting
 
