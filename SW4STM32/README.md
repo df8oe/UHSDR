@@ -1,7 +1,7 @@
 Introduction 
 
-This directory contains SW4STM32 and CubeIDE compatible project that allows easy import to any
-of those tools
+This directory contains SW4STM32 compatible project that allows easy import and building the source
+on Windows systems
 
 Import into SW4STM32 IDE
 
@@ -12,7 +12,7 @@ Import into SW4STM32 IDE
 
 Import into STM32CubeIDE
 
-- ...
+- not possible ATM
 
 Troubleshooting
 
