@@ -803,8 +803,8 @@ int16_t Rtty_Modulator_GenSample()
 			// load the character and add the stop bits;
 			bool bitsFilled = false;
             uint8_t current_ascii;
-			while ( DigiModes_TxBufferRemove( &current_ascii, RTTY )
-			        && bitsFilled == false )
+			while ( bitsFilled == false
+			        && DigiModes_TxBufferRemove( &current_ascii, RTTY ) )
 			{
 			    if (current_ascii == 0x04 ) //EOT
 			    {
