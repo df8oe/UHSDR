@@ -789,27 +789,6 @@ static void __attribute__ ((noinline)) UiConfiguration_ReadConfigEntries(bool lo
     }
 }
 
-void UiConfiguration_UpdateMacroCap(void)
-{
-	for (int i = 0; i < KEYER_BUTTONS; i++)
-	{
-		if (*ts.keyer_mode.macro[i] != '\0')
-		{
-			// Make button label from start of the macro
-		    uint8_t* pmacro = (uint8_t *)ts.keyer_mode.macro[i];
-			int c = 0;
-			while(*pmacro != ' ' && *pmacro != '\0' && c < KEYER_CAP_LEN)
-			{
-				ts.keyer_mode.cap[i][c++] = *pmacro++;
-			}
-			ts.keyer_mode.cap[i][c] = '\0';
-		}
-		else
-		{
-			strcpy((char *) ts.keyer_mode.cap[i], "BTN");
-		}
-	}
-}
 /**
  * Calculate based on current firmware version and stored configuration values, which parameters were not present in the stored configuration and
  * do need to be initialized / reset to the default value.
@@ -943,7 +922,6 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
     UiReadSettingEEPROM_Filter(load_eeprom_defaults);
 
     ConfigStorage_CopySerial2Array(EEPROM_KEYER_MEMORY_ADDRESS, (uint8_t *)ts.keyer_mode.macro, sizeof(ts.keyer_mode.macro));
-    UiConfiguration_UpdateMacroCap();
 
     // post configuration loading actions below
     df.tuning_step  = tune_steps[df.selected_idx];

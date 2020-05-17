@@ -47,7 +47,6 @@ const ConfigEntryDescriptor* UiConfiguration_GetEntry(uint16_t id);
 
 void        UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_eeprom_defaults);
 uint16_t    UiConfiguration_SaveEepromValues(void);
-void		UiConfiguration_UpdateMacroCap(void);
 
 // Configuration Value Definitions Follow
 //
