@@ -802,21 +802,29 @@ int16_t Rtty_Modulator_GenSample()
 		{
 			// load the character and add the stop bits;
 			bool bitsFilled = false;
-            uint8_t current_ascii;
+
 			while ( bitsFilled == false
-			        && DigiModes_TxBufferRemove( &current_ascii, RTTY ) )
+			        &&  DigiModes_TxBufferHasDataFor(RTTY))
 			{
-			    if (current_ascii == 0x04 ) //EOT
+
+			    uint8_t current_ascii;
+
+			    // as the character might have been removed from the buffer,
+			    // we do a final check when removing the character
+			    if (DigiModes_TxBufferRemove( &current_ascii, RTTY ))
 			    {
-			        RadioManagement_Request_TxOff();
-			    }
-			    else
-			    {
-			        uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
-			        if (current_baudot > 0)
-			        { // we have valid baudot code
-			            Rtty_Modulator_Code2Bits(current_baudot);
-			            bitsFilled = true;
+			        if (current_ascii == 0x04 ) //EOT
+			        {
+			            RadioManagement_Request_TxOff();
+			        }
+			        else
+			        {
+			            uint8_t current_baudot = Ascii2Baudot[current_ascii & 0x7f];
+			            if (current_baudot > 0)
+			            { // we have valid baudot code
+			                Rtty_Modulator_Code2Bits(current_baudot);
+			                bitsFilled = true;
+			            }
 			        }
 			    }
 			}
