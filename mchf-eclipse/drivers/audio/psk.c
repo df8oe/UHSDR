@@ -734,25 +734,27 @@ int16_t Psk_Modulator_GenSample()
                         Psk_Modulator_SetState(PSK_MOD_ACTIVE);
                     }
                 }
-                else if (DigiModes_TxBufferHasData())
+                else if (DigiModes_TxBufferHasData(BPSK))
                 {
-                    DigiModes_TxBufferRemove( &psk_state.tx_char, BPSK );
-                    Psk_Modulator_SetState(PSK_MOD_ACTIVE);
-                    if (psk_state.tx_char == 0x04) // EOT, stop tranmission
+                    if (DigiModes_TxBufferRemove( &psk_state.tx_char, BPSK ))
                     {
-                        // we send from buffer, and nothing more is in the buffer
-                        // request sending the trailing sequence
-                        Psk_Modulator_SetState(PSK_MOD_POSTAMBLE);
-                    }
-                    else
-                    {
-                        // if all zeros have been sent, look for new
-                        // input from input buffer
-                        psk_state.tx_bits = Bpsk_FindCharReversed(psk_state.tx_char);
-                        // reset counter for spacing zeros
-                        psk_state.tx_zeros = 0;
-                        // reset counter for trailing postamble (which conclude a transmission)
-                        psk_state.tx_ones = 0;
+                        Psk_Modulator_SetState(PSK_MOD_ACTIVE);
+                        if (psk_state.tx_char == 0x04) // EOT, stop tranmission
+                        {
+                            // we send from buffer, and nothing more is in the buffer
+                            // request sending the trailing sequence
+                            Psk_Modulator_SetState(PSK_MOD_POSTAMBLE);
+                        }
+                        else
+                        {
+                            // if all zeros have been sent, look for new
+                            // input from input buffer
+                            psk_state.tx_bits = Bpsk_FindCharReversed(psk_state.tx_char);
+                            // reset counter for spacing zeros
+                            psk_state.tx_zeros = 0;
+                            // reset counter for trailing postamble (which conclude a transmission)
+                            psk_state.tx_ones = 0;
+                        }
                     }
                 }
 

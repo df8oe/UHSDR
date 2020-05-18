@@ -29,6 +29,7 @@ extern "C" {
 #endif
 
 uint8_t DigiModes_TxBufferHasData();
+uint8_t DigiModes_TxBufferHasDataFor(digi_buff_consumer_t consumer);
 
 /*
  * The Digi buffer has multi consumers, some of them trying to get an entry

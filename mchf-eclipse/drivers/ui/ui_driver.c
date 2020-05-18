@@ -1023,25 +1023,61 @@ void UiDriver_EncoderDisplay(const uint8_t row, const uint8_t column, const char
 
 }
 
+static void UiDriver_UpdateMacroKeyerLabel(int8_t macro_idx)
+{
+    if (macro_idx < KEYER_BUTTONS)
+    {
+        // Make button label from start of the macro
+        uint8_t* pmacro = (uint8_t *)ts.keyer_mode.macro[macro_idx];
+        int cap_idx = 0;
+        for (; *pmacro != '\0' && cap_idx < KEYER_CAP_LEN; pmacro++ )
+        {
+            char lc = *pmacro >' ' ? *pmacro : '_';
+
+            if (lc< 0x80) // stay within ascii range
+            {
+                ts.keyer_mode.cap[macro_idx][cap_idx++] = lc;
+            }
+        }
+        ts.keyer_mode.cap[macro_idx][cap_idx] = '\0';
+    }
+}
+
+bool UiDriver_DisplayMacroKeyerLabel(int8_t macro_idx, const char** cap_p, uint32_t* color_p)
+{
+    bool retval = ts.keyer_mode.active;
+    if (retval)
+    {
+        if (ts.keyer_mode.button_recording == macro_idx)
+        {
+            *cap_p = "REC";
+            *color_p = Red;
+        }
+        else
+        {
+            UiDriver_UpdateMacroKeyerLabel(macro_idx);
+            if (ts.keyer_mode.cap[macro_idx][0] == '\0')
+            {
+                *cap_p = "empty";
+                *color_p = Yellow;
+            }
+            else
+            {
+                *cap_p = (char*) ts.keyer_mode.cap[macro_idx];
+                *color_p = White;
+            }
+        }
+    }
+
+    return retval;
+}
 
 void UiDriver_DisplayFButton_F1MenuExit()
 {
-	char* cap;
+	const char* cap;
 	uint32_t color;
-	if (ts.keyer_mode.active)
-	{
-		if (ts.keyer_mode.button_recording == KEYER_BUTTON_1)
-		{
-			cap = "REC";
-			color = Red;
-		}
-		else
-		{
-			cap = (char*) ts.keyer_mode.cap[0];
-			color = White;
-		}
-	}
-	else
+
+	if (UiDriver_DisplayMacroKeyerLabel(KEYER_BUTTON_1, &cap, &color) == false)
 	{
 		if (!ts.menu_var_changed)
 		{
@@ -1071,20 +1107,8 @@ static void UiDriver_DisplayFButton_F2SnapMeter()
 {
 	const char* cap;
 	uint32_t color;
-	if (ts.keyer_mode.active)
-	{
-		if (ts.keyer_mode.button_recording == KEYER_BUTTON_2)
-		{
-			cap = "REC";
-			color = Red;
-		}
-		else
-		{
-			cap = (char *)ts.keyer_mode.cap[1];
-			color = White;
-		}
-	}
-	else
+
+	if (UiDriver_DisplayMacroKeyerLabel(KEYER_BUTTON_2, &cap, &color) == false)
 	{
 
 		cap = "SNAP";
@@ -1102,21 +1126,7 @@ static void UiDriver_FButton_F3MemSplit()
 	const char* cap;
 	uint32_t color;
 
-	if (ts.keyer_mode.active)
-	{
-		if (ts.keyer_mode.button_recording == KEYER_BUTTON_3)
-		{
-			cap = "REC";
-			color = Red;
-		}
-		else
-		{
-			cap = (char *)ts.keyer_mode.cap[2];
-			color = White;
-		}
-
-	}
-	else
+	if (UiDriver_DisplayMacroKeyerLabel(KEYER_BUTTON_3, &cap, &color) == false)
 	{
 		if (ts.vfo_mem_flag)            // is it in VFO mode now?
 		{
@@ -6609,7 +6619,6 @@ static void UiAction_PlayKeyerBtnN(int8_t n)
 			*pmacro = '\0';
 		}
 
-		UiConfiguration_UpdateMacroCap();
 		UiDriver_TextMsgPutChar('<');
 		ts.keyer_mode.button_recording = KEYER_BUTTON_NONE;
 
