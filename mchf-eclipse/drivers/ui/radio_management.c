@@ -38,6 +38,7 @@
 
 #include "ui_configuration.h"
 #include "ui_menu.h"  // for CONFIG_160M_FULL_POWER_ADJUST and Co.
+#include "ui_driver.h" // for SWR_MIN_CALC_POWER
 
 #include "config_storage.h"
 
@@ -1713,7 +1714,8 @@ bool RadioManagement_UpdatePowerAndVSWR()
 
         swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrtf(swrm.rev_pwr/swrm.fwd_pwr));
 
-        if ( ts.vswr_protection_threshold > 1 )
+		// Perform VSWR protection iff threshold is > 1 AND enough forward power exists for a valid calculation
+        if ( ts.vswr_protection_threshold > 1 && swrm.fwd_pwr >= SWR_MIN_CALC_POWER)
         {
             if ( swrm.vswr > ts.vswr_protection_threshold )
             {
