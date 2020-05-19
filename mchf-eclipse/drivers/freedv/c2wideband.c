@@ -257,7 +257,7 @@ void correct_rate_K_vec(MODEL *model, float rate_K_vec[], float rate_K_sample_fr
             float cka = K;
             int k;
             for (k = 0; k < K; k++) {
-                float a = abs(rate_K_sample_freqs_kHz[k] - nasty_error_freq);
+                float a = fabsf(rate_K_sample_freqs_kHz[k] - nasty_error_freq);
 
                 if (closest_k == -1 || a < cka) {
                     closest_k = k;
@@ -295,8 +295,8 @@ void correct_rate_K_vec(MODEL *model, float rate_K_vec[], float rate_K_sample_fr
             for (m = 0; m < C2WB_K - 1; m++) {
                 //[tmp st_m] = min(abs(Am_freqs_kHz - rate_K_prev_sample_kHz));
                 //[tmp en_m] = min(abs(Am_freqs_kHz - rate_K_next_sample_kHz));
-                int pa = abs(Am_freqs_kHz[m] - rate_K_prev_sample_kHz);
-                int na = abs(abs(Am_freqs_kHz[m] - rate_K_next_sample_kHz));
+                int pa = abs((int)(Am_freqs_kHz[m] - rate_K_prev_sample_kHz));
+                int na = abs((int)(Am_freqs_kHz[m] - rate_K_next_sample_kHz));
                 if (st == -1 || pa < st) {
                     st = pa;
                     st_m = m;
