@@ -614,10 +614,20 @@ static bool RttyDecoder_waitForStartBit(float32_t sample) {
 }
 
 
+// character tables borrowed from fldigi / rtty.cxx
+static const char RTTYLetters[] = {
+	'\0',	'E',	'\n',	'A',	' ',	'S',	'I',	'U',
+	'\r',	'D',	'R',	'J',	'N',	'F',	'C',	'K',
+	'T',	'Z',	'L',	'W',	'H',	'Y',	'P',	'Q',
+	'O',	'B',	'G',	' ',	'M',	'X',	'V',	' '
+};
 
-static const char RTTYLetters[] = "<E\nA SIU\nDRJNFCKTZLWHYPQOBG^MXV^";
-static const char RTTYSymbols[] = "<3\n- ,87\n$4#,.:(5+)2.60197.^./=^";
-
+static const char RTTYSymbols[32] = {
+	'\0',	'3',	'\n',	'-',	' ',	'\a',	'8',	'7',
+	'\r',	'$',	'4',	'\'',	',',	'!',	':',	'(',
+	'5',	'"',	')',	'2',	'#',	'6',	'0',	'1',
+	'9',	'?',	'&',	' ',	'.',	'/',	';',	' '
+};
 
 void Rtty_Demodulator_ProcessSample(float32_t sample)
 {
