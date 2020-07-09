@@ -503,7 +503,7 @@ void UiVk_BndSelVirtualKeys()
 }
 
 //Band selection direct frequency enter keypad========================================
-#define UiVk_MaxFreqText 11
+#define UiVk_MaxFreqText 12
 char UiVk_FreqEditText[UiVk_MaxFreqText];
 uint8_t UiVk_FreqEditTextCntr=0;
 uint8_t UiVk_prevFreqEditTextCntr=0xff;
@@ -518,31 +518,11 @@ static void UiVk_FSetNumKeyUpdate()
 	UiArea_t KeybArea;
 	UiVk_GetKeybArea(&KeybArea);
 
-	char txtEdit[14];
-	char txt[14];
-	int i, n=0, t=0;
-
-	for(i=UiVk_FreqEditTextCntr;i>0;i--)
-	{
-		txtEdit[t++]=UiVk_FreqEditText[i-1];
-
-		n++;
-		if((n==3) && (i>1))
-		{
-			txtEdit[t++]='.';
-			n=0;
-		}
-	}
-	t--;
-	n=0;
-	for(;t>=0;t--)
-	{
-		txt[n++]=txtEdit[t];
-	}
-	txt[n]=0;
+	char txt[4];
+	int i, n=0, t;
 
 	char txtInfo[16]="               ";
-	uint32_t freq=atoi(UiVk_FreqEditText);
+	uint64_t freq=atol(UiVk_FreqEditText);
 	uint32_t textColor=RGB(0xff,0xff,0xff);
 	UiVk_EnableFrequencySet=1;
 	if(UiVk_BandChangeEN==0)
@@ -559,8 +539,34 @@ static void UiVk_FSetNumKeyUpdate()
 #else
 	uint8_t FSet_font=1;
 #endif
+	uint16_t txtPosX=KeybArea.x+KeybArea.w-4;
+	const uint8_t font_width = UiLcdHy28_TextWidth("0",FSet_font);
 
-	UiLcdHy28_PrintTextRight(KeybArea.x+KeybArea.w-4,KeybArea.y+4,txt,textColor,Col_BtnForeCol,FSet_font);
+	i=UiVk_FreqEditTextCntr;
+
+	while(i>0)
+	{
+	    t=3;
+	    if(i<3)
+	    {
+	        t=i;
+	    }
+
+	    for(n=t;n>0;n--)
+	    {
+	        txt[n-1]=UiVk_FreqEditText[i-1];
+	        i--;
+	    }
+	    txt[t]=0;
+	    if(i>0)
+	    {
+	        UiLcdHy28_PrintTextRight(txtPosX-UiLcdHy28_TextWidth(txt,FSet_font)+font_width/2,KeybArea.y+4,".",textColor,Col_BtnForeCol,FSet_font);
+	    }
+
+        UiLcdHy28_PrintTextRight(txtPosX,KeybArea.y+4,txt,textColor,Col_BtnForeCol,FSet_font);
+	    txtPosX-=UiLcdHy28_TextWidth(txt,FSet_font)+font_width/2;
+	}
+
 	UiLcdHy28_PrintText(KeybArea.x+4,KeybArea.y+4,txtInfo,RGB(0xff,0xff,0x00),Col_BtnForeCol,4);
 }
 
@@ -628,7 +634,7 @@ static void UiVk_FSetNumKeyVKeyCallBackShort(uint8_t KeyNum, uint32_t param)
 	case 0x0d:
 		if(UiVk_EnableFrequencySet)
 		{
-			uint32_t freq=atoi(UiVk_FreqEditText);
+			uint64_t freq=atol(UiVk_FreqEditText);
 
 			uint8_t band_scan=ts.band->band_mode;
 
