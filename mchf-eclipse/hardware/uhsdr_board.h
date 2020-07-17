@@ -711,6 +711,7 @@ typedef struct TransceiverState
     int16_t  nr_gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
     //                                           3 = display bin gain multiplied with long_tone_gain
 
+    uint8_t DisableTCXOdisplay; //permanent disable of TCXO display (some trx do not use it anyway)
 } TransceiverState;
 
 extern __IO TransceiverState ts;
