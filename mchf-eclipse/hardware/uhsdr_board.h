@@ -24,6 +24,7 @@
 #include "ui_lcd_hy28.h"
 #include "ui_vkeybrd.h"
 #include "audio_driver.h"
+#include "osc_SParkle.h"
 
 struct mchf_waterfall
 {
