@@ -658,6 +658,7 @@ void osc_SParkle_Init()
             SParkle_WriteBBRegister1(PCA_9554_RegConfig,0);    //expander#1 setup all to outputs
         }
 
+        ts.DisableTCXOdisplay=1;    //disable the tcxo field in layout
     }
 
     osc = SParkle_IsPresent()?&osc_SParkle_DDC:NULL;

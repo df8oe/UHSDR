@@ -4977,6 +4977,11 @@ static void UiDriverUpdateLoMeter(uchar val,uchar active)
 #define TEMP_DATA 43
 void UiDriver_CreateTemperatureDisplay()
 {
+    if(ts.DisableTCXOdisplay)
+    {
+        return;                 //permanent disable unused temp sensor
+    }
+
 	const char *label, *txt;
 	uint32_t label_color, txt_color;
 
@@ -5056,6 +5061,11 @@ static void UiDriver_DisplayTemperature(int temp)
 //*----------------------------------------------------------------------------
 static void UiDriver_HandleLoTemperature()
 {
+    if(ts.DisableTCXOdisplay)
+    {
+        return;                 //permanent disable unused temp sensor
+    }
+
 	if (SoftTcxo_HandleLoTemperatureDrift())
 	{
 		UiDriver_DisplayTemperature(lo.temp/1000); // precision is 0.1 represent by lowest digit
