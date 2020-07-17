@@ -403,10 +403,20 @@ static bool RadioManagement_SetBandPowerFactor(const BandInfo* band, int32_t pow
     // limit hard limit for power factor since it otherwise may overdrive the PA section
 
     const float32_t old_pf = ts.tx_power_factor;
-
-    ts.tx_power_factor =
-            (power_factor > TX_POWER_FACTOR_MAX_INTERNAL) ?
-            TX_POWER_FACTOR_MAX_INTERNAL : power_factor;
+#ifdef USE_OSC_SParkle
+    if(SParkle_IsPresent())
+    {
+        //TODO: make mixed amplitude/attenuator use, using only the 0.5dB steps from PE4302 causes inaccurate power settings
+        ts.tx_power_factor=TX_POWER_FACTOR_MAX_DUC_INTERNAL;   //because fpga doesn't have the limits of typical analog mixer and we always output full power from DAC
+        return SParkle_SetTXpower(power_factor);
+    }
+    else
+#endif
+    {
+        ts.tx_power_factor =
+                (power_factor > TX_POWER_FACTOR_MAX_INTERNAL) ?
+                        TX_POWER_FACTOR_MAX_INTERNAL : power_factor;
+    }
 
     ts.power_modified |=  (power_factor == 0 || ts.tx_power_factor != power_factor);
 

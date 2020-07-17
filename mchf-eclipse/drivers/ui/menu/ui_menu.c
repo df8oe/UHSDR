@@ -557,6 +557,9 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         case FOUND_RF_BOARD_OVI40:
             outs = "OVI40 RF Board";
             break;
+        case FOUND_RF_BOARD_SParkle:
+            outs = "SParkle RF Board";
+            break;
         default:
             outs = "mcHF RF Board";
             break;
@@ -704,12 +707,26 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcess
     const BandInfo* band = RadioManagement_GetBand(df.tune_old);
     if((band_mode == band->band_mode) && (ts.power_level == pa_level))
     {
+#ifdef USE_OSC_SParkle
+        if(SParkle_IsPresent())
+        {
+            tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
+                                                  TX_POWER_FACTOR_MIN_DUC,
+                                                  RadioManagement_IsPowerFactorReduce(df.tune_old)?TX_POWER_FACTOR_MAX_DUC:TX_POWER_FACTOR_MAX_DUC/4,
+                                                  TX_POWER_FACTOR_MIN_DUC,
+                                                  1
+                                                 );
+        }
+        else
+#endif
+        {
         tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
                                               TX_POWER_FACTOR_MIN,
                                               RadioManagement_IsPowerFactorReduce(df.tune_old)?TX_POWER_FACTOR_MAX:TX_POWER_FACTOR_MAX/4,
                                               TX_POWER_FACTOR_MIN,
                                               1
                                              );
+        }
 
         if(tchange)	 		// did something change?
         {

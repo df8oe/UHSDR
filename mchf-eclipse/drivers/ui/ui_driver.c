@@ -63,6 +63,7 @@
 
 #include "audio_convolution.h"
 #include "audio_agc.h"
+#include "osc_SParkle.h"
 
 #define SPLIT_ACTIVE_COLOUR         		Yellow      // colour of "SPLIT" indicator when active
 #define SPLIT_INACTIVE_COLOUR           	Grey        // colour of "SPLIT" indicator when NOT active
@@ -2330,29 +2331,6 @@ void UiDriver_InitBandSet()
     {
         const BandInfo* bi = RadioManagement_GetBandInfo(i);
         band_enabled[i] = ((bi->tune >= min_osc) && ((bi->size + bi->tune) <= max_osc));
-    }
-
-    switch (ts.rf_board)
-    {
-    case FOUND_RF_BOARD_MCHF:
-        // here you can enable or disable based on additional hardware capabilities
-        // but this should only be used with care
-        /*
-        band_enabled[BAND_MODE_23] = false;
-        band_enabled[BAND_MODE_70] = false;
-        band_enabled[BAND_MODE_2] = false;
-        band_enabled[BAND_MODE_4] = false;
-        band_enabled[BAND_MODE_6] = false;
-        band_enabled[BAND_MODE_630] = false;
-        band_enabled[BAND_MODE_2200] = false;
-        */
-        break;
-    case FOUND_RF_BOARD_OVI40:
-        /*
-        band_enabled[BAND_MODE_23] = false;
-        band_enabled[BAND_MODE_70] = false;
-        */
-        break;
     }
 
 	const char* test = Board_BootloaderVersion();
@@ -6036,6 +6014,10 @@ void UiDriver_StartUpScreenFinish()
 
 	if(!Si5351a_IsPresent() && RadioManagement_TcxoIsEnabled())
 	{
+#ifdef USE_OSC_SParkle
+	    if(!SParkle_IsPresent())
+#endif
+
 		UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
 	}
 
@@ -6051,7 +6033,21 @@ void UiDriver_StartUpScreenFinish()
 	    }
 	}
 
-	if(!Si5351a_IsPresent()) {
+	uint8_t checkSWRmod=1;
+#ifdef USE_OSC_SParkle
+	if(SParkle_IsPresent())
+    {
+        checkSWRmod=0;
+    }
+#endif
+
+	if(Si5351a_IsPresent())
+	{
+	    checkSWRmod=0;
+	}
+
+	if(checkSWRmod)
+	{
 	  UiDriver_StartupScreen_LogIfProblem((HAL_ADC_GetValue(&hadc2) > MAX_VSWR_MOD_VALUE) && (HAL_ADC_GetValue(&hadc3) > MAX_VSWR_MOD_VALUE),
 			"SWR Bridge resistor mod NOT completed!");
 	}

@@ -392,10 +392,14 @@ int mchfMain(void)
 #endif
 
 	profileTimedEventInit();
-
+#ifdef USE_OSC_SParkle
+    if(!SParkle_IsPresent())
+#endif
+    {
 #ifdef USE_HMC1023
     hmc1023_init();
 #endif
+    }
 
     // Audio Software Init
     AudioDriver_Init();

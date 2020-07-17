@@ -76,6 +76,7 @@ typedef enum {
 typedef enum {
     FOUND_RF_BOARD_MCHF = 0,
     FOUND_RF_BOARD_OVI40 = 1,
+    FOUND_RF_BOARD_SParkle = 2,
 } RfBoard_t;
 
 #define CW_KEYER_MODE_IAM_B				0
@@ -119,7 +120,11 @@ enum
 #define TX_POWER_FACTOR_MAX_INTERNAL 0.55 // we limit power factor  to 55 (.55) . This limit is independent of the possible scale factor 4 for the power factor
 #define	TX_POWER_FACTOR_MAX		(TX_POWER_FACTOR_MAX_INTERNAL*400.0)		// Please keep in mind that this is only a setting value maximum. Depending on the flags this reduced by 4 before further use.
                                         //And the true maximum is defined above in TX_POWER_FACTOR_MAX_INTERNAL
-
+#ifdef USE_OSC_SParkle
+#define TX_POWER_FACTOR_MIN_DUC 1
+#define TX_POWER_FACTOR_MAX_DUC_INTERNAL 0.95   //power limit for fpga processing
+#define TX_POWER_FACTOR_MAX_DUC (TX_POWER_FACTOR_MAX_DUC_INTERNAL*400)
+#endif
 //
 // Default power factors for 5 watt and FULL settings in percent
 // These power factors are based on the original fixed values

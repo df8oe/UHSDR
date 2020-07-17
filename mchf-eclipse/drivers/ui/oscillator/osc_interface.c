@@ -17,6 +17,7 @@
 #include "uhsdr_board.h"
 #include "osc_si570.h"
 #include "osc_si5351a.h"
+#include "osc_SParkle.h"
 #include "soft_tcxo.h"
 // -------------------------------------------------------------------------------------
 // Local Oscillator
@@ -90,6 +91,12 @@ static void OscDummy_Init()
 
 void Osc_Init()
 {
+#ifdef USE_OSC_SParkle
+    if (osc == NULL)
+    {
+        osc_SParkle_Init();
+    }
+#endif
 #ifdef USE_OSC_SI5351A
 	if (osc == NULL)
 	{
