@@ -46,10 +46,6 @@
 #define USE_HMC1023
 
 #if defined(STM32F7)
-    #define USE_OSC_SParkle
-#endif
-
-#if defined(STM32F7)
     #ifndef TRX_NAME
         #define TRX_NAME "OVI40 F7"
     #endif

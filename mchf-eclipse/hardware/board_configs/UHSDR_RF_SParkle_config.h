@@ -14,6 +14,10 @@
 #ifndef BOARD_CONFIGS_UHSDR_RF_SPARKLE_CONFIG_H_
 #define BOARD_CONFIGS_UHSDR_RF_SPARKLE_CONFIG_H_
 
+#if defined(STM32F7) //temporary until the port for h7 will be ready...
+#define USE_OSC_SParkle
+#endif
+
 #if defined(STM32F7)
 #define TRX_NAME_SParkle "SParkle F7"
 #endif
