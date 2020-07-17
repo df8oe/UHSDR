@@ -62,6 +62,7 @@
 
 #include "audio_convolution.h"
 #include "audio_agc.h"
+#include "osc_SParkle.h"
 
 #define SPLIT_ACTIVE_COLOUR         		Yellow      // colour of "SPLIT" indicator when active
 #define SPLIT_INACTIVE_COLOUR           	Grey        // colour of "SPLIT" indicator when NOT active
@@ -5951,6 +5952,10 @@ void UiDriver_StartUpScreenFinish()
 
 	if(osc->type == OSC_SI570 && RadioManagement_TcxoIsEnabled())
 	{
+#ifdef USE_OSC_SParkle
+	    if(!SParkle_IsPresent())
+#endif
+
 		UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
 	}
 

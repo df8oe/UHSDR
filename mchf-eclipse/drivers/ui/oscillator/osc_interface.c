@@ -18,6 +18,7 @@
 #include "osc_si570.h"
 #include "osc_si5351a.h"
 #include "osc_ducddc_df8oe.h"
+#include "osc_SParkle.h"
 #include "soft_tcxo.h"
 // -------------------------------------------------------------------------------------
 // Local Oscillator

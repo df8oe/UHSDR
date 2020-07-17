@@ -28,6 +28,7 @@ drivers/ui/oscillator/soft_tcxo.c \
 drivers/ui/oscillator/osc_ducddc_df8oe.c \
 drivers/ui/oscillator/osc_si570.c \
 drivers/ui/oscillator/osc_si5351a.c \
+drivers/ui/oscillator/osc_SParkle.c \
 drivers/ui/oscillator/osc_interface.c \
 drivers/ui/menu/ui_menu.c \
 drivers/ui/menu/ui_menu_internal.c \
