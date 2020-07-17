@@ -5897,8 +5897,21 @@ void UiDriver_StartUpScreenInit()
 	// Clear all
 	UiLcdHy28_LcdClear(Black);
 	uint16_t nextY = ts.Layout->StartUpScreen_START.y;
-	snprintf(tx,100,"%s",DEVICE_STRING);
-	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
+#ifdef USE_OSC_SParkle
+	if(SParkle_IsPresent())
+	{
+	    snprintf(tx,100,"%s",SParkle_DEVICE_STRING);
+        nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
+
+        snprintf(tx,100,"Hardware License: %s",SParkleTRX_HW_LIC);
+        nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 3, 320, tx, White,Black, 0);
+        nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, SParkleTRX_HW_CREATOR, White,Black, 0);
+	}
+	else
+#endif
+	{
+	    snprintf(tx,100,"%s",DEVICE_STRING);
+	    nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
 
 #ifdef TRX_HW_LIC
 	snprintf(tx,100,"Hardware License: %s",TRX_HW_LIC);
@@ -5907,6 +5920,7 @@ void UiDriver_StartUpScreenInit()
 #ifdef TRX_HW_CREATOR
 	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, TRX_HW_CREATOR, White,Black, 0);
 #endif
+    }
 
 	snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
 	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 8, 320, tx, Yellow, Black, 1);
