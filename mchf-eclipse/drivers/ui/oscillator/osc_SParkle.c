@@ -6,8 +6,8 @@
  **                                                                                **
  **--------------------------------------------------------------------------------**
  **                                                                                **
- **  File name:     osc_FPGA_DDC.c                                                 **
- **  Description:   oscillator for FPGA DDC management                             **
+ **  File name:     osc_SParkle.c                                                  **
+ **  Description:   SParkle interface, FPGA DDC management                         **
  **  Licence:       GNU GPLv3                                                      **
  **  Author:        Slawomir Balon/SP9BSL                                          **
  ************************************************************************************/
