@@ -271,6 +271,12 @@ void TransceiverStateInit(void)
     //CONFIG LOADED:ts.expflags1 = 0; // Used to hold flags for options in Debug/Expert menu, stored in EEPROM location "EEPROM_EXPFLAGS1"
 
     ts.band_effective = NULL; // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
+    ts.ATT_Gain=127;        //this is dummy value to disable the amplifier/attenuator control. It should be enabled in hardware init routine.
+
+    //setting to default RFboard structure. The specific hardware setting must be done in hardware init.
+    RFboard.AMP_ATT_getCurrent=NULL;
+    RFboard.AMP_ATT_next=NULL;
+    RFboard.AMP_ATT_prev=NULL;
 }
 
 // #include "Trace.h"

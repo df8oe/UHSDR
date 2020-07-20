@@ -100,6 +100,20 @@ extern DMA_HandleTypeDef hdma_sai2_b;
 
 SParkleState_t SParkleState;
 
+enum {
+    att_30=0,
+    att_20,
+    att_10,
+    att_off,
+    amp10,
+    amp20
+};
+const int8_t att_table[]={-30,-20,-10,0,10,20};
+
+#define SParkle_att_max att_30
+#define SParkleHF_amp_max amp10
+#define SParkleVHF_amp_max amp20
+
 static inline void SP_DDCboard_CSon(void)
 {
     GPIO_ResetBits(FPGA_CS_PORT,FPGA_CS_PIN);
@@ -619,6 +633,73 @@ bool SParkle_SetTXpower(float32_t pf)
     return power_changed;
 }
 
+static void osc_SParkle_CheckMaxATT()
+{
+    uint8_t maxtval=SParkleHF_amp_max;
+    if(SParkleState.Nyquist_Zone>1)
+    {
+        maxtval=SParkleVHF_amp_max;
+    }
+
+    if(SParkleState.RX_amp_idx>127)
+    {
+        SParkleState.RX_amp_idx=0;
+    }
+
+    if(SParkleState.RX_amp_idx>maxtval)
+    {
+        SParkleState.RX_amp_idx=maxtval;
+    }
+}
+
+static void osc_SParkle_updateRXATT()
+{
+    if(SParkleState.current_RX_amp_idx!=SParkleState.RX_amp_idx)
+    {
+        SParkleState.current_RX_amp_idx=SParkleState.RX_amp_idx;
+
+        int8_t gain=att_table[SParkleState.RX_amp_idx];
+        int8_t atten=0;
+        if(gain<=0)
+        {
+            atten=gain*(-1);
+            SParkleState.next_BB_reg1&=~SParkleBB_I2C_adr1_LNA;
+        }
+        else if(gain>0)
+        {
+            SParkleState.next_BB_reg1|=SParkleBB_I2C_adr1_LNA;
+        }
+
+        SParkle_SetAttenuator(Att_RX,atten);
+        if(SParkleState.current_BB_reg1!=SParkleState.next_BB_reg1)
+        {
+            SParkleState.current_BB_reg1=SParkleState.next_BB_reg1;
+            SParkle_WriteBBRegister1(PCA_9554_RegOutput,SParkleState.current_BB_reg1);
+        }
+
+    }
+}
+static int8_t osc_SParkle_ATTgetCurrent(void)
+{
+    osc_SParkle_CheckMaxATT();
+    osc_SParkle_updateRXATT();
+    return att_table[SParkleState.RX_amp_idx];
+}
+
+static int8_t osc_SParkle_ATTsetNext(void)
+{
+    SParkleState.RX_amp_idx++;
+    osc_SParkle_CheckMaxATT();
+    return att_table[SParkleState.RX_amp_idx];
+}
+
+static int8_t osc_SParkle_ATTsetPrev(void)
+{
+    SParkleState.RX_amp_idx--;
+    osc_SParkle_CheckMaxATT();
+    return att_table[SParkleState.RX_amp_idx];
+}
+
 void osc_SParkle_Init()
 {
     SParkleState.current_frequency = 0;
@@ -627,12 +708,17 @@ void osc_SParkle_Init()
     SParkleState.next_BB_reg2=0;
     SParkleState.current_BB_reg1=255;    //255 to trigger update of i2c expander
     SParkleState.current_BB_reg2=255;    //255 to trigger update of i2c expander
+    SParkleState.current_RX_amp_idx=255;
 
     SParkleState.is_present = SParkle_CheckPresence();
     SParkleState.DDC_RegConfig=DDCboard_REG_CTRL_AMP1;
 
     if (SParkleState.is_present)
     {
+        RFboard.AMP_ATT_getCurrent=osc_SParkle_ATTgetCurrent;
+        RFboard.AMP_ATT_next=osc_SParkle_ATTsetNext;
+        RFboard.AMP_ATT_prev=osc_SParkle_ATTsetPrev;
+
         SParkle_ConfigureSAI();
         SParkle_UpdateConfig(DDCboard_REG_CTRL_SAIen | DDCboard_REG_CTRL_AdcRes | DDCboard_REG_CTRL_AMP1 | DDCboard_REG_CTRL_LED2 | DDCboard_REG_CTRL_RevDAC,ENABLE);   //enable MCLK, Reset ADC to default state
         SParkle_UpdateConfig(DDCboard_REG_CTRL_AdcRes,DISABLE);
@@ -659,12 +745,12 @@ void osc_SParkle_Init()
         }
 
         ts.DisableTCXOdisplay=1;    //disable the tcxo field in layout
+        SParkleState.RX_amp_idx=att_off;
+        ts.ATT_Gain=att_table[SParkleState.RX_amp_idx];  //enable display of attenuation/amplification control
     }
 
     osc = SParkle_IsPresent()?&osc_SParkle_DDC:NULL;
 
 }
-
-
 
 #endif
