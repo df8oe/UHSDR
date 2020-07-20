@@ -712,9 +712,23 @@ typedef struct TransceiverState
     //                                           3 = display bin gain multiplied with long_tone_gain
 
     uint8_t DisableTCXOdisplay; //permanent disable of TCXO display (some trx do not use it anyway)
+    int8_t ATT_Gain;            //value of amplification (positive) or attenuation (negative) of receiver path. This is setting for available hardware.
+
 } TransceiverState;
 
 extern __IO TransceiverState ts;
+
+//definition of specific RF hardware features
+typedef int8_t (*hRFb_RXATT)(void);
+
+typedef struct {
+    hRFb_RXATT AMP_ATT_prev;
+    hRFb_RXATT AMP_ATT_next;
+    hRFb_RXATT AMP_ATT_getCurrent;
+
+} HardwareRFBoard;
+
+extern __IO HardwareRFBoard RFboard;
 
 #define	POWERDOWN_DELAY_COUNT	30	// Delay in main service loop for the "last second" before power-down - to allow EEPROM write to complete
 

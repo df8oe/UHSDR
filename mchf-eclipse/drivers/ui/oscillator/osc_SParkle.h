@@ -34,6 +34,8 @@ typedef struct
     uint32_t AntiAliasFilterSeting;
     uint32_t prevAntiAliasFilterSeting;
     uint8_t TestStatus;
+    uint8_t RX_amp_idx;
+    uint8_t current_RX_amp_idx;
 }SParkleState_t;
 
 #define SParkleStat_BaseBoardPresent 0x01

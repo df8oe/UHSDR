@@ -144,6 +144,7 @@ static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
 static void UiDriver_DisplayPskSpeed(bool encoder_active);
 
+static void UiDriver_DisplayATTgain(bool encoder_active);
 
 // encoder one
 typedef enum {
@@ -173,6 +174,7 @@ typedef enum {
     ENC_THREE_MODE_CW_SPEED,
     ENC_THREE_MODE_INPUT_CTRL,
     ENC_THREE_MODE_PSK_SPEED,
+    ENC_THREE_MODE_ATT_GAIN,
     ENC_THREE_NUM_MODES
 } EncoderThreeModes;
 
@@ -1423,6 +1425,8 @@ void UiDriver_UpdateDisplayAfterParamChange()
 	UiSpectrum_DisplayFilterBW();  // update on-screen filter bandwidth indicator (graphical)
 
 	UiDriver_RefreshEncoderDisplay();
+
+	UiDriver_DisplayATTgain(ts.enc_thr_mode == ENC_THREE_MODE_ATT_GAIN);      // update gain display and setting if needed
 
 	if(ts.menu_mode)    // are we in menu mode?
 	{
@@ -3326,6 +3330,41 @@ static void UiDriver_ChangeBand(bool is_up)
 	}
 }
 
+static void UiDriver_DisplayATTgain(bool encoder_active)
+{
+    if(ts.ATT_Gain==127)
+    {
+        return;
+    }
+
+    if(RFboard.AMP_ATT_getCurrent)
+    {
+        ts.ATT_Gain=RFboard.AMP_ATT_getCurrent();
+    }
+
+    uint32_t color = encoder_active?White:Grey;
+
+    char    temp[5];
+    const char* label = "???";
+    snprintf(temp,5,ts.ATT_Gain?"%+2i":"%2i", ts.ATT_Gain);
+
+    if(ts.ATT_Gain>0)
+    {
+        label = "AMP";
+    }
+    else
+    {
+        label = "ATT";
+        if(ts.ATT_Gain==0)
+        {
+            snprintf(temp,5,"OFF");
+        }
+    }
+
+
+    UiDriver_EncoderDisplay(2,2,label, encoder_active, temp, color);
+}
+
 
 /**
  * @brief Read out the changes in the frequency encoder and initiate frequency change by setting a global variable.
@@ -3870,6 +3909,20 @@ static void UiDriver_CheckEncoderThree()
 				UiDriver_DisplayLineInModeAndGain(1);
 			}
 			break;
+			//if applicable do amplitude select
+			case ENC_THREE_MODE_ATT_GAIN:
+			{
+			    if(RFboard.AMP_ATT_next && pot_diff_step>0)
+			    {
+			        ts.ATT_Gain=RFboard.AMP_ATT_next();
+			    }
+			    else
+			    {
+			        ts.ATT_Gain=RFboard.AMP_ATT_prev();
+			    }
+			    UiDriver_DisplayATTgain(1);
+			}
+			break;
 			default:
 				break;
 			}
@@ -4014,6 +4067,9 @@ static bool UiDriver_IsApplicableEncoderThreeMode(uint8_t mode)
 		retval = ts.dmod_mode != DEMOD_DIGI || ts.digital_mode != DigitalMode_BPSK;
 		//retval = ts.dmod_mode != DEMOD_DIGI || (ts.digital_mode != DigitalMode_BPSK && ts.digital_mode != DigitalMode_RTTY);
 		break;
+	case ENC_THREE_MODE_ATT_GAIN:
+	    retval = ts.ATT_Gain != 127;
+	    break;
 	}
 	return retval;
 }
@@ -4023,6 +4079,7 @@ static void UiDriver_DisplayEncoderThreeMode()
 {
 	// upper box
 	UiDriver_DisplayRit(ts.enc_thr_mode == ENC_THREE_MODE_RIT);
+	UiDriver_DisplayATTgain(ts.enc_thr_mode == ENC_THREE_MODE_ATT_GAIN);
 
 	// lower box
 	switch(ts.enc_thr_mode)
