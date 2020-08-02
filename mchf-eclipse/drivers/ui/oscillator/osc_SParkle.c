@@ -609,7 +609,7 @@ static uint8_t SParkle_SetAttenuator(uint16_t Chan, float32_t att)
 }
 
 /**
- * @brief sets the aoutput attenuator according to required power percentage
+ * @brief sets the output attenuator according to required power percentage
  * @param pf  the value of output power to set
  */
 bool SParkle_SetTXpower(float32_t pf)

@@ -3252,7 +3252,7 @@ static void UiDriver_ChangeBand(bool is_up)
 
 static void UiDriver_DisplayATTgain(bool encoder_active)
 {
-    if(ts.ATT_Gain==127)
+    if(!RFboard.AMP_ATT_getCurrent)
     {
         return;
     }
@@ -3988,7 +3988,7 @@ static bool UiDriver_IsApplicableEncoderThreeMode(uint8_t mode)
 		//retval = ts.dmod_mode != DEMOD_DIGI || (ts.digital_mode != DigitalMode_BPSK && ts.digital_mode != DigitalMode_RTTY);
 		break;
 	case ENC_THREE_MODE_ATT_GAIN:
-	    retval = ts.ATT_Gain != 127;
+	    retval = RFboard.AMP_ATT_getCurrent!=NULL;
 	    break;
 	}
 	return retval;
