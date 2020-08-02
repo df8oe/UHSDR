@@ -2111,7 +2111,7 @@ static void UiSpectrum_CalculateDBm()
 
         if (sum_db > 0)
         {
-            sm.dbm_cur = slope * Math_log10f_fast (sum_db) + cons;
+            sm.dbm_cur = slope * Math_log10f_fast (sum_db) + cons - ts.ATT_Gain;
             sm.dbmhz_cur = sm.dbm_cur -  10 * Math_log10f_fast ((float32_t)(((int)Ubin-(int)Lbin) * bin_BW)) ;
         }
         else
