@@ -17,10 +17,10 @@
 
 #include "uhsdr_board_config.h"
 
-void UhsdrHwI2s_Codec_StartDMA();
-void UhsdrHwI2s_Codec_StopDMA();
+void UhsdrHwI2s_Codec_StartDMA(void);
+void UhsdrHwI2s_Codec_StopDMA(void);
 
-void UhsdrHwI2s_Codec_ClearTxDmaBuffer();
+void UhsdrHwI2s_Codec_ClearTxDmaBuffer(void);
 
 #endif
 

@@ -32,7 +32,7 @@
 
 struct PEXP;
 
-struct PEXP * phase_experiment_create();
+struct PEXP * phase_experiment_create(void);
 void phase_experiment_destroy(struct PEXP *pexp);
 void phase_experiment(struct PEXP *pexp, MODEL *model, char *arg);
 

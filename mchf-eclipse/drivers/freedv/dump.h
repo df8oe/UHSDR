@@ -32,7 +32,7 @@
 #include "codec2_internal.h"
 
 void dump_on(char filename_prefix[]);
-void dump_off();
+void dump_off(void);
 
 void dump_Sn(int m_pitch, float Sn[]);
 void dump_Sw(COMP Sw[]);

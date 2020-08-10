@@ -360,7 +360,7 @@ int mchfMain(void)
     // HW init
     Board_InitMinimal();
     // Show logo & HW Info
-    UiDriver_StartUpScreenInit(2000);
+    UiDriver_StartUpScreenInit();
 
     if (ts.display != DISPLAY_NONE)
     {
@@ -425,7 +425,7 @@ int mchfMain(void)
     Canary_Create();
 #endif
 
-    UiDriver_StartUpScreenFinish(2000);
+    UiDriver_StartUpScreenFinish();
 
     // We initialize the requested demodulation mode
     // and update the screen accordingly

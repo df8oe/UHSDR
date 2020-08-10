@@ -45,10 +45,10 @@ void     Codec_IQInGainAdj(uint8_t gain);
 void 	 Codec_MuteDAC(bool state);
 
 uint32_t Codec_Reset(uint32_t AudioFreq);
-void     Codec_RestartI2S();
+void     Codec_RestartI2S(void);
 void     Codec_TxSidetoneSetgain(uint8_t mode);
 void     Codec_SwitchMicTxRxMode(uint8_t mode);
 void     Codec_PrepareTx(uint8_t current_txrx_mode);
 
-bool     Codec_ReadyForIrqCall();
+bool     Codec_ReadyForIrqCall(void);
 #endif

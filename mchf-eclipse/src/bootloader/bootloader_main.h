@@ -21,9 +21,9 @@ extern "C" {
 #endif
 
 
-void Bootloader_UsbHostApplication();
-int  Bootloader_Main();
-void Bootloader_CheckAndGoForBootTarget();
+void Bootloader_UsbHostApplication(void);
+int  Bootloader_Main(void);
+void Bootloader_CheckAndGoForBootTarget(void);
 void Bootloader_PrintLine(const char* txt);
 
 enum

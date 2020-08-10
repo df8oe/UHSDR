@@ -32,16 +32,16 @@ typedef enum
 
 // Exports
 
-CatInterfaceState CatDriver_GetInterfaceState();
+CatInterfaceState CatDriver_GetInterfaceState(void);
 
 int CatDriver_InterfaceBufferAddData(uint8_t c);
 
-void CatDriver_HandleProtocol();
+void CatDriver_HandleProtocol(void);
 
-bool CatDriver_CloneOutStart();
-bool CatDriver_CloneInStart();
+bool CatDriver_CloneOutStart(void);
+bool CatDriver_CloneInStart(void);
 
-bool CatDriver_CWKeyPressed();
-bool CatDriver_CatPttActive();
+bool CatDriver_CWKeyPressed(void);
+bool CatDriver_CatPttActive(void);
 
 #endif

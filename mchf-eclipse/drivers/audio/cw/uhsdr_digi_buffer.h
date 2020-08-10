@@ -28,7 +28,7 @@ typedef enum
 extern "C" {
 #endif
 
-uint8_t DigiModes_TxBufferHasData();
+uint8_t DigiModes_TxBufferHasData(void);
 uint8_t DigiModes_TxBufferHasDataFor(digi_buff_consumer_t consumer);
 
 /*
@@ -39,7 +39,7 @@ uint8_t DigiModes_TxBufferHasDataFor(digi_buff_consumer_t consumer);
  * @return - previous consumer
  */
 digi_buff_consumer_t DigiModes_Set_BufferConsumer( digi_buff_consumer_t consumer );
-void                 DigiModes_Restore_BufferConsumer();
+void                 DigiModes_Restore_BufferConsumer(void);
 
 /*
  * @return - true if element was removed from buffer and available in c_ptr

@@ -41,8 +41,8 @@ extern cw_config_t cw_decoder_config;
 
 
 void CwDecode_RxProcessor(float32_t * const src, int16_t blockSize);
-void CwDecode_Filter_Set();
-//void CW_Decoder_WPM_display_erase();
+void CwDecode_Filter_Set(void);
+//void CW_Decoder_WPM_display_erase(void);
 void CwDecoder_WpmDisplayUpdate(bool force_update);
 void CwDecoder_WpmDisplayClearOrPrepare(bool prepare);
 
