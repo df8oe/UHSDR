@@ -645,8 +645,8 @@ extern lLMS leakyLMS;
 // Exports
 void AudioDriver_Init(void);
 void AudioDriver_SetProcessingChain(uint8_t dmod_mode, bool reset_dsp_nr);
-int32_t AudioDriver_GetTranslateFreq();
-void AudioDriver_SetSamPllParameters ();
+int32_t AudioDriver_GetTranslateFreq(void);
+void AudioDriver_SetSamPllParameters (void);
 
 void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t *audioDst, int16_t size);
 
@@ -657,6 +657,6 @@ void AudioDriver_CalcBandpass(float32_t coeffs[5], float32_t f0, float32_t FS);
 void AudioDriver_SetBiquadCoeffs(float32_t* coeffsTo,const float32_t* coeffsFrom);
 
 void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, float32_t* q_buffer, const uint16_t blockSize);
-void AudioDriver_AgcWdsp_Set();
+void AudioDriver_AgcWdsp_Set(void);
 
 #endif

@@ -222,7 +222,7 @@ typedef enum
 // Working register plus VFO A and VFO B registers.
 extern BandRegs vfo[VFO_MAX];
 
-vfo_name_t get_active_vfo();
+vfo_name_t get_active_vfo(void);
 
 
 // SWR and RF power meter public
@@ -330,11 +330,11 @@ bool RadioManagement_FreqIsInEnabledBand ( uint32_t freq );
 const BandInfo* RadioManagement_GetBandInfo(uint8_t new_band_index);
 bool RadioManagement_SetPowerLevel(const BandInfo* band, power_level_t power_level);
 bool RadioManagement_Tune(bool tune);
-bool RadioManagement_UpdatePowerAndVSWR();
+bool RadioManagement_UpdatePowerAndVSWR(void);
 void RadioManagement_ChangeCodec(uint32_t codec, bool enableCodec);
 bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8_t txrx_mode);
-void RadioManagement_HandlePttOnOff();
-void RadioManagement_MuteTemporarilyRxAudio();
+void RadioManagement_HandlePttOnOff(void);
+void RadioManagement_MuteTemporarilyRxAudio(void);
 
 uint32_t RadioManagement_NextNormalDemodMode(uint32_t loc_mode);
 uint32_t RadioManagement_NextAlternativeDemodMode(uint32_t loc_mode);
@@ -344,32 +344,32 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode);
 void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode);
 bool RadioManagement_LSBActive(uint16_t dmod_mode);
 bool RadioManagement_USBActive(uint16_t dmod_mode);
-void RadioManagement_SetPaBias();
+void RadioManagement_SetPaBias(void);
 bool RadioManagement_CalculateCWSidebandMode(void);
 void RadioManagement_SetDemodMode(uint8_t new_mode);
-void RadioManagement_HandleRxIQSignalCodecGain();
+void RadioManagement_HandleRxIQSignalCodecGain(void);
 const cw_mode_map_entry_t* RadioManagement_CWConfigValueToModeEntry(uint8_t cw_offset_mode);
 uint8_t RadioManagement_CWModeEntryToConfigValue(const cw_mode_map_entry_t* mode_entry);
 bool RadioManagement_UsesBothSidebands(uint16_t dmod_mode);
 bool RadioManagement_IsPowerFactorReduce(uint32_t freq);
-bool RadioManagement_UsesTxSidetone();
-void RadioManagement_ToggleVfoAB();
+bool RadioManagement_UsesTxSidetone(void);
+void RadioManagement_ToggleVfoAB(void);
 
-bool RadioManagement_FmDevIs5khz();
+bool RadioManagement_FmDevIs5khz(void);
 void RadioManagement_FmDevSet5khz(bool is5khz);
 
-uint32_t RadioManagement_GetTXDialFrequency();
-uint32_t RadioManagement_GetRXDialFrequency();
-int32_t  RadioManagement_GetCWDialOffset();
+uint32_t RadioManagement_GetTXDialFrequency(void);
+uint32_t RadioManagement_GetRXDialFrequency(void);
+int32_t  RadioManagement_GetCWDialOffset(void);
 
-bool     RadioManagement_Transverter_IsEnabled();
+bool     RadioManagement_Transverter_IsEnabled(void);
 uint64_t RadioManagement_Transverter_GetFreq(const uint32_t dial_freq, const uint8_t trx_mode);
 
 
-void RadioManagement_Request_TxOn();
-void RadioManagement_Request_TxOff();
+void RadioManagement_Request_TxOn(void);
+void RadioManagement_Request_TxOff(void);
 
-bool RadioManagement_SwitchTxRx_Possible();
+bool RadioManagement_SwitchTxRx_Possible(void);
 bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode);
 
 inline void RadioManagement_ToggleVfoMem()

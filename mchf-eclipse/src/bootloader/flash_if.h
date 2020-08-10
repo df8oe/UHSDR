@@ -67,9 +67,9 @@ static inline uint32_t flashIf_userFlashSize()  {  return ((STM32_GetFlashSize()
 
 /* Exported macros -----------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void flashIf_FlashUnlock();
-void flashIf_FlashLock();
-FlagStatus flashIf_ReadOutProtectionStatus();
+void flashIf_FlashUnlock(void);
+void flashIf_FlashLock(void);
+FlagStatus flashIf_ReadOutProtectionStatus(void);
 uint32_t flashIf_EraseSectors(uint32_t Address, uint32_t Length);
 HAL_StatusTypeDef flashIf_Program256Bit(uint32_t Address, uint32_t Data[8]);
 

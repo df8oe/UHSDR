@@ -19,20 +19,20 @@
 
 void    AudioManagement_CalcIqPhaseGainAdjust(float32_t freq);
 
-void    AudioManagement_CalcTxCompLevel();
-void    AudioManagement_CalcNB_AGC();
-void    AudioManagement_CalcAGCVals();
-void    AudioManagement_CalcRFGain();
-void    AudioManagement_CalcALCDecay();
-void    AudioManagement_CalcAGCDecay();
+void    AudioManagement_CalcTxCompLevel(void);
+void    AudioManagement_CalcNB_AGC(void);
+void    AudioManagement_CalcAGCVals(void);
+void    AudioManagement_CalcRFGain(void);
+void    AudioManagement_CalcALCDecay(void);
+void    AudioManagement_CalcAGCDecay(void);
 void    AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode);
 
-void    AudioManagement_LoadToneBurstMode();
+void    AudioManagement_LoadToneBurstMode(void);
 void    AudioManagement_CalcSubaudibleGenFreq(float32_t freq);        // load/set current FM subaudible tone settings for generation
 void    AudioManagement_CalcSubaudibleDetFreq(float32_t freq);
 
-void    AudioManagement_KeyBeep();
-void    AudioManagement_KeyBeepPrepare();
+void    AudioManagement_KeyBeep(void);
+void    AudioManagement_KeyBeepPrepare(void);
 
 #define IQ_BALANCE_OFF  -128 // Minimum setting for IQ balance
 #define IQ_BALANCE_MAX  127 // Maximum setting for IQ balance

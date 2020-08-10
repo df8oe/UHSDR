@@ -17,10 +17,10 @@
 
 #include "osc_interface.h"
 
-void 	Si570_Init();
+void 	Si570_Init(void);
 
 // non-critical device information reading
-float32_t   Si570_GetStartupFrequency();
-uint8_t     Si570_GetI2CAddress();
+float32_t   Si570_GetStartupFrequency(void);
+uint8_t     Si570_GetI2CAddress(void);
 
 #endif

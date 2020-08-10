@@ -51,8 +51,8 @@ typedef struct {
 typedef struct
 {
 	UiArea_t region;
-	void (*function_short_press)();
-	void (*function_long_press)();
+	void (*function_short_press)(void);
+	void (*function_long_press)(void);
 } touchaction_descr_t;
 
 typedef struct

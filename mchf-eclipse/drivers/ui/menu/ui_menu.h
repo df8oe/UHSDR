@@ -34,10 +34,10 @@ void UiMenu_RenderMenu(MenuProcessingMode_t mode);
 
 void UiMenu_RenderChangeItemValue(int16_t pot_diff);
 void UiMenu_RenderChangeItem(int16_t pot_diff);
-void UiMenu_RenderLastScreen();
-void UiMenu_RenderFirstScreen();
-bool UiMenu_RenderNextScreen(); // returns true if screen was changed, i.e. not last screen
-bool UiMenu_RenderPrevScreen(); // returns true if screen was changed, i.e. not first screen
+void UiMenu_RenderLastScreen(void);
+void UiMenu_RenderFirstScreen(void);
+bool UiMenu_RenderNextScreen(void); // returns true if screen was changed, i.e. not last screen
+bool UiMenu_RenderPrevScreen(void); // returns true if screen was changed, i.e. not first screen
 
 
 enum MENU_INFO_ITEM

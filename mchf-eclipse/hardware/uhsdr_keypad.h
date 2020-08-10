@@ -45,22 +45,22 @@ enum
     BUTTON_NOP // used for buttons with no function
 };
 
-void        Keypad_KeypadInit();
+void        Keypad_KeypadInit(void);
 
 #ifdef UI_BRD_MCHF
 // this function invoked only on the MCHF with RTC as they have different buttons layout
-void        Keypad_SetLayoutRTC_MCHF();
+void        Keypad_SetLayoutRTC_MCHF(void);
 #endif
 
 bool        Keypad_IsButtonPressed( uint32_t button_num );
-bool        Keypad_IsAnyButtonPressed();
+bool        Keypad_IsAnyButtonPressed(void);
 bool        Keypad_IsKeyPressed( uint32_t key_num );
-bool        Keypad_IsAnyKeyPressed();
+bool        Keypad_IsAnyKeyPressed(void);
 
-void        Keypad_Scan();
+void        Keypad_Scan(void);
 
-uint32_t    Keypad_KeyStates();
-uint32_t    Keypad_ButtonStates();
+uint32_t    Keypad_KeyStates(void);
+uint32_t    Keypad_ButtonStates(void);
 const char* Keypad_GetLabelOfButton( uint32_t id_button );
 
 #endif

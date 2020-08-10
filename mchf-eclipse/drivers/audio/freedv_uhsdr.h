@@ -98,18 +98,18 @@ typedef struct {
 extern freedv_conf_t freedv_conf;
 
 
-void FreeDv_HandleFreeDv();
-void FreeDV_Init();
+void FreeDv_HandleFreeDv(void);
+void FreeDV_Init(void);
 int32_t FreeDV_SetMode(uint8_t fdv_mode, int32_t firstTime);
-void FreeDV_Test();
+void FreeDV_Test(void);
 
-int32_t FreeDV_Iq_Get_FrameLen();
-int32_t FreeDV_Audio_Get_FrameLen();
+int32_t FreeDV_Iq_Get_FrameLen(void);
+int32_t FreeDV_Audio_Get_FrameLen(void);
 
 
-void FreeDv_DisplayClear();
-void FreeDv_DisplayPrepare();
-void FreeDv_DisplayUpdate();
+void FreeDv_DisplayClear(void);
+void FreeDv_DisplayPrepare(void);
+void FreeDv_DisplayUpdate(void);
 
 int32_t FreeDV_Get_Squelch_SNR(freedv_conf_t* freedv_conf_p);
 void FreeDV_Set_Squelch_SNR(freedv_conf_t* freedv_conf_p, int8_t squelch_snr);

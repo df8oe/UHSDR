@@ -104,12 +104,12 @@ typedef struct
 {
     mchf_display_types_t display_type;
     const char* name;
-    uint16_t (*ReadDisplayId)();
+    uint16_t (*ReadDisplayId)(void);
     void (*SetActiveWindow) (uint16_t XLeft, uint16_t XRight, uint16_t YTop, uint16_t YBottom);
     void (*SetCursorA)( unsigned short Xpos, unsigned short Ypos );
-    void (*WriteRAM_Prepare) ();
-    void (*WriteDataSpiStart_Prepare)();
-    void (*WriteIndexSpi_Prepare)();
+    void (*WriteRAM_Prepare) (void);
+    void (*WriteDataSpiStart_Prepare)(void);
+    void (*WriteIndexSpi_Prepare)(void);
     void (*WriteReg)(unsigned short LCD_Reg, unsigned short LCD_RegValue);
     uint16_t (*ReadReg)( uint16_t LCD_Reg);
     void (*DrawStraightLine)(uint16_t x, uint16_t y, uint16_t Length, uint8_t Direction,uint16_t color);
@@ -134,9 +134,9 @@ typedef struct
     const RegisterValueSetInfo_t* reg_info;
     void (*SetActiveWindow) (uint16_t XLeft, uint16_t XRight, uint16_t YTop, uint16_t YBottom);
     void (*SetCursorA)( unsigned short Xpos, unsigned short Ypos );
-    void (*WriteRAM_Prepare) ();
-    void (*WriteDataSpiStart_Prepare)();
-    void (*WriteIndexSpi_Prepare)();
+    void (*WriteRAM_Prepare) (void);
+    void (*WriteDataSpiStart_Prepare)(void);
+    void (*WriteIndexSpi_Prepare)(void);
     void (*WriteReg)(unsigned short LCD_Reg, unsigned short LCD_RegValue);
     uint16_t (*ReadReg)( uint16_t LCD_Reg);
     void (*DrawStraightLine)(uint16_t x, uint16_t y, uint16_t Length, uint8_t Direction,uint16_t color);
@@ -169,12 +169,12 @@ void 	UiLcdHy28_DrawFullRect (ushort Xpos, ushort Ypos, ushort Height, ushort Wi
 void 	UiLcdHy28_DrawColorPoint(ushort x, ushort y, ushort color);
 
 void    UiLcdHy28_BulkPixel_OpenWrite(ushort x, ushort width, ushort y, ushort height);
-void    UiLcdHy28_BulkPixel_CloseWrite();
+void    UiLcdHy28_BulkPixel_CloseWrite(void);
 void 	UiLcdHy28_BulkPixel_Put(uint16_t pixel);
 void    UiLcdHy28_BulkPixel_PutBuffer(uint16_t* pixel_buffer, uint32_t len);
-void    UiLcdHy28_BulkPixel_BufferFlush();
+void    UiLcdHy28_BulkPixel_BufferFlush(void);
 
-uint8_t 	UiLcdHy28_Init();
+uint8_t 	UiLcdHy28_Init(void);
 
 void    UiLcdHy28_BacklightEnable(bool on);
 
@@ -209,9 +209,9 @@ typedef struct
 
 extern mchf_touchscreen_t mchf_touchscreen;
 
-void    UiLcdHy28_TouchscreenDetectPress();
-void 	UiLcdHy28_TouchscreenReadCoordinates();
-bool    UiLcdHy28_TouchscreenHasProcessableCoordinates();
+void    UiLcdHy28_TouchscreenDetectPress(void);
+void 	UiLcdHy28_TouchscreenReadCoordinates(void);
+bool    UiLcdHy28_TouchscreenHasProcessableCoordinates(void);
 void    UiLcdHy28_TouchscreenInit(uint8_t mirror);
 
 

@@ -46,5 +46,5 @@ typedef struct LoTcxo
 // LO Tcxo
 extern LoTcxo lo;
 
-bool SoftTcxo_HandleLoTemperatureDrift();
-void SoftTcxo_Init();
+bool SoftTcxo_HandleLoTemperatureDrift(void);
+void SoftTcxo_Init(void);

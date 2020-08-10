@@ -39,10 +39,10 @@ typedef enum
 typedef struct
 {
 	// startup handling
-	void  (*init)();
+	void  (*init)(void);
 
 	// presence information
-	bool  (*isPresent)();
+	bool  (*isPresent)(void);
 	// startup/runtime reconfiguration
 	void  (*setPPM)(float32_t ppm);
 
@@ -50,11 +50,11 @@ typedef struct
 	// freq is given in Hz, is QSD mixing frequency,
 	// internally multiplied by 4 for Johnson Counter clock counters if needed by circuit
 	Oscillator_ResultCodes_t (*prepareNextFrequency)(ulong freq, int temp_factor);
-	Oscillator_ResultCodes_t (*changeToNextFrequency)();
-	bool 			  (*isNextStepLarge)();
-	bool              (*readyForIrqCall)();
-	uint32_t    (*getMinFrequency)();
-	uint32_t    (*getMaxFrequency)();
+	Oscillator_ResultCodes_t (*changeToNextFrequency)(void);
+	bool 			  (*isNextStepLarge)(void);
+	bool              (*readyForIrqCall)(void);
+	uint32_t    (*getMinFrequency)(void);
+	uint32_t    (*getMaxFrequency)(void);
     const char*  name;
     const Oscillator_Type_t  type;
 
@@ -62,5 +62,5 @@ typedef struct
 
 extern const OscillatorInterface_t *osc;
 
-void Osc_Init();
+void Osc_Init(void);
 #endif

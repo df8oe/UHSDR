@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 
-int mchfMain();
+int mchfMain(void);
 
 #ifdef __cplusplus
 }

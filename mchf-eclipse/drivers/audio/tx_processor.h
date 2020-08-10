@@ -19,8 +19,8 @@
 #include "uhsdr_types.h"
 #include "audio_driver.h" // for types
 
-void TxProcessor_Init();
+void TxProcessor_Init(void);
 void TxProcessor_Set(uint8_t dmod_mode);
-void TxProcessor_PrepareRun();
+void TxProcessor_PrepareRun(void);
 void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, AudioSample_t * const audioDst, uint16_t blockSize, bool external_mute);
 #endif

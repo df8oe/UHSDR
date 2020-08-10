@@ -16,7 +16,7 @@
 #define __HW_SI5351A
 #include "osc_interface.h"
 
-void Si5351a_Init();
-bool Si5351a_IsPresent();
+void Si5351a_Init(void);
+bool Si5351a_IsPresent(void);
 
 #endif

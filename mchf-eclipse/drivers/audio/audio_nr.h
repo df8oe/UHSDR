@@ -111,10 +111,10 @@ typedef struct
 audio_nr_params_t nr_params;
 
 
-void NR_Init();
+void NR_Init(void);
 
-void AudioNr_Prepare();
-void AudioNr_HandleNoiseReduction();
+void AudioNr_Prepare(void);
+void AudioNr_HandleNoiseReduction(void);
 void AudioNr_ActivateAutoNotch(uint8_t notch1_bin, bool notch1_active);
 
 
@@ -122,18 +122,18 @@ int NR_in_buffer_peek(NR_Buffer** c_ptr);
 int NR_in_buffer_remove(NR_Buffer** c_ptr);
 /* no room left in the buffer returns 0 */
 int NR_in_buffer_add(NR_Buffer* c);
-void NR_in_buffer_reset();
-int8_t NR_in_has_data();
-int32_t NR_in_has_room();
+void NR_in_buffer_reset(void);
+int8_t NR_in_has_data(void);
+int32_t NR_in_has_room(void);
 
 
 int NR_out_buffer_peek(NR_Buffer** c_ptr);
 int NR_out_buffer_remove(NR_Buffer** c_ptr);
 /* no room left in the buffer returns 0 */
 int NR_out_buffer_add(NR_Buffer* c);
-void NR_out_buffer_reset();
-int8_t NR_out_has_data();
-int32_t NR_out_has_room();
+void NR_out_buffer_reset(void);
+int8_t NR_out_has_data(void);
+int32_t NR_out_has_room(void);
 #endif
 
 #endif

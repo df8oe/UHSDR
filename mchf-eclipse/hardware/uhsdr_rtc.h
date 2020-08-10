@@ -18,9 +18,9 @@
 
 #include "rtc.h"
 
-bool Rtc_isEnabled();
-void Rtc_FullReset();
-void Rtc_Start();
+bool Rtc_isEnabled(void);
+void Rtc_FullReset(void);
+void Rtc_Start(void);
 bool Rtc_SetPpm(int16_t ppm);
 void Rtc_GetTime(RTC_HandleTypeDef *hrtc, RTC_TimeTypeDef *sTime, uint32_t Format);
 

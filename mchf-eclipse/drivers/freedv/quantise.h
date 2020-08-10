@@ -53,7 +53,7 @@
 #define LPCPF_GAMMA 0.5
 #define LPCPF_BETA  0.2
 
-void quantise_init();
+void quantise_init(void);
 float lpc_model_amplitudes(float Sn[], float w[], MODEL *model, int order,
 			   int lsp,float ak[]);
 void aks_to_M2(codec2_fftr_cfg fftr_fwd_cfg, float ak[], int order, MODEL *model,

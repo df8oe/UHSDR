@@ -156,8 +156,8 @@ uint8_t  AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint16
 bool     AudioFilter_IsApplicableFilterPath(const uint16_t query, const uint16_t filter_mode, const uint8_t filter_path);
 void     AudioFilter_GetNamesOfFilterPath(uint16_t filter_path,const char** filter_names);
 uint16_t AudioFilter_GetFilterModeFromDemodMode(uint8_t dmod_mode);
-uint8_t  AudioFilter_NextApplicableFilter();
-void     AudioFilter_SetDefaultMemories();
+uint8_t  AudioFilter_NextApplicableFilter(void);
+void     AudioFilter_SetDefaultMemories(void);
 
 
 typedef struct

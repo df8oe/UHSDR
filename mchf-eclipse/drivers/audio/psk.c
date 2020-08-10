@@ -734,7 +734,7 @@ int16_t Psk_Modulator_GenSample()
                         Psk_Modulator_SetState(PSK_MOD_ACTIVE);
                     }
                 }
-                else if (DigiModes_TxBufferHasData(BPSK))
+                else if (DigiModes_TxBufferHasData())
                 {
                     if (DigiModes_TxBufferRemove( &psk_state.tx_char, BPSK ))
                     {

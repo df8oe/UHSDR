@@ -739,15 +739,15 @@ typedef enum {
 
 
 void Board_SetPaBiasValue(uint16_t bias);
-void Board_HandlePowerDown();
+void Board_HandlePowerDown(void);
 
 void Board_SelectLpfBpf(uint8_t group);
 
-void Board_InitMinimal();
-void Board_InitFull();
-void Board_PostInit();
-void Board_Reboot();
-void Board_Powerdown();
+void Board_InitMinimal(void);
+void Board_InitFull(void);
+void Board_PostInit(void);
+void Board_Reboot(void);
+void Board_Powerdown(void);
 
 void Board_EnableTXSignalPath(bool tx_enable);
 
@@ -758,17 +758,17 @@ void Board_RedLed(ledstate_t state);
 void Board_BlueLed(ledstate_t state);
 #endif
 
-bool Board_PttDahLinePressed();
-bool Board_DitLinePressed();
+bool Board_PttDahLinePressed(void);
+bool Board_DitLinePressed(void);
 
-uint32_t Board_RamSizeGet();
-void Board_RamSizeDetection();
-const char* Board_BootloaderVersion();
+uint32_t Board_RamSizeGet(void);
+void Board_RamSizeDetection(void);
+const char* Board_BootloaderVersion(void);
 
 // in main.c
 void CriticalError(uint32_t error);
 
-bool is_vfo_b();
+bool is_vfo_b(void);
 
 static inline bool is_ssb_tx_filter_enabled() {
 	return (ts.tx_filter != 0);
@@ -794,17 +794,17 @@ static inline bool is_waterfallmode()
     return (ts.flags1 & FLAGS1_WFALL_ENABLED) != 0;
 }
 
-bool is_dsp_nb_active();
-bool is_dsp_nb();
-bool is_dsp_nr();
-bool is_dsp_nr_postagc();
-bool is_dsp_notch();
-bool is_dsp_mnotch();
-bool is_dsp_mpeak();
+bool is_dsp_nb_active(void);
+bool is_dsp_nb(void);
+bool is_dsp_nr(void);
+bool is_dsp_nr_postagc(void);
+bool is_dsp_notch(void);
+bool is_dsp_mnotch(void);
+bool is_dsp_mpeak(void);
 
 
 #ifdef USE_PENDSV_FOR_HIGHPRIO_TASKS
-extern void UiDriver_TaskHandler_HighPrioTasks();
+extern void UiDriver_TaskHandler_HighPrioTasks(void);
 #endif
 
 #endif

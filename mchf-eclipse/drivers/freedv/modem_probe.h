@@ -36,7 +36,7 @@
 
 /* Internal functions */
 void modem_probe_init_int(char *modname, char *runname);
-void modem_probe_close_int();
+void modem_probe_close_int(void);
 
 void modem_probe_samp_i_int(char * tracename,int samp[],size_t cnt);
 void modem_probe_samp_f_int(char * tracename,float samp[],size_t cnt);
@@ -55,7 +55,7 @@ static inline void modem_probe_init(char *modname,char *runname){
  * Dump traces to a file and clean up
  */
 static inline void modem_probe_close(){
-        modem_probe_close_int();
+        modem_probe_close_int(void);
 }
 
 /*

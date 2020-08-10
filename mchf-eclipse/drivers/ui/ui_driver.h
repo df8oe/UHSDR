@@ -178,78 +178,78 @@ typedef struct
 // --------------------------------------------------------------------------
 // Exports
 void 	UiDriver_Init(void);
-void 	UiDriver_TaskHandler_MainTasks();
+void 	UiDriver_TaskHandler_MainTasks(void);
 
-void 	UiDriver_CreateTemperatureDisplay();
+void 	UiDriver_CreateTemperatureDisplay(void);
 void 	UiDriver_UpdateFrequency(bool force_update, enum UpdateFrequencyMode_t mode);
 void    UiDriver_FrequencyUpdateLOandDisplay(bool full_update);
-void    UiDriver_RefreshEncoderDisplay();
+void    UiDriver_RefreshEncoderDisplay(void);
 void    UiDriver_DrawFButtonLabel(uint8_t button_num, const char* label, uint32_t label_color) ;
-void 	UiDriver_DisplayFreqStepSize();
+void 	UiDriver_DisplayFreqStepSize(void);
 void 	UiDriver_DisplayDemodMode(void);
 void	UiDriver_LcdBlankingStartTimer(void);
-void    UiDriver_SpectrumChangeLayoutParameters();
+void    UiDriver_SpectrumChangeLayoutParameters(void);
 
 void UiDriver_DebugInfo_DisplayEnable(bool enable);
 
 void UiDriver_ChangeTuningStep(uchar is_up);
-void UiDriver_UpdateDisplayAfterParamChange();
-void UiDriver_UpdateDemodSpecificDisplayAfterParamChange();
+void UiDriver_UpdateDisplayAfterParamChange(void);
+void UiDriver_UpdateDemodSpecificDisplayAfterParamChange(void);
 void UiDriver_SetDemodMode(uint8_t new_mode);
 
-void UiDriver_StartUpScreenInit();
-void UiDriver_StartUpScreenFinish();
+void UiDriver_StartUpScreenInit(void);
+void UiDriver_StartUpScreenFinish(void);
 
 void UiDriver_DoCrossCheck(int16_t cross[]);
-void UiAction_ToggleVfoAB();
+void UiAction_ToggleVfoAB(void);
 void UiDriver_SetSplitMode(bool mode_active);
 
 
 void UiDriver_StartupScreen_LogIfProblem(bool isError, const char* txt);
 
-void UiDriver_BacklightDimHandler();
+void UiDriver_BacklightDimHandler(void);
 
 void UiDriver_TextMsgPutChar(char ch);
 void UiDriver_TextMsgPutSign(const char *s);
-void UiDriver_TextMsgDisplay();
-void UiDriver_TextMsgClear();
-void UiDriver_DisplayFButton_F1MenuExit();
+void UiDriver_TextMsgDisplay(void);
+void UiDriver_TextMsgClear(void);
+void UiDriver_DisplayFButton_F1MenuExit(void);
 
 void UiDriver_SetSpectrumMode(SpectrumMode_t mode);
-SpectrumMode_t UiDriver_GetSpectrumMode();
+SpectrumMode_t UiDriver_GetSpectrumMode(void);
 
 //some exports for layout definitions
-void UiAction_ChangeLowerMeterUp();
-void UiAction_ToggleWaterfallScopeDisplay();
-void UiAction_ChangeSpectrumSize();
-void UiAction_ChangeSpectrumZoomLevelDown();
-void UiAction_ChangeSpectrumZoomLevelUp();
-void UiAction_CheckSpectrumTouchActions();
-void UiAction_ChangeFrequencyToNextKhz();
-void UiAction_ChangeDemodMode();
-void UiAction_ChangePowerLevel();
-void UiAction_ChangeAudioSource();
-void UiAction_ChangeBandDownOrUp();
-void UiAction_ChangeBandUpOrDown();
-void UiAction_ChangeDigitalMode();
-void UiAction_ChangeDynamicTuning();
-void UiAction_ChangeDebugInfoDisplay();
-void UiAction_ChangeRfModPresence();
-void UiAction_ChangeVhfUhfModPresence();
-void UiAction_ChangeFrequencyByTouch();
-void Codec_RestartI2S();
-uint32_t UiDriver_GetActiveDSPFunctions();
+void UiAction_ChangeLowerMeterUp(void);
+void UiAction_ToggleWaterfallScopeDisplay(void);
+void UiAction_ChangeSpectrumSize(void);
+void UiAction_ChangeSpectrumZoomLevelDown(void);
+void UiAction_ChangeSpectrumZoomLevelUp(void);
+void UiAction_CheckSpectrumTouchActions(void);
+void UiAction_ChangeFrequencyToNextKhz(void);
+void UiAction_ChangeDemodMode(void);
+void UiAction_ChangePowerLevel(void);
+void UiAction_ChangeAudioSource(void);
+void UiAction_ChangeBandDownOrUp(void);
+void UiAction_ChangeBandUpOrDown(void);
+void UiAction_ChangeDigitalMode(void);
+void UiAction_ChangeDynamicTuning(void);
+void UiAction_ChangeDebugInfoDisplay(void);
+void UiAction_ChangeRfModPresence(void);
+void UiAction_ChangeVhfUhfModPresence(void);
+void UiAction_ChangeFrequencyByTouch(void);
+void Codec_RestartI2S(void);
+uint32_t UiDriver_GetActiveDSPFunctions(void);
 void UiDriver_UpdateDSPmode(uint8_t new_dsp_mode);
 bool UiDriver_CheckTouchRegion(const UiArea_t* tr_p);
 void UiDriver_Power2String(char* txt, size_t txt_len,uint32_t power_mW);
 
-uint32_t UiDriver_GetNBColor();
+uint32_t UiDriver_GetNBColor(void);
 
-void UiDriver_InitBandSet();
+void UiDriver_InitBandSet(void);
 void UiDriver_SelectBandMemory(uint16_t vfo_sel, uint8_t new_band_index);
 
 
-void UiDriver_Callback_AudioISR();
+void UiDriver_Callback_AudioISR(void);
 
 // Items that are timed using ts.sysclock (operates at 100 Hz)
 //
