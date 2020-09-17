@@ -272,6 +272,7 @@ void TransceiverStateInit(void)
 
     ts.band_effective = NULL;   // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
     ts.ATT_Gain=0;              //additional attenuator or amplifier gain value to be used in real dbm calculation.
+    ts.TX_at_zeroIF=0;          //set default state of TX IF to setting same as for RX (except for digi modes which most of use zero IF TX anyway)
 
     //setting to default RFboard structure. The specific hardware setting must be done in hardware init.
     RFboard.AMP_ATT_getCurrent=NULL;

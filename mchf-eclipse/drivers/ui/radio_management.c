@@ -610,7 +610,8 @@ bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode)
                             || is_demod_rtty()
 #endif
                     )
-                )
+                ) ||
+                ts.TX_at_zeroIF
              );
 }
 uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t txrx_mode)

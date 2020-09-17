@@ -3552,6 +3552,21 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         }
         break;
 #endif
+        case CONFIG_DUC_DAC_TYPE:
+            if(SParkle_IsPresent())
+            {
+                uint8_t dac_type=SParkle_GetDacType();
+                UiDriverMenuItemChangeUInt8(var, mode, &dac_type,
+                                            0,
+                                            1,
+                                            0,
+                                            1
+                                            );
+                txt_ptr=dac_type==SParkleDacType_clone?"  clone":"genuine";
+                SParkle_SetDacType(dac_type);
+            }
+            break;
+
         case CONFIG_RESET_SER_EEPROM:
         if(SerialEEPROM_24xx_Exists() == false)
         {

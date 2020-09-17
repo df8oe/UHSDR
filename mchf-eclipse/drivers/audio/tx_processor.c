@@ -989,7 +989,7 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     {
         bool runFilter = (ts.flags1 & FLAGS1_SSB_TX_FILTER_DISABLE) == false;
         TxProcessor_PrepareVoice(adb.a_buffer[0], src, blockSize, SSB_ALC_GAIN_CORRECTION, runFilter);
-        signal_active = TxProcessor_SSB(adb.a_buffer[0], &adb.iq_buf, blockSize, AudioDriver_GetTranslateFreq(), dmod_mode == DEMOD_LSB);
+        signal_active = TxProcessor_SSB(adb.a_buffer[0], &adb.iq_buf, blockSize, ts.TX_at_zeroIF==0?AudioDriver_GetTranslateFreq():0, dmod_mode == DEMOD_LSB);
         iq_gain_comp = SSB_GAIN_COMP;
     }
     else if(dmod_mode == DEMOD_AM)
@@ -999,7 +999,7 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
         {
             bool runFilter = (ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE) == false;
             TxProcessor_PrepareVoice(adb.a_buffer[0], src, blockSize, AM_ALC_GAIN_CORRECTION, runFilter);
-            signal_active = TxProcessor_AM(adb.a_buffer[0], &adb.iq_buf, blockSize, AudioDriver_GetTranslateFreq());
+            signal_active = TxProcessor_AM(adb.a_buffer[0], &adb.iq_buf, blockSize,  ts.TX_at_zeroIF==0?AudioDriver_GetTranslateFreq():0);
             iq_gain_comp = AM_GAIN_COMP;
         }
     }
@@ -1009,7 +1009,7 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
         if (iq_freq_mode)
         {
             TxProcessor_PrepareVoice(adb.a_buffer[0], src, blockSize, FM_ALC_GAIN_CORRECTION, true);
-            signal_active = TxProcessor_FM(adb.a_buffer, &adb.iq_buf, blockSize, AudioDriver_GetTranslateFreq());
+            signal_active = TxProcessor_FM(adb.a_buffer, &adb.iq_buf, blockSize,  ts.TX_at_zeroIF==0?AudioDriver_GetTranslateFreq():0);
             iq_gain_comp = FM_MOD_AMPLITUDE_SCALING;
         }
     }

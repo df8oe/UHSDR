@@ -125,7 +125,7 @@ enum
                                         //And the true maximum is defined above in TX_POWER_FACTOR_MAX_INTERNAL
 #ifdef USE_OSC_SParkle
 #define TX_POWER_FACTOR_MIN_DUC 1
-#define TX_POWER_FACTOR_MAX_DUC_INTERNAL 0.95   //power limit for fpga processing
+#define TX_POWER_FACTOR_MAX_DUC_INTERNAL 0.55   //power limit for fpga processing
 #define TX_POWER_FACTOR_MAX_DUC (TX_POWER_FACTOR_MAX_DUC_INTERNAL*400)
 #endif
 //
@@ -715,6 +715,7 @@ typedef struct TransceiverState
 
     uint8_t DisableTCXOdisplay; //permanent disable of TCXO display (some trx do not use it anyway)
     int8_t ATT_Gain;            //value of amplification (positive) or attenuation (negative) of receiver path. This is setting for available hardware.
+    bool TX_at_zeroIF;          //permanent disable frequency shift for TX
 
 } TransceiverState;
 
