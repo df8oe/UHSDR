@@ -13,10 +13,12 @@
  ************************************************************************************/
 #include "main.h"
 #include "uhsdr_board.h"
-#ifdef USE_OSC_SParkle
-
 #include <math.h>
 #include "osc_SParkle.h"
+
+SParkleState_t SParkleState;
+#ifdef USE_OSC_SParkle
+
 #include <spi.h>
 #include "uhsdr_hw_i2c.h"
 
@@ -59,7 +61,7 @@ extern DMA_HandleTypeDef hdma_sai2_b;
 #define DDCboard_REG_STAT 0
 #define DDCboard_REG_CTRL 1
     #define DDCboard_REG_CTRL_SAIen     (1<<0)  //enable SAI outputs in FPGA
-    #define DDCboard_REG_CTRL_SAITEST   (1<<1)  //test pattern for receiver (FPGA transmits: L:0x12345678 R:0x90123456 on its SAI output)
+    #define DDCboard_REG_CTRL_SAITEST   (1<<1)  //test pattern for receiver (FPGA transmits: L:0x12345678 R:0x90123456 on its SAI output, increment on DAC output)
     #define DDCboard_REG_CTRL_RCV1revIQ (1<<2)  //exchange Receiver1 IQ (when working in even Nyquist Zone)
     #define DDCboard_REG_CTRL_AMP1      (1<<3)  //20dB ADC amplifier on off signal
     #define DDCboard_REG_CTRL_LNA       (1<<4)  //26dB 10m> LNA on off signal
@@ -70,8 +72,8 @@ extern DMA_HandleTypeDef hdma_sai2_b;
         #define DDCboard_REG_CTRL_ADCFLTR_4mBPF (1<<7)  //RX/TX ADC filter mux,0 or 2=2m BPF, 1=4m BPF, 3=52MHz LPF
         #define DDCboard_REG_CTRL_ADCFLTR_LPF   (0<<7)  //RX/TX ADC filter mux,0 or 2=2m BPF, 1=4m BPF, 3=52MHz LPF
 #define DDCboard_REG_CTRL_AdcRes (1<<9)
-#define DDCboard_REG_CTRL_RevDAC (1<<10)
-#define DDCboard_REG_CTRL_AttDAC (1<<11)    //shifts two bits down the aoutput amplitude (attenuate by 12dB for f<144MHz to compensate 3rd alias attenuation)
+#define DDCboard_REG_CTRL_RevDAC (1<<10)    //if set, turns on the chinese clone fault by not proper handling of U2 data
+#define DDCboard_REG_CTRL_AttDAC (1<<11)    //shifts two bits down the output amplitude (attenuate by 12dB for f<144MHz to compensate 3rd alias attenuation)
 #define DDCboard_REG_CTRL_LED2  (1<<15)
 
 #define DDCboard_REG_RXfreq     2
@@ -97,8 +99,6 @@ extern DMA_HandleTypeDef hdma_sai2_b;
 //Attenuator SPI address
 #define Att_RX 2
 #define Att_TX 3
-
-SParkleState_t SParkleState;
 
 enum {
     att_30=0,
@@ -699,8 +699,24 @@ static int8_t osc_SParkle_ATTsetPrev(void)
     osc_SParkle_CheckMaxATT();
     return att_table[SParkleState.RX_amp_idx];
 }
+bool SParkle_GetDacType(void)
+{
+    return (SParkleState.DDC_RegConfig&DDCboard_REG_CTRL_RevDAC)!=0;
+}
 
-void osc_SParkle_Init()
+void SParkle_SetDacType(bool DacType)
+{
+    if(DacType)
+    {
+        SParkle_UpdateConfig(DDCboard_REG_CTRL_RevDAC,ENABLE);
+    }
+    else
+    {
+        SParkle_UpdateConfig(DDCboard_REG_CTRL_RevDAC,DISABLE);
+    }
+}
+
+void osc_SParkle_Init(void)
 {
     SParkleState.current_frequency = 0;
     SParkleState.next_frequency = 0;
@@ -747,6 +763,9 @@ void osc_SParkle_Init()
         ts.DisableTCXOdisplay=1;    //disable the tcxo field in layout
         SParkleState.RX_amp_idx=att_off;
         ts.ATT_Gain=att_table[SParkleState.RX_amp_idx];  //enable display of attenuation/amplification control
+        ts.TX_at_zeroIF=1;      //DUC input interpolating FIR filter has roll off around 12kHz causing -12kHz USB and +12kHz LSB not being transmitted, so there is a must for transmit at zero if
+                                //TODO: proof that FM/SAM transmit works as expected
+
     }
 
     osc = SParkle_IsPresent()?&osc_SParkle_DDC:NULL;
