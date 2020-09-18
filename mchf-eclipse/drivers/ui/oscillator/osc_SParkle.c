@@ -15,6 +15,7 @@
 #include "uhsdr_board.h"
 #include <math.h>
 #include "osc_SParkle.h"
+#include "radio_management.h"
 
 SParkleState_t SParkleState;
 #ifdef USE_OSC_SParkle
@@ -734,6 +735,7 @@ void osc_SParkle_Init(void)
         RFboard.AMP_ATT_getCurrent=osc_SParkle_ATTgetCurrent;
         RFboard.AMP_ATT_next=osc_SParkle_ATTsetNext;
         RFboard.AMP_ATT_prev=osc_SParkle_ATTsetPrev;
+        RadioManagement_Init_SParklePA();
 
         SParkle_ConfigureSAI();
         SParkle_UpdateConfig(DDCboard_REG_CTRL_SAIen | DDCboard_REG_CTRL_AdcRes | DDCboard_REG_CTRL_AMP1 | DDCboard_REG_CTRL_LED2 | DDCboard_REG_CTRL_RevDAC,ENABLE);   //enable MCLK, Reset ADC to default state

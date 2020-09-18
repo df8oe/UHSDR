@@ -3511,10 +3511,12 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                                   PA_LEVEL_TUNE_KEEP_CURRENT,
                                                   1);
 
-            if (ts.tune_power_level < mchf_power_levelsInfo.count)
+            //if (ts.tune_power_level < mchf_power_levelsInfo.count)
+            if (ts.tune_power_level < RFboard.power_levelsInfo->count)
             {
                 char txt[5];
-                UiDriver_Power2String(txt,sizeof(txt),mchf_power_levelsInfo.levels[ts.tune_power_level].mW);
+                //UiDriver_Power2String(txt,sizeof(txt),mchf_power_levelsInfo.levels[ts.tune_power_level].mW);
+                UiDriver_Power2String(txt,sizeof(txt),RFboard.power_levelsInfo->levels[ts.tune_power_level].mW);
                 snprintf(options,32,"       %s",txt);
             }
             else
@@ -3559,6 +3561,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         }
         break;
 #endif
+#ifdef USE_OSC_SParkle
         case CONFIG_DUC_DAC_TYPE:
             if(SParkle_IsPresent())
             {
@@ -3573,7 +3576,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                 SParkle_SetDacType(dac_type);
             }
             break;
-
+#endif
         case CONFIG_RESET_SER_EEPROM:
         if(SerialEEPROM_24xx_Exists() == false)
         {

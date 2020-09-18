@@ -1933,7 +1933,8 @@ static void UiDriver_DrawPowerMeterLabels()
     const uint16_t y_pos = (ts.Layout->SM_IND.y + 5);
     const uint16_t x_pos = (ts.Layout->SM_IND.x + 18);
 
-    const int32_t maxW = ((mchf_pa.max_power > 5000) ? mchf_pa.max_power : 5000)  / 1000;
+    //const int32_t maxW = ((mchf_pa.max_power > 5000) ? mchf_pa.max_power : 5000)  / 1000;
+    const int32_t maxW = ((RFboard.pa_info->max_power > 5000) ? RFboard.pa_info->max_power : 5000)  / 1000;
 
     // get the pwr increment in next integer number of 0.5W steps
     const float32_t PWR_INCR = (maxW % 5 == 0)? (maxW/10.0) : (maxW/5+1)/2.0  ; //.
@@ -6381,7 +6382,8 @@ static void UiAction_ChangeDemodModeToAlternativeMode()
 void UiAction_ChangePowerLevel()
 {
     uint8_t pl = ts.power_level;
-    incr_wrap_uint8(&pl,0,mchf_power_levelsInfo.count-1);
+    //incr_wrap_uint8(&pl,0,mchf_power_levelsInfo.count-1);
+    incr_wrap_uint8(&pl,0,RFboard.power_levelsInfo->count-1);
 	UiDriver_HandlePowerLevelChange(ts.band_effective, pl);
 
 }

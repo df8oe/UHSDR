@@ -129,6 +129,19 @@ typedef struct
 
 extern const pa_info_t mchf_pa;
 
+//definition of specific RF hardware features
+typedef int8_t (*hRFb_RXATT)(void);
+
+typedef struct {
+    hRFb_RXATT AMP_ATT_prev;
+    hRFb_RXATT AMP_ATT_next;
+    hRFb_RXATT AMP_ATT_getCurrent;
+
+    const pa_power_levels_info_t* power_levelsInfo;
+    const pa_info_t* pa_info;
+} HardwareRFBoard;
+
+extern __IO HardwareRFBoard RFboard;
 
 #define PA_LEVEL_DEFAULT        PA_LEVEL_MEDIUM     // Default power level
 
@@ -371,6 +384,11 @@ void RadioManagement_Request_TxOff(void);
 
 bool RadioManagement_SwitchTxRx_Possible(void);
 bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode);
+
+void RadioManagement_Init_RFboardPA(void);
+#ifdef USE_OSC_SParkle
+void RadioManagement_Init_SParklePA(void);
+#endif
 
 inline void RadioManagement_ToggleVfoMem()
 {

@@ -40,10 +40,6 @@
 // Transceiver state public structure
 __IO __MCHF_SPECIALMEM TransceiverState ts;
 
-//specyfic hardware features structure
-__IO __MCHF_SPECIALMEM HardwareRFBoard RFboard;
-
-
 static void Board_Led_Init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;

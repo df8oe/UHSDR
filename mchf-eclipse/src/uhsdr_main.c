@@ -326,6 +326,8 @@ void TransceiverStateInit(void)
     RFboard.AMP_ATT_getCurrent=NULL;
     RFboard.AMP_ATT_next=NULL;
     RFboard.AMP_ATT_prev=NULL;
+
+    RadioManagement_Init_RFboardPA();
 }
 
 // #include "Trace.h"

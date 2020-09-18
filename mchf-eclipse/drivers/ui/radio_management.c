@@ -217,6 +217,9 @@ BandInfo_c **bandInfo = bandInfo_combined;
 
 uint8_t bandinfo_idx; // default init with 0 is fine
 
+//specyfic hardware features structure
+__IO __MCHF_SPECIALMEM HardwareRFBoard RFboard;
+
 /**
  * Searches the band info for a given band memory index
  * This relieves us from ordering the vfo band memories exactly like the
@@ -282,7 +285,33 @@ const pa_info_t mchf_pa =
 };
 #endif // LAPWING
 
+#ifdef USE_OSC_SParkle
+// this structure MUST match the order of entries in power_level_t !
+static const power_level_desc_t SParkle_rf_power_levels[] =
+{
+        { .id = PA_LEVEL_FULL,   .mW = 0,    }, // we use 0 to indicate max power
+        { .id = PA_LEVEL_HIGH,   .mW = 50000, },
+        { .id = PA_LEVEL_MEDIUM, .mW = 10000, },
+        { .id = PA_LEVEL_LOW,    .mW = 1000, },
+        { .id = PA_LEVEL_MINIMAL,.mW =  500, },
+};
 
+const pa_power_levels_info_t SParkle_power_levelsInfo =
+{
+        .levels = SParkle_rf_power_levels,
+        .count = sizeof(SParkle_rf_power_levels)/sizeof(*SParkle_rf_power_levels),
+};
+
+const pa_info_t SParkle_pa =
+{
+        .name  = "SParkle PA",
+        .reference_power = 10000.0,
+        .max_freq = 150000000,
+        .min_freq =  1800000,
+        .max_am_power = 25000,
+        .max_power = 50000,
+};
+#endif
 
 // The following descriptor table has to be in the order of the enum digital_modes_t in  radio_management.h
 // This table is stored in flash (due to const) and cannot be written to
@@ -446,7 +475,8 @@ bool RadioManagement_SetPowerLevel(const BandInfo* band, power_level_t power_lev
     bool retval = false;
     bool power_modified = false;
 
-    int32_t power = power_level < mchf_power_levelsInfo.count ? mchf_power_levelsInfo.levels[power_level].mW : -1;
+    //int32_t power = power_level < mchf_power_levelsInfo.count ? mchf_power_levelsInfo.levels[power_level].mW : -1;
+    int32_t power = power_level < RFboard.power_levelsInfo->count ? RFboard.power_levelsInfo->levels[power_level].mW : -1;
 
     if (power != -1 && band != NULL)
     {
@@ -1944,3 +1974,17 @@ uint64_t RadioManagement_Transverter_GetFreq(const uint32_t dial_freq, const uin
 
     return dial_freq * ts.xverter_mode + offset_offset * offset_multiplier;
 }
+
+void RadioManagement_Init_RFboardPA(void)
+{
+    RFboard.pa_info=&mchf_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
+    RFboard.power_levelsInfo=&mchf_power_levelsInfo;
+}
+
+#ifdef USE_OSC_SParkle
+void RadioManagement_Init_SParklePA(void)
+{
+    RFboard.pa_info=&SParkle_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
+    RFboard.power_levelsInfo=&SParkle_power_levelsInfo;
+}
+#endif
