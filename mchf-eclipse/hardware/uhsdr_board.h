@@ -721,18 +721,6 @@ typedef struct TransceiverState
 
 extern __IO TransceiverState ts;
 
-//definition of specific RF hardware features
-typedef int8_t (*hRFb_RXATT)(void);
-
-typedef struct {
-    hRFb_RXATT AMP_ATT_prev;
-    hRFb_RXATT AMP_ATT_next;
-    hRFb_RXATT AMP_ATT_getCurrent;
-
-} HardwareRFBoard;
-
-extern __IO HardwareRFBoard RFboard;
-
 #define	POWERDOWN_DELAY_COUNT	30	// Delay in main service loop for the "last second" before power-down - to allow EEPROM write to complete
 
 //#define CODEC_USE_SPI
