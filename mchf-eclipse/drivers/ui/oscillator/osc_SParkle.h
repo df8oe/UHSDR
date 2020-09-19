@@ -16,9 +16,14 @@
 #define UI_OSCILLATOR_OSC_SPARKLE_H_
 
 
+#define EEPROM_SParkleFLAG_DACtype 0x0001
+#define EEPROM_SParkleFLAGS_MASK 0x0001
+#define EEPROM_SParkleFLAGS_DEFAULT 0x0000
+
 typedef struct
 {
     bool is_present;
+    uint16_t EEPROM_Flags;
 #ifdef USE_OSC_SParkle
     uint8_t version_major;
     uint8_t version_minor;
@@ -41,6 +46,7 @@ typedef struct
 
 extern SParkleState_t SParkleState;
 
+#ifdef USE_OSC_SParkle
 #define oscDDC_f_sample 122880000
 #define SParkleStat_BaseBoardPresent 0x01
 
@@ -53,5 +59,7 @@ void osc_SParkle_Init(void);
 bool SParkle_SetTXpower(float32_t pf);
 void SParkle_SetDacType(bool DacType);
 bool SParkle_GetDacType(void);
+void SParkle_ConfigurationInit(void);
+#endif
 
 #endif /* UI_OSCILLATOR_OSC_SPARKLE_H_ */

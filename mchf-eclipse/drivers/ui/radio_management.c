@@ -408,7 +408,8 @@ float32_t RadioManagement_CalculatePowerFactorScale(float32_t powerMw)
     float32_t retval = 1.0;
     if (powerMw > 0)
     {
-        retval = sqrtf(powerMw / mchf_pa.reference_power);
+        //retval = sqrtf(powerMw / mchf_pa.reference_power);
+        retval = sqrtf(powerMw / RFboard.pa_info->reference_power);
     }
     return retval;
 }
@@ -525,13 +526,16 @@ bool RadioManagement_SetPowerLevel(const BandInfo* band, power_level_t power_lev
 
         if(ts.dmod_mode == DEMOD_AM)                // in AM mode?
         {
-            if(power > mchf_pa.max_am_power || power == 0)     // yes, power over am limits?
+            //if(power > mchf_pa.max_am_power || power == 0)     // yes, power over am limits?
+            if(power > RFboard.pa_info->max_am_power || power == 0)     // yes, power over am limits?
             {
-                power = mchf_pa.max_am_power;  // force to keep am limits
+                //power = mchf_pa.max_am_power;  // force to keep am limits
+                power = RFboard.pa_info->max_am_power;  // force to keep am limits
                 power_modified = true;
             }
         }
-        else if(power > mchf_pa.reference_power)
+        //else if(power > mchf_pa.reference_power)
+        else if(power > RFboard.pa_info->reference_power)
         {
             power = 0; //  0 == full power
             power_level = PA_LEVEL_FULL;

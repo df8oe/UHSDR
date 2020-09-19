@@ -276,6 +276,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
 	{ ConfigEntry_UInt16, EEPROM_EXPFLAGS1,&ts.expflags1,EXPFLAGS1_CONFIG_DEFAULT,0,0xffff},
 	{ ConfigEntry_UInt16, EEPROM_CW_DECODER_FLAGS,&cw_decoder_config.flags,CW_DECODER_FLAGS_DEFAULT,0,0x7fff},
     { ConfigEntry_UInt8, EEPROM_BAND_REGION, &bandinfo_idx, BAND_INFO_SET_DEFAULT, 0, 0x7f}, // we need to validate the range later as we cannot do it here due to C shortcomings
+	{ ConfigEntry_UInt16, EEPROM_SParkleFLAGS,&SParkleState.EEPROM_Flags,EEPROM_SParkleFLAGS_DEFAULT,0,0xffff},
 	
     // the entry below MUST be the last entry, and only at the last position Stop is allowed
     {
