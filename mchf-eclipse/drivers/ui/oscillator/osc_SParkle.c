@@ -710,11 +710,20 @@ void SParkle_SetDacType(bool DacType)
     if(DacType)
     {
         SParkle_UpdateConfig(DDCboard_REG_CTRL_RevDAC,ENABLE);
+        SParkleState.EEPROM_Flags|=EEPROM_SParkleFLAG_DACtype;
     }
     else
     {
         SParkle_UpdateConfig(DDCboard_REG_CTRL_RevDAC,DISABLE);
+        SParkleState.EEPROM_Flags&=~EEPROM_SParkleFLAG_DACtype;
     }
+
+}
+//this raoutine is called after eeprom read
+void SParkle_ConfigurationInit(void)
+{
+    SParkle_UpdateConfig(DDCboard_REG_CTRL_RevDAC,(SParkleState.EEPROM_Flags&EEPROM_SParkleFLAG_DACtype)==0?DISABLE:ENABLE);
+    SParkleState.EEPROM_Flags&=EEPROM_SParkleFLAGS_MASK;
 }
 
 void osc_SParkle_Init(void)
@@ -728,17 +737,17 @@ void osc_SParkle_Init(void)
     SParkleState.current_RX_amp_idx=255;
 
     SParkleState.is_present = SParkle_CheckPresence();
-    SParkleState.DDC_RegConfig=DDCboard_REG_CTRL_AMP1;
 
     if (SParkleState.is_present)
     {
+        SParkleState.DDC_RegConfig=DDCboard_REG_CTRL_AMP1;
         RFboard.AMP_ATT_getCurrent=osc_SParkle_ATTgetCurrent;
         RFboard.AMP_ATT_next=osc_SParkle_ATTsetNext;
         RFboard.AMP_ATT_prev=osc_SParkle_ATTsetPrev;
         RadioManagement_Init_SParklePA();
 
         SParkle_ConfigureSAI();
-        SParkle_UpdateConfig(DDCboard_REG_CTRL_SAIen | DDCboard_REG_CTRL_AdcRes | DDCboard_REG_CTRL_AMP1 | DDCboard_REG_CTRL_LED2 | DDCboard_REG_CTRL_RevDAC,ENABLE);   //enable MCLK, Reset ADC to default state
+        SParkle_UpdateConfig(DDCboard_REG_CTRL_SAIen | DDCboard_REG_CTRL_AdcRes | DDCboard_REG_CTRL_AMP1 | DDCboard_REG_CTRL_LED2,ENABLE);   //enable MCLK, Reset ADC to default state
         SParkle_UpdateConfig(DDCboard_REG_CTRL_AdcRes,DISABLE);
 
         SParkle_UpdateConfig(DDCboard_REG_CTRL_ADCFLTR_LPF | DDCboard_REG_CTRL_RXANT | DDCboard_REG_CTRL_TXANT,ENABLE);

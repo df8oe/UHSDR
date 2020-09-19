@@ -3574,6 +3574,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                             );
                 txt_ptr=dac_type==SParkleDacType_clone?"  clone":"genuine";
                 SParkle_SetDacType(dac_type);
+                ts.menu_var_changed = true;
             }
             break;
 #endif

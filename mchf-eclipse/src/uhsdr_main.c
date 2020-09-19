@@ -402,7 +402,11 @@ int mchfMain(void)
 
 	profileTimedEventInit();
 #ifdef USE_OSC_SParkle
-    if(!SParkle_IsPresent())
+    if(SParkle_IsPresent())
+    {
+        SParkle_ConfigurationInit();
+    }
+    else
 #endif
     {
 #ifdef USE_HMC1023

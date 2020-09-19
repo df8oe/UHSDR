@@ -380,7 +380,8 @@ float32_t RadioManagement_CalculatePowerFactorScale(float32_t powerMw)
     float32_t retval = 1.0;
     if (powerMw > 0)
     {
-        retval = sqrtf(powerMw / mchf_pa.reference_power);
+        //retval = sqrtf(powerMw / mchf_pa.reference_power);
+        retval = sqrtf(powerMw / RFboard.pa_info->reference_power);
     }
     return retval;
 }
@@ -497,13 +498,16 @@ bool RadioManagement_SetPowerLevel(const BandInfo* band, power_level_t power_lev
 
         if(ts.dmod_mode == DEMOD_AM)                // in AM mode?
         {
-            if(power > mchf_pa.max_am_power || power == 0)     // yes, power over am limits?
+            //if(power > mchf_pa.max_am_power || power == 0)     // yes, power over am limits?
+            if(power > RFboard.pa_info->max_am_power || power == 0)     // yes, power over am limits?
             {
-                power = mchf_pa.max_am_power;  // force to keep am limits
+                //power = mchf_pa.max_am_power;  // force to keep am limits
+                power = RFboard.pa_info->max_am_power;  // force to keep am limits
                 power_modified = true;
             }
         }
-        else if(power > mchf_pa.reference_power)
+        //else if(power > mchf_pa.reference_power)
+        else if(power > RFboard.pa_info->reference_power)
         {
             power = 0; //  0 == full power
             power_level = PA_LEVEL_FULL;
@@ -788,7 +792,8 @@ Oscillator_ResultCodes_t RadioManagement_ValidateFrequencyForTX(uint32_t dial_fr
     bool osc_ok = osc_res == OSC_OK || osc_res == OSC_TUNE_LIMITED;
 	
 	// we also check if our PA is able to support this frequency
-    bool pa_ok = dial_freq >= mchf_pa.min_freq && dial_freq <= mchf_pa.max_freq;
+    //bool pa_ok = dial_freq >= mchf_pa.min_freq && dial_freq <= mchf_pa.max_freq;
+    bool pa_ok = dial_freq >= RFboard.pa_info->min_freq && dial_freq <= RFboard.pa_info->max_freq;
 
     return pa_ok && osc_ok ? osc_res: OSC_TUNE_IMPOSSIBLE;
 }
