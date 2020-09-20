@@ -172,6 +172,8 @@
 #define USE_OSC_SI570
 // Support for LO based on SI5351
 #define USE_OSC_SI5351A
+// Support for DUC/DDC board
+#define USE_OSC_DUCDDC
 
 // OPTION TO USE FLASH BASED CONFIGURATION STORAGE
 #define USE_CONFIGSTORAGE_FLASH
@@ -241,7 +243,7 @@
 
 //******************************CONFIGURATION_LOGIC_CHECKS************************************//
 
-#if !defined(USE_OSC_SI570) && !defined(USE_OSC_SI5351A)
+#if !defined(USE_OSC_SI570) && !defined(USE_OSC_SI5351A) && !defined(USE_OSC_DUCDDC)
     #error At least one of supported oscillators should be enabled.
 #endif
 
