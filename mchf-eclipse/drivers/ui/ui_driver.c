@@ -26,7 +26,6 @@
 #include "ui_menu.h"
 #include "uhsdr_rtc.h"
 #include "adc.h"
-#include "drivers/ui/oscillator/osc_si5351a.h"
 #include "audio_nr.h"
 #include "uhsdr_keypad.h"
 #include "serial_eeprom.h"
@@ -78,9 +77,6 @@ static void 	UiDriver_DrawSMeter(ushort color);
 //
 static void 	UiDriver_UpdateTopMeterA(uchar val);
 static void 	UiDriver_UpdateBtmMeter(float val, uchar warn);
-
-static void 	UiDriver_InitFrequency();
-//
 
 static void     UiDriver_UpdateLcdFreq(ulong dial_freq,ushort color,ushort mode);
 static bool 	UiDriver_IsButtonPressed(ulong button_num);
@@ -908,7 +904,7 @@ void UiDriver_Init()
 	// Driver publics init
 	UiDriver_PublicsInit();
 	// Init frequency publics
-	UiDriver_InitFrequency();
+	RadioManagement_InitTuningInfo();
 
 	Keypad_Scan();
 
@@ -2307,107 +2303,6 @@ static void UiDriver_UpdateBtmMeter(float val, uchar warn)
 		val = S_METER_MAX;
 	}
 	UiDriver_UpdateMeter(val,warn,clr,METER_BTM);
-}
-
-// FIXME: Move to RadioManagement()
-void UiDriver_InitBandSet()
-{
-    // TODO: Do this setting based on the detected RF board capabilities
-    // set the enabled bands
-    uint32_t min_osc = osc->getMinFrequency();
-    uint32_t max_osc = osc->getMaxFrequency();
-
-    // first we enabled all bands for rx based on the reported tuning frequency range
-    // please note, that this may enabled bands not really usable
-    // as other limitations of the hardware such as lpf/bpf limits
-    // etc. may apply. For instance, the standard MCHF RF has RX BPF/LPF
-    // limiting RX above 32 Mhz.
-
-    // the PA itself has its own limits which are checked before transmitting
-    // so we don't care here about these limits
-
-    for(int i = 0; i < MAX_BANDS; i++)
-    {
-        const BandInfo* bi = RadioManagement_GetBandInfo(i);
-        band_enabled[i] = ((bi->tune >= min_osc) && ((bi->size + bi->tune) <= max_osc));
-    }
-
-    switch (ts.rf_board)
-    {
-    case FOUND_RF_BOARD_MCHF:
-        // here you can enable or disable based on additional hardware capabilities
-        // but this should only be used with care
-        /*
-        band_enabled[BAND_MODE_23] = false;
-        band_enabled[BAND_MODE_70] = false;
-        band_enabled[BAND_MODE_2] = false;
-        band_enabled[BAND_MODE_4] = false;
-        band_enabled[BAND_MODE_6] = false;
-        band_enabled[BAND_MODE_630] = false;
-        band_enabled[BAND_MODE_2200] = false;
-        */
-        break;
-    case FOUND_RF_BOARD_OVI40:
-        /*
-        band_enabled[BAND_MODE_23] = false;
-        band_enabled[BAND_MODE_70] = false;
-        */
-        break;
-    }
-
-	const char* test = Board_BootloaderVersion();
-	char res = 0;
-	for (int i=0; i<20;i++)			// find last character in bootloader string
-	{
-		if(test[i] == 0)
-		{
-			res = test[i-1];
-			break;
-		}
-	}
-	if(res == 0x61)					// if it is an "a" ==> DF8OE version, enable all bands
-	{
-  		for(int i = 0; i < MAX_BANDS; i++)
-  		{
-      		band_enabled[i] = true;
-  		}
-	}
-}
-
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverInitFrequency
-//* Object              : set default values, some could be overwritten later
-static void UiDriver_InitFrequency()
-{
-	// Clear band values array
-	for(int i = 0; i < MAX_BANDS; i++)
-	{
-		vfo[VFO_A].band[i].dial_value = 0xFFFFFFFF;	// clear dial values
-		vfo[VFO_A].band[i].decod_mode = DEMOD_USB; 	// clear decode mode
-        vfo[VFO_A].band[i].digital_mode = DigitalMode_None;   // clear digital mode
-		vfo[VFO_B].band[i].dial_value = 0xFFFFFFFF;  // clear dial values
-		vfo[VFO_B].band[i].decod_mode = DEMOD_USB;   // clear decode mode
-        vfo[VFO_B].band[i].digital_mode = DigitalMode_None;   // clear digital mode
-	}
-
-	// Lower bands default to LSB mode
-	// TODO: This needs to be checked, some even lower bands have higher numbers now
-	for(int i = 0; i < 4; i++)
-	{
-		vfo[VFO_A].band[i].decod_mode = DEMOD_LSB;
-		vfo[VFO_B].band[i].decod_mode = DEMOD_LSB;
-	}
-
-	// Init frequency publics(set diff values so update on LCD will be done)
-	df.tune_old 	= 0;
-	df.tune_new 	= 3500001;
-	df.selected_idx = T_STEP_1KHZ_IDX; 		// 1 Khz startup step
-	df.tuning_step	= tune_steps[df.selected_idx];
-	df.temp_factor	= 0;
-	df.temp_factor_changed = false;
-	df.temp_enabled = 0;		// startup state of TCXO
-
-	UiDriver_InitBandSet();
 }
 
 /**
@@ -6034,7 +5929,7 @@ void UiDriver_StartUpScreenFinish()
 
 	UiDriver_StartupScreen_LogIfProblem(osc_present_problem, "Local Oscillator NOT Detected!");
 
-	if(!Si5351a_IsPresent() && RadioManagement_TcxoIsEnabled())
+	if(osc->type == OSC_SI570 && RadioManagement_TcxoIsEnabled())
 	{
 		UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
 	}
@@ -6051,7 +5946,7 @@ void UiDriver_StartUpScreenFinish()
 	    }
 	}
 
-	if(!Si5351a_IsPresent()) {
+	if(ts.rf_board == RF_BOARD_MCHF || ts.rf_board == RF_BOARD_RS928) {
 	  UiDriver_StartupScreen_LogIfProblem((HAL_ADC_GetValue(&hadc2) > MAX_VSWR_MOD_VALUE) && (HAL_ADC_GetValue(&hadc3) > MAX_VSWR_MOD_VALUE),
 			"SWR Bridge resistor mod NOT completed!");
 	}

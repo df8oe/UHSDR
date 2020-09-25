@@ -247,7 +247,7 @@ void Board_InitMinimal()
     UiLcdHy28_Init();
 
     // we determine and set the correct RF board here
-    ts.rf_board = Si5351a_IsPresent()?FOUND_RF_BOARD_OVI40:FOUND_RF_BOARD_MCHF;
+    ts.rf_board = osc_si5351a.isPresent()?RF_BOARD_RS928:RF_BOARD_MCHF;
 
 }
 

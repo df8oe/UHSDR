@@ -17,12 +17,11 @@
 #include "uhsdr_board.h"
 #include "osc_si570.h"
 #include "osc_si5351a.h"
+#include "osc_ducddc_df8oe.h"
 #include "soft_tcxo.h"
 // -------------------------------------------------------------------------------------
 // Local Oscillator
 // ------------------
-static void OscDummy_Init();
-
 const OscillatorInterface_t* osc;
 
 static bool OscDummy_IsPresent()
@@ -57,55 +56,64 @@ static bool              OscDummy_ReadyForIrqCall()
     return true;
 }
 
-static uint32_t OscDummy_getMinFrequency()
+static uint32_t OscDummy_getMinFrequency(void)
 {
     return 1; // 1 Hz
 }
 
-static uint32_t OscDummy_getMaxFrequency()
+static uint32_t OscDummy_getMaxFrequency(void)
 {
     return UINT32_MAX-1;
 }
 
 
-const OscillatorInterface_t osc_dummy =
-{
-		.init = OscDummy_Init,
-		.isPresent = OscDummy_IsPresent,
-		.setPPM = OscDummy_SetPPM,
-		.prepareNextFrequency = OscDummy_PrepareNextFrequency,
-		.changeToNextFrequency = OscDummy_ChangeToNextFrequency,
-		.isNextStepLarge = OscDummy_IsNextStepLarge,
-		.readyForIrqCall = OscDummy_ReadyForIrqCall,
-        .name = "Dummy",
-        .type = OSC_DUMMY,
-        .getMinFrequency = OscDummy_getMinFrequency,
-		.getMaxFrequency = OscDummy_getMaxFrequency,
-};
 
-static void OscDummy_Init()
+static bool OscDummy_Init(void)
 {
-	osc = &osc_dummy;
+	return true;
 }
+
+static const OscillatorInterface_t osc_dummy;
+
+static const OscillatorInterface_t* oscillators[] =
+{
+#ifdef USE_OSC_DUCDDC
+        &osc_ducddc,
+#endif
+#ifdef USE_OSC_SI5351A
+        &osc_si5351a,
+#endif
+#ifdef USE_OSC_SI570
+        &osc_si570,
+#endif
+        &osc_dummy
+};
 
 void Osc_Init()
 {
-#ifdef USE_OSC_SI5351A
-	if (osc == NULL)
-	{
-		Si5351a_Init();
-	}
-#endif
-#ifdef USE_OSC_SI570
-	if (osc == NULL)
-	{
-		Si570_Init();
-	}
-#endif
-	if (osc == NULL)
-	{
-		OscDummy_Init();
-	}
+    for (int osc_idx = 0; osc_idx < sizeof(oscillators)/sizeof(OscillatorInterface_t*); osc_idx++)
+    {
+        if (oscillators[osc_idx]->init())
+        {
+            osc = oscillators[osc_idx];
+            break;
+        }
+    }
 
 	SoftTcxo_Init();
 }
+
+static const OscillatorInterface_t osc_dummy =
+{
+        .init = OscDummy_Init,
+        .isPresent = OscDummy_IsPresent,
+        .setPPM = OscDummy_SetPPM,
+        .prepareNextFrequency = OscDummy_PrepareNextFrequency,
+        .changeToNextFrequency = OscDummy_ChangeToNextFrequency,
+        .isNextStepLarge = OscDummy_IsNextStepLarge,
+        .readyForIrqCall = OscDummy_ReadyForIrqCall,
+        .name = "Dummy",
+        .type = OSC_DUMMY,
+        .getMinFrequency = OscDummy_getMinFrequency,
+        .getMaxFrequency = OscDummy_getMaxFrequency,
+};

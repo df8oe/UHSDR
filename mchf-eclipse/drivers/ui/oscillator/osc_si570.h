@@ -17,7 +17,7 @@
 
 #include "osc_interface.h"
 
-void 	Si570_Init(void);
+extern const OscillatorInterface_t osc_si570;
 
 // non-critical device information reading
 float32_t   Si570_GetStartupFrequency(void);

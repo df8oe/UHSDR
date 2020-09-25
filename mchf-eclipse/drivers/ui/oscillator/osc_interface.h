@@ -34,12 +34,13 @@ typedef enum
     OSC_DUMMY,
     OSC_SI570,
     OSC_SI5351A,
+    OSC_DUCDDC_DF8OE,
 } Oscillator_Type_t;
 
 typedef struct
 {
 	// startup handling
-	void  (*init)(void);
+	bool  (*init)(void);
 
 	// presence information
 	bool  (*isPresent)(void);

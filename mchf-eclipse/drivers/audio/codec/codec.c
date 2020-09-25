@@ -93,6 +93,7 @@
 typedef struct
 {
     bool present;
+    uint32_t init;
 } mchf_codec_t;
 
 
@@ -242,29 +243,33 @@ static uint32_t Codec_ResetCodec(I2C_HandleTypeDef* hi2c, uint32_t AudioFreq, Co
 
 }
 
+uint32_t Codec_InitState(uint32_t codec)
+{
+    return (codec < CODEC_NUM)? mchf_codecs[codec].init: 0;
+}
 /**
  * @brief initializes codec
  * @param AudioFreq sample rate in Hertz
  * @param word_size should be set to WORD_SIZE_16, since we have not yet implemented any other word_size
  */
-uint32_t Codec_Reset(uint32_t AudioFreq)
+bool Codec_Reset(uint32_t AudioFreq)
 {
 
-    uint32_t retval;
 #ifdef UI_BRD_MCHF
-    retval = Codec_ResetCodec(CODEC_I2C, AudioFreq, IQ_WORD_SIZE);
+    mchf_codecs[0].init = Codec_ResetCodec(CODEC_I2C, AudioFreq, IQ_WORD_SIZE);
 #else
-    retval = Codec_ResetCodec(CODEC_ANA_I2C, AudioFreq, AUDIO_WORD_SIZE);
-    if (retval == 0)
-    {
-        mchf_codecs[1].present = true;
-        retval = Codec_ResetCodec(CODEC_IQ_I2C, AudioFreq, IQ_WORD_SIZE);
-    }
+    mchf_codecs[1].init = Codec_ResetCodec(CODEC_ANA_I2C, AudioFreq, AUDIO_WORD_SIZE);
+    mchf_codecs[0].init = Codec_ResetCodec(CODEC_IQ_I2C, AudioFreq, IQ_WORD_SIZE);
 #endif
-    if (retval == 0)
-    {
-        mchf_codecs[0].present = true;
 
+    bool retval = true;
+    for (int codec_idx = 0; codec_idx < CODEC_NUM; codec_idx++)
+    {
+        retval &= mchf_codecs[codec_idx].init == HAL_OK;
+    }
+
+    if (Codec_InitState(CODEC_NUM-1) == HAL_OK)
+    {
 #ifdef UI_BRD_OVI40
         AudioPA_Enable(true);
 #endif

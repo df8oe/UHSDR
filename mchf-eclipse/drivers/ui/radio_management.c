@@ -1933,3 +1933,72 @@ uint64_t RadioManagement_Transverter_GetFreq(const uint32_t dial_freq, const uin
 
     return dial_freq * ts.xverter_mode + offset_offset * offset_multiplier;
 }
+
+static void RadioManagement_InitBandSet()
+{
+    // TODO: Do this setting based on the detected RF board capabilities
+    // set the enabled bands
+    uint32_t min_osc = osc->getMinFrequency();
+    uint32_t max_osc = osc->getMaxFrequency();
+
+    // first we enabled all bands for rx based on the reported tuning frequency range
+    // please note, that this may enabled bands not really usable
+    // as other limitations of the hardware such as lpf/bpf limits
+    // etc. may apply. For instance, the standard MCHF RF has RX BPF/LPF
+    // limiting RX above 32 Mhz.
+
+    // the PA itself has its own limits which are checked before transmitting
+    // so we don't care here about these limits
+
+    for(int i = 0; i < MAX_BANDS; i++)
+    {
+        const BandInfo* bi = RadioManagement_GetBandInfo(i);
+        band_enabled[i] = ((bi->tune >= min_osc) && ((bi->size + bi->tune) <= max_osc));
+    }
+
+    const char* test = Board_BootloaderVersion();
+    char res = 0;
+    for (int i=0; i<20;i++)         // find last character in bootloader string
+    {
+        if(test[i] == 0)
+        {
+            res = test[i-1];
+            break;
+        }
+    }
+    if(res == 0x61)                 // if it is an "a" ==> DF8OE version, enable all bands
+    {
+        for(int i = 0; i < MAX_BANDS; i++)
+        {
+            band_enabled[i] = true;
+        }
+    }
+}
+
+void RadioManagement_InitTuningInfo()
+{
+    RadioManagement_InitBandSet();
+
+    // Initialize vfo values array
+    for(int i = 0; i < MAX_BAND_NUM; i++)
+    {
+        VfoReg* vfoa = &vfo[VFO_A].band[i];
+        VfoReg* vfob = &vfo[VFO_B].band[i];
+
+        uint32_t bandstart = RadioManagement_GetBandInfo(i)->tune;
+
+        vfoa->dial_value = vfob->dial_value = 0xFFFFFFFF;   // clear dial values
+        vfoa->decod_mode = vfob->decod_mode = bandstart >= 8000000?DEMOD_USB:DEMOD_LSB;     // initialized default demod mode
+        vfoa->digital_mode = vfob->digital_mode = DigitalMode_None;   // clear digital mode
+    }
+
+    // Init frequency publics(set diff values so update on LCD will be done)
+    df.tune_old     = 0;
+    df.tune_new     = RadioManagement_GetBandInfo(BAND_MODE_80)->tune + 3000;
+    df.selected_idx = T_STEP_1KHZ_IDX;      // 1 Khz startup step
+    df.tuning_step  = tune_steps[df.selected_idx];
+    df.temp_factor  = 0;
+    df.temp_factor_changed = false;
+    df.temp_enabled = 0;        // startup state of TCXO
+
+}
