@@ -115,7 +115,7 @@ typedef struct
 	uint32_t xtal_freq;
 } Si5351a_State_t;
 
-Si5351a_State_t si5351a_state;
+static Si5351a_State_t si5351a_state;
 
 
 // Set up PLL with mult, num and denom
@@ -359,7 +359,7 @@ static bool Si5351a_ApplyConfig(Si5351a_Config_t* config)
 }
 
 
-bool Si5351a_IsPresent()
+static bool Si5351a_IsPresent()
 {
 	return si5351a_state.is_present;
 }
@@ -410,7 +410,7 @@ static bool              Si5351a_IsNextStepLarge()
  * otherwise deadlocks may happen
  * @return true if it is safe to call oscillator functions in an interrupt
  */
-bool Si5351a_ReadyForIrqCall()
+static bool Si5351a_ReadyForIrqCall()
 {
     return (SI5351A_I2C->Lock == HAL_UNLOCKED);
 }
@@ -431,22 +431,7 @@ static uint32_t Si5351a_getMaxFrequency()
     return 290000000 / 4;
 }
 
-const OscillatorInterface_t osc_si5351a =
-{
-		.init = Si5351a_Init,
-		.isPresent = Si5351a_IsPresent,
-		.setPPM = Si5351a_SetPPM,
-		.prepareNextFrequency = Si5351a_PrepareNextFrequency,
-		.changeToNextFrequency = Si5351a_ChangeToNextFrequency,
-		.isNextStepLarge = Si5351a_IsNextStepLarge,
-		.readyForIrqCall = Si5351a_ReadyForIrqCall,
-        .name = "Si5351a",
-        .type = OSC_SI5351A,
-        .getMinFrequency = Si5351a_getMinFrequency,
-        .getMaxFrequency = Si5351a_getMaxFrequency,
-};
-
-void Si5351a_Init()
+static bool Si5351a_Init()
 {
 	si5351a_state.current.frequency = 0;
 	si5351a_state.next.frequency = 0;
@@ -466,8 +451,21 @@ void Si5351a_Init()
 	}
 
 
-	osc = Si5351a_IsPresent()?&osc_si5351a:NULL;
-
-
+	return Si5351a_IsPresent();
 }
+
+const OscillatorInterface_t osc_si5351a =
+{
+        .init = Si5351a_Init,
+        .isPresent = Si5351a_IsPresent,
+        .setPPM = Si5351a_SetPPM,
+        .prepareNextFrequency = Si5351a_PrepareNextFrequency,
+        .changeToNextFrequency = Si5351a_ChangeToNextFrequency,
+        .isNextStepLarge = Si5351a_IsNextStepLarge,
+        .readyForIrqCall = Si5351a_ReadyForIrqCall,
+        .name = "Si5351a",
+        .type = OSC_SI5351A,
+        .getMinFrequency = Si5351a_getMinFrequency,
+        .getMaxFrequency = Si5351a_getMaxFrequency,
+};
 #endif

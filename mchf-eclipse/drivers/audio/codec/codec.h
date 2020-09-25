@@ -15,6 +15,8 @@
 #ifndef __CODEC_H
 #define __CODEC_H
 
+#include <stdint.h>
+
 typedef enum
 {
     WORD_SIZE_16 =	0,
@@ -43,9 +45,9 @@ void     Codec_VolumeSpkr(uint8_t vol);
 void 	 Codec_LineInGainAdj(uint8_t gain);
 void     Codec_IQInGainAdj(uint8_t gain);
 void 	 Codec_MuteDAC(bool state);
-
-uint32_t Codec_Reset(uint32_t AudioFreq);
-void     Codec_RestartI2S(void);
+uint32_t Codec_InitState(uint32_t codec);
+bool     Codec_Reset(uint32_t AudioFreq);
+void     Codec_RestartI2S();
 void     Codec_TxSidetoneSetgain(uint8_t mode);
 void     Codec_SwitchMicTxRxMode(uint8_t mode);
 void     Codec_PrepareTx(uint8_t current_txrx_mode);

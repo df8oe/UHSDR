@@ -74,8 +74,9 @@ typedef enum {
 // opposed to the RF_BRD_MCHF / RF_BRD_OVI40 which are
 // compile time constants, the FOUND_RF_BOARD_xx is a runtime detected property
 typedef enum {
-    FOUND_RF_BOARD_MCHF = 0,
-    FOUND_RF_BOARD_OVI40 = 1,
+    RF_BOARD_MCHF = 0,  // Standard mcHF RF Board using Si570
+    RF_BOARD_RS928 = 1, // RS928 MCHF Clone using Si5351a
+    RF_BOARD_DDCDUC_DF8OE = 2, // FPGA Board (experimental)
 } RfBoard_t;
 
 #define CW_KEYER_MODE_IAM_B				0

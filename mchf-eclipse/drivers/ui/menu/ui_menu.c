@@ -554,11 +554,14 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     case INFO_RFBOARD:
         switch(ts.rf_board)
         {
-        case FOUND_RF_BOARD_OVI40:
-            outs = "OVI40 RF Board";
+        case RF_BOARD_DDCDUC_DF8OE:
+            outs = "DDCDUC DF8OE RF";
+            break;
+        case RF_BOARD_RS928:
+            outs = "RS9xx RF";
             break;
         default:
-            outs = "mcHF RF Board";
+            outs = "mcHF RF";
             break;
         }
         break;

@@ -111,7 +111,7 @@ static const uchar	hs_div[6]	= {11, 9, 7, 6, 5, 4};
 static const float	fdco_max	= FDCO_MAX;
 static const float	fdco_min	= FDCO_MIN;
 
-OscillatorState os;
+static OscillatorState os;
 
 /*
  * @brief Returns startup frequency value of Si570, call only after init of Si570
@@ -613,7 +613,7 @@ static Oscillator_ResultCodes_t Si570_PrepareNextFrequency(ulong freq, int temp_
  * otherwise deadlocks may happen
  * @return true if it safe to call oscillator functions in an interrupt
  */
-bool Si570_ReadyForIrqCall()
+static bool Si570_ReadyForIrqCall()
 {
     return (SI570_I2C->Lock == HAL_UNLOCKED);
 }
@@ -650,23 +650,8 @@ static uint32_t Si570_translateExt2Osc(uint32_t freq)
     // frequency multiplied with 4 since we drive a johnson counter for phased clock generation
 #endif
 }
-const OscillatorInterface_t osc_si570 =
-{
-		.init = Si570_Init,
-		.isPresent = Oscillator_IsPresent,
-		.setPPM = Si570_SetPPM,
-		.prepareNextFrequency = Si570_PrepareNextFrequency,
-		.changeToNextFrequency = Si570_ChangeToNextFrequency,
-		.isNextStepLarge = Si570_IsNextStepLarge,
-		.readyForIrqCall = Si570_ReadyForIrqCall,
-		.name = "Si570",
-		.type = OSC_SI570,
-		.getMinFrequency = Si570_getMinFrequency,
-		.getMaxFrequency = Si570_getMaxFrequency,
-};
 
-
-void Si570_Init()
+static bool Si570_Init()
 {
 
 	os.base_reg = 13;	// first test with regs 13+ for 7ppm SI570
@@ -732,7 +717,8 @@ void Si570_Init()
 		HAL_Delay(40);
 		Si570_ResetConfiguration();
 	}
-	osc = os.present?&osc_si570:NULL;
+
+	return os.present;
 }
 
 /**
@@ -774,3 +760,18 @@ static Oscillator_ResultCodes_t Si570_PrepareNextFrequency(ulong freq, int temp_
     }
     return retval;
 }
+
+const OscillatorInterface_t osc_si570 =
+{
+        .init = Si570_Init,
+        .isPresent = Oscillator_IsPresent,
+        .setPPM = Si570_SetPPM,
+        .prepareNextFrequency = Si570_PrepareNextFrequency,
+        .changeToNextFrequency = Si570_ChangeToNextFrequency,
+        .isNextStepLarge = Si570_IsNextStepLarge,
+        .readyForIrqCall = Si570_ReadyForIrqCall,
+        .name = "Si570",
+        .type = OSC_SI570,
+        .getMinFrequency = Si570_getMinFrequency,
+        .getMaxFrequency = Si570_getMaxFrequency,
+};

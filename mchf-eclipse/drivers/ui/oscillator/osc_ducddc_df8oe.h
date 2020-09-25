@@ -12,9 +12,9 @@
 **  Licence:		GNU GPLv3                                                      **
 ************************************************************************************/
 
-#ifndef __HW_SI5351A
-#define __HW_SI5351A
+#ifndef __HW_OSC_DUCDDC_DF8OE
+#define __HW_OSC_DUCDDC_DF8OE
 #include "osc_interface.h"
 
-extern const OscillatorInterface_t osc_si5351a;
+extern const OscillatorInterface_t osc_ducddc;
 #endif

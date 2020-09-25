@@ -325,6 +325,8 @@ inline bool RadioManagement_IsTxDisabledBy(uint8_t whom)
     return ((ts.tx_disable & (whom)) > 0);
 }
 
+void RadioManagement_InitTuningInfo();
+
 uint32_t RadioManagement_GetRealFreqTranslationMode(uint32_t txrx_mode, uint32_t dmod_mode, uint32_t iq_freq_mode);
 const BandInfo* RadioManagement_GetBand(ulong freq);
 bool RadioManagement_FreqIsInBand(BandInfo_c * bandinfo, const uint32_t freq);
@@ -373,6 +375,7 @@ void RadioManagement_Request_TxOff(void);
 
 bool RadioManagement_SwitchTxRx_Possible(void);
 bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode);
+
 
 inline void RadioManagement_ToggleVfoMem()
 {
