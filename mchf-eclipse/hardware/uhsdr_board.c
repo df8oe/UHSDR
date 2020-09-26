@@ -34,7 +34,7 @@
 #include "dac.h"
 
 #include "uhsdr_keypad.h"
-#include "osc_si5351a.h"
+// #include "osc_interface.h"
 
 // Transceiver state public structure
 __IO __MCHF_SPECIALMEM TransceiverState ts;
@@ -229,7 +229,7 @@ void Board_InitMinimal()
     // Power up hardware
     Board_PowerDown_Init();
 
-  // FROM HERE
+    // FROM HERE
     // Filter control lines
     Board_BandCntr_Init();
 
@@ -237,17 +237,22 @@ void Board_InitMinimal()
     // TODO: Move to CubeMX Config
     Board_Touchscreen_Init();
 
-    // Initialize LO
-    Osc_Init();
-
-    // TO HERE: Code be moved to init_full() if we figure out what causes the white screen @MiniTRX SPI
-
-    // TODO: It seems that some SPI display need some time to get started...
     // LCD Init
     UiLcdHy28_Init();
 
+    // Minimally initialize the RF board
+
+    // Initialize LO, by which we (at least for now) can detect the RF board
+    Osc_Init();
+
     // we determine and set the correct RF board here
-    ts.rf_board = osc_si5351a.isPresent()?RF_BOARD_RS928:RF_BOARD_MCHF;
+    switch(osc->type)
+    {
+        case OSC_SI5351A: ts.rf_board = RF_BOARD_RS928; break;
+        case OSC_DUCDDC_DF8OE  : ts.rf_board = RF_BOARD_DDCDUC_DF8OE; break;
+        case OSC_SI570: ts.rf_board = RF_BOARD_MCHF; break;
+        default: ts.rf_board = RF_BOARD_UNKNOWN;
+    }
 
 }
 

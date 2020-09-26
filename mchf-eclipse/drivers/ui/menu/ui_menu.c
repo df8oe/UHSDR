@@ -538,7 +538,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 #endif
     case INFO_OSC_NAME:
     {
-        if (osc->isPresent) {
+        if (osc->isPresent()) {
         	outs = osc->name;
         }
         else

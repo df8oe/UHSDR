@@ -14,9 +14,7 @@
 
 // Common
 #include "uhsdr_board.h"
-#include <stdio.h>
-#include "uhsdr_rtc.h"
-#include "ui_spectrum.h"
+//#include "uhsdr_rtc.h"
 
 #include "ui_configuration.h"
 #include "config_storage.h"
@@ -24,40 +22,27 @@
 // serial EEPROM driver
 #include "uhsdr_hw_i2c.h"
 #include "uhsdr_hw_i2s.h"
+
 #include "uhsdr_hmc1023.h"
 
 // Audio Driver
-#include "drivers/audio/audio_driver.h"
-#include "drivers/audio/audio_management.h"
 #include "drivers/audio/cw/cw_gen.h"
 #include "drivers/audio/freedv_uhsdr.h"
-#include "drivers/audio/audio_nr.h"
-
-//cat
-#include "drivers/cat/cat_driver.h"
+#include "drivers/audio/codec/codec.h"
 
 // UI Driver
 #include "drivers/ui/ui_driver.h"
-#include "drivers/ui/lcd/ui_lcd_hy28.h"
-#include "drivers/ui/menu/ui_menu.h"
-#include "drivers/ui/oscillator/osc_interface.h"
-#include "drivers/ui/oscillator/osc_si5351a.h"
-#include "drivers/ui/oscillator/osc_si570.h"
-#include "drivers/audio/codec/codec.h"
+
+// General
 #include "misc/profiling.h"
 #include "uhsdr_canary.h"
-#include "audio_agc.h"
-// Keyboard Driver
-// #include "keyb_driver.h"
-
-// Misc
-#include "drivers/audio/softdds/softdds.h"
 
 #include "uhsdr_flash.h" // only for EEPROM_START_ADDRESS
-#include "drivers/ui/radio_management.h"
-//
+
 
 #include "misc/TestCPlusPlusInterface.h"
+
+#include "drivers/ui/radio_management.h" // just for the ptt/paddle handling
 
 void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
 {
