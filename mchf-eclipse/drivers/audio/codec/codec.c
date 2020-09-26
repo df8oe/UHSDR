@@ -252,7 +252,7 @@ uint32_t Codec_InitState(uint32_t codec)
  * @param AudioFreq sample rate in Hertz
  * @param word_size should be set to WORD_SIZE_16, since we have not yet implemented any other word_size
  */
-bool Codec_Reset(uint32_t AudioFreq)
+static bool Codec_Reset(uint32_t AudioFreq)
 {
 
 #ifdef UI_BRD_MCHF
@@ -282,10 +282,15 @@ bool Codec_Reset(uint32_t AudioFreq)
     return retval;
 }
 
+bool Codec_Init(void)
+{
+    ts.codec_present = Codec_Reset(ts.samp_rate) == HAL_OK;
+    return ts.codec_present;
+}
 /**
  * @brief Call this if the twin peaks happen, this restarts the I2S audio stream and it may fix the issue
  */
-void Codec_RestartI2S()
+void Codec_RestartI2S(void)
 {
     // Reg 09: Active Control
     Codec_WriteRegister(CODEC_IQ_I2C, W8731_ACTIVE_CNTR,0x0000);
@@ -328,7 +333,7 @@ void Codec_SwitchMicTxRxMode(uint8_t txrx_mode)
     }
 }
 
-static bool is_microphone_active()
+static bool is_microphone_active(void)
 {
 	return ts.tx_audio_source == TX_AUDIO_MIC && (ts.dmod_mode != DEMOD_CW && is_demod_rtty() == false && is_demod_psk() == false);
 }
