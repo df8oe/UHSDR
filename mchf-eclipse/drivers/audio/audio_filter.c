@@ -1071,6 +1071,23 @@ uint8_t AudioFilter_NextApplicableFilterPath(const uint16_t query, const uint16_
     return  idx;
 }
 
+void AudioFilter_GetNamesOfFilterPath(uint16_t filter_path,const char** filter_names)
+{
+
+    const FilterPathDescriptor *path = &FilterPathInfo[filter_path];
+    const FilterDescriptor    *filter = &FilterInfo[path->id];
+
+    filter_names[0] = filter->name;
+    filter_names[1] = path->name;
+}
+
+void AudioFilter_FilterPath_Init()
+{
+    // filter selection for FM is hardcoded
+    ts.filter_path_mem[FILTER_MODE_FM][1] = 1;
+    ts.filter_path_mem[FILTER_MODE_FM][2] = 2;
+    ts.filter_path_mem[FILTER_MODE_FM][3] = 3;
+}
 
 
 /*
@@ -1260,24 +1277,7 @@ void AudioFilter_SetTxHilbertFIR(void)
     ads.tx_filter_adjusting--;        // re-enable TX I/Q filter now that we are done
 }
 
-void AudioFilter_GetNamesOfFilterPath(uint16_t filter_path,const char** filter_names)
-{
-
-    const FilterPathDescriptor *path = &FilterPathInfo[filter_path];
-    const FilterDescriptor    *filter = &FilterInfo[path->id];
-
-    filter_names[0] = filter->name;
-    filter_names[1] = path->name;
-}
-
-void AudioFilter_SetDefaultMemories()
-{
-    // filter selection for FM is hardcoded
-    ts.filter_path_mem[FILTER_MODE_FM][1] = 1;
-    ts.filter_path_mem[FILTER_MODE_FM][2] = 2;
-    ts.filter_path_mem[FILTER_MODE_FM][3] = 3;
-}
-
+// These filters are used to detect special frequencies in a signal
 void AudioFilter_CalcGoertzel(Goertzel* g, float32_t freq, const uint32_t size, const float goertzel_coeff, float32_t samplerate)
 {
     g->a = (0.5 + (freq * goertzel_coeff) * size/samplerate);

@@ -26,7 +26,7 @@
 #include "uhsdr_hmc1023.h"
 
 // Audio Driver
-#include "drivers/audio/cw/cw_gen.h"
+//#include "drivers/audio/cw/cw_gen.h"
 #include "drivers/audio/freedv_uhsdr.h"
 #include "drivers/audio/codec/codec.h"
 
@@ -43,39 +43,6 @@
 #include "misc/TestCPlusPlusInterface.h"
 
 #include "drivers/ui/radio_management.h" // just for the ptt/paddle handling
-
-void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
-{
-    if (ts.paddles_active != false)
-    {
-        switch(GPIO_Pin)
-        {
-        case BUTTON_PWR:
-            break;
-        case PADDLE_DAH:
-            // Call handler
-            if (Board_PttDahLinePressed() && RadioManagement_IsTxDisabledBy(TX_DISABLE_RXMODE) == false)
-            {  // was PTT line low? Is it not a RX only mode
-                RadioManagement_Request_TxOn();     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
-                if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || ts.cw_text_entry)
-                {
-                    CwGen_DahIRQ();     // Yes - go to CW state machine
-                }
-            }
-            break;
-        case PADDLE_DIT:
-            if((ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || ts.cw_text_entry) && Board_DitLinePressed())
-            {
-                if (ts.cw_keyer_mode != CW_KEYER_MODE_STRAIGHT)
-                {
-                    RadioManagement_Request_TxOn();
-                }
-                CwGen_DitIRQ();
-            }
-            break;
-        }
-    }
-}
 
 /**
  * Detects if a special bootloader is used and configures some settings
@@ -386,7 +353,7 @@ int mchfMain(void)
     // Audio Software Init
     AudioDriver_Init();
 
-    AudioFilter_SetDefaultMemories();
+    AudioFilter_FilterPath_Init();
 
 #ifdef USE_FREEDV
     FreeDV_Init();
