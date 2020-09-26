@@ -5925,6 +5925,24 @@ void UiDriver_StartUpScreenFinish()
 
 	uint32_t hold_time;
 
+    for (int codec_idx = 0; codec_idx < CODEC_NUM; codec_idx++)
+    {
+        if (Codec_InitState(codec_idx) != 0)
+        {
+            char text[128];
+            snprintf(text,sizeof(text),"Codec WM8731 %d NOT detected",codec_idx);
+            UiDriver_StartupScreen_LogIfProblem(true,
+                    text);
+        }
+    }
+
+    const char* bl_version = Board_BootloaderVersion();
+
+    UiDriver_StartupScreen_LogIfProblem(
+            (bl_version[0] == '1' || bl_version[0] == '2' || bl_version[0] == '3' || bl_version[0] == '4')  && bl_version[1] == '.',
+
+                "Upgrade bootloader to 5.0.1 or newer");
+
 	bool osc_present_problem = osc->isPresent() == false;
 
 	UiDriver_StartupScreen_LogIfProblem(osc_present_problem, "Local Oscillator NOT Detected!");

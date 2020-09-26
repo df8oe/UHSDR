@@ -336,7 +336,7 @@ int mchfMain(void)
     // Set default transceiver state
     TransceiverStateInit();
 
-     Board_RamSizeDetection();
+    Board_RamSizeDetection();
 
 #ifdef TESTCPLUSPLUS
     test_call_cpp();
@@ -362,11 +362,9 @@ int mchfMain(void)
     // here, so we simply set reverse to false
     UiLcdHy28_TouchscreenInit(0);
 
-
     Main_DetectSpecialBootloader();
 
     UiDriver_Init();
-
 
 #ifdef STM32F4
     // we now re-init the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!
@@ -376,40 +374,19 @@ int mchfMain(void)
     UhsdrHw_I2C_ChangeSpeed(&hi2c2);
 #endif
 
-	profileTimedEventInit();
-
 #ifdef USE_HMC1023
     hmc1023_init();
 #endif
 
+    // IQ and Audio Codec(s) init
+    Codec_Init();
+
+	profileTimedEventInit();
+
     // Audio Software Init
     AudioDriver_Init();
 
-    // Audio Driver Hardware Init
-    ts.codec_present = Codec_Reset(ts.samp_rate) == HAL_OK;
-
-    for (int codec_idx = 0; codec_idx < CODEC_NUM; codec_idx++)
-    {
-        if (Codec_InitState(codec_idx) != 0)
-        {
-            char text[128];
-            snprintf(text,sizeof(text),"Codec WM8731 %d NOT detected",codec_idx);
-            UiDriver_StartupScreen_LogIfProblem(true,
-                    text);
-        }
-    }
-
-    const char* bl_version = Board_BootloaderVersion();
-
-    UiDriver_StartupScreen_LogIfProblem(
-            (bl_version[0] == '1' || bl_version[0] == '2' || bl_version[0] == '3' || bl_version[0] == '4')  && bl_version[1] == '.',
-
-                "Upgrade bootloader to 5.0.1 or newer");
-
     AudioFilter_SetDefaultMemories();
-
-
-    ts.rx_gain[RX_AUDIO_SPKR].value_old = 0;		// Force update of volume control
 
 #ifdef USE_FREEDV
     FreeDV_Init();
@@ -419,14 +396,10 @@ int mchfMain(void)
 #endif
 
     UiDriver_StartUpScreenFinish();
-
-    // We initialize the requested demodulation mode
-    // and update the screen accordingly
-    UiDriver_SetDemodMode(ts.dmod_mode);
+    // display error messages/warnings, draw main ui
 
     // Finally, start DMA transfers to get everything going
     UhsdrHwI2s_Codec_StartDMA();
-
 
     // now enable paddles/ptt, i.e. external input
     ts.paddles_active = true;

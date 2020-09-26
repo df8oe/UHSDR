@@ -16,6 +16,7 @@
 #include "uhsdr_board.h"
 #include "ui_lcd_layouts.h"
 #include "ui_driver.h"
+#include "codec.h"
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //some local 480x320 calculations to make life easier in case of change something
