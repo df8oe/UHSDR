@@ -80,6 +80,7 @@ static bool DucDdc_Df8oe_CalculateConfig(uint32_t frequency, DucDdc_Df8oe_Config
         new_config->rx_frequency = new_config->tx_frequency = __bswap32(frequency);
         // we need to store in big endian (i.e. the most significant byte first
         // we compile with little endian
+        retval = true;
     }
     return retval;
 }
