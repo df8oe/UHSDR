@@ -1868,6 +1868,8 @@ static void UiDriver_CreateDesktop()
 
 	UiDriver_UpdateDisplayAfterParamChange();
 
+	UiDriver_SetDemodMode(ts.dmod_mode);
+
 	// Backlight on - only when all is drawn
 	UiLcdHy28_BacklightEnable(true);
 }
