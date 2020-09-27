@@ -270,7 +270,16 @@ void TransceiverStateInit(void)
 
     //CONFIG LOADED:ts.expflags1 = 0; // Used to hold flags for options in Debug/Expert menu, stored in EEPROM location "EEPROM_EXPFLAGS1"
 
-    ts.band_effective = NULL; // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
+    ts.band_effective = NULL;   // this is an invalid band number, which will trigger a redisplay of the band name and the effective power
+    ts.ATT_Gain=0;              //additional attenuator or amplifier gain value to be used in real dbm calculation.
+    ts.TX_at_zeroIF=0;          //set default state of TX IF to setting same as for RX (except for digi modes which most of use zero IF TX anyway)
+
+    //setting to default RFboard structure. The specific hardware setting must be done in hardware init.
+    RFboard.AMP_ATT_getCurrent=NULL;
+    RFboard.AMP_ATT_next=NULL;
+    RFboard.AMP_ATT_prev=NULL;
+
+    RadioManagement_Init_RFboardPA();
 }
 
 // #include "Trace.h"
@@ -339,6 +348,15 @@ int mchfMain(void)
     // the speed on the STM32F7/H7 easily via HAL in a portable way
     UhsdrHw_I2C_ChangeSpeed(&hi2c1);
     UhsdrHw_I2C_ChangeSpeed(&hi2c2);
+#endif
+
+	profileTimedEventInit();
+#ifdef USE_OSC_SParkle
+    if(osc->type == osc_SParkle_DDC)
+    {
+        SParkle_ConfigurationInit();
+    }
+    else
 #endif
 
 #ifdef USE_HMC1023

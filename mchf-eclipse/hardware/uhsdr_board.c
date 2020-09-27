@@ -44,7 +44,6 @@
 // Transceiver state public structure
 __IO __MCHF_SPECIALMEM TransceiverState ts;
 
-
 static void Board_Led_Init(void)
 {
     GPIO_InitTypeDef  GPIO_InitStructure;
@@ -256,6 +255,7 @@ void Board_InitMinimal()
         case OSC_SI5351A: ts.rf_board = RF_BOARD_RS928; break;
         case OSC_DUCDDC_DF8OE  : ts.rf_board = RF_BOARD_DDCDUC_DF8OE; break;
         case OSC_SI570: ts.rf_board = RF_BOARD_MCHF; break;
+        case OSC_SPARKLE: ts.rf_board = RF_BOARD_SPARKLE; break;
         default: ts.rf_board = RF_BOARD_UNKNOWN;
     }
 

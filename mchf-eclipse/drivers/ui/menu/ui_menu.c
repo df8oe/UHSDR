@@ -560,6 +560,9 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         case RF_BOARD_RS928:
             outs = "RS9xx RF";
             break;
+        case RF_BOARD_SPARKLE:
+            outs = "SParkle RF Board";
+            break;
         default:
             outs = "mcHF RF";
             break;
@@ -707,12 +710,26 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcess
     const BandInfo* band = RadioManagement_GetBand(df.tune_old);
     if((band_mode == band->band_mode) && (ts.power_level == pa_level))
     {
+#ifdef USE_OSC_SParkle
+        if(SParkle_IsPresent())
+        {
+            tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
+                                                  TX_POWER_FACTOR_MIN_DUC,
+                                                  RadioManagement_IsPowerFactorReduce(df.tune_old)?TX_POWER_FACTOR_MAX_DUC:TX_POWER_FACTOR_MAX_DUC/4,
+                                                  TX_POWER_FACTOR_MIN_DUC,
+                                                  1
+                                                 );
+        }
+        else
+#endif
+        {
         tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
                                               TX_POWER_FACTOR_MIN,
                                               RadioManagement_IsPowerFactorReduce(df.tune_old)?TX_POWER_FACTOR_MAX:TX_POWER_FACTOR_MAX/4,
                                               TX_POWER_FACTOR_MIN,
                                               1
                                              );
+        }
 
         if(tchange)	 		// did something change?
         {
@@ -3497,10 +3514,12 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
                                                   PA_LEVEL_TUNE_KEEP_CURRENT,
                                                   1);
 
-            if (ts.tune_power_level < mchf_power_levelsInfo.count)
+            //if (ts.tune_power_level < mchf_power_levelsInfo.count)
+            if (ts.tune_power_level < RFboard.power_levelsInfo->count)
             {
                 char txt[5];
-                UiDriver_Power2String(txt,sizeof(txt),mchf_power_levelsInfo.levels[ts.tune_power_level].mW);
+                //UiDriver_Power2String(txt,sizeof(txt),mchf_power_levelsInfo.levels[ts.tune_power_level].mW);
+                UiDriver_Power2String(txt,sizeof(txt),RFboard.power_levelsInfo->levels[ts.tune_power_level].mW);
                 snprintf(options,32,"       %s",txt);
             }
             else
@@ -3544,6 +3563,26 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             break;
         }
         break;
+#endif
+#ifdef USE_OSC_SParkle
+        case CONFIG_DUC_DAC_TYPE:
+            if(SParkle_IsPresent())
+            {
+                uint8_t dac_type=SParkle_GetDacType();
+                var_change=UiDriverMenuItemChangeUInt8(var, mode, &dac_type,
+                                            0,
+                                            1,
+                                            0,
+                                            1
+                                            );
+                txt_ptr=dac_type==SParkleDacType_clone?"  clone":"genuine";
+                if(var_change)
+                {
+                    SParkle_SetDacType(dac_type);
+                    ts.menu_var_changed = true;
+                }
+            }
+            break;
 #endif
         case CONFIG_RESET_SER_EEPROM:
         if(SerialEEPROM_24xx_Exists() == false)

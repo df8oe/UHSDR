@@ -217,6 +217,9 @@ BandInfo_c **bandInfo = bandInfo_combined;
 
 uint8_t bandinfo_idx; // default init with 0 is fine
 
+//specyfic hardware features structure
+__IO __MCHF_SPECIALMEM HardwareRFBoard RFboard;
+
 /**
  * Searches the band info for a given band memory index
  * This relieves us from ordering the vfo band memories exactly like the
@@ -282,7 +285,33 @@ const pa_info_t mchf_pa =
 };
 #endif // LAPWING
 
+#ifdef USE_OSC_SParkle
+// this structure MUST match the order of entries in power_level_t !
+static const power_level_desc_t SParkle_rf_power_levels[] =
+{
+        { .id = PA_LEVEL_FULL,   .mW = 0,    }, // we use 0 to indicate max power
+        { .id = PA_LEVEL_HIGH,   .mW = 50000, },
+        { .id = PA_LEVEL_MEDIUM, .mW = 10000, },
+        { .id = PA_LEVEL_LOW,    .mW = 1000, },
+        { .id = PA_LEVEL_MINIMAL,.mW =  500, },
+};
 
+const pa_power_levels_info_t SParkle_power_levelsInfo =
+{
+        .levels = SParkle_rf_power_levels,
+        .count = sizeof(SParkle_rf_power_levels)/sizeof(*SParkle_rf_power_levels),
+};
+
+const pa_info_t SParkle_pa =
+{
+        .name  = "SParkle PA",
+        .reference_power = 10000.0,
+        .max_freq = 150000000,
+        .min_freq =  1800000,
+        .max_am_power = 25000,
+        .max_power = 50000,
+};
+#endif
 
 // The following descriptor table has to be in the order of the enum digital_modes_t in  radio_management.h
 // This table is stored in flash (due to const) and cannot be written to
@@ -351,7 +380,8 @@ float32_t RadioManagement_CalculatePowerFactorScale(float32_t powerMw)
     float32_t retval = 1.0;
     if (powerMw > 0)
     {
-        retval = sqrtf(powerMw / mchf_pa.reference_power);
+        //retval = sqrtf(powerMw / mchf_pa.reference_power);
+        retval = sqrtf(powerMw / RFboard.pa_info->reference_power);
     }
     return retval;
 }
@@ -403,10 +433,20 @@ static bool RadioManagement_SetBandPowerFactor(const BandInfo* band, int32_t pow
     // limit hard limit for power factor since it otherwise may overdrive the PA section
 
     const float32_t old_pf = ts.tx_power_factor;
-
-    ts.tx_power_factor =
-            (power_factor > TX_POWER_FACTOR_MAX_INTERNAL) ?
-            TX_POWER_FACTOR_MAX_INTERNAL : power_factor;
+#ifdef USE_OSC_SParkle
+    if(SParkle_IsPresent())
+    {
+        //TODO: make mixed amplitude/attenuator use, using only the 0.5dB steps from PE4302 causes inaccurate power settings
+        ts.tx_power_factor=TX_POWER_FACTOR_MAX_DUC_INTERNAL;   //because fpga doesn't have the limits of typical analog mixer and we always output full power from DAC
+        return SParkle_SetTXpower(power_factor);
+    }
+    else
+#endif
+    {
+        ts.tx_power_factor =
+                (power_factor > TX_POWER_FACTOR_MAX_INTERNAL) ?
+                        TX_POWER_FACTOR_MAX_INTERNAL : power_factor;
+    }
 
     ts.power_modified |=  (power_factor == 0 || ts.tx_power_factor != power_factor);
 
@@ -436,7 +476,8 @@ bool RadioManagement_SetPowerLevel(const BandInfo* band, power_level_t power_lev
     bool retval = false;
     bool power_modified = false;
 
-    int32_t power = power_level < mchf_power_levelsInfo.count ? mchf_power_levelsInfo.levels[power_level].mW : -1;
+    //int32_t power = power_level < mchf_power_levelsInfo.count ? mchf_power_levelsInfo.levels[power_level].mW : -1;
+    int32_t power = power_level < RFboard.power_levelsInfo->count ? RFboard.power_levelsInfo->levels[power_level].mW : -1;
 
     if (power != -1 && band != NULL)
     {
@@ -457,13 +498,16 @@ bool RadioManagement_SetPowerLevel(const BandInfo* band, power_level_t power_lev
 
         if(ts.dmod_mode == DEMOD_AM)                // in AM mode?
         {
-            if(power > mchf_pa.max_am_power || power == 0)     // yes, power over am limits?
+            //if(power > mchf_pa.max_am_power || power == 0)     // yes, power over am limits?
+            if(power > RFboard.pa_info->max_am_power || power == 0)     // yes, power over am limits?
             {
-                power = mchf_pa.max_am_power;  // force to keep am limits
+                //power = mchf_pa.max_am_power;  // force to keep am limits
+                power = RFboard.pa_info->max_am_power;  // force to keep am limits
                 power_modified = true;
             }
         }
-        else if(power > mchf_pa.reference_power)
+        //else if(power > mchf_pa.reference_power)
+        else if(power > RFboard.pa_info->reference_power)
         {
             power = 0; //  0 == full power
             power_level = PA_LEVEL_FULL;
@@ -572,7 +616,8 @@ bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode)
                             || is_demod_rtty()
 #endif
                     )
-                )
+                ) ||
+                ts.TX_at_zeroIF
              );
 }
 uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t txrx_mode)
@@ -747,7 +792,8 @@ Oscillator_ResultCodes_t RadioManagement_ValidateFrequencyForTX(uint32_t dial_fr
     bool osc_ok = osc_res == OSC_OK || osc_res == OSC_TUNE_LIMITED;
 	
 	// we also check if our PA is able to support this frequency
-    bool pa_ok = dial_freq >= mchf_pa.min_freq && dial_freq <= mchf_pa.max_freq;
+    //bool pa_ok = dial_freq >= mchf_pa.min_freq && dial_freq <= mchf_pa.max_freq;
+    bool pa_ok = dial_freq >= RFboard.pa_info->min_freq && dial_freq <= RFboard.pa_info->max_freq;
 
     return pa_ok && osc_ok ? osc_res: OSC_TUNE_IMPOSSIBLE;
 }
@@ -2002,3 +2048,16 @@ void RadioManagement_InitTuningInfo()
     df.temp_enabled = 0;        // startup state of TCXO
 
 }
+void RadioManagement_Init_RFboardPA(void)
+{
+    RFboard.pa_info=&mchf_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
+    RFboard.power_levelsInfo=&mchf_power_levelsInfo;
+}
+
+#ifdef USE_OSC_SParkle
+void RadioManagement_Init_SParklePA(void)
+{
+    RFboard.pa_info=&SParkle_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
+    RFboard.power_levelsInfo=&SParkle_power_levelsInfo;
+}
+#endif

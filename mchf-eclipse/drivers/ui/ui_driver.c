@@ -62,6 +62,7 @@
 
 #include "audio_convolution.h"
 #include "audio_agc.h"
+#include "osc_SParkle.h"
 
 #define SPLIT_ACTIVE_COLOUR         		Yellow      // colour of "SPLIT" indicator when active
 #define SPLIT_INACTIVE_COLOUR           	Grey        // colour of "SPLIT" indicator when NOT active
@@ -139,6 +140,7 @@ static void UiDriver_DisplayRttySpeed(bool encoder_active);
 static void UiDriver_DisplayRttyShift(bool encoder_active);
 static void UiDriver_DisplayPskSpeed(bool encoder_active);
 
+static void UiDriver_DisplayATTgain(bool encoder_active);
 
 // encoder one
 typedef enum {
@@ -168,6 +170,7 @@ typedef enum {
     ENC_THREE_MODE_CW_SPEED,
     ENC_THREE_MODE_INPUT_CTRL,
     ENC_THREE_MODE_PSK_SPEED,
+    ENC_THREE_MODE_ATT_GAIN,
     ENC_THREE_NUM_MODES
 } EncoderThreeModes;
 
@@ -1419,6 +1422,8 @@ void UiDriver_UpdateDisplayAfterParamChange()
 
 	UiDriver_RefreshEncoderDisplay();
 
+	UiDriver_DisplayATTgain(ts.enc_thr_mode == ENC_THREE_MODE_ATT_GAIN);      // update gain display and setting if needed
+
 	if(ts.menu_mode)    // are we in menu mode?
 	{
 		UiMenu_RenderMenu(MENU_RENDER_ONLY);    // yes, update display when we change modes
@@ -1926,7 +1931,8 @@ static void UiDriver_DrawPowerMeterLabels()
     const uint16_t y_pos = (ts.Layout->SM_IND.y + 5);
     const uint16_t x_pos = (ts.Layout->SM_IND.x + 18);
 
-    const int32_t maxW = ((mchf_pa.max_power > 5000) ? mchf_pa.max_power : 5000)  / 1000;
+    //const int32_t maxW = ((mchf_pa.max_power > 5000) ? mchf_pa.max_power : 5000)  / 1000;
+    const int32_t maxW = ((RFboard.pa_info->max_power > 5000) ? RFboard.pa_info->max_power : 5000)  / 1000;
 
     // get the pwr increment in next integer number of 0.5W steps
     const float32_t PWR_INCR = (maxW % 5 == 0)? (maxW/10.0) : (maxW/5+1)/2.0  ; //.
@@ -3245,6 +3251,41 @@ static void UiDriver_ChangeBand(bool is_up)
 	}
 }
 
+static void UiDriver_DisplayATTgain(bool encoder_active)
+{
+    if(!RFboard.AMP_ATT_getCurrent)
+    {
+        return;
+    }
+
+    if(RFboard.AMP_ATT_getCurrent)
+    {
+        ts.ATT_Gain=RFboard.AMP_ATT_getCurrent();
+    }
+
+    uint32_t color = encoder_active?White:Grey;
+
+    char    temp[5];
+    const char* label = "???";
+    snprintf(temp,5,ts.ATT_Gain?"%+2i":"%2i", ts.ATT_Gain);
+
+    if(ts.ATT_Gain>0)
+    {
+        label = "AMP";
+    }
+    else
+    {
+        label = "ATT";
+        if(ts.ATT_Gain==0)
+        {
+            snprintf(temp,5,"OFF");
+        }
+    }
+
+
+    UiDriver_EncoderDisplay(2,2,label, encoder_active, temp, color);
+}
+
 
 /**
  * @brief Read out the changes in the frequency encoder and initiate frequency change by setting a global variable.
@@ -3789,6 +3830,20 @@ static void UiDriver_CheckEncoderThree()
 				UiDriver_DisplayLineInModeAndGain(1);
 			}
 			break;
+			//if applicable do amplitude select
+			case ENC_THREE_MODE_ATT_GAIN:
+			{
+			    if(RFboard.AMP_ATT_next && pot_diff_step>0)
+			    {
+			        ts.ATT_Gain=RFboard.AMP_ATT_next();
+			    }
+			    else
+			    {
+			        ts.ATT_Gain=RFboard.AMP_ATT_prev();
+			    }
+			    UiDriver_DisplayATTgain(1);
+			}
+			break;
 			default:
 				break;
 			}
@@ -3933,6 +3988,9 @@ static bool UiDriver_IsApplicableEncoderThreeMode(uint8_t mode)
 		retval = ts.dmod_mode != DEMOD_DIGI || ts.digital_mode != DigitalMode_BPSK;
 		//retval = ts.dmod_mode != DEMOD_DIGI || (ts.digital_mode != DigitalMode_BPSK && ts.digital_mode != DigitalMode_RTTY);
 		break;
+	case ENC_THREE_MODE_ATT_GAIN:
+	    retval = RFboard.AMP_ATT_getCurrent!=NULL;
+	    break;
 	}
 	return retval;
 }
@@ -3942,6 +4000,7 @@ static void UiDriver_DisplayEncoderThreeMode()
 {
 	// upper box
 	UiDriver_DisplayRit(ts.enc_thr_mode == ENC_THREE_MODE_RIT);
+	UiDriver_DisplayATTgain(ts.enc_thr_mode == ENC_THREE_MODE_ATT_GAIN);
 
 	// lower box
 	switch(ts.enc_thr_mode)
@@ -4976,6 +5035,11 @@ static void UiDriverUpdateLoMeter(uchar val,uchar active)
 #define TEMP_DATA 43
 void UiDriver_CreateTemperatureDisplay()
 {
+    if(ts.DisableTCXOdisplay)
+    {
+        return;                 //permanent disable unused temp sensor
+    }
+
 	const char *label, *txt;
 	uint32_t label_color, txt_color;
 
@@ -5055,6 +5119,11 @@ static void UiDriver_DisplayTemperature(int temp)
 //*----------------------------------------------------------------------------
 static void UiDriver_HandleLoTemperature()
 {
+    if(ts.DisableTCXOdisplay)
+    {
+        return;                 //permanent disable unused temp sensor
+    }
+
 	if (SoftTcxo_HandleLoTemperatureDrift())
 	{
 		UiDriver_DisplayTemperature(lo.temp/1000); // precision is 0.1 represent by lowest digit
@@ -5896,8 +5965,21 @@ void UiDriver_StartUpScreenInit()
 	// Clear all
 	UiLcdHy28_LcdClear(Black);
 	uint16_t nextY = ts.Layout->StartUpScreen_START.y;
-	snprintf(tx,100,"%s",DEVICE_STRING);
-	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
+#ifdef USE_OSC_SParkle
+	if(SParkle_IsPresent())
+	{
+	    snprintf(tx,100,"%s",SParkle_DEVICE_STRING);
+        nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
+
+        snprintf(tx,100,"Hardware License: %s",SParkleTRX_HW_LIC);
+        nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 3, 320, tx, White,Black, 0);
+        nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, SParkleTRX_HW_CREATOR, White,Black, 0);
+	}
+	else
+#endif
+	{
+	    snprintf(tx,100,"%s",DEVICE_STRING);
+	    nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
 
 #ifdef TRX_HW_LIC
 	snprintf(tx,100,"Hardware License: %s",TRX_HW_LIC);
@@ -5906,6 +5988,7 @@ void UiDriver_StartUpScreenInit()
 #ifdef TRX_HW_CREATOR
 	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, TRX_HW_CREATOR, White,Black, 0);
 #endif
+    }
 
 	snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
 	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 8, 320, tx, Yellow, Black, 1);
@@ -5951,6 +6034,10 @@ void UiDriver_StartUpScreenFinish()
 
 	if(osc->type == OSC_SI570 && RadioManagement_TcxoIsEnabled())
 	{
+#ifdef USE_OSC_SParkle
+	    if(!SParkle_IsPresent())
+#endif
+
 		UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
 	}
 
@@ -5966,7 +6053,8 @@ void UiDriver_StartUpScreenFinish()
 	    }
 	}
 
-	if(ts.rf_board == RF_BOARD_MCHF || ts.rf_board == RF_BOARD_RS928) {
+	if(ts.rf_board == RF_BOARD_MCHF || ts.rf_board == RF_BOARD_RS928 )
+	{
 	  UiDriver_StartupScreen_LogIfProblem((HAL_ADC_GetValue(&hadc2) > MAX_VSWR_MOD_VALUE) && (HAL_ADC_GetValue(&hadc3) > MAX_VSWR_MOD_VALUE),
 			"SWR Bridge resistor mod NOT completed!");
 	}
@@ -6219,7 +6307,8 @@ static void UiAction_ChangeDemodModeToAlternativeMode()
 void UiAction_ChangePowerLevel()
 {
     uint8_t pl = ts.power_level;
-    incr_wrap_uint8(&pl,0,mchf_power_levelsInfo.count-1);
+    //incr_wrap_uint8(&pl,0,mchf_power_levelsInfo.count-1);
+    incr_wrap_uint8(&pl,0,RFboard.power_levelsInfo->count-1);
 	UiDriver_HandlePowerLevelChange(ts.band_effective, pl);
 
 }
