@@ -26,8 +26,10 @@
 #include "uhsdr_hw_i2c.h"
 
 #include "freedv_uhsdr.h"
-// SI570 control
+// OSC control
 #include "osc_interface.h"
+#include "osc_ducddc_df8oe.h"
+
 #include "codec.h"
 #include "audio_driver.h"
 #include "audio_management.h"
@@ -218,7 +220,7 @@ BandInfo_c **bandInfo = bandInfo_combined;
 uint8_t bandinfo_idx; // default init with 0 is fine
 
 //specyfic hardware features structure
-__IO __MCHF_SPECIALMEM HardwareRFBoard RFboard;
+__MCHF_SPECIALMEM HardwareRFBoard RFboard;
 
 /**
  * Searches the band info for a given band memory index
@@ -995,7 +997,6 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
             ts.audio_dac_muting_buffer_count = 2; // wait at least 2 buffer cycles
             ts.audio_dac_muting_flag = true; // let the audio being muted initially as long as we need it
-            RadioManagement_DisablePaBias(); // kill bias to mute the HF output quickly
         }
 
         if(txrx_mode_final == TRX_MODE_TX)
@@ -1020,8 +1021,12 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             {
                 Board_RedLed(LED_STATE_ON); // TX
                 Board_GreenLed(LED_STATE_OFF);
-                Board_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
+                RFboard.PrepareTx();
             }
+        }
+        else
+        {
+            RFboard.PrepareRx();
         }
 
         df.tune_new = tune_new;
@@ -1047,7 +1052,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
                 // this can take up to 1.2ms (time for processing two audio buffer dma requests
             }
 
-            Board_EnableTXSignalPath(false); // switch antenna to input and codec output to lineout
+            RFboard.EnableRx(); // switch antenna to input and codec output to lineout
             Board_RedLed(LED_STATE_OFF);      // TX led off
             Board_GreenLed(LED_STATE_ON);      // TX led off
             ts.audio_dac_muting_flag = false; // unmute audio output
@@ -1061,7 +1066,8 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
             if (txrx_mode_final == TRX_MODE_TX)
             {
-                RadioManagement_SetPaBias();
+                RFboard.EnableTx();
+
                 uint32_t input_mute_time = 0, dac_mute_time = 0, dac_mute_time_mode = 0, input_mute_time_mode = 0; // aka 1.3ms
                 // calculate expire time for audio muting in interrupts, it is 15 interrupts per 10ms
                 dac_mute_time = ts.txrx_switch_audio_muting_timing * 15;
@@ -2021,43 +2027,128 @@ static void RadioManagement_InitBandSet()
     }
 }
 
+/**
+ * Setups up available bands etc.
+ * NOTE: To be called AFTER configuration has been initialized / loaded from flash/I2C eeprom AND
+ * after the RFBoard has been initialized
+ */
 void RadioManagement_InitTuningInfo()
 {
     RadioManagement_InitBandSet();
 
-    // Initialize vfo values array
-    for(int i = 0; i < MAX_BAND_NUM; i++)
-    {
-        VfoReg* vfoa = &vfo[VFO_A].band[i];
-        VfoReg* vfob = &vfo[VFO_B].band[i];
-
-        uint32_t bandstart = RadioManagement_GetBandInfo(i)->tune;
-
-        vfoa->dial_value = vfob->dial_value = 0xFFFFFFFF;   // clear dial values
-        vfoa->decod_mode = vfob->decod_mode = bandstart >= 8000000?DEMOD_USB:DEMOD_LSB;     // initialized default demod mode
-        vfoa->digital_mode = vfob->digital_mode = DigitalMode_None;   // clear digital mode
-    }
-
     // Init frequency publics(set diff values so update on LCD will be done)
     df.tune_old     = 0;
-    df.tune_new     = RadioManagement_GetBandInfo(BAND_MODE_80)->tune + 3000;
-    df.selected_idx = T_STEP_1KHZ_IDX;      // 1 Khz startup step
-    df.tuning_step  = tune_steps[df.selected_idx];
+    // df.tune_new     = RadioManagement_GetBandInfo(BAND_MODE_80)->tune + 3000;
+    // df.selected_idx = T_STEP_1KHZ_IDX;      // 1 Khz startup step
+    // df.tuning_step  = tune_steps[df.selected_idx];
+
     df.temp_factor  = 0;
     df.temp_factor_changed = false;
     df.temp_enabled = 0;        // startup state of TCXO
 
-}
-void RadioManagement_Init_RFboardPA(void)
-{
-    RFboard.pa_info=&mchf_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
-    RFboard.power_levelsInfo=&mchf_power_levelsInfo;
+    df.tune_new = vfo[get_active_vfo()].band[ts.band->band_mode].dial_value;        // init "tuning dial" frequency based on restored settings
+
+    ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();          // determine CW sideband mode from the restored frequency
+
 }
 
-#ifdef USE_OSC_SParkle
-void RadioManagement_Init_SParklePA(void)
+bool Mchf_PrepareTx(void)
 {
-    RFboard.pa_info=&SParkle_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
-    RFboard.power_levelsInfo=&SParkle_power_levelsInfo;
+    Board_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
+    return true;
 }
+
+bool Mchf_PrepareRx(void)
+{
+    RadioManagement_DisablePaBias(); // kill bias to mute the HF output quickly
+    return true;
+}
+
+bool Mchf_EnableRx(void)
+{
+    Board_EnableTXSignalPath(false); // switch antenna to input and codec output to QSD mixer
+    return true;
+}
+
+bool Mchf_EnableTx(void)
+{
+    RadioManagement_SetPaBias();
+    return true;
+}
+
+bool RFBoard_Dummy_PrepareTx(void)
+{
+    return true;
+}
+
+bool RFBoard_Dummy_PrepareRx(void)
+{
+    return true;
+}
+
+bool RFBoard_Dummy_EnableRx(void)
+{
+    return true;
+}
+
+bool RFBoard_Dummy_EnableTx(void)
+{
+    return true;
+}
+
+/**
+ * This has to be called after rf board hardware detection and before using any other RFboard related functions
+ */
+void RFBoard_Init_Board(void)
+{
+
+    // Initialize LO, by which we (at least for now) can detect the RF board
+    Osc_Init();
+
+    // we determine and set the correct RF board here
+    switch(osc->type)
+    {
+        case OSC_SI5351A: ts.rf_board = RF_BOARD_RS928; break;
+        case OSC_DUCDDC_DF8OE  : ts.rf_board = RF_BOARD_DDCDUC_DF8OE; break;
+        case OSC_SI570: ts.rf_board = RF_BOARD_MCHF; break;
+        case OSC_SPARKLE: ts.rf_board = RF_BOARD_SPARKLE; break;
+        default: ts.rf_board = RF_BOARD_UNKNOWN;
+    }
+
+    osc->setPPM((float)ts.freq_cal/10.0);
+
+    switch(ts.rf_board)
+    {
+        case RF_BOARD_SPARKLE:
+#ifdef USE_OSC_SParkle
+            RFboard.pa_info=&SParkle_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
+            RFboard.power_levelsInfo=&SParkle_power_levelsInfo;
+            RFboard.EnableTx  = RFBoard_Dummy_EnableTx;
+            RFboard.EnableRx = RFBoard_Dummy_EnableRx;
+            RFboard.PrepareTx  = RFBoard_Dummy_PrepareTx;
+            RFboard.PrepareRx = RFBoard_Dummy_PrepareRx;
+
+            SParkle_ConfigurationInit();
 #endif
+
+            break;
+        case RF_BOARD_DDCDUC_DF8OE:
+            RFboard.pa_info=&mchf_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
+            RFboard.power_levelsInfo=&mchf_power_levelsInfo;
+            RFboard.EnableTx  = DucDdc_Df8oe_EnableTx;
+            RFboard.EnableRx = DucDdc_Df8oe_EnableRx;
+            RFboard.PrepareTx  = DucDdc_Df8oe_PrepareTx;
+            RFboard.PrepareRx = DucDdc_Df8oe_PrepareRx;
+
+            break;
+        case RF_BOARD_MCHF:
+        case RF_BOARD_RS928:
+        default: // HACK: in case we don't detect a board, we still initialize to mcHF RF for now.
+            RFboard.pa_info=&mchf_pa;
+            RFboard.power_levelsInfo=&mchf_power_levelsInfo;
+            RFboard.EnableTx  = Mchf_EnableTx;
+            RFboard.EnableRx = Mchf_EnableRx;
+            RFboard.PrepareTx  = Mchf_PrepareTx;
+            RFboard.PrepareRx = Mchf_PrepareRx;
+    }
+}

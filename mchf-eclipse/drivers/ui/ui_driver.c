@@ -906,8 +906,6 @@ void UiDriver_Init()
 
 	// Driver publics init
 	UiDriver_PublicsInit();
-	// Init frequency publics
-	RadioManagement_InitTuningInfo();
 
 	Keypad_Scan();
 
@@ -929,6 +927,7 @@ void UiDriver_Init()
 		UiDriver_StartupScreen_LogIfProblem(IS_TSCalibrated == 0,
 				"WARNING:  TOUCHSCREEN NOT CALIBRATED!!!\nRun calibration first!");
 	}
+
 	if (ts.special_functions_enabled != 1)
 	{
 	  UiDriver_StartupScreen_LogIfProblem(AudioDriver_GetTranslateFreq() == 0,
@@ -956,16 +955,6 @@ void UiDriver_Init()
 	{
 		UiDriver_KeyTestScreen();
 	}
-
-
-	osc->setPPM((float)ts.freq_cal/10.0);
-
-	df.tune_new = vfo[get_active_vfo()].band[ts.band->band_mode].dial_value;		// init "tuning dial" frequency based on restored settings
-	df.tune_old = 0; // with this we force a frequency change once the main loop becomes active
-
-	ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();			// determine CW sideband mode from the restored frequency
-
-
 	UiDriver_DspModeMaskInit();
 
 	sd.display_offset = INIT_SPEC_AGC_LEVEL;		// initialize setting for display offset/AGC
@@ -973,7 +962,6 @@ void UiDriver_Init()
 	// Reset inter driver requests flag
 	ts.LcdRefreshReq	= 0;
 	ts.new_band 		= ts.band->band_mode;
-	df.step_new 		= df.tuning_step;
 
 	// Extra HW init
 	Board_PostInit();
@@ -3833,6 +3821,8 @@ static void UiDriver_CheckEncoderThree()
 			//if applicable do amplitude select
 			case ENC_THREE_MODE_ATT_GAIN:
 			{
+			    // TODO This Code WILL CRASH if RFboard AMP_ATT_prev and AMP_ATT_next == NULL,
+			    // which is default
 			    if(RFboard.AMP_ATT_next && pot_diff_step>0)
 			    {
 			        ts.ATT_Gain=RFboard.AMP_ATT_next();

@@ -274,12 +274,6 @@ void TransceiverStateInit(void)
     ts.ATT_Gain=0;              //additional attenuator or amplifier gain value to be used in real dbm calculation.
     ts.TX_at_zeroIF=0;          //set default state of TX IF to setting same as for RX (except for digi modes which most of use zero IF TX anyway)
 
-    //setting to default RFboard structure. The specific hardware setting must be done in hardware init.
-    RFboard.AMP_ATT_getCurrent=NULL;
-    RFboard.AMP_ATT_next=NULL;
-    RFboard.AMP_ATT_prev=NULL;
-
-    RadioManagement_Init_RFboardPA();
 }
 
 // #include "Trace.h"
@@ -342,6 +336,12 @@ int mchfMain(void)
 
     UiDriver_Init();
 
+    // Initialize the RF board
+    RFBoard_Init_Board();
+
+    RadioManagement_InitTuningInfo();
+
+
 #ifdef STM32F4
     // we now re-init the I2C buses with the configured speed settings. Loading the EEPROM always uses the default speed!
     // we can do this only on the STM32F4 as we are not able to change
@@ -351,13 +351,8 @@ int mchfMain(void)
 #endif
 
 	profileTimedEventInit();
-#ifdef USE_OSC_SParkle
-    if(osc->type == osc_SParkle_DDC)
-    {
-        SParkle_ConfigurationInit();
-    }
-    else
-#endif
+
+
 
 #ifdef USE_HMC1023
     hmc1023_init();
