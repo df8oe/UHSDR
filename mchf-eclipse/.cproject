@@ -2862,6 +2862,7 @@
 									<listOptionValue builtIn="false" value="RF_BRD_MCHF"/>
 									<listOptionValue builtIn="false" value="UI_BRD_OVI40"/>
 									<listOptionValue builtIn="false" value="FDV_ARM_MATH"/>
+									<listOptionValue builtIn="false" value="RF_BRD_SPARKLE"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.135558932" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
@@ -2878,6 +2879,7 @@
 									<listOptionValue builtIn="false" value="RF_BRD_MCHF"/>
 									<listOptionValue builtIn="false" value="UI_BRD_OVI40"/>
 									<listOptionValue builtIn="false" value="FDV_ARM_MATH"/>
+									<listOptionValue builtIn="false" value="RF_BRD_SPARKLE"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.779985996" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/ovi40-h7/Inc}&quot;"/>
@@ -2929,6 +2931,7 @@
 									<listOptionValue builtIn="false" value="RF_BRD_MCHF"/>
 									<listOptionValue builtIn="false" value="UI_BRD_OVI40"/>
 									<listOptionValue builtIn="false" value="FDV_ARM_MATH"/>
+									<listOptionValue builtIn="false" value="RF_BRD_SPARKLE"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.967575706" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mchf-eclipse/basesw/ovi40-h7/Inc}&quot;"/>

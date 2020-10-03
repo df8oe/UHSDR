@@ -40,7 +40,6 @@ typedef struct DialFrequency
     // Current tuning step
     ulong   tuning_step;        // selected step by user
     ulong   selected_idx;       // id of step
-    ulong   step_new;           // Eth driver req step
 
     ulong   update_skip;
 
@@ -139,9 +138,13 @@ typedef struct {
 
     const pa_power_levels_info_t* power_levelsInfo;
     const pa_info_t* pa_info;
+    bool    (*EnableTx)(void);
+    bool    (*EnableRx)(void);
+    bool    (*PrepareTx)(void);
+    bool    (*PrepareRx)(void);
 } HardwareRFBoard;
 
-extern __IO HardwareRFBoard RFboard;
+extern HardwareRFBoard RFboard;
 
 #define PA_LEVEL_DEFAULT        PA_LEVEL_MEDIUM     // Default power level
 

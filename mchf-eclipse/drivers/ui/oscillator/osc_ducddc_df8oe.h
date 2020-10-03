@@ -17,4 +17,10 @@
 #include "osc_interface.h"
 
 extern const OscillatorInterface_t osc_ducddc;
+
+bool DucDdc_Df8oe_EnableRx(void);
+bool DucDdc_Df8oe_EnableTx(void);
+bool DucDdc_Df8oe_PrepareTx(void);
+bool DucDdc_Df8oe_PrepareRx(void);
+
 #endif

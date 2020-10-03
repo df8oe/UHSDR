@@ -260,7 +260,6 @@ void Board_InitMinimal()
 
 }
 
-<<<<<<< HEAD
 /**
  * Interrupt handler for the input paddles/ptt switch
  * @param GPIO_Pin
@@ -296,13 +295,6 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
             break;
         }
     }
-=======
-#ifdef USE_OSC_SParkle
-    if(SParkle_IsPresent())
-        ts.rf_board=FOUND_RF_BOARD_SParkle;
-#endif
-
->>>>>>> 49d6a26b... [SParkle] Initial commit. Basic interfacing to SParkle RF boards.
 }
 
 

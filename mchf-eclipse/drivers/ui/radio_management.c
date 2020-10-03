@@ -26,8 +26,10 @@
 #include "uhsdr_hw_i2c.h"
 
 #include "freedv_uhsdr.h"
-// SI570 control
+// OSC control
 #include "osc_interface.h"
+#include "osc_ducddc_df8oe.h"
+
 #include "codec.h"
 #include "audio_driver.h"
 #include "audio_management.h"
@@ -246,7 +248,7 @@ BandInfo_c **bandInfo = bandInfo_combined;
 uint8_t bandinfo_idx; // default init with 0 is fine
 
 //specyfic hardware features structure
-__IO __MCHF_SPECIALMEM HardwareRFBoard RFboard;
+__MCHF_SPECIALMEM HardwareRFBoard RFboard;
 
 /**
  * Searches the band info for a given band memory index
@@ -1029,7 +1031,6 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
             ts.audio_dac_muting_buffer_count = 2; // wait at least 2 buffer cycles
             ts.audio_dac_muting_flag = true; // let the audio being muted initially as long as we need it
-            RadioManagement_DisablePaBias(); // kill bias to mute the HF output quickly
         }
 
         if(txrx_mode_final == TRX_MODE_TX)
@@ -1054,8 +1055,12 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
             {
                 Board_RedLed(LED_STATE_ON); // TX
                 Board_GreenLed(LED_STATE_OFF);
-                Board_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
+                RFboard.PrepareTx();
             }
+        }
+        else
+        {
+            RFboard.PrepareRx();
         }
 
         df.tune_new = tune_new;
@@ -1081,7 +1086,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
                 // this can take up to 1.2ms (time for processing two audio buffer dma requests
             }
 
-            Board_EnableTXSignalPath(false); // switch antenna to input and codec output to lineout
+            RFboard.EnableRx(); // switch antenna to input and codec output to lineout
             Board_RedLed(LED_STATE_OFF);      // TX led off
             Board_GreenLed(LED_STATE_ON);      // TX led off
             ts.audio_dac_muting_flag = false; // unmute audio output
@@ -1095,7 +1100,8 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
             if (txrx_mode_final == TRX_MODE_TX)
             {
-                RadioManagement_SetPaBias();
+                RFboard.EnableTx();
+
                 uint32_t input_mute_time = 0, dac_mute_time = 0, dac_mute_time_mode = 0, input_mute_time_mode = 0; // aka 1.3ms
                 // calculate expire time for audio muting in interrupts, it is 15 interrupts per 10ms
                 dac_mute_time = ts.txrx_switch_audio_muting_timing * 15;
@@ -2055,30 +2061,27 @@ static void RadioManagement_InitBandSet()
     }
 }
 
+/**
+ * Setups up available bands etc.
+ * NOTE: To be called AFTER configuration has been initialized / loaded from flash/I2C eeprom AND
+ * after the RFBoard has been initialized
+ */
 void RadioManagement_InitTuningInfo()
 {
     RadioManagement_InitBandSet();
 
-    // Initialize vfo values array
-    for(int i = 0; i < MAX_BAND_NUM; i++)
-    {
-        VfoReg* vfoa = &vfo[VFO_A].band[i];
-        VfoReg* vfob = &vfo[VFO_B].band[i];
-
-        uint32_t bandstart = RadioManagement_GetBandInfo(i)->tune;
-
-        vfoa->dial_value = vfob->dial_value = 0xFFFFFFFF;   // clear dial values
-        vfoa->decod_mode = vfob->decod_mode = bandstart >= 8000000?DEMOD_USB:DEMOD_LSB;     // initialized default demod mode
-        vfoa->digital_mode = vfob->digital_mode = DigitalMode_None;   // clear digital mode
-    }
-
     // Init frequency publics(set diff values so update on LCD will be done)
     df.tune_old     = 0;
-    df.tune_new     = RadioManagement_GetBandInfo(BAND_MODE_80)->tune + 3000;
-    df.selected_idx = T_STEP_1KHZ_IDX;      // 1 Khz startup step
-    df.tuning_step  = tune_steps[df.selected_idx];
+    // df.tune_new     = RadioManagement_GetBandInfo(BAND_MODE_80)->tune + 3000;
+    // df.selected_idx = T_STEP_1KHZ_IDX;      // 1 Khz startup step
+    // df.tuning_step  = tune_steps[df.selected_idx];
+
     df.temp_factor  = 0;
     df.temp_factor_changed = false;
     df.temp_enabled = 0;        // startup state of TCXO
+
+    df.tune_new = vfo[get_active_vfo()].band[ts.band->band_mode].dial_value;        // init "tuning dial" frequency based on restored settings
+
+    ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();          // determine CW sideband mode from the restored frequency
 
 }

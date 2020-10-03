@@ -150,4 +150,26 @@ const OscillatorInterface_t osc_ducddc =
         .getMinFrequency = DucDdc_Df8oe_getMinFrequency,
         .getMaxFrequency = DucDdc_Df8oe_getMaxFrequency,
 };
+
+bool DucDdc_Df8oe_EnableTx(void)
+{
+    ducddc_state.next.txp |= 0xD0;
+    return DucDdc_Df8oe_ChangeToNextFrequency() == OSC_OK;
+}
+bool DucDdc_Df8oe_EnableRx(void)
+{
+    ducddc_state.next.txp &= ~0xD0;
+    return DucDdc_Df8oe_ChangeToNextFrequency() == OSC_OK;
+}
+
+bool DucDdc_Df8oe_PrepareTx(void)
+{
+    return true;
+}
+bool DucDdc_Df8oe_PrepareRx(void)
+{
+    return true;
+}
+
+
 #endif
