@@ -1766,12 +1766,11 @@ bool RadioManagement_UpdatePowerAndVSWR()
 
         swrm.vswr = (1+sqrtf(swrm.rev_pwr/swrm.fwd_pwr))/(1-sqrtf(swrm.rev_pwr/swrm.fwd_pwr));
 
-		// Perform VSWR protection iff threshold is > 1 AND enough forward power exists for a valid calculation
+        // Perform VSWR protection iff threshold is > 1 AND enough forward power exists for a valid calculation
         if ( ts.vswr_protection_threshold > 1 && swrm.fwd_pwr >= SWR_MIN_CALC_POWER)
         {
             if ( swrm.vswr > ts.vswr_protection_threshold )
             {
-                RadioManagement_DisablePaBias ( );
                 swrm.high_vswr_detected = true;
 
                 // change output power to "PA_LEVEL_0_5W" when VSWR protection is active
