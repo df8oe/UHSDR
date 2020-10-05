@@ -62,7 +62,8 @@
 
 #include "audio_convolution.h"
 #include "audio_agc.h"
-#include "osc_SParkle.h"
+
+#include "rfboard_interface.h"
 
 #define SPLIT_ACTIVE_COLOUR         		Yellow      // colour of "SPLIT" indicator when active
 #define SPLIT_INACTIVE_COLOUR           	Grey        // colour of "SPLIT" indicator when NOT active
