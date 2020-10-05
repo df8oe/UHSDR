@@ -6,15 +6,14 @@
  **                                                                                 **
  **---------------------------------------------------------------------------------**
  **                                                                                 **
- **  File name:                                                                     **
  **  Description:                                                                   **
- **  Last Modified:                                                                 **
- **  Licence:		GNU GPLv3                                                      **
+ **  Licence:       GNU GPLv3                                                      **
  ************************************************************************************/
 
 // Common
 #include <assert.h>
 #include "radio_management.h"
+#include "rfboard_interface.h"
 #include "profiling.h"
 #include "adc.h"
 
@@ -121,7 +120,7 @@ static const BandInfo bi_gen_all =     { .tune = 0,            .size = 0,       
 // the maximum band size from the 3 different IARU regions
 // IMPORTANT: Right now the order of bands in the list is fixed to the order of BAND_MODE_xxx (low to high)
 // TODO: Make this list ordered by frequency
-static const BandInfo *bandInfo_combined[MAX_BAND_NUM] = 
+static const BandInfo *bandInfo_combined[MAX_BAND_NUM] =
 {
     &bi_80m_r2,
     &bi_60m_gen,
@@ -247,9 +246,6 @@ BandInfo_c **bandInfo = bandInfo_combined;
 
 uint8_t bandinfo_idx; // default init with 0 is fine
 
-//specyfic hardware features structure
-__MCHF_SPECIALMEM HardwareRFBoard RFboard;
-
 /**
  * Searches the band info for a given band memory index
  * This relieves us from ordering the vfo band memories exactly like the
@@ -273,75 +269,6 @@ const BandInfo* RadioManagement_GetBandInfo(uint8_t new_band_index)
     return bi;
 }
 
-// this structure MUST match the order of entries in power_level_t !
-static const power_level_desc_t mchf_rf_power_levels[] =
-{
-        { .id = PA_LEVEL_FULL,   .mW = 0,    }, // we use 0 to indicate max power
-        { .id = PA_LEVEL_HIGH,   .mW = 5000, },
-        { .id = PA_LEVEL_MEDIUM, .mW = 2000, },
-        { .id = PA_LEVEL_LOW,    .mW = 1000, },
-        { .id = PA_LEVEL_MINIMAL,.mW =  500, },
-};
-
-
-const pa_power_levels_info_t mchf_power_levelsInfo =
-{
-        .levels = mchf_rf_power_levels,
-        .count = sizeof(mchf_rf_power_levels)/sizeof(*mchf_rf_power_levels),
-};
-
-#ifdef RF_BRD_MCHF
-const pa_info_t mchf_pa =
-{
-        .name  = "mcHF PA",
-        .reference_power = 5000.0,
-        .max_freq = 32000000,
-        .min_freq =  1800000,
-        .max_am_power = 2000,
-        .max_power = 10000,
-};
-#endif  // RF_BRD_MCHF
-
-
-#ifdef RF_BRD_LAPWING
-const pa_info_t mchf_pa =
-{
-        .name  = "Lapwing PA",
-        .reference_power = 5000.0,
-        .max_freq = 1300 * 1000000,
-        .min_freq = 1240 * 1000000,
-        .max_am_power = 2000,
-        .max_power = 20000,
-};
-#endif // LAPWING
-
-#ifdef USE_OSC_SParkle
-// this structure MUST match the order of entries in power_level_t !
-static const power_level_desc_t SParkle_rf_power_levels[] =
-{
-        { .id = PA_LEVEL_FULL,   .mW = 0,    }, // we use 0 to indicate max power
-        { .id = PA_LEVEL_HIGH,   .mW = 50000, },
-        { .id = PA_LEVEL_MEDIUM, .mW = 10000, },
-        { .id = PA_LEVEL_LOW,    .mW = 1000, },
-        { .id = PA_LEVEL_MINIMAL,.mW =  500, },
-};
-
-const pa_power_levels_info_t SParkle_power_levelsInfo =
-{
-        .levels = SParkle_rf_power_levels,
-        .count = sizeof(SParkle_rf_power_levels)/sizeof(*SParkle_rf_power_levels),
-};
-
-const pa_info_t SParkle_pa =
-{
-        .name  = "SParkle PA",
-        .reference_power = 10000.0,
-        .max_freq = 150000000,
-        .min_freq =  1800000,
-        .max_am_power = 25000,
-        .max_power = 50000,
-};
-#endif
 
 // The following descriptor table has to be in the order of the enum digital_modes_t in  radio_management.h
 // This table is stored in flash (due to const) and cannot be written to
@@ -680,17 +607,6 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
 }
 
 /**
- * @brief switch off the PA Bias to mute HF output ( even if PTT is on )
- * Using this method the PA will be effectively muted no matter what setting
- * the main bias switch has (which directly connected to the PTT HW Signal)
- * Used to suppress signal path reconfiguration noise during rx/tx and tx/rx switching
- */
-void RadioManagement_DisablePaBias()
-{
-    Board_SetPaBiasValue(0);
-}
-
-/**
  * @brief recalculate and set the PA Bias according to requested value
  *
  * Please note that at the mcHF BIAS is only applied if the PTT HW Signal
@@ -1015,7 +931,7 @@ void RadioManagement_SwitchTxRx(uint8_t txrx_mode, bool tune_mode)
 
         if (is_demod_psk())
         {
-        	Psk_Modulator_PrepareTx();
+            Psk_Modulator_PrepareTx();
         }
     }
 
@@ -1484,18 +1400,18 @@ void RadioManagement_HandlePttOnOff()
         else if (CatDriver_CatPttActive() == false)
         {
             // When CAT driver "pressed" PTT skip auto return to RX
-        	if (ts.tx_stop_req == true && is_demod_psk() && Psk_Modulator_GetState() == PSK_MOD_ACTIVE)
-        	{
-        		Psk_Modulator_SetState(PSK_MOD_POSTAMBLE);
-        		ts.tx_stop_req = false;
-        	}
-        	else if(!(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || ts.cw_text_entry) || ts.tx_stop_req == true)
+            if (ts.tx_stop_req == true && is_demod_psk() && Psk_Modulator_GetState() == PSK_MOD_ACTIVE)
             {
-        	    // we get here either if there is an explicit request to stop transmission no matter which mode we are in
-        	    // or if the mode relies on us to switch off after PTT has been released (we defines this by exclusion
-        	    // of modes which control transmission state via paddles or keyboard)
+                Psk_Modulator_SetState(PSK_MOD_POSTAMBLE);
+                ts.tx_stop_req = false;
+            }
+            else if(!(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || ts.cw_text_entry) || ts.tx_stop_req == true)
+            {
+                // we get here either if there is an explicit request to stop transmission no matter which mode we are in
+                // or if the mode relies on us to switch off after PTT has been released (we defines this by exclusion
+                // of modes which control transmission state via paddles or keyboard)
 
-        	    // If we are in TX
+                // If we are in TX
                 if(ts.txrx_mode == TRX_MODE_TX)
                 {
                     // ... the PTT line is released ...
@@ -1569,15 +1485,15 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
 #ifdef USE_TWO_CHANNEL_AUDIO
     case DEMOD_SSBSTEREO:
     case DEMOD_IQ:
-    	if(!ts.stereo_enable)
-    	{
-    		retval = false;
-    	}
-    	else
-    	{
-    		retval = true;
-    	}
-    	break;
+        if(!ts.stereo_enable)
+        {
+            retval = false;
+        }
+        else
+        {
+            retval = true;
+        }
+        break;
 #endif
     default:
         retval = true;

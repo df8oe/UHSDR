@@ -43,7 +43,7 @@
 #include "misc/TestCPlusPlusInterface.h"
 
 #include "drivers/ui/radio_management.h" // just for the ptt/paddle handling
-
+#include "rfboard_interface.h"
 /**
  * Detects if a special bootloader is used and configures some settings
  * Used for debugging and testing purposes only

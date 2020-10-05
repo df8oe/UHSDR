@@ -32,6 +32,7 @@
 #include "math.h"
 #include "codec.h"
 #include "radio_management.h"
+#include "rfboard_interface.h"
 #include "soft_tcxo.h"
 #include "cw_decoder.h"
 

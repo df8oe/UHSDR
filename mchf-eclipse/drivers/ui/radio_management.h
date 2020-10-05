@@ -104,49 +104,8 @@ typedef enum
 } power_level_t;
 
 
-typedef struct {
-    power_level_t id;
-    int32_t   mW;
-} power_level_desc_t;
-
-typedef struct {
-    const power_level_desc_t* levels;
-    const uint32_t count;
-} pa_power_levels_info_t;
-
-extern const pa_power_levels_info_t mchf_power_levelsInfo;
-
-typedef struct
-{
-    char* name;
-    float32_t  reference_power;
-    uint32_t  max_freq;
-    uint32_t  min_freq;
-    int32_t max_am_power;
-    int32_t max_power; // power level upper limit, used for display
-} pa_info_t;
-
-extern const pa_info_t mchf_pa;
-
-//definition of specific RF hardware features
-typedef int8_t (*hRFb_RXATT)(void);
-
-typedef struct {
-    hRFb_RXATT AMP_ATT_prev;
-    hRFb_RXATT AMP_ATT_next;
-    hRFb_RXATT AMP_ATT_getCurrent;
-
-    const pa_power_levels_info_t* power_levelsInfo;
-    const pa_info_t* pa_info;
-    bool    (*EnableTx)(void);
-    bool    (*EnableRx)(void);
-    bool    (*PrepareTx)(void);
-    bool    (*PrepareRx)(void);
-} HardwareRFBoard;
-
-extern HardwareRFBoard RFboard;
-
 #define PA_LEVEL_DEFAULT        PA_LEVEL_MEDIUM     // Default power level
+
 
 #define DEFAULT_FREQ_OFFSET     3000              // Amount of offset (at LO freq) when loading "default" frequency
 

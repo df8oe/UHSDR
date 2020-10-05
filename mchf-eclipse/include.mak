@@ -4,6 +4,7 @@ hardware \
 hardware/board_configs \
 drivers/freedv \
 drivers/audio \
+drivers/rfboard \
 drivers/ui/oscillator \
 drivers/ui/ \
 misc/v_eprom \
