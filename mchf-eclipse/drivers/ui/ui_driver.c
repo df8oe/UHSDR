@@ -18,6 +18,7 @@
 #include <assert.h>
 
 #include <stdio.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <math.h>
 #include <src/uhsdr_version.h>
@@ -1674,7 +1675,7 @@ static void UiDriver_DisplayMemoryLabel()
 
 #ifdef USE_MEMORY_MODE
 	    // Enable all band memories, don't use band names
-        snprintf(txt,12,"Mem%02d   ", ts.band->band_mode);
+        snprintf(txt,12,"Mem%02"PRIu32"   ", ts.band->band_mode);
 #else
         // Each memory has its designated band, use that as band
         snprintf(txt,12,"Bnd%s   ", ts.band->name);

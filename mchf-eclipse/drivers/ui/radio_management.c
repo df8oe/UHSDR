@@ -1987,16 +1987,9 @@ void RadioManagement_InitTuningInfo()
 
     // Init frequency publics(set diff values so update on LCD will be done)
     df.tune_old     = 0;
-    // df.tune_new     = RadioManagement_GetBandInfo(BAND_MODE_80)->tune + 3000;
-    // df.selected_idx = T_STEP_1KHZ_IDX;      // 1 Khz startup step
-    // df.tuning_step  = tune_steps[df.selected_idx];
-
     df.temp_factor  = 0;
     df.temp_factor_changed = false;
     df.temp_enabled = 0;        // startup state of TCXO
-
     df.tune_new = vfo[get_active_vfo()].band[ts.band->band_mode].dial_value;        // init "tuning dial" frequency based on restored settings
-
     ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();          // determine CW sideband mode from the restored frequency
-
 }
