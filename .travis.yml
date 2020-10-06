@@ -34,6 +34,7 @@ script:
     - mkdir -p mchf-eclipse/build/fw-f4-small
     - mkdir -p mchf-eclipse/build/fw-h7
     - mkdir -p mchf-eclipse/build/fw-f7-lapwing
+    - mkdir -p mchf-eclipse/build/fw-f7-sparkle
     - cd $BUILDLOC/fw-h7
     - cd ../bl-h7
     - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="H7" TRX_ID="i40h7" TRX_NAME="OVI40H7" CONFIGFLAGS="-DUI_BRD_OVI40" bootloader 
@@ -53,6 +54,8 @@ script:
     - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF -DEXTERNAL_USE_GFX_CONFIG -DUSE_DISP_480_320 -DUSE_GFX_ILI9486" all 
     - cd ../fw-f4-small
     - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR CONFIGFLAGS="-DUI_BRD_MCHF -DRF_BRD_MCHF -DIS_SMALL_BUILD" ROOTLOC=$ROOTLOC all
+    - cd ../fw-f7-sparkle
+    - make $MAKEFLAGS -f $ROOTLOC/Makefile OPT_GCC_ARM=$GCC_DIR ROOTLOC=$ROOTLOC BUILDFOR="F7" TRX_ID="spkf7" CONFIGFLAGS="-DUI_BRD_OVI40 -DRF_BRD_SPARKLE" all 
     - cd ..
 before_deploy:
     - sudo apt-get install -y doxygen graphviz
