@@ -1668,25 +1668,24 @@ const BandGenInfo bandGenInfo[] =
 //*----------------------------------------------------------------------------
 static void UiDriver_DisplayMemoryLabel()
 {
-	char txt[12];
-	uint32_t col = White;
+	char txt[9];
+	// "Bnd" + 4digits + "m" = max 8 characters. We make sure the string is never longer than that.
+
 	if (ts.band->band_mode < MAX_BAND_NUM && ts.cat_band_index == 255)
 	{
-
 #ifdef USE_MEMORY_MODE
 	    // Enable all band memories, don't use band names
-        snprintf(txt,12,"Mem%02"PRIu32"   ", ts.band->band_mode);
+        snprintf(txt,sizeof(txt),"Mem%02"PRIu32"   ", ts.band->band_mode);
 #else
         // Each memory has its designated band, use that as band
-        snprintf(txt,12,"Bnd%s   ", ts.band->name);
+        snprintf(txt,sizeof(txt),"Bnd%s   ", ts.band->name);
 #endif
 	}
 	if (ts.cat_band_index != 255)		// no band storage place active because of "CAT running in sandbox"
 	{
-		snprintf(txt,12,"  CAT   ");
+		snprintf(txt,sizeof(txt),"  CAT   ");
 	}
-	txt[8]='\0'; // "Bnd" + 4digits + "m" = max 8 characters. We make sure the string is never longer than that.
-	UiLcdHy28_PrintText(ts.Layout->MEMORYLABEL.x,  ts.Layout->MEMORYLABEL.y,txt,col,Black,0);
+	UiLcdHy28_PrintText(ts.Layout->MEMORYLABEL.x, ts.Layout->MEMORYLABEL.y, txt, White, Black, 0);
 }
 
 /**
@@ -6026,10 +6025,6 @@ void UiDriver_StartUpScreenFinish()
 
 	if(osc->type == OSC_SI570 && RadioManagement_TcxoIsEnabled())
 	{
-#ifdef USE_OSC_SParkle
-	    if(!SParkle_IsPresent())
-#endif
-
 		UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
 	}
 
