@@ -5957,7 +5957,7 @@ void UiDriver_StartUpScreenInit()
 	UiLcdHy28_LcdClear(Black);
 	uint16_t nextY = ts.Layout->StartUpScreen_START.y;
 #ifdef USE_OSC_SParkle
-	if(SParkle_IsPresent())
+	if(ts.rf_board == RF_BOARD_SPARKLE)
 	{
 	    snprintf(tx,100,"%s",SParkle_DEVICE_STRING);
         nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
