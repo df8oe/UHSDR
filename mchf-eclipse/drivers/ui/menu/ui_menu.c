@@ -711,27 +711,15 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcess
     const BandInfo* band = RadioManagement_GetBand(df.tune_old);
     if((band_mode == band->band_mode) && (ts.power_level == pa_level))
     {
-#ifdef USE_OSC_SParkle
-        if(SParkle_IsPresent())
-        {
-            tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
-                                                  TX_POWER_FACTOR_MIN_DUC,
-                                                  RadioManagement_IsPowerFactorReduce(df.tune_old)?TX_POWER_FACTOR_MAX_DUC:TX_POWER_FACTOR_MAX_DUC/4,
-                                                  TX_POWER_FACTOR_MIN_DUC,
-                                                  1
-                                                 );
-        }
-        else
-#endif
-        {
+        const uint8_t val_defmin = ts.rf_board == RF_BOARD_SPARKLE ? TX_POWER_FACTOR_MIN_DUC : TX_POWER_FACTOR_MIN;
+        const uint16_t val_pf_max = ts.rf_board == RF_BOARD_SPARKLE ? TX_POWER_FACTOR_MAX_DUC : TX_POWER_FACTOR_MAX;
+
         tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
-                                              TX_POWER_FACTOR_MIN,
-                                              RadioManagement_IsPowerFactorReduce(df.tune_old)?TX_POWER_FACTOR_MAX:TX_POWER_FACTOR_MAX/4,
-                                              TX_POWER_FACTOR_MIN,
+                                              val_defmin,
+                                              RadioManagement_IsPowerFactorReduce(df.tune_old)? val_pf_max : val_pf_max/4,
+                                              val_defmin,
                                               1
                                              );
-        }
-
         if(tchange)	 		// did something change?
         {
             RadioManagement_SetPowerLevel(band, pa_level);	// yes, update the power factor
@@ -3557,7 +3545,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 #endif
 #ifdef USE_OSC_SParkle
         case CONFIG_DUC_DAC_TYPE:
-            if(SParkle_IsPresent())
+            if(ts.rf_board == RF_BOARD_SPARKLE)
             {
                 uint8_t dac_type=SParkle_GetDacType();
                 var_change=UiDriverMenuItemChangeUInt8(var, mode, &dac_type,

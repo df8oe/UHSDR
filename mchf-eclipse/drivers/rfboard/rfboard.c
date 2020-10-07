@@ -46,19 +46,6 @@ const pa_power_levels_info_t mchf_power_levelsInfo =
         .count = sizeof(mchf_rf_power_levels)/sizeof(*mchf_rf_power_levels),
 };
 
-#ifdef RF_BRD_MCHF
-const pa_info_t mchf_pa =
-{
-        .name  = "mcHF PA",
-        .reference_power = 5000.0,
-        .max_freq = 32000000,
-        .min_freq =  1800000,
-        .max_am_power = 2000,
-        .max_power = 10000,
-};
-#endif  // RF_BRD_MCHF
-
-
 #ifdef RF_BRD_LAPWING
 const pa_info_t mchf_pa =
 {
@@ -68,6 +55,16 @@ const pa_info_t mchf_pa =
         .min_freq = 1240 * 1000000,
         .max_am_power = 2000,
         .max_power = 20000,
+};
+#else
+const pa_info_t mchf_pa =
+{
+        .name  = "mcHF PA",
+        .reference_power = 5000.0,
+        .max_freq = 32000000,
+        .min_freq =  1800000,
+        .max_am_power = 2000,
+        .max_power = 10000,
 };
 #endif // LAPWING
 

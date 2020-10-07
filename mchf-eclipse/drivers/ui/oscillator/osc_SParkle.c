@@ -16,6 +16,7 @@
 #include <math.h>
 #include "osc_SParkle.h"
 #include "radio_management.h"
+#include "rfboard_interface.h"
 
 SParkleState_t SParkleState;
 #ifdef USE_OSC_SParkle
@@ -563,20 +564,6 @@ static bool SParkle_DDCboard_ReadyForIrqCall()
     return true;
 }
 
-const OscillatorInterface_t osc_SParkle_DDC =
-{
-        .init = osc_SParkle_Init,
-        .isPresent = SParkle_IsPresent,
-        .setPPM = SParkle_SetPPM,
-        .prepareNextFrequency = SParkle_DDCboard_PrepareNextFrequency,
-        .changeToNextFrequency = SParkle_DDCboard_ChangeToNextFrequency,
-        .isNextStepLarge = SParkle_DDCboard_IsNextStepLarge,
-        .readyForIrqCall = SParkle_DDCboard_ReadyForIrqCall,
-        .getMinFrequency = SParkle_DDCboard_getMinFrequency,
-        .getMaxFrequency = SParkle_DDCboard_getMaxFrequency,
-        .name = "SParkle DDC",
-};
-
 static uint8_t SParkle_SetAttenuator(uint16_t Chan, float32_t att)
 {
     uint8_t tx_data[7];
@@ -744,7 +731,6 @@ void osc_SParkle_Init(void)
         RFboard.AMP_ATT_getCurrent=osc_SParkle_ATTgetCurrent;
         RFboard.AMP_ATT_next=osc_SParkle_ATTsetNext;
         RFboard.AMP_ATT_prev=osc_SParkle_ATTsetPrev;
-        RadioManagement_Init_SParklePA();
 
         SParkle_ConfigureSAI();
         SParkle_UpdateConfig(DDCboard_REG_CTRL_SAIen | DDCboard_REG_CTRL_AdcRes | DDCboard_REG_CTRL_AMP1 | DDCboard_REG_CTRL_LED2,ENABLE);   //enable MCLK, Reset ADC to default state
@@ -782,5 +768,19 @@ void osc_SParkle_Init(void)
     osc = SParkle_IsPresent()?&osc_SParkle_DDC:NULL;
 
 }
+
+const OscillatorInterface_t osc_SParkle_DDC =
+{
+        .init = osc_SParkle_Init,
+        .isPresent = SParkle_IsPresent,
+        .setPPM = SParkle_SetPPM,
+        .prepareNextFrequency = SParkle_DDCboard_PrepareNextFrequency,
+        .changeToNextFrequency = SParkle_DDCboard_ChangeToNextFrequency,
+        .isNextStepLarge = SParkle_DDCboard_IsNextStepLarge,
+        .readyForIrqCall = SParkle_DDCboard_ReadyForIrqCall,
+        .getMinFrequency = SParkle_DDCboard_getMinFrequency,
+        .getMaxFrequency = SParkle_DDCboard_getMaxFrequency,
+        .name = "SParkle DDC",
+};
 
 #endif

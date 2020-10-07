@@ -391,7 +391,7 @@ static bool RadioManagement_SetBandPowerFactor(const BandInfo* band, int32_t pow
 
     const float32_t old_pf = ts.tx_power_factor;
 #ifdef USE_OSC_SParkle
-    if(SParkle_IsPresent())
+    if(ts.rf_board == RF_BOARD_SPARKLE)
     {
         //TODO: make mixed amplitude/attenuator use, using only the 0.5dB steps from PE4302 causes inaccurate power settings
         ts.tx_power_factor=TX_POWER_FACTOR_MAX_DUC_INTERNAL;   //because fpga doesn't have the limits of typical analog mixer and we always output full power from DAC
