@@ -59,7 +59,7 @@ static uint32_t DucDdc_Df8oe_getMaxFrequency()
 static bool DucDdc_Df8oe_ApplyConfig(DucDdc_Df8oe_Config_t* config)
 {
     // write 10 bytes to I2C
-    return HAL_I2C_Master_Transmit(DUCDDC_I2C, DUCDDC_I2C_WRITE, (uint8_t*)config, sizeof(config), 100) == HAL_OK;
+    return HAL_I2C_Master_Transmit(DUCDDC_I2C, DUCDDC_I2C_WRITE, (uint8_t*)config, sizeof(*config), 100) == HAL_OK;
 }
 
 
