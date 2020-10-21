@@ -373,10 +373,10 @@ static bool RadioManagement_SetBandPowerFactor(const BandInfo* band, int32_t pow
         // TX outside bands **very dirty hack**
         //  FIXME: calculate based on 2 frequency points close the selected frequency, should be inter-/extrapolated
         uint32_t freq_min = RadioManagement_GetBandInfo(BAND_MODE_80)->tune;
-        float32_t adj_min = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_80] / (RadioManagement_IsPowerFactorReduce(freq_min)? 400: 100);
+        float32_t adj_min = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_80] / (RadioManagement_IsPowerFactorReduce(freq_min)? 400.0: 100.0);
 
         uint32_t freq_max = RadioManagement_GetBandInfo(BAND_MODE_10)->tune;
-        float32_t adj_max = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_10] / (RadioManagement_IsPowerFactorReduce(freq_max)? 400: 100);
+        float32_t adj_max = ts.pwr_adj[ADJ_REF_PWR][BAND_MODE_10] / (RadioManagement_IsPowerFactorReduce(freq_max)? 400.0: 100.0);
 
         float32_t delta_f = (float32_t)df.tune_old - (float32_t)freq_min; // we must convert to a signed type
         float32_t delta_points = freq_max - freq_min;
