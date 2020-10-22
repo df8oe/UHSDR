@@ -22,7 +22,7 @@
 
 #ifdef USE_OSC_DUCDDC
 
-#define DUCDDC_MIN_FREQ			100000L			// Min frequency
+#define DUCDDC_MIN_FREQ			10000L			// Min frequency
 #define DUCDDC_MAX_FREQ		    4200000000L	    // Max frequency
 
 #define DUCDDC_I2C_WRITE 0xD2
@@ -32,8 +32,8 @@ typedef struct
 {
 	uint32_t rx_frequency;
 	uint32_t tx_frequency;
-	uint8_t txp;
 	uint8_t sr;
+	uint8_t txp;
 } DucDdc_Df8oe_Config_t;
 
 typedef struct
@@ -59,7 +59,7 @@ static uint32_t DucDdc_Df8oe_getMaxFrequency()
 static bool DucDdc_Df8oe_ApplyConfig(DucDdc_Df8oe_Config_t* config)
 {
     // write 10 bytes to I2C
-    return HAL_I2C_Master_Transmit(DUCDDC_I2C, DUCDDC_I2C_WRITE, (uint8_t*)config, sizeof(*config), 100) == HAL_OK;
+    return HAL_I2C_Master_Transmit(DUCDDC_I2C, DUCDDC_I2C_WRITE, (uint8_t*)config, 10, 100) == HAL_OK; //dirtyfix: 10 bytes as integer instead of size()
 }
 
 
@@ -122,13 +122,13 @@ static bool DucDdc_Df8oe_Init()
 {
 	ducddc_state.current.rx_frequency = 0;
 	ducddc_state.current.tx_frequency = 0;
-	ducddc_state.current.txp = 0;
 	ducddc_state.current.sr = 0;
+	ducddc_state.current.txp = 0;
 
 	ducddc_state.next.rx_frequency = 0;
 	ducddc_state.next.tx_frequency = 0;
-    ducddc_state.next.txp = 0;
     ducddc_state.next.sr = 0;
+    ducddc_state.next.txp = 0xFF;	// maximum TX power
 
 
 	ducddc_state.is_present = UhsdrHw_I2C_DeviceReady(DUCDDC_I2C,DUCDDC_I2C_WRITE) == HAL_OK;
@@ -153,13 +153,11 @@ const OscillatorInterface_t osc_ducddc =
 
 bool DucDdc_Df8oe_EnableTx(void)
 {
-    ducddc_state.next.txp |= 0xD0;
-    return DucDdc_Df8oe_ChangeToNextFrequency() == OSC_OK;
+	return true;		// we do not need any RX/TX switching except activating TX I/Q stream
 }
 bool DucDdc_Df8oe_EnableRx(void)
 {
-    ducddc_state.next.txp &= ~0xD0;
-    return DucDdc_Df8oe_ChangeToNextFrequency() == OSC_OK;
+	return true;		// we do not need any TX/RX switching except deactivating TX I/Q stream
 }
 
 bool DucDdc_Df8oe_PrepareTx(void)
