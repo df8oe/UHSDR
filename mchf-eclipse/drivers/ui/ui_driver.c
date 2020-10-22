@@ -2748,7 +2748,7 @@ static void UiDriver_ShowTxErrorMessages()
     // if there is no power factor ( == no output power)
     // or effective bias is 0 (== no or very distorted output)
     // inform operator
-	const bool no_tx_power = ts.tx_power_factor == 0;
+	const bool no_tx_power = ts.tx_power_factor == 0.0;
 	const bool no_bias = (ts.dmod_mode != DEMOD_CW && ts.pa_bias == 0) || (ts.dmod_mode == DEMOD_CW && ts.pa_cw_bias == 0 && ts.pa_bias == 0);
 	
 
