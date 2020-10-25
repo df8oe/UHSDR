@@ -4,8 +4,6 @@ DF8OE Bootloader Usage (Bootloader 3.3.0 and newer)
 The DF8OE bootloader is responsible for starting the firmware of the TRX. It is
 also used to flash new firmware AND bootloader.
 
-The DF8OE bootloader is responsible for starting the firmware of the TRX. It is also used to flash new firmware AND bootloader.
-
 Firmware can be installed via a USB drive or via USB cable using DFU Upgrade. The bootloader can only be installed via USB cable using DFU Upgrade, __not__ via USB drive.
 
 This document describes both, upgrades via USB drive and via USB cable, each in its own section in this document. This document assumes you have a bootloader with version 3.3.0 or newer installed. If not, see information below how to upgraded older bootloaders. 
@@ -80,26 +78,27 @@ For the firmware-upgrade you must plug the USB-key into the TRX big USB-A plug.
 ### Flashing New Firmware And Saving Old Firmware
 
 1.  Place the binary file of the new firmware with the name "fw-.bin" (e.g.
-    fw-mchf.bin for the mcHF) into the root directory of the USB drive. 1 Turn
-    off the TRX and connect the USB drive.
+    fw-mchf.bin for the mcHF) into the root directory of the USB drive.
 
-2.  Press BAND- button and hold it.
+2.  Turn off the TRX and connect the USB drive.
 
-3.  Then press the power button and release it after a second once you see the
+3.  Press BAND- button and hold it.
+
+4.  Then press the power button and release it after a second once you see the
     LCD screen light up.
 
-4.  Release BAND- button once you see the green LED light up. Now the dumping of
+5.  Release BAND- button once you see the green LED light up. Now the dumping of
     the whole firmware flash into MCHFOLD.BIN starts. The resulting file will
     have a size of up to 1984kByte, depending on the actual flash size of the
     MCU (2M = 1984, 1M = 960, 512k = 448).
 
-5.  Then the red LED lights up too, indicating the write process has started.
+6.  Then the red LED lights up too, indicating the write process has started.
 
-6.  When the update has finished, the backlight goes dark, both red and green
+7.  When the update has finished, the backlight goes dark, both red and green
     LEDs remain steadily on. If not, and the red LED starts flashing, see the
     error codes section below.
 
-7.  Remove the USB drive and press BAND- to reboot into the new firmware, press
+8.  Remove the USB drive and press BAND- to reboot into the new firmware, press
     Power to power off.
 
 ### Only Saving Old Firmware
