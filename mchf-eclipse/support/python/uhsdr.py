@@ -104,7 +104,7 @@ class catCommands:
         cmd = bytearray([ 0x00, 0x00 , 0x00, 0x00, CatCmd.UHSDR_ID])
         ok,res = self.execute(cmd,5)
 
-        return res == bytearray("UHSDR")
+        return res == bytearray("UHSDR", 'utf-8')
    
 
     def writeEEPROM(self, addr, value16bit):
