@@ -16,25 +16,34 @@
 #define CW_DECODER_THRESH_MAX			50000
 #define CW_DECODER_THRESH_DEFAULT		32000
 
+#define CW_DECODER_FLAGS_DEFAULT        (0b110001)  // NOISECANCEL_ENABLE, SNAP_ENABLE, SHOW_CW_LED
+
 typedef struct
 {
-	float32_t sampling_freq;
-	float32_t target_freq;
-//	float32_t speed;
-	uint8_t speed;
-//	uint8_t average;
-	uint32_t thresh;
-	uint8_t blocksize;
+    float32_t sampling_freq;
+    float32_t target_freq;
+    //	float32_t speed;
+    uint8_t speed;
+    //	uint8_t average;
+    uint32_t thresh;
+    uint8_t blocksize;
 
-//	uint8_t AGC_enable;
-	uint8_t noisecancel_enable;
-	uint8_t spikecancel;
+    //	uint8_t AGC_enable;
+    union
+    {
+        struct
+        {
+            uint16_t noisecancel_enable:1;
+            uint16_t spikecancel:2;
 #define CW_SPIKECANCEL_MODE_OFF 0
 #define CW_SPIKECANCEL_MODE_SPIKE 1
 #define CW_SPIKECANCEL_MODE_SHORT 2
-	bool use_3_goertzels;
-	bool snap_enable;
-    bool show_CW_LED; // menu choice whether the user wants the CW LED indicator to be working or not
+            uint16_t use_3_goertzels:1;
+            uint16_t snap_enable:1;
+            uint16_t show_CW_LED:1; // menu choice whether the user wants the CW LED indicator to be working or not
+        };
+        uint16_t flags;
+    };
 } cw_config_t;
 
 extern cw_config_t cw_decoder_config;
