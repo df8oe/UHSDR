@@ -252,25 +252,25 @@ basesw/%stm32f4xx_ll_usb.o: CFLAGS += -Wno-attributes
 basesw/%stm32f7xx_ll_usb.o: CFLAGS += -Wno-attributes
 basesw/%stm32h7xx_ll_usb.o: CFLAGS += -Wno-attributes
 
-.S.o: %.d
+.S.o:
 	$(ECHO) "  [CC] $@"
 	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
 	$(POSTCOMPILE)
 
-.c.o: %.d
+.c.o:
 	$(ECHO) "  [CC] $@"
 	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(DEPFLAGS) -std=gnu11 -c ${INC_DIRS} $< -o $@
 	$(POSTCOMPILE)
 
-.cxx.o: %.d
+.cxx.o:
 	$(ECHO) "  [CXX] $@"
 	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(DEPFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
 	$(POSTCOMPILE)
 
-.cpp.o: %.d
+.cpp.o:
 	$(ECHO) "  [CXX] $@"
 	@mkdir -p $(subst $(ROOTLOC)/,,$(shell dirname $<))
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(DEPFLAGS) -std=gnu++11 -c ${INC_DIRS} $< -o $@
