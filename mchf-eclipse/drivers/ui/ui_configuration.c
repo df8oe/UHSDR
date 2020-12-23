@@ -275,6 +275,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
     { ConfigEntry_UInt8, EEPROM_VSWR_PROTECTION_THRESHOLD,&ts.vswr_protection_threshold,1,1,10},
 	{ ConfigEntry_UInt16, EEPROM_EXPFLAGS1,&ts.expflags1,EXPFLAGS1_CONFIG_DEFAULT,0,0xffff},
 	{ ConfigEntry_UInt16, EEPROM_CW_DECODER_FLAGS,&cw_decoder_config.flags,CW_DECODER_FLAGS_DEFAULT,0,0x7fff},
+    { ConfigEntry_UInt8, EEPROM_BAND_REGION,&bandinfo_idx,0,0,0x7f},
 	
     // the entry below MUST be the last entry, and only at the last position Stop is allowed
     {
