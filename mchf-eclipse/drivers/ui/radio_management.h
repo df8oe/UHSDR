@@ -180,6 +180,7 @@ typedef struct BandInfo
     uint32_t size;
     const char* name;
     uint32_t band_mode;
+    bool    rx_only;
 } BandInfo;
 
 /**

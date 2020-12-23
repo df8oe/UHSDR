@@ -107,6 +107,11 @@ static const BandInfo bi_2m_r2_3 =     { .tune = 144000000,    .size = 4000000, 
 static const BandInfo bi_70cm_r1 =     { .tune = 430000000,    .size = 10000000,   .name = "70cm",  BAND_MODE_70};
 static const BandInfo bi_70cm_r2_3 =   { .tune = 430000000,    .size = 20000000,   .name = "70cm",  BAND_MODE_70};
 static const BandInfo bi_23cm_all =    { .tune = 1240000000,   .size = 60000000,   .name = "23cm",  BAND_MODE_23};
+
+static const BandInfo bi_160m_r3_thai ={ .tune = 1800000,      .size = 200000,     .name = "160m",  BAND_MODE_160};
+static const BandInfo bi_80m_r3_thai = { .tune = 3500000,      .size = 100000,     .name = "80m",   BAND_MODE_80};
+static const BandInfo bi_2m_r3_thai =  { .tune = 144000000,    .size = 3000000,    .name = "2m",    BAND_MODE_2};
+static const BandInfo bi_60m_rx =     { .tune = 5250000,      .size = 200000,     .name = "60m",   .band_mode = BAND_MODE_60, .rx_only = true };
 static const BandInfo bi_gen_all =     { .tune = 0,            .size = 0,          .name = "Gen",   BAND_MODE_GEN};
 
 // now we combine from the above defined bands the set of bands for each region
@@ -202,6 +207,28 @@ static const BandInfo* bandInfo_region3[MAX_BAND_NUM] =
         &bi_gen_all,
 };
 
+static const BandInfo* bandInfo_region3_thai[MAX_BAND_NUM] =
+{
+        &bi_80m_r3_thai,
+        &bi_60m_rx, // should cover all regions
+        &bi_40m_r1,
+        &bi_30m_all,
+        &bi_20m_all,
+        &bi_17m_all,
+        &bi_15m_all,
+        &bi_12m_all,
+        &bi_10m_all,
+        &bi_6m_r2_3,
+        &bi_4m_gen,
+        &bi_2m_r3_thai,
+        &bi_70cm_r2_3,
+        &bi_23cm_all,
+        &bi_2200m_all,
+        &bi_630m_all,
+        &bi_160m_r3_thai,
+        &bi_gen_all,
+};
+
 // finally we list all of them in a table and give them names for the menu
 const BandInfoSet bandInfos[] =
 {
@@ -209,6 +236,7 @@ const BandInfoSet bandInfos[] =
         { bandInfo_region1,  "Region 1" },
         { bandInfo_region2,  "Region 2" },
         { bandInfo_region3,  "Region 3" },
+        { bandInfo_region3_thai,  "Thailand" },
 };
 
 const int BAND_INFO_SET_NUM = sizeof(bandInfos)/sizeof(BandInfoSet);
@@ -742,14 +770,21 @@ void RadioManagement_MuteTemporarilyRxAudio()
 
 Oscillator_ResultCodes_t RadioManagement_ValidateFrequencyForTX(uint32_t dial_freq)
 {
-    // we check with the si570 code if the frequency is tunable, we do not tune to it.
-	Oscillator_ResultCodes_t osc_res = osc->prepareNextFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX), df.temp_factor);
-    bool osc_ok = osc_res == OSC_OK || osc_res == OSC_TUNE_LIMITED;
-	
-	// we also check if our PA is able to support this frequency
+    // get bandinfo to check if this is rx_only
+    const BandInfo* bi = RadioManagement_GetBand(dial_freq);
+
+    // we also check if our PA is able to support this frequency
     bool pa_ok = dial_freq >= mchf_pa.min_freq && dial_freq <= mchf_pa.max_freq;
 
-    return pa_ok && osc_ok ? osc_res: OSC_TUNE_IMPOSSIBLE;
+    Oscillator_ResultCodes_t retval = (pa_ok && bi != NULL && bi->rx_only == false)? OSC_OK : OSC_TUNE_IMPOSSIBLE;
+
+    if (retval == OSC_OK)
+    {
+        // we check with the si570 code if the frequency is tunable, we do not tune to it.
+        retval = osc->prepareNextFrequency(RadioManagement_Dial2TuneFrequency(dial_freq, TRX_MODE_TX), df.temp_factor);
+    }
+
+    return retval;
 }
 
 /**
