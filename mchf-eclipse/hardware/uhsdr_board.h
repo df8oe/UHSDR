@@ -79,7 +79,7 @@ typedef enum {
     RF_BOARD_MCHF           = 1,  // Standard mcHF RF Board using Si570
     RF_BOARD_RS928          = 2,  // RS928 MCHF Clone using Si5351a
     RF_BOARD_DDCDUC_DF8OE   = 3,  // FPGA Board (experimental)
-    FOUND_RF_BOARD_SParkle  = 4,
+    RF_BOARD_SPARKLE        = 4,
 } RfBoard_t;
 
 #define CW_KEYER_MODE_IAM_B				0

@@ -612,7 +612,6 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_XVERTER_OFFSET_TX_LOW                429     // Secondary frequency by which the display is offset for transverter use, low word
 #define EEPROM_CW_DECODER_FLAGS                     430     // Various flags controlling operation of CW decoder
 #define EEPROM_BAND_REGION                          431     // store which region the TRX is being used in
-#define EEPROM_FIRST_UNUSED                         432		// change this if new value ids are introduced, must be correct at any time
 #define EEPROM_SParkleFLAGS                         432     // some flags holding SParkle specyfic setup
 #define EEPROM_FIRST_UNUSED                         433		// change this if new value ids are introduced, must be correct at any time
 

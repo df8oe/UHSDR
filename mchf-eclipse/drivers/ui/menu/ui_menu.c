@@ -561,7 +561,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         case RF_BOARD_RS928:
             outs = "RS9xx RF";
             break;
-        case FOUND_RF_BOARD_SParkle:
+        case RF_BOARD_SPARKLE:
             outs = "SParkle RF Board";
             break;
         default:

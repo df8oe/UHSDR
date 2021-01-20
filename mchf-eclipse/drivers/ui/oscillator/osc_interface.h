@@ -35,6 +35,7 @@ typedef enum
     OSC_SI570,
     OSC_SI5351A,
     OSC_DUCDDC_DF8OE,
+    OSC_SPARKLE,
 } Oscillator_Type_t;
 
 typedef struct

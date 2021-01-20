@@ -737,7 +737,7 @@ Oscillator_ResultCodes_t RadioManagement_ValidateFrequencyForTX(uint32_t dial_fr
     const BandInfo* bi = RadioManagement_GetBand(dial_freq);
 
     // we also check if our PA is able to support this frequency
-    bool pa_ok = dial_freq >= mchf_pa.min_freq && dial_freq <= mchf_pa.max_freq;
+    bool pa_ok = dial_freq >= RFboard.pa_info->min_freq && dial_freq <= RFboard.pa_info->max_freq;
 
     Oscillator_ResultCodes_t retval = (pa_ok && bi != NULL && bi->rx_only == false)? OSC_OK : OSC_TUNE_IMPOSSIBLE;
 

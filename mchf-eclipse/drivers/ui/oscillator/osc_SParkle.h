@@ -55,7 +55,7 @@ extern SParkleState_t SParkleState;
 
 enum SParkle_DDCboard_{SParkle_DDCboard_OK=0,SParkle_DDCboard_Fail};
 bool SParkle_IsPresent(void);
-void osc_SParkle_Init(void);
+bool osc_SParkle_Init(void);
 bool SParkle_SetTXpower(float32_t pf);
 void SParkle_SetDacType(bool DacType);
 bool SParkle_GetDacType(void);

@@ -713,7 +713,7 @@ void SParkle_ConfigurationInit(void)
     SParkleState.EEPROM_Flags&=EEPROM_SParkleFLAGS_MASK;
 }
 
-void osc_SParkle_Init(void)
+bool osc_SParkle_Init(void)
 {
     SParkleState.current_frequency = 0;
     SParkleState.next_frequency = 0;
@@ -765,7 +765,7 @@ void osc_SParkle_Init(void)
 
     }
 
-    osc = SParkle_IsPresent()?&osc_SParkle_DDC:NULL;
+    return  SParkle_IsPresent();
 
 }
 
