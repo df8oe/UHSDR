@@ -87,6 +87,9 @@ static const OscillatorInterface_t* oscillators[] =
 #ifdef USE_OSC_SI570
         &osc_si570,
 #endif
+#ifdef USE_OSC_SParkle
+        &osc_SParkle_DDC,
+#endif
         &osc_dummy
 };
 

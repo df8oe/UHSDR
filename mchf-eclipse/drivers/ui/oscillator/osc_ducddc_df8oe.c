@@ -34,7 +34,7 @@ typedef struct
 	uint32_t tx_frequency;
 	uint8_t txp;
 	uint8_t sr;
-} DucDdc_Df8oe_Config_t;
+} __attribute__ ((packed)) DucDdc_Df8oe_Config_t;
 
 typedef struct
 {

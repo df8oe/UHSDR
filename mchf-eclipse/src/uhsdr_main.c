@@ -351,18 +351,10 @@ int mchfMain(void)
 #endif
 
 	profileTimedEventInit();
-#ifdef USE_OSC_SParkle
-    if(SParkle_IsPresent())
-    {
-        SParkle_ConfigurationInit();
-    }
-    else
-#endif
-    {
+
 #ifdef USE_HMC1023
     hmc1023_init();
 #endif
-    }
 
     // IQ and Audio Codec(s) init
     Codec_Init();

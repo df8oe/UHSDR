@@ -6003,7 +6003,7 @@ void UiDriver_StartUpScreenFinish()
 
     for (int codec_idx = 0; codec_idx < CODEC_NUM; codec_idx++)
     {
-        if (Codec_InitState(codec_idx) != 0)
+        if (Codec_IsActive(codec_idx) == true && Codec_InitState(codec_idx) != 0 )
         {
             char text[128];
             snprintf(text,sizeof(text),"Codec WM8731 %d NOT detected",codec_idx);

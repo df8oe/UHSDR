@@ -1770,7 +1770,11 @@ void RadioManagement_HandleRxIQSignalCodecGain()
         rfg_calc = 31;
     }
 
-    Codec_IQInGainAdj(rfg_calc); // set the RX gain on the codec
+    // HACK
+    if (ts.rf_board == RF_BOARD_MCHF || ts.rf_board == RF_BOARD_RS928)
+    {
+        Codec_IQInGainAdj(rfg_calc); // set the RX gain on the codec
+    }
 
     // Now calculate the RF gain setting
     gcalc = pow10(((rfg_calc * 1.5) - 34.5) / 10) ;

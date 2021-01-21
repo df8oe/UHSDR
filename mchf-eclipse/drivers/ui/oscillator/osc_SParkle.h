@@ -42,11 +42,14 @@ typedef struct
     uint8_t RX_amp_idx;
     uint8_t current_RX_amp_idx;
 #endif
-}SParkleState_t;
+} SParkleState_t;
 
 extern SParkleState_t SParkleState;
 
 #ifdef USE_OSC_SParkle
+
+const OscillatorInterface_t osc_SParkle_DDC;
+
 #define oscDDC_f_sample 122880000
 #define SParkleStat_BaseBoardPresent 0x01
 
@@ -54,8 +57,6 @@ extern SParkleState_t SParkleState;
 #define SParkleDacType_clone 1      //AD9744 chinese clone (reversed MSB for U2 data interface)
 
 enum SParkle_DDCboard_{SParkle_DDCboard_OK=0,SParkle_DDCboard_Fail};
-bool SParkle_IsPresent(void);
-bool osc_SParkle_Init(void);
 bool SParkle_SetTXpower(float32_t pf);
 void SParkle_SetDacType(bool DacType);
 bool SParkle_GetDacType(void);

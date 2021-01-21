@@ -87,6 +87,9 @@
 
 #define W8731_POWER_DOWN_CNTR_MCHF_ALL_ON    (W8731_POWER_DOWN_CNTR_CLKOUTPD|W8731_POWER_DOWN_CNTR_OSCPD)
 // all on but osc and out, since we don't need it, clock comes from STM
+#define W8731_POWER_DOWN_CNTR_MCHF_ALL_OFF    (W8731_POWER_DOWN_CNTR_CLKOUTPD|W8731_POWER_DOWN_CNTR_OSCPD| W8731_POWER_DOWN_CNTR_POWEROFF)
+// all on but osc and out, since we don't need it, clock comes from STM
+
 
 #define W8731_POWER_DOWN_CNTR_MCHF_MIC_OFF    (W8731_POWER_DOWN_CNTR_CLKOUTPD|W8731_POWER_DOWN_CNTR_OSCPD|W8731_POWER_DOWN_CNTR_MICPD)
 
@@ -94,10 +97,11 @@ typedef struct
 {
     bool present;
     uint32_t init;
+    bool active;
 } mchf_codec_t;
 
 
-__IO mchf_codec_t mchf_codecs[CODEC_NUM];
+mchf_codec_t mchf_codecs[CODEC_NUM];
 
 // FIXME: for now we use 32bits transfer size, does not change the ADC/DAC resolution
 // which is 24 bits in any case. We should reduce finally to 24bits (which requires also the I2S/SAI peripheral to
@@ -152,6 +156,25 @@ static uint32_t Codec_WriteRegister(I2C_HandleTypeDef* hi2c, uint8_t RegisterAdd
     uint8_t Byte1 = ((RegisterAddr<<1)&0xFE) | ((RegisterValue>>8)&0x01);
     uint8_t Byte2 = RegisterValue&0xFF;
     return UhsdrHw_I2C_WriteRegister(hi2c, CODEC_ADDRESS, Byte1, 1, Byte2);
+}
+
+/**
+ * Indicate that the given codec is actively being required in this TRX configuration
+ *
+ */
+bool Codec_IsActive(uint32_t codec_idx)
+{
+
+    bool retval;
+    if ((codec_idx < CODEC_NUM))
+    {
+        retval = mchf_codecs[codec_idx].active;
+    }
+    else
+    {
+        retval = false;
+    }
+    return retval;
 }
 
 static uint32_t Codec_ResetCodec(I2C_HandleTypeDef* hi2c, uint32_t AudioFreq, CodecSampleWidth_t word_size)
@@ -257,15 +280,31 @@ static bool Codec_Reset(uint32_t AudioFreq)
 
 #ifdef UI_BRD_MCHF
     mchf_codecs[0].init = Codec_ResetCodec(CODEC_I2C, AudioFreq, IQ_WORD_SIZE);
+    mchf_codecs[0].active = true;
 #else
     mchf_codecs[1].init = Codec_ResetCodec(CODEC_ANA_I2C, AudioFreq, AUDIO_WORD_SIZE);
-    mchf_codecs[0].init = Codec_ResetCodec(CODEC_IQ_I2C, AudioFreq, IQ_WORD_SIZE);
+    mchf_codecs[1].active = true;
+
+    // HACK
+    if (ts.rf_board != RF_BOARD_SPARKLE && ts.rf_board != RF_BOARD_DDCDUC_DF8OE)
+    {
+        mchf_codecs[0].init = Codec_ResetCodec(CODEC_IQ_I2C, AudioFreq, IQ_WORD_SIZE);
+        mchf_codecs[0].active = true;
+    }
+    else
+    {
+        Codec_WriteRegister(CODEC_IQ_I2C, W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_ALL_OFF);
+    }
 #endif
 
+    // check if all required codecs have been initialized correctly
     bool retval = true;
     for (int codec_idx = 0; codec_idx < CODEC_NUM; codec_idx++)
     {
-        retval &= mchf_codecs[codec_idx].init == HAL_OK;
+        if (mchf_codecs[codec_idx].active)
+        {
+            retval &= mchf_codecs[codec_idx].init == HAL_OK;
+        }
     }
 
     if (Codec_InitState(CODEC_NUM-1) == HAL_OK)

@@ -198,7 +198,7 @@ static uint32_t SP_DDCboard_writePeriphSPI(uint32_t data)
     return retval;
 }
 
-bool SParkle_IsPresent(void)
+static bool SParkle_IsPresent(void)
 {
     return SParkleState.is_present;
 }
