@@ -22,5 +22,7 @@ void UhsdrHwI2s_Codec_StopDMA(void);
 
 void UhsdrHwI2s_Codec_ClearTxDmaBuffer(void);
 
+void UhsdrHwI2s_Codec_Restart();
+
 #endif
 

@@ -232,3 +232,19 @@ void UhsdrHwI2s_Codec_StopDMA(void)
     HAL_SAI_DMAStop(&hsai_BlockB2);
 #endif
 }
+
+void UhsdrHwI2s_Codec_Restart()
+{
+    UhsdrHwI2s_Codec_StopDMA();
+
+#ifdef UI_BRD_MCHF
+#endif
+#ifdef UI_BRD_OVI40
+    HAL_SAI_DeInit(&hsai_BlockB2);
+    HAL_SAI_DeInit(&hsai_BlockA2);
+    non_os_delay();
+    MX_SAI2_Init();
+#endif
+    non_os_delay();
+    UhsdrHwI2s_Codec_StartDMA();
+}

@@ -35,6 +35,7 @@
 #include "rfboard_interface.h"
 #include "soft_tcxo.h"
 #include "cw_decoder.h"
+#include "uhsdr_hw_i2s.h"
 
 #include "osc_si5351a.h"
 #include "osc_si570.h"
@@ -2458,7 +2459,15 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
 
             UiMenu_DisplayValue("Restart",Red,pos);
-            Codec_RestartI2S();
+
+            if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE)
+            {
+                UhsdrHwI2s_Codec_Restart();
+            }
+            else
+            {
+                Codec_RestartI2S();
+            }
             var = 0;
         }
         break;

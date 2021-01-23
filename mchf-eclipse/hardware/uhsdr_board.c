@@ -248,17 +248,6 @@ void Board_InitMinimal()
 
     // Initialize LO, by which we (at least for now) can detect the RF board
     Osc_Init();
-
-    // we determine and set the correct RF board here
-    switch(osc->type)
-    {
-        case OSC_SI5351A: ts.rf_board = RF_BOARD_RS928; break;
-        case OSC_DUCDDC_DF8OE  : ts.rf_board = RF_BOARD_DDCDUC_DF8OE; break;
-        case OSC_SI570: ts.rf_board = RF_BOARD_MCHF; break;
-        case OSC_SPARKLE: ts.rf_board = RF_BOARD_SPARKLE; break;
-        default: ts.rf_board = RF_BOARD_UNKNOWN;
-    }
-
 }
 
 /**
