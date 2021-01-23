@@ -383,6 +383,7 @@ int mchfMain(void)
     ts.paddles_active = true;
 
     Board_RedLed(LED_STATE_OFF);
+    UhsdrHwI2s_Codec_Restart();
 
 
     // Transceiver main loop

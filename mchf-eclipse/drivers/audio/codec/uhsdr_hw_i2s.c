@@ -174,7 +174,11 @@ static void UhsdrHWI2s_Sai32Bits(SAI_HandleTypeDef* hsai)
 }
 #endif
 
-static void UhsdrHwI2s_SetBitWidth()
+/***
+ * This handles reconfiguring the I2S connection to use the desired parameters namely the used data format
+ * NOTE: It can only be used with disabled DMA transfers!
+ */
+static void UhsdrHwI2s_ApplyConfig()
 {
 #if defined(USE_32_IQ_BITS)
     #if defined(UI_BRD_MCHF)
@@ -200,7 +204,7 @@ static void UhsdrHwI2s_SetBitWidth()
 
 void UhsdrHwI2s_Codec_StartDMA()
 {
-    UhsdrHwI2s_SetBitWidth();
+    UhsdrHwI2s_ApplyConfig();
 
 #ifdef UI_BRD_MCHF
     HAL_I2SEx_TransmitReceive_DMA(&hi2s3,(uint16_t*)dma.iq_buf.out,(uint16_t*)dma.iq_buf.in,sizeof(dma.iq_buf.in)/sizeof(dma.iq_buf.in[0].l));
@@ -238,13 +242,32 @@ void UhsdrHwI2s_Codec_Restart()
     UhsdrHwI2s_Codec_StopDMA();
 
 #ifdef UI_BRD_MCHF
+    MX_I2S3_Init();
 #endif
 #ifdef UI_BRD_OVI40
-    HAL_SAI_DeInit(&hsai_BlockB2);
-    HAL_SAI_DeInit(&hsai_BlockA2);
-    non_os_delay();
     MX_SAI2_Init();
 #endif
-    non_os_delay();
+
     UhsdrHwI2s_Codec_StartDMA();
+}
+
+void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
+{
+#ifdef UI_BRD_OVI40
+    if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE)
+    {
+        uint32_t target_mode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
+        if (target_mode != hsai_BlockB2.Init.AudioMode)
+        {
+            UhsdrHwI2s_Codec_StopDMA();
+            hsai_BlockB2.Init.AudioMode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
+            UhsdrHwI2s_Codec_StartDMA();
+        }
+    }
+#endif
+}
+
+bool UhsdrHwI2s_Codec_IqIsSlave()
+{
+    return hsai_BlockB2.Init.AudioMode == SAI_MODESLAVE_TX;
 }
