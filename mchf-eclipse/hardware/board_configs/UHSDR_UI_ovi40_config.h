@@ -43,7 +43,7 @@
 #endif // STM32H7
 
 #define USE_TWO_CHANNEL_AUDIO
-#define USE_HMC1023
+// #define USE_HMC1023
 
 #if defined(STM32F7)
     #ifndef TRX_NAME
