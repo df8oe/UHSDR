@@ -314,6 +314,9 @@ int mchfMain(void)
 
     // HW init
     Board_InitMinimal();
+    // Initialize the RF board
+    RFBoard_Init_Board();
+
     // Show logo & HW Info
     UiDriver_StartUpScreenInit();
 
@@ -337,7 +340,7 @@ int mchfMain(void)
     UiDriver_Init();
 
     // Initialize the RF board
-    RFBoard_Init_Board();
+    //RFBoard_Init_Board();
 
     RadioManagement_InitTuningInfo();
 

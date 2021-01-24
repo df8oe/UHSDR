@@ -247,7 +247,7 @@ void Board_InitMinimal()
     // Minimally initialize the RF board
 
     // Initialize LO, by which we (at least for now) can detect the RF board
-    Osc_Init();
+    //Osc_Init();
 }
 
 /**

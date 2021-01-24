@@ -781,6 +781,7 @@ const OscillatorInterface_t osc_SParkle_DDC =
         .getMinFrequency = SParkle_DDCboard_getMinFrequency,
         .getMaxFrequency = SParkle_DDCboard_getMaxFrequency,
         .name = "SParkle DDC",
+        .type = OSC_SPARKLE,
 };
 
 #endif
