@@ -254,7 +254,7 @@ void UhsdrHwI2s_Codec_Restart()
 void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
 {
 #ifdef UI_BRD_OVI40
-    if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE)
+    // if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE)
     {
         uint32_t target_mode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
         if (target_mode != hsai_BlockB2.Init.AudioMode)

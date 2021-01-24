@@ -4376,7 +4376,8 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             }
 
             break;
-
+#endif
+#ifdef UI_BRD_OVI40
         case MENU_DEBUG_IQ_MASTER_SLAVE:
         {
             bool is_slave = UhsdrHwI2s_Codec_IqIsSlave();
@@ -4387,7 +4388,6 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             }
         }
             break;
-
 #endif
         case CONFIG_SMETER_ATTACK:
             var_change = UiDriverMenuItemChangeUInt8(var, mode, &sm.config.alphaSplit.AttackAlpha, SMETER_ALPHA_MIN, SMETER_ALPHA_MAX, SMETER_ALPHA_ATTACK_DEFAULT,1);
