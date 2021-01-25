@@ -1116,6 +1116,15 @@ const int BAND_FILTER_NUM = sizeof(mchf_rf_bandFilters)/sizeof(BandFilterDescrip
  */
 static void RadioManagement_SetHWFiltersForFrequency(uint32_t freq)
 {
+#ifdef USE_OSC_SParkle
+    if(ts.rf_board == RF_BOARD_SPARKLE)
+    {
+        //in case of SParkle rf board, the band relays are being switched during frequency change preparation in SParkle_DDCboard_PrepareNextFrequency().
+        //this is not so nice, TODO: make it more convenient at development of DF8OE filter board
+        return;
+    }
+#endif
+
     for (int idx = 0; idx < BAND_FILTER_NUM; idx++)
     {
         if(freq < mchf_rf_bandFilters[idx].upper)       // are we low enough if frequency for this band filter?

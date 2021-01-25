@@ -73,10 +73,10 @@ const pa_info_t mchf_pa =
 static const power_level_desc_t SParkle_rf_power_levels[] =
 {
         { .id = PA_LEVEL_FULL,   .mW = 0,    }, // we use 0 to indicate max power
-        { .id = PA_LEVEL_HIGH,   .mW = 50000, },
-        { .id = PA_LEVEL_MEDIUM, .mW = 10000, },
-        { .id = PA_LEVEL_LOW,    .mW = 1000, },
-        { .id = PA_LEVEL_MINIMAL,.mW =  500, },
+        { .id = PA_LEVEL_HIGH,   .mW = 10000, },
+        { .id = PA_LEVEL_MEDIUM, .mW = 5000, },
+        { .id = PA_LEVEL_LOW,    .mW = 2000, },
+        { .id = PA_LEVEL_MINIMAL,.mW = 1000, },
 };
 
 const pa_power_levels_info_t SParkle_power_levelsInfo =
@@ -181,10 +181,10 @@ void RFBoard_Init_Board(void)
 #ifdef USE_OSC_SParkle
             RFboard.pa_info=&SParkle_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
             RFboard.power_levelsInfo=&SParkle_power_levelsInfo;
-            RFboard.EnableTx  = RFBoard_Dummy_EnableTx;
-            RFboard.EnableRx = RFBoard_Dummy_EnableRx;
-            RFboard.PrepareTx  = RFBoard_Dummy_PrepareTx;
-            RFboard.PrepareRx = RFBoard_Dummy_PrepareRx;
+            RFboard.EnableTx  = osc_SParkle_EnableTx;
+            RFboard.EnableRx = osc_SParkle_EnableRx;
+            RFboard.PrepareTx  = osc_SParkle_PrepareTx;
+            RFboard.PrepareRx = osc_SParkle_PrepareRx;
 
             SParkle_ConfigurationInit();
 #endif

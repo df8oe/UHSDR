@@ -58,6 +58,7 @@ typedef struct {
     bool    (*EnableRx)(void);
     bool    (*PrepareTx)(void);
     bool    (*PrepareRx)(void);
+    void (*CodecRestart)(void);
 } HardwareRFBoard;
 
 extern HardwareRFBoard RFboard;

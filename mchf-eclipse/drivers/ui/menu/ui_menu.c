@@ -2466,7 +2466,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             }
             else
             {
-                Codec_RestartI2S();
+                RFboard.CodecRestart();     //TODO: make this available for all rf boards including DF8OE DDC
             }
             var = 0;
         }

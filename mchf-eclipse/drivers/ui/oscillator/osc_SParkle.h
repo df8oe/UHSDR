@@ -61,6 +61,10 @@ bool SParkle_SetTXpower(float32_t pf);
 void SParkle_SetDacType(bool DacType);
 bool SParkle_GetDacType(void);
 void SParkle_ConfigurationInit(void);
+bool osc_SParkle_EnableTx(void);
+bool osc_SParkle_EnableRx(void);
+bool osc_SParkle_PrepareTx(void);
+bool osc_SParkle_PrepareRx(void);
 #endif
 
 #endif /* UI_OSCILLATOR_OSC_SPARKLE_H_ */

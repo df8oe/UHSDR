@@ -6321,6 +6321,11 @@ void UiAction_ChangeBandUpOrDown()
 	UiDriver_HandleBandButtons(BUTTON_BNDP);
 }
 
+void UiAction_Codec_RestartI2S(void)
+{
+    RFboard.CodecRestart();
+}
+
 static void UiAction_SaveConfigurationToMemory()
 {
 	if(ts.txrx_mode == TRX_MODE_RX)	 				// only allow EEPROM write in receive mode

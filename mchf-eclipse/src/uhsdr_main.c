@@ -274,6 +274,7 @@ void TransceiverStateInit(void)
     ts.ATT_Gain=0;              //additional attenuator or amplifier gain value to be used in real dbm calculation.
     ts.TX_at_zeroIF=0;          //set default state of TX IF to setting same as for RX (except for digi modes which most of use zero IF TX anyway)
 
+    RFboard.CodecRestart=Codec_RestartI2S; //default setting in case of RF board init routine would not set it
 }
 
 // #include "Trace.h"
