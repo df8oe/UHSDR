@@ -215,7 +215,7 @@ void TransceiverStateInit(void)
 
     ts.txrx_switch_audio_muting_timing = 0;					// timing value used for muting TX audio when keying PTT to suppress "click" or "thump"
     ts.audio_dac_muting_timer = 0;					// timer used for muting TX audio when keying PTT to suppress "click" or "thump"
-    ts.audio_dac_muting_flag = 0;					// when TRUE, audio is to be muted after PTT/keyup
+    ts.audio_dac_muting_flag = true;					// when TRUE, audio is to be muted after PTT/keyup
 
     //CONFIG LOADED:ts.filter_disp_colour = FILTER_DISP_COLOUR_DEFAULT;
     ts.vfo_mem_flag = 0;						// when TRUE, memory mode is enabled
@@ -375,7 +375,6 @@ int mchfMain(void)
 
     UiDriver_StartUpScreenFinish();
     // display error messages/warnings, draw main ui
-
     // Finally, start DMA transfers to get everything going
     UhsdrHwI2s_Codec_StartDMA();
 
@@ -384,7 +383,7 @@ int mchfMain(void)
 
     Board_RedLed(LED_STATE_OFF);
     UhsdrHwI2s_Codec_Restart();
-
+    ts.audio_dac_muting_flag = false;
 
     // Transceiver main loop
     for(;;)

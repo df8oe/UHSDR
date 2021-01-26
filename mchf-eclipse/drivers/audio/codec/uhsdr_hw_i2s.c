@@ -241,25 +241,50 @@ void UhsdrHwI2s_Codec_Restart()
 {
     UhsdrHwI2s_Codec_StopDMA();
 
+    bool temp_mute = ts.audio_dac_muting_flag;
+    ts.audio_dac_muting_flag = true;
 #ifdef UI_BRD_MCHF
     MX_I2S3_Init();
 #endif
 #ifdef UI_BRD_OVI40
     MX_SAI2_Init();
 #endif
-
     UhsdrHwI2s_Codec_StartDMA();
+    HAL_Delay(1000);
+    UhsdrHwI2s_Codec_IqAsSlave(ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE);
+    ts.audio_dac_muting_flag = temp_mute;
+}
+
+static void UhsdrHwI2s_Codec_EnableExternalMasterClock(void)
+{
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    /*Configure GPIO pin : PC9 */
+    GPIO_InitStruct.Pin = GPIO_PIN_9;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;  //strange alternate name, but there is no I2S_CKIN definition in HAL :)
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    __HAL_RCC_SAI1_CONFIG(RCC_SAI1CLKSOURCE_PIN);
+    __HAL_RCC_SAI2_CONFIG(RCC_SAI1CLKSOURCE_PIN);
 }
 
 void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
 {
 #ifdef UI_BRD_OVI40
-    // if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE)
+
+    if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE)
     {
         uint32_t target_mode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
         if (target_mode != hsai_BlockB2.Init.AudioMode)
         {
             UhsdrHwI2s_Codec_StopDMA();
+            if (target_mode == SAI_MODESLAVE_TX)
+            {
+                UhsdrHwI2s_Codec_EnableExternalMasterClock();
+            }
             hsai_BlockB2.Init.AudioMode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
             UhsdrHwI2s_Codec_StartDMA();
         }
