@@ -818,6 +818,8 @@ bool osc_SParkle_Init(void)
 
     if (SParkleState.is_present)
     {
+        SParkle_UpdateConfig(DDCboard_REG_CTRL_SAIen,DISABLE);  //switch off data lines if for any reason FPGA is running (STM restart?). The quiet on SAI input is recommended during SAI setup.
+
         SParkleState.DDC_RegConfig=DDCboard_REG_CTRL_AMP1;
         RFboard.AMP_ATT_getCurrent=osc_SParkle_ATTgetCurrent;
         RFboard.AMP_ATT_next=osc_SParkle_ATTsetNext;
@@ -855,6 +857,7 @@ bool osc_SParkle_Init(void)
         ts.TX_at_zeroIF=1;      //DUC input interpolating FIR filter has roll off around 12kHz causing -12kHz USB and +12kHz LSB not being transmitted, so there is a must for transmit at zero if
                                 //TODO: proof that FM/SAM transmit works as expected
 
+        SParkle_UpdateConfig(DDCboard_REG_CTRL_SAIen,ENABLE);
     }
 
     return  SParkle_IsPresent();

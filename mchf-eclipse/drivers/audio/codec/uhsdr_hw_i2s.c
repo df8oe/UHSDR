@@ -240,6 +240,11 @@ void UhsdrHwI2s_Codec_StopDMA(void)
 
 void UhsdrHwI2s_Codec_Restart()
 {
+    if (ts.rf_board == RF_BOARD_SPARKLE)
+    {
+        return;     //SParkle is already configured and there is no need to change here anything regarding SAI. TODO: refactor this
+    }
+
     UhsdrHwI2s_Codec_StopDMA();
 
     bool temp_mute = ts.audio_dac_muting_flag;
@@ -276,7 +281,8 @@ void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
 {
 #ifdef UI_BRD_OVI40
 
-    if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE)
+    //if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE)  //disabled this conditional because SParkle works always as slave
+    if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE)
     {
         uint32_t target_mode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
         if (target_mode != hsai_BlockB2.Init.AudioMode)
