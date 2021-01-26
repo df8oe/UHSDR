@@ -240,25 +240,23 @@ void UhsdrHwI2s_Codec_StopDMA(void)
 
 void UhsdrHwI2s_Codec_Restart()
 {
-    if (ts.rf_board == RF_BOARD_SPARKLE)
+    if (ts.rf_board != RF_BOARD_SPARKLE)  //SAI for SParkle is already configured and there is no need to change here anything.
     {
-        return;     //SParkle is already configured and there is no need to change here anything regarding SAI. TODO: refactor this
-    }
+        UhsdrHwI2s_Codec_StopDMA();
 
-    UhsdrHwI2s_Codec_StopDMA();
-
-    bool temp_mute = ts.audio_dac_muting_flag;
-    ts.audio_dac_muting_flag = true;
+        bool temp_mute = ts.audio_dac_muting_flag;
+        ts.audio_dac_muting_flag = true;
 #ifdef UI_BRD_MCHF
-    MX_I2S3_Init();
+        MX_I2S3_Init();
 #endif
 #ifdef UI_BRD_OVI40
-    MX_SAI2_Init();
+        MX_SAI2_Init();
 #endif
-    UhsdrHwI2s_Codec_StartDMA();
-    HAL_Delay(1000);
-    UhsdrHwI2s_Codec_IqAsSlave(ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE);
-    ts.audio_dac_muting_flag = temp_mute;
+        UhsdrHwI2s_Codec_StartDMA();
+        HAL_Delay(1000);
+        UhsdrHwI2s_Codec_IqAsSlave(ts.rf_board == RF_BOARD_DDCDUC_DF8OE);
+        ts.audio_dac_muting_flag = temp_mute;
+    }
 }
 
 static void UhsdrHwI2s_Codec_EnableExternalMasterClock(void)
@@ -281,7 +279,6 @@ void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
 {
 #ifdef UI_BRD_OVI40
 
-    //if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE)  //disabled this conditional because SParkle works always as slave
     if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE)
     {
         uint32_t target_mode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;

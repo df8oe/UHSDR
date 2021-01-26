@@ -827,7 +827,7 @@ bool osc_SParkle_Init(void)
         RFboard.CodecRestart=osc_SParkle_RestartI2S;
 
         SParkle_ConfigureSAI();
-        SParkle_UpdateConfig(DDCboard_REG_CTRL_SAIen | DDCboard_REG_CTRL_AdcRes | DDCboard_REG_CTRL_AMP1 | DDCboard_REG_CTRL_LED2,ENABLE);   //enable MCLK, Reset ADC to default state
+        SParkle_UpdateConfig(DDCboard_REG_CTRL_AdcRes | DDCboard_REG_CTRL_AMP1 | DDCboard_REG_CTRL_LED2,ENABLE);   //enable MCLK, Reset ADC to default state
         SParkle_UpdateConfig(DDCboard_REG_CTRL_AdcRes,DISABLE);
 
         SParkle_UpdateConfig(DDCboard_REG_CTRL_ADCFLTR_LPF | DDCboard_REG_CTRL_RXANT | DDCboard_REG_CTRL_TXANT,ENABLE);
@@ -857,7 +857,7 @@ bool osc_SParkle_Init(void)
         ts.TX_at_zeroIF=1;      //DUC input interpolating FIR filter has roll off around 12kHz causing -12kHz USB and +12kHz LSB not being transmitted, so there is a must for transmit at zero if
                                 //TODO: proof that FM/SAM transmit works as expected
 
-        SParkle_UpdateConfig(DDCboard_REG_CTRL_SAIen,ENABLE);
+        SParkle_UpdateConfig(DDCboard_REG_CTRL_SAIen,ENABLE);   //enable I2S stream from FPGA
     }
 
     return  SParkle_IsPresent();
