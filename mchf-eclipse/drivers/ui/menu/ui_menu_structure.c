@@ -470,7 +470,6 @@ const MenuDescriptor debugGroup[] =
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_FREEDV_MODE, NULL, "FreeDV Mode", UiMenuDesc("Change active FreeDV mode. Please note, you have to reboot to activate new mode") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_FREEDV_SQL_THRESHOLD, NULL, "FreeDV Squelch threshold", UiMenuDesc("If not OFF, FreeDV will squelch if detected SNR is below set value.") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_SMOOTH_DYN_TUNE, NULL, "Smooth dynamic tune", UiMenuDesc("Activate smooth dynamic tune.") },
-    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_IQ_MASTER_SLAVE, NULL, "IQ I2S is Slave", UiMenuDesc("Dev Only: Switch I2S IQ between master and slave operation") },
 
 	{ MENU_DEBUG, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };

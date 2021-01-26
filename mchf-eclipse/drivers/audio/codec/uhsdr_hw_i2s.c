@@ -189,6 +189,7 @@ static void UhsdrHwI2s_ApplyConfig()
     #if defined(UI_BRD_OVI40)
     UhsdrHWI2s_Sai32Bits(&hsai_BlockA2);
     UhsdrHWI2s_Sai32Bits(&hsai_BlockB2);
+    UhsdrHwI2s_Codec_IqAsSlave(ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE);
     #endif
 #endif
 
