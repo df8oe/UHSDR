@@ -315,6 +315,13 @@ int mchfMain(void)
 
     // HW init
     Board_InitMinimal();
+
+    /* ========================================================================================= */
+    // here configuration data is loaded, before this, any configuration/calibration information
+    // is not valid and should not be accessed.
+
+    ConfigStorage_Init();
+
     // Initialize the RF board
     RFBoard_Init_Board();
 
@@ -329,7 +336,6 @@ int mchfMain(void)
 
     Board_InitFull();
 
-    ConfigStorage_Init();
 
     // init mchf_touchscreen to see if it is present
     // we don't care about the screen being reverse or not
@@ -340,8 +346,6 @@ int mchfMain(void)
 
     UiDriver_Init();
 
-    // Initialize the RF board
-    //RFBoard_Init_Board();
 
     RadioManagement_InitTuningInfo();
 
