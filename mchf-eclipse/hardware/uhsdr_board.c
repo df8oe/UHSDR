@@ -243,11 +243,6 @@ void Board_InitMinimal()
 
     // LCD Init
     UiLcdHy28_Init();
-
-    // Minimally initialize the RF board
-
-    // Initialize LO, by which we (at least for now) can detect the RF board
-    //Osc_Init();
 }
 
 /**

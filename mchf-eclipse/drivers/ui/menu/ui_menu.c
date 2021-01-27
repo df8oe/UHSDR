@@ -4304,6 +4304,10 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.enable_ptt_rts,0,options,&clr);
         break;
 
+    case MENU_DEBUG_I2S_IQ_TEST:
+        var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.debug_i2s_iq, 0, options, &clr);
+        break;
+
     case MENU_DEBUG_OSC_SI5351_PLLRESET:
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.debug_si5351a_pllreset,
                 0,

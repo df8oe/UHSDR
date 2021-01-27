@@ -418,6 +418,7 @@ const MenuDescriptor infoGroup[] =
 
 const MenuDescriptor debugGroup[] =
 {
+    { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_I2S_IQ_TEST, NULL, "I2S Test", UiMenuDesc("Generate I2S IQ Test pattern at TX, test incoming RX I2S IQ data for pattern and turn on red led if detected") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_ENABLE_INFO, NULL,"Enable Debug Info Display", UiMenuDesc("Enable debug outputs on LCD for testing purposes (touch screen coordinates, load) and audio interrupt duration indication via green led") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL, NULL,"CW Shift Keeps Signal", UiMenuDesc("Enable automatic sidetone correction for CW OFFSET MODE = SHIFT. If you tuned in SSB to a CW signal around the sidetone frequency, you'll keep that signal when going to CW. Even if you switch from USB to CW-LSB etc.") },
     { MENU_DEBUG, MENU_ITEM, MENU_DEBUG_TX_AUDIO, NULL,"TX Audio via USB", UiMenuDesc("If enabled, send generated audio to PC during TX.") },

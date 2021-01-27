@@ -2951,6 +2951,48 @@ static void AudioDriver_IqFillSilence(IqSample_t *s, size_t size)
     memset(s,0,size*sizeof(*s));
 }
 
+/**
+ * Fills the IQ buffer with a test pattern. The lower 8 bits are a counter, which allows to identify any sample shifts, works with 16bit and 32bit IQ samples
+ *
+ * @param s pointer to current iq data block
+ * @param size
+ */
+static void AudioDriver_IqFillPattern(IqSample_t *s, size_t size)
+{
+    for (size_t idx = 0; idx < size; idx++)
+    {
+        s[idx].l = 0x65432100 | (idx & 0xff );
+        s[idx].r = 0xfedcba00 | (idx & 0xff );
+    }
+}
+
+/**
+ * Tests the IQ buffer test pattern. The lower 8 bits are a counter, which allows to identify any sample shifts, works with 16bit and 32bit IQ samples
+ * Turns on the red led if the test pattern is recognized.
+ *
+ * @param s pointer to current iq data block
+ * @param size
+ */
+static void AudioDriver_IqGenTestPattern(IqSample_t *s, size_t size)
+{
+    bool phase = true;
+    bool unswapped = true;
+    bool swapped = true;
+    for (size_t idx = 0; idx < size; idx++)
+    {
+        phase = phase && ((s[idx].l & 0xff) == (s[idx].r & 0xff));
+
+        bool l_ok = (s[idx].l & 0xffffff00) == 0x12345600;
+        bool r_ok = (s[idx].r  & 0xffffff00) == 0xabcdef00;
+        bool r_swapped = (s[idx].r & 0xffffff00) == 0x12345600;
+        bool l_swapped = (s[idx].l  & 0xffffff00) == 0xabcdef00;
+
+        unswapped = unswapped && l_ok && r_ok;
+        swapped = swapped && l_swapped && r_swapped;
+    }
+    Board_RedLed((phase && unswapped)?LED_STATE_ON:LED_STATE_OFF);
+}
+
 //*----------------------------------------------------------------------------
 //* Function Name       : I2S_RX_CallBack
 //* Object              :
@@ -2987,6 +3029,10 @@ void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t
             to_rx = false;                          // caused by the content of the buffers from TX - used on return from SSB TX
         }
 
+        if (ts.debug_i2s_iq)
+        {
+            AudioDriver_IqGenTestPattern(iq, blockSize);
+        }
 #ifdef USE_CONVOLUTION
         AudioDriver_RxProcessorConvolution(iq, audio, blockSize, muted);
 #else
@@ -3033,6 +3079,11 @@ void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t
         }
 
         to_rx = true;		// Set flag to indicate that we WERE transmitting when we eventually go back to receive mode
+
+        if (ts.debug_i2s_iq)
+        {
+                AudioDriver_IqFillPattern(iq, blockSize);
+        }
     }
 
     UiDriver_Callback_AudioISR();
