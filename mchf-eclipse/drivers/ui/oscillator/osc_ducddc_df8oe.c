@@ -22,7 +22,7 @@
 
 #ifdef USE_OSC_DUCDDC
 
-#define DUCDDC_MIN_FREQ			100000L			// Min frequency
+#define DUCDDC_MIN_FREQ			10000L			// Min frequency
 #define DUCDDC_MAX_FREQ		    4200000000L	    // Max frequency
 
 #define DUCDDC_I2C_WRITE 0xD2
@@ -32,8 +32,8 @@ typedef struct
 {
 	uint32_t rx_frequency;
 	uint32_t tx_frequency;
-	uint8_t txp;
 	uint8_t sr;
+    uint8_t txp;
 } __attribute__ ((packed)) DucDdc_Df8oe_Config_t;
 
 typedef struct
@@ -153,12 +153,12 @@ const OscillatorInterface_t osc_ducddc =
 
 bool DucDdc_Df8oe_EnableTx(void)
 {
-    ducddc_state.next.txp |= 0xD0;
+    ducddc_state.next.txp = 0xff;
     return DucDdc_Df8oe_ChangeToNextFrequency() == OSC_OK;
 }
 bool DucDdc_Df8oe_EnableRx(void)
 {
-    ducddc_state.next.txp &= ~0xD0;
+    ducddc_state.next.txp = 0;
     return DucDdc_Df8oe_ChangeToNextFrequency() == OSC_OK;
 }
 
