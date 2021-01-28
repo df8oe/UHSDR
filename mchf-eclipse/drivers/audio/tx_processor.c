@@ -1006,7 +1006,7 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     else if(dmod_mode == DEMOD_FM)
     {
         //  is frequency translation active (No FM possible unless in frequency translate mode!)
-        if (iq_freq_mode)
+        if (RadioManagement_FM_Permitted())
         {
             TxProcessor_PrepareVoice(adb.a_buffer[0], src, blockSize, FM_ALC_GAIN_CORRECTION, true);
             signal_active = TxProcessor_FM(adb.a_buffer, &adb.iq_buf, blockSize,  ts.TX_at_zeroIF==0?AudioDriver_GetTranslateFreq():0);

@@ -932,7 +932,7 @@ void UiDriver_Init()
 
 	if (ts.special_functions_enabled != 1)
 	{
-	  UiDriver_StartupScreen_LogIfProblem(AudioDriver_GetTranslateFreq() == 0,
+	  UiDriver_StartupScreen_LogIfProblem(AudioDriver_GetTranslateFreq() == 0 && RadioManagement_CleanZeroIF() == false,
 			"WARNING:  Freq. Translation is OFF!!!\nTranslation is STRONGLY recommended!!");
 	}
 

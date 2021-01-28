@@ -1545,7 +1545,7 @@ demod_fm_data_t fm_data;
 {
 	float32_t goertzel_buf[blockSize], squelch_buf[blockSize];
 
-	if (ts.iq_freq_mode != FREQ_IQ_CONV_MODE_OFF)// bail out if translate mode is not active
+	if (RadioManagement_FM_Permitted())
 	{
 
 		bool tone_det_enabled = ads.fm_conf.subaudible_tone_det_freq != 0;// set a quick flag for checking to see if tone detection is enabled

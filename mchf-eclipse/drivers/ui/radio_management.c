@@ -1453,6 +1453,25 @@ void RadioManagement_HandlePttOnOff()
     }
 }
 
+// TODO: implement this as capability of the RF_BOARD not via code
+/**
+ *
+ * @return true if we can receive and transmit at zero if without any constraints
+ */
+bool RadioManagement_CleanZeroIF()
+{
+    return (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE);
+}
+
+/**
+ *
+ * @return true if in the current operational state and hardware capabilites, transmission in FM is permitted
+ */
+bool RadioManagement_FM_Permitted()
+{
+     return (RadioManagement_CleanZeroIF() || ts.iq_freq_mode != FREQ_IQ_CONV_MODE_OFF);
+}
+
 bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
 {
     bool retval = false;
@@ -1486,7 +1505,8 @@ bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
         break;
     case DEMOD_FM:
         // FIXME: ts.lsb_usb_auto_select acts as fm select here. Rename!
-        retval = (ts.iq_freq_mode != FREQ_IQ_CONV_MODE_OFF) && (((ts.flags2 & FLAGS2_FM_MODE_ENABLE) != 0) || (ts.band->band_mode == BAND_MODE_10 && ts.lsb_usb_auto_select));   // is FM enabled?
+        retval = RadioManagement_FM_Permitted() && (((ts.flags2 & FLAGS2_FM_MODE_ENABLE) != 0) || (ts.band->band_mode == BAND_MODE_10 && ts.lsb_usb_auto_select));   // is FM enabled?
+
         break;
     case DEMOD_SAM:
         retval =( ts.flags1 & FLAGS1_SAM_ENABLE) != 0;        // is SAM enabled?
