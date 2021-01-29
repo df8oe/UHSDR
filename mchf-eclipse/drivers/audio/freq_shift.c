@@ -270,7 +270,7 @@ static void FreqShift_QuarterFs(float32_t* I_buffer, float32_t* Q_buffer, int16_
  * @param I_buffer incoming i data
  * @param Q_buffer incoming q data
  * @param blockSize size of data to be processed
- * @param shift  > 0 SHIFT_UP moves receive frequency to the right in the spectrum, SHIFT_DOWN opposite direction
+ * @param shift  in Hz, 0 is a permitted value and is just a passthrough (nop)
  */
 void FreqShift(float32_t* i_buffer, float32_t* q_buffer, size_t blockSize, int32_t shift)
 {
@@ -285,50 +285,53 @@ void FreqShift(float32_t* i_buffer, float32_t* q_buffer, size_t blockSize, int32
 
     assert(blockSize <= IQ_BLOCK_SIZE);
 
-    int32_t new_conversion_freq = abs(shift);
-    if (conversion_freq != new_conversion_freq || single_osc_calc == false)
+    if (shift != 0)
     {
-        if (conversion_freq != new_conversion_freq)
+        int32_t new_conversion_freq = abs(shift);
+        if (conversion_freq != new_conversion_freq || single_osc_calc == false)
         {
-            float32_t rate = new_conversion_freq / IQ_SAMPLE_RATE_F;
-
-            single_osc_calc = (rate == 0.25 || rate == 0.125 || rate == 0.0625 || rate == 0.03125);
-            // if the sample frequency divider to get shift frequency is a power of two no larger
-            // than the number of samples in the osc buffer
-            // we can avoid continuous recalculation of sin/cos table because it repeats after blockSize entries
-
-            is_quarter_of_fs = rate == 0.25;
-            // if we have shift equals a quarter of sample frequency, we can use a highly optimized formula, see below
-
-            conversion_freq = new_conversion_freq;
-
-            FreqShift_Approx_Prepare(&nco_approx, new_conversion_freq, IQ_SAMPLE_RATE_F);
-            // this algorithm works always, but takes more time
-
-            single_osc_calc = false;
-            if (single_osc_calc == true)
+            if (conversion_freq != new_conversion_freq)
             {
+                float32_t rate = new_conversion_freq / IQ_SAMPLE_RATE_F;
 
-                // Pre-calculate quadrature sine wave(s) ONCE for the conversion
-                FreqShift_SinCos_Prepare(&nco_sincos, new_conversion_freq, IQ_SAMPLE_RATE_F, single_osc_calc, blockSize);
+                single_osc_calc = (rate == 0.25 || rate == 0.125 || rate == 0.0625 || rate == 0.03125);
+                // if the sample frequency divider to get shift frequency is a power of two no larger
+                // than the number of samples in the osc buffer
+                // we can avoid continuous recalculation of sin/cos table because it repeats after blockSize entries
+
+                is_quarter_of_fs = rate == 0.25;
+                // if we have shift equals a quarter of sample frequency, we can use a highly optimized formula, see below
+
+                conversion_freq = new_conversion_freq;
+
+                FreqShift_Approx_Prepare(&nco_approx, new_conversion_freq, IQ_SAMPLE_RATE_F);
+                // this algorithm works always, but takes more time
+
+                single_osc_calc = false;
+                if (single_osc_calc == true)
+                {
+
+                    // Pre-calculate quadrature sine wave(s) ONCE for the conversion
+                    FreqShift_SinCos_Prepare(&nco_sincos, new_conversion_freq, IQ_SAMPLE_RATE_F, single_osc_calc, blockSize);
+                }
             }
         }
-    }
 
-    bool dir = shift > 0;
-    if (is_quarter_of_fs == true)
-    {
-        FreqShift_QuarterFs(i_buffer, q_buffer, blockSize, dir);
-    }
-    else if (single_osc_calc == true)  // 'not so optimized' frequency translation using sin/cos (+6kHz or -6kHz)
-    {
-        // Below is the call to frequency translation code that uses a "pre-calculated" sine wave - which means that the translation must be done at a sub-
-        // multiple of the sample frequency.  This pre-calculation eliminates the processor overhead required to generate a sine wave on the fly.
-        // This also makes extensive use of the optimized ARM vector instructions for the calculation of the final I/Q vectors
-        FreqShift_SinCos(&nco_sincos, i_buffer, q_buffer, blockSize, dir);
-    }
-    else
-    {
-        FreqShift_Approx(&nco_approx, i_buffer, q_buffer, blockSize, dir);
+        bool dir = shift > 0;
+        if (is_quarter_of_fs == true)
+        {
+            FreqShift_QuarterFs(i_buffer, q_buffer, blockSize, dir);
+        }
+        else if (single_osc_calc == true)  // 'not so optimized' frequency translation using sin/cos (+6kHz or -6kHz)
+        {
+            // Below is the call to frequency translation code that uses a "pre-calculated" sine wave - which means that the translation must be done at a sub-
+            // multiple of the sample frequency.  This pre-calculation eliminates the processor overhead required to generate a sine wave on the fly.
+            // This also makes extensive use of the optimized ARM vector instructions for the calculation of the final I/Q vectors
+            FreqShift_SinCos(&nco_sincos, i_buffer, q_buffer, blockSize, dir);
+        }
+        else
+        {
+            FreqShift_Approx(&nco_approx, i_buffer, q_buffer, blockSize, dir);
+        }
     }
 }

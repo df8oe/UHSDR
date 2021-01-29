@@ -1545,7 +1545,7 @@ demod_fm_data_t fm_data;
 {
 	float32_t goertzel_buf[blockSize], squelch_buf[blockSize];
 
-	if (RadioManagement_FM_Permitted())
+	if (RadioManagement_AMFM_Permitted())
 	{
 
 		bool tone_det_enabled = ads.fm_conf.subaudible_tone_det_freq != 0;// set a quick flag for checking to see if tone detection is enabled

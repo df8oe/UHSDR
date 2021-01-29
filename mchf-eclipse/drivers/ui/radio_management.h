@@ -350,7 +350,7 @@ void RadioManagement_Request_TxOff(void);
 
 bool RadioManagement_SwitchTxRx_Possible(void);
 bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode);
-bool RadioManagement_FM_Permitted();
+bool RadioManagement_AMFM_Permitted();
 bool RadioManagement_CleanZeroIF();
 
 inline void RadioManagement_ToggleVfoMem()

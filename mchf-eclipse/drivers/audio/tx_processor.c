@@ -479,10 +479,8 @@ static bool TxProcessor_SSB(audio_block_t a_block, iq_buffer_t* iq_buf_p, const 
         arm_fir_f32(i_filter, a_block, iq_buf_p->i_buffer, blockSize);
         arm_fir_f32(q_filter, a_block, iq_buf_p->q_buffer, blockSize);
 
-        if(translate_freq != 0)
-        {
-            FreqShift(iq_buf_p->i_buffer, iq_buf_p->q_buffer, blockSize, translate_freq);
-        }
+        FreqShift(iq_buf_p->i_buffer, iq_buf_p->q_buffer, blockSize, translate_freq);
+
         retval = true;
     }
     return retval;
@@ -789,7 +787,6 @@ static bool TxProcessor_AM(audio_block_t a_block, iq_buffer_t* iq_buf,  uint16_t
         }
 #endif
 
-        // apply correct translate mode
         FreqShift(iq_buf->i_buffer, iq_buf->q_buffer, blockSize, translate_freq);
 
         retval = true;
@@ -918,7 +915,6 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     const uint8_t dmod_mode = ts.dmod_mode;
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t tune = ts.tune;
-    const int32_t iq_freq_mode = ts.iq_freq_mode;
     AudioSample_t srcUSB[blockSize];
     AudioSample_t * const src = (tx_audio_source == TX_AUDIO_DIG || tx_audio_source == TX_AUDIO_DIGIQ) ? srcUSB : srcCodec;
 
@@ -994,8 +990,7 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     }
     else if(dmod_mode == DEMOD_AM)
     {
-        //  is frequency translation active (No AM possible unless in frequency translate mode!)
-        if (ts.iq_freq_mode)
+        if (RadioManagement_AMFM_Permitted())
         {
             bool runFilter = (ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE) == false;
             TxProcessor_PrepareVoice(adb.a_buffer[0], src, blockSize, AM_ALC_GAIN_CORRECTION, runFilter);
@@ -1006,7 +1001,7 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     else if(dmod_mode == DEMOD_FM)
     {
         //  is frequency translation active (No FM possible unless in frequency translate mode!)
-        if (RadioManagement_FM_Permitted())
+        if (RadioManagement_AMFM_Permitted())
         {
             TxProcessor_PrepareVoice(adb.a_buffer[0], src, blockSize, FM_ALC_GAIN_CORRECTION, true);
             signal_active = TxProcessor_FM(adb.a_buffer, &adb.iq_buf, blockSize,  ts.TX_at_zeroIF==0?AudioDriver_GetTranslateFreq():0);
