@@ -96,6 +96,35 @@ const pa_info_t SParkle_pa =
 };
 #endif
 
+#ifdef USE_OSC_DUCDDC
+// this structure MUST match the order of entries in power_level_t !
+static const power_level_desc_t Df8oe_DdcDuc_rf_power_levels[] =
+{
+        { .id = PA_LEVEL_FULL,   .mW = 0,    }, // we use 0 to indicate max power
+        { .id = PA_LEVEL_HIGH,   .mW = 10000, },
+        { .id = PA_LEVEL_MEDIUM, .mW = 5000, },
+        { .id = PA_LEVEL_LOW,    .mW = 2000, },
+        { .id = PA_LEVEL_MINIMAL,.mW = 1000, },
+};
+
+const pa_power_levels_info_t Df8oe_DdcDuc_power_levelsInfo =
+{
+        .levels = Df8oe_DdcDuc_rf_power_levels,
+        .count = sizeof(Df8oe_DdcDuc_rf_power_levels)/sizeof(*Df8oe_DdcDuc_rf_power_levels),
+};
+
+const pa_info_t Df8oe_DdcDuc_pa =
+{
+        .name  = "Df8oe_DdcDuc PA",
+        .reference_power = 10000.0,
+        .max_freq = 150000000,
+        .min_freq =  1800000,
+        .max_am_power = 25000,
+        .max_power = 50000,
+};
+#endif
+
+
 /**
  * @brief switch off the PA Bias to mute HF output ( even if PTT is on )
  * Using this method the PA will be effectively muted no matter what setting
@@ -191,8 +220,8 @@ void RFBoard_Init_Board(void)
 
             break;
         case RF_BOARD_DDCDUC_DF8OE:
-            RFboard.pa_info=&mchf_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
-            RFboard.power_levelsInfo=&mchf_power_levelsInfo;
+            RFboard.pa_info=&Df8oe_DdcDuc_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
+            RFboard.power_levelsInfo=&Df8oe_DdcDuc_power_levelsInfo;
             RFboard.EnableTx  = DucDdc_Df8oe_EnableTx;
             RFboard.EnableRx = DucDdc_Df8oe_EnableRx;
             RFboard.PrepareTx  = DucDdc_Df8oe_PrepareTx;
