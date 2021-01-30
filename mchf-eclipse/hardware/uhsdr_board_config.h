@@ -224,6 +224,7 @@
 #define SAMPLES_PER_DMA_CYCLE   (IQ_BLOCK_SIZE)
 #define SAMPLES_PER_CENTISECOND (IQ_SAMPLE_RATE/100)
 
+#define IQ_AUDIO_RATIO (IQ_SAMPLE_RATE/AUDIO_SAMPLE_RATE)
 
 #ifdef STM32F4
     #define USE_SIMPLE_FREEDV_FILTERS
@@ -233,14 +234,21 @@
 #endif
 
 
-#if (IQ_SAMPLE_RATE) != 48000
-    #error Only 48k sample frequency supported (yet).
+#if (IQ_AUDIO_RATIO * AUDIO_SAMPLE_RATE) != IQ_SAMPLE_RATE
+    #error Iq Sample rate must be an integer multiple of Audio sample rate
+#endif
+
+#if (AUDIO_SAMPLE_RATE) != 48000
+    // #error Only 48k audio frequency supported (yet).
 #endif
 #if (IQ_BLOCK_SIZE * 1500) != IQ_SAMPLE_RATE
     #error Audio Interrupt Frequency must be 1500.
 #endif
 #if (IQ_SAMPLE_RATE/IQ_BLOCK_SIZE) != (AUDIO_SAMPLE_RATE/AUDIO_BLOCK_SIZE)
-    #error IQ Interrupt frequency must be idential to Audio Interrupt Frequency
+    #error IQ Interrupt frequency must be identical to Audio Interrupt Frequency
+#endif
+#if (IQ_BLOCK_SIZE) != (AUDIO_BLOCK_SIZE)
+    #error IQ and AUDIO block size must be identical
 #endif
 
 
@@ -266,7 +274,18 @@
 #error UI_BRD_MCHF does not permit USE_TWO_CHANNEL_AUDIO
 #endif
 
-#if CODEC_NUM == 1 && (defined(USE_32_IQ_BITS) &&  !defined(USE_32_AUDIO_BITS)) || (!defined(USE_32_IQ_BITS) &&  defined(USE_32_AUDIO_BITS))
+#ifdef USE_32_IQ_BITS
+    #define IQ_SAMPLE_BITS (32)
+#else
+   #define IQ_SAMPLE_BITS (16)
+#endif
+#ifdef USE_32_AUDIO_BITS
+    #define AUDIO_SAMPLE_BITS (32)
+#else
+   #define AUDIO_SAMPLE_BITS (16)
+#endif
+
+#if CODEC_NUM == 1 && AUDIO_SAMPLE_BITS != IQ_SAMPLE_BITS
 #error With only one codec bit width of iq and audio must match, either define both USE_32_IQ_BITS and USE_32_AUDIO_BITS or none
 #endif
 

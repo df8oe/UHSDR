@@ -117,7 +117,7 @@ const pa_info_t Df8oe_DdcDuc_pa =
 {
         .name  = "Df8oe_DdcDuc PA",
         .reference_power = 10000.0,
-        .max_freq = 150000000,
+        .max_freq = 76000000,
         .min_freq =  1800000,
         .max_am_power = 25000,
         .max_power = 50000,

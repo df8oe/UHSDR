@@ -1652,7 +1652,7 @@ static void UiSpectrum_DrawFrequencyBar()
 
     if (ts.spectrum_freqscale_colour != SPEC_BLACK)     // don't bother updating frequency scale if it is black (invisible)!
     {
-        float32_t grat = 6.0f / (float32_t)(1 << sd.magnify);
+        float32_t grat = (IQ_SAMPLE_RATE / 8000) / (float32_t)(1 << sd.magnify);
 
         // This function draws the frequency bar at the bottom of the spectrum scope, putting markers every at every graticule and the full frequency
         // (rounded to the nearest kHz) in the "center".  (by KA7OEI, 20140913)

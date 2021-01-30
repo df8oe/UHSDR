@@ -27,6 +27,7 @@
 #ifdef UI_BRD_OVI40
 #include "sai.h"
 #endif
+#include <assert.h>
 
 
 typedef struct
@@ -164,13 +165,64 @@ void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hi2s)
 #endif
 
 #if defined(UI_BRD_OVI40)
-static void UhsdrHWI2s_Sai32Bits(SAI_HandleTypeDef* hsai)
+static void UhsdrHWI2s_SaiConfig(SAI_HandleTypeDef* hsai, uint32_t bits, uint32_t rate)
 {
-    hsai->hdmarx->Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
-    hsai->hdmarx->Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
-    HAL_DMA_Init(hsai->hdmarx);
 
-    HAL_SAI_InitProtocol(hsai, SAI_I2S_STANDARD, SAI_PROTOCOL_DATASIZE_32BIT, 2);
+    typedef struct
+    {
+        uint32_t bits;
+        uint32_t word_id;
+        uint32_t PeriphDataAlignment;
+        uint32_t MemDataAlignment;
+    } protocol_config_t;
+
+    static const protocol_config_t word_config[] =
+    {
+            { 16, SAI_PROTOCOL_DATASIZE_16BIT,  DMA_PDATAALIGN_HALFWORD, DMA_MDATAALIGN_HALFWORD },
+            { 24, SAI_PROTOCOL_DATASIZE_32BIT,  DMA_PDATAALIGN_WORD, DMA_MDATAALIGN_WORD },
+            { 32, SAI_PROTOCOL_DATASIZE_32BIT,  DMA_PDATAALIGN_WORD, DMA_MDATAALIGN_WORD },
+            // keep at end
+            { 0, 0, 0, 0 },
+    };
+
+    // get bits_idx, is valid if word_config[bits_idx].bits != 0
+    uint32_t bits_idx;
+    for (bits_idx = 0; word_config[bits_idx].bits != 0 && word_config[bits_idx].bits != bits; bits_idx++) {}
+
+    typedef struct
+    {
+        uint32_t rate;
+        uint32_t rate_id;
+    } rate_config_t;
+
+    static const rate_config_t sr_config[] =
+    {
+                { 48000,  SAI_AUDIO_FREQUENCY_48K},
+                { 96000, SAI_AUDIO_FREQUENCY_96K },
+                { 192000, SAI_AUDIO_FREQUENCY_192K },
+                // keep at end
+                { 0, 0 },
+    };
+    // get sample rate_idx, is valid if sr_config[sr_idx].rate != 0
+    uint32_t sr_idx;
+    for (sr_idx = 0; sr_config[sr_idx].rate != 0 && sr_config[sr_idx].rate != rate; sr_idx++) {}
+
+
+
+    if (sr_config[sr_idx].rate != 0 && word_config[bits_idx].bits != 0)
+    {
+
+        hsai->hdmarx->Init.PeriphDataAlignment = word_config[bits_idx].PeriphDataAlignment;
+        hsai->hdmarx->Init.MemDataAlignment = word_config[bits_idx].MemDataAlignment;
+        HAL_DMA_Init(hsai->hdmarx);
+
+        HAL_SAI_InitProtocol(hsai, SAI_I2S_STANDARD, word_config[bits_idx].word_id, 2);
+    }
+    else
+    {
+        assert(false && "Unsupported SAI Sample Rate or SAI Word Lenght");
+        Error_Handler();
+    }
 }
 #endif
 
@@ -180,27 +232,23 @@ static void UhsdrHWI2s_Sai32Bits(SAI_HandleTypeDef* hsai)
  */
 static void UhsdrHwI2s_ApplyConfig()
 {
-#if defined(USE_32_IQ_BITS)
-    #if defined(UI_BRD_MCHF)
-    hi2s3.Init.DataFormat = I2S_DATAFORMAT_32B;
-    HAL_I2S_Init(&hi2s3);
 
-    #endif
-    #if defined(UI_BRD_OVI40)
-    UhsdrHWI2s_Sai32Bits(&hsai_BlockA2);
-    UhsdrHWI2s_Sai32Bits(&hsai_BlockB2);
-    #endif
+#if defined(UI_BRD_MCHF)
+    if (IQ_SAMPLE_BITS == 32)
+    {
+        hi2s3.Init.DataFormat = I2S_DATAFORMAT_32B;
+    }
+    HAL_I2S_Init(&hi2s3);
 #endif
 
 #if defined(UI_BRD_OVI40)
-    UhsdrHwI2s_Codec_IqAsSlave(ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE);
-#endif
+    UhsdrHWI2s_SaiConfig(&hsai_BlockA2, IQ_SAMPLE_BITS, IQ_SAMPLE_RATE);
+    UhsdrHWI2s_SaiConfig(&hsai_BlockB2, IQ_SAMPLE_BITS, IQ_SAMPLE_RATE);
 
-#if defined(USE_32_AUDIO_BITS)
-    #if defined(UI_BRD_OVI40)
-    UhsdrHWI2s_Sai32Bits(&hsai_BlockA1);
-    UhsdrHWI2s_Sai32Bits(&hsai_BlockB1);
-    #endif
+    UhsdrHwI2s_Codec_IqAsSlave(ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE);
+
+    UhsdrHWI2s_SaiConfig(&hsai_BlockA1, AUDIO_SAMPLE_BITS, AUDIO_SAMPLE_RATE);
+    UhsdrHWI2s_SaiConfig(&hsai_BlockB1, AUDIO_SAMPLE_BITS, AUDIO_SAMPLE_RATE);
 #endif
 }
 

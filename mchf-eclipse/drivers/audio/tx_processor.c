@@ -1029,6 +1029,10 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
         for(int i = 0; i < blockSize; i++)
         {
 
+
+            // iq sample rate must match the sample rate of USB IQ audio if we push iq samples to USB
+            assert(IQ_SAMPLE_RATE == USBD_AUDIO_FREQ);
+
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
             UsbdAudio_PutSample(adb.iq_buf.q_buffer[i]);
             UsbdAudio_PutSample(adb.iq_buf.i_buffer[i]);
@@ -1061,6 +1065,9 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
 
     if (ts.stream_tx_audio == STREAM_TX_AUDIO_DIGIQ)
     {
+        // iq sample rate must match the sample rate of USB IQ audio if we push iq samples to USB
+        assert(IQ_SAMPLE_RATE == USBD_AUDIO_FREQ);
+
         for(int i = 0; i < blockSize; i++)
         {
             // Native sample format to USB 16 bit format

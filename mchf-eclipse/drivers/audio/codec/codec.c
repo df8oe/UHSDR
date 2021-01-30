@@ -21,6 +21,7 @@
 
 #include "uhsdr_hw_i2c.h"
 #include "codec.h"
+#include <assert.h>
 
 // I2C addresses
 #define W8731_ADDR_0                    0x1A        // CS = 0, MODE to GND
@@ -107,16 +108,24 @@ mchf_codec_t mchf_codecs[CODEC_NUM];
 // which is 24 bits in any case. We should reduce finally to 24bits (which requires also the I2S/SAI peripheral to
 // use 24bits)
 
-#if defined(USE_32_IQ_BITS)
+#if IQ_SAMPLE_BITS == 32
     #define IQ_WORD_SIZE WORD_SIZE_32
-#else
+#elif IQ_SAMPLE_BITS == 24
+    #define IQ_WORD_SIZE WORD_SIZE_24
+#elif IQ_SAMPLE_BITS == 16
     #define IQ_WORD_SIZE WORD_SIZE_16
+#else
+    #error WM8371: Unsupported IQ_SAMPLE_BITS
 #endif
 
-#if defined(USE_32_AUDIO_BITS)
+#if AUDIO_SAMPLE_BITS == 32
     #define AUDIO_WORD_SIZE WORD_SIZE_32
-#else
+#elif AUDIO_SAMPLE_BITS == 24
+    #define AUDIO_WORD_SIZE WORD_SIZE_24
+#elif AUDIO_SAMPLE_BITS == 16
     #define AUDIO_WORD_SIZE WORD_SIZE_16
+#else
+    #error WM8371: Unsupported AUDIO_WORD_SIZE
 #endif
 
 #ifdef UI_BRD_OVI40
@@ -251,9 +260,11 @@ static uint32_t Codec_ResetCodec(I2C_HandleTypeDef* hi2c, uint32_t AudioFreq, Co
             samp_reg_val = W8731_SAMPLING_CNTR_96K;
             break;
         case 48000:
-        default:
             samp_reg_val = W8731_SAMPLING_CNTR_48K;
             break;
+        default:
+            assert(false && "WM8371: Unsupported Sample Rate detected");
+            Error_Handler();
         }
 
         Codec_WriteRegister(hi2c, W8731_SAMPLING_CNTR,samp_reg_val);

@@ -2626,6 +2626,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
     IqSample_t * const src = (rx_iq_source == RX_IQ_DIG || rx_iq_source == RX_IQ_DIGIQ) ? srcUSB : srcCodec;
     // If source is digital usb in, pull from USB buffer, discard codec iq and
     // let the normal processing happen
+    // TODO: Make it possible to have the IQ sample rate a multiple of usb audio sampling rate
     if (rx_iq_source == RX_IQ_DIG || rx_iq_source == RX_IQ_DIGIQ)
     {
         // audio sample rate must match the sample rate of USB audio if we read from USB
@@ -2634,11 +2635,18 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         // iq sample rate must match the sample rate of USB IQ audio if we read from USB
         assert(tx_audio_source != RX_IQ_DIGIQ || IQ_SAMPLE_RATE == USBD_AUDIO_FREQ);
 
+        // unless both are of equal size, we can't simply cast one into the other
+        assert(sizeof(AudioSample_t) == sizeof(IqSample_t));
+
         UsbdAudio_FillTxBuffer((AudioSample_t*)srcUSB,blockSize);
     }
 
+
     if (tx_audio_source == TX_AUDIO_DIGIQ)
     {
+        // iq sample rate must match the sample rate of USB IQ audio if we push iq samples to USB
+        assert(IQ_SAMPLE_RATE == USBD_AUDIO_FREQ);
+
         for(uint32_t i = 0; i < blockSize; i++)
         {
             // 16 bit format - convert to float and increment
