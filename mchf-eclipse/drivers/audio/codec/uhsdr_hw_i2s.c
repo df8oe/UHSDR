@@ -308,6 +308,7 @@ void UhsdrHwI2s_Codec_Restart()
     }
 }
 
+#ifdef UI_BRD_OVI40
 static void UhsdrHwI2s_Codec_EnableExternalMasterClock(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
@@ -326,7 +327,6 @@ static void UhsdrHwI2s_Codec_EnableExternalMasterClock(void)
 
 void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
 {
-#ifdef UI_BRD_OVI40
 
     if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE)
     {
@@ -342,10 +342,5 @@ void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
             UhsdrHwI2s_Codec_StartDMA();
         }
     }
+}
 #endif
-}
-
-bool UhsdrHwI2s_Codec_IqIsSlave()
-{
-    return hsai_BlockB2.Init.AudioMode == SAI_MODESLAVE_TX;
-}
