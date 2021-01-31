@@ -242,10 +242,12 @@ static void UhsdrHwI2s_ApplyConfig()
 #endif
 
 #if defined(UI_BRD_OVI40)
+
+    UhsdrHwI2s_Codec_IqAsSlave(ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE);
+
     UhsdrHWI2s_SaiConfig(&hsai_BlockA2, IQ_SAMPLE_BITS, IQ_SAMPLE_RATE);
     UhsdrHWI2s_SaiConfig(&hsai_BlockB2, IQ_SAMPLE_BITS, IQ_SAMPLE_RATE);
 
-    UhsdrHwI2s_Codec_IqAsSlave(ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE);
 
     UhsdrHWI2s_SaiConfig(&hsai_BlockA1, AUDIO_SAMPLE_BITS, AUDIO_SAMPLE_RATE);
     UhsdrHWI2s_SaiConfig(&hsai_BlockB1, AUDIO_SAMPLE_BITS, AUDIO_SAMPLE_RATE);
@@ -333,13 +335,13 @@ void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
         uint32_t target_mode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
         if (target_mode != hsai_BlockB2.Init.AudioMode)
         {
-            UhsdrHwI2s_Codec_StopDMA();
+            // UhsdrHwI2s_Codec_StopDMA();
             if (target_mode == SAI_MODESLAVE_TX)
             {
                 UhsdrHwI2s_Codec_EnableExternalMasterClock();
             }
             hsai_BlockB2.Init.AudioMode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
-            UhsdrHwI2s_Codec_StartDMA();
+            // UhsdrHwI2s_Codec_StartDMA();
         }
     }
 }
