@@ -422,7 +422,7 @@ void CwGen_Init(void)
 {
     // Init Soft DDS
     float freq[2] = { 0.0, 0.0 };
-    softdds_configRunIQ(freq,ts.samp_rate,0);
+    softdds_configRunIQ(freq,IQ_SAMPLE_RATE,0);
 
 	CwGen_SetSpeed();
 

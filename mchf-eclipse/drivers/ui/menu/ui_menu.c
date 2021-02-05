@@ -1753,7 +1753,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
             float freq[2] = { ts.cw_sidetone_freq, 0.0 };
 
-            softdds_configRunIQ(freq,ts.samp_rate,0);
+            softdds_configRunIQ(freq, AUDIO_SAMPLE_RATE, 0);
             UiDriver_FrequencyUpdateLOandDisplay(false);
             CwDecode_Filter_Set();
         }
@@ -4306,6 +4306,11 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 
     case MENU_DEBUG_I2S_IQ_TEST:
         var_change = UiDriverMenuItemChangeEnableOnOffBool(var, mode, &ts.debug_i2s_iq, 0, options, &clr);
+        if (var_change)
+        {
+            // reset this to default state
+            Board_RedLed(LED_STATE_OFF);
+        }
         break;
 
     case MENU_DEBUG_OSC_SI5351_PLLRESET:

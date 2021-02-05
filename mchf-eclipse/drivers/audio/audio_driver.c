@@ -689,8 +689,8 @@ void AudioDriver_Init()
     AudioManagement_KeyBeepPrepare();  // load/set beep frequency
 
     // Codecs/Demod init
-    Rtty_Modem_Init(ts.samp_rate); // RX/TX
-    Psk_Modem_Init(ts.samp_rate);  // RX/TX
+    Rtty_Modem_Init(AUDIO_SAMPLE_RATE); // RX/TX
+    Psk_Modem_Init(AUDIO_SAMPLE_RATE);  // RX/TX
 
     RxProcessor_Init();
     TxProcessor_Init();
@@ -988,12 +988,248 @@ static void AudioDriver_CalcNotch(float32_t coeffs[5], float32_t f0, float32_t B
 static const float32_t biquad_passthrough[] = { 1, 0, 0, 0, 0 };
 
 
+static arm_fir_decimate_instance_f32   DECIMATE_DOWN_I;
+static arm_fir_decimate_instance_f32   DECIMATE_DOWN_Q;
+
+/**
+ * Setup filters for decimating IQ input into 48khz from the original sample rate
+ * It is a no-op if IQ rate is 48khz
+ */
+
+#define IQ_DOWN_48_RATIO (IQ_SAMPLE_RATE/48000)
+
+const float32_t fir_half_83[] =
+                      {
+                              0.014747708857823375,
+
+                                0.04650125427457192,
+
+                                0.05269743000659975,
+
+                                0.025741292611793972,
+
+                                -0.014380874959258792,
+
+                                -0.020135817579941297,
+
+                                0.0038984364434740864,
+
+                                0.01632726798757871,
+
+                                -0.00046911830922178504,
+
+                                -0.013927203899215253,
+
+                                -0.0013687839549392134,
+
+                                0.012774617845697517,
+
+                                0.0025740635930506933,
+
+                                -0.012233803951668957,
+
+                                -0.0036728189590829363,
+
+                                0.012138362251685967,
+
+                                0.0048692265843418795,
+
+                                -0.012289672015820931,
+
+                                -0.006279673903635075,
+
+                                0.012568936095670762,
+
+                                0.00794345510110177,
+
+                                -0.012951865469799283,
+
+                                -0.009979470280688223,
+
+                                0.013363226160432489,
+
+                                0.012465615695020141,
+
+                                -0.013757154923551434,
+
+                                -0.015523099208787626,
+
+                                0.014140778408836584,
+
+                                0.01936764061712684,
+
+                                -0.014581509034267474,
+
+                                -0.024560120074063312,
+
+                                0.014871356694821036,
+
+                                0.03167366462807286,
+
+                                -0.015211681809141517,
+
+                                -0.04259258450679741,
+
+                                0.01543107183913201,
+
+                                0.061619284702166516,
+
+                                -0.015535803725913514,
+
+                                -0.10482208875597428,
+
+                                0.015675274224205327,
+
+                                0.31785647492338154,
+
+                                0.48423985919086004,
+
+                                0.31785647492338154,
+
+                                0.015675274224205327,
+
+                                -0.10482208875597428,
+
+                                -0.015535803725913514,
+
+                                0.061619284702166516,
+
+                                0.01543107183913201,
+
+                                -0.04259258450679741,
+
+                                -0.015211681809141517,
+
+                                0.03167366462807286,
+
+                                0.014871356694821036,
+
+                                -0.024560120074063312,
+
+                                -0.014581509034267474,
+
+                                0.01936764061712684,
+
+                                0.014140778408836584,
+
+                                -0.015523099208787626,
+
+                                -0.013757154923551434,
+
+                                0.012465615695020141,
+
+                                0.013363226160432489,
+
+                                -0.009979470280688223,
+
+                                -0.012951865469799283,
+
+                                0.00794345510110177,
+
+                                0.012568936095670762,
+
+                                -0.006279673903635075,
+
+                                -0.012289672015820931,
+
+                                0.0048692265843418795,
+
+                                0.012138362251685967,
+
+                                -0.0036728189590829363,
+
+                                -0.012233803951668957,
+
+                                0.0025740635930506933,
+
+                                0.012774617845697517,
+
+                                -0.0013687839549392134,
+
+                                -0.013927203899215253,
+
+                                -0.00046911830922178504,
+
+                                0.01632726798757871,
+
+                                0.0038984364434740864,
+
+                                -0.020135817579941297,
+
+                                -0.014380874959258792,
+
+                                0.025741292611793972,
+
+                                0.05269743000659975,
+
+                                0.04650125427457192,
+
+                                0.014747708857823375
+                      };
+
+#define DOWN_IQ_NUM_TAPS  (sizeof (fir_half_83) / sizeof (fir_half_83[0]))
+
+void AudioDriver_DecimIq_Setup()
+{
+
+    static float32_t           __MCHF_SPECIALMEM decimHalf_I_State[IQ_BLOCK_SIZE + DOWN_IQ_NUM_TAPS];
+    static float32_t           __MCHF_SPECIALMEM decimHalf_Q_State[IQ_BLOCK_SIZE + DOWN_IQ_NUM_TAPS];
+
+    if (IQ_DOWN_48_RATIO != 1)
+    {
+        const uint32_t shift = __builtin_ctz(IQ_DOWN_48_RATIO);
+        arm_fir_decimate_init_f32(&DECIMATE_DOWN_I,
+                 FirZoomFFTDecimate[shift].numTaps,
+                 (IQ_DOWN_48_RATIO),          // Decimation factor
+                 FirZoomFFTDecimate[shift].pCoeffs,
+                 decimHalf_I_State,            // Filter state variables
+                 IQ_BLOCK_SIZE);
+         arm_fir_decimate_init_f32(&DECIMATE_DOWN_Q,
+                 FirZoomFFTDecimate[shift].numTaps,
+                 (IQ_DOWN_48_RATIO),          // Decimation factor
+                 FirZoomFFTDecimate[shift].pCoeffs,
+                 decimHalf_Q_State,            // Filter state variables
+                 IQ_BLOCK_SIZE);
+#if 0
+        arm_fir_decimate_init_f32(&DECIMATE_DOWN_I,
+                DOWN_IQ_NUM_TAPS, //FirZoomFFTDecimate[shift].numTaps,
+                (IQ_DOWN_48_RATIO),          // Decimation factor
+                fir_half_83, // FirZoomFFTDecimate[shift].pCoeffs,
+                decimHalf_I_State,            // Filter state variables
+                IQ_BLOCK_SIZE);
+        arm_fir_decimate_init_f32(&DECIMATE_DOWN_Q,
+                DOWN_IQ_NUM_TAPS, // FirZoomFFTDecimate[shift].numTaps,
+                (IQ_DOWN_48_RATIO),          // Decimation factor
+                fir_half_83, // FirZoomFFTDecimate[shift].pCoeffs,
+                decimHalf_Q_State,            // Filter state variables
+                IQ_BLOCK_SIZE);
+#endif
+    }
+}
+
+/**
+ * Run filters for decimating IQ input into 48khz from the original sample rate in place
+ * It is a no-op if IQ rate is 48khz
+ */
+void AudioDriver_DecimIqDown_Run(iq_buffer_t* iq_p, uint32_t blockSize)
+{
+    if (IQ_DOWN_48_RATIO > 1)
+    {
+        arm_fir_decimate_f32(&DECIMATE_DOWN_I, iq_p->i_buffer, iq_p->i_buffer, blockSize );
+        arm_fir_decimate_f32(&DECIMATE_DOWN_Q, iq_p->q_buffer, iq_p->q_buffer, blockSize );
+    }
+}
+
+
+
 /**
  * @brief Filter Init used for processing audio for RX and TX
  */
 static void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
 {
     float32_t FSdec = AUDIO_SAMPLE_RATE / (ts.filters_p->sample_rate_dec != 0 ? ts.filters_p->sample_rate_dec : 1) ;
+
+
 
     // the notch filter is in biquad 1 and works at the decimated sample rate FSdec
 
@@ -1157,6 +1393,7 @@ void AudioDriver_SetProcessingChain(uint8_t dmod_mode, bool reset_dsp_nr)
     // initialize the goertzel filter used to detect CW signals at a given frequency in the audio stream
     CwDecode_Filter_Set();
 
+    AudioDriver_DecimIq_Setup();
 
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      * End of coefficient calculation and setting for cascaded biquad
@@ -1287,10 +1524,10 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 
         for(i = 0; i < blockSize; i++)	 		// Noise blanker function
         {
-            sig = fabs(src[i].l);		// get signal amplitude.  We need only look at one of the two audio channels since they will be the same.
+            sig = fabs(src[i].iqtest_l);		// get signal amplitude.  We need only look at one of the two audio channels since they will be the same.
             sig /= ads.codec_gain_calc;	// Scale for codec A/D gain adjustment
             //		avg_sig = (avg_sig * NB_AVG_WEIGHT) + ((float)(*src) * NB_SIG_WEIGHT);	// IIR-filtered short-term average signal level (e.g. low-pass audio)
-            delay_buf[delbuf_inptr++] = src[i].l;	    // copy first byte into delay buffer
+            delay_buf[delbuf_inptr++] = src[i].iqtest_l;	    // copy first byte into delay buffer
             delay_buf[delbuf_inptr++] = src[i].r;	// copy second byte into delay buffer
 
             nb_agc = (ads.nb_agc_filt * nb_agc) + (ads.nb_sig_filt * sig);		// IIR-filtered "AGC" of current overall signal level
@@ -1302,13 +1539,13 @@ static void AudioDriver_NoiseBlanker(AudioSample_t * const src, int16_t blockSiz
 
             if(!nb_delay)	 		// blank counter not active
             {
-                src[i].l = delay_buf[delbuf_outptr++];		// pass through delayed audio, unchanged
-                src[i].r = delay_buf[delbuf_outptr++];
+                src[i].iqtest_l = delay_buf[delbuf_outptr++];		// pass through delayed audio, unchanged
+                src[i].iqtest_r = delay_buf[delbuf_outptr++];
             }
             else	 	// It is within the blanking pulse period
             {
-                src[i].l = 0; // (int16_t)avg_sig;		// set the audio buffer to "mute" during the blanking period
-                src[i].r = 0; //(int16_t)avg_sig;
+                src[i].iqtest_l = 0; // (int16_t)avg_sig;		// set the audio buffer to "mute" during the blanking period
+                src[i].iqtest_r = 0; //(int16_t)avg_sig;
                 nb_delay--;						// count down the number of samples that we are to blank
             }
 
@@ -1987,7 +2224,7 @@ demod_sam_data_t sam_data;
  * @param a_buffer
  * @param blockSize
  */
-static void AudioDriver_DemodSAM(float32_t* i_buffer, float32_t* q_buffer, float32_t a_buffer[][IQ_BLOCK_SIZE], int16_t blockSize, float32_t sampleRate)
+static void AudioDriver_DemodSAM(float32_t* i_buffer, float32_t* q_buffer, float32_t a_buffer[][AUDIO_BLOCK_SIZE], int16_t blockSize, float32_t sampleRate)
 {
     // new synchronous AM PLL & PHASE detector
     // wdsp Warren Pratt, 2016
@@ -2600,7 +2837,7 @@ static void RxProcessor_DemodAudioPostprocessing(float32_t (*a_buffer)[AUDIO_BLO
  * @param blockSize number of input and output samples
  * @param external_mute request to produce silence
  */
-static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t * const dst, const uint16_t blockSize, bool external_mute)
+static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t * const dst, const uint16_t iqBlockSize, bool external_mute)
 {
     // this is the main RX audio function
 	// it is driven with 32 samples in the complex buffer scr, meaning 32 * I AND 32 * Q
@@ -2612,6 +2849,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
     const uint8_t dmod_mode = ts.dmod_mode;
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t rx_iq_source = ts.rx_iq_source;
+    const uint32_t audio_blockSize = iqBlockSize / IQ_AUDIO_RATIO;
 
     const int32_t iq_freq_mode = ts.iq_freq_mode;
 #ifdef USE_TWO_CHANNEL_AUDIO
@@ -2620,7 +2858,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
     const bool use_stereo = false;
 #endif
 
-    IqSample_t srcUSB[blockSize];
+    // we have to make this work if sample rates diverge
+    IqSample_t srcUSB[audio_blockSize];
 
 
     IqSample_t * const src = (rx_iq_source == RX_IQ_DIG || rx_iq_source == RX_IQ_DIGIQ) ? srcUSB : srcCodec;
@@ -2638,7 +2877,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         // unless both are of equal size, we can't simply cast one into the other
         assert(sizeof(AudioSample_t) == sizeof(IqSample_t));
 
-        UsbdAudio_FillTxBuffer((AudioSample_t*)srcUSB,blockSize);
+        UsbdAudio_FillTxBuffer((AudioSample_t*)srcUSB,audio_blockSize);
     }
 
 
@@ -2647,7 +2886,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         // iq sample rate must match the sample rate of USB IQ audio if we push iq samples to USB
         assert(IQ_SAMPLE_RATE == USBD_AUDIO_FREQ);
 
-        for(uint32_t i = 0; i < blockSize; i++)
+        for(uint32_t i = 0; i < audio_blockSize; i++)
         {
             // 16 bit format - convert to float and increment
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
@@ -2665,7 +2904,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
             AudioDriver_NoiseBlanker(src, blockSize);     // do noise blanker function
         #endif
 
-        for(uint32_t i = 0; i < blockSize; i++)
+        for(uint32_t i = 0; i < iqBlockSize; i++)
         {
             int32_t level = abs(I2S_correctHalfWord(src[i].l))>>IQ_BIT_SHIFT;
 
@@ -2688,20 +2927,20 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         if (IQ_BIT_SCALE_DOWN != 1.0)
         {
             // we scale everything into the range of +/-32767 if we are getting 32 bit input
-            arm_scale_f32 (adb.iq_buf.i_buffer, IQ_BIT_SCALE_DOWN, adb.iq_buf.i_buffer, blockSize);
-            arm_scale_f32 (adb.iq_buf.q_buffer, IQ_BIT_SCALE_DOWN, adb.iq_buf.q_buffer, blockSize);
+            arm_scale_f32 (adb.iq_buf.i_buffer, IQ_BIT_SCALE_DOWN, adb.iq_buf.i_buffer, iqBlockSize);
+            arm_scale_f32 (adb.iq_buf.q_buffer, IQ_BIT_SCALE_DOWN, adb.iq_buf.q_buffer, iqBlockSize);
         }
-        AudioDriver_RxHandleIqCorrection(adb.iq_buf.i_buffer, adb.iq_buf.q_buffer, blockSize);
+        AudioDriver_RxHandleIqCorrection(adb.iq_buf.i_buffer, adb.iq_buf.q_buffer, iqBlockSize);
 
         // at this point we have phase corrected IQ @ IQ_SAMPLE_RATE, unshifted in adb.iq_buf.i_buffer, adb.iq_buf.q_buffer
 
         // Spectrum display sample collect for magnify == 0
-        AudioDriver_SpectrumNoZoomProcessSamples(&adb.iq_buf, blockSize);
+        AudioDriver_SpectrumNoZoomProcessSamples(&adb.iq_buf, iqBlockSize);
 
 
         if(iq_freq_mode)            // is receive frequency conversion to be done?
         {
-            FreqShift(adb.iq_buf.i_buffer, adb.iq_buf.q_buffer, blockSize, AudioDriver_GetTranslateFreq());
+            FreqShift(adb.iq_buf.i_buffer, adb.iq_buf.q_buffer, iqBlockSize, AudioDriver_GetTranslateFreq());
         }
 
         // at this point we have phase corrected IQ @ IQ_SAMPLE_RATE, with our RX frequency in the center (i.e. at 0 Hertz Shift)
@@ -2710,7 +2949,12 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
 
         // Spectrum display sample collect for magnify != 0
 
-        AudioDriver_SpectrumZoomProcessSamples(&adb.iq_buf, blockSize);
+        AudioDriver_SpectrumZoomProcessSamples(&adb.iq_buf, iqBlockSize);
+
+        AudioDriver_DecimIqDown_Run(&adb.iq_buf, iqBlockSize);
+        // from here on we have 48khz IQ
+
+        const uint32_t blockSize = iqBlockSize / IQ_DOWN_48_RATIO;
 #ifdef USE_FREEDV
         if (ts.dvmode == true && ts.digital_mode == DigitalMode_FreeDV)
         {
@@ -2730,7 +2974,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
             const int16_t blockSizeDecim = blockSize/ads.decimation_rate;
 
             const uint16_t blockSizeIQ = use_decimatedIQ? blockSizeDecim: blockSize;
-            const uint32_t sampleRateIQ = use_decimatedIQ? ads.decimated_freq: IQ_SAMPLE_RATE;
+            const uint32_t sampleRateIQ = use_decimatedIQ? ads.decimated_freq: (IQ_SAMPLE_RATE / (IQ_DOWN_48_RATIO));
 
             // in some case we decimate the IQ before passing to demodulator, in some don't
             // in any case, we do audio filtering on decimated data
@@ -2820,7 +3064,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
                 // at this point we are at the decimated audio sample rate
                 // we support multiple rates
                 // here also the various digital mode modems are called
-                RxProcessor_DemodAudioPostprocessing(adb.a_buffer, blockSize, blockSizeDecim, ads.decimated_freq, use_stereo);
+                RxProcessor_DemodAudioPostprocessing(adb.a_buffer, audio_blockSize, blockSizeDecim, ads.decimated_freq, use_stereo);
                 // we get back blockSize audio at full sample rate
 
             } // end NOT in FM mode
@@ -2832,16 +3076,16 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
                         adb.a_buffer[0],
                         RadioManagement_FmDevIs5khz() ? FM_RX_SCALING_5K : FM_RX_SCALING_2K5,
                         adb.a_buffer[1],
-                        blockSize);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
-                AudioAgc_RunAgcWdsp(blockSize, adb.a_buffer, false); // FM is not using stereo
+                        audio_blockSize);  // apply fixed amount of audio gain scaling to make the audio levels correct along with AGC
+                AudioAgc_RunAgcWdsp(audio_blockSize, adb.a_buffer, false); // FM is not using stereo
             }
 
             // this is the biquad filter, a highshelf filter
-            arm_biquad_cascade_df1_f32 (&IIR_biquad_2[0], adb.a_buffer[1],adb.a_buffer[1], blockSize);
+            arm_biquad_cascade_df1_f32 (&IIR_biquad_2[0], adb.a_buffer[1],adb.a_buffer[1], audio_blockSize);
 #ifdef USE_TWO_CHANNEL_AUDIO
             if(use_stereo)
             {
-                arm_biquad_cascade_df1_f32 (&IIR_biquad_2[1], adb.a_buffer[0],adb.a_buffer[0], blockSize);
+                arm_biquad_cascade_df1_f32 (&IIR_biquad_2[1], adb.a_buffer[0],adb.a_buffer[0], audio_blockSize);
             }
 #endif
         }
@@ -2856,8 +3100,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
     // fill audio buffers with zeroes if we are to mute the receiver completely while still processing data OR it is in FM and squelched
     // or when filters are switched
     {
-        arm_fill_f32(0, adb.a_buffer[0], blockSize);
-        arm_fill_f32(0, adb.a_buffer[1], blockSize);
+        arm_fill_f32(0, adb.a_buffer[0], audio_blockSize);
+        arm_fill_f32(0, adb.a_buffer[1], audio_blockSize);
     }
     else
     {
@@ -2865,15 +3109,15 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         // BOTH CHANNELS "FIXED" GAIN as input for audio amp and headphones/lineout
         // each output path has its own gain control.
     	// Do fixed scaling of audio for LINE OUT
-    	arm_scale_f32(adb.a_buffer[1], LINE_OUT_SCALING_FACTOR, adb.a_buffer[1], blockSize);
+    	arm_scale_f32(adb.a_buffer[1], LINE_OUT_SCALING_FACTOR, adb.a_buffer[1], audio_blockSize);
     	if (use_stereo)
     	{
-    		arm_scale_f32(adb.a_buffer[0], LINE_OUT_SCALING_FACTOR, adb.a_buffer[0], blockSize);
+    		arm_scale_f32(adb.a_buffer[0], LINE_OUT_SCALING_FACTOR, adb.a_buffer[0], audio_blockSize);
     	}
     	else
     	{
     		// we simply copy the data from the other channel
-    		arm_copy_f32(adb.a_buffer[1], adb.a_buffer[0], blockSize);
+    		arm_copy_f32(adb.a_buffer[1], adb.a_buffer[0], audio_blockSize);
     	}
 #else
         // VARIABLE LEVEL FOR SPEAKER
@@ -2888,7 +3132,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
 #ifdef UI_BRD_MCHF
         if(ts.rx_gain[RX_AUDIO_SPKR].value > CODEC_SPEAKER_MAX_VOLUME)    // is volume control above highest hardware setting?
         {
-            arm_scale_f32(adb.a_buffer[1], (float32_t)ts.rx_gain[RX_AUDIO_SPKR].active_value, adb.a_buffer[1], blockSize);    // yes, do software volume control adjust on "b" buffer
+            arm_scale_f32(adb.a_buffer[1], (float32_t)ts.rx_gain[RX_AUDIO_SPKR].active_value, adb.a_buffer[1], audio_blockSize);    // yes, do software volume control adjust on "b" buffer
         }
 #endif
     }
@@ -2899,14 +3143,14 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
     if((ts.beep_timing > 0))         // is beep active?
     {
 #ifdef USE_TWO_CHANNEL_AUDIO
-        softdds_addSingleToneToTwobuffers(&ads.beep, adb.a_buffer[0],adb.a_buffer[1], blockSize, ads.beep_loudness_factor);
+        softdds_addSingleToneToTwobuffers(&ads.beep, adb.a_buffer[0],adb.a_buffer[1], audio_blockSize, ads.beep_loudness_factor);
 #else
         softdds_addSingleTone(&ads.beep, adb.a_buffer[1], blockSize, ads.beep_loudness_factor);
 #endif
     }
 
     // Transfer processed audio to DMA buffer
-    for(int i=0; i < blockSize; i++)                            // transfer to DMA buffer and do conversion to INT
+    for(int i=0; i < audio_blockSize; i++)                            // transfer to DMA buffer and do conversion to INT
     {
 
         if (do_mute_output)
@@ -2981,8 +3225,17 @@ static void AudioDriver_IqFillPattern(IqSample_t *s, size_t size)
  * @param s pointer to current iq data block
  * @param size
  */
+
+static uint32_t iqtest_breaks = 0;
+static uint32_t iqtest_passed_loops = 0;
+static uint32_t iqtest_max_passed_loops = 0;
+static uint32_t iqtest_last_passed_loops = 0;
+static bool iqtest_last_was_pass = 0;
+static volatile uint32_t iqtest_l  = 0, iqtest_r = 0;
+
 static void AudioDriver_IqGenTestPattern(IqSample_t *s, size_t size)
 {
+
     bool phase = true;
     bool unswapped = true;
     bool swapped = true;
@@ -2997,7 +3250,34 @@ static void AudioDriver_IqGenTestPattern(IqSample_t *s, size_t size)
 
         unswapped = unswapped && l_ok && r_ok;
         swapped = swapped && l_swapped && r_swapped;
+
+        if  (!(l_ok && r_ok && ((s[idx].l & 0xff) == (s[idx].r & 0xff))))
+        {
+            iqtest_l = s[idx].l;
+            iqtest_r = s[idx].r;
+        }
     }
+    bool pass = (phase && unswapped);
+
+    if (pass)
+    {
+        iqtest_passed_loops++;
+        iqtest_last_was_pass = true;
+    }
+    else
+    {
+        if (iqtest_passed_loops > 0)
+        {
+            iqtest_breaks++;
+            iqtest_last_passed_loops = iqtest_passed_loops;
+            if (iqtest_passed_loops > iqtest_max_passed_loops)
+            {
+                iqtest_max_passed_loops = iqtest_passed_loops;
+            }
+            iqtest_passed_loops = 0;
+        }
+    }
+
     Board_RedLed((phase && unswapped)?LED_STATE_ON:LED_STATE_OFF);
 }
 

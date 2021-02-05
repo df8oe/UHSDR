@@ -286,20 +286,20 @@ uint32_t Codec_InitState(uint32_t codec)
  * @param AudioFreq sample rate in Hertz
  * @param word_size should be set to WORD_SIZE_16, since we have not yet implemented any other word_size
  */
-static bool Codec_Reset(uint32_t AudioFreq)
+static bool Codec_Reset(uint32_t IqFreq)
 {
 
 #ifdef UI_BRD_MCHF
-    mchf_codecs[0].init = Codec_ResetCodec(CODEC_I2C, AudioFreq, IQ_WORD_SIZE);
+    mchf_codecs[0].init = Codec_ResetCodec(CODEC_I2C, IqFreq, IQ_WORD_SIZE);
     mchf_codecs[0].active = true;
 #else
-    mchf_codecs[1].init = Codec_ResetCodec(CODEC_ANA_I2C, AudioFreq, AUDIO_WORD_SIZE);
+    mchf_codecs[1].init = Codec_ResetCodec(CODEC_ANA_I2C, AUDIO_SAMPLE_RATE, AUDIO_WORD_SIZE);
     mchf_codecs[1].active = true;
 
     // HACK
     if (ts.rf_board != RF_BOARD_SPARKLE && ts.rf_board != RF_BOARD_DDCDUC_DF8OE)
     {
-        mchf_codecs[0].init = Codec_ResetCodec(CODEC_IQ_I2C, AudioFreq, IQ_WORD_SIZE);
+        mchf_codecs[0].init = Codec_ResetCodec(CODEC_IQ_I2C, IqFreq, IQ_WORD_SIZE);
         mchf_codecs[0].active = true;
     }
     else
@@ -334,7 +334,7 @@ static bool Codec_Reset(uint32_t AudioFreq)
 
 bool Codec_Init(void)
 {
-    ts.codec_present = Codec_Reset(ts.samp_rate) == HAL_OK;
+    ts.codec_present = Codec_Reset(IQ_SAMPLE_RATE) == HAL_OK;
     return ts.codec_present;
 }
 /**

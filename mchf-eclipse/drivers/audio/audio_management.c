@@ -301,7 +301,7 @@ void AudioManagement_CalcTxCompLevel()
 void AudioManagement_CalcSubaudibleGenFreq(float32_t freq)
 {
     ads.fm_conf.subaudible_tone_gen_freq = freq; // look up tone frequency (in Hz)
-    softdds_setFreqDDS(&ads.fm_conf.subaudible_tone_dds, ads.fm_conf.subaudible_tone_gen_freq,ts.samp_rate,false);
+    softdds_setFreqDDS(&ads.fm_conf.subaudible_tone_dds, ads.fm_conf.subaudible_tone_gen_freq,AUDIO_SAMPLE_RATE,false);
 }
 
 
@@ -345,7 +345,7 @@ void AudioManagement_LoadToneBurstMode()
         frequency = fm_tone_burst_freq[ts.fm_tone_burst_mode];
     }
 
-    softdds_setFreqDDS(&ads.fm_conf.tone_burst_dds, frequency, ts.samp_rate, false);
+    softdds_setFreqDDS(&ads.fm_conf.tone_burst_dds, frequency, AUDIO_SAMPLE_RATE, false);
 }
 
 /**
@@ -353,7 +353,7 @@ void AudioManagement_LoadToneBurstMode()
  */
 void AudioManagement_KeyBeepPrepare()
 {
-    softdds_setFreqDDS(&ads.beep, ts.beep_frequency,ts.samp_rate,false);
+    softdds_setFreqDDS(&ads.beep, ts.beep_frequency,AUDIO_SAMPLE_RATE,false);
 
     float32_t calc = (float)(ts.beep_loudness-1);  // range 0-20
     calc /= 2;                          // range 0-10
@@ -400,5 +400,5 @@ void AudioManagement_SetSidetoneForDemodMode(uint8_t dmod_mode, bool tune_mode)
         }
     }
 
-    softdds_configRunIQ(tonefreq,ts.samp_rate,0);
+    softdds_configRunIQ(tonefreq, AUDIO_SAMPLE_RATE, 0);
 }

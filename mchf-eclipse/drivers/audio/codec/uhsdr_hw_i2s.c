@@ -88,27 +88,30 @@ static void MchfHw_Codec_HandleBlock(uint16_t which)
 
     // Transfer complete interrupt
     // Point to 2nd half of buffers
-    const size_t sz = IQ_BLOCK_SIZE;
-    const uint16_t offset = which == 0?sz:0;
+    const size_t iq_sz = IQ_BLOCK_SIZE;
+    const size_t audio_sz = AUDIO_BLOCK_SIZE;
+
+    const uint16_t iq_offset = which == 0?iq_sz:0;
+    const uint16_t audio_offset = which == 0?audio_sz:0;
 
     AudioSample_t *audio;
     IqSample_t    *iq;
 
     if (ts.txrx_mode != TRX_MODE_TX)
     {
-        iq = &dma.iq_buf.in[offset];
-        audio = &dma.audio_buf.out[offset];
+        iq = &dma.iq_buf.in[iq_offset];
+        audio = &dma.audio_buf.out[audio_offset];
     }
     else
     {
-        audio = &dma.audio_buf.in[offset];
-        iq = &dma.iq_buf.out[offset];
+        audio = &dma.audio_buf.in[audio_offset];
+        iq = &dma.iq_buf.out[iq_offset];
     }
 
-    AudioSample_t *audioDst = &dma.audio_buf.out[offset];
+    AudioSample_t *audioDst = &dma.audio_buf.out[audio_offset];
 
     // Handle
-    AudioDriver_I2SCallback(audio, iq, audioDst, sz);
+    AudioDriver_I2SCallback(audio, iq, audioDst, iq_sz);
 
 #ifdef EXEC_PROFILING
     // Profiling pin (low level)
@@ -179,7 +182,7 @@ static void UhsdrHWI2s_SaiConfig(SAI_HandleTypeDef* hsai, uint32_t bits, uint32_
     static const protocol_config_t word_config[] =
     {
             { 16, SAI_PROTOCOL_DATASIZE_16BIT,  DMA_PDATAALIGN_HALFWORD, DMA_MDATAALIGN_HALFWORD },
-            { 24, SAI_PROTOCOL_DATASIZE_32BIT,  DMA_PDATAALIGN_WORD, DMA_MDATAALIGN_WORD },
+            { 24, SAI_PROTOCOL_DATASIZE_24BIT,  DMA_PDATAALIGN_WORD, DMA_MDATAALIGN_WORD },
             { 32, SAI_PROTOCOL_DATASIZE_32BIT,  DMA_PDATAALIGN_WORD, DMA_MDATAALIGN_WORD },
             // keep at end
             { 0, 0, 0, 0 },
@@ -220,7 +223,7 @@ static void UhsdrHWI2s_SaiConfig(SAI_HandleTypeDef* hsai, uint32_t bits, uint32_
     }
     else
     {
-        assert(false && "Unsupported SAI Sample Rate or SAI Word Lenght");
+        assert(false && "Unsupported SAI Sample Rate or SAI Word Length");
         Error_Handler();
     }
 }
@@ -335,13 +338,11 @@ void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
         uint32_t target_mode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
         if (target_mode != hsai_BlockB2.Init.AudioMode)
         {
-            // UhsdrHwI2s_Codec_StopDMA();
             if (target_mode == SAI_MODESLAVE_TX)
             {
                 UhsdrHwI2s_Codec_EnableExternalMasterClock();
             }
             hsai_BlockB2.Init.AudioMode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
-            // UhsdrHwI2s_Codec_StartDMA();
         }
     }
 }

@@ -248,11 +248,18 @@
     #error IQ Interrupt frequency must be identical to Audio Interrupt Frequency
 #endif
 #if (IQ_BLOCK_SIZE) != (AUDIO_BLOCK_SIZE)
-    #error IQ and AUDIO block size must be identical
+    // #error IQ and AUDIO block size must be identical
 #endif
 
 
 //******************************CONFIGURATION_LOGIC_CHECKS************************************//
+
+#if IQ_SAMPLE_RATE != 48000 && IQ_SAMPLE_RATE != 96000
+    #error IQ_SAMPLE_RATE must equal 48000 or 96000
+#endif
+#if AUDIO_SAMPLE_RATE != 48000
+    #error AUDIO_SAMPLE_RATE must equal 48000
+#endif
 
 #if !defined(USE_OSC_SI570) && !defined(USE_OSC_SI5351A) && !defined(USE_OSC_DUCDDC)
     #error At least one of supported oscillators should be enabled.
