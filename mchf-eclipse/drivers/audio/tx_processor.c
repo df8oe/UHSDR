@@ -942,7 +942,7 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
         assert(tx_audio_source != TX_AUDIO_DIG || AUDIO_SAMPLE_RATE == USBD_AUDIO_FREQ);
 
         // iq sample rate must match the sample rate of USB IQ audio if we read from USB
-        assert(tx_audio_source != TX_AUDIO_DIGIQ || IQ_SAMPLE_RATE == USBD_AUDIO_FREQ);
+        assert(tx_audio_source != TX_AUDIO_DIGIQ || AUDIO_SAMPLE_RATE == USBD_AUDIO_FREQ);
 
         UsbdAudio_FillTxBuffer(srcUSB,blockSize);
     }

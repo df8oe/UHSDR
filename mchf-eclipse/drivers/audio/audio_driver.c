@@ -2872,16 +2872,21 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         assert(rx_iq_source != RX_IQ_DIG || AUDIO_SAMPLE_RATE == USBD_AUDIO_FREQ);
 
         // iq sample rate must match the sample rate of USB IQ audio if we read from USB
-        assert(tx_audio_source != RX_IQ_DIGIQ || IQ_SAMPLE_RATE == USBD_AUDIO_FREQ);
+        // assert(tx_audio_source != RX_IQ_DIGIQ || IQ_SAMPLE_RATE == USBD_AUDIO_FREQ);
+        // Disabled assertion as we now simply switch to silence in above case, this is to survive
+        // cycling through the input modes via UI
 
         // unless both are of equal size, we can't simply cast one into the other
         assert(sizeof(AudioSample_t) == sizeof(IqSample_t));
 
-        UsbdAudio_FillTxBuffer((AudioSample_t*)srcUSB,audio_blockSize);
+        if (tx_audio_source != RX_IQ_DIGIQ || IQ_SAMPLE_RATE == USBD_AUDIO_FREQ)
+        {
+            UsbdAudio_FillTxBuffer((AudioSample_t*)srcUSB,audio_blockSize);
+        }
     }
 
 
-    if (tx_audio_source == TX_AUDIO_DIGIQ)
+    if (tx_audio_source == TX_AUDIO_DIGIQ && IQ_SAMPLE_RATE == USBD_AUDIO_FREQ)
     {
         // iq sample rate must match the sample rate of USB IQ audio if we push iq samples to USB
         assert(IQ_SAMPLE_RATE == USBD_AUDIO_FREQ);
