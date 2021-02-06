@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2020-12-23T17:58:05  by "/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2021-02-06T14:42:03  by "/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2020-12-23T17:58:05  by "/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_mdtable.py"
+generated at  2021-02-06T14:42:03  by "/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_mdtable.py"
 
 
 
@@ -129,6 +129,7 @@ generated at  2020-12-23T17:58:05  by "/home/andreas/git/uhsdr/mchf-eclipse/supp
 | **DSP Notch ConvRate**        (             CONFIG_DSP_NOTCH_CONVERGE_RATE) | DSP LMS automatic notch filter:                | 
 | **DSP Notch BufLen**          (CONFIG_DSP_NOTCH_DECORRELATOR_BUFFER_LENGTH) | DSP LMS automatic notch filter: length of the audio buffer that is used for simulation of a reference for the LMS algorithm. The longer the buffer, the better -and the slower- the performance, but this buffer length must always be larger than the number of taps in the FIR filter used. Thus, a larger buffer (and larger FIR filter) uses more MCU resources. | 
 | **DSP Notch FIRNumTap**       (               CONFIG_DSP_NOTCH_FFT_NUMTAPS) | DSP LMS automatic notch filter: Number of taps in the DSP automatic notch FIR filter. The larger the number of taps in the filter, the better the performance, but the slower the performance of the filter and the mcHF. | 
+| **SParkle DAC type**          (                        CONFIG_DUC_DAC_TYPE) | Setting for DAC type in DDC/DUC board. Workaround for bug in DAC data interface of clones. | 
 | **Rst Conf EEPROM**           (                    CONFIG_RESET_SER_EEPROM) | Clear the EEPROM so that at next start all stored configuration data is reset to the values stored in Flash (see Backup/Restore). | 
 
 
@@ -307,6 +308,7 @@ generated at  2020-12-23T17:58:05  by "/home/andreas/git/uhsdr/mchf-eclipse/supp
     
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
+| **I2S Test**                  (                     MENU_DEBUG_I2S_IQ_TEST) | Generate I2S IQ Test pattern at TX, test incoming RX I2S IQ data for pattern and turn on red led if detected | 
 | **Enable Debug Info Display** (                     MENU_DEBUG_ENABLE_INFO) | Enable debug outputs on LCD for testing purposes (touch screen coordinates, load) and audio interrupt duration indication via green led | 
 | **CW Shift Keeps Signal**     (     MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL) | Enable automatic sidetone correction for CW OFFSET MODE = SHIFT. If you tuned in SSB to a CW signal around the sidetone frequency, you'll keep that signal when going to CW. Even if you switch from USB to CW-LSB etc. | 
 | **TX Audio via USB**          (                        MENU_DEBUG_TX_AUDIO) | If enabled, send generated audio to PC during TX. | 
