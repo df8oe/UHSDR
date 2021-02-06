@@ -254,8 +254,8 @@
 
 //******************************CONFIGURATION_LOGIC_CHECKS************************************//
 
-#if IQ_SAMPLE_RATE != 48000 && IQ_SAMPLE_RATE != 96000
-    #error IQ_SAMPLE_RATE must equal 48000 or 96000
+#if IQ_SAMPLE_RATE != 48000 && IQ_SAMPLE_RATE != 96000 && IQ_SAMPLE_RATE != 192000
+    #error IQ_SAMPLE_RATE must equal 48000 or 96000 or 192000
 #endif
 #if AUDIO_SAMPLE_RATE != 48000
     #error AUDIO_SAMPLE_RATE must equal 48000

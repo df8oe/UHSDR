@@ -123,12 +123,12 @@ static bool DucDdc_Df8oe_Init()
 	ducddc_state.current.rx_frequency = 0;
 	ducddc_state.current.tx_frequency = 0;
 	ducddc_state.current.txp = 0;
-	ducddc_state.current.sr = IQ_SAMPLE_RATE == 96000?1:0;
+	ducddc_state.current.sr = IQ_SAMPLE_RATE == 192000? 2 : (IQ_SAMPLE_RATE ==  96000 ? 1 : 0);
 
 	ducddc_state.next.rx_frequency = 0;
 	ducddc_state.next.tx_frequency = 0;
     ducddc_state.next.txp = 0;
-    ducddc_state.next.sr = IQ_SAMPLE_RATE == 96000?1:0;;
+    ducddc_state.next.sr = IQ_SAMPLE_RATE == 192000? 2 : (IQ_SAMPLE_RATE ==  96000 ? 1 : 0);
 
 
 	ducddc_state.is_present = UhsdrHw_I2C_DeviceReady(DUCDDC_I2C,DUCDDC_I2C_WRITE) == HAL_OK;
