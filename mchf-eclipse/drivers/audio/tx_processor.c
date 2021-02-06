@@ -319,12 +319,19 @@ static void TxProcessor_IqFinalProcessing(float32_t scaling, bool swap, iq_buffe
 
     // this is the IQ phase adjustment
     AudioDriver_IQPhaseAdjust(ts.txrx_mode, final_i_buffer, final_q_buffer,blockSize);
+
     for(int i = 0; i < blockSize; i++)
     {
-        // Prepare data for DAC
-        dst[i].l = I2S_correctHalfWord(final_i_buffer[i]); // save left channel
-        dst[i].r = I2S_correctHalfWord(final_q_buffer[i]); // save right channel
+        // HACK Prepare data for DAC, just emit multiple times the same sample if we have to go to a higher sample rate
+        // this works for DF8OE_DDCDUC, it is not good if a real 96k/192k sample rate is requested
+        // normally we should run a real interpolation filter here.
+        for (int sub_idx = 0; sub_idx < IQ_AUDIO_RATIO; sub_idx++)
+        {
+            dst[IQ_AUDIO_RATIO * i + sub_idx].l = I2S_correctHalfWord(final_i_buffer[i]); // save left channel
+            dst[IQ_AUDIO_RATIO * i + sub_idx].r = I2S_correctHalfWord(final_q_buffer[i]); // save right channel
+        }
     }
+
 
 }
 
@@ -884,7 +891,7 @@ static bool TxProcessor_CW(audio_block_t a_block, iq_buffer_t* iq_buf_p, uint16_
 }
 
 
-void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, AudioSample_t * const audioDst, uint16_t blockSize, bool external_mute)
+void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, AudioSample_t * const audioDst, uint16_t iqBlockSize, bool external_mute)
 {
 
     /*
@@ -906,7 +913,7 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
      */
 
     // this code (for now) assumes the delivered srcCodec/srcUSB block matches the required IQ blockSize
-    assert(AUDIO_BLOCK_SIZE == IQ_BLOCK_SIZE);
+    // assert(AUDIO_BLOCK_SIZE == IQ_BLOCK_SIZE);
 
 
     // we copy volatile variables which are used multiple times to local consts to let the compiler do its optimization magic
@@ -915,6 +922,8 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     const uint8_t dmod_mode = ts.dmod_mode;
     const uint8_t tx_audio_source = ts.tx_audio_source;
     const uint8_t tune = ts.tune;
+    const uint32_t blockSize = iqBlockSize / IQ_AUDIO_RATIO;
+
     AudioSample_t srcUSB[blockSize];
     AudioSample_t * const src = (tx_audio_source == TX_AUDIO_DIG || tx_audio_source == TX_AUDIO_DIGIQ) ? srcUSB : srcCodec;
 
@@ -1031,7 +1040,7 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
 
 
             // iq sample rate must match the sample rate of USB IQ audio if we push iq samples to USB
-            assert(IQ_SAMPLE_RATE == USBD_AUDIO_FREQ);
+            assert(AUDIO_SAMPLE_RATE == USBD_AUDIO_FREQ);
 
             // we collect our I/Q samples for USB transmission if TX_AUDIO_DIGIQ
             UsbdAudio_PutSample(adb.iq_buf.q_buffer[i]);
