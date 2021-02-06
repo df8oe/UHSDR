@@ -25,7 +25,8 @@ typedef struct
     float32_t speed;
     rtty_stop_t stopbits;
     uint16_t shift;
-    float32_t samplerate;
+    float32_t input_samplerate;
+    uint32_t output_samplerate;
 } rtty_mode_config_t;
 
 
@@ -77,7 +78,7 @@ typedef struct
 }  rtty_ctrl_t;
 
 extern rtty_ctrl_t rtty_ctrl_config;
-void Rtty_Modem_Init(uint32_t output_sample_rate);
+void Rtty_Modem_Init();
 void Rtty_Demodulator_ProcessSample(float32_t sample);
 int16_t Rtty_Modulator_GenSample(void);
 

@@ -689,8 +689,8 @@ void AudioDriver_Init()
     AudioManagement_KeyBeepPrepare();  // load/set beep frequency
 
     // Codecs/Demod init
-    Rtty_Modem_Init(AUDIO_SAMPLE_RATE); // RX/TX
-    Psk_Modem_Init(AUDIO_SAMPLE_RATE);  // RX/TX
+    Rtty_Modem_Init(); // RX/TX
+    Psk_Modem_Init();  // RX/TX
 
     RxProcessor_Init();
     TxProcessor_Init();

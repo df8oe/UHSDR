@@ -397,12 +397,15 @@ static rtty_lpf_config_t rtty_lp_12khz_50 =
 
 static rtty_mode_config_t  rtty_mode_current_config;
 
-
-void Rtty_Modem_Init(uint32_t output_sample_rate)
+/**
+ * Configure the RTTY internal modem based on settings in rtty_ctrl_config struct
+ */
+void Rtty_Modem_Init()
 {
 
 	// TODO: pass config as parameter and make it changeable via menu
-	rtty_mode_current_config.samplerate = 12000;
+	rtty_mode_current_config.input_samplerate = 12000;
+	rtty_mode_current_config.output_samplerate = AUDIO_SAMPLE_RATE;
 	rtty_mode_current_config.shift = rtty_shifts[rtty_ctrl_config.shift_idx].value;
 	rtty_mode_current_config.speed = rtty_speeds[rtty_ctrl_config.speed_idx].value;
 	rtty_mode_current_config.stopbits = rtty_ctrl_config.stopbits_idx;
@@ -410,7 +413,7 @@ void Rtty_Modem_Init(uint32_t output_sample_rate)
 	rttyDecoderData.config_p = &rtty_mode_current_config;
 
 	// common config to all supported modes
-	rttyDecoderData.oneBitSampleCount = (uint16_t)roundf(rttyDecoderData.config_p->samplerate/rttyDecoderData.config_p->speed);
+	rttyDecoderData.oneBitSampleCount = (uint16_t)roundf(rttyDecoderData.config_p->input_samplerate/rttyDecoderData.config_p->speed);
 	rttyDecoderData.charSetMode = RTTY_MODE_LETTERS;
 	rttyDecoderData.state = RTTY_RUN_STATE_WAIT_START;
 
@@ -442,8 +445,8 @@ void Rtty_Modem_Init(uint32_t output_sample_rate)
 	}
 
 	// configure DDS for transmission
-	softdds_setFreqDDS(&rttyDecoderData.tx_dds[0], rttyDecoderData.bpfSpaceConfig->freq, output_sample_rate, 0);
-	softdds_setFreqDDS(&rttyDecoderData.tx_dds[1], rttyDecoderData.bpfMarkConfig->freq, output_sample_rate, 0);
+	softdds_setFreqDDS(&rttyDecoderData.tx_dds[0], rttyDecoderData.bpfSpaceConfig->freq, rtty_mode_current_config.output_samplerate, 0);
+	softdds_setFreqDDS(&rttyDecoderData.tx_dds[1], rttyDecoderData.bpfMarkConfig->freq, rtty_mode_current_config.output_samplerate, 0);
 
 }
 

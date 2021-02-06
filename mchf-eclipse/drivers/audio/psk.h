@@ -57,7 +57,7 @@ psk_modulator_t Psk_Modulator_GetState(void);
 psk_modulator_t Psk_Modulator_SetState(psk_modulator_t newState);
 
 
-void Psk_Modem_Init(uint32_t output_sample_rate);
+void Psk_Modem_Init();
 void Psk_Modulator_PrepareTx(void);
 void Psk_Demodulator_ProcessSample(float32_t sample);
 int16_t Psk_Modulator_GenSample(void);

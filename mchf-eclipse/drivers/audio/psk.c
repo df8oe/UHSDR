@@ -471,9 +471,13 @@ void Bpsk_Demodulator_Init()
 	psk_state.rx_word = 0;
 }
 
-
-void Psk_Modem_Init(uint32_t output_sample_rate)
+/**
+ * Configure the PSK internal modem based on settings in psk_ctrl_config struct
+ */
+void Psk_Modem_Init()
 {
+
+    const uint32_t output_sample_rate = AUDIO_SAMPLE_RATE;
 
 	psk_state.tx_idx = 0;
 
