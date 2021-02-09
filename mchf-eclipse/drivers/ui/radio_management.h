@@ -383,4 +383,6 @@ inline bool RadioManagement_TxRxSwitching_IsEnabled()
     return ts.txrx_switching_enabled;
 }
 
+// TODO: Separate out Mchf specific functionality
+bool Mchf_SetHWFiltersForFrequency(uint32_t freq);
 #endif /* DRIVERS_UI_RADIO_MANAGEMENT_H_ */

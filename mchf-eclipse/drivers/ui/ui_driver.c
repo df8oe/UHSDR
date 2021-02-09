@@ -832,7 +832,6 @@ void UiDriver_HandleBandButtons(uint16_t button)
 	UiDriver_ChangeBand(dir);
 }
 
-
 static void UiDriver_PublicsInit()
 {
 	// Button state structure init state
@@ -846,26 +845,6 @@ static void UiDriver_PublicsInit()
 	// Auto button blink state
 	//abst.blink_flag 		= 0;
 	//abst.blink_skip 		= 0;
-
-	// SWR meter init
-	swrm.p_curr				= 0;
-	swrm.fwd_calc			= 0;
-	swrm.rev_calc			= 0;
-	swrm.fwd_pwr			= 0;
-	swrm.rev_pwr			= 0;
-	swrm.fwd_dbm			= 0;
-	swrm.rev_dbm			= 0;
-	swrm.vswr			 	= 0;
-	swrm.sensor_null		= SENSOR_NULL_DEFAULT;
-	{
-		int idx;
-		for (idx = 0; idx < COUPLING_MAX; idx++)
-		{
-			swrm.coupling_calc[idx]    = SWR_COUPLING_DEFAULT;
-		}
-	}
-	swrm.pwr_meter_disp		= 0;	// Display of numerical FWD/REV power metering off by default
-	swrm.pwr_meter_was_disp = 0;	// Used to indicate if FWD/REV numerical power metering WAS displayed
 
 	// Power supply meter
 	pwmt.p_curr				= 0;
@@ -1662,6 +1641,7 @@ const BandGenInfo bandGenInfo[] =
 		{21450000, 21750000, "13m" },
 		{25670000, 26100000, "11m" },
 		{26965000, 27405000, "11m" },
+		{88000000, 108000000, "FM" },
 		{ 0,  0,             "Gen" }
 };
 
@@ -6022,6 +6002,7 @@ void UiDriver_StartUpScreenFinish()
 	bool osc_present_problem = osc->isPresent() == false;
 
 	UiDriver_StartupScreen_LogIfProblem(osc_present_problem, "Local Oscillator NOT Detected!");
+    UiDriver_StartupScreen_LogIfProblem(ts.rf_board == RF_BOARD_UNKNOWN, "RF Board Type UNKNOWN!");
 
 	if(osc->type == OSC_SI570 && RadioManagement_TcxoIsEnabled())
 	{
@@ -6996,6 +6977,7 @@ static const keyaction_descr_t keyactions_normal[] =
 		{ BUTTON_BNDM_PRESSED, 	UiAction_ChangeBandDownOrUp,				UiAction_BandMinusHold },
 		{ BUTTON_BNDP_PRESSED,  UiAction_ChangeBandUpOrDown,				UiAction_BandPlusHold },
 		{ BUTTON_PWR_PRESSED, UiAction_ChangeBacklightBrightness,			UiAction_PowerHold },
+        { BUTTON_L1_PRESSED,    UiAction_ChangeFilterBW,                    UiAction_ChangeRxFilterOrFmToneBurst },
 };
 
 static const keyaction_descr_t keyactions_menu[] =

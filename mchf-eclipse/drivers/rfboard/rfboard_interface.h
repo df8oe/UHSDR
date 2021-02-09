@@ -58,6 +58,7 @@ typedef struct {
     bool    (*EnableRx)(void);
     bool    (*PrepareTx)(void);
     bool    (*PrepareRx)(void);
+    bool    (*ChangeFrequency)(uint32_t frequency);
     void (*CodecRestart)(void);
 } HardwareRFBoard;
 

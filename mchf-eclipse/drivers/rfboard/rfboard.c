@@ -182,6 +182,11 @@ bool RFBoard_Dummy_EnableTx(void)
     return true;
 }
 
+bool RFBoard_Dummy_ChangeFrequency(uint32_t frequency)
+{
+    return true;
+}
+
 
 /**
  * This has to be called after rf board hardware detection and before using any other RFboard related functions
@@ -214,6 +219,7 @@ void RFBoard_Init_Board(void)
             RFboard.EnableRx = osc_SParkle_EnableRx;
             RFboard.PrepareTx  = osc_SParkle_PrepareTx;
             RFboard.PrepareRx = osc_SParkle_PrepareRx;
+            RFboard.ChangeFrequency = RFBoard_Dummy_ChangeFrequency;
 
             SParkle_ConfigurationInit();
 #endif
@@ -226,6 +232,7 @@ void RFBoard_Init_Board(void)
             RFboard.EnableRx = DucDdc_Df8oe_EnableRx;
             RFboard.PrepareTx  = DucDdc_Df8oe_PrepareTx;
             RFboard.PrepareRx = DucDdc_Df8oe_PrepareRx;
+            RFboard.ChangeFrequency = RFBoard_Dummy_ChangeFrequency;
 
             break;
         case RF_BOARD_MCHF:
@@ -237,5 +244,6 @@ void RFBoard_Init_Board(void)
             RFboard.EnableRx = Mchf_EnableRx;
             RFboard.PrepareTx  = Mchf_PrepareTx;
             RFboard.PrepareRx = Mchf_PrepareRx;
+            RFboard.ChangeFrequency = Mchf_SetHWFiltersForFrequency;
     }
 }

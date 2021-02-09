@@ -75,6 +75,7 @@
 
 
 // SWR/Power meter
+// NOTE: This structure must be a global structure, otherwise it would not be initialized correctly
 SWRMeter                    swrm;
 
 // ------------------------------------------------
@@ -284,7 +285,6 @@ const digital_mode_desc_t digimodes[DigitalMode_Num_Modes] =
 };
 
 static void RadioManagement_SetCouplingForFrequency(uint32_t freq);
-static void RadioManagement_SetHWFiltersForFrequency(uint32_t freq);
 
 
 /**
@@ -702,8 +702,8 @@ bool RadioManagement_ChangeFrequency(bool force_update, uint32_t dial_freq,uint8
 
             uint32_t tune_freq_real = ts.tune_freq;
 
+            RFboard.ChangeFrequency(tune_freq_real);
             RadioManagement_SetCouplingForFrequency(tune_freq_real);    // adjust wattmeter coupling factor
-            RadioManagement_SetHWFiltersForFrequency(tune_freq_real);  // check the filter status with the new frequency update
             AudioManagement_CalcIqPhaseGainAdjust(tune_freq_real);
 
             // Inform Spectrum Display code that a frequency change has happened
@@ -1114,17 +1114,9 @@ const int BAND_FILTER_NUM = sizeof(mchf_rf_bandFilters)/sizeof(BandFilterDescrip
  *
  * @warning  If the frequency given in @p freq is too high for any of the filters, no filter change is executed.
  */
-static void RadioManagement_SetHWFiltersForFrequency(uint32_t freq)
+bool Mchf_SetHWFiltersForFrequency(uint32_t freq)
 {
-#ifdef USE_OSC_SParkle
-    if(ts.rf_board == RF_BOARD_SPARKLE)
-    {
-        //in case of SParkle rf board, the band relays are being switched during frequency change preparation in SParkle_DDCboard_PrepareNextFrequency().
-        //this is not so nice, TODO: make it more convenient at development of DF8OE filter board
-        return;
-    }
-#endif
-
+    bool retval = false;
     for (int idx = 0; idx < BAND_FILTER_NUM; idx++)
     {
         if(freq < mchf_rf_bandFilters[idx].upper)       // are we low enough if frequency for this band filter?
@@ -1135,9 +1127,12 @@ static void RadioManagement_SetHWFiltersForFrequency(uint32_t freq)
                 ts.filter_band = mchf_rf_bandFilters[idx].band_mode;
                 nr_params.first_time = 1; // in case of any Bandfilter change restart the NR routine
             }
+            retval = true;
             break;
         }
     }
+
+    return retval;
 }
 
 typedef struct
@@ -1689,6 +1684,13 @@ static void RadioManagement_PowerFromADCValue(float inval, float sensor_null, fl
     *pwr_ptr = pow10f(dbm/10)/1000;
 }
 
+
+void MchfPa_ReadPowerAndVSWR(uint16_t* val_p_ptr, uint16_t* val_s_ptr)
+{
+    *val_p_ptr = HAL_ADC_GetValue(&hadc2); // forward
+    *val_s_ptr = HAL_ADC_GetValue(&hadc3); // return
+}
+
 /*
  * @brief Measures and calculates TX Power Output and SWR, has to be called regularly
  * @returns true if new values have been calculated
@@ -1706,13 +1708,11 @@ bool RadioManagement_UpdatePowerAndVSWR()
         // Get next sample
         if(!(ts.flags1 & FLAGS1_SWAP_FWDREV_SENSE))       // is bit NOT set?  If this is so, do NOT swap FWD/REV inputs from power detectors
         {
-            val_p = HAL_ADC_GetValue(&hadc2); // forward
-            val_s = HAL_ADC_GetValue(&hadc3); // return
+            MchfPa_ReadPowerAndVSWR(&val_p, &val_s);
         }
         else        // FWD/REV bits should be swapped
         {
-            val_p = HAL_ADC_GetValue(&hadc3); // forward
-            val_s = HAL_ADC_GetValue(&hadc2); // return
+            MchfPa_ReadPowerAndVSWR(&val_s, &val_p);
         }
 
         // Add to accumulator to average A/D values
