@@ -214,6 +214,7 @@ static void UhsdrHWI2s_SaiConfig(SAI_HandleTypeDef* hsai, uint32_t bits, uint32_
 
     if (sr_config[sr_idx].rate != 0 && word_config[bits_idx].bits != 0)
     {
+        hsai->Init.AudioFrequency = sr_config[sr_idx].rate_id;
 
         hsai->hdmarx->Init.PeriphDataAlignment = word_config[bits_idx].PeriphDataAlignment;
         hsai->hdmarx->Init.MemDataAlignment = word_config[bits_idx].MemDataAlignment;
