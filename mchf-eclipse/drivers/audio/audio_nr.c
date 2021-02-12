@@ -21,6 +21,8 @@ static void alt_noise_blanking();
 static void spectral_noise_reduction_3();
 static void AudioNr_RunNoiseReduction(float32_t* inputsamples, float32_t* outputsamples );
 
+audio_nr_params_t nr_params;
+
 typedef struct NoiseReduction // declaration
 {
     float32_t                   last_iFFT_result [NR_FFT_L_2 / 2];

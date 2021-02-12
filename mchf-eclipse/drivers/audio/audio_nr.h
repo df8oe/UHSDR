@@ -108,7 +108,7 @@ typedef struct
 
 } audio_nr_params_t;
 
-audio_nr_params_t nr_params;
+extern audio_nr_params_t nr_params;
 
 
 void NR_Init(void);

@@ -17,7 +17,6 @@ basesw/ovi40/Src/stm32f7xx_hal_msp.c \
 basesw/ovi40/Src/stm32f7xx_it.c \
 basesw/ovi40/Src/tim.c \
 basesw/ovi40/Src/usb_host.c \
-basesw/ovi40/Src/usb_otg_fs.c \
 basesw/ovi40/Src/usbd_conf.c \
 basesw/ovi40/Src/usbh_conf.c \
 basesw/ovi40/Middlewares/Third_Party/FatFs/src/option/syscall.c \
