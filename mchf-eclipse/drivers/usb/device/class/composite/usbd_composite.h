@@ -89,7 +89,7 @@ extern const usbd_ep_map_t usbdEpMap;
 extern USBD_ClassCompInfo dev_instance[CLASS_NUM];
 
 #define USB_AUDIO_CONFIG_DESC_SIZ                        (9+101+73 + 8 + 66 + 9 +7)
-uint8_t USBD_COMP_CfgDesc[USB_AUDIO_CONFIG_DESC_SIZ];
+extern uint8_t USBD_COMP_CfgDesc[USB_AUDIO_CONFIG_DESC_SIZ];
 
 
 typedef struct

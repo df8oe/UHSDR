@@ -212,7 +212,7 @@ typedef struct band_regs_s
     VfoReg band[MAX_BAND_NUM];
 } BandRegs;
 
-bool band_enabled[MAX_BAND_NUM]; // we store which band is to be used (or ignored)
+extern bool band_enabled[MAX_BAND_NUM]; // we store which band is to be used (or ignored)
 
 typedef enum
 {

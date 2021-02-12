@@ -810,14 +810,14 @@ bool CatDriver_BlockAck()
 
     while(CatDriver_InterfaceBufferHasData())
     {
-        uint8_t c;
-        CatDriver_InterfaceBufferGetData(&c,1);
-        if (c == CLONE_CMD_ACK)
+        uint8_t c = 0;
+        if (CatDriver_InterfaceBufferGetData(&c,1))
         {
-            retval = true;
+            retval =  c == CLONE_CMD_ACK;
             break;
         }
-    }
+    } 
+
     return retval;
 }
 
