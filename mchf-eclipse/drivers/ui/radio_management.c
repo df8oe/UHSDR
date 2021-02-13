@@ -1311,6 +1311,8 @@ bool RadioManagement_FreqIsInBand(const BandInfo* bandinfo, const uint32_t freq)
     return (freq >= bandinfo->tune) && (freq <= (bandinfo->tune + bandinfo->size));
 }
 
+bool band_enabled[MAX_BAND_NUM]; // we store which band is to be used (or ignored)
+
 /**
  * Is the given frequency in an enabled band?
  * @param freq the frequency to check

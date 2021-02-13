@@ -55,8 +55,10 @@ void ConfigStorage_CopySerial2Flash(void)
 
     for(count=1; count <= MAX_VAR_ADDR; count++)
     {
-        SerialEEPROM_ReadVariable(count, &data);
-        Flash_UpdateVariable(count, data);
+        if (SerialEEPROM_ReadVariable(count, &data) == HAL_OK)
+        {
+            Flash_UpdateVariable(count, data);
+        }
     }
 }
 
@@ -72,12 +74,18 @@ static bool ConfigStorage_CheckSameContentSerialAndFlash(void)
     for(uint16_t count=1; retval == true && count <= MAX_VAR_ADDR; count++)
     {
         uint16_t data1, data2;
-        SerialEEPROM_ReadVariable(count, &data1);
-        Flash_ReadVariable(count, &data2);
-        if(data1 != data2)
+        if (SerialEEPROM_ReadVariable(count, &data1) == HAL_OK)
+        {
+            Flash_ReadVariable(count, &data2);
+            if(data1 != data2)
+            {
+                retval = false;
+                ts.configstore_in_use = CONFIGSTORE_IN_USE_ERROR; // mark data copy as faulty
+            }
+        }
+        else
         {
             retval = false;
-            ts.configstore_in_use = CONFIGSTORE_IN_USE_ERROR; // mark data copy as faulty
         }
     }
     return retval;
