@@ -6977,7 +6977,9 @@ static const keyaction_descr_t keyactions_normal[] =
 		{ BUTTON_BNDM_PRESSED, 	UiAction_ChangeBandDownOrUp,				UiAction_BandMinusHold },
 		{ BUTTON_BNDP_PRESSED,  UiAction_ChangeBandUpOrDown,				UiAction_BandPlusHold },
 		{ BUTTON_PWR_PRESSED, UiAction_ChangeBacklightBrightness,			UiAction_PowerHold },
+#ifdef 	BUTTON_L1_PRESSED
         { BUTTON_L1_PRESSED,    UiAction_ChangeFilterBW,                    UiAction_ChangeRxFilterOrFmToneBurst },
+#endif
 };
 
 static const keyaction_descr_t keyactions_menu[] =
