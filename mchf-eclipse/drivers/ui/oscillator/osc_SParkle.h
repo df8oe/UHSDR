@@ -48,7 +48,7 @@ extern SParkleState_t SParkleState;
 
 #ifdef USE_OSC_SParkle
 
-const OscillatorInterface_t osc_SParkle_DDC;
+extern const OscillatorInterface_t osc_SParkle_DDC;
 
 #define oscDDC_f_sample 122880000
 #define SParkleStat_BaseBoardPresent 0x01
