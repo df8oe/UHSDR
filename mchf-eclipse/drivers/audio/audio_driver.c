@@ -3127,7 +3127,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
 #else
         // VARIABLE LEVEL FOR SPEAKER
         // LINE OUT (constant level)
-    	arm_scale_f32(adb.a_buffer[1], LINE_OUT_SCALING_FACTOR, adb.a_buffer[0], blockSize);       // Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
+    	arm_scale_f32(adb.a_buffer[1], LINE_OUT_SCALING_FACTOR, adb.a_buffer[0], audio_blockSize);       // Do fixed scaling of audio for LINE OUT and copy to "a" buffer in one operation
 #endif
     	//
         // AF gain in "ts.audio_gain-active"
@@ -3150,7 +3150,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
 #ifdef USE_TWO_CHANNEL_AUDIO
         softdds_addSingleToneToTwobuffers(&ads.beep, adb.a_buffer[0],adb.a_buffer[1], audio_blockSize, ads.beep_loudness_factor);
 #else
-        softdds_addSingleTone(&ads.beep, adb.a_buffer[1], blockSize, ads.beep_loudness_factor);
+        softdds_addSingleTone(&ads.beep, adb.a_buffer[1], audio_blockSize, ads.beep_loudness_factor);
 #endif
     }
 
