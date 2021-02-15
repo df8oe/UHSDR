@@ -23,7 +23,8 @@
 
 #include "osc_interface.h"
 #include "osc_ducddc_df8oe.h"
-
+#include "osc_SParkle.h"
+#include "mchf_rfboard.h"
 
 
 //specyfic hardware features structure
@@ -83,6 +84,7 @@ const pa_power_levels_info_t SParkle_power_levelsInfo =
 {
         .levels = SParkle_rf_power_levels,
         .count = sizeof(SParkle_rf_power_levels)/sizeof(*SParkle_rf_power_levels),
+        .power_factor = TX_POWER_FACTOR_MAX_DUC_INTERNAL,
 };
 
 const pa_info_t SParkle_pa =
@@ -125,42 +127,7 @@ const pa_info_t Df8oe_DdcDuc_pa =
 #endif
 
 
-/**
- * @brief switch off the PA Bias to mute HF output ( even if PTT is on )
- * Using this method the PA will be effectively muted no matter what setting
- * the main bias switch has (which directly connected to the PTT HW Signal)
- * Used to suppress signal path reconfiguration noise during rx/tx and tx/rx switching
- */
-static void RFBoard_Mchf_DisablePaBias()
-{
-    Board_SetPaBiasValue(0);
-}
 
-
-
-static bool Mchf_PrepareTx(void)
-{
-    Board_EnableTXSignalPath(true); // switch antenna to output and codec output to QSE mixer
-    return true;
-}
-
-bool Mchf_PrepareRx(void)
-{
-    RFBoard_Mchf_DisablePaBias(); // kill bias to mute the HF output quickly
-    return true;
-}
-
-bool Mchf_EnableRx(void)
-{
-    Board_EnableTXSignalPath(false); // switch antenna to input and codec output to QSD mixer
-    return true;
-}
-
-bool Mchf_EnableTx(void)
-{
-    RadioManagement_SetPaBias();
-    return true;
-}
 
 bool RFBoard_Dummy_PrepareTx(void)
 {
@@ -187,11 +154,21 @@ bool RFBoard_Dummy_ChangeFrequency(uint32_t frequency)
     return true;
 }
 
+bool RFBoard_Dummy_InitBoard(void)
+{
+    return true;
+}
+
+bool RFBoard_Dummy_SetPaBias(uint32_t bias)
+{
+    return true;
+}
+
 
 /**
  * This has to be called after rf board hardware detection and before using any other RFboard related functions
  */
-void RFBoard_Init_Board(void)
+bool RFBoard_Init_Board(void)
 {
 
     // Initialize LO, by which we (at least for now) can detect the RF board
@@ -220,8 +197,9 @@ void RFBoard_Init_Board(void)
             RFboard.PrepareTx  = osc_SParkle_PrepareTx;
             RFboard.PrepareRx = osc_SParkle_PrepareRx;
             RFboard.ChangeFrequency = RFBoard_Dummy_ChangeFrequency;
-
-            SParkle_ConfigurationInit();
+            RFboard.InitBoard = SParkle_ConfigurationInit;
+            RFboard.SetPABias = RFBoard_Dummy_SetPaBias;
+            RFboard.SetPowerFactor = SParkle_SetTXpower;
 #endif
 
             break;
@@ -233,6 +211,8 @@ void RFBoard_Init_Board(void)
             RFboard.PrepareTx  = DucDdc_Df8oe_PrepareTx;
             RFboard.PrepareRx = DucDdc_Df8oe_PrepareRx;
             RFboard.ChangeFrequency = RFBoard_Dummy_ChangeFrequency;
+            RFboard.InitBoard = RFBoard_Dummy_InitBoard;
+            RFboard.SetPABias = RFBoard_Dummy_SetPaBias;
 
             break;
         case RF_BOARD_MCHF:
@@ -245,5 +225,9 @@ void RFBoard_Init_Board(void)
             RFboard.PrepareTx  = Mchf_PrepareTx;
             RFboard.PrepareRx = Mchf_PrepareRx;
             RFboard.ChangeFrequency = Mchf_SetHWFiltersForFrequency;
+            RFboard.InitBoard = Mchf_Rf_Board_Init;
+            RFboard.SetPABias = Mchf_Rf_Board_SetPaBiasValue;
     }
+
+    return RFboard.InitBoard();
 }

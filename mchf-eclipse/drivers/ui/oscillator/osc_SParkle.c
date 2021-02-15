@@ -25,6 +25,7 @@ SParkleState_t SParkleState;
 #include "uhsdr_hw_i2c.h"
 #include "sai.h"
 
+#if 0
 extern SAI_HandleTypeDef hsai_BlockA1;
 extern SAI_HandleTypeDef hsai_BlockB1;
 extern SAI_HandleTypeDef hsai_BlockA2;
@@ -33,6 +34,7 @@ extern DMA_HandleTypeDef hdma_sai1_a;
 extern DMA_HandleTypeDef hdma_sai1_b;
 extern DMA_HandleTypeDef hdma_sai2_a;
 extern DMA_HandleTypeDef hdma_sai2_b;
+#endif
 
 #define FPGA_CS_PIN GPIO_PIN_13
 #define FPGA_CS_PORT GPIOC
@@ -275,6 +277,7 @@ bool SParkle_CheckPresence(void)
 static void SParkle_ConfigureSAI(void)
 {
 
+#if 0
     HAL_DMA_DeInit(&hdma_sai1_a);
     HAL_DMA_DeInit(&hdma_sai1_b);
     HAL_DMA_DeInit(&hdma_sai2_a);
@@ -418,7 +421,7 @@ static void SParkle_ConfigureSAI(void)
     {
       Error_Handler();
     }
-
+#endif
 }
 
 static void SParkle_SetPPM(float32_t ppm)
@@ -797,11 +800,13 @@ void osc_SParkle_RestartI2S(void)
 }
 
 
-//this raoutine is called after eeprom read
-void SParkle_ConfigurationInit(void)
+//this routine is called after eeprom read
+bool  SParkle_ConfigurationInit(void)
 {
     SParkle_UpdateConfig(DDCboard_REG_CTRL_RevDAC,(SParkleState.EEPROM_Flags&EEPROM_SParkleFLAG_DACtype)==0?DISABLE:ENABLE);
     SParkleState.EEPROM_Flags&=EEPROM_SParkleFLAGS_MASK;
+
+    return true;
 }
 
 bool osc_SParkle_Init(void)

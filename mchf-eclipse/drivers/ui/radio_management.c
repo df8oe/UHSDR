@@ -27,7 +27,6 @@
 #include "freedv_uhsdr.h"
 // OSC control
 #include "osc_interface.h"
-#include "osc_ducddc_df8oe.h"
 
 #include "codec.h"
 #include "audio_driver.h"
@@ -390,15 +389,18 @@ static bool RadioManagement_SetBandPowerFactor(const BandInfo* band, int32_t pow
     // limit hard limit for power factor since it otherwise may overdrive the PA section
 
     const float32_t old_pf = ts.tx_power_factor;
-#ifdef USE_OSC_SParkle
-    if(ts.rf_board == RF_BOARD_SPARKLE)
+    // essentially we have multiple cases
+    // a) the local code does all the IQ scaling for power output, the external system does not change anything if power is changed
+    // b) the local code does not do any kind of scaling, we always send out full signal, the external system does all power scaling
+    // c) a mixture of a) and b)
+
+    if(RFboard.SetPowerFactor != NULL)
     {
-        //TODO: make mixed amplitude/attenuator use, using only the 0.5dB steps from PE4302 causes inaccurate power settings
-        ts.tx_power_factor=TX_POWER_FACTOR_MAX_DUC_INTERNAL;   //because fpga doesn't have the limits of typical analog mixer and we always output full power from DAC
-        return SParkle_SetTXpower(power_factor);
+        ts.tx_power_factor= RFboard.power_levelsInfo->power_factor; // we use a constant power factor in signal processing
+        // controlling different power output levels is done externally
+        RFboard.SetPowerFactor(power_factor);
     }
     else
-#endif
     {
         ts.tx_power_factor =
                 (power_factor > TX_POWER_FACTOR_MAX_INTERNAL) ?
@@ -631,7 +633,7 @@ void RadioManagement_SetPaBias()
     {
         calc_var = 255;
     }
-    Board_SetPaBiasValue(calc_var);
+    RFboard.SetPABias(calc_var);
 }
 
 
@@ -1083,57 +1085,6 @@ bool RadioManagement_CalculateCWSidebandMode()
 }
 
 
-typedef struct BandFilterDescriptor
-{
-    uint32_t upper;
-    uint16_t band_mode;
-} BandFilterDescriptor;
-
-// TODO: This code below approach assumes that all filter hardware uses a set of separate filter banks
-// other approaches such as configurable filters need a different approach, should be factored out
-// into some hardware abstraction at some point
-
-// The descriptor array below has to be ordered from the lowest BPF frequency filter
-// to the highest.
-static const BandFilterDescriptor mchf_rf_bandFilters[] =
-{
-    {  4000000,  0 },
-    {  8000000,  1 },
-    { 16000000,  2 },
-    { 32000000,  3 },
-};
-
-const int BAND_FILTER_NUM = sizeof(mchf_rf_bandFilters)/sizeof(BandFilterDescriptor);
-
-
-/**
- * @brief Select and activate the correct BPF for the frequency given in @p freq
- *
- *
- * @param freq The frequency to activate the BPF for in Hz
- *
- * @warning  If the frequency given in @p freq is too high for any of the filters, no filter change is executed.
- */
-bool Mchf_SetHWFiltersForFrequency(uint32_t freq)
-{
-    bool retval = false;
-    for (int idx = 0; idx < BAND_FILTER_NUM; idx++)
-    {
-        if(freq < mchf_rf_bandFilters[idx].upper)       // are we low enough if frequency for this band filter?
-        {
-            if(ts.filter_band != mchf_rf_bandFilters[idx].band_mode)
-            {
-                Board_SelectLpfBpf(mchf_rf_bandFilters[idx].band_mode);
-                ts.filter_band = mchf_rf_bandFilters[idx].band_mode;
-                nr_params.first_time = 1; // in case of any Bandfilter change restart the NR routine
-            }
-            retval = true;
-            break;
-        }
-    }
-
-    return retval;
-}
 
 typedef struct
 {

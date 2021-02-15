@@ -24,7 +24,6 @@
 #include "ui_lcd_hy28.h"
 #include "ui_vkeybrd.h"
 #include "audio_driver.h"
-#include "osc_SParkle.h"
 
 struct mchf_waterfall
 {
@@ -750,10 +749,7 @@ typedef enum {
 
 
 
-void Board_SetPaBiasValue(uint16_t bias);
 void Board_HandlePowerDown(void);
-
-void Board_SelectLpfBpf(uint8_t group);
 
 void Board_InitMinimal(void);
 void Board_InitFull(void);

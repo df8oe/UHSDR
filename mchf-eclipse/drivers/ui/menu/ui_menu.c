@@ -39,6 +39,7 @@
 
 #include "osc_si5351a.h"
 #include "osc_si570.h"
+#include "osc_SParkle.h"
 
 #include "audio_nr.h"
 #include "audio_agc.h"
@@ -2458,17 +2459,11 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         if(var>=1)
         {
 
-            UiMenu_DisplayValue("Restart",Red,pos);
+           UiMenu_DisplayValue("Restart",Red,pos);
 
-            if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE)
-            {
-                UhsdrHwI2s_Codec_Restart();
-            }
-            else
-            {
-                RFboard.CodecRestart();     //TODO: make this available for all rf boards including DF8OE DDC
-            }
-            var = 0;
+           RFboard.CodecRestart();
+
+           var = 0;
         }
         break;
     case MENU_DEBUG_TWINPEAKS_CORR_RUN:
