@@ -228,6 +228,39 @@ static void UhsdrHWI2s_SaiConfig(SAI_HandleTypeDef* hsai, uint32_t bits, uint32_
         Error_Handler();
     }
 }
+static void UhsdrHwI2s_Codec_EnableExternalMasterClock(void)
+{
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    /*Configure GPIO pin : PC9 */
+    GPIO_InitStruct.Pin = GPIO_PIN_9;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;  //strange alternate name, but there is no I2S_CKIN definition in HAL :)
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    __HAL_RCC_SAI1_CONFIG(RCC_SAI1CLKSOURCE_PIN);
+    __HAL_RCC_SAI2_CONFIG(RCC_SAI1CLKSOURCE_PIN);
+}
+
+void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
+{
+
+    if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE)
+    {
+        uint32_t target_mode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
+        if (target_mode != hsai_BlockB2.Init.AudioMode)
+        {
+            if (target_mode == SAI_MODESLAVE_TX)
+            {
+                UhsdrHwI2s_Codec_EnableExternalMasterClock();
+            }
+            hsai_BlockB2.Init.AudioMode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
+        }
+    }
+}
+
 #endif
 
 /***
@@ -295,6 +328,7 @@ void UhsdrHwI2s_Codec_StopDMA(void)
 #endif
 }
 
+#if 0
 void UhsdrHwI2s_Codec_Restart()
 {
     if (ts.rf_board != RF_BOARD_SPARKLE)  //SAI for SParkle is already configured and there is no need to change here anything.
@@ -313,38 +347,7 @@ void UhsdrHwI2s_Codec_Restart()
         ts.audio_dac_muting_flag = temp_mute;
     }
 }
+#endif
 
 #ifdef UI_BRD_OVI40
-static void UhsdrHwI2s_Codec_EnableExternalMasterClock(void)
-{
-    GPIO_InitTypeDef GPIO_InitStruct;
-
-    /*Configure GPIO pin : PC9 */
-    GPIO_InitStruct.Pin = GPIO_PIN_9;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;  //strange alternate name, but there is no I2S_CKIN definition in HAL :)
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-    __HAL_RCC_SAI1_CONFIG(RCC_SAI1CLKSOURCE_PIN);
-    __HAL_RCC_SAI2_CONFIG(RCC_SAI1CLKSOURCE_PIN);
-}
-
-void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
-{
-
-    if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE)
-    {
-        uint32_t target_mode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
-        if (target_mode != hsai_BlockB2.Init.AudioMode)
-        {
-            if (target_mode == SAI_MODESLAVE_TX)
-            {
-                UhsdrHwI2s_Codec_EnableExternalMasterClock();
-            }
-            hsai_BlockB2.Init.AudioMode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
-        }
-    }
-}
 #endif

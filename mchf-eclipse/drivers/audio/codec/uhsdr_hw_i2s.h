@@ -21,11 +21,5 @@ void UhsdrHwI2s_Codec_StartDMA(void);
 void UhsdrHwI2s_Codec_StopDMA(void);
 
 void UhsdrHwI2s_Codec_ClearTxDmaBuffer(void);
-
-// HACKS
-void UhsdrHwI2s_Codec_Restart();
-void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave);
-bool UhsdrHwI2s_Codec_IqIsSlave();
-
 #endif
 
