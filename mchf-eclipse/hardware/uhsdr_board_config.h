@@ -208,6 +208,7 @@
 
 // for now: These are fixed.
 #define IQ_SAMPLE_RATE (96000)
+//#define IQ_SAMPLE_RATE (192000)
 #define AUDIO_SAMPLE_RATE (48000)
 
 // a lot of code pieces assume that this frequency
