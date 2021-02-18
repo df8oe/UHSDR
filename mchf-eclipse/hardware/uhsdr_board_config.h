@@ -127,6 +127,7 @@
     // with IS_SMALL_BUILD we are not automatically including USE_FREEDV as it uses lot of memory
     // both RAM and flash
     #define USE_FREEDV
+
 #endif // IS_SMALL_BUILD
 
 // some special switches
@@ -207,9 +208,18 @@
 #endif
 
 // for now: These are fixed.
-#define IQ_SAMPLE_RATE (96000)
-//#define IQ_SAMPLE_RATE (192000)
+#ifndef IQ_SAMPLE_RATE
+    #define IQ_SAMPLE_RATE (192000)
+#endif
+
 #define AUDIO_SAMPLE_RATE (48000)
+
+#if  defined(STM32F4) && (IQ_SAMPLE_RATE > 48000)
+    #error IQ_SAMPLE_RATE must be set to 48000
+#endif
+#if  defined(STM32F7) && (IQ_SAMPLE_RATE > 96000) && defined(USE_FREEDV)
+    #error IQ_SAMPLE_RATE must be 96000 or 48000 if USE_FREEDV is defined
+#endif
 
 // a lot of code pieces assume that this frequency
 // is 1500 Hz, so don't change
