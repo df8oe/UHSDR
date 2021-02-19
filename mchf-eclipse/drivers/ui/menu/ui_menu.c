@@ -3061,55 +3061,55 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         break;
 
 
-    case CONFIG_2200M_5W_ADJUST:        // 2200m 5 watt adjust
+    case CONFIG_2200M_REFPWR_ADJUST:        // 2200m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2200, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_630M_5W_ADJUST:     // 630m 5 watt adjust
+    case CONFIG_630M_REFPWR_ADJUST:     // 630m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_630, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_160M_5W_ADJUST:     // 160m 5 watt adjust
+    case CONFIG_160M_REFPWR_ADJUST:     // 160m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_160, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_80M_5W_ADJUST:      // 80m 5 watt adjust
+    case CONFIG_80M_REFPWR_ADJUST:      // 80m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_80, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_60M_5W_ADJUST:      // 60m 5 watt adjust
+    case CONFIG_60M_REFPWR_ADJUST:      // 60m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_60, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_40M_5W_ADJUST:      // 40m 5 watt adjust
+    case CONFIG_40M_REFPWR_ADJUST:      // 40m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_40, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_30M_5W_ADJUST:      // 30m 5 watt adjust
+    case CONFIG_30M_REFPWR_ADJUST:      // 30m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_30, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_20M_5W_ADJUST:      // 20m 5 watt adjust
+    case CONFIG_20M_REFPWR_ADJUST:      // 20m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_20, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_17M_5W_ADJUST:      // 17m 5 watt adjust
+    case CONFIG_17M_REFPWR_ADJUST:      // 17m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_17, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_15M_5W_ADJUST:      // 15m 5 watt adjust
+    case CONFIG_15M_REFPWR_ADJUST:      // 15m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_15, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_12M_5W_ADJUST:      // 12m 5 watt adjust
+    case CONFIG_12M_REFPWR_ADJUST:      // 12m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_12, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_10M_5W_ADJUST:      // 10m 5 watt adjust
+    case CONFIG_10M_REFPWR_ADJUST:      // 10m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_10, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_6M_5W_ADJUST:       // 6m 5 watt adjust
+    case CONFIG_6M_REFPWR_ADJUST:       // 6m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_6, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_4M_5W_ADJUST:       // 4m 5 watt adjust
+    case CONFIG_4M_REFPWR_ADJUST:       // 4m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_4, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_2M_5W_ADJUST:       // 2m 5 watt adjust
+    case CONFIG_2M_REFPWR_ADJUST:       // 2m 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_2, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_70CM_5W_ADJUST:     // 70cm 5 watt adjust
+    case CONFIG_70CM_REFPWR_ADJUST:     // 70cm 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_70, PA_LEVEL_HIGH, options, &clr);
         break;
-    case CONFIG_23CM_5W_ADJUST:     // 23cm 5 watt adjust
+    case CONFIG_23CM_REFPWR_ADJUST:     // 23cm 5 watt adjust
         UiDriverMenuBandPowerAdjust(var, mode, BAND_MODE_23, PA_LEVEL_HIGH, options, &clr);
         break;
     case CONFIG_2200M_FULL_POWER_ADJUST:        // 2200m 5 watt adjust
@@ -4435,6 +4435,10 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         case MENU_DEBUG_SMOOTH_DYN_TUNE:
             var_change = UiDriverMenuItemChangeEnableOnOffFlag(var, mode, &ts.expflags1,0,options,&clr, EXPFLAGS1_SMOOTH_DYNAMIC_TUNE);
             clr = White;
+            break;
+
+        case CONFIG_REF_POWER:
+            snprintf(options,32,"     %.1fW",RFboard.pa_info->reference_power/1000.0);
             break;
 
     default:                        // Move to this location if we get to the bottom of the table!
