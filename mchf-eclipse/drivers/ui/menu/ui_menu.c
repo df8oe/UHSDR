@@ -694,6 +694,10 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     }
     break;
 #endif
+    case INFO_RFBOARD_HWLICENCE:
+        outs = (RFboard.description != NULL && RFboard.description->license != NULL) ? RFboard.description->license : "Not set";
+        break;
+
     default:
         outs = "NO INFO";
     }

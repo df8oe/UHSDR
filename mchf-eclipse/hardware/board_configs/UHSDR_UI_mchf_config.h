@@ -37,7 +37,7 @@
 
 #ifndef TRX_HW_LIC
     #define TRX_HW_LIC "CC BY-NC-SA 3.0"
-    #define TRX_HW_CREATOR "K. Atanassov, M0NKA, www.m0nka.co.uk"
+    #define TRX_HW_CREATOR "K. Atanassov,M0NKA,www.m0nka.co.uk"
 #endif
 
 #define SI570_I2C               (&hi2c1)

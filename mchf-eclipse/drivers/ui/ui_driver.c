@@ -5950,11 +5950,30 @@ void UiDriver_StartUpScreenInit()
 	snprintf(tx,100,"%s",DEVICE_STRING);
 	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
 
-	snprintf(tx,100,"Hardware License: %s",desc.license);
+	if (strcmp(TRX_HW_LIC,desc.license) == 0)
+	{
+	    snprintf(tx,100,"%s",desc.license);
+	}
+	else
+	{
+	    snprintf(tx,100,"%s (UI), %s (RF)", TRX_HW_LIC, desc.license);
+	}
 	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 3, 320, tx, White,Black, 0);
-	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, desc.creator, White,Black, 0);
 
-	snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
+    if (strcmp(TRX_HW_CREATOR,desc.creator) == 0)
+    {
+        snprintf(tx,100,"HW by %s",desc.creator);
+    }
+    else
+    {
+        snprintf(tx,100,"UI by %s", TRX_HW_CREATOR);
+        nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, White,Black, 0);
+        snprintf(tx,100,"RF by %s", desc.creator);
+    }
+
+	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, White,Black, 0);
+
+	snprintf(tx,100,"UHSDR Vers. %s",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
 	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 8, 320, tx, Yellow, Black, 1);
 
 	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 3, 320, "Firmware License: " UHSDR_LICENCE "\n" UHSDR_REPO, White, Black, 0);

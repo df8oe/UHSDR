@@ -60,6 +60,10 @@
         #define TRX_ID "ovi40"
     #endif
 #endif
+#ifndef TRX_HW_LIC
+    #define TRX_HW_LIC "CERN-OHL v1.2"
+    #define TRX_HW_CREATOR "DG8YGW, DF8OE et al"
+#endif
 
 #ifndef TRX_HW_LIC
 // #define TRX_HW_LIC "???"

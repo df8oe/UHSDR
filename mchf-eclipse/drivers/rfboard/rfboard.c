@@ -174,8 +174,8 @@ const hardware_ident_t sparkle_desc =
 #endif
 const hardware_ident_t generic_desc =
 {
-    .creator = TRX_HW_CREATOR,
-    .license = TRX_HW_LIC,
+    .creator = "K. Atanassov,M0NKA,www.m0nka.co.uk",
+    .license = "CC BY-NC-SA 3.0",
     .name = TRX_NAME
 };
 

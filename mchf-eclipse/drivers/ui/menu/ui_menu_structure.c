@@ -412,7 +412,8 @@ const MenuDescriptor infoGroup[] =
     { MENU_SYSINFO, MENU_INFO, INFO_VBAT, NULL,"Backup RAM Battery", UiMenuDesc("Battery Support for Backup RAM present?") },
     { MENU_SYSINFO, MENU_INFO, INFO_RTC, NULL,"Real Time Clock", UiMenuDesc("Battery Supported Real Time Clock present?") },
     { MENU_SYSINFO, MENU_INFO, INFO_LICENCE, NULL,"FW license", UiMenuDesc("Display license of firmware") },
-    { MENU_SYSINFO, MENU_INFO, INFO_HWLICENCE, NULL,"HW license", UiMenuDesc("Display license of hardware") },
+    { MENU_SYSINFO, MENU_INFO, INFO_HWLICENCE, NULL,"UI HW license", UiMenuDesc("Display license of UI hardware") },
+    { MENU_SYSINFO, MENU_INFO, INFO_HWLICENCE, NULL,"RF HW license", UiMenuDesc("Display license of RF hardware") },
 
     { MENU_SYSINFO, MENU_STOP, 0, NULL, NULL, UiMenuDesc("") }
 };
