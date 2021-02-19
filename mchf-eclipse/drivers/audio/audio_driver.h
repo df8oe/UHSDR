@@ -653,7 +653,7 @@ void AudioDriver_I2SCallback(AudioSample_t *audio, IqSample_t *iq, AudioSample_t
 
 void AudioDriver_CalcLowShelf(float32_t coeffs[5], float32_t f0, float32_t S, float32_t gain, float32_t FS);
 void AudioDriver_CalcHighShelf(float32_t coeffs[5], float32_t f0, float32_t S, float32_t gain, float32_t FS);
-void AudioDriver_CalcBandpass(float32_t coeffs[5], float32_t f0, float32_t FS);
+void AudioDriver_CalcBandpass(float32_t coeffs[5], float32_t f0, float32_t FS, float32_t Q);
 void AudioDriver_SetBiquadCoeffs(float32_t* coeffsTo,const float32_t* coeffsFrom);
 
 void AudioDriver_IQPhaseAdjust(uint16_t txrx_mode, float32_t* i_buffer, float32_t* q_buffer, const uint16_t blockSize);
