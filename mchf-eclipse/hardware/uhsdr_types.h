@@ -58,6 +58,16 @@ typedef enum {
     IQ_TRANS_NUM
 } iq_trans_idx_t;
 
-
+// PA power level setting enumeration
+// this order MUST match the order of entries in power_levels in radio_management.c !
+typedef enum
+{
+    PA_LEVEL_FULL = 0,
+    PA_LEVEL_HIGH,
+    PA_LEVEL_MEDIUM,
+    PA_LEVEL_LOW,
+    PA_LEVEL_MINIMAL,
+    PA_LEVEL_TUNE_KEEP_CURRENT
+} power_level_t;
 
 #endif

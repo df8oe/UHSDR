@@ -91,21 +91,8 @@ inline bool RadioManagement_TcxoIsFahrenheit()
     return (df.temp_enabled & TCXO_UNIT_MASK) == TCXO_UNIT_F;
 }
 
-// PA power level setting enumeration
-// this order MUST match the order of entries in power_levels in radio_management.c !
-typedef enum
-{
-    PA_LEVEL_FULL = 0,
-    PA_LEVEL_HIGH,
-    PA_LEVEL_MEDIUM,
-    PA_LEVEL_LOW,
-    PA_LEVEL_MINIMAL,
-    PA_LEVEL_TUNE_KEEP_CURRENT
-} power_level_t;
-
 
 #define PA_LEVEL_DEFAULT        PA_LEVEL_MEDIUM     // Default power level
-
 
 #define DEFAULT_FREQ_OFFSET     3000              // Amount of offset (at LO freq) when loading "default" frequency
 

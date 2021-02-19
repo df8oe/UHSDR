@@ -222,6 +222,7 @@ bool RFBoard_Init_Board(void)
             RFboard.SetPABias = RFBoard_Dummy_SetPaBias;
             RFboard.SetPowerFactor = SParkle_SetTXpower;
             RFboard.description = &sparkle_desc;
+            RFboard.iq_balance_required = false;
 #endif
 
             break;
@@ -236,6 +237,7 @@ bool RFBoard_Init_Board(void)
             RFboard.InitBoard = RFBoard_Dummy_InitBoard;
             RFboard.SetPABias = RFBoard_Dummy_SetPaBias;
             RFboard.description = &ddcduc_df8oe_desc;
+            RFboard.iq_balance_required = false;
 
             break;
         case RF_BOARD_MCHF:
@@ -251,6 +253,7 @@ bool RFBoard_Init_Board(void)
             RFboard.InitBoard = Mchf_Rf_Board_Init;
             RFboard.SetPABias = Mchf_Rf_Board_SetPaBiasValue;
             RFboard.description = &generic_desc;
+            RFboard.iq_balance_required = true;
     }
 
     return RFboard.InitBoard();

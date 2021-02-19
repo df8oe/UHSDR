@@ -17,6 +17,8 @@
 #include "audio_driver.h"
 #include "radio_management.h"
 #include "audio_management.h" // only for AudioManagement_CalcALCDecay
+#include "rfboard_interface.h"
+
 #include "rtty.h"
 #include "psk.h"
 #include "freedv_uhsdr.h"
@@ -311,16 +313,9 @@ static void TxProcessor_IqFinalProcessing(float32_t scaling, bool swap, iq_buffe
         final_q_buffer = iq_buf_p->i_buffer;
     }
 
-    if (RadioManagement_CleanZeroIF())
+    if (RFboard.iq_balance_required)
     {
-        float32_t final_iq_gain = ts.tx_power_factor * scaling;
-        // this is the IQ gain / amplitude adjustment
-        arm_scale_f32(final_i_buffer, final_iq_gain, final_i_buffer, blockSize);
-        arm_scale_f32(final_q_buffer, final_iq_gain, final_q_buffer, blockSize);
 
-    }
-    else
-    {
         // in case we have to handle iq imbalances on the output stage, we do this here
         float32_t final_i_gain = ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].i * scaling;
         float32_t final_q_gain = ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].q * scaling;
@@ -331,6 +326,13 @@ static void TxProcessor_IqFinalProcessing(float32_t scaling, bool swap, iq_buffe
 
         // this is the IQ phase adjustment
         AudioDriver_IQPhaseAdjust(ts.txrx_mode, final_i_buffer, final_q_buffer,blockSize);
+    }
+    else
+    {
+        float32_t final_iq_gain = ts.tx_power_factor * scaling;
+        // this is the IQ gain / amplitude adjustment
+        arm_scale_f32(final_i_buffer, final_iq_gain, final_i_buffer, blockSize);
+        arm_scale_f32(final_q_buffer, final_iq_gain, final_q_buffer, blockSize);
     }
 
     for(int i = 0; i < blockSize; i++)

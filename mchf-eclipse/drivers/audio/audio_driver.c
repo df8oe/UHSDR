@@ -17,6 +17,7 @@
 #include "uhsdr_board.h"
 #include "ui_driver.h"
 #include "profiling.h"
+#include "rfboard_interface.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -2975,7 +2976,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
             arm_scale_f32 (adb.iq_buf.q_buffer, IQ_BIT_SCALE_DOWN, adb.iq_buf.q_buffer, iqBlockSize);
         }
 
-        if (RadioManagement_CleanZeroIF() == false)
+        if (RFboard.iq_balance_required)
         {
             AudioDriver_RxHandleIqCorrection(adb.iq_buf.i_buffer, adb.iq_buf.q_buffer, iqBlockSize);
         }
