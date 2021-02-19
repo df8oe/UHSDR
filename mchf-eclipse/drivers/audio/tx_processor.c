@@ -298,8 +298,6 @@ static void TxProcessor_IqFinalProcessing(float32_t scaling, bool swap, iq_buffe
 
     float32_t *final_i_buffer, *final_q_buffer;
 
-    float32_t final_i_gain = ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].i * scaling;
-    float32_t final_q_gain = ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].q * scaling;
 
     // Output I and Q as stereo data
     if(swap == false)               // the resulting iq is "identical" to the original iq
@@ -313,12 +311,27 @@ static void TxProcessor_IqFinalProcessing(float32_t scaling, bool swap, iq_buffe
         final_q_buffer = iq_buf_p->i_buffer;
     }
 
-    // this is the IQ gain / amplitude adjustment
-    arm_scale_f32(final_i_buffer, final_i_gain, final_i_buffer, blockSize);
-    arm_scale_f32(final_q_buffer, final_q_gain, final_q_buffer, blockSize);
+    if (RadioManagement_CleanZeroIF())
+    {
+        float32_t final_iq_gain = ts.tx_power_factor * scaling;
+        // this is the IQ gain / amplitude adjustment
+        arm_scale_f32(final_i_buffer, final_iq_gain, final_i_buffer, blockSize);
+        arm_scale_f32(final_q_buffer, final_iq_gain, final_q_buffer, blockSize);
 
-    // this is the IQ phase adjustment
-    AudioDriver_IQPhaseAdjust(ts.txrx_mode, final_i_buffer, final_q_buffer,blockSize);
+    }
+    else
+    {
+        // in case we have to handle iq imbalances on the output stage, we do this here
+        float32_t final_i_gain = ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].i * scaling;
+        float32_t final_q_gain = ts.tx_power_factor * ts.tx_adj_gain_var[trans_idx].q * scaling;
+
+        // this is the IQ gain / amplitude adjustment
+        arm_scale_f32(final_i_buffer, final_i_gain, final_i_buffer, blockSize);
+        arm_scale_f32(final_q_buffer, final_q_gain, final_q_buffer, blockSize);
+
+        // this is the IQ phase adjustment
+        AudioDriver_IQPhaseAdjust(ts.txrx_mode, final_i_buffer, final_q_buffer,blockSize);
+    }
 
     for(int i = 0; i < blockSize; i++)
     {
@@ -999,23 +1012,16 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     }
     else if(dmod_mode == DEMOD_AM)
     {
-        if (RadioManagement_AMFM_Permitted())
-        {
-            bool runFilter = (ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE) == false;
-            TxProcessor_PrepareVoice(adb.a_buffer[0], src, blockSize, AM_ALC_GAIN_CORRECTION, runFilter);
-            signal_active = TxProcessor_AM(adb.a_buffer[0], &adb.iq_buf, blockSize,  ts.TX_at_zeroIF==0?AudioDriver_GetTranslateFreq():0);
-            iq_gain_comp = AM_GAIN_COMP;
-        }
+        bool runFilter = (ts.flags1 & FLAGS1_AM_TX_FILTER_DISABLE) == false;
+        TxProcessor_PrepareVoice(adb.a_buffer[0], src, blockSize, AM_ALC_GAIN_CORRECTION, runFilter);
+        signal_active = TxProcessor_AM(adb.a_buffer[0], &adb.iq_buf, blockSize,  ts.TX_at_zeroIF==0?AudioDriver_GetTranslateFreq():0);
+        iq_gain_comp = AM_GAIN_COMP;
     }
     else if(dmod_mode == DEMOD_FM)
     {
-        //  is frequency translation active (No FM possible unless in frequency translate mode!)
-        if (RadioManagement_AMFM_Permitted())
-        {
-            TxProcessor_PrepareVoice(adb.a_buffer[0], src, blockSize, FM_ALC_GAIN_CORRECTION, true);
-            signal_active = TxProcessor_FM(adb.a_buffer, &adb.iq_buf, blockSize,  ts.TX_at_zeroIF==0?AudioDriver_GetTranslateFreq():0);
-            iq_gain_comp = FM_MOD_AMPLITUDE_SCALING;
-        }
+        TxProcessor_PrepareVoice(adb.a_buffer[0], src, blockSize, FM_ALC_GAIN_CORRECTION, true);
+        signal_active = TxProcessor_FM(adb.a_buffer, &adb.iq_buf, blockSize,  ts.TX_at_zeroIF==0?AudioDriver_GetTranslateFreq():0);
+        iq_gain_comp = FM_MOD_AMPLITUDE_SCALING;
     }
 
     if (signal_active == false  || external_mute )
@@ -1037,8 +1043,6 @@ void TxProcessor_Run(AudioSample_t * const srcCodec, IqSample_t * const dst, Aud
     case STREAM_TX_AUDIO_GENIQ:
         for(int i = 0; i < blockSize; i++)
         {
-
-
             // iq sample rate must match the sample rate of USB IQ audio if we push iq samples to USB
             assert(AUDIO_SAMPLE_RATE == USBD_AUDIO_FREQ);
 

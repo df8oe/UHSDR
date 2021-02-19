@@ -1825,193 +1825,189 @@ demod_fm_data_t fm_data;
 {
 	float32_t goertzel_buf[blockSize], squelch_buf[blockSize];
 
-	if (RadioManagement_AMFM_Permitted())
+	bool tone_det_enabled = ads.fm_conf.subaudible_tone_det_freq != 0;// set a quick flag for checking to see if tone detection is enabled
+
+	for (uint16_t i = 0; i < blockSize; i++)
 	{
+	    // first, calculate "x" and "y" for the arctan2, comparing the vectors of present data with previous data
 
-		bool tone_det_enabled = ads.fm_conf.subaudible_tone_det_freq != 0;// set a quick flag for checking to see if tone detection is enabled
+	    float32_t y = (fm_data.i_prev * q_buffer[i]) - (i_buffer[i] * fm_data.q_prev);
+	    float32_t x = (fm_data.i_prev * i_buffer[i]) + (q_buffer[i] * fm_data.q_prev);
 
-		for (uint16_t i = 0; i < blockSize; i++)
-		{
-			// first, calculate "x" and "y" for the arctan2, comparing the vectors of present data with previous data
+	    float32_t angle = atan2f(y, x);
 
-			float32_t y = (fm_data.i_prev * q_buffer[i]) - (i_buffer[i] * fm_data.q_prev);
-			float32_t x = (fm_data.i_prev * i_buffer[i]) + (q_buffer[i] * fm_data.q_prev);
+	    // we now have our audio in "angle"
+	    squelch_buf[i] = angle;	// save audio in "d" buffer for squelch noise filtering/detection - done later
 
-            float32_t angle = atan2f(y, x);
+	    // Now do integrating low-pass filter to do FM de-emphasis
+	    float32_t a = fm_data.lpf_prev + (FM_RX_LPF_ALPHA * (angle - fm_data.lpf_prev));	//
+	    fm_data.lpf_prev = a;			// save "[n-1]" sample for next iteration
 
-            // we now have our audio in "angle"
-			squelch_buf[i] = angle;	// save audio in "d" buffer for squelch noise filtering/detection - done later
+	    goertzel_buf[i] = a;	// save in "c" for subaudible tone detection
 
-			// Now do integrating low-pass filter to do FM de-emphasis
-			float32_t a = fm_data.lpf_prev + (FM_RX_LPF_ALPHA * (angle - fm_data.lpf_prev));	//
-			fm_data.lpf_prev = a;			// save "[n-1]" sample for next iteration
+	    if (((!ads.fm_conf.squelched) && (!tone_det_enabled))
+	            || ((ads.fm_conf.subaudible_tone_detected) && (tone_det_enabled))
+	            || ((!ts.fm_sql_threshold)))// high-pass audio only if we are un-squelched (to save processor time)
+	    {
 
-			goertzel_buf[i] = a;	// save in "c" for subaudible tone detection
+	        // Do differentiating high-pass filter to attenuate very low frequency audio components, namely subadible tones and other "speaker-rattling" components - and to remove any DC that might be present.
+	        float32_t b = FM_RX_HPF_ALPHA * (fm_data.hpf_prev_b + a - fm_data.hpf_prev_a);// do differentiation
+	        fm_data.hpf_prev_a = a;		// save "[n-1]" samples for next iteration
+	        fm_data.hpf_prev_b = b;
 
-			if (((!ads.fm_conf.squelched) && (!tone_det_enabled))
-					|| ((ads.fm_conf.subaudible_tone_detected) && (tone_det_enabled))
-					|| ((!ts.fm_sql_threshold)))// high-pass audio only if we are un-squelched (to save processor time)
-			{
+	        a_buffer[i] = b;// save demodulated and filtered audio in main audio processing buffer
+	    }
+	    else if ((ads.fm_conf.squelched)
+	            || ((!ads.fm_conf.subaudible_tone_detected) && (tone_det_enabled)))// were we squelched or tone NOT detected?
+	    {
+	        a_buffer[i] = 0;// do not filter receive audio - fill buffer with zeroes to mute it
+	    }
 
-				// Do differentiating high-pass filter to attenuate very low frequency audio components, namely subadible tones and other "speaker-rattling" components - and to remove any DC that might be present.
-				float32_t b = FM_RX_HPF_ALPHA * (fm_data.hpf_prev_b + a - fm_data.hpf_prev_a);// do differentiation
-				fm_data.hpf_prev_a = a;		// save "[n-1]" samples for next iteration
-				fm_data.hpf_prev_b = b;
+	    fm_data.q_prev = q_buffer[i];// save "previous" value of each channel to allow detection of the change of angle in next go-around
+	    fm_data.i_prev = i_buffer[i];
+	}
 
-				a_buffer[i] = b;// save demodulated and filtered audio in main audio processing buffer
-			}
-			else if ((ads.fm_conf.squelched)
-					|| ((!ads.fm_conf.subaudible_tone_detected) && (tone_det_enabled)))// were we squelched or tone NOT detected?
-			{
-				a_buffer[i] = 0;// do not filter receive audio - fill buffer with zeroes to mute it
-			}
+	// *** Squelch Processing ***
+	arm_iir_lattice_f32(&IIR_Squelch_HPF, squelch_buf, squelch_buf,
+	        blockSize);	// Do IIR high-pass filter on audio so we may detect squelch noise energy
 
-			fm_data.q_prev = q_buffer[i];// save "previous" value of each channel to allow detection of the change of angle in next go-around
-			fm_data.i_prev = i_buffer[i];
-		}
+	ads.fm_conf.sql_avg = ((1 - FM_RX_SQL_SMOOTHING) * ads.fm_conf.sql_avg)
+				        + (FM_RX_SQL_SMOOTHING * sqrtf(fabsf(squelch_buf[0])));// IIR filter squelch energy magnitude:  We need look at only one representative sample
 
-		// *** Squelch Processing ***
-		arm_iir_lattice_f32(&IIR_Squelch_HPF, squelch_buf, squelch_buf,
-				blockSize);	// Do IIR high-pass filter on audio so we may detect squelch noise energy
+	//
+	// Squelch processing
+	//
+	// Determine if the (averaged) energy in "ads.fm.sql_avg" is above or below the squelch threshold
+	//
+	fm_data.count++;// bump count that controls how often the squelch threshold is checked
+	fm_data.count %= FM_SQUELCH_PROC_DECIMATION;    // enforce the count limit
 
-		ads.fm_conf.sql_avg = ((1 - FM_RX_SQL_SMOOTHING) * ads.fm_conf.sql_avg)
-				+ (FM_RX_SQL_SMOOTHING * sqrtf(fabsf(squelch_buf[0])));// IIR filter squelch energy magnitude:  We need look at only one representative sample
+	if (fm_data.count == 0)	// do the squelch threshold calculation much less often than we are called to process this audio
+	{
+	    if (ads.fm_conf.sql_avg > 0.175)	// limit maximum noise value in averaging to keep it from going out into the weeds under no-signal conditions (higher = noisier)
+	    {
+	        ads.fm_conf.sql_avg = 0.175;
+	    }
 
-		//
-		// Squelch processing
-		//
-		// Determine if the (averaged) energy in "ads.fm.sql_avg" is above or below the squelch threshold
-		//
-		fm_data.count++;// bump count that controls how often the squelch threshold is checked
-		fm_data.count %= FM_SQUELCH_PROC_DECIMATION;    // enforce the count limit
+	    float32_t scaled_sql_avg = ads.fm_conf.sql_avg * 172;// scale noise amplitude to range of squelch setting
 
-		if (fm_data.count == 0)	// do the squelch threshold calculation much less often than we are called to process this audio
-		{
-			if (ads.fm_conf.sql_avg > 0.175)	// limit maximum noise value in averaging to keep it from going out into the weeds under no-signal conditions (higher = noisier)
-			{
-				ads.fm_conf.sql_avg = 0.175;
-			}
-
-			float32_t scaled_sql_avg = ads.fm_conf.sql_avg * 172;// scale noise amplitude to range of squelch setting
-
-			if (scaled_sql_avg > 24)						// limit noise amplitude range
-			{
-				scaled_sql_avg = 24;
-			}
-			//
-			scaled_sql_avg = 22 - scaled_sql_avg;
-			// "invert" the noise power so that high number now corresponds with
-			// quieter signal:  "scaled_sql_avg" may now be compared with squelch setting
+	    if (scaled_sql_avg > 24)						// limit noise amplitude range
+	    {
+	        scaled_sql_avg = 24;
+	    }
+	    //
+	    scaled_sql_avg = 22 - scaled_sql_avg;
+	    // "invert" the noise power so that high number now corresponds with
+	    // quieter signal:  "scaled_sql_avg" may now be compared with squelch setting
 
 
 
-			// Now evaluate noise power with respect to squelch setting
-			if (ts.fm_sql_threshold == 0)	 	// is squelch set to zero?
-			{
-				ads.fm_conf.squelched = false;		// yes, the we are un-squelched
-			}
-			else
-			{
-			    if (ads.fm_conf.squelched == true)	 	// are we squelched?
-			    {
-			        if (scaled_sql_avg >= (float) (ts.fm_sql_threshold + FM_SQUELCH_HYSTERESIS))	// yes - is average above threshold plus hysteresis?
-			        {
-			            ads.fm_conf.squelched = false;		//  yes, open the squelch
-			        }
-			    }
-			    else	 	// is the squelch open (e.g. passing audio)?
-			    {
-			        if (ts.fm_sql_threshold > FM_SQUELCH_HYSTERESIS)// is setting higher than hysteresis?
-			        {
-			            if (scaled_sql_avg < (float) (ts.fm_sql_threshold - FM_SQUELCH_HYSTERESIS))// yes - is average below threshold minus hysteresis?
-			            {
-			                ads.fm_conf.squelched = true;	// yes, close the squelch
-			            }
-			        }
-			        else	 // setting is lower than hysteresis so we can't use it!
-			        {
-			            if (scaled_sql_avg < (float) ts.fm_sql_threshold)// yes - is average below threshold?
-			            {
-			                ads.fm_conf.squelched = true;	// yes, close the squelch
-			            }
-			        }
-			    }
-			}
-		}
+	    // Now evaluate noise power with respect to squelch setting
+	    if (ts.fm_sql_threshold == 0)	 	// is squelch set to zero?
+	    {
+	        ads.fm_conf.squelched = false;		// yes, the we are un-squelched
+	    }
+	    else
+	    {
+	        if (ads.fm_conf.squelched == true)	 	// are we squelched?
+	        {
+	            if (scaled_sql_avg >= (float) (ts.fm_sql_threshold + FM_SQUELCH_HYSTERESIS))	// yes - is average above threshold plus hysteresis?
+	            {
+	                ads.fm_conf.squelched = false;		//  yes, open the squelch
+	            }
+	        }
+	        else	 	// is the squelch open (e.g. passing audio)?
+	        {
+	            if (ts.fm_sql_threshold > FM_SQUELCH_HYSTERESIS)// is setting higher than hysteresis?
+	            {
+	                if (scaled_sql_avg < (float) (ts.fm_sql_threshold - FM_SQUELCH_HYSTERESIS))// yes - is average below threshold minus hysteresis?
+	                {
+	                    ads.fm_conf.squelched = true;	// yes, close the squelch
+	                }
+	            }
+	            else	 // setting is lower than hysteresis so we can't use it!
+	            {
+	                if (scaled_sql_avg < (float) ts.fm_sql_threshold)// yes - is average below threshold?
+	                {
+	                    ads.fm_conf.squelched = true;	// yes, close the squelch
+	                }
+	            }
+	        }
+	    }
+	}
 
-		//
-		// *** Subaudible tone detection ***
-		//
-		if (tone_det_enabled)// is subaudible tone detection enabled?  If so, do decoding
-		{
-			//
-			// Use Goertzel algorithm for subaudible tone detection
-			//
-			// We will detect differentially at three frequencies:  Above, below and on-frequency.  The two former will be used to provide a sample of the total energy
-			// present as well as improve nearby-frequency discrimination.  By dividing the on-frequency energy with the averaged off-frequency energy we'll
-			// get a ratio that is irrespective of the actual detected audio amplitude:  A ratio of 1.00 is considered "neutral" and it goes above unity with the increasing
-			// likelihood that a tone was present on the target frequency
-			//
-			// Goertzel constants for the three decoders are pre-calculated in the function "UiCalcSubaudibleDetFreq()"
-			//
-			// (Yes, I know that below could be rewritten to be a bit more compact-looking, but it would not be much faster and it would be less-readable)
-			//
-			// Note that the "c" buffer contains audio that is somewhat low-pass filtered by the integrator, above
-			//
-		    fm_data.gcount++;// this counter is used for the accumulation of data over multiple cycles
-			//
-			for (uint16_t i = 0; i < blockSize; i++)
-			{
+	//
+	// *** Subaudible tone detection ***
+	//
+	if (tone_det_enabled)// is subaudible tone detection enabled?  If so, do decoding
+	{
+	    //
+	    // Use Goertzel algorithm for subaudible tone detection
+	    //
+	    // We will detect differentially at three frequencies:  Above, below and on-frequency.  The two former will be used to provide a sample of the total energy
+	    // present as well as improve nearby-frequency discrimination.  By dividing the on-frequency energy with the averaged off-frequency energy we'll
+	    // get a ratio that is irrespective of the actual detected audio amplitude:  A ratio of 1.00 is considered "neutral" and it goes above unity with the increasing
+	    // likelihood that a tone was present on the target frequency
+	    //
+	    // Goertzel constants for the three decoders are pre-calculated in the function "UiCalcSubaudibleDetFreq()"
+	    //
+	    // (Yes, I know that below could be rewritten to be a bit more compact-looking, but it would not be much faster and it would be less-readable)
+	    //
+	    // Note that the "c" buffer contains audio that is somewhat low-pass filtered by the integrator, above
+	    //
+	    fm_data.gcount++;// this counter is used for the accumulation of data over multiple cycles
+	    //
+	    for (uint16_t i = 0; i < blockSize; i++)
+	    {
 
-				// Detect above target frequency
-				AudioFilter_GoertzelInput(&ads.fm_conf.goertzel[FM_HIGH],goertzel_buf[i]);
-				// Detect energy below target frequency
-				AudioFilter_GoertzelInput(&ads.fm_conf.goertzel[FM_LOW],goertzel_buf[i]);
-				// Detect on-frequency energy
-				AudioFilter_GoertzelInput(&ads.fm_conf.goertzel[FM_CTR],goertzel_buf[i]);
-			}
+	        // Detect above target frequency
+	        AudioFilter_GoertzelInput(&ads.fm_conf.goertzel[FM_HIGH],goertzel_buf[i]);
+	        // Detect energy below target frequency
+	        AudioFilter_GoertzelInput(&ads.fm_conf.goertzel[FM_LOW],goertzel_buf[i]);
+	        // Detect on-frequency energy
+	        AudioFilter_GoertzelInput(&ads.fm_conf.goertzel[FM_CTR],goertzel_buf[i]);
+	    }
 
-			if (fm_data.gcount >= FM_SUBAUDIBLE_GOERTZEL_WINDOW)// have we accumulated enough samples to do the final energy calculation?
-			{
-				float32_t s = AudioFilter_GoertzelEnergy(&ads.fm_conf.goertzel[FM_HIGH]) + AudioFilter_GoertzelEnergy(&ads.fm_conf.goertzel[FM_LOW]);
-				// sum +/- energy levels:
-				// s = "off frequency" energy reading
+	    if (fm_data.gcount >= FM_SUBAUDIBLE_GOERTZEL_WINDOW)// have we accumulated enough samples to do the final energy calculation?
+	    {
+	        float32_t s = AudioFilter_GoertzelEnergy(&ads.fm_conf.goertzel[FM_HIGH]) + AudioFilter_GoertzelEnergy(&ads.fm_conf.goertzel[FM_LOW]);
+	        // sum +/- energy levels:
+	        // s = "off frequency" energy reading
 
-				float32_t r = AudioFilter_GoertzelEnergy(&ads.fm_conf.goertzel[FM_CTR]);
-				fm_data.subdet = ((1 - FM_TONE_DETECT_ALPHA) * fm_data.subdet)
-						+ (r / (s / 2) * FM_TONE_DETECT_ALPHA);	// do IIR filtering of the ratio between on and off-frequency energy
+	        float32_t r = AudioFilter_GoertzelEnergy(&ads.fm_conf.goertzel[FM_CTR]);
+	        fm_data.subdet = ((1 - FM_TONE_DETECT_ALPHA) * fm_data.subdet)
+						        + (r / (s / 2) * FM_TONE_DETECT_ALPHA);	// do IIR filtering of the ratio between on and off-frequency energy
 
-				if (fm_data.subdet > FM_SUBAUDIBLE_TONE_DET_THRESHOLD)// is subaudible tone detector ratio above threshold?
-				{
-				    fm_data.tdet++;	// yes - increment count			// yes - bump debounce count
-					if (fm_data.tdet > FM_SUBAUDIBLE_DEBOUNCE_MAX)// is count above the maximum?
-					{
-					    fm_data.tdet = FM_SUBAUDIBLE_DEBOUNCE_MAX;// yes - limit the count
-					}
-				}
-				else	 	// it is below the threshold - reduce the debounce
-				{
-					if (fm_data.tdet)		// - but only if already nonzero!
-					{
-					    fm_data.tdet--;
-					}
-				}
-				if (fm_data.tdet >= FM_SUBAUDIBLE_TONE_DEBOUNCE_THRESHOLD)// are we above the debounce threshold?
-				{
-					ads.fm_conf.subaudible_tone_detected = 1;// yes - a tone has been detected
-				}
-				else									// not above threshold
-				{
-					ads.fm_conf.subaudible_tone_detected = 0;	// no tone detected
-				}
+	        if (fm_data.subdet > FM_SUBAUDIBLE_TONE_DET_THRESHOLD)// is subaudible tone detector ratio above threshold?
+	        {
+	            fm_data.tdet++;	// yes - increment count			// yes - bump debounce count
+	            if (fm_data.tdet > FM_SUBAUDIBLE_DEBOUNCE_MAX)// is count above the maximum?
+	            {
+	                fm_data.tdet = FM_SUBAUDIBLE_DEBOUNCE_MAX;// yes - limit the count
+	            }
+	        }
+	        else	 	// it is below the threshold - reduce the debounce
+	        {
+	            if (fm_data.tdet)		// - but only if already nonzero!
+	            {
+	                fm_data.tdet--;
+	            }
+	        }
+	        if (fm_data.tdet >= FM_SUBAUDIBLE_TONE_DEBOUNCE_THRESHOLD)// are we above the debounce threshold?
+	        {
+	            ads.fm_conf.subaudible_tone_detected = 1;// yes - a tone has been detected
+	        }
+	        else									// not above threshold
+	        {
+	            ads.fm_conf.subaudible_tone_detected = 0;	// no tone detected
+	        }
 
-				fm_data.gcount = 0;		// reset accumulation counter
-			}
-		}
-		else	 		// subaudible tone detection disabled
-		{
-			ads.fm_conf.subaudible_tone_detected = 1;// always signal that a tone is being detected if detection is disabled to enable audio gate
-		}
+	        fm_data.gcount = 0;		// reset accumulation counter
+	    }
+	}
+	else	 		// subaudible tone detection disabled
+	{
+	    ads.fm_conf.subaudible_tone_detected = 1;// always signal that a tone is being detected if detection is disabled to enable audio gate
 	}
 	return ads.fm_conf.squelched == false;
 }
@@ -2978,7 +2974,11 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
             arm_scale_f32 (adb.iq_buf.i_buffer, IQ_BIT_SCALE_DOWN, adb.iq_buf.i_buffer, iqBlockSize);
             arm_scale_f32 (adb.iq_buf.q_buffer, IQ_BIT_SCALE_DOWN, adb.iq_buf.q_buffer, iqBlockSize);
         }
-        AudioDriver_RxHandleIqCorrection(adb.iq_buf.i_buffer, adb.iq_buf.q_buffer, iqBlockSize);
+
+        if (RadioManagement_CleanZeroIF() == false)
+        {
+            AudioDriver_RxHandleIqCorrection(adb.iq_buf.i_buffer, adb.iq_buf.q_buffer, iqBlockSize);
+        }
 
         // at this point we have phase corrected IQ @ IQ_SAMPLE_RATE, unshifted in adb.iq_buf.i_buffer, adb.iq_buf.q_buffer
 

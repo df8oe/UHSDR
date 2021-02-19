@@ -1430,9 +1430,9 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 
         break;
     case MENU_RX_FREQ_CONV:     // Enable/Disable receive frequency conversion
-  		;
-  		uchar firstmode = FREQ_IQ_CONV_MODE_OFF;
-		if(ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM || ts.dmod_mode == DEMOD_FM)
+    {
+  		uchar firstmode = FREQ_IQ_CONV_MODE_OFF; // TODO: Better handling of
+		if(RadioManagement_DemodAndIqFreqConvCompat(ts.dmod_mode, FREQ_IQ_CONV_MODE_OFF) == false )
 		{
 		  firstmode = FREQ_IQ_CONV_P6KHZ;
 		}
@@ -1446,7 +1446,10 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         {
         case FREQ_IQ_CONV_MODE_OFF:
             txt_ptr = ">> OFF! <<";
-            clr = Red3;
+            if (RadioManagement_CleanZeroIF() == false)
+            {
+                clr = Red3;
+            }
             break;
         case FREQ_IQ_CONV_P6KHZ:
             txt_ptr ="RX  +6kHz";
@@ -1466,6 +1469,7 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             UiDriver_FrequencyUpdateLOandDisplay(true); // update frequency display without checking encoder, unconditionally updating synthesizer
         }
         break;
+    }
     case MENU_MIC_LINE_MODE:    // Mic/Line mode
         var_change = UiDriverMenuItemChangeUInt8(var, mode, &ts.tx_audio_source,
                                               0,

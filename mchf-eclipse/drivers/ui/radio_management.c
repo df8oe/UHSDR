@@ -1412,68 +1412,84 @@ bool RadioManagement_CleanZeroIF()
 }
 
 /**
+ * Returns true if the given modulation and freq translation are compatible, i.e. can be used together.
+ * This is based on the hardware capabilities
  *
- * @return true if in the current operational state and hardware capabilites, transmission in AM or FM is permitted
+ * @param dmod_mode
+ * @param freq_iq_conv_mode
+ * @return true if translation mode and (de)modulation can be used together in the current hardwae configuration
  */
-bool RadioManagement_AMFM_Permitted()
+bool RadioManagement_DemodAndIqFreqConvCompat(uint8_t dmod_mode, int32_t freq_iq_conv_mode)
 {
-     return (RadioManagement_CleanZeroIF() || ts.iq_freq_mode != FREQ_IQ_CONV_MODE_OFF);
+    bool retval = true;
+    if (freq_iq_conv_mode == FREQ_IQ_CONV_MODE_OFF)
+    {
+
+        retval = RadioManagement_CleanZeroIF() == true || ( dmod_mode != DEMOD_AM && dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_FM);
+    }
+    return retval;
 }
 
 bool RadioManagement_IsApplicableDemodMode(uint32_t demod_mode)
 {
     bool retval = false;
-    switch(demod_mode)
-    {
-    case DEMOD_LSB:
-    case DEMOD_USB:
-        if((ts.lsb_usb_auto_select))       // is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
-        {
-            retval = RadioManagement_SSB_AutoSideBand(df.tune_new) == demod_mode;       // is this a voice mode, subject to "auto" LSB/USB select?
-        }
-        else
-        {
-            retval = true;
-        }
-        break;
-    case DEMOD_AM:
-        retval = (ts.demod_mode_disable & DEMOD_AM_DISABLE) == 0;      // is AM enabled?
-        break;
-    case DEMOD_DIGI:
-        retval = (ts.demod_mode_disable & DEMOD_DIGI_DISABLE) == 0;      // is DIGI enabled?
-        if((ts.lsb_usb_auto_select) && retval == true)       // is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
-        {
-            // TODO: this is only true for FreeDV, but since we have only FreeDV...
-            ts.digi_lsb = RadioManagement_SSB_AutoSideBand(df.tune_new) == DEMOD_LSB;
-            // is this a voice mode, subject to "auto" LSB/USB select?
-        }
-        break;
-    case DEMOD_CW:
-        retval = (ts.demod_mode_disable & DEMOD_CW_DISABLE) == 0;      // is CW enabled?
-        break;
-    case DEMOD_FM:
-        // FIXME: ts.lsb_usb_auto_select acts as fm select here. Rename!
-        retval = RadioManagement_AMFM_Permitted() && (((ts.flags2 & FLAGS2_FM_MODE_ENABLE) != 0) || (ts.band->band_mode == BAND_MODE_10 && ts.lsb_usb_auto_select));   // is FM enabled?
 
-        break;
-    case DEMOD_SAM:
-        retval =( ts.flags1 & FLAGS1_SAM_ENABLE) != 0;        // is SAM enabled?
-        break;
+    // we check if the give mode is usable with the current freq translation setting from hardware capbility standpoint,
+    // then we check specific conditions per demod mode based on software condifuration and rules
+    if (RadioManagement_DemodAndIqFreqConvCompat(demod_mode, ts.iq_freq_mode))
+    {
+        switch(demod_mode)
+        {
+        case DEMOD_LSB:
+        case DEMOD_USB:
+            if((ts.lsb_usb_auto_select))       // is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
+            {
+                retval = RadioManagement_SSB_AutoSideBand(df.tune_new) == demod_mode;       // is this a voice mode, subject to "auto" LSB/USB select?
+            }
+            else
+            {
+                retval = true;
+            }
+            break;
+        case DEMOD_AM:
+            retval = (ts.demod_mode_disable & DEMOD_AM_DISABLE) == 0;      // is AM enabled?
+            break;
+        case DEMOD_DIGI:
+            retval = (ts.demod_mode_disable & DEMOD_DIGI_DISABLE) == 0;      // is DIGI enabled?
+            if((ts.lsb_usb_auto_select) && retval == true)       // is auto-select LSB/USB mode enabled AND mode-skip NOT enabled?
+            {
+                // TODO: this is only true for FreeDV, but since we have only FreeDV...
+                ts.digi_lsb = RadioManagement_SSB_AutoSideBand(df.tune_new) == DEMOD_LSB;
+                // is this a voice mode, subject to "auto" LSB/USB select?
+            }
+            break;
+        case DEMOD_CW:
+            retval = (ts.demod_mode_disable & DEMOD_CW_DISABLE) == 0;      // is CW enabled?
+            break;
+        case DEMOD_FM:
+            // FIXME: ts.lsb_usb_auto_select acts as fm select here. Rename!
+            retval = (((ts.flags2 & FLAGS2_FM_MODE_ENABLE) != 0) || (ts.band->band_mode == BAND_MODE_10 && ts.lsb_usb_auto_select));   // is FM enabled?
+
+            break;
+        case DEMOD_SAM:
+            retval =( ts.flags1 & FLAGS1_SAM_ENABLE) != 0;        // is SAM enabled?
+            break;
 #ifdef USE_TWO_CHANNEL_AUDIO
-    case DEMOD_SSBSTEREO:
-    case DEMOD_IQ:
-        if(!ts.stereo_enable)
-        {
-            retval = false;
-        }
-        else
-        {
+        case DEMOD_SSBSTEREO:
+        case DEMOD_IQ:
+            if(!ts.stereo_enable)
+            {
+                retval = false;
+            }
+            else
+            {
+                retval = true;
+            }
+            break;
+#endif
+        default:
             retval = true;
         }
-        break;
-#endif
-    default:
-        retval = true;
     }
     return retval;
 }
