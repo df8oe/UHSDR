@@ -209,12 +209,12 @@
 
 // for now: These are fixed.
 #ifndef IQ_SAMPLE_RATE
-    #define IQ_SAMPLE_RATE (192000)
+    #define IQ_SAMPLE_RATE (96000)
 #endif
 
 #define AUDIO_SAMPLE_RATE (48000)
 
-#if  defined(STM32F4) && (IQ_SAMPLE_RATE > 48000)
+#if  defined(STM32F4) && (IQ_SAMPLE_RATE > 48000) && !defined(BOOTLOADER_BUILD)
     #error IQ_SAMPLE_RATE must be set to 48000
 #endif
 
