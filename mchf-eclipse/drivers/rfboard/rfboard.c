@@ -164,6 +164,27 @@ bool RFBoard_Dummy_SetPaBias(uint32_t bias)
     return true;
 }
 
+#ifdef USE_OSC_SParkle
+const hardware_ident_t sparkle_desc =
+{
+    .creator = SParkleTRX_HW_CREATOR,
+    .license = SParkleTRX_HW_LIC,
+    .name = TRX_NAME_SParkle
+};
+#endif
+const hardware_ident_t generic_desc =
+{
+    .creator = TRX_HW_CREATOR,
+    .license = TRX_HW_LIC,
+    .name = TRX_NAME
+};
+
+const hardware_ident_t ddcduc_df8oe_desc =
+{
+    .creator = "DG8YGW, DF8OE et al",
+    .license = "CERN-OHL v1.2",
+    .name = TRX_NAME
+};
 
 /**
  * This has to be called after rf board hardware detection and before using any other RFboard related functions
@@ -200,6 +221,7 @@ bool RFBoard_Init_Board(void)
             RFboard.InitBoard = SParkle_ConfigurationInit;
             RFboard.SetPABias = RFBoard_Dummy_SetPaBias;
             RFboard.SetPowerFactor = SParkle_SetTXpower;
+            RFboard.description = &sparkle_desc;
 #endif
 
             break;
@@ -213,6 +235,7 @@ bool RFBoard_Init_Board(void)
             RFboard.ChangeFrequency = RFBoard_Dummy_ChangeFrequency;
             RFboard.InitBoard = RFBoard_Dummy_InitBoard;
             RFboard.SetPABias = RFBoard_Dummy_SetPaBias;
+            RFboard.description = &ddcduc_df8oe_desc;
 
             break;
         case RF_BOARD_MCHF:
@@ -227,6 +250,7 @@ bool RFBoard_Init_Board(void)
             RFboard.ChangeFrequency = Mchf_SetHWFiltersForFrequency;
             RFboard.InitBoard = Mchf_Rf_Board_Init;
             RFboard.SetPABias = Mchf_Rf_Board_SetPaBiasValue;
+            RFboard.description = &generic_desc;
     }
 
     return RFboard.InitBoard();

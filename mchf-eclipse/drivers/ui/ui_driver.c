@@ -5936,30 +5936,23 @@ void UiDriver_StartUpScreenInit()
 	// Clear all
 	UiLcdHy28_LcdClear(Black);
 	uint16_t nextY = ts.Layout->StartUpScreen_START.y;
-#ifdef USE_OSC_SParkle
-	if(ts.rf_board == RF_BOARD_SPARKLE)
-	{
-	    snprintf(tx,100,"%s",SParkle_DEVICE_STRING);
-        nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
 
-        snprintf(tx,100,"Hardware License: %s",SParkleTRX_HW_LIC);
-        nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 3, 320, tx, White,Black, 0);
-        nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, SParkleTRX_HW_CREATOR, White,Black, 0);
+	hardware_ident_t desc = { .name = TRX_NAME, .license = TRX_HW_LIC, .creator = TRX_HW_CREATOR };
+
+
+	if (RFboard.description != NULL)
+	{
+	    desc.name = RFboard.description->name != NULL? RFboard.description->name : desc.name;
+	    desc.license = RFboard.description->license != NULL? RFboard.description->license : desc.license;
+	    desc.creator = RFboard.description->creator != NULL? RFboard.description->creator : desc.creator;
 	}
-	else
-#endif
-	{
-	    snprintf(tx,100,"%s",DEVICE_STRING);
-	    nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
 
-#ifdef TRX_HW_LIC
-	snprintf(tx,100,"Hardware License: %s",TRX_HW_LIC);
+	snprintf(tx,100,"%s",DEVICE_STRING);
+	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, tx, Cyan, Black, 1);
+
+	snprintf(tx,100,"Hardware License: %s",desc.license);
 	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 3, 320, tx, White,Black, 0);
-#endif
-#ifdef TRX_HW_CREATOR
-	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, TRX_HW_CREATOR, White,Black, 0);
-#endif
-    }
+	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY, 320, desc.creator, White,Black, 0);
 
 	snprintf(tx,100,"%s%s","UHSDR Vers. ",UiMenu_GetSystemInfo(&clr,INFO_FW_VERSION));
 	nextY = UiLcdHy28_PrintTextCentered(ts.Layout->StartUpScreen_START.x, nextY + 8, 320, tx, Yellow, Black, 1);

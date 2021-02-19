@@ -22,6 +22,13 @@
 #include "uhsdr_types.h"
 #include "uhsdr_board.h"
 
+typedef struct
+{
+    const char* creator;
+    const char* license;
+    const char* name;
+} hardware_ident_t;
+
 #if 0
 typedef enum
 {
@@ -73,6 +80,7 @@ typedef struct {
     bool    (*InitBoard)(void);
     bool    (*SetPABias)(uint32_t bias); // a bias of 0 must disable transmission without disabling the PA signal path
     bool    (*SetPowerFactor)(float pf);
+    const hardware_ident_t* description;
     // if set, external power factor control is assumed, pa_info->power_factor is used in signal procssing
     // and this function is called with the calculated power factor;
 } HardwareRFBoard;
