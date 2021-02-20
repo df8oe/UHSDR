@@ -2943,7 +2943,7 @@ static float ApproxAtan2(float y, float x)
 static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
 {
     //const float32_t Pilot_tone_freq = 19000.0f;
-    const float32_t WFM_scaling_factor = 600.0f; //0.24f;
+    const float32_t WFM_scaling_factor = 400.0f; //0.24f;
 
     static float32_t I_old = 0.2;
     static float32_t Q_old = 0.2;
@@ -3240,8 +3240,9 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         AudioDriver_SpectrumZoomProcessSamples(&adb.iq_buf, iqBlockSize);
 
         // for WFM demodulation, do not decimate, but stay at 192ksps sample rate
-        if(0)
-//        if(dmod_mode == DEMOD_WFM)
+       //if(1)
+#ifdef USE_WFM
+        if(dmod_mode == DEMOD_WFM)
         {
             AudioDriver_Demod_WFM(&adb.iq_buf, iqBlockSize); // has to demodulate and pack everything into adb.a_buffer[0], audio_blockSize and adb.a_buffer[1], audio_blockSize
 
@@ -3250,6 +3251,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
             signal_active = true;
         }
         else
+#endif
         {
 
         AudioDriver_DecimIqDown_Run(&adb.iq_buf, iqBlockSize);

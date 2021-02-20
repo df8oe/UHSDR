@@ -87,6 +87,13 @@
  *
  */
 
+// wideband FM demodulation to receive FM radio
+// DD4WH, 2021_02_19
+// only possible on the DDC/DUC RF board
+// and by using 192ksps sample rate for audio processing
+// tested on F7
+//#define USE_WFM
+
 // Fast convolution filtering
 // experimental at the moment DD4WH, 2018_08_18
 //#define USE_CONVOLUTION
@@ -126,8 +133,9 @@
     // OPTION
     // with IS_SMALL_BUILD we are not automatically including USE_FREEDV as it uses lot of memory
     // both RAM and flash
-    #define USE_FREEDV
-
+    #ifndef USE_WFM
+        #define USE_FREEDV
+    #endif
 #endif // IS_SMALL_BUILD
 
 // some special switches
@@ -209,7 +217,11 @@
 
 // for now: These are fixed.
 #ifndef IQ_SAMPLE_RATE
-    #define IQ_SAMPLE_RATE (96000)
+    #if defined(USE_WFM)
+        #define IQ_SAMPLE_RATE (192000)
+    #else
+        #define IQ_SAMPLE_RATE (96000)
+    #endif
 #endif
 
 #define AUDIO_SAMPLE_RATE (48000)

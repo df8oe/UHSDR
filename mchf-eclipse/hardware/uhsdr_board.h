@@ -53,6 +53,9 @@ typedef enum {
 #ifdef USE_TWO_CHANNEL_AUDIO
     DEMOD_SSBSTEREO =   7,
     DEMOD_IQ        =   8,
+    #ifdef USE_WFM
+        DEMOD_WFM       =   9,
+    #endif
 #endif
     DEMOD_NUM_MODE
 } DemodModes_t;

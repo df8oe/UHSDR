@@ -1547,6 +1547,11 @@ void UiDriver_DisplayDemodMode()
 	case DEMOD_SSBSTEREO:
 		txt = "SSB-S";
 		break;
+    #ifdef USE_WFM
+	    case DEMOD_WFM:
+	        txt = "WFM";
+	    break;
+    #endif
 #endif
 		default:
 			break;
