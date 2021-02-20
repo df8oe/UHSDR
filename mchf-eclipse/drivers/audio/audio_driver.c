@@ -987,6 +987,7 @@ static void AudioDriver_CalcNotch(float32_t coeffs[5], float32_t f0, float32_t B
 
 static const float32_t biquad_passthrough[] = { 1, 0, 0, 0, 0 };
 
+#ifdef USE_WFM
 // used for FM radio WFM demodulation
 #define UKW_FIR_HILBERT_NUM_TAPS 10
 #define WFM_SAMPLE_RATE 192000.0f
@@ -1035,6 +1036,7 @@ static arm_biquad_casd_df1_inst_f32 biquad_WFM_pilot_19k[2] =
                 } // 1 x 4 = 4 state variables
         }
 };
+#endif
 
 static arm_fir_decimate_instance_f32   DECIMATE_DOWN_I;
 static arm_fir_decimate_instance_f32   DECIMATE_DOWN_Q;
@@ -1055,6 +1057,7 @@ const float32_t fir_192k_83[] = {47.95040771559608570E-6, 75.88045984174966920E-
 
 #define DOWN_IQ_NUM_TAPS 83
 
+#ifdef USE_WFM
     //////////////////////////////////////////////////////////////////////
     //  Call to setup filter parameters
     // SampleRate in Hz
@@ -1162,7 +1165,9 @@ float32_t Izero (float32_t x)
   }   while (ds >= errorlimit * summe);
   return (summe);
 }  // END Izero
+#endif
 
+#ifdef USE_WFM
 void AudioDriver_WFM_Setup()
 {
     float32_t coeffs[5];
@@ -1184,6 +1189,7 @@ void AudioDriver_WFM_Setup()
        AudioDriver_SetBiquadCoeffsAllInstances(biquad_WFM_pilot_19k, 0, coeffs_ptr);
 
 }
+#endif
 
 void AudioDriver_DecimIq_Setup()
 {
@@ -2878,6 +2884,7 @@ static void RxProcessor_DemodAudioPostprocessing(float32_t (*a_buffer)[AUDIO_BLO
 
 }
 
+#ifdef USE_WFM
 // copied from https://www.dsprelated.com/showarticle/1052.php
 // Polynomial approximating arctangenet on the range -1,1.
 // Max error < 0.005 (or 0.29 degrees)
@@ -2939,7 +2946,9 @@ static float ApproxAtan2(float y, float x)
   }
   return 0.0f; // x,y = 0. Could return NaN instead.
 }
+#endif
 
+#ifdef USE_WFM
 static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
 {
     //const float32_t Pilot_tone_freq = 19000.0f;
@@ -3106,7 +3115,7 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
                 }
             }
 }
-
+#endif
 
 /**
  * Gets IQ data as input, runs the rx processing on the input signal, leaves audio data in DMA buffer
