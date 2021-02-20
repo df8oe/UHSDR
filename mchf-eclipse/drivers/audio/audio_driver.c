@@ -1070,13 +1070,9 @@ const float32_t fir_192k_83[] = {47.95040771559608570E-6, 75.88045984174966920E-
     //  SetupParameters( 100, 2800, 0, 48000);
     //////////////////////////////////////////////////////////////////////
 
-    //void calc_cplx_FIR_coeffs (float * coeffs_I, float * coeffs_Q, int numCoeffs, float32_t fc, float32_t Astop, int type, float dfc, float SampleRate)
     void AudioDriver_Calc_Cplx_FIR_Coeffs (float * coeffs_I, float * coeffs_Q, int numCoeffs, float32_t FLoCut, float32_t FHiCut, float SampleRate)
     // pointer to coefficients variable, no. of coefficients to calculate, frequency where it happens, stopband attenuation in dB,
     // filter type, half-filter bandwidth (only for bandpass and notch)
-
-    //void CFastFIR::SetupParameters( TYPEREAL FLoCut, TYPEREAL FHiCut,
-    //                TYPEREAL Offset, TYPEREAL SampleRate)
     {
 
       //calculate some normalized filter parameters
@@ -1137,33 +1133,33 @@ const float32_t fir_192k_83[] = {47.95040771559608570E-6, 75.88045984174966920E-
 
 
 float m_sinc(int m, float fc)
-{ // fc is f_cut/(Fsamp/2)
-  // m is between -M and M step 2
-  //
-  float x = m * PIH;
-  if (m == 0)
-    return 1.0f;
-  else
-    return sinf(x * fc) / (fc * x);
+{     // fc is f_cut/(Fsamp/2)
+      // m is between -M and M step 2
+      //
+      float x = m * PIH;
+      if (m == 0)
+        return 1.0f;
+      else
+        return sinf(x * fc) / (fc * x);
 }
 
 float32_t Izero (float32_t x)
 {
-  float32_t x2 = x / 2.0;
-  float32_t summe = 1.0;
-  float32_t ds = 1.0;
-  float32_t di = 1.0;
-  float32_t errorlimit = 1e-9;
-  float32_t tmp;
-  do
-  {
-    tmp = x2 / di;
-    tmp *= tmp;
-    ds *= tmp;
-    summe += ds;
-    di += 1.0;
-  }   while (ds >= errorlimit * summe);
-  return (summe);
+      float32_t x2 = x / 2.0;
+      float32_t summe = 1.0;
+      float32_t ds = 1.0;
+      float32_t di = 1.0;
+      float32_t errorlimit = 1e-9;
+      float32_t tmp;
+      do
+      {
+        tmp = x2 / di;
+        tmp *= tmp;
+        ds *= tmp;
+        summe += ds;
+        di += 1.0;
+      }   while (ds >= errorlimit * summe);
+      return (summe);
 }  // END Izero
 #endif
 
@@ -1183,10 +1179,14 @@ void AudioDriver_WFM_Setup()
      arm_fir_init_f32 (&UKW_FIR_HILBERT_I, UKW_FIR_HILBERT_NUM_TAPS, UKW_FIR_HILBERT_I_Coef, UKW_FIR_HILBERT_I_State, (uint32_t)IQ_BLOCK_SIZE);
      arm_fir_init_f32 (&UKW_FIR_HILBERT_Q, UKW_FIR_HILBERT_NUM_TAPS, UKW_FIR_HILBERT_Q_Coef, UKW_FIR_HILBERT_Q_State, (uint32_t)IQ_BLOCK_SIZE);
 
-       // high Q IIR bandpass filter for wideband FM at 19k
-       AudioDriver_CalcBandpass(coeffs, 19000, WFM_SAMPLE_RATE, 200.0f);
-       coeffs_ptr = coeffs;
-       AudioDriver_SetBiquadCoeffsAllInstances(biquad_WFM_pilot_19k, 0, coeffs_ptr);
+     // high Q IIR bandpass filter for wideband FM at 19k
+     AudioDriver_CalcBandpass(coeffs, 19000, WFM_SAMPLE_RATE, 200.0f);
+     coeffs_ptr = coeffs;
+     AudioDriver_SetBiquadCoeffsAllInstances(biquad_WFM_pilot_19k, 0, coeffs_ptr);
+
+     // FIR filter lowpass 15kHz
+
+     // IIR notch filter 19kHz
 
 }
 #endif

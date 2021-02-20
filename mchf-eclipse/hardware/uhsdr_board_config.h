@@ -91,7 +91,7 @@
 // DD4WH, 2021_02_19
 // only possible on the DDC/DUC RF board
 // and by using 192ksps sample rate for audio processing
-// tested on F7
+// tested on F7 & H7
 //#define USE_WFM
 
 // Fast convolution filtering
@@ -133,6 +133,8 @@
     // OPTION
     // with IS_SMALL_BUILD we are not automatically including USE_FREEDV as it uses lot of memory
     // both RAM and flash
+
+    #define USE_FREEDV
 
 #endif // IS_SMALL_BUILD
 
