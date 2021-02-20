@@ -92,7 +92,7 @@
 // only possible on the DDC/DUC RF board
 // and by using 192ksps sample rate for audio processing
 // tested on F7 & H7
-//#define USE_WFM
+#define USE_WFM
 
 // Fast convolution filtering
 // experimental at the moment DD4WH, 2018_08_18

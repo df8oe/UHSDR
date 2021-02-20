@@ -1000,6 +1000,12 @@ static const float32_t biquad_passthrough[] = { 1, 0, 0, 0, 0 };
 #define PILOTTONEDISPLAYALPHA 0.002f
 #define WFM_LOCK_MAG_THRESHOLD     0.06f //0.013f // 0.001f bei taps==20 //0.108f // lock error magnitude
 #define FMDC_ALPHA 0.001  //time constant for DC removal filter
+#define WFM_DEEMPHASIS  50e-6f //EU: 50 us -> tau = 50e-6, USA: 75 us -> tau = 75e-6
+#define WFM_DE (-1.0f / (WFM_SAMPLE_RATE * WFM_DEEMPHASIS))
+const float32_t WFM_deemp_alpha = 1.0f - expf(WFM_DE);
+//const float32_t WFM_deemp_alpha = 1.0 - expf(-1.0f / (WFM_SAMPLE_RATE * WFM_DEEMPHASIS));
+const float32_t WFM_onem_deemp_alpha = 1.0f - WFM_deemp_alpha;
+
 
 static arm_fir_instance_f32 UKW_FIR_HILBERT_I;
 static float32_t UKW_FIR_HILBERT_I_Coef[UKW_FIR_HILBERT_NUM_TAPS];
@@ -1188,6 +1194,27 @@ void AudioDriver_WFM_Setup()
 
      // IIR notch filter 19kHz
 
+}
+#endif
+
+#ifdef USE_WFM
+float32_t deemphasis_wfm_ff (float32_t* input, float32_t* output, int input_size, int sample_rate, float32_t last_output)
+{
+  /* taken from libcsdr
+    typical time constant (tau) values:
+    WFM transmission in USA: 75 us -> tau = 75e-6
+    WFM transmission in EU:  50 us -> tau = 50e-6
+    More info at: http://www.cliftonlaboratories.com/fm_receivers_and_de-emphasis.htm
+    Simulate in octave: tau=75e-6; dt=1/48000; alpha = dt/(tau+dt); freqz([alpha],[1 -(1-alpha)])
+  */
+      output[0] = WFM_deemp_alpha * input[0] + (WFM_onem_deemp_alpha) * last_output;
+
+      for (unsigned i = 1; i < input_size; i++) //@deemphasis_wfm_ff
+      {
+          output[i] = WFM_deemp_alpha * input[i] + (WFM_onem_deemp_alpha) * output[i - 1]; //this is the simplest IIR LPF
+      }
+
+      return output[input_size - 1];
 }
 #endif
 
@@ -2977,6 +3004,8 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
     static float32_t WFM_tmp_im = 0.0;
     static float32_t WFM_phzerror = 1.0;
     static float32_t LminusR = 2.0;
+    static float32_t rawFM_old_L = 0.0;
+    static float32_t rawFM_old_R = 0.0;
 
       //initialize the PLL
     const float32_t  m_PilotNcoLLimit = m_PilotNcoFreq - PILOTPLL_RANGE * WFM_SAMPLE_RATE_NORM;    //clamp FM PLL NCO
@@ -3098,11 +3127,11 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
 
          //   5   lowpass filter 15kHz & deemphasis
                 // Right channel: lowpass filter with 15kHz Fstop & deemphasis
-                //rawFM_old_R = deemphasis_wfm_ff (float_buffer_R, FFT_buffer, WFM_DEC_SAMPLES, WFM_SAMPLE_RATE / 4.0f, rawFM_old_R);
+                rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, iq_p->i_buffer, blockSize, WFM_SAMPLE_RATE, rawFM_old_R);
                 //arm_biquad_cascade_df1_f32 (&biquad_WFM_15k_R, FFT_buffer, float_buffer_R, WFM_DEC_SAMPLES);
 
                 // Left channel: lowpass filter with 15kHz Fstop & deemphasis
-                //rawFM_old_L = deemphasis_wfm_ff (iFFT_buffer, float_buffer_L, WFM_DEC_SAMPLES, WFM_SAMPLE_RATE / 4.0f, rawFM_old_L);
+                rawFM_old_L = deemphasis_wfm_ff (iq_p->q_buffer, iq_p->q_buffer, blockSize, WFM_SAMPLE_RATE, rawFM_old_L);
                 //arm_biquad_cascade_df1_f32 (&biquad_WFM_15k_L, float_buffer_L, FFT_buffer, WFM_DEC_SAMPLES);
 
          //   6   notch filter 19kHz to eliminate pilot tone from audio
