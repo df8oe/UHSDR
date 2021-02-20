@@ -1453,7 +1453,9 @@ void AudioDriver_SetProcessingChain(uint8_t dmod_mode, bool reset_dsp_nr)
 
     AudioDriver_DecimIq_Setup();
 
+#ifdef USE_WFM
     AudioDriver_WFM_Setup();
+#endif
 
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      * End of coefficient calculation and setting for cascaded biquad
