@@ -3265,7 +3265,11 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
 
     const int32_t iq_freq_mode = ts.iq_freq_mode;
 #ifdef USE_TWO_CHANNEL_AUDIO
-    const bool use_stereo = dmod_mode == DEMOD_WFM || ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
+    #ifdef USE_WFM
+        const bool use_stereo = dmod_mode == DEMOD_WFM || ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
+    #else
+        const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
+    #endif
 #else
     const bool use_stereo = false;
 #endif
