@@ -161,7 +161,7 @@ const ConfigEntryDescriptor ConfigEntryInfo[] =
 #endif
 	//   { ConfigEntry_UInt8, EEPROM_MAX_RX_GAIN,&ts.max_rf_gain,MAX_RF_GAIN_DEFAULT,0,MAX_RF_GAIN_MAX},
     { ConfigEntry_Int16, EEPROM_TX_AUDIO_COMPRESS,&ts.tx_comp_level,TX_AUDIO_COMPRESSION_DEFAULT,TX_AUDIO_COMPRESSION_MIN,TX_AUDIO_COMPRESSION_MAX}, // NO INT DEFAULT PROBLEM
-    { ConfigEntry_UInt8, EEPROM_TX_DISABLE,&ts.tx_disable,0,0,1},
+    { ConfigEntry_UInt8, EEPROM_TX_DISABLE,&ts.tx_disable,0,0,0xff},
     { ConfigEntry_UInt16, EEPROM_FLAGS1,&ts.flags1,FLAGS1_CONFIG_DEFAULT,0,0xffff},
     { ConfigEntry_UInt16, EEPROM_FLAGS2,&ts.flags2,FLAGS2_CONFIG_DEFAULT,0,0xffff},
     { ConfigEntry_UInt16, EEPROM_VERSION_MINOR,&ts.version_number_minor,0,0,255},
