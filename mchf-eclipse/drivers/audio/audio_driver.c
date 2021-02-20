@@ -3076,7 +3076,7 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
 
     static float32_t I_old = 0.2;
     static float32_t Q_old = 0.2;
-    static float32_t m_PilotPhaseAdjust = 1.42; // 0.15
+    static float32_t m_PilotPhaseAdjust = 0.0f; // 0.15
     //const float32_t WFM_gain = 0.24;
     static float32_t m_PilotNcoPhase = 0.0;
     static float32_t WFM_fil_out = 0.0;
@@ -3195,7 +3195,7 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
               {
                 //    4   multiply audio with 2 times (2 x 19kHz) the phase of the pilot tone --> L-R signal !
                   // LminusR = (stereo_factor / 100.0f) * UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 2.0f);
-                      LminusR = (1.2f) * UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 2.0f);
+                      LminusR = (3.70f) * UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 2.0f);
 
                       iq_p->q_buffer[i] = UKW_buffer_0[i]; // MPX-Signal: L+R
                       UKW_buffer_1[i] = LminusR;          // L-R - Signal
@@ -3265,7 +3265,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
 
     const int32_t iq_freq_mode = ts.iq_freq_mode;
 #ifdef USE_TWO_CHANNEL_AUDIO
-    const bool use_stereo = ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
+    const bool use_stereo = dmod_mode == DEMOD_WFM || ((dmod_mode == DEMOD_IQ || dmod_mode == DEMOD_SSBSTEREO || (dmod_mode == DEMOD_SAM && ads.sam_sideband == SAM_SIDEBAND_STEREO)) && ts.stereo_enable);
 #else
     const bool use_stereo = false;
 #endif
