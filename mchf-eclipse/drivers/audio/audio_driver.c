@@ -848,7 +848,7 @@ void AudioDriver_CalcBandstop(float32_t coeffs[5], float32_t f0, float32_t FS)
 /**
  * @brief Biquad Filter Init Helper function to calculate a peak filter aka a narrow bandpass filter
  */
-void AudioDriver_CalcBandpass(float32_t coeffs[5], float32_t f0, float32_t FS)
+void AudioDriver_CalcBandpass(float32_t coeffs[], float32_t f0, float32_t FS, float32_t Q)
 {
     /*       // peak filter = peaking EQ
     f0 = ts.dsp.peak_frequency;
@@ -885,7 +885,6 @@ void AudioDriver_CalcBandpass(float32_t coeffs[5], float32_t f0, float32_t FS)
     coeffs[A2] = alpha - 1; // already negated!
      */
     // BPF: constant skirt gain, peak gain = Q
-    float32_t Q = 4; //
     float32_t BW = 0.03;
     float32_t w0 = 2 * PI * f0 / FS;
     float32_t alpha = sinf (w0) * sinhf( log(2) / 2 * BW * w0 / sinf(w0) ); //
@@ -988,9 +987,58 @@ static void AudioDriver_CalcNotch(float32_t coeffs[5], float32_t f0, float32_t B
 
 static const float32_t biquad_passthrough[] = { 1, 0, 0, 0, 0 };
 
+// used for FM radio WFM demodulation
+#define UKW_FIR_HILBERT_NUM_TAPS 10
+#define WFM_SAMPLE_RATE 192000.0f
+#define WFM_SAMPLE_RATE_NORM    (PI * 2.0f / WFM_SAMPLE_RATE) //to normalize Hz to radians
+#define PILOTPLL_FREQ     19000.0f  //Centerfreq of pilot tone
+#define PILOTPLL_RANGE    20.0f
+#define PILOTPLL_BW       50.0f // was 10.0, but then it did not lock properly
+#define PILOTPLL_ZETA     0.707f
+#define PILOTPLL_LOCK_TIME_CONSTANT 1.0f // lock filter time in seconds
+#define PILOTTONEDISPLAYALPHA 0.002f
+#define WFM_LOCK_MAG_THRESHOLD     0.06f //0.013f // 0.001f bei taps==20 //0.108f // lock error magnitude
+#define FMDC_ALPHA 0.001  //time constant for DC removal filter
+
+static arm_fir_instance_f32 UKW_FIR_HILBERT_I;
+static float32_t UKW_FIR_HILBERT_I_Coef[UKW_FIR_HILBERT_NUM_TAPS];
+static arm_fir_instance_f32 UKW_FIR_HILBERT_Q;
+static float32_t UKW_FIR_HILBERT_Q_Coef[UKW_FIR_HILBERT_NUM_TAPS];
+static float32_t UKW_FIR_HILBERT_I_State[IQ_BLOCK_SIZE + UKW_FIR_HILBERT_NUM_TAPS - 1]; // numTaps+blockSize-1
+static float32_t UKW_FIR_HILBERT_Q_State[IQ_BLOCK_SIZE + UKW_FIR_HILBERT_NUM_TAPS - 1];
+
+static arm_biquad_casd_df1_inst_f32 biquad_WFM_pilot_19k[2] =
+{
+        {
+                .numStages = 1,
+                .pCoeffs = (float32_t *)(float32_t [])
+                {
+                    1,0,0,0,0
+                }, // 1 x 5 = 5 coefficients
+
+                .pState = (float32_t *)(float32_t [])
+                {
+                    0,0,0,0
+                } // 1 x 4 = 4 state variables
+        },
+
+        {
+                .numStages = 1,
+                .pCoeffs = (float32_t *)(float32_t [])
+                {
+                    1,0,0,0,0
+                }, // 1 x 5 = 5 coefficients
+
+                .pState = (float32_t *)(float32_t [])
+                {
+                    0,0,0,0
+                } // 1 x 4 = 4 state variables
+        }
+};
 
 static arm_fir_decimate_instance_f32   DECIMATE_DOWN_I;
 static arm_fir_decimate_instance_f32   DECIMATE_DOWN_Q;
+
 
 /**
  * Setup filters for decimating IQ input into 48khz from the original sample rate
@@ -1004,178 +1052,138 @@ static arm_fir_decimate_instance_f32   DECIMATE_DOWN_Q;
 //
 const float32_t fir_96k_83[] = {41.84938219008083140E-6, 75.85731837601629480E-6, 80.72236884517649000E-6, 22.13491727714625410E-6,-109.3810516315026150E-6,-272.1638366071229600E-6,-370.4786479640264930E-6,-290.7938609398941030E-6, 27.85685852840283160E-6, 521.7548677608390340E-6, 977.7344510470936710E-6, 0.001095221907467245, 634.1800739624624160E-6,-408.2294725937611020E-6,-0.001691146770231551,-0.002587677180876103,-0.002435767702031182,-905.6529875632708130E-6, 0.001688779658474947, 0.004333412708844624, 0.005629939522457341, 0.004429152482673922, 532.2904462448402680E-6,-0.004900357679862948,-0.009539944891464324,-0.010750736935642938,-0.006861243732365132, 0.001698164460925769, 0.012004482287531206, 0.019388046016257380, 0.019238199782734947, 0.009263297299788430,-0.008744319667649837,-0.028549915060922113,-0.040970970278695541,-0.036928889949865665,-0.011041751180998691, 0.035629967922116410, 0.094892963129413407, 0.153286317127012656, 0.196025721884426712, 0.211699218628406100, 0.196025721884426712, 0.153286317127012656, 0.094892963129413407, 0.035629967922116410,-0.011041751180998691,-0.036928889949865665,-0.040970970278695541,-0.028549915060922113,-0.008744319667649837, 0.009263297299788430, 0.019238199782734947, 0.019388046016257380, 0.012004482287531206, 0.001698164460925769,-0.006861243732365132,-0.010750736935642938,-0.009539944891464324,-0.004900357679862948, 532.2904462448402680E-6, 0.004429152482673922, 0.005629939522457341, 0.004333412708844624, 0.001688779658474947,-905.6529875632708130E-6,-0.002435767702031182,-0.002587677180876103,-0.001691146770231551,-408.2294725937611020E-6, 634.1800739624624160E-6, 0.001095221907467245, 977.7344510470936710E-6, 521.7548677608390340E-6, 27.85685852840283160E-6,-290.7938609398941030E-6,-370.4786479640264930E-6,-272.1638366071229600E-6,-109.3810516315026150E-6, 22.13491727714625410E-6, 80.72236884517649000E-6, 75.85731837601629480E-6, 41.84938219008083140E-6};
 const float32_t fir_192k_83[] = {47.95040771559608570E-6, 75.88045984174966920E-6, 100.8980446371833890E-6, 110.5495960297998580E-6, 89.03159123287152000E-6, 20.29154629454684770E-6,-107.3049467984177600E-6,-295.3981741742603050E-6,-530.2884907322999200E-6,-779.3022794385648240E-6,-990.4274287225654230E-6,-0.001096493325254062,-0.001024499135724526,-709.6895776405295920E-6,-112.7847661144799640E-6, 762.3886982913388690E-6, 0.001854481658739783, 0.003037350708721791, 0.004123434343633181, 0.004880045235466343, 0.005058886532328527, 0.004436662064215503, 0.002862121786908406, 302.7350864706432960E-6,-0.003117112050832530,-0.007094563235757837,-0.011150174756312420,-0.014657254918994965,-0.016898803924735396,-0.017147759377822053,-0.014761950007754664,-0.009281746941768599,-516.5503547907412670E-6, 0.011393576703644199, 0.025952461314449744, 0.042325565547865186, 0.059402179135994673, 0.075896976215773293, 0.090479898197635161, 0.101918718444280423, 0.109216169300307142, 0.111723632690906100, 0.109216169300307142, 0.101918718444280423, 0.090479898197635161, 0.075896976215773293, 0.059402179135994673, 0.042325565547865186, 0.025952461314449744, 0.011393576703644199,-516.5503547907412670E-6,-0.009281746941768599,-0.014761950007754664,-0.017147759377822053,-0.016898803924735396,-0.014657254918994965,-0.011150174756312420,-0.007094563235757837,-0.003117112050832530, 302.7350864706432960E-6, 0.002862121786908406, 0.004436662064215503, 0.005058886532328527, 0.004880045235466343, 0.004123434343633181, 0.003037350708721791, 0.001854481658739783, 762.3886982913388690E-6,-112.7847661144799640E-6,-709.6895776405295920E-6,-0.001024499135724526,-0.001096493325254062,-990.4274287225654230E-6,-779.3022794385648240E-6,-530.2884907322999200E-6,-295.3981741742603050E-6,-107.3049467984177600E-6, 20.29154629454684770E-6, 89.03159123287152000E-6, 110.5495960297998580E-6, 100.8980446371833890E-6, 75.88045984174966920E-6, 47.95040771559608570E-6};
-/*
-const float32_t fir_half_83[] =
-                      {
-                              0.014747708857823375,
 
-                                0.04650125427457192,
-
-                                0.05269743000659975,
-
-                                0.025741292611793972,
-
-                                -0.014380874959258792,
-
-                                -0.020135817579941297,
-
-                                0.0038984364434740864,
-
-                                0.01632726798757871,
-
-                                -0.00046911830922178504,
-
-                                -0.013927203899215253,
-
-                                -0.0013687839549392134,
-
-                                0.012774617845697517,
-
-                                0.0025740635930506933,
-
-                                -0.012233803951668957,
-
-                                -0.0036728189590829363,
-
-                                0.012138362251685967,
-
-                                0.0048692265843418795,
-
-                                -0.012289672015820931,
-
-                                -0.006279673903635075,
-
-                                0.012568936095670762,
-
-                                0.00794345510110177,
-
-                                -0.012951865469799283,
-
-                                -0.009979470280688223,
-
-                                0.013363226160432489,
-
-                                0.012465615695020141,
-
-                                -0.013757154923551434,
-
-                                -0.015523099208787626,
-
-                                0.014140778408836584,
-
-                                0.01936764061712684,
-
-                                -0.014581509034267474,
-
-                                -0.024560120074063312,
-
-                                0.014871356694821036,
-
-                                0.03167366462807286,
-
-                                -0.015211681809141517,
-
-                                -0.04259258450679741,
-
-                                0.01543107183913201,
-
-                                0.061619284702166516,
-
-                                -0.015535803725913514,
-
-                                -0.10482208875597428,
-
-                                0.015675274224205327,
-
-                                0.31785647492338154,
-
-                                0.48423985919086004,
-
-                                0.31785647492338154,
-
-                                0.015675274224205327,
-
-                                -0.10482208875597428,
-
-                                -0.015535803725913514,
-
-                                0.061619284702166516,
-
-                                0.01543107183913201,
-
-                                -0.04259258450679741,
-
-                                -0.015211681809141517,
-
-                                0.03167366462807286,
-
-                                0.014871356694821036,
-
-                                -0.024560120074063312,
-
-                                -0.014581509034267474,
-
-                                0.01936764061712684,
-
-                                0.014140778408836584,
-
-                                -0.015523099208787626,
-
-                                -0.013757154923551434,
-
-                                0.012465615695020141,
-
-                                0.013363226160432489,
-
-                                -0.009979470280688223,
-
-                                -0.012951865469799283,
-
-                                0.00794345510110177,
-
-                                0.012568936095670762,
-
-                                -0.006279673903635075,
-
-                                -0.012289672015820931,
-
-                                0.0048692265843418795,
-
-                                0.012138362251685967,
-
-                                -0.0036728189590829363,
-
-                                -0.012233803951668957,
-
-                                0.0025740635930506933,
-
-                                0.012774617845697517,
-
-                                -0.0013687839549392134,
-
-                                -0.013927203899215253,
-
-                                -0.00046911830922178504,
-
-                                0.01632726798757871,
-
-                                0.0038984364434740864,
-
-                                -0.020135817579941297,
-
-                                -0.014380874959258792,
-
-                                0.025741292611793972,
-
-                                0.05269743000659975,
-
-                                0.04650125427457192,
-
-                                0.014747708857823375
-                      };
-*/
-//#define DOWN_IQ_NUM_TAPS  (sizeof (fir_half_83) / sizeof (fir_half_83[0]))
 #define DOWN_IQ_NUM_TAPS 83
+
+    //////////////////////////////////////////////////////////////////////
+    //  Call to setup filter parameters
+    // SampleRate in Hz
+    // FLowcut is low cutoff frequency of filter in Hz
+    // FHicut is high cutoff frequency of filter in Hz
+    // Offset is the CW tone offset frequency
+    // cutoff frequencies range from -SampleRate/2 to +SampleRate/2
+    //  HiCut must be greater than LowCut
+    //    example to make 2700Hz USB filter:
+    //  SetupParameters( 100, 2800, 0, 48000);
+    //////////////////////////////////////////////////////////////////////
+
+    //void calc_cplx_FIR_coeffs (float * coeffs_I, float * coeffs_Q, int numCoeffs, float32_t fc, float32_t Astop, int type, float dfc, float SampleRate)
+    void AudioDriver_Calc_Cplx_FIR_Coeffs (float * coeffs_I, float * coeffs_Q, int numCoeffs, float32_t FLoCut, float32_t FHiCut, float SampleRate)
+    // pointer to coefficients variable, no. of coefficients to calculate, frequency where it happens, stopband attenuation in dB,
+    // filter type, half-filter bandwidth (only for bandpass and notch)
+
+    //void CFastFIR::SetupParameters( TYPEREAL FLoCut, TYPEREAL FHiCut,
+    //                TYPEREAL Offset, TYPEREAL SampleRate)
+    {
+
+      //calculate some normalized filter parameters
+      float32_t nFL = FLoCut / SampleRate;
+      float32_t nFH = FHiCut / SampleRate;
+      float32_t nFc = (nFH - nFL) / 2.0; //prototype LP filter cutoff
+      float32_t nFs = PI * (nFH + nFL); //2 PI times required frequency shift (FHiCut+FLoCut)/2
+      float32_t fCenter = 0.5 * (float32_t)(numCoeffs - 1); //floating point center index of FIR filter
+
+      for (int i = 0; i < numCoeffs; i++) //zero pad entire coefficient buffer
+      {
+        coeffs_I[i] = 0.0;
+        coeffs_Q[i] = 0.0;
+      }
+
+      //create LP FIR windowed sinc, sin(x)/x complex LP filter coefficients
+      for (int i = 0; i < numCoeffs; i++)
+      {
+        float32_t x = (float32_t)i - fCenter;
+        float32_t z;
+        if ( abs((float)i - fCenter) < 0.01) //deal with odd size filter singularity where sin(0)/0==1
+          z = 2.0 * nFc;
+        else
+          switch (1) { // FIXME
+            case 1:    // 4-term Blackman-Harris --> this is what Power SDR uses
+              z = (float32_t)sinf(TWO_PI * x * nFc) / (PI * x) *
+                  (0.35875 - 0.48829 * cosf( (TWO_PI * i) / (numCoeffs - 1) )
+                   + 0.14128 * cosf( (FOURPI * i) / (numCoeffs - 1) )
+                   - 0.01168 * cosf( (SIXPI * i) / (numCoeffs - 1) ) );
+              break;
+            case 2:
+              z = (float32_t)sinf(TWO_PI * x * nFc) / (PI * x) *
+                  (0.355768 - 0.487396 * cosf( (TWO_PI * i) / (numCoeffs - 1) )
+                   + 0.144232 * cosf( (FOURPI * i) / (numCoeffs - 1) )
+                   - 0.012604 * cosf( (SIXPI * i) / (numCoeffs - 1) ) );
+              break;
+            case 3: // cosine
+              z = (float32_t)sinf(TWO_PI * x * nFc) / (PI * x) *
+                  cosf((PI * (float32_t)i) / (numCoeffs - 1));
+              break;
+            case 4: // Hann
+              z = (float32_t)sinf(TWO_PI * x * nFc) / (PI * x) *
+                  0.5 * (float32_t)(1.0 - (cosf(PI * 2 * (float32_t)i / (float32_t)(numCoeffs - 1))));
+              break;
+            default: // Blackman-Nuttall window
+              z = (float32_t)sinf(TWO_PI * x * nFc) / (PI * x) *
+                  (0.3635819
+                   - 0.4891775 * cosf( (TWO_PI * i) / (numCoeffs - 1) )
+                   + 0.1365995 * cosf( (FOURPI * i) / (numCoeffs - 1) )
+                   - 0.0106411 * cosf( (SIXPI * i) / (numCoeffs - 1) ) );
+              break;
+          }
+        //shift lowpass filter coefficients in frequency by (hicut+lowcut)/2 to form bandpass filter anywhere in range
+        coeffs_I[i]   = z * cosf(nFs * x);
+        coeffs_Q[i]   = z * sinf(nFs * x);
+      }
+    }
+
+
+float m_sinc(int m, float fc)
+{ // fc is f_cut/(Fsamp/2)
+  // m is between -M and M step 2
+  //
+  float x = m * PIH;
+  if (m == 0)
+    return 1.0f;
+  else
+    return sinf(x * fc) / (fc * x);
+}
+
+float32_t Izero (float32_t x)
+{
+  float32_t x2 = x / 2.0;
+  float32_t summe = 1.0;
+  float32_t ds = 1.0;
+  float32_t di = 1.0;
+  float32_t errorlimit = 1e-9;
+  float32_t tmp;
+  do
+  {
+    tmp = x2 / di;
+    tmp *= tmp;
+    ds *= tmp;
+    summe += ds;
+    di += 1.0;
+  }   while (ds >= errorlimit * summe);
+  return (summe);
+}  // END Izero
+
+void AudioDriver_WFM_Setup()
+{
+    float32_t coeffs[5];
+    const float32_t *coeffs_ptr;
+
+    /****************************************************************************************
+        Coefficients for WFM Hilbert filters
+     ****************************************************************************************/
+     // calculate Hilbert filter pair for splitting of UKW MPX signal
+     AudioDriver_Calc_Cplx_FIR_Coeffs (UKW_FIR_HILBERT_I_Coef, UKW_FIR_HILBERT_Q_Coef, UKW_FIR_HILBERT_NUM_TAPS, (float32_t)17000, (float32_t)75000, (float)WFM_SAMPLE_RATE);
+
+     // Hilbert filters to generate PLL for 19kHz pilote tone
+     arm_fir_init_f32 (&UKW_FIR_HILBERT_I, UKW_FIR_HILBERT_NUM_TAPS, UKW_FIR_HILBERT_I_Coef, UKW_FIR_HILBERT_I_State, (uint32_t)IQ_BLOCK_SIZE);
+     arm_fir_init_f32 (&UKW_FIR_HILBERT_Q, UKW_FIR_HILBERT_NUM_TAPS, UKW_FIR_HILBERT_Q_Coef, UKW_FIR_HILBERT_Q_State, (uint32_t)IQ_BLOCK_SIZE);
+
+       // high Q IIR bandpass filter for wideband FM at 19k
+       AudioDriver_CalcBandpass(coeffs, 19000, WFM_SAMPLE_RATE, 200.0f);
+       coeffs_ptr = coeffs;
+       AudioDriver_SetBiquadCoeffsAllInstances(biquad_WFM_pilot_19k, 0, coeffs_ptr);
+
+}
 
 void AudioDriver_DecimIq_Setup()
 {
@@ -1303,7 +1311,7 @@ static void AudioDriver_SetRxTxAudioProcessingAudioFilters(uint8_t dmod_mode)
     // the peak filter is in biquad 1 and works at the decimated sample rate FSdec
     if(is_dsp_mpeak())
     {
-        AudioDriver_CalcBandpass(coeffs, ts.dsp.peak_frequency, FSdec);
+        AudioDriver_CalcBandpass(coeffs, ts.dsp.peak_frequency, FSdec, 4.0f);
         coeffs_ptr = coeffs;
     }
     else   //passthru
@@ -1438,6 +1446,8 @@ void AudioDriver_SetProcessingChain(uint8_t dmod_mode, bool reset_dsp_nr)
     CwDecode_Filter_Set();
 
     AudioDriver_DecimIq_Setup();
+
+    AudioDriver_WFM_Setup();
 
     /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      * End of coefficient calculation and setting for cascaded biquad
@@ -2868,6 +2878,235 @@ static void RxProcessor_DemodAudioPostprocessing(float32_t (*a_buffer)[AUDIO_BLO
 
 }
 
+// copied from https://www.dsprelated.com/showarticle/1052.php
+// Polynomial approximating arctangenet on the range -1,1.
+// Max error < 0.005 (or 0.29 degrees)
+static float ApproxAtan(float z)
+{
+    const float n1 = 0.97239411f;
+    const float n2 = -0.19194795f;
+    return (n1 + n2 * z * z) * z;
+}
+
+static float ApproxAtan2(float y, float x)
+{
+  if (x != 0.0f)
+  {
+    if (fabsf(x) > fabsf(y))
+    {
+      const float z = y / x;
+      if (x > 0.0f)
+      {
+        // atan2(y,x) = atan(y/x) if x > 0
+        return ApproxAtan(z);
+      }
+      else if (y >= 0.0f)
+      {
+        // atan2(y,x) = atan(y/x) + PI if x < 0, y >= 0
+        return ApproxAtan(z) + PI;
+      }
+      else
+      {
+        // atan2(y,x) = atan(y/x) - PI if x < 0, y < 0
+        return ApproxAtan(z) - PI;
+      }
+    }
+    else // Use property atan(y/x) = PI/2 - atan(x/y) if |y/x| > 1.
+    {
+      const float z = x / y;
+      if (y > 0.0f)
+      {
+        // atan2(y,x) = PI/2 - atan(x/y) if |y/x| > 1, y > 0
+        return -ApproxAtan(z) + HALF_PI;
+      }
+      else
+      {
+        // atan2(y,x) = -PI/2 - atan(x/y) if |y/x| > 1, y < 0
+        return -ApproxAtan(z) - HALF_PI;
+      }
+    }
+  }
+  else
+  {
+    if (y > 0.0f) // x = 0, y > 0
+    {
+      return HALF_PI;
+    }
+    else if (y < 0.0f) // x = 0, y < 0
+    {
+      return -HALF_PI;
+    }
+  }
+  return 0.0f; // x,y = 0. Could return NaN instead.
+}
+
+static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
+{
+    //const float32_t Pilot_tone_freq = 19000.0f;
+    const float32_t WFM_scaling_factor = 400.0f; //0.24f;
+
+    static float32_t I_old = 0.2;
+    static float32_t Q_old = 0.2;
+    static float32_t m_PilotPhaseAdjust = 0.17607; // 1.42
+    //const float32_t WFM_gain = 0.24;
+    static float32_t m_PilotNcoPhase = 0.0;
+    static float32_t WFM_fil_out = 0.0;
+    static float32_t WFM_del_out = 0.0;
+    static float32_t m_PilotNcoFreq = PILOTPLL_FREQ * WFM_SAMPLE_RATE_NORM; //freq offset to bring to baseband
+    float32_t UKW_buffer_0[IQ_BLOCK_SIZE];
+    static float32_t UKW_buffer_1[IQ_BLOCK_SIZE];
+    static float32_t UKW_buffer_2[IQ_BLOCK_SIZE];
+    static float32_t UKW_buffer_3[IQ_BLOCK_SIZE];
+    static float32_t UKW_buffer_4[IQ_BLOCK_SIZE];
+
+    static float32_t m_PilotPhase[IQ_BLOCK_SIZE];
+    float32_t WFM_Sin = 0.0;
+    float32_t WFM_Cos = 1.0;
+    static float32_t WFM_tmp_re = 0.0;
+    static float32_t WFM_tmp_im = 0.0;
+    static float32_t WFM_phzerror = 1.0;
+    static float32_t LminusR = 2.0;
+
+      //initialize the PLL
+    const float32_t  m_PilotNcoLLimit = m_PilotNcoFreq - PILOTPLL_RANGE * WFM_SAMPLE_RATE_NORM;    //clamp FM PLL NCO
+    const float32_t  m_PilotNcoHLimit = m_PilotNcoFreq + PILOTPLL_RANGE * WFM_SAMPLE_RATE_NORM;
+    const float32_t  m_PilotPllAlpha = 2.0 * PILOTPLL_ZETA * PILOTPLL_BW * WFM_SAMPLE_RATE_NORM; //
+    const float32_t  m_PilotPllBeta = (m_PilotPllAlpha * m_PilotPllAlpha) / (4.0 * PILOTPLL_ZETA * PILOTPLL_ZETA);
+    float32_t  m_PhaseErrorMagAve = 0.01;
+    const float32_t  m_PhaseErrorMagAlpha = 1.0f - expf(-1.0f/(WFM_SAMPLE_RATE * PILOTPLL_LOCK_TIME_CONSTANT));
+    const float32_t  one_m_m_PhaseErrorMagAlpha = 1.0f - m_PhaseErrorMagAlpha;
+    static uint8_t WFM_is_stereo = 1;
+
+    UKW_buffer_0[0] = WFM_scaling_factor * ApproxAtan2(I_old * iq_p->q_buffer[0] - iq_p->i_buffer[0] * Q_old,
+                     I_old * iq_p->i_buffer[0] + iq_p->q_buffer[0] * Q_old);
+
+    for (unsigned i = 1; i < blockSize; i++)
+    {
+         // KA7OEI: http://ka7oei.blogspot.com/2015/11/adding-fm-to-mchf-sdr-transceiver.html
+        UKW_buffer_0[i] = WFM_scaling_factor * ApproxAtan2(iq_p->i_buffer[i - 1] * iq_p->q_buffer[i] - iq_p->i_buffer[i] * iq_p->q_buffer[i - 1],
+                   iq_p->i_buffer[i - 1] * iq_p->i_buffer[i] + iq_p->q_buffer[i] * iq_p->q_buffer[i - 1]);
+    }
+
+     // take care of last sample of each block
+    I_old = iq_p->i_buffer[blockSize - 1];
+    Q_old = iq_p->q_buffer[blockSize - 1];
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // taken from cuteSDR and the excellent explanation by Wheatley (2013): thanks for that excellent piece of educational writing up!
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //    1   generate complex signal pair of I and Q
+          // Hilbert BP 10 - 75kHz
+    //    2   BPF 19kHz for pilote tone in both, I & Q
+    //    3   PLL for pilot tone in order to determine the phase of the pilot tone
+    //    4   multiply audio with 2 times (2 x 19kHz) the phase of the pilot tone --> L-R signal !
+     //   5   lowpass filter 15kHz
+     //   6   notch filter 19kHz to eliminate pilot tone from audio
+
+    //    1   generate complex signal pair of I and Q
+          // demodulated signal is in UKW_buffer_0
+            arm_fir_f32(&UKW_FIR_HILBERT_I, UKW_buffer_0, UKW_buffer_1, blockSize);
+            arm_fir_f32(&UKW_FIR_HILBERT_Q, UKW_buffer_0, UKW_buffer_2, blockSize);
+
+    //    2   BPF 19kHz for pilote tone in both, I & Q
+            arm_biquad_cascade_df1_f32 (&biquad_WFM_pilot_19k[0], UKW_buffer_1, UKW_buffer_3, blockSize);
+            arm_biquad_cascade_df1_f32 (&biquad_WFM_pilot_19k[1], UKW_buffer_2, UKW_buffer_4, blockSize);
+
+              // only used for fancy display ;-)
+              //Pilot_tone_freq = Pilot_tone_freq * (1.0f - PILOTTONEDISPLAYALPHA) + PILOTTONEDISPLAYALPHA * m_PilotNcoFreq * WFM_SAMPLE_RATE / 2.0f / PI;
+
+    //    3   PLL for pilot tone in order to determine the phase of the pilot tone
+              for (unsigned i = 0; i < blockSize; i++)
+              {
+                  WFM_Sin = arm_sin_f32(m_PilotNcoPhase);
+                  WFM_Cos = arm_cos_f32(m_PilotNcoPhase);
+
+                WFM_tmp_re = WFM_Cos * UKW_buffer_3[i] - WFM_Sin * UKW_buffer_4[i];
+                WFM_tmp_im = WFM_Cos * UKW_buffer_4[i] + WFM_Sin * UKW_buffer_3[i];
+                  WFM_phzerror = -ApproxAtan2(WFM_tmp_im, WFM_tmp_re);
+
+                  WFM_del_out = WFM_fil_out; // wdsp
+                m_PilotNcoFreq += (m_PilotPllBeta * WFM_phzerror);
+                if (m_PilotNcoFreq > m_PilotNcoHLimit)
+                {
+                  m_PilotNcoFreq = m_PilotNcoHLimit;
+                }
+                else if (m_PilotNcoFreq < m_PilotNcoLLimit)
+                {
+                  m_PilotNcoFreq = m_PilotNcoLLimit;
+                }
+                WFM_fil_out = m_PilotNcoFreq + m_PilotPllAlpha * WFM_phzerror;
+
+                m_PilotNcoPhase += WFM_del_out;
+                m_PilotPhase[i] = m_PilotNcoPhase + m_PilotPhaseAdjust;
+                // wrap round 2PI, modulus
+                while (m_PilotNcoPhase >= TPI)
+                {
+                  m_PilotNcoPhase -= TPI;
+                            //Serial.println(" wrap -TWO PI");
+                }
+                while (m_PilotNcoPhase < 0.0f)
+                {
+                  m_PilotNcoPhase += TPI;
+                            //Serial.println(" wrap +TWO PI");
+                }
+                m_PhaseErrorMagAve = one_m_m_PhaseErrorMagAlpha * m_PhaseErrorMagAve + m_PhaseErrorMagAlpha * WFM_phzerror * WFM_phzerror;
+                if(m_PhaseErrorMagAve < WFM_LOCK_MAG_THRESHOLD)
+                  WFM_is_stereo = 1;
+                  else
+                  WFM_is_stereo = 0;
+              }
+
+    // FIXME !!!
+    WFM_is_stereo = 1;
+            if(WFM_is_stereo)
+            { //if pilot tone present, do stereo demuxing
+              for(unsigned i = 0; i < blockSize; i++)
+              {
+                //    4   multiply audio with 2 times (2 x 19kHz) the phase of the pilot tone --> L-R signal !
+                  // LminusR = (stereo_factor / 100.0f) * UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 2.0f);
+                      LminusR = (2.0f) * UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 2.0f);
+
+                      iq_p->q_buffer[i] = UKW_buffer_0[i]; // MPX-Signal: L+R
+                      UKW_buffer_1[i] = LminusR;          // L-R - Signal
+                      //UKW_buffer_2[i] = UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 3.0f); // is this the RDS signal at 57kHz ?
+              }
+            // STEREO post-processing
+                //if(decimate_WFM)
+                //{
+            // decimate-by-4 --> 64ksps
+              //arm_fir_decimate_f32(&WFM_decimation_R, float_buffer_R, float_buffer_R, BUFFER_SIZE * WFM_BLOCKS);
+              //arm_fir_decimate_f32(&WFM_decimation_L, iFFT_buffer, iFFT_buffer, BUFFER_SIZE * WFM_BLOCKS);
+
+                // make L & R channels
+              for(unsigned i = 0; i < blockSize; i++)
+              {
+                float32_t hilfsV = iq_p->q_buffer[i]; // L+R
+                iq_p->q_buffer[i] = iq_p->q_buffer[i] + UKW_buffer_1[i]; // left channel
+                iq_p->i_buffer[i] = hilfsV - UKW_buffer_1[i]; // right channel
+              }
+
+         //   5   lowpass filter 15kHz & deemphasis
+                // Right channel: lowpass filter with 15kHz Fstop & deemphasis
+                //rawFM_old_R = deemphasis_wfm_ff (float_buffer_R, FFT_buffer, WFM_DEC_SAMPLES, WFM_SAMPLE_RATE / 4.0f, rawFM_old_R);
+                //arm_biquad_cascade_df1_f32 (&biquad_WFM_15k_R, FFT_buffer, float_buffer_R, WFM_DEC_SAMPLES);
+
+                // Left channel: lowpass filter with 15kHz Fstop & deemphasis
+                //rawFM_old_L = deemphasis_wfm_ff (iFFT_buffer, float_buffer_L, WFM_DEC_SAMPLES, WFM_SAMPLE_RATE / 4.0f, rawFM_old_L);
+                //arm_biquad_cascade_df1_f32 (&biquad_WFM_15k_L, float_buffer_L, FFT_buffer, WFM_DEC_SAMPLES);
+
+         //   6   notch filter 19kHz to eliminate pilot tone from audio
+                //arm_biquad_cascade_df1_f32 (&biquad_WFM_notch_19k_R, float_buffer_R, float_buffer_L, WFM_DEC_SAMPLES);
+                //arm_biquad_cascade_df1_f32 (&biquad_WFM_notch_19k_L, FFT_buffer, iFFT_buffer, WFM_DEC_SAMPLES);
+            }
+            else
+            {
+                for(unsigned i = 0; i < blockSize; i++)
+                {
+                    iq_p->q_buffer[i] = iq_p->i_buffer[i] = 800.0f * UKW_buffer_0[i]; // right channel
+                }
+            }
+}
+
 
 /**
  * Gets IQ data as input, runs the rx processing on the input signal, leaves audio data in DMA buffer
@@ -2883,7 +3122,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
 	// it is driven with 32 samples in the complex buffer scr, meaning 32 * I AND 32 * Q
 	// blockSize is thus 32, DD4WH 2018_02_06
 
-    // we copy volatile variables which are used multiple times to local consts to let the compiler to its optimization magic
+    // we copy volatile variables which are used multiple times to local consts to let the compiler do its optimization magic
     // since we are in an interrupt, no one will change these anyway
     // shaved off a few bytes of code
     const uint8_t dmod_mode = ts.dmod_mode;
@@ -3000,6 +3239,21 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
 
         AudioDriver_SpectrumZoomProcessSamples(&adb.iq_buf, iqBlockSize);
 
+        // for WFM demodulation, do not decimate, but stay at 192ksps sample rate
+       //if(1)
+#ifdef USE_WFM
+        if(dmod_mode == DEMOD_WFM)
+        {
+            AudioDriver_Demod_WFM(&adb.iq_buf, iqBlockSize); // has to demodulate and pack everything into adb.a_buffer[0], audio_blockSize and adb.a_buffer[1], audio_blockSize
+
+            arm_fir_decimate_f32(&DECIMATE_DOWN_I, adb.iq_buf.i_buffer, adb.a_buffer[1], iqBlockSize );
+            arm_fir_decimate_f32(&DECIMATE_DOWN_Q, adb.iq_buf.q_buffer, adb.a_buffer[0], iqBlockSize );
+            signal_active = true;
+        }
+        else
+#endif
+        {
+
         AudioDriver_DecimIqDown_Run(&adb.iq_buf, iqBlockSize);
         // from here on we have 48khz IQ
 
@@ -3113,6 +3367,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
                 // at this point we are at the decimated audio sample rate
                 // we support multiple rates
                 // here also the various digital mode modems are called
+                // interpolation is done in this function
                 RxProcessor_DemodAudioPostprocessing(adb.a_buffer, audio_blockSize, blockSizeDecim, ads.decimated_freq, use_stereo);
                 // we get back blockSize audio at full sample rate
 
@@ -3138,6 +3393,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
             }
 #endif
         }
+    } // End of if(dmod_mode == DEMOD_WFM)
+
     }
 
     // at this point we have audio at AUDIO_SAMPLE_RATE in our adb.a_buffer[1] (and [0] if we are in stereo)
@@ -3197,6 +3454,32 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         softdds_addSingleTone(&ads.beep, adb.a_buffer[1], audio_blockSize, ads.beep_loudness_factor);
 #endif
     }
+
+#if 0
+    // Gain correction due to different interpolation factors depending on IQ_SAMPLE_RATE
+    if(IQ_SAMPLE_RATE != 48000)
+    {
+        float32_t GAIN_FACTOR = 1.0f;
+
+        switch (IQ_SAMPLE_RATE)
+        {
+            case 96000:
+                GAIN_FACTOR = 2.0f;
+                break;
+            case 192000:
+                GAIN_FACTOR = 4.0f;
+                break;
+            default:
+                break;
+        }
+
+        for(int i=0; i < audio_blockSize; i++)
+        {
+            adb.a_buffer[1][i] = adb.a_buffer[1][i] * GAIN_FACTOR;
+            adb.a_buffer[0][i] = adb.a_buffer[0][i] * GAIN_FACTOR;
+        }
+    }
+#endif
 
     // Transfer processed audio to DMA buffer
     for(int i=0; i < audio_blockSize; i++)                            // transfer to DMA buffer and do conversion to INT

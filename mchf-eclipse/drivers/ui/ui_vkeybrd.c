@@ -891,7 +891,7 @@ const VKey Keys_ModSel480x320[]={
 		{.ShortFnc=UiVk_ModSelVKeyCallBackShort, .ShortPar=DEMOD_CW|(1<<8), .KeyText="CW-L", .LongFnc=UiVk_ModSelVKeyToggleCW,.TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
 		{.ShortFnc=UiVk_ModSelVKeyCallBackShort, .ShortPar=DEMOD_CW|(0<<8), .KeyText="CW-U", .LongFnc=UiVk_ModSelVKeyToggleCW,.TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
 		{.ShortFnc=UiVk_ModSelVKeyCallBackShort, .ShortPar=DEMOD_LSB,		.KeyText="LSB", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
-		{.ShortFnc=UiVk_ModSelVKeyCallBackShort, .ShortPar=DEMOD_USB,		.KeyText="USB", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
+        {.ShortFnc=UiVk_ModSelVKeyCallBackShort, .ShortPar=DEMOD_USB,       .KeyText="USB", .TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
 		{.ShortFnc=UiVk_ModSelVKeyCallBackShort, .ShortPar=DEMOD_AM, 		.KeyText="AM", .LongFnc=UiVk_ModSelVKeyToggleAM,.TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
 		{.ShortFnc=UiVk_ModSelVKeyCallBackShort, .ShortPar=DEMOD_FM, 		.KeyText="FM", .LongFnc=UiVk_ModSelVKeyToggleFM,.TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
 		{.ShortFnc=UiVk_ModSelVKeyCallBackShort, .ShortPar=DEMOD_SAM|(0<<8),.KeyText="SAM", .LongFnc=UiVk_ModSelVKeyToggleSAM,.TextColor=col_Keys_BndSel_npr, .PressedTextColor=col_Keys_BndSel_pr},
