@@ -1051,7 +1051,6 @@ static const float32_t biquad_passthrough[] = { 1, 0, 0, 0, 0 };
 #define PILOTPLL_ZETA                   0.707f
 #define PILOTPLL_LOCK_TIME_CONSTANT     1.0f // lock filter time in seconds
 #define PILOTTONEDISPLAYALPHA           0.002f
-#define WFM_LOCK_MAG_THRESHOLD          0.06f //0.013f // 0.001f bei taps==20 //0.108f // lock error magnitude
 #define FMDC_ALPHA                      0.001  //time constant for DC removal filter
 #define WFM_DEEMPHASIS                  50e-6f //EU: 50 us -> tau = 50e-6, USA: 75 us -> tau = 75e-6
 #define WFM_DE                          (-1.0f / (WFM_SAMPLE_RATE * WFM_DEEMPHASIS))
@@ -3074,11 +3073,12 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
     //const float32_t Pilot_tone_freq = 19000.0f;
     uint32_t blockSizeDec = blockSize / 4;
 
-    const float32_t WFM_scaling_factor = 400.0f; // empirically derived
+    float32_t WFM_scaling_factor = 800.0f; //(float32_t)(ts.dsp.notch_frequency) ; //400.0f; // empirically derived
+
+//    const float32_t WFM_LOCK_MAG_THRESHOLD = 0.000015; //(ts.dsp.notch_frequency / 100000.0f); // 0.06f //0.013f // 0.001f bei taps==20 //0.108f // lock error magnitude
 
     static float32_t I_old = 0.2;
     static float32_t Q_old = 0.2;
-    //    static float32_t m_PilotPhaseAdjust = 0.0f; // 0.15
     float32_t m_PilotPhaseAdjust = 1.7f; // (ts.dsp.notch_frequency / 1000.0f); // temporarily recycled the variable for empirical testing
     //const float32_t WFM_gain = 0.24;
     static float32_t m_PilotNcoPhase = 0.0;
@@ -3106,10 +3106,10 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
     const float32_t  m_PilotNcoHLimit = m_PilotNcoFreq + PILOTPLL_RANGE * WFM_SAMPLE_RATE_NORM;
     const float32_t  m_PilotPllAlpha = 2.0 * PILOTPLL_ZETA * PILOTPLL_BW * WFM_SAMPLE_RATE_NORM; //
     const float32_t  m_PilotPllBeta = (m_PilotPllAlpha * m_PilotPllAlpha) / (4.0 * PILOTPLL_ZETA * PILOTPLL_ZETA);
-    float32_t  m_PhaseErrorMagAve = 0.01;
-    const float32_t  m_PhaseErrorMagAlpha = 1.0f - expf(-1.0f/(WFM_SAMPLE_RATE * PILOTPLL_LOCK_TIME_CONSTANT));
-    const float32_t  one_m_m_PhaseErrorMagAlpha = 1.0f - m_PhaseErrorMagAlpha;
-    static uint8_t WFM_is_stereo = 1;
+//    float32_t  m_PhaseErrorMagAve = 0.01;
+//    const float32_t  m_PhaseErrorMagAlpha = 1.0f - expf(-1.0f/(WFM_SAMPLE_RATE * PILOTPLL_LOCK_TIME_CONSTANT));
+//    const float32_t  one_m_m_PhaseErrorMagAlpha = 1.0f - m_PhaseErrorMagAlpha;
+//    static uint8_t WFM_is_stereo = 1;
 
     UKW_buffer_0[0] = WFM_scaling_factor * ApproxAtan2(I_old * iq_p->q_buffer[0] - iq_p->i_buffer[0] * Q_old,
                      I_old * iq_p->i_buffer[0] + iq_p->q_buffer[0] * Q_old);
@@ -3129,12 +3129,14 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
     // taken from cuteSDR and the excellent explanation by Wheatley (2013): thanks for that excellent piece of educational writing up!
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //    1   generate complex signal pair of I and Q
-          // Hilbert BP 10 - 75kHz
+    //        Hilbert BP 10 - 75kHz
     //    2   BPF 19kHz for pilote tone in both, I & Q
     //    3   PLL for pilot tone in order to determine the phase of the pilot tone
     //    4   multiply audio with 2 times (2 x 19kHz) the phase of the pilot tone --> L-R signal !
-     //   5   lowpass filter 15kHz
-     //   6   notch filter 19kHz to eliminate pilot tone from audio
+    //    5   decimate-by-4
+    //    6   De-emphasis & lowpass filter 15kHz
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //    1   generate complex signal pair of I and Q
           // demodulated signal is in UKW_buffer_0
@@ -3183,29 +3185,30 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
                   m_PilotNcoPhase += TPI;
                             //Serial.println(" wrap +TWO PI");
                 }
-                m_PhaseErrorMagAve = one_m_m_PhaseErrorMagAlpha * m_PhaseErrorMagAve + m_PhaseErrorMagAlpha * WFM_phzerror * WFM_phzerror;
+/*                m_PhaseErrorMagAve = one_m_m_PhaseErrorMagAlpha * m_PhaseErrorMagAve + m_PhaseErrorMagAlpha * WFM_phzerror * WFM_phzerror;
                 if(m_PhaseErrorMagAve < WFM_LOCK_MAG_THRESHOLD)
                   WFM_is_stereo = 1;
                   else
                   WFM_is_stereo = 0;
+*/
               }
 
-    // FIXME !!!
-    WFM_is_stereo = 1;
-            if(WFM_is_stereo)
+    //WFM_is_stereo = 1;
+    //        if(WFM_is_stereo)
+            if(ts.stereo_enable)
             { //if pilot tone present, do stereo demuxing
               for(unsigned i = 0; i < blockSize; i++)
               {
-                //    4   multiply audio with 2 times (2 x 19kHz) the phase of the pilot tone --> L-R signal !
+    //    4   multiply audio with 2 times (2 x 19kHz) the phase of the pilot tone --> L-R signal !
 
                       LminusR = (2.0f) * UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 2.0f);
                       iq_p->q_buffer[i] = UKW_buffer_0[i]; // MPX-Signal: L+R
                       UKW_buffer_1[i] = LminusR;          // L-R - Signal
                       //UKW_buffer_2[i] = UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 3.0f); // is this the RDS signal at 57kHz ?
               }
-            // STEREO post-processing
+    // STEREO post-processing
 
-                // make L & R channels
+              // make L & R channels
               for(unsigned i = 0; i < blockSize; i++)
               {
                 float32_t hilfsV = iq_p->q_buffer[i]; // L+R
@@ -3213,35 +3216,42 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
                 iq_p->i_buffer[i] = hilfsV - UKW_buffer_1[i]; // right channel
               }
 
-              // decimate-by-4 BEFORE filtering --> this saves some MCU cycles
+    //    5   decimate-by-4 BEFORE filtering --> this saves some MCU cycles
               arm_fir_decimate_f32(&DECIMATE_DOWN_I, iq_p->i_buffer, iq_p->i_buffer, blockSize );
               arm_fir_decimate_f32(&DECIMATE_DOWN_Q, iq_p->q_buffer, iq_p->q_buffer, blockSize );
 
-         //   5   lowpass filter 15kHz & deemphasis
-                // Right channel: lowpass filter with 15kHz Fstop & deemphasis
+    //    6   lowpass filter 15kHz & deemphasis
+              // Right channel: lowpass filter with 15kHz Fstop & deemphasis
               rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, UKW_buffer_1, blockSizeDec, WFM_SAMPLE_RATE_DEC, rawFM_old_R);
               arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[0], UKW_buffer_1, adb.a_buffer[1], blockSizeDec);
 
-                // Left channel: lowpass filter with 15kHz Fstop & deemphasis
+              // Left channel: lowpass filter with 15kHz Fstop & deemphasis
               rawFM_old_L = deemphasis_wfm_ff (iq_p->q_buffer, UKW_buffer_2, blockSizeDec, WFM_SAMPLE_RATE_DEC, rawFM_old_L);
               arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[1], UKW_buffer_2, adb.a_buffer[0], blockSizeDec);
 
-         //   6   notch filter 19kHz to eliminate pilot tone from audio
-                //arm_biquad_cascade_df1_f32 (&biquad_WFM_notch_19k_R, float_buffer_R, float_buffer_L, WFM_DEC_SAMPLES);
-                //arm_biquad_cascade_df1_f32 (&biquad_WFM_notch_19k_L, FFT_buffer, iFFT_buffer, WFM_DEC_SAMPLES);
-
-              // this is the biquad filter, a highshelf filter
+              // this is a highshelf filter for tone control
+              // we cannot use the bass tone control, because that runs @12ksps --> TODO: new bass control IIR filter
               arm_biquad_cascade_df1_f32 (&IIR_biquad_2[0], adb.a_buffer[1],adb.a_buffer[1], blockSizeDec);
               arm_biquad_cascade_df1_f32 (&IIR_biquad_2[1], adb.a_buffer[0],adb.a_buffer[0], blockSizeDec);
 
-
             }
             else
-            {
-                for(unsigned i = 0; i < blockSize; i++)
-                {
-                    iq_p->q_buffer[i] = iq_p->i_buffer[i] = WFM_scaling_factor * UKW_buffer_0[i]; // right channel
-                }
+            {  // MONO Audio Processing
+
+    //    5   decimate-by-4 BEFORE filtering --> this saves some MCU cycles
+              arm_fir_decimate_f32(&DECIMATE_DOWN_I, UKW_buffer_0, iq_p->i_buffer, blockSize );
+
+    //    6   lowpass filter 15kHz & deemphasis
+              // Right channel: lowpass filter with 15kHz Fstop & deemphasis
+              rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, UKW_buffer_1, blockSizeDec, WFM_SAMPLE_RATE_DEC, rawFM_old_R);
+              arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[0], UKW_buffer_1, adb.a_buffer[1], blockSizeDec);
+
+              // this is a highshelf filter for tone control
+              // we cannot use the bass tone control, because that runs @12ksps --> TODO: new bass control IIR filter
+              arm_biquad_cascade_df1_f32 (&IIR_biquad_2[0], adb.a_buffer[1],adb.a_buffer[1], blockSizeDec);
+
+    //      for MONO, simply copy left channel audio to right channel
+              arm_copy_f32(adb.a_buffer[1],adb.a_buffer[0],blockSizeDec);
             }
 }
 #endif

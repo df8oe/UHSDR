@@ -1549,7 +1549,7 @@ void UiDriver_DisplayDemodMode()
 		break;
     #ifdef USE_WFM
 	    case DEMOD_WFM:
-	        txt = "WFM";
+            txt = ts.stereo_enable?"STEREO":"MONO";
 	    break;
     #endif
 #endif
@@ -4402,7 +4402,9 @@ static void UiDriver_DisplayModulationType()
 	char txt_empty[]="       ";
 	char txt_SSB[]="SSB";
 	char txt_CW[]="CW";
-
+#ifdef USE_WFM
+	char txt_WFM[]="WFM";
+#endif
 	//const char* txt = digimodes[ts.digital_mode].label;
 	const char* txt;
 	switch(ts.dmod_mode)
@@ -4426,6 +4428,11 @@ static void UiDriver_DisplayModulationType()
 	case DEMOD_CW:
 		txt = txt_CW;
 		break;
+#ifdef USE_WFM
+	case DEMOD_WFM:
+	    txt = txt_WFM;
+	    break;
+#endif
 	default:
 		txt = txt_empty;
 	}
