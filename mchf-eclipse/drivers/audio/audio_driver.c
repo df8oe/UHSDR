@@ -1041,19 +1041,20 @@ static const float32_t biquad_passthrough[] = { 1, 0, 0, 0, 0 };
 
 #ifdef USE_WFM
 // used for FM radio WFM demodulation
-#define UKW_FIR_HILBERT_NUM_TAPS 10
-#define WFM_SAMPLE_RATE 192000.0
-#define WFM_SAMPLE_RATE_NORM    (PI * 2.0 / WFM_SAMPLE_RATE) //to normalize Hz to radians
-#define PILOTPLL_FREQ     19000.0f  //Centerfreq of pilot tone
-#define PILOTPLL_RANGE    20.0f
-#define PILOTPLL_BW       50.0f // was 10.0, but then it did not lock properly
-#define PILOTPLL_ZETA     0.707f
-#define PILOTPLL_LOCK_TIME_CONSTANT 1.0f // lock filter time in seconds
-#define PILOTTONEDISPLAYALPHA 0.002f
-#define WFM_LOCK_MAG_THRESHOLD     0.06f //0.013f // 0.001f bei taps==20 //0.108f // lock error magnitude
-#define FMDC_ALPHA 0.001  //time constant for DC removal filter
-#define WFM_DEEMPHASIS  50e-6f //EU: 50 us -> tau = 50e-6, USA: 75 us -> tau = 75e-6
-#define WFM_DE (-1.0f / (WFM_SAMPLE_RATE * WFM_DEEMPHASIS))
+#define UKW_FIR_HILBERT_NUM_TAPS        10
+#define WFM_SAMPLE_RATE                 192000.0
+#define WFM_SAMPLE_RATE_DEC             (WFM_SAMPLE_RATE/4)
+#define WFM_SAMPLE_RATE_NORM            (PI * 2.0 / WFM_SAMPLE_RATE) //to normalize Hz to radians
+#define PILOTPLL_FREQ                   19000.0f  //Centerfreq of pilot tone
+#define PILOTPLL_RANGE                  20.0f
+#define PILOTPLL_BW                     50.0f // was 10.0, but then it did not lock properly
+#define PILOTPLL_ZETA                   0.707f
+#define PILOTPLL_LOCK_TIME_CONSTANT     1.0f // lock filter time in seconds
+#define PILOTTONEDISPLAYALPHA           0.002f
+#define WFM_LOCK_MAG_THRESHOLD          0.06f //0.013f // 0.001f bei taps==20 //0.108f // lock error magnitude
+#define FMDC_ALPHA                      0.001  //time constant for DC removal filter
+#define WFM_DEEMPHASIS                  50e-6f //EU: 50 us -> tau = 50e-6, USA: 75 us -> tau = 75e-6
+#define WFM_DE                          (-1.0f / (WFM_SAMPLE_RATE * WFM_DEEMPHASIS))
 const float32_t WFM_deemp_alpha = 1.0f - expf(WFM_DE);
 const float32_t WFM_onem_deemp_alpha = 1.0f - WFM_deemp_alpha;
 
@@ -1271,18 +1272,18 @@ void AudioDriver_WFM_Setup()
      coeffs_ptr = coeffs;
      AudioDriver_SetBiquadCoeffsAllInstances(biquad_WFM_pilot_19k, 0, coeffs_ptr);
 
-     // FIR filter lowpass 15kHz
-     AudioDriver_CalcLowpass(coeffs, 15000, WFM_SAMPLE_RATE, 0.54);
+     // FIR filter lowpass 15kHz, @192ksps
+     AudioDriver_CalcLowpass(coeffs, 15000, WFM_SAMPLE_RATE_DEC, 0.54);
      coeffs_ptr = coeffs;
      AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k,  0, coeffs_ptr);
      AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k, 10, coeffs_ptr);
-     AudioDriver_CalcLowpass(coeffs, 15000, WFM_SAMPLE_RATE, 1.3);
+     AudioDriver_CalcLowpass(coeffs, 15000, WFM_SAMPLE_RATE_DEC, 1.3);
      coeffs_ptr = coeffs;
      AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k,  5, coeffs_ptr);
      AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k, 15, coeffs_ptr);
 
      // IIR notch filter 19kHz
-
+     // well, not really needed, unless you have a dog or little children, that are able to hear 19kHz
 }
 #endif
 
@@ -3071,7 +3072,10 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
 {
     // on F7 @192ksps sample rate, this is really MCU-intense: 73%
     // plus de-emphasis: 77%
+    // plus 15kHz lowpass: 90%
     //const float32_t Pilot_tone_freq = 19000.0f;
+    uint32_t blockSizeDec = blockSize / 4;
+
     const float32_t WFM_scaling_factor = 400.0f; //0.24f;
 
     static float32_t I_old = 0.2;
@@ -3202,11 +3206,6 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
                       //UKW_buffer_2[i] = UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 3.0f); // is this the RDS signal at 57kHz ?
               }
             // STEREO post-processing
-                //if(decimate_WFM)
-                //{
-            // decimate-by-4 --> 64ksps
-              //arm_fir_decimate_f32(&WFM_decimation_R, float_buffer_R, float_buffer_R, BUFFER_SIZE * WFM_BLOCKS);
-              //arm_fir_decimate_f32(&WFM_decimation_L, iFFT_buffer, iFFT_buffer, BUFFER_SIZE * WFM_BLOCKS);
 
                 // make L & R channels
               for(unsigned i = 0; i < blockSize; i++)
@@ -3216,16 +3215,20 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
                 iq_p->i_buffer[i] = hilfsV - UKW_buffer_1[i]; // right channel
               }
 
+              // decimate-by-4 BEFORE filtering --> this saves some MCU cycles
+              arm_fir_decimate_f32(&DECIMATE_DOWN_I, iq_p->i_buffer, iq_p->i_buffer, blockSize );
+              arm_fir_decimate_f32(&DECIMATE_DOWN_Q, iq_p->q_buffer, iq_p->q_buffer, blockSize );
+
          //   5   lowpass filter 15kHz & deemphasis
                 // Right channel: lowpass filter with 15kHz Fstop & deemphasis
               //rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, iq_p->i_buffer, blockSize, WFM_SAMPLE_RATE, rawFM_old_R);
-              rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, UKW_buffer_1, blockSize, WFM_SAMPLE_RATE, rawFM_old_R);
-              arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[0], UKW_buffer_1, iq_p->i_buffer, blockSize);
+              rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, UKW_buffer_1, blockSizeDec, WFM_SAMPLE_RATE_DEC, rawFM_old_R);
+              arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[0], UKW_buffer_1, adb.a_buffer[1], blockSizeDec);
 
                 // Left channel: lowpass filter with 15kHz Fstop & deemphasis
               //rawFM_old_L = deemphasis_wfm_ff (iq_p->q_buffer, iq_p->q_buffer, blockSize, WFM_SAMPLE_RATE, rawFM_old_L);
-              rawFM_old_L = deemphasis_wfm_ff (iq_p->q_buffer, UKW_buffer_2, blockSize, WFM_SAMPLE_RATE, rawFM_old_L);
-              arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[1], UKW_buffer_2, iq_p->q_buffer, blockSize);
+              rawFM_old_L = deemphasis_wfm_ff (iq_p->q_buffer, UKW_buffer_2, blockSizeDec, WFM_SAMPLE_RATE_DEC, rawFM_old_L);
+              arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[1], UKW_buffer_2, adb.a_buffer[0], blockSizeDec);
 
          //   6   notch filter 19kHz to eliminate pilot tone from audio
                 //arm_biquad_cascade_df1_f32 (&biquad_WFM_notch_19k_R, float_buffer_R, float_buffer_L, WFM_DEC_SAMPLES);
@@ -3235,7 +3238,7 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
             {
                 for(unsigned i = 0; i < blockSize; i++)
                 {
-                    iq_p->q_buffer[i] = iq_p->i_buffer[i] = 800.0f * UKW_buffer_0[i]; // right channel
+                    iq_p->q_buffer[i] = iq_p->i_buffer[i] = WFM_scaling_factor * UKW_buffer_0[i]; // right channel
                 }
             }
 }
@@ -3383,8 +3386,8 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         {
             AudioDriver_Demod_WFM(&adb.iq_buf, iqBlockSize); // has to demodulate and pack everything into adb.a_buffer[0], audio_blockSize and adb.a_buffer[1], audio_blockSize
 
-            arm_fir_decimate_f32(&DECIMATE_DOWN_I, adb.iq_buf.i_buffer, adb.a_buffer[1], iqBlockSize );
-            arm_fir_decimate_f32(&DECIMATE_DOWN_Q, adb.iq_buf.q_buffer, adb.a_buffer[0], iqBlockSize );
+            //arm_fir_decimate_f32(&DECIMATE_DOWN_I, adb.iq_buf.i_buffer, adb.a_buffer[1], iqBlockSize );
+            //arm_fir_decimate_f32(&DECIMATE_DOWN_Q, adb.iq_buf.q_buffer, adb.a_buffer[0], iqBlockSize );
             signal_active = true;
         }
         else
