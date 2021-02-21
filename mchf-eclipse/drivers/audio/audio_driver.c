@@ -3070,17 +3070,16 @@ static float ApproxAtan2(float y, float x)
 #ifdef USE_WFM
 static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
 {
-    // on F7 @192ksps sample rate, this is really MCU-intense: 73%
-    // plus de-emphasis: 77%
-    // plus 15kHz lowpass: 90%
+    // on F7 @192ksps sample rate, this is really MCU-intense: 89%
     //const float32_t Pilot_tone_freq = 19000.0f;
     uint32_t blockSizeDec = blockSize / 4;
 
-    const float32_t WFM_scaling_factor = 400.0f; //0.24f;
+    const float32_t WFM_scaling_factor = 400.0f; // empirically derived
 
     static float32_t I_old = 0.2;
     static float32_t Q_old = 0.2;
-    static float32_t m_PilotPhaseAdjust = 0.0f; // 0.15
+    //    static float32_t m_PilotPhaseAdjust = 0.0f; // 0.15
+    float32_t m_PilotPhaseAdjust = 1.7f; // (ts.dsp.notch_frequency / 1000.0f); // temporarily recycled the variable for empirical testing
     //const float32_t WFM_gain = 0.24;
     static float32_t m_PilotNcoPhase = 0.0;
     static float32_t WFM_fil_out = 0.0;
@@ -3198,9 +3197,8 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
               for(unsigned i = 0; i < blockSize; i++)
               {
                 //    4   multiply audio with 2 times (2 x 19kHz) the phase of the pilot tone --> L-R signal !
-                  // LminusR = (stereo_factor / 100.0f) * UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 2.0f);
-                      LminusR = (3.70f) * UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 2.0f);
 
+                      LminusR = (2.0f) * UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 2.0f);
                       iq_p->q_buffer[i] = UKW_buffer_0[i]; // MPX-Signal: L+R
                       UKW_buffer_1[i] = LminusR;          // L-R - Signal
                       //UKW_buffer_2[i] = UKW_buffer_0[i] * arm_sin_f32(m_PilotPhase[i] * 3.0f); // is this the RDS signal at 57kHz ?
@@ -3221,12 +3219,10 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
 
          //   5   lowpass filter 15kHz & deemphasis
                 // Right channel: lowpass filter with 15kHz Fstop & deemphasis
-              //rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, iq_p->i_buffer, blockSize, WFM_SAMPLE_RATE, rawFM_old_R);
               rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, UKW_buffer_1, blockSizeDec, WFM_SAMPLE_RATE_DEC, rawFM_old_R);
               arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[0], UKW_buffer_1, adb.a_buffer[1], blockSizeDec);
 
                 // Left channel: lowpass filter with 15kHz Fstop & deemphasis
-              //rawFM_old_L = deemphasis_wfm_ff (iq_p->q_buffer, iq_p->q_buffer, blockSize, WFM_SAMPLE_RATE, rawFM_old_L);
               rawFM_old_L = deemphasis_wfm_ff (iq_p->q_buffer, UKW_buffer_2, blockSizeDec, WFM_SAMPLE_RATE_DEC, rawFM_old_L);
               arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[1], UKW_buffer_2, adb.a_buffer[0], blockSizeDec);
 
