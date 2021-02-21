@@ -816,7 +816,7 @@ void AudioDriver_SetBiquadCoeffsAllInstances(arm_biquad_casd_df1_inst_f32 biquad
 /**
  * @brief Biquad Filter Init Helper function which applies the filter specific scaling to calculated coefficients
  */
-void AudioDriver_ScaleBiquadCoeffs(float32_t coeffs[5],const float32_t scalingA, const float32_t scalingB)
+void AudioDriver_ScaleBiquadCoeffs(float32_t coeffs[5],const double scalingA, const double scalingB)
 {
     coeffs[A1] = coeffs[A1] / scalingA;
     coeffs[A2] = coeffs[A2] / scalingA;
@@ -829,17 +829,17 @@ void AudioDriver_ScaleBiquadCoeffs(float32_t coeffs[5],const float32_t scalingA,
 /**
  * @brief Biquad Filter Init Helper function to calculate a notch filter aka narrow bandstop filter
  */
-void AudioDriver_CalcBandstop(float32_t coeffs[5], float32_t f0, float32_t FS)
+void AudioDriver_CalcBandstop(float32_t coeffs[5], double f0, double FS)
 {
-     float32_t Q = 10; // larger Q gives narrower notch
-     float32_t w0 = 2 * PI * f0 / FS;
-     float32_t alpha = sinf(w0) / (2 * Q);
+     double Q = 10; // larger Q gives narrower notch
+     double w0 = 2 * PI * f0 / FS;
+     double alpha = sin(w0) / (2 * Q);
 
      coeffs[B0] = 1;
-     coeffs[B1] = - 2 * cosf(w0);
+     coeffs[B1] = - 2 * cos(w0);
      coeffs[B2] = 1;
-     float32_t scaling = 1 + alpha;
-     coeffs[A1] = 2 * cosf(w0); // already negated!
+     double scaling = 1 + alpha;
+     coeffs[A1] = 2 * cos(w0); // already negated!
      coeffs[A2] = alpha - 1; // already negated!
 
      AudioDriver_ScaleBiquadCoeffs(coeffs,scaling, scaling);
@@ -872,7 +872,7 @@ void AudioDriver_CalcLowpass(float32_t coeffs[5], double f0, double FS, double Q
 /**
  * @brief Biquad Filter Init Helper function to calculate a peak filter aka a narrow bandpass filter
  */
-void AudioDriver_CalcPeakFilter(float32_t coeffs[], float32_t f0, float32_t FS, float32_t Q)
+void AudioDriver_CalcPeakFilter(float32_t coeffs[], double f0, double FS, double Q)
 {
     /*       // peak filter = peaking EQ
     f0 = ts.dsp.peak_frequency;
@@ -909,15 +909,15 @@ void AudioDriver_CalcPeakFilter(float32_t coeffs[], float32_t f0, float32_t FS, 
     coeffs[A2] = alpha - 1; // already negated!
      */
     // BPF: constant skirt gain, peak gain = Q
-    float32_t BW = 0.03;
-    float32_t w0 = 2 * PI * f0 / FS;
-    float32_t alpha = sinf (w0) * sinhf( log(2) / 2 * BW * w0 / sinf(w0) ); //
+    double BW = 0.03;
+    double w0 = 2 * PI * f0 / FS;
+    double alpha = sin (w0) * sinh( log(2) / 2 * BW * w0 / sin(w0) ); //
 
     coeffs[B0] = Q * alpha;
     coeffs[B1] = 0;
     coeffs[B2] = - Q * alpha;
-    float32_t scaling = 1 + alpha;
-    coeffs[A1] = 2 * cosf(w0); // already negated!
+    double scaling = 1 + alpha;
+    coeffs[A1] = 2 * cos(w0); // already negated!
     coeffs[A2] = alpha - 1; // already negated!
 
     AudioDriver_ScaleBiquadCoeffs(coeffs,scaling, scaling);
@@ -925,7 +925,7 @@ void AudioDriver_CalcPeakFilter(float32_t coeffs[], float32_t f0, float32_t FS, 
 }
 
 #ifdef USE_WFM
-void AudioDriver_CalcBandpass(float32_t coeffs[], float32_t f0, float32_t FS, float32_t Q)
+void AudioDriver_CalcBandpass(float32_t coeffs[], double f0, double FS, double Q)
 {
     /*
     coeffs[B0] = alpha;
@@ -936,13 +936,13 @@ void AudioDriver_CalcBandpass(float32_t coeffs[], float32_t f0, float32_t FS, fl
     coeffs[A2] = alpha - 1; // already negated!
      */
 
-    float32_t w0 = 2 * PI * f0 / FS;
+    double w0 = 2 * PI * f0 / FS;
     double alpha = sin(w0) / 2.0;
 
     coeffs[B0] =  alpha;
     coeffs[B1] = 0;
     coeffs[B2] = - alpha;
-    float32_t scaling = 1 + alpha;
+    double scaling = 1 + alpha;
     coeffs[A1] = 2 * cos(w0); // already negated!
     coeffs[A2] = alpha - 1; // already negated!
 
@@ -955,26 +955,26 @@ void AudioDriver_CalcBandpass(float32_t coeffs[], float32_t f0, float32_t FS, fl
 /**
  * @brief Biquad Filter Init Helper function to calculate a treble adjustment filter aka high shelf filter
  */
-void AudioDriver_CalcHighShelf(float32_t coeffs[5], float32_t f0, float32_t S, float32_t gain, float32_t FS)
+void AudioDriver_CalcHighShelf(float32_t coeffs[5], double f0, double S, double gain, double FS)
 {
-    float32_t w0 = 2 * PI * f0 / FS;
-    float32_t A = pow10f(gain/40.0); // gain ranges from -20 to 5
-    float32_t alpha = sinf(w0) / 2 * sqrtf( (A + 1/A) * (1/S - 1) + 2 );
-    float32_t cosw0 = cosf(w0);
-    float32_t twoAa = 2 * sqrtf(A) * alpha;
+    double w0 = 2 * PI * f0 / FS;
+    double A = pow10(gain/40.0); // gain ranges from -20 to 5
+    double alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
+    double cosw0 = cos(w0);
+    double twoAa = 2 * sqrt(A) * alpha;
     // highShelf
     //
     coeffs[B0] = A *        ( (A + 1) + (A - 1) * cosw0 + twoAa );
     coeffs[B1] = - 2 * A *  ( (A - 1) + (A + 1) * cosw0         );
     coeffs[B2] = A *        ( (A + 1) + (A - 1) * cosw0 - twoAa );
-    float32_t scaling =       (A + 1) - (A - 1) * cosw0 + twoAa ;
+    double scaling =       (A + 1) - (A - 1) * cosw0 + twoAa ;
     coeffs[A1] = - 2 *      ( (A - 1) - (A + 1) * cosw0         ); // already negated!
     coeffs[A2] = twoAa      - (A + 1) + (A - 1) * cosw0; // already negated!
 
 
     //    DCgain = 2; //
     //    DCgain = (coeffs[B0] + coeffs[B1] + coeffs[B2]) / (1 - (- coeffs[A1] - coeffs[A2])); // takes into account that coeffs[A1] and coeffs[A2] are already negated!
-    float32_t DCgain = 1.0 * scaling;
+    double DCgain = 1.0 * scaling;
 
     AudioDriver_ScaleBiquadCoeffs(coeffs,scaling, DCgain);
 }
@@ -982,21 +982,21 @@ void AudioDriver_CalcHighShelf(float32_t coeffs[5], float32_t f0, float32_t S, f
 /**
  * @brief Biquad Filter Init Helper function to calculate a bass adjustment filter aka low shelf filter
  */
-void AudioDriver_CalcLowShelf(float32_t coeffs[5], float32_t f0, float32_t S, float32_t gain, float32_t FS)
+void AudioDriver_CalcLowShelf(float32_t coeffs[5], double f0, double S, double gain, double FS)
 {
 
-    float32_t w0 = 2 * PI * f0 / FS;
-    float32_t A = pow10f(gain/40.0); // gain ranges from -20 to 5
+    double w0 = 2 * PI * f0 / FS;
+    double A = pow10(gain/40.0); // gain ranges from -20 to 5
 
-    float32_t alpha = sinf(w0) / 2 * sqrtf( (A + 1/A) * (1/S - 1) + 2 );
-    float32_t cosw0 = cosf(w0);
-    float32_t twoAa = 2 * sqrtf(A) * alpha;
+    double alpha = sin(w0) / 2 * sqrt( (A + 1/A) * (1/S - 1) + 2 );
+    double cosw0 = cos(w0);
+    double twoAa = 2 * sqrt(A) * alpha;
 
     // lowShelf
     coeffs[B0] = A *        ( (A + 1) - (A - 1) * cosw0 + twoAa );
     coeffs[B1] = 2 * A *    ( (A - 1) - (A + 1) * cosw0         );
     coeffs[B2] = A *        ( (A + 1) - (A - 1) * cosw0 - twoAa );
-    float32_t scaling =       (A + 1) + (A - 1) * cosw0 + twoAa ;
+    double scaling =        (A + 1) + (A - 1) * cosw0 + twoAa ;
     coeffs[A1] = 2 *        ( (A - 1) + (A + 1) * cosw0         ); // already negated!
     coeffs[A2] = twoAa      - (A + 1) - (A - 1) * cosw0; // already negated!
 
@@ -1008,7 +1008,7 @@ void AudioDriver_CalcLowShelf(float32_t coeffs[5], float32_t f0, float32_t S, fl
     // I take a divide by a constant instead !
     //    DCgain = (coeffs[B0] + coeffs[B1] + coeffs[B2]) / (1 - (- coeffs[A1] - coeffs[A2])); // takes into account that coeffs[A1] and coeffs[A2] are already negated!
 
-    float32_t DCgain = 1.0 * scaling; //
+    double DCgain = 1.0 * scaling; //
 
 
     AudioDriver_ScaleBiquadCoeffs(coeffs,scaling, DCgain);
@@ -3233,6 +3233,12 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
          //   6   notch filter 19kHz to eliminate pilot tone from audio
                 //arm_biquad_cascade_df1_f32 (&biquad_WFM_notch_19k_R, float_buffer_R, float_buffer_L, WFM_DEC_SAMPLES);
                 //arm_biquad_cascade_df1_f32 (&biquad_WFM_notch_19k_L, FFT_buffer, iFFT_buffer, WFM_DEC_SAMPLES);
+
+              // this is the biquad filter, a highshelf filter
+              arm_biquad_cascade_df1_f32 (&IIR_biquad_2[0], adb.a_buffer[1],adb.a_buffer[1], blockSizeDec);
+              arm_biquad_cascade_df1_f32 (&IIR_biquad_2[1], adb.a_buffer[0],adb.a_buffer[0], blockSizeDec);
+
+
             }
             else
             {
@@ -3383,11 +3389,10 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
        //if(1)
 #ifdef USE_WFM
         if(dmod_mode == DEMOD_WFM)
-        {
-            AudioDriver_Demod_WFM(&adb.iq_buf, iqBlockSize); // has to demodulate and pack everything into adb.a_buffer[0], audio_blockSize and adb.a_buffer[1], audio_blockSize
-
-            //arm_fir_decimate_f32(&DECIMATE_DOWN_I, adb.iq_buf.i_buffer, adb.a_buffer[1], iqBlockSize );
-            //arm_fir_decimate_f32(&DECIMATE_DOWN_Q, adb.iq_buf.q_buffer, adb.a_buffer[0], iqBlockSize );
+        {   // audio sample rate has to be 192ksps in order for WFM to deliver nice audio
+            // this does WFM demodulation @192ksps, then does the decimation-by-4, lowpass filtering @15kHz and de-emphasis
+            // and delivers stereo Audio in adb.a_buffer
+            AudioDriver_Demod_WFM(&adb.iq_buf, iqBlockSize);
             signal_active = true;
         }
         else
