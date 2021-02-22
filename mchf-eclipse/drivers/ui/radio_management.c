@@ -1535,6 +1535,18 @@ uint32_t RadioManagement_NextAlternativeDemodMode(uint32_t loc_mode)
             retval = DEMOD_AM;
         }
         break;
+#ifdef USE_WFM
+    case DEMOD_WFM:
+        if(ts.stereo_enable)
+        {
+            ts.stereo_enable = false;
+        }
+        else
+        {
+            ts.stereo_enable = true;
+        }
+        break;
+#endif
     case DEMOD_DIGI:
         ts.digi_lsb = !ts.digi_lsb;
         break;
