@@ -628,6 +628,7 @@ static void AudioDriver_FreeDV_Rx_Init()
 
 void AudioDriver_AgcWdsp_Set()
 {
+    // FIXME: hmm, not sure, but wouldnt we want to eliminate DC, if NOT in AM or SAM ? this is the opposite, DD4WH, 22.02.2021
     AudioAgc_SetupAgcWdsp(ads.decimated_freq, ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM);
 }
 
@@ -1271,15 +1272,34 @@ void AudioDriver_WFM_Setup()
      coeffs_ptr = coeffs;
      AudioDriver_SetBiquadCoeffsAllInstances(biquad_WFM_pilot_19k, 0, coeffs_ptr);
 
-     // FIR filter lowpass 15kHz, @192ksps
+     // IIR filter lowpass 15kHz, 8th order = 4 biquad stages, 48dB/octave, @48ksps sample rate [WFM_SAMPLE_RATE_DEC]
+#if 1
+     // Butterworth 8th order can be performed by using Q values of 0.510 -> 0.601 -> 0.900 -> 2.563, https://www.earlevel.com/main/2016/09/29/cascading-filters/
+     AudioDriver_CalcLowpass(coeffs, 15000, WFM_SAMPLE_RATE_DEC, 0.510);
+     coeffs_ptr = coeffs;
+     AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k,  0, coeffs_ptr);
+     AudioDriver_CalcLowpass(coeffs, 15000, WFM_SAMPLE_RATE_DEC, 0.601);
+     coeffs_ptr = coeffs;
+     AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k, 5, coeffs_ptr);
+     AudioDriver_CalcLowpass(coeffs, 15000, WFM_SAMPLE_RATE_DEC, 0.900);
+     coeffs_ptr = coeffs;
+     AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k, 10, coeffs_ptr);
+     AudioDriver_CalcLowpass(coeffs, 15000, WFM_SAMPLE_RATE_DEC, 2.563);
+     coeffs_ptr = coeffs;
+     AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k, 15, coeffs_ptr);
+
+#else
+     // 8th order Linkwitz-Riley can be performed by cascading four biquad stages, http://www.linkwitzlab.com/filters.htm#2
+     // the table on that webpage gives the Q values of 0.54 -> 1.34 -> 0.54 -> 1.34 with 48dB/octave
      AudioDriver_CalcLowpass(coeffs, 15000, WFM_SAMPLE_RATE_DEC, 0.54);
      coeffs_ptr = coeffs;
      AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k,  0, coeffs_ptr);
      AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k, 10, coeffs_ptr);
-     AudioDriver_CalcLowpass(coeffs, 15000, WFM_SAMPLE_RATE_DEC, 1.3);
+     AudioDriver_CalcLowpass(coeffs, 15000, WFM_SAMPLE_RATE_DEC, 1.34);
      coeffs_ptr = coeffs;
      AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k,  5, coeffs_ptr);
      AudioDriver_SetBiquadCoeffsAllInstances(WFM_biquad_15k, 15, coeffs_ptr);
+#endif
 
      // IIR notch filter 19kHz
      // well, not really needed, unless you have a dog or little children, that are able to hear 19kHz
@@ -1287,7 +1307,7 @@ void AudioDriver_WFM_Setup()
 #endif
 
 #ifdef USE_WFM
-float32_t deemphasis_wfm_ff (float32_t* input, float32_t* output, int input_size, int sample_rate, float32_t last_output)
+float32_t deemphasis_wfm_ff (float32_t* input, float32_t* output, int input_size, float32_t last_output)
 {
   /* taken from libcsdr
     typical time constant (tau) values:
@@ -1517,7 +1537,9 @@ void AudioDriver_SetProcessingChain(uint8_t dmod_mode, bool reset_dsp_nr)
 
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = filters_p->sample_rate_dec;
-    ads.decimated_freq = IQ_SAMPLE_RATE / ads.decimation_rate;
+    // I guess this should be AUDIO_SAMPLE_RATE, NOT IQ_SAMPLE_RATE ! DD4WH, 22.02.2021
+    //    ads.decimated_freq = IQ_SAMPLE_RATE / ads.decimation_rate;
+    ads.decimated_freq = AUDIO_SAMPLE_RATE / ads.decimation_rate;
 
     for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
     {
@@ -2892,6 +2914,8 @@ static void RxProcessor_DemodAudioPostprocessing(float32_t (*a_buffer)[AUDIO_BLO
 #endif
     }
 
+
+    // TEST:
     // now process the samples and perform the receiver AGC function
     AudioAgc_RunAgcWdsp(blockSizeDecim, a_buffer, use_stereo);
 
@@ -3222,11 +3246,11 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
 
     //    6   lowpass filter 15kHz & deemphasis
               // Right channel: lowpass filter with 15kHz Fstop & deemphasis
-              rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, UKW_buffer_1, blockSizeDec, WFM_SAMPLE_RATE_DEC, rawFM_old_R);
+              rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, UKW_buffer_1, blockSizeDec, rawFM_old_R);
               arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[0], UKW_buffer_1, adb.a_buffer[1], blockSizeDec);
 
               // Left channel: lowpass filter with 15kHz Fstop & deemphasis
-              rawFM_old_L = deemphasis_wfm_ff (iq_p->q_buffer, UKW_buffer_2, blockSizeDec, WFM_SAMPLE_RATE_DEC, rawFM_old_L);
+              rawFM_old_L = deemphasis_wfm_ff (iq_p->q_buffer, UKW_buffer_2, blockSizeDec, rawFM_old_L);
               arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[1], UKW_buffer_2, adb.a_buffer[0], blockSizeDec);
 
               // this is a highshelf filter for tone control
@@ -3243,7 +3267,7 @@ static void AudioDriver_Demod_WFM(iq_buffer_t* iq_p, uint32_t blockSize)
 
     //    6   lowpass filter 15kHz & deemphasis
               // Right channel: lowpass filter with 15kHz Fstop & deemphasis
-              rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, UKW_buffer_1, blockSizeDec, WFM_SAMPLE_RATE_DEC, rawFM_old_R);
+              rawFM_old_R = deemphasis_wfm_ff (iq_p->i_buffer, UKW_buffer_1, blockSizeDec, rawFM_old_R);
               arm_biquad_cascade_df1_f32 (&WFM_biquad_15k[0], UKW_buffer_1, adb.a_buffer[1], blockSizeDec);
 
               // this is a highshelf filter for tone control
