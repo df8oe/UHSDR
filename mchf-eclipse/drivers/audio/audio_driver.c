@@ -628,6 +628,7 @@ static void AudioDriver_FreeDV_Rx_Init()
 
 void AudioDriver_AgcWdsp_Set()
 {
+    // FIXME: hmm, not sure, but wouldnt we want to eliminate DC, if NOT in AM or SAM ? this is the opposite, DD4WH, 22.02.2021
     AudioAgc_SetupAgcWdsp(ads.decimated_freq, ts.dmod_mode == DEMOD_AM || ts.dmod_mode == DEMOD_SAM);
 }
 
@@ -1536,7 +1537,9 @@ void AudioDriver_SetProcessingChain(uint8_t dmod_mode, bool reset_dsp_nr)
 
     // Adjust decimation rate based on selected filter
     ads.decimation_rate = filters_p->sample_rate_dec;
-    ads.decimated_freq = IQ_SAMPLE_RATE / ads.decimation_rate;
+    // I guess this should be AUDIO_SAMPLE_RATE, NOT IQ_SAMPLE_RATE ! DD4WH, 22.02.2021
+    //    ads.decimated_freq = IQ_SAMPLE_RATE / ads.decimation_rate;
+    ads.decimated_freq = AUDIO_SAMPLE_RATE / ads.decimation_rate;
 
     for (int chan = 0; chan < NUM_AUDIO_CHANNELS; chan++)
     {
@@ -2911,6 +2914,8 @@ static void RxProcessor_DemodAudioPostprocessing(float32_t (*a_buffer)[AUDIO_BLO
 #endif
     }
 
+
+    // TEST:
     // now process the samples and perform the receiver AGC function
     AudioAgc_RunAgcWdsp(blockSizeDecim, a_buffer, use_stereo);
 
