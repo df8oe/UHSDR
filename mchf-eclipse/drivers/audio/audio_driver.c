@@ -2576,8 +2576,8 @@ static void AudioDriver_DemodSAM(float32_t* i_buffer, float32_t* q_buffer, float
             sam_data.phs = sam_data.phs + del_out;
 
             // wrap round 2PI, modulus
-            while (sam_data.phs >= 2.0 * PI) { sam_data.phs -= (2.0 * PI); }
-            while (sam_data.phs < 0.0) { sam_data.phs += (2.0 * PI); }
+            while (sam_data.phs >= TWO_PI) { sam_data.phs -= (TWO_PI); }
+            while (sam_data.phs < 0.0) { sam_data.phs += (TWO_PI); }
         }
 
         sam_data.count++;
@@ -2587,7 +2587,7 @@ static void AudioDriver_DemodSAM(float32_t* i_buffer, float32_t* q_buffer, float
             // we calculate carrier offset here and the display function is
             // then called in UiDriver_MainHandler approx. every 40-80ms
         { // to make this smoother, a simple lowpass/exponential averager here . . .
-            float32_t carrier = 0.1 * (sam_data.omega2 * sampleRate) / (2.0 * PI);
+            float32_t carrier = 0.1 * (sam_data.omega2 * sampleRate) / (TWO_PI);
             carrier = carrier + 0.9 * sam_data.lowpass;
             ads.carrier_freq_offset = carrier;
             sam_data.count = 0;
@@ -3386,7 +3386,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
         }
         if (IQ_BIT_SCALE_DOWN != 1.0)
         {
-            // we scale everything into the range of +/-32767 if we are getting 32 bit input
+            // we scale everything into the range of +/-32767 if we are getting signed 16 bit input samples
             arm_scale_f32 (adb.iq_buf.i_buffer, IQ_BIT_SCALE_DOWN, adb.iq_buf.i_buffer, iqBlockSize);
             arm_scale_f32 (adb.iq_buf.q_buffer, IQ_BIT_SCALE_DOWN, adb.iq_buf.q_buffer, iqBlockSize);
         }
@@ -3469,7 +3469,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
              * SSB-> wants for wider bandwidth full IQ_SAMPLE_RATE input, shifted I and Q shifted by 90 degrees
              */
 
-            if(use_decimatedIQ)
+            if(use_decimatedIQ) // for SAM/AM and SSB with filter bandwidth <3k8, for SSB and SAM/AM < 4k8: 12ksps, others: 24ksps
             {
                 arm_fir_decimate_f32(&DECIMATE_RX_I, adb.iq_buf.i_buffer, adb.iq_buf.i_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
                 arm_fir_decimate_f32(&DECIMATE_RX_Q, adb.iq_buf.q_buffer, adb.iq_buf.q_buffer, blockSize);      // LPF built into decimation (Yes, you can decimate-in-place!)
@@ -3477,7 +3477,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
 
             if(dmod_mode != DEMOD_SAM && dmod_mode != DEMOD_AM) // for SAM & AM leave out this processor-intense filter
             {
-            	// SECOND: Hilbert transform (for all but AM/SAM)
+            	// Hilbert transform (for CW/SSB): BW<3k8: 12ksps, 199taps, BW>3k6: 48ksps, 89taps
                 arm_fir_f32(&Fir_Rx_Hilbert_I,adb.iq_buf.i_buffer, adb.iq_buf.i_buffer, blockSizeIQ);   // Hilbert lowpass +45 degrees
                 arm_fir_f32(&Fir_Rx_Hilbert_Q,adb.iq_buf.q_buffer, adb.iq_buf.q_buffer, blockSizeIQ);   // Hilbert lowpass -45 degrees
             }
@@ -3529,7 +3529,7 @@ static void AudioDriver_RxProcessor(IqSample_t * const srcCodec, AudioSample_t *
                 // If we are not, do decimation if not already done, filtering, DSP notch/noise reduction, etc.
                 if (use_decimatedIQ == false) // we did not already decimate the input earlier
                 {
-                    // TODO HILBERT
+                    // this is the decimation for SSB with >3k6 bandwidth to @24ksps
                     arm_fir_decimate_f32(&DECIMATE_RX_I, adb.a_buffer[0], adb.a_buffer[0], blockSizeIQ);      // LPF built into decimation (Yes, you can decimate-in-place!)
 #ifdef USE_TWO_CHANNEL_AUDIO
                     if(use_stereo)
