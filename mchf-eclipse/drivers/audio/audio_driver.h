@@ -593,7 +593,7 @@ extern lLMS leakyLMS;
 // using the same DMA memory (two times the memory true 16 bit values take, in our case this is 2*(2*(IQ_BLOCK_SIZE*2samples*2bytes) = 512 bytes)
 #ifdef USE_32_IQ_BITS
     #define IQ_BIT_SHIFT 16
-    #define IQ_BIT_SCALE_DOWN (0.0000152587890625)
+    #define IQ_BIT_SCALE_DOWN (3.0518509475997192297128208258309e-5) // this is 1 / (2^15 - 1) for 16bit signed input samples [-32767 to +32767]
 #else
     #define IQ_BIT_SHIFT 0
     #define IQ_BIT_SCALE_DOWN (1.0)

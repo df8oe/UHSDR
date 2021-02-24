@@ -578,7 +578,7 @@ const float q_rx_new_coeffs[IQ_NUM_TAPS_HI] = {-0.000027601902477323,-0.00002835
  * if the other coeffs are not satisfying, try these:
  * they should have excellent low audio freq response
  * 199 taps, 12ksps
- * Fc = 0.2965
+ * Fc = 0.2965 == 3.56kHz
  * BW=0.5769
  * Kaiser Window
  * Kaiser Beta = 5.60, Raised Cosine = 0.97
