@@ -20,6 +20,31 @@
 // use FreeDV buffers, if we switch on digital voice mode FreeDV
 // user code
 
+/***************************************************************************************************
+ *
+ *  Fast Convolution Filtering
+ *  2nd attempt, DD4WH, 2021-02-25
+ *
+ *  should run with 24ksps sample rate in order to be able to allow large bandwidths up to 11kHz
+ *  no partitioned convolution necessary, just plain simple Fast FIR convolution is sufficient
+ *  we use overlap-and-save == overlap-and-discard --> Lyons, R. (2011): Understanding Digital Processing. - chapter 13.10
+ *  FFT size 512, no. of filter coeffs is 257, overlap is 50%
+ *  code taken from Teensy Convolution SDR: https://github.com/DD4WH/Teensy-ConvolutionSDR/blob/master/Teensy_Convolution_SDR.ino
+ *  complex coefficients needed in order to simultaneously process I & Q in one complex-multiply
+ *
+ *  This Fast FIR filtering should substitute filters formerly used:
+ *      - Hilbert FIR bandpass filters with 199 taps
+ *      - 10th order IIR Audio lattice filter
+ *
+ *  Additionally, the filtering will be better, because the coeffs are calculated on-the-fly shaped exactly to the desired filter response
+ *
+ *  Filters can be made sharper/softer by varying the input sample rate or the FFT size:
+ *      - sharper filter: lower sample rate / larger FFT size
+ *      - softer filter: higher sample rate / smaller FFT size
+ *
+ ***************************************************************************************************/
+
+
 #ifdef USE_CONVOLUTION
 __IO int32_t Sample_in_head = 0;
 __IO int32_t Sample_in_tail = 0;
@@ -290,17 +315,7 @@ void AudioDriver_SetConvolutionFilter (int nc, float32_t f_low, float32_t f_high
 void convolution_handle()
 {
 	// put everything that should happen, when 128 samples are ready, into this function
-	/****************************************************************
-	 *
-	 *  Partitioned Convolution code adapted from wdsp library
-	 *
-	 *  (c) by Warren Pratt under GNU GPLv3
-	 *
-	 *  thanks, Warren!
-	 *
-	 ****************************************************************/
-
-
+                // explanatory lines by Warren Pratt in wdsp
 	            // input file: cob.i_buffer_convolution
 	            // IIIIIIIIIIIIIIII
 	            // <- cbs.size   ->
@@ -325,9 +340,8 @@ void convolution_handle()
 	            // output of FFT is copied into fftout[buffidx]
 	            // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
 	            // <-      2 * cbs.size          -><-      2 * cbs.size          ->
-	            // there are as many FFT output buffers as there are convolution blocks
 
-	            // Complex multiply / accumulate with all FFT outputs of nfor last rounds, see below :-) !
+	            // Complex multiply FFT output with complex FIR filter mask
 
 	            // inverse FFT of the accumulated complex multiply outputs
 	            // IQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQIQ
@@ -348,84 +362,53 @@ void convolution_handle()
 	            // <- cbs.size   ->
 	            // this is the filtered audio of Q
 
-	 /*
-	  * partitioned block overlap-and-save algorithm
-	  */
-	            	int fft_conv_size = cbs.size * 2;
-	                int i, j, k;
-	                // copy input buffer to right half of FFT input buffer
-	                // left half already contains data from last round
-	                for(int idx=0; idx < cbs.size; idx++)
-	                {
-	                	cob.fftin[fft_conv_size + 2 * idx + 0] = cob.i_buffer_convolution[idx];
-	                  	cob.fftin[fft_conv_size + 2 * idx + 1] = cob.q_buffer_convolution[idx];
-	                }
 
-	                // fftin --> one input buffer
-	                // fftout[nfor] --> changing output buffers !
-	                // FFT performed on fftin inplace
-	                arm_cfft_f32(&arm_cfft_sR_f32_len256, cob.fftin, 0, 1);
-	                // copy output from fftin into current fftout buffer
-	                for (int idx = 0; idx < fft_conv_size * 2; idx++)
-	                {
-	                	cob.fftout[cbs.buffidx][idx] = cob.fftin[idx];
-	                }
-	                //fftw_execute (a->pcfor[a->buffidx]);
+    int fft_conv_size = cbs.size * 2;
 
-	                k = cbs.buffidx;
-	                // fill the array accum with zeros
-	                for (int idx = 0; idx < fft_conv_size * 2; idx++)
-	                {
-	                	cob.accum[idx] = 0;
-	                }
-	                //memset (a->accum, 0, 2 * a->size * sizeof (complex));
+    // 4.) ONLY FOR the VERY FIRST FFT: fill first samples with zeros
+     if (first_block) // fill real & imaginaries with zeros for the first BLOCKSIZE samples
+     {
+       for (unsigned idx = 0; iidx < cbs.size * 2; idx++)
+       {
+           cob.fftin[idx] = 0.0;
+       }
+       first_block = 0;
+     }
+     else
+
+       // HERE IT STARTS for all other instances
+       // 6 a.) fill FFT_buffer with last events audio samples
+       for (unsigned idx = 0; idx < cbs.size; idx++)
+       {
+           cob.fftin[idx * 2 + 0] = last_sample_buffer_L[idx]; // real
+           cob.fftin[idx * 2 + 1] = last_sample_buffer_R[idx]; // imaginary
+       }
 
 
-	                for (j = 0; j < cbs.nfor; j++)
-	                {
-	                  for (i = 0; i < fft_conv_size; i++)
-	                  {
-	                    // this sums up the complex multiply results for real and imaginary components
-	                    // stored in accum
-	                    cob.accum[2 * i + 0] += cob.fftout[k][2 * i + 0] * cob.fmask[j][2 * i + 0]
-				                              - cob.fftout[k][2 * i + 1] * cob.fmask[j][2 * i + 1];
-	                    cob.accum[2 * i + 1] += cob.fftout[k][2 * i + 0] * cob.fmask[j][2 * i + 1]
-											  + cob.fftout[k][2 * i + 1] * cob.fmask[j][2 * i + 0];
-	                  }
-	                  // k points to the next relevant fftout result
-	                  // it must flip over when 0 is reached
-	                  k = k -1;
-	                  if(k < 0)
-	                  {
-	                	  k = cbs.nfor - 1;
-	                  }
-	                  //k = (k + a->idxmask) & a->idxmask;
-	                }
-	                cbs.buffidx +=1;
-	                if(cbs.buffidx >= cbs.nfor)
-	                {
-	                	cbs.buffidx = 0;
-	                }
-	                // a->buffidx = (a->buffidx + 1) & a->idxmask;
-	                // inverse FFT
-	                // input: accum
-	                // audio is in right half of the output buffer accum
-	                arm_cfft_f32(&arm_cfft_sR_f32_len256, cob.accum, 1, 1);
-	                // fftw_execute (a->crev);
-	                // copy FFT input buffer to left half of FFT input buffer for next round
-	                // --> overlap 50%
-	                for(int idx=0; idx < cbs.size; idx++)
-	                {
-	                	cob.fftin[2 * idx + 0] = cob.fftin[fft_conv_size + 2 * idx + 0];
-	                	cob.fftin[2 * idx + 1] = cob.fftin[fft_conv_size + 2 * idx + 1];
-	                }
-	                //memcpy (a->fftin, &(a->fftin[2 * a->size]), a->size * sizeof(complex));
-	                // copy I & Q inverse FFT results (from second half of accum) to adb.i_buffer_convolution and adb.q_buffer_convolution
-	                for(int idx = 0; idx < cbs.size; idx++)
-	                {
-	                	cob.i_buffer_convolution[idx] = cob.accum[fft_conv_size + 2 * idx + 0];
-	                	cob.q_buffer_convolution[idx] = cob.accum[fft_conv_size + 2 * idx + 1];
-	                }
+     // copy recent samples to last_sample_buffer for next time!
+     for (unsigned idx = 0; idx < cbs.size; idx++)
+     {
+       last_sample_buffer_L [idx] = cob.i_buffer_convolution[idx];
+       last_sample_buffer_R [idx] = cob.q_buffer_convolution[idx];
+     }
+
+     // 6. b) now fill recent audio samples into FFT_buffer (left channel: re, right channel: im)
+     for (unsigned idx = 0; idx < cbs.size; idx++)
+     {
+         cob.fftin[fft_conv_size + 2 * idx + 0] = cob.i_buffer_convolution[idx];
+         cob.fftin[fft_conv_size + 2 * idx + 1] = cob.q_buffer_convolution[idx];
+     }
+
+     // perform complex FFT
+     // calculation is performed in-place the FFT_buffer [re, im, re, im, re, im . . .]
+     arm_cfft_f32(&arm_cfft_sR_f32_len256, cob.fftin, 0, 1);
+
+     // complex multiply with filter mask
+     arm_cmplx_mult_cmplx_f32 (FFT_buffer, FIR_filter_mask, iFFT_buffer, FFT_length);
+
+     // perform iFFT (in-place)
+     arm_cfft_f32(&arm_cfft_sR_f32_len256, cob.accum, 1, 1);
+
 	                // these buffers now contain the bandpass filtered audio
 	                // which already has suppressed opposite sideband (if cutoff-frequencies have been set correctly for the BP filter)
 	                // so no further "demodulation" is necessary for SSB / CW
@@ -921,7 +904,7 @@ void AudioDriver_RxProcessorConvolution(AudioSample_t * const src, AudioSample_t
 
     // interpolation
 
-// TODO: at this point we have 128 real audio samples filtered and AGC´ed in the variable 	 (for mono modes)
+// TODO: at this point we have 128 real audio samples filtered and AGCï¿½ed in the variable 	 (for mono modes)
     // for stereo modes (not yet implemented), the other channel is in cob.q_buffer_convolution
 
     // now we have to make blocks of 32 samples out of that for further processing
