@@ -33,6 +33,7 @@ drivers/ui/oscillator/osc_interface.c \
 drivers/ui/menu/ui_menu.c \
 drivers/ui/menu/ui_menu_internal.c \
 drivers/ui/menu/ui_menu_structure.c \
+drivers/ui/lcd/ui_lcd_draw.c \
 drivers/ui/lcd/ui_lcd_hy28.c \
 drivers/ui/lcd/ui_lcd_hy28_fonts.c \
 drivers/ui/lcd/ui_spectrum.c \

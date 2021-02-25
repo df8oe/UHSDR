@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "ui_spectrum.h"
-#include "ui_lcd_hy28.h"
+#include "ui_lcd_draw.h"
 // For spectrum display struct
 #include "audio_driver.h"
 #include "ui_driver.h"
@@ -499,15 +499,15 @@ static void UiSpectrum_DrawLine(uint16_t x, uint16_t y_pos_prev, uint16_t y_pos,
 
     if(y_pos - y_pos_prev > 1) // && x !=(SPECTRUM_START_X + x_offset))
     { // plot line upwards
-        UiLcdHy28_DrawStraightLine(x, y_pos_prev + 1, y_pos -  y_pos_prev,LCD_DIR_VERTICAL, clr);
+        UiLcdDraw_StraightLine(x, y_pos_prev + 1, y_pos -  y_pos_prev,LCD_DIR_VERTICAL, clr);
     }
     else if (y_pos - y_pos_prev < -1) // && x !=(SPECTRUM_START_X + x_offset))
     { // plot line downwards
-        UiLcdHy28_DrawStraightLine(x, y_pos, y_pos_prev - y_pos,LCD_DIR_VERTICAL, clr);
+        UiLcdDraw_StraightLine(x, y_pos, y_pos_prev - y_pos,LCD_DIR_VERTICAL, clr);
     }
     else
     {
-        UiLcdHy28_DrawStraightLine(x, y_pos,1,LCD_DIR_VERTICAL, clr);
+        UiLcdDraw_StraightLine(x, y_pos,1,LCD_DIR_VERTICAL, clr);
     }
 
 }
@@ -518,7 +518,7 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
     if(y_old_pos > y_new_pos)
     {
         // is old line going to be overwritten by new line, anyway?
-        UiLcdHy28_DrawStraightLine(x, y_new_pos,y_old_pos-y_new_pos, LCD_DIR_VERTICAL, clr_scope);
+        UiLcdDraw_StraightLine(x, y_new_pos,y_old_pos-y_new_pos, LCD_DIR_VERTICAL, clr_scope);
     }
     else if (y_old_pos < y_new_pos )
     {
@@ -535,7 +535,7 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
                         ( repaint_v_grid ? sd.scope_grid_colour_active : clr_bgr )
                         ;
 
-        UiLcdHy28_DrawStraightLine(x,y_old_pos,y_new_pos-y_old_pos,LCD_DIR_VERTICAL,clr_bg);
+        UiLcdDraw_StraightLine(x,y_old_pos,y_new_pos-y_old_pos,LCD_DIR_VERTICAL,clr_bg);
 
         if (!repaint_v_grid && is_carrier_line == false)
         {
@@ -546,7 +546,7 @@ static void UiSpectrum_ScopeStandard_UpdateVerticalDataLine(uint16_t x, uint16_t
 
                 if(y_old_pos <= sd.horz_grid_id[k] && sd.horz_grid_id[k] < y_new_pos )
                 {
-                    UiLcdHy28_DrawStraightLine(x,sd.horz_grid_id[k],1,LCD_DIR_HORIZONTAL, sd.scope_grid_colour_active);
+                    UiLcdDraw_StraightLine(x,sd.horz_grid_id[k],1,LCD_DIR_HORIZONTAL, sd.scope_grid_colour_active);
                 }
             }
         }
@@ -566,24 +566,24 @@ static void UiSpectrum_CreateDrawArea()
     UiMenu_MapColors(ts.spectrum_centre_line_colour,NULL, &sd.scope_centre_grid_colour_active);
 
     // Clear screen where frequency information will be under graticule
-    UiLcdHy28_DrawFullRect(slayout.graticule.x, slayout.graticule.y, slayout.graticule.h, slayout.graticule.w, Black);    // Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
+    UiLcdDraw_FullRect(slayout.graticule.x, slayout.graticule.y, slayout.graticule.h, slayout.graticule.w, Black);    // Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
 
     //sd.wfall_DrawDirection=1;
 
 // was used on 320x240, we may reactivate that at some point for all resolutions
 #if 0
     // Frequency bar separator
-    UiLcdHy28_DrawHorizLineWithGrad(pos_spectrum->IND_X,(pos_spectrum->IND_Y + pos_spectrum->IND_H - 20),pos_spectrum->IND_W,COL_SPECTRUM_GRAD);
+    UiLcdDraw_HorizLineWithGrad(pos_spectrum->IND_X,(pos_spectrum->IND_Y + pos_spectrum->IND_H - 20),pos_spectrum->IND_W,COL_SPECTRUM_GRAD);
 
     // Draw control left and right border
-    UiLcdHy28_DrawStraightLineDouble((pos_spectrum->DRAW_X_LEFT),
+    UiLcdDraw_StraightLineDouble((pos_spectrum->DRAW_X_LEFT),
     		(pos_spectrum->IND_Y - 20),
 			(pos_spectrum->IND_H + 12),
 			LCD_DIR_VERTICAL,
 			//									RGB(COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD,COL_SPECTRUM_GRAD));
 			sd.scope_grid_colour_active);
 
-    UiLcdHy28_DrawStraightLineDouble(	(pos_spectrum->IND_X + pos_spectrum->IND_W - 2),
+    UiLcdDraw_StraightLineDouble(	(pos_spectrum->IND_X + pos_spectrum->IND_W - 2),
     		(pos_spectrum->IND_Y - 20),
 			(pos_spectrum->IND_H + 12),
 			LCD_DIR_VERTICAL,
@@ -597,7 +597,7 @@ static void UiSpectrum_CreateDrawArea()
     	// Draw top band = grey box in which text is printed
     	for(int i = 0; i < 16; i++)
     	{
-    		UiLcdHy28_DrawHorizLineWithGrad(slayout.title.x,slayout.title.y + i, slayout.title.w, COL_SPECTRUM_GRAD);
+    		UiLcdDraw_HorizLineWithGrad(slayout.title.x,slayout.title.y + i, slayout.title.w, COL_SPECTRUM_GRAD);
     	}
 
     	char bartext[34];
@@ -605,9 +605,9 @@ static void UiSpectrum_CreateDrawArea()
     	// Top band text - middle caption
     	UiSpectrum_SpectrumTopBar_GetText(bartext);
 
-    	UiLcdHy28_PrintTextCentered(
+    	UiLcdDraw_PrintTextCentered(
     			slayout.title.x,
-    			slayout.title.y + (slayout.title.h - UiLcdHy28_TextHeight(0))/2,
+    			slayout.title.y + (slayout.title.h - UiLcdDraw_TextHeight(0))/2,
     			slayout.title.w,
 				bartext,
 				White,
@@ -640,9 +640,9 @@ static void UiSpectrum_CreateDrawArea()
     if (is_waterfallmode() == true && ts.waterfall.speed == 0)
     {
         // print "disabled" in the middle of the screen if the waterfall or scope was disabled
-        UiLcdHy28_PrintTextCentered(
+        UiLcdDraw_PrintTextCentered(
                 slayout.wfall.x,
-                slayout.wfall.y + (slayout.scope.h - UiLcdHy28_TextHeight(0))/2 ,
+                slayout.wfall.y + (slayout.scope.h - UiLcdDraw_TextHeight(0))/2 ,
                 slayout.wfall.w,
                 "DISABLED",
                 Grey, Black,0);
@@ -651,9 +651,9 @@ static void UiSpectrum_CreateDrawArea()
     if (is_scopemode() == true && ts.scope_speed == 0)
     {
         // print "disabled" in the middle of the screen if the waterfall or scope was disabled
-        UiLcdHy28_PrintTextCentered(
+        UiLcdDraw_PrintTextCentered(
                 slayout.scope.x,
-                slayout.scope.y + (slayout.scope.h - UiLcdHy28_TextHeight(0))/2 ,
+                slayout.scope.y + (slayout.scope.h - UiLcdDraw_TextHeight(0))/2 ,
                 slayout.scope.w,
                 "DISABLED",
                 Grey, Black,0);
@@ -668,7 +668,7 @@ static void UiSpectrum_CreateDrawArea()
 
 void UiSpectrum_Clear()
 {
-    UiLcdHy28_DrawFullRect(slayout.full.x, slayout.full.y, slayout.full.h, slayout.full.w, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
+    UiLcdDraw_FullRect(slayout.full.x, slayout.full.y, slayout.full.h, slayout.full.w, Black);	// Clear screen under spectrum scope by drawing a single, black block (faster with SPI!)
     ts.VirtualKeysShown_flag=false;	//if virtual keypad was shown, switch it off
 }
 
@@ -809,7 +809,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 
                 if(is_scope_light)
                 {
-                    UiLcdHy28_DrawStraightLine( sd.marker_line_pos_prev[idx],
+                    UiLcdDraw_StraightLine( sd.marker_line_pos_prev[idx],
                             spec_top_y - spec_height_limit,
                             spec_height_limit,
                             LCD_DIR_VERTICAL,
@@ -838,7 +838,7 @@ static void    UiSpectrum_DrawScope(uint16_t *old_pos, float32_t *fft_new)
 
                 // draw new line if inside screen limits
 
-                UiLcdHy28_DrawStraightLine( marker_line_pos[idx],
+                UiLcdDraw_StraightLine( marker_line_pos[idx],
                         spec_top_y - spec_height_limit,
                         spec_height_limit,
                         LCD_DIR_VERTICAL,
@@ -1631,12 +1631,12 @@ void UiSpectrum_DisplayFilterBW()
 
         uint16_t pos_bw_y = slayout.graticule.y + slayout.graticule.h - 2;
 
-        UiLcdHy28_DrawStraightLineDouble(slayout.graticule.x, pos_bw_y, slayout.graticule.w, LCD_DIR_HORIZONTAL, Black);
+        UiLcdDraw_StraightLineDouble(slayout.graticule.x, pos_bw_y, slayout.graticule.w, LCD_DIR_HORIZONTAL, Black);
         uint32_t clr;
         // get color for line
         UiMenu_MapColors(ts.filter_disp_colour,NULL, &clr);
         // draw line
-        UiLcdHy28_DrawStraightLineDouble(((float32_t)slayout.graticule.x + roundf(left_filter_border_pos)), pos_bw_y, roundf(width_pixel), LCD_DIR_HORIZONTAL, clr);
+        UiLcdDraw_StraightLineDouble(((float32_t)slayout.graticule.x + roundf(left_filter_border_pos)), pos_bw_y, roundf(width_pixel), LCD_DIR_HORIZONTAL, clr);
     }
 }
 
@@ -1705,8 +1705,8 @@ static void UiSpectrum_DrawFrequencyBar()
         {
             int pos = idx2pos[idx+4];
             const uint8_t graticule_font = 4;
-            const uint16_t number_width = UiLcdHy28_TextWidth("    ",graticule_font);
-            const uint16_t pos_number_y = (slayout.graticule.y +  (slayout.graticule.h - UiLcdHy28_TextHeight(graticule_font))/2);
+            const uint16_t number_width = UiLcdDraw_TextWidth("    ",graticule_font);
+            const uint16_t pos_number_y = (slayout.graticule.y +  (slayout.graticule.h - UiLcdDraw_TextHeight(graticule_font))/2);
             if (idx != centerIdx)
             {
                 char *c;
@@ -1725,16 +1725,16 @@ static void UiSpectrum_DrawFrequencyBar()
                 }
                 if (idx == -4) // left border
                 {
-                    UiLcdHy28_PrintText( slayout.graticule.x + pos, pos_number_y,c,clr,Black,graticule_font);
+                    UiLcdDraw_PrintText( slayout.graticule.x + pos, pos_number_y,c,clr,Black,graticule_font);
                 }
                 else if (idx == 4) // right border
                 {
-                    UiLcdHy28_PrintTextRight( slayout.graticule.x + pos, pos_number_y,c,clr,Black,graticule_font);
+                    UiLcdDraw_PrintTextRight( slayout.graticule.x + pos, pos_number_y,c,clr,Black,graticule_font);
                 }
 
                 else
                 {
-                    UiLcdHy28_PrintTextCentered(slayout.graticule.x +  pos - number_width/2,pos_number_y, number_width,c,clr,Black,graticule_font);
+                    UiLcdDraw_PrintTextCentered(slayout.graticule.x +  pos - number_width/2,pos_number_y, number_width,c,clr,Black,graticule_font);
                 }
             }
         }
@@ -1789,36 +1789,36 @@ void UiSpectrum_InitCwSnapDisplay (bool visible)
 	{
 		color = Black;
 		// also erase yellow indicator
-        UiLcdHy28_DrawFullRect(ts.Layout->SNAP_CARRIER.x-27, ts.Layout->SNAP_CARRIER.y, 6, 58, Black);
+        UiLcdDraw_FullRect(ts.Layout->SNAP_CARRIER.x-27, ts.Layout->SNAP_CARRIER.y, 6, 58, Black);
 	}
 	//Horizontal lines of box
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x-27,
+	UiLcdDraw_StraightLine(ts.Layout->SNAP_CARRIER.x-27,
 			ts.Layout->SNAP_CARRIER.y + 6,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x+5,
+	UiLcdDraw_StraightLine(ts.Layout->SNAP_CARRIER.x+5,
 			ts.Layout->SNAP_CARRIER.y + 6,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x-27,
+	UiLcdDraw_StraightLine(ts.Layout->SNAP_CARRIER.x-27,
 			ts.Layout->SNAP_CARRIER.y - 1,
             27,
             LCD_DIR_HORIZONTAL,
             color);
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x+5,
+	UiLcdDraw_StraightLine(ts.Layout->SNAP_CARRIER.x+5,
 			ts.Layout->SNAP_CARRIER.y - 1,
             27,
             LCD_DIR_HORIZONTAL,
             color);
 	// vertical lines of box
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x-27,
+	UiLcdDraw_StraightLine(ts.Layout->SNAP_CARRIER.x-27,
 			ts.Layout->SNAP_CARRIER.y - 1,
             8,
             LCD_DIR_VERTICAL,
             color);
-	UiLcdHy28_DrawStraightLine(ts.Layout->SNAP_CARRIER.x+31,
+	UiLcdDraw_StraightLine(ts.Layout->SNAP_CARRIER.x+31,
 			ts.Layout->SNAP_CARRIER.y - 1,
             8,
             LCD_DIR_VERTICAL,
@@ -1854,13 +1854,13 @@ void UiSpectrum_CwSnapDisplay (float32_t delta)
 
 	if(delta_p != old_delta_p)
 	{
-	    UiLcdHy28_DrawStraightLineDouble( ts.Layout->SNAP_CARRIER.x + old_delta_p + 1,
+	    UiLcdDraw_StraightLineDouble( ts.Layout->SNAP_CARRIER.x + old_delta_p + 1,
 	    		ts.Layout->SNAP_CARRIER.y,
 	            6,
 	            LCD_DIR_VERTICAL,
 	            Black);
 
-	    UiLcdHy28_DrawStraightLineDouble( ts.Layout->SNAP_CARRIER.x + delta_p + 1,
+	    UiLcdDraw_StraightLineDouble( ts.Layout->SNAP_CARRIER.x + delta_p + 1,
 	    		ts.Layout->SNAP_CARRIER.y,
 	            6,
 	            LCD_DIR_VERTICAL,

@@ -13,6 +13,7 @@
  ************************************************************************************/
 
 #include "uhsdr_board.h"
+#include "ui_lcd_draw.h"
 #include "ui_spectrum.h"
 #include "ui_driver.h"
 #include <stdlib.h>
@@ -43,11 +44,11 @@ uint8_t UiVk_KeyState[UiVk_MaxKeyCount];
 
 static void UiVk_DrawButtonBody(UiArea_t* Ka, uint16_t col_Bcgr, uint16_t col_LeftUP, uint16_t col_RightBot)
 {
-	UiLcdHy28_DrawFullRect(Ka->x+1,Ka->y+1,Ka->h-1,Ka->w-1,col_Bcgr);
-	UiLcdHy28_DrawStraightLine(Ka->x,Ka->y,Ka->h+1,LCD_DIR_VERTICAL,col_LeftUP);	//left
-	UiLcdHy28_DrawStraightLine(Ka->x+1,Ka->y,Ka->w,LCD_DIR_HORIZONTAL,col_LeftUP);	//top
-	UiLcdHy28_DrawStraightLine(Ka->x+Ka->w,Ka->y+1,Ka->h-1,LCD_DIR_VERTICAL,col_RightBot);	//right
-	UiLcdHy28_DrawStraightLine(Ka->x+1,Ka->y+Ka->h,Ka->w,LCD_DIR_HORIZONTAL,col_RightBot); //bottom
+	UiLcdDraw_FullRect(Ka->x+1,Ka->y+1,Ka->h-1,Ka->w-1,col_Bcgr);
+	UiLcdDraw_StraightLine(Ka->x,Ka->y,Ka->h+1,LCD_DIR_VERTICAL,col_LeftUP);	//left
+	UiLcdDraw_StraightLine(Ka->x+1,Ka->y,Ka->w,LCD_DIR_HORIZONTAL,col_LeftUP);	//top
+	UiLcdDraw_StraightLine(Ka->x+Ka->w,Ka->y+1,Ka->h-1,LCD_DIR_VERTICAL,col_RightBot);	//right
+	UiLcdDraw_StraightLine(Ka->x+1,Ka->y+Ka->h,Ka->w,LCD_DIR_HORIZONTAL,col_RightBot); //bottom
 }
 
 /**
@@ -86,7 +87,7 @@ static void UiVk_DrawButton(UiArea_t* Btn_area, bool Warning, uint8_t Vbtn_State
 		break;
 	}
 
-    uint8_t FontHeight=UiLcdHy28_TextHeight(font);
+    uint8_t FontHeight=UiLcdDraw_TextHeight(font);
     uint16_t TextHeight =  FontHeight;
 
     const char* txt_=txt;
@@ -100,7 +101,7 @@ static void UiVk_DrawButton(UiArea_t* Btn_area, bool Warning, uint8_t Vbtn_State
     }
 
 	UiVk_DrawButtonBody(Btn_area,col_Bcgr,col_LeftUP,col_RightBot);
-	UiLcdHy28_PrintTextCentered(Btn_area->x+2,Btn_area->y+Btn_area->h/2-TextHeight/2,Btn_area->w-4,txt,col_Text,col_Bcgr,font);
+	UiLcdDraw_PrintTextCentered(Btn_area->x+2,Btn_area->y+Btn_area->h/2-TextHeight/2,Btn_area->w-4,txt,col_Text,col_Bcgr,font);
 }
 
 /**
@@ -540,7 +541,7 @@ static void UiVk_FSetNumKeyUpdate()
 	uint8_t FSet_font=1;
 #endif
 	uint16_t txtPosX=KeybArea.x+KeybArea.w-4;
-	const uint8_t font_width = UiLcdHy28_TextWidth("0",FSet_font);
+	const uint8_t font_width = UiLcdDraw_TextWidth("0",FSet_font);
 
 	i=UiVk_FreqEditTextCntr;
 
@@ -560,21 +561,21 @@ static void UiVk_FSetNumKeyUpdate()
 	    txt[t]=0;
 	    if(i>0)
 	    {
-	        UiLcdHy28_PrintTextRight(txtPosX-UiLcdHy28_TextWidth(txt,FSet_font)+font_width/2,KeybArea.y+4,".",textColor,Col_BtnForeCol,FSet_font);
+	        UiLcdDraw_PrintTextRight(txtPosX-UiLcdDraw_TextWidth(txt,FSet_font)+font_width/2,KeybArea.y+4,".",textColor,Col_BtnForeCol,FSet_font);
 	    }
 
-        UiLcdHy28_PrintTextRight(txtPosX,KeybArea.y+4,txt,textColor,Col_BtnForeCol,FSet_font);
-	    txtPosX-=UiLcdHy28_TextWidth(txt,FSet_font)+font_width/2;
+        UiLcdDraw_PrintTextRight(txtPosX,KeybArea.y+4,txt,textColor,Col_BtnForeCol,FSet_font);
+	    txtPosX-=UiLcdDraw_TextWidth(txt,FSet_font)+font_width/2;
 	}
 
-	UiLcdHy28_PrintText(KeybArea.x+4,KeybArea.y+4,txtInfo,RGB(0xff,0xff,0x00),Col_BtnForeCol,4);
+	UiLcdDraw_PrintText(KeybArea.x+4,KeybArea.y+4,txtInfo,RGB(0xff,0xff,0x00),Col_BtnForeCol,4);
 }
 
 static void UiVk_FSetEraseFreqArea()
 {
 	UiArea_t KeybArea;
 	UiVk_GetKeybArea(&KeybArea);
-	UiLcdHy28_DrawFullRect(KeybArea.x+2+UiVk_InfoWindowWidth,KeybArea.y+4,28,KeybArea.w-UiVk_InfoWindowWidth-4,Col_BtnForeCol);
+	UiLcdDraw_FullRect(KeybArea.x+2+UiVk_InfoWindowWidth,KeybArea.y+4,28,KeybArea.w-UiVk_InfoWindowWidth-4,Col_BtnForeCol);
 }
 
 static void UiVk_FSetNumKeyVKeyCallBackLong(uint8_t KeyNum, uint32_t param)

@@ -92,7 +92,7 @@ void float2fixedstr(char* buf, int maxchar, float32_t f, uint16_t digitsBefore, 
 
 
 // LCD
-#include "ui_lcd_hy28.h" // for colors!
+#include "ui_lcd_draw.h" // for colors!
 
 #include "uhsdr_hw_i2c.h"
 #include "uhsdr_rtc.h"
@@ -718,7 +718,7 @@ bool __attribute__ ((noinline)) UiDriverMenuBandPowerAdjust(int var, MenuProcess
     if((band_mode == band->band_mode) && (ts.power_level == pa_level))
     {
         const uint8_t val_defmin = ts.rf_board == RF_BOARD_SPARKLE ? TX_POWER_FACTOR_MIN_DUC : TX_POWER_FACTOR_MIN;
-        const uint16_t val_pf_max = ts.rf_board == RF_BOARD_SPARKLE ? TX_POWER_FACTOR_MAX_DUC : TX_POWER_FACTOR_MAX;
+        const uint16_t val_pf_max = ts.rf_board == RF_BOARD_SPARKLE ? TX_POWER_FACTOR_MAX_DUC : 255;
 
         tchange = UiDriverMenuItemChangeUInt8(var, mode, adj_ptr,
                                               val_defmin,

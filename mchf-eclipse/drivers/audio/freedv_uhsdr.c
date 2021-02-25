@@ -15,7 +15,7 @@
 #include "freedv_uhsdr.h"
 #include "ui_lcd_layouts.h"
 #include "profiling.h"
-#include "ui_lcd_hy28.h"
+#include "ui_lcd_draw.h"
 #include "radio_management.h"
 
 #if defined(USE_FREEDV) || defined(USE_ALTERNATE_NR)
@@ -99,7 +99,7 @@ static void FreeDv_DisplayBer()
 
     ber = 1000*freedv_get_total_bit_errors(f_FREEDV)/freedv_get_total_bits(f_FREEDV);
     snprintf(ber_string,12,"0.%03d",ber);  //calculate and display the bit error rate
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_BER.x + freedv_display_x_offset,ts.Layout->FREEDV_BER.y, ber_string,Yellow,Black, ts.Layout->FREEDV_FONT);
+    UiLcdDraw_PrintText(ts.Layout->FREEDV_BER.x + freedv_display_x_offset,ts.Layout->FREEDV_BER.y, ber_string,Yellow,Black, ts.Layout->FREEDV_FONT);
 
 }
 
@@ -135,24 +135,24 @@ static void FreeDv_DisplaySnr()
     }
 
     snprintf(SNR_string,12,"%-2ld",SNR_Int);  //Display the current SNR and round it up to the next int
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x + freedv_display_x_offset, ts.Layout->FREEDV_SNR.y ,SNR_string,clr_fg,Black, ts.Layout->FREEDV_FONT);
+    UiLcdDraw_PrintText(ts.Layout->FREEDV_SNR.x + freedv_display_x_offset, ts.Layout->FREEDV_SNR.y ,SNR_string,clr_fg,Black, ts.Layout->FREEDV_FONT);
 }
 
 void FreeDv_DisplayClear()
 {
 //    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x, ts.Layout->FREEDV_SNR.y,"            ",Yellow,Black,ts.Layout->FREEDV_FONT);
 //   UiLcdHy28_PrintText(ts.Layout->FREEDV_BER.x, ts.Layout->FREEDV_BER.y,"            ",Yellow,Black,ts.Layout->FREEDV_FONT);
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x, ts.Layout->FREEDV_SNR.y,"         ",Yellow,Black,ts.Layout->FREEDV_FONT);		//SNR=00
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_BER.x, ts.Layout->FREEDV_BER.y,"         ",Yellow,Black,ts.Layout->FREEDV_FONT);		//BER=0.000	(max 9 chars)
+    UiLcdDraw_PrintText(ts.Layout->FREEDV_SNR.x, ts.Layout->FREEDV_SNR.y,"         ",Yellow,Black,ts.Layout->FREEDV_FONT);		//SNR=00
+    UiLcdDraw_PrintText(ts.Layout->FREEDV_BER.x, ts.Layout->FREEDV_BER.y,"         ",Yellow,Black,ts.Layout->FREEDV_FONT);		//BER=0.000	(max 9 chars)
     UiDriver_TextMsgClear();
 }
 
 void FreeDv_DisplayPrepare()
 {
 	UiDriver_TextMsgClear();
-	freedv_display_x_offset = UiLcdHy28_TextWidth("SNR=", ts.Layout->FREEDV_FONT);
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_SNR.x, ts.Layout->FREEDV_SNR.y,"SNR=",Yellow,Black, ts.Layout->FREEDV_FONT);
-    UiLcdHy28_PrintText(ts.Layout->FREEDV_BER.x, ts.Layout->FREEDV_BER.y,"BER=",Yellow,Black, ts.Layout->FREEDV_FONT);
+	freedv_display_x_offset = UiLcdDraw_TextWidth("SNR=", ts.Layout->FREEDV_FONT);
+    UiLcdDraw_PrintText(ts.Layout->FREEDV_SNR.x, ts.Layout->FREEDV_SNR.y,"SNR=",Yellow,Black, ts.Layout->FREEDV_FONT);
+    UiLcdDraw_PrintText(ts.Layout->FREEDV_BER.x, ts.Layout->FREEDV_BER.y,"BER=",Yellow,Black, ts.Layout->FREEDV_FONT);
 }
 
 void FreeDv_DisplayUpdate()

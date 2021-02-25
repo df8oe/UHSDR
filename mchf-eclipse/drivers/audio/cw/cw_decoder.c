@@ -41,6 +41,7 @@
 
 #include "uhsdr_board.h"
 #include "ui_lcd_layouts.h"
+#include "ui_lcd_draw.h"
 #include "ui_driver.h"
 #include "cw_decoder.h"
 #include "audio_driver.h"
@@ -1082,8 +1083,8 @@ void CwDecoder_WpmDisplayClearOrPrepare(bool prepare)
     uint16_t color1 = prepare?White:Black;
     uint16_t color2 = prepare?Green:Black;
 
-    UiLcdHy28_PrintText(ts.Layout->CW_DECODER_WPM.x, ts.Layout->CW_DECODER_WPM.y," --",color1,Black,0);
-    UiLcdHy28_PrintText(ts.Layout->CW_DECODER_WPM.x + 27, ts.Layout->CW_DECODER_WPM.y, "wpm", color2, Black, 4);
+    UiLcdDraw_PrintText(ts.Layout->CW_DECODER_WPM.x, ts.Layout->CW_DECODER_WPM.y," --",color1,Black,0);
+    UiLcdDraw_PrintText(ts.Layout->CW_DECODER_WPM.x + 27, ts.Layout->CW_DECODER_WPM.y, "wpm", color2, Black, 4);
 
     if (prepare == true)
     {
@@ -1101,7 +1102,7 @@ void CwDecoder_WpmDisplayUpdate(bool force_update)
 
 	    snprintf(WPM_str, 10, cw_decoder_config.speed > 0? "%3u" : " --", cw_decoder_config.speed);
 
-		UiLcdHy28_PrintText(ts.Layout->CW_DECODER_WPM.x, ts.Layout->CW_DECODER_WPM.y, WPM_str,White,Black,0);
+		UiLcdDraw_PrintText(ts.Layout->CW_DECODER_WPM.x, ts.Layout->CW_DECODER_WPM.y, WPM_str,White,Black,0);
 	}
 }
 

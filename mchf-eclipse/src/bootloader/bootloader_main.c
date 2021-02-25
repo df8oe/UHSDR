@@ -25,6 +25,7 @@
 #include "usb_host.h"
 #include "bootloader_main.h"
 #include "ui_lcd_hy28.h"
+#include "ui_lcd_draw.h"
 
 
 FATFS USBDISKFatFs;           /* File system object for USB disk logical drive */
@@ -75,7 +76,7 @@ static void Bootloader_DisplayInit()
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 
     UiLcdHy28_Init();
-    UiLcdHy28_LcdClear(Black);
+    UiLcdDraw_LcdClear(Black);
     mchfBl_PinOn(BACKLIGHT);
 
 }
@@ -433,6 +434,6 @@ static uint8_t current_line;
 
 void Bootloader_PrintLine(const char* txt)
 {
-    UiLcdHy28_PrintText(4,4+current_line*16,txt,Yellow,Black,0);
+    UiLcdDraw_PrintText(4,4+current_line*16,txt,Yellow,Black,0);
     current_line++;
 }

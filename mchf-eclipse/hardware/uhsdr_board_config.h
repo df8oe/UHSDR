@@ -92,7 +92,9 @@
 // only possible on the DDC/DUC RF board
 // and by using 192ksps sample rate for audio processing
 // tested on F7 & H7
-//#define USE_WFM
+#ifndef STM32F4
+    #define USE_WFM
+#endif
 
 // Fast convolution filtering
 // experimental at the moment DD4WH, 2018_08_18
@@ -217,10 +219,10 @@
 
 // for now: These are fixed.
 #ifndef IQ_SAMPLE_RATE
-    #if defined(USE_WFM)
-        #define IQ_SAMPLE_RATE (192000)
+    #ifdef UI_BRD_MCHF
+        #define IQ_SAMPLE_RATE (48000)
     #else
-        #define IQ_SAMPLE_RATE (96000)
+        #define IQ_SAMPLE_RATE (192000)
     #endif
 #endif
 
@@ -254,6 +256,13 @@
 #endif
 
 
+
+
+//******************************CONFIGURATION_LOGIC_CHECKS************************************//
+#if defined(USE_WFM) && IQ_SAMPLE_RATE < 192000
+    #error IQ_SAMPLE_RATE must be at least 192000 for USE_WFM (Broadband FM reception)
+#endif
+
 #if (IQ_AUDIO_RATIO * AUDIO_SAMPLE_RATE) != IQ_SAMPLE_RATE
     #error Iq Sample rate must be an integer multiple of Audio sample rate
 #endif
@@ -267,12 +276,6 @@
 #if (IQ_SAMPLE_RATE/IQ_BLOCK_SIZE) != (AUDIO_SAMPLE_RATE/AUDIO_BLOCK_SIZE)
     #error IQ Interrupt frequency must be identical to Audio Interrupt Frequency
 #endif
-#if (IQ_BLOCK_SIZE) != (AUDIO_BLOCK_SIZE)
-    // #error IQ and AUDIO block size must be identical
-#endif
-
-
-//******************************CONFIGURATION_LOGIC_CHECKS************************************//
 
 #if IQ_SAMPLE_RATE != 48000 && IQ_SAMPLE_RATE != 96000 && IQ_SAMPLE_RATE != 192000
     #error IQ_SAMPLE_RATE must equal 48000 or 96000 or 192000

@@ -14,5 +14,5 @@ fw-*.elf
 fw-*.map
 firmware_Target_Flash/
 Release*/
-build-*/
+build*/
 Debug*/

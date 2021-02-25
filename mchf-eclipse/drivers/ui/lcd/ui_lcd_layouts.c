@@ -15,6 +15,7 @@
 #ifndef BOOTLOADER_BUILD
 #include "uhsdr_board.h"
 #include "ui_lcd_layouts.h"
+#include "ui_lcd_draw.h"
 #include "ui_driver.h"
 #include "codec.h"
 
