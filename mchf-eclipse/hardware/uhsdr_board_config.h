@@ -93,7 +93,7 @@
 // and by using 192ksps sample rate for audio processing
 // tested on F7 & H7
 #ifndef STM32F4
-    #define USE_WFM
+//    #define USE_WFM
 #endif
 
 // Fast convolution filtering
