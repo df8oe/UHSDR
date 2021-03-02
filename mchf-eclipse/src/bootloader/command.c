@@ -25,7 +25,6 @@
 #include "fatfs.h"
 #include "uhsdr_boot_hw.h"
 #include "bootloader_main.h"
-#include "ui_lcd_hy28.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private defines -----------------------------------------------------------*/

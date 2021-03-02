@@ -18,6 +18,7 @@
 #include "ui_driver.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <ui_lcd_hy28.h>
 #include "radio_management.h"
 
 #define Col_BtnForeCol RGB(0x90,0x90,0x90)

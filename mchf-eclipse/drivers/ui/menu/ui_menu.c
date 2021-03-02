@@ -24,10 +24,9 @@
 #include "ui_spectrum.h"
 #include "rtc.h"
 #include "uhsdr_hmc1023.h"
-
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <ui_lcd_hy28.h>
 #include "arm_math.h"
 #include "math.h"
 #include "codec.h"

@@ -13,6 +13,7 @@
  ************************************************************************************/
 
 // Common
+#include <ui_lcd_hy28.h>
 #include "uhsdr_board.h"
 //#include "uhsdr_rtc.h"
 
@@ -32,8 +33,6 @@
 
 // UI Driver
 #include "drivers/ui/ui_driver.h"
-
-// General
 #include "misc/profiling.h"
 #include "uhsdr_canary.h"
 

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <ui_lcd_hy28.h>
 #include "ui_spectrum.h"
 #include "ui_lcd_draw.h"
 // For spectrum display struct

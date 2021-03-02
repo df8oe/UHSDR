@@ -148,6 +148,9 @@
 // this is the standard NR now (Febr 2018)
 #define USE_ALTERNATE_NR
 
+#define USE_DISPLAY_PAR
+#define USE_DISPLAY_SPI
+
 // you may optionally define the list of supported GFX drivers externally
 // if you just define EXTERNAL_USE_GFX_CONFIG and no USE_GFX_...
 // you will get a headless system using a dummy display driver
@@ -258,7 +261,23 @@
 
 
 
+// DERIVED VALUES
+#ifdef USE_DISPLAY_PAR
+    #define LCD_REG      (*((volatile unsigned short *) 0x60000000))
+
+    #if defined(UI_BRD_MCHF)
+    #define LCD_RAM      (*((volatile unsigned short *) 0x60020000))
+    #elif defined(UI_BRD_OVI40)
+    #define LCD_RAM      (*((volatile unsigned short *) 0x60004000))
+    #endif
+#endif
+
+
 //******************************CONFIGURATION_LOGIC_CHECKS************************************//
+#if !defined(USE_DISPLAY_PAR) && !defined(USE_SPI_DISPLAY)
+#warning Both USE_DISPLAY_PAR and USE_SPI_DISPLAY are disabled, no display driver will be available!
+#endif
+
 #if defined(USE_WFM) && IQ_SAMPLE_RATE < 192000
     #error IQ_SAMPLE_RATE must be at least 192000 for USE_WFM (Broadband FM reception)
 #endif

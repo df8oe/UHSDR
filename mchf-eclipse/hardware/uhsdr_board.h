@@ -21,7 +21,6 @@
 #include "audio_filter.h"
 #include "osc_interface.h"
 #include "ui_lcd_layouts.h"
-#include "ui_lcd_hy28.h"
 #include "ui_vkeybrd.h"
 #include "audio_driver.h"
 
@@ -41,6 +40,9 @@ struct mchf_waterfall
 
 #define TRX_MODE_RX				0
 #define TRX_MODE_TX				1
+
+typedef struct mchf_display_t mchf_display_t;
+typedef struct mchf_touchscreen_t mchf_touchscreen_t;
 
 typedef enum {
     DEMOD_USB       =   0,
