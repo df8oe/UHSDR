@@ -55,8 +55,8 @@
     #endif
 
 
-   	#define LCD_REG_RA8875      (*((volatile unsigned short *) 0x60004000))
-    #define LCD_RAM_RA8875      (*((volatile unsigned short *) 0x60000000))
+//    #define LCD_REG_RA8875      (*((volatile unsigned short *) 0x60004000))
+//    #define LCD_RAM_RA8875      (*((volatile unsigned short *) 0x60000000))
 
     #define LCD_REG      (*((volatile unsigned short *) 0x60000000))
     #if defined(UI_BRD_MCHF)
@@ -87,8 +87,8 @@ mchf_display_t mchf_display;
 
 void sync_mem()
 {
-#if 0
-    __DMB();
+#if 1
+//    __DMB();
 #endif
 }
 extern const uhsdr_display_info_t display_infos[];
@@ -393,12 +393,12 @@ static const RegisterValue_t ra8875[] =
 	    { REGVAL_DELAY, 100},              // delay 100 ms
         { 0x01, 0x00},
 	    { REGVAL_DELAY, 100},              // delay 100 ms
-        { 0x88, 0x0a},
+        { 0x88, 0x0c},
 	    { REGVAL_DELAY, 100},              // delay 100 ms
-        { 0x89, 0x02},
+        { 0x89, 0x01},
 	    { REGVAL_DELAY, 100},              // delay 100 ms
-        { 0x10, 0x0F},   // 65K 16 bit 8080 mpu interface
-        { 0x04, 0x80},   // 00b: PCLK period = System Clock period.
+        { 0x10, 0x0C},   // 65K 16 bit 8080 mpu interface
+        { 0x04, 0x81},   // 00b: PCLK period = System Clock period.
 	    { REGVAL_DELAY, 100},              // delay 100 ms
         //Horizontal set
         { 0x14, 0x63}, //Horizontal display width(pixels) = (HDWR + 1)*8
@@ -617,11 +617,32 @@ void UiLcdHy28_BacklightEnable(bool on)
 
 static uint32_t lcd_spi_prescaler = SPI_PRESCALE_LCD_DEFAULT;
 
-// static SPI_HandleTypeDef SPI_Handle;
+static inline void UiLcdHy28_SetSpiPrescaler(uint32_t baudrate_prescaler)
+{
+    /*---------------------------- SPIx CR1 Configuration ------------------------*/
+    // the baud rate register differs across the different processors
+#if defined(STM32H7)
+    #define SPI_BR_REG CFG1
+#elif defined(STM32F4) || defined(STM32F7)
+    #define SPI_BR_REG CR1
+#endif
 
+    /* Get the SPIx SPI_BR_REG value */
+    uint32_t tmpreg = SPI_DISPLAY->SPI_BR_REG;
+    tmpreg &= ~SPI_BAUDRATEPRESCALER_256;
+    tmpreg |= baudrate_prescaler;
+
+    /* Write to SPIx CR1 */
+    SPI_DISPLAY->SPI_BR_REG = tmpreg;
+}
+
+
+
+// static SPI_HandleTypeDef SPI_Handle;
 void UiLcdHy28_SpiInit(bool hispeed, mchf_display_types_t display_type)
 {
     lcd_spi_prescaler = hispeed?SPI_PRESCALE_LCD_HIGH:SPI_PRESCALE_LCD_DEFAULT;
+    hspiDisplay.Init.BaudRatePrescaler = lcd_spi_prescaler;
 
 #ifdef USE_GFX_ILI9486
     if (display_type == DISPLAY_RPI_SPI)
@@ -630,12 +651,11 @@ void UiLcdHy28_SpiInit(bool hispeed, mchf_display_types_t display_type)
         hspiDisplay.Init.CLKPhase = SPI_PHASE_1EDGE;
         hspiDisplay.Init.NSS = SPI_NSS_SOFT;
 
-        hspiDisplay.Init.BaudRatePrescaler = lcd_spi_prescaler;
-
         if (HAL_SPI_Init(&hspiDisplay) != HAL_OK)
         {
             Error_Handler();
         }
+
     }
 #endif
 
@@ -847,15 +867,12 @@ uint8_t UiLcdHy28_SpiReadByteFast()
     return retval;
 }
 
-
 // TODO: Function Per Controller Group
 void UiLcdHy28_WriteIndexSpi(unsigned char index)
 {
     UiLcdHy28_SpiLcdCsEnable();
 
     mchf_display.WriteIndexSpi_Prepare();
-
-    UiLcdHy28_SpiSendByte(0);
     UiLcdHy28_SpiSendByte(index);
 
     UiLcdHy28_LcdSpiFinishTransfer();
@@ -893,22 +910,10 @@ static inline void UiLcdHy28_WriteDataOnly( unsigned short data)
 #endif
     }
 }
-#ifdef USE_GFX_RA8875
-static inline void UiLcdHy28_WriteDataOnlyRA8875( unsigned short data)
-{
-	LCD_RAM_RA8875 = data;
-	sync_mem();
-}
-#endif
 
 static inline void UiLcdHy28_WriteData( unsigned short data)
 {
-	if(mchf_display.DeviceCode==0x8875)
-	{
-        LCD_RAM_RA8875 = data;
-        sync_mem();
-	}
-	else if(UiLcdHy28_SpiDisplayUsed())
+	if(UiLcdHy28_SpiDisplayUsed())
     {
         UiLcdHy28_WriteDataSpiStart();
         UiLcdHy28_SpiSendByte((data >>   8));                    /* Write D8..D15                */
@@ -982,23 +987,99 @@ uint16_t UiLcdHy28_ReadReg(uint16_t LCD_Reg)
 }
 #ifdef USE_GFX_RA8875
 
-void UiLcdHy28_WriteRegRA8875(unsigned short LCD_Reg, unsigned short LCD_RegValue)
+#define RA8875_CMDWRITE  0x80
+#define RA8875_DATAWRITE 0x00
+#define RA8875_CMDREAD   0xC0
+#define RA8875_DATAREAD  0x40
+
+static inline void UiLcdHy28_WriteDataSpiStart_Prepare_RA8875()
 {
-	UiLcdHy28_RA8875_WaitReady();
-	LCD_REG_RA8875 = LCD_Reg;
-	sync_mem();
-	LCD_RAM_RA8875 = LCD_RegValue;
-	sync_mem();
+    UiLcdHy28_SpiSendByte(RA8875_DATAWRITE);
+}
+static void UiLcdHy28_WriteIndexSpi_Prepare_RA8875()
+{
+    UiLcdHy28_SpiSendByte(RA8875_CMDWRITE);
+}
+
+static void UiLcdHy28_LcdSpiWrite16(uint16_t data)
+{
+    UiLcdHy28_SpiLcdCsEnable();
+    UiLcdHy28_SpiSendByte(data >> 8);
+    UiLcdHy28_SpiSendByte(data & 0xff);
+    UiLcdHy28_LcdSpiFinishTransfer();
+}
+
+void UiLcdHy28_WriteRegRA8875(uint16_t LCD_Reg, uint16_t LCD_RegValue)
+{
+    UiLcdHy28_RA8875_WaitReady();
+    if(UiLcdHy28_SpiDisplayUsed())
+    {
+        // write command
+        UiLcdHy28_LcdSpiWrite16((RA8875_CMDWRITE << 8)| LCD_Reg );
+        // write data
+        UiLcdHy28_LcdSpiWrite16((RA8875_DATAWRITE << 8)| LCD_RegValue );
+    }
+    else
+    {
+        LCD_REG = LCD_Reg;
+        sync_mem();
+        LCD_RAM = LCD_RegValue;
+        sync_mem();
+    }
+}
+
+void UiLcdHy28_WriteRegRA8875_Seq(uint16_t LCD_Reg, uint16_t size, uint16_t* LCD_RegValues)
+{
+    UiLcdHy28_RA8875_WaitReady();
+    if(UiLcdHy28_SpiDisplayUsed())
+    {
+        for (uint16_t idx = 0; idx < size; idx++)
+        {
+            // write command
+            UiLcdHy28_LcdSpiWrite16((RA8875_CMDWRITE << 8)| (LCD_Reg+2*idx) );
+            // write data
+            UiLcdHy28_LcdSpiWrite16((RA8875_DATAWRITE << 8)| (LCD_RegValues[idx] & 0xff) );
+            // write command
+            UiLcdHy28_LcdSpiWrite16((RA8875_CMDWRITE << 8)| (LCD_Reg+2*idx+1) );
+            // write data
+            UiLcdHy28_LcdSpiWrite16((RA8875_DATAWRITE << 8)| (LCD_RegValues[idx] >> 8) );
+
+        }
+    }
+    else
+    {
+        for (uint16_t idx = 0; idx < size; idx++)
+        {
+
+            LCD_REG = LCD_Reg + 2*idx;
+            LCD_RAM = LCD_RegValues[idx] & 0xff;
+
+            LCD_REG = LCD_Reg + 2*idx + 1;
+            LCD_RAM = LCD_RegValues[idx] >> 8;
+       }
+    }
 }
 
 uint16_t UiLcdHy28_ReadRegRA8875(uint16_t LCD_Reg)
 {
 	uint16_t retval;
     // Write 16-bit Index (then Read Reg)
-	LCD_REG_RA8875 = LCD_Reg;
-    // Read 16-bit Reg
-    sync_mem();
-    retval = LCD_RAM_RA8875;
+    if(UiLcdHy28_SpiDisplayUsed())
+    {
+        UiLcdHy28_LcdSpiWrite16((RA8875_CMDWRITE << 8)| LCD_Reg );
+        UiLcdHy28_SpiLcdCsEnable();
+        UiLcdHy28_SpiSendByte(RA8875_DATAREAD);
+        retval = UiLcdHy28_SpiReadByte();
+        UiLcdHy28_LcdSpiFinishTransfer();
+    }
+    else
+    {
+
+        LCD_REG = LCD_Reg;
+        // Read 16-bit Reg
+        sync_mem();
+        retval = LCD_RAM;
+    }
 
     return retval;
 }
@@ -1035,12 +1116,7 @@ static void UiLcdHy28_SetCursorA( unsigned short Xpos, unsigned short Ypos )
 
 static void UiLcdHy28_WriteRAM_Prepare_Index(uint16_t wr_prep_reg)
 {
-	if(mchf_display.DeviceCode==0x8875)
-	{
-        LCD_REG_RA8875 = wr_prep_reg;
-        sync_mem();
-	}
-	else if(UiLcdHy28_SpiDisplayUsed())
+    if(UiLcdHy28_SpiDisplayUsed())
     {
         UiLcdHy28_WriteIndexSpi(wr_prep_reg);
         UiLcdHy28_WriteDataSpiStart();
@@ -1049,7 +1125,6 @@ static void UiLcdHy28_WriteRAM_Prepare_Index(uint16_t wr_prep_reg)
     {
 #ifdef USE_DISPLAY_PAR
         LCD_REG = wr_prep_reg;
-
         sync_mem();
 #endif
     }
@@ -1076,29 +1151,20 @@ static void UiLcdHy28_BulkWrite(uint16_t* pixel, uint32_t len)
     if(UiLcdHy28_SpiDisplayUsed() == false)
 #endif
     {
-#ifdef USE_GFX_RA8875
-    	if(mchf_display.DeviceCode==0x8875)
-    	{
-    		for (uint32_t i = len; i; i--)
-    		{
-    			UiLcdHy28_WriteDataOnlyRA8875(*(pixel++));
-    		}
-    	}
-    	else
-#endif
-    	{
-    		for (uint32_t i = len; i; i--)
-    		{
-    			UiLcdHy28_WriteDataOnly(*(pixel++));
-    		}
-    	}
+        for (uint32_t i = len; i; i--)
+        {
+            UiLcdHy28_WriteDataOnly(*(pixel++));
+        }
     }
 #ifdef USE_SPI_DMA
     else
     {
-        for (uint32_t i = 0; i < len; i++)
+        if (mchf_display.display_type != DISPLAY_RA8875_SPI)
         {
-            pixel[i] = __REV16(pixel[i]); // reverse byte order;
+            for (uint32_t i = 0; i < len; i++)
+            {
+                pixel[i] = __REV16(pixel[i]); // reverse byte order;
+            }
         }
         UiLcdHy28_SpiDmaStart((uint8_t*)pixel,len*2);
     }
@@ -1177,9 +1243,19 @@ void UiLcdHy28_BulkPixel_PutBuffer(uint16_t* pixel_buffer, uint32_t len)
     // interface (memory to memory DMA)
     if(UiLcdHy28_SpiDisplayUsed())         // SPI enabled?
     {
-        for (uint32_t idx = 0; idx < len; idx++)
+        if (mchf_display.display_type == DISPLAY_RA8875_SPI)
         {
-            UiLcdHy28_BulkPixel_Put(pixel_buffer[idx]);
+            for (uint32_t idx = 0; idx < len; idx++)
+            {
+                UiLcdHy28_BulkPixel_Put(__REV16(pixel_buffer[idx]));
+            }
+        }
+        else
+        {
+            for (uint32_t idx = 0; idx < len; idx++)
+            {
+                UiLcdHy28_BulkPixel_Put(pixel_buffer[idx]);
+            }
         }
     }
     else
@@ -1201,29 +1277,10 @@ inline void UiLcdHy28_BulkPixel_CloseWrite()
 }
 
 
-void UiLcdDraw_LcdClear(ushort Color)
+void UiLcdDraw_LcdClear(uint16_t Color)
 {
 	uint32_t MAX_X=mchf_display.MAX_X; uint32_t MAX_Y=mchf_display.MAX_Y;
-    UiLcdHy28_OpenBulkWrite(0,MAX_X,0,MAX_Y);
-#ifdef USE_SPI_DMA
-    if(UiLcdHy28_SpiDisplayUsed())
-    {
-        int idx;
-
-        UiLcdHy28_BulkPixel_BufferInit();
-
-        for (idx = 0; idx < MAX_X * MAX_Y; idx++)
-        {
-            UiLcdHy28_BulkPixel_Put(Color);
-        }
-        UiLcdHy28_BulkPixel_BufferFlush();
-    }
-    else
-#endif
-    {
-        UiLcdHy28_BulkWriteColor(Color,MAX_X * MAX_Y);
-    }
-    UiLcdHy28_CloseBulkWrite();
+	mchf_display.DrawFullRect(0,0,MAX_Y, MAX_X, Color);
 }
 
 #if 1
@@ -1273,9 +1330,23 @@ void UiLcdHy28_DrawColorPoint_RA8875(uint16_t Xpos,uint16_t Ypos,uint16_t point)
 void UiLcdHy28_RA8875_WaitReady()
 {
     uint16_t temp;
-    do {
-        temp = LCD_REG_RA8875;
-    } while ((temp & 0x80) == 0x80);
+    if(UiLcdHy28_SpiDisplayUsed())
+    {
+        do
+                {
+                    UiLcdHy28_SpiLcdCsEnable();
+                    UiLcdHy28_SpiSendByte(RA8875_CMDREAD);
+                    temp = UiLcdHy28_SpiReadByte();
+                    UiLcdHy28_LcdSpiFinishTransfer();
+                } while ((temp & 0x80) == 0x80);
+    }
+    else
+    {
+        do
+        {
+            temp = LCD_REG;
+        } while ((temp & 0x80) == 0x80);
+    }
 }
 
 void UiLcdRa8875_WriteReg_8bit(uint16_t LCD_Reg, uint8_t LCD_RegValue)
@@ -1284,6 +1355,7 @@ void UiLcdRa8875_WriteReg_8bit(uint16_t LCD_Reg, uint8_t LCD_RegValue)
 }
 void UiLcdRa8875_WriteReg_16bit(uint16_t LCD_Reg, uint16_t LCD_RegValue)
 {
+
 	UiLcdHy28_WriteRegRA8875(LCD_Reg,LCD_RegValue & 0xff);
 	UiLcdHy28_WriteRegRA8875(LCD_Reg+1,(LCD_RegValue >> 8) & 0xff);
 }
@@ -1411,10 +1483,8 @@ void UiLcdHy28_DrawStraightLine_RA8875(uint16_t x, uint16_t y, uint16_t Length, 
 		else
 		{
 			/* Horizontal + vertical start */
-			UiLcdRa8875_WriteReg_16bit(LCD_DLHSR0, x);
-			UiLcdRa8875_WriteReg_16bit(LCD_DLVSR0, y);
-			UiLcdRa8875_WriteReg_16bit(LCD_DLHER0, x_end);
-			UiLcdRa8875_WriteReg_16bit(LCD_DLVER0, y_end);
+		    uint16_t vals[] = { x, y, x_end, y_end };
+			UiLcdHy28_WriteRegRA8875_Seq( LCD_DLHSR0, 4, vals);
 
 			UiLcdHy28_WriteRegRA8875(LCD_DCR, 0x80);
 		}
@@ -1457,23 +1527,10 @@ static void UiLcdHy28_BulkWriteColor(uint16_t Color, uint32_t len)
     else
 #endif
     {
-    	uint32_t i = len;
-#ifdef USE_GFX_RA8875
-    	if(mchf_display.DeviceCode==0x8875)
-    	{
-    		for (uint32_t i = len; i; i--)
-    		{
-    			UiLcdHy28_WriteDataOnlyRA8875(Color);
-    		}
-    	}
-    	else
-#endif
-    	{
-    		for (; i; i--)
-    		{
-    			UiLcdHy28_WriteDataOnly(Color);
-    		}
-    	}
+        for (uint32_t i = len; i; i--)
+        {
+            UiLcdHy28_WriteDataOnly(Color);
+        }
     }
 }
 
@@ -1574,9 +1631,10 @@ static inline void UiLcdHy28_WriteDataSpiStart_Prepare_ILI9486()
 {
     GPIO_SetBits(LCD_RS_PIO, LCD_RS);
 }
-void UiLcdHy28_WriteIndexSpi_Prepare_ILI9486()
+static void UiLcdHy28_WriteIndexSpi_Prepare_ILI9486()
 {
     GPIO_ResetBits(LCD_RS_PIO, LCD_RS);
+    UiLcdHy28_SpiSendByte(0);
 }
 
 static void UiLcdHy28_SetCursorA_ILI9486( unsigned short Xpos, unsigned short Ypos )
@@ -1635,6 +1693,7 @@ static inline void UiLcdHy28_WriteDataSpiStart_Prepare_ILI932x()
 void UiLcdHy28_WriteIndexSpi_Prepare_ILI932x()
 {
     UiLcdHy28_SpiSendByte(SPI_START | SPI_WR | SPI_INDEX);   /* Write : RS = 0, RW = 0       */
+    UiLcdHy28_SpiSendByte(0);
 }
 
 static void UiLcdHy28_SetCursorA_ILI932x( unsigned short Xpos, unsigned short Ypos )
@@ -1833,9 +1892,9 @@ const uhsdr_display_info_t display_infos[] = {
         },
 #endif
 #ifdef USE_GFX_RA8875
-		//currently RA8875 parallel interface supported only
-/*        {
+        {
                 DISPLAY_RA8875_SPI, "RA8875 SPI",
+                .ReadDisplayId = UiLcdHy28_ReadDisplayId_RA8875,
                 .SetActiveWindow = UiLcdHy28_SetActiveWindow_RA8875,
                 .SetCursorA = UiLcdHy28_SetCursorA_RA8875,
                 .WriteRAM_Prepare = UiLcdHy28_WriteRAM_Prepare_RA8875,
@@ -1848,7 +1907,9 @@ const uhsdr_display_info_t display_infos[] = {
 				.DrawColorPoint = UiLcdHy28_DrawColorPoint_RA8875,
                 .spi_cs_port = LCD_CSA_PIO,
                 .spi_cs_pin = LCD_CSA,
-                true, false },*/
+                .is_spi = true,
+                .spi_speed = true
+        },
 #endif
 #if defined(USE_GFX_ILI9486)
         {       DISPLAY_RPI_SPI, "RPi 3.5 SPI",
@@ -2033,24 +2094,6 @@ uint8_t UiLcdHy28_Init()
 
 
 
-static inline void UiLcdHy28_SetSpiPrescaler(uint32_t baudrate_prescaler)
-{
-    /*---------------------------- SPIx CR1 Configuration ------------------------*/
-    // the baud rate register differs across the different processors
-#if defined(STM32H7)
-    #define SPI_BR_REG CFG1
-#elif defined(STM32F4) || defined(STM32F7)
-    #define SPI_BR_REG CR1
-#endif
-
-    /* Get the SPIx SPI_BR_REG value */
-    uint32_t tmpreg = SPI_DISPLAY->SPI_BR_REG;
-    tmpreg &= ~SPI_BAUDRATEPRESCALER_256;
-    tmpreg |= baudrate_prescaler;
-
-    /* Write to SPIx CR1 */
-    SPI_DISPLAY->SPI_BR_REG = tmpreg;
-}
 
 mchf_touchscreen_t mchf_touchscreen;
 
