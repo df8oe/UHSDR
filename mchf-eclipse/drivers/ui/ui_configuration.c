@@ -923,8 +923,8 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
     for(int i = 0; i < MAX_BANDS; i++)
     {
         // read from stored bands
-        UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i], load_eeprom_defaults);
-        UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i], load_eeprom_defaults);
+        UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_A,EEPROM_BAND0_FREQ_HIGH_A,EEPROM_BAND0_FREQ_LOW_A, &vfo[VFO_A].band[i], load_eeprom_defaults || load_freq_mode_defaults);
+        UiReadSettingsBandMode(i,EEPROM_BAND0_MODE_B,EEPROM_BAND0_FREQ_HIGH_B,EEPROM_BAND0_FREQ_LOW_B, &vfo[VFO_B].band[i], load_eeprom_defaults || load_freq_mode_defaults);
     }
 
 
