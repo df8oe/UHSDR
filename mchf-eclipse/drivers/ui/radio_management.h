@@ -340,6 +340,8 @@ bool RadioManagement_IsTxAtZeroIF(uint8_t dmod_mode, uint8_t digital_mode);
 bool RadioManagement_CleanZeroIF();
 bool RadioManagement_DemodAndIqFreqConvCompat(uint8_t dmod_mode, int32_t freq_iq_conv_mode);
 
+void RadioManagement_HandleIqGainAndSMeter(void);
+
 
 inline void RadioManagement_ToggleVfoMem()
 {

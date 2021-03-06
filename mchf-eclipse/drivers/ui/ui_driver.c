@@ -4548,53 +4548,6 @@ static void UiDriver_DisplayDbm()
     }
 }
 
-/**
- * Handles calculation of SMeter values and also handles the input gain adjustment to keep input inside good range
- */
-void RadioManagement_HandleIqGainAndSMeter()
-{
-    if(ts.txrx_mode == TRX_MODE_RX)
-    {
-        RadioManagement_HandleRxIQSignalCodecGain();
-
-        // lowpass IIR filter
-        // Wheatley 2011: two averagers with two time constants
-        // IIR filter with one element analog to 1st order RC filter
-        // but uses two different time constants (ALPHA = 1 - e^(-T/Tau)) depending on
-        // whether the signal is increasing (attack) or decreasing (decay)
-        // we scale Alpha values by 100 so that we have a usable range for configuring the speed of attack and decay in menu items (from 1 to 100)
-
-        const float32_t alpha_scale_inv = 0.01;
-        float32_t attackAlpha = sm.config.alphaSplit.AttackAlpha *alpha_scale_inv;
-
-        float32_t decayAlpha = sm.config.alphaSplit.DecayAlpha *alpha_scale_inv;
-        sm.AttackAvedbm =   (1.0 - attackAlpha) * sm.AttackAvedbm   + attackAlpha * sm.dbm_cur;
-        sm.DecayAvedbm =    (1.0 - decayAlpha)  * sm.DecayAvedbm    + decayAlpha  * sm.dbm_cur;
-        sm.AttackAvedbmhz = (1.0 - attackAlpha) * sm.AttackAvedbmhz + attackAlpha * sm.dbmhz_cur;
-        sm.DecayAvedbmhz =  (1.0 - decayAlpha)  * sm.DecayAvedbmhz  + decayAlpha  * sm.dbmhz_cur;
-
-        if (sm.AttackAvedbm > sm.DecayAvedbm)
-        { // if attack average is larger then it must be an increasing signal
-            sm.dbm = sm.AttackAvedbm; // use attack average value for output
-            sm.DecayAvedbm = sm.AttackAvedbm; // set decay average to attack average value for next time
-        }
-        else
-        { // signal is decreasing, so use decay average value
-            sm.dbm = sm.DecayAvedbm;
-        }
-
-        if (sm.AttackAvedbmhz > sm.DecayAvedbmhz)
-        { // if attack average is larger then it must be an increasing signal
-            sm.dbmhz = sm.AttackAvedbmhz; // use attack average value for output
-            sm.DecayAvedbmhz = sm.AttackAvedbmhz; // set decay average to attack average value for next time
-        }
-        else
-        { // signal is decreasing, so use decay average value
-            sm.dbmhz = sm.DecayAvedbmhz;
-        }
-    }
-}
-
 static void UiDriver_HandleSMeter()
 {
 
