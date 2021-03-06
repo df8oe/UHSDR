@@ -60,7 +60,7 @@ void MchfRfBoard_BandCntr_Init(void)
 
 
 
-static void Board_Mchf_BandFilterPulseRelays()
+static void MchfRfBoard_BandFilterPulseRelays()
 {
     // FIXME: Replace non_os_delay with HAL_Delay
     GPIO_ResetBits(BAND2_PIO, BAND2);
@@ -94,96 +94,30 @@ void MchfRfBoard_SelectLpfBpf(uint8_t group)
     // Set BPFs
     // Constant line states for the BPF filter,
     // always last - after LPF change
-    switch(group)
+
+    // 0xXY -> X -> BAND0 Pin, Y -> BAND1 pin
+    static const uint8_t relay_sequence[4][3] =
     {
-    case 0:
+            { 0x10, 0x11, 0x11 }, // config 0
+            { 0x10, 0x01, 0x10 }, // config 1
+            { 0x00, 0x01, 0x00 }, // config 1
+            { 0x00, 0x11, 0x01 }, // config 1
+    };
+
+    if (group < 4)
     {
-        // Internal group - Set(High/Low)
-        GPIO_SetBits(BAND0_PIO, BAND0);
-        GPIO_ResetBits(BAND1_PIO, BAND1);
-
-        Board_Mchf_BandFilterPulseRelays();
-
-        // External group -Set(High/High)
-        GPIO_SetBits(BAND0_PIO, BAND0);
-        GPIO_SetBits(BAND1_PIO, BAND1);
-
-        Board_Mchf_BandFilterPulseRelays();
-
-        // BPF
-        GPIO_SetBits(BAND0_PIO, BAND0);
-        GPIO_SetBits(BAND1_PIO, BAND1);
-
-        break;
+        for (int idx = 0; idx < 3; idx ++)
+        {
+            // pulse relay between every change
+            if (idx > 0)
+            {
+                MchfRfBoard_BandFilterPulseRelays();
+            }
+            // now change pin config to next in sequence
+            if ((relay_sequence[group][idx] & 0xf0) != 0) GPIO_SetBits(BAND0_PIO, BAND0) else GPIO_ResetBits(BAND0_PIO, BAND0);
+            if ((relay_sequence[group][idx] & 0x0f) != 0) GPIO_SetBits(BAND1_PIO, BAND1) else GPIO_ResetBits(BAND1_PIO, BAND1);
+        }
     }
-
-    case 1:
-    {
-        // Internal group - Set(High/Low)
-        GPIO_SetBits(BAND0_PIO, BAND0);
-        GPIO_ResetBits(BAND1_PIO, BAND1);
-
-        Board_Mchf_BandFilterPulseRelays();
-
-        // External group - Reset(Low/High)
-        GPIO_ResetBits(BAND0_PIO, BAND0);
-        GPIO_SetBits(BAND1_PIO, BAND1);
-
-        Board_Mchf_BandFilterPulseRelays();
-
-        // BPF
-        GPIO_SetBits(BAND0_PIO, BAND0);
-        GPIO_ResetBits(BAND1_PIO, BAND1);
-
-        break;
-    }
-
-    case 2:
-    {
-        // Internal group - Reset(Low/Low)
-        GPIO_ResetBits(BAND0_PIO, BAND0);
-        GPIO_ResetBits(BAND1_PIO, BAND1);
-
-        Board_Mchf_BandFilterPulseRelays();
-
-        // External group - Reset(Low/High)
-        GPIO_ResetBits(BAND0_PIO, BAND0);
-        GPIO_SetBits(BAND1_PIO, BAND1);
-
-        Board_Mchf_BandFilterPulseRelays();
-
-        // BPF
-        GPIO_ResetBits(BAND0_PIO, BAND0);
-        GPIO_ResetBits(BAND1_PIO, BAND1);
-
-        break;
-    }
-
-    case 3:
-    {
-        // Internal group - Reset(Low/Low)
-        GPIO_ResetBits(BAND0_PIO, BAND0);
-        GPIO_ResetBits(BAND1_PIO, BAND1);
-
-        Board_Mchf_BandFilterPulseRelays();
-
-        // External group - Set(High/High)
-        GPIO_SetBits(BAND0_PIO, BAND0);
-        GPIO_SetBits(BAND1_PIO, BAND1);
-
-        Board_Mchf_BandFilterPulseRelays();
-
-        // BPF
-        GPIO_ResetBits(BAND0_PIO, BAND0);
-        GPIO_SetBits(BAND1_PIO, BAND1);
-
-        break;
-    }
-
-    default:
-        break;
-    }
-
 }
 
 
