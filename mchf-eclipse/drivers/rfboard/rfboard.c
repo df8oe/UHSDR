@@ -159,6 +159,11 @@ bool RFBoard_Dummy_InitBoard(void)
     return true;
 }
 
+bool RFBoard_Dummy_ConfigBoard(void)
+{
+    return true;
+}
+
 bool RFBoard_Dummy_SetPaBias(uint32_t bias)
 {
     return true;
@@ -205,20 +210,20 @@ bool RFBoard_Init_Board(void)
         default: ts.rf_board = RF_BOARD_UNKNOWN;
     }
 
-    osc->setPPM((float)ts.freq_cal/10.0);
 
     switch(ts.rf_board)
     {
         case RF_BOARD_SPARKLE:
 #ifdef USE_OSC_SParkle
-            RFboard.pa_info=&SParkle_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
+            RFboard.pa_info=&SParkle_pa;
             RFboard.power_levelsInfo=&SParkle_power_levelsInfo;
             RFboard.EnableTx  = osc_SParkle_EnableTx;
             RFboard.EnableRx = osc_SParkle_EnableRx;
             RFboard.PrepareTx  = osc_SParkle_PrepareTx;
             RFboard.PrepareRx = osc_SParkle_PrepareRx;
             RFboard.ChangeFrequency = RFBoard_Dummy_ChangeFrequency;
-            RFboard.InitBoard = SParkle_ConfigurationInit;
+            RFboard.InitBoard = RFBoard_Dummy_InitBoard;
+            RFboard.ConfigBoard = SParkle_ConfigurationInit;
             RFboard.SetPABias = RFBoard_Dummy_SetPaBias;
             RFboard.SetPowerFactor = SParkle_SetTXpower;
             RFboard.description = &sparkle_desc;
@@ -226,8 +231,10 @@ bool RFBoard_Init_Board(void)
 #endif
 
             break;
+
         case RF_BOARD_DDCDUC_DF8OE:
-            RFboard.pa_info=&Df8oe_DdcDuc_pa;       //default setting for mchf PA (overwitten later when other hardware was detected)
+#ifdef USE_OSC_DUCDDC
+            RFboard.pa_info=&Df8oe_DdcDuc_pa;
             RFboard.power_levelsInfo=&Df8oe_DdcDuc_power_levelsInfo;
             RFboard.EnableTx  = DucDdc_Df8oe_EnableTx;
             RFboard.EnableRx = DucDdc_Df8oe_EnableRx;
@@ -235,10 +242,11 @@ bool RFBoard_Init_Board(void)
             RFboard.PrepareRx = DucDdc_Df8oe_PrepareRx;
             RFboard.ChangeFrequency = RFBoard_Dummy_ChangeFrequency;
             RFboard.InitBoard = RFBoard_Dummy_InitBoard;
+            RFboard.ConfigBoard = RFBoard_Dummy_ConfigBoard;
             RFboard.SetPABias = RFBoard_Dummy_SetPaBias;
             RFboard.description = &ddcduc_df8oe_desc;
             RFboard.iq_balance_required = false;
-
+#endif
             break;
         case RF_BOARD_MCHF:
         case RF_BOARD_RS928:
@@ -251,10 +259,27 @@ bool RFBoard_Init_Board(void)
             RFboard.PrepareRx = Mchf_PrepareRx;
             RFboard.ChangeFrequency = Mchf_SetHWFiltersForFrequency;
             RFboard.InitBoard = Mchf_Rf_Board_Init;
+            RFboard.ConfigBoard = RFBoard_Dummy_ConfigBoard;
             RFboard.SetPABias = Mchf_Rf_Board_SetPaBiasValue;
             RFboard.description = &generic_desc;
             RFboard.iq_balance_required = true;
     }
 
     return RFboard.InitBoard();
+}
+
+/**
+ * This will configure the rf board based on the configuration data
+ * to be called after RFBoard_Init_Board and after configuration data
+ * has been restored from persistent storage
+ *
+ * @return true if everything went well
+ */
+bool RFBoard_Config_Board(void)
+{
+    bool retval = RFboard.ConfigBoard();
+
+    osc->setPPM((float)ts.freq_cal/10.0);
+
+    return retval;
 }

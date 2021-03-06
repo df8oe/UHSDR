@@ -79,6 +79,7 @@ typedef struct {
     bool    (*ChangeFrequency)(uint32_t frequency);
     void (*CodecRestart)(void);
     bool    (*InitBoard)(void);
+    bool    (*ConfigBoard)(void);
     bool    (*SetPABias)(uint32_t bias); // a bias of 0 must disable transmission without disabling the PA signal path
     bool    (*SetPowerFactor)(float pf);
     const hardware_ident_t* description;
@@ -91,5 +92,6 @@ extern HardwareRFBoard RFboard;
 
 
 bool RFBoard_Init_Board(void);
+bool RFBoard_Config_Board(void);
 
 #endif /* DRIVERS_RFBOARD_INTERFACE_H_ */

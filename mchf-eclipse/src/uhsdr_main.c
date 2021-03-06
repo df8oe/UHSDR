@@ -315,17 +315,17 @@ int mchfMain(void)
     // HW init
     Board_InitMinimal();
 
-    /* ========================================================================================= */
-    // here configuration data is loaded, before this, any configuration/calibration information
-    // is not valid and should not be accessed.
 
     ConfigStorage_Init();
 
-    // Initialize the RF board
+    // Initialize the RF board (but not do final configuration)
     RFBoard_Init_Board();
 
     // Show logo & HW Info
     UiDriver_StartUpScreenInit();
+    /* ========================================================================================= */
+    // here configuration data is loaded, before this, any configuration/calibration information
+    // is not valid and should not be accessed.
 
     if (ts.display != DISPLAY_NONE)
     {
@@ -334,6 +334,7 @@ int mchfMain(void)
     }
 
     Board_InitFull();
+    RFBoard_Config_Board();
 
 
     // init mchf_touchscreen to see if it is present
