@@ -38,6 +38,7 @@ typedef struct
 
 typedef struct
 {
+    float64_t corr_mult;
 	bool is_present;
 	DucDdc_Df8oe_Config_t current;
 	DucDdc_Df8oe_Config_t next;
@@ -69,7 +70,8 @@ bool DucDdc_Df8oe_IsPresent()
 }
 static void DucDdc_Df8oe_SetPPM(float32_t ppm)
 {
-	// ducddc_state.xtal_freq = ((float64_t)DUCDDC_XTAL_FREQ) + (((float64_t)DUCDDC_XTAL_FREQ)*(float64_t)ppm/1000000.0);
+
+    ducddc_state.corr_mult = (float64_t)1.0 + ((float64_t)ppm / 1000000.0);
 }
 
 static bool DucDdc_Df8oe_CalculateConfig(uint32_t frequency, DucDdc_Df8oe_Config_t* new_config)
@@ -77,7 +79,10 @@ static bool DucDdc_Df8oe_CalculateConfig(uint32_t frequency, DucDdc_Df8oe_Config
     bool retval = false;
     if (frequency<=DucDdc_Df8oe_getMaxFrequency() && frequency>= DucDdc_Df8oe_getMinFrequency())
     {
-        new_config->rx_frequency = new_config->tx_frequency = __bswap32(frequency);
+        // calculated frequency adjusted by ppm multiplier
+        uint32_t corr_freq = (float64_t)frequency * ducddc_state.corr_mult;
+
+        new_config->rx_frequency = new_config->tx_frequency = __bswap32(corr_freq);
         // we need to store in big endian (i.e. the most significant byte first
         // we compile with little endian
         retval = true;
@@ -120,6 +125,7 @@ bool DucDdc_Df8oe_ReadyForIrqCall()
 
 static bool DucDdc_Df8oe_Init()
 {
+    ducddc_state.corr_mult = 1.0;
 	ducddc_state.current.rx_frequency = 0;
 	ducddc_state.current.tx_frequency = 0;
 	ducddc_state.current.txp = 0;
