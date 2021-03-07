@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ui_lcd_hy28.h>
+#include "ui_touchscreen.h"
 #include "arm_math.h"
 #include "math.h"
 #include "codec.h"
@@ -501,7 +502,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
     {
     case INFO_DISPLAY:
     {
-        outs = UiLcdHy28_DisplayInfoGet(ts.display->display_type)->name;
+        outs = UiLcd_DisplayInfoGet(ts.display->display_type)->name;
         break;
     }
     case INFO_DISPLAY_CTRL:

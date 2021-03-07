@@ -34,6 +34,7 @@
 // LCD
 #include "ui_lcd_hy28.h"
 #include "ui_lcd_draw.h"
+#include "ui_touchscreen.h"
 #include "ui_spectrum.h"
 
 #include "freedv_uhsdr.h"
@@ -956,6 +957,7 @@ void UiDriver_Init()
 
 #define BOTTOM_BAR_LABEL_W (56)
 #define POS_BOTTOM_BAR_F1_offset 2
+
 void UiDriver_DrawFButtonLabel(uint8_t button_num, const char* label, uint32_t label_color)
 {
 	//UiLcdHy28_PrintTextCentered(BOTTOM_BAR_F1_X + (button_num - 1)*(POS_BOTTOM_BAR_BUTTON_W+2), POS_BOTTOM_BAR_F1_Y, BOTTOM_BAR_LABEL_W, label,
@@ -1808,7 +1810,7 @@ SpectrumMode_t UiDriver_GetSpectrumMode()
 static void UiDriver_CreateDesktop()
 {
 	// Backlight off - hide startup logo
-	UiLcdHy28_BacklightEnable(false);
+	UiLcd_BacklightEnable(false);
 
 	// Clear display
 	UiLcdDraw_LcdClear(Black);
@@ -1851,7 +1853,7 @@ static void UiDriver_CreateDesktop()
 	UiDriver_SetDemodMode(ts.dmod_mode);
 
 	// Backlight on - only when all is drawn
-	UiLcdHy28_BacklightEnable(true);
+	UiLcd_BacklightEnable(true);
 }
 
 
@@ -3261,6 +3263,75 @@ static void UiDriver_DisplayATTgain(bool encoder_active)
     UiDriver_EncoderDisplay(2,2,label, encoder_active, temp, color);
 }
 
+typedef struct
+{
+    uint32_t speed;
+    uint32_t mult;
+} encoder_speed_mult_t;
+
+static const encoder_speed_mult_t encoder_mult_dyn[] = { { 300, 100 }, { 160, 40 }, { 80, 10 }, { 0, 1 } };
+static const encoder_speed_mult_t encoder_mult_smooth[] =    { { 350, 100 }, { 250, 50 }, { 180, 12 }, { 90, 6}, { 45, 3}, { 30, 2}, { 0, 1 } };
+
+static uint32_t UiDriver_FindEncoderSpeedMult(const encoder_speed_mult_t* map, const uint32_t enc_speed)
+{
+    uint32_t idx = 0;
+
+    for (;map[idx].speed != 0; idx++)
+    {
+        if (enc_speed > map[idx].speed)
+        {
+            break;
+        }
+    }
+
+    return map[idx].mult;
+}
+
+static int UiDriver_EncoderDynMult(int delta_t, int pot_diff, float* enc_speed_avg_p)
+{
+    // allow tuning only if in rx mode, no freq lock,
+    if (delta_t > 300)
+    {
+        *enc_speed_avg_p = 0;    //when leaving speedy turning set avg_speed to 0
+    }
+
+    int enc_speed = div(4000,delta_t).quot*pot_diff;  // app. 4000 tics per second -> calc. enc. speed.
+
+    if (enc_speed > 500)
+    {
+        enc_speed = 500;    //limit calculated enc. speed
+    }
+    if (enc_speed < -500)
+    {
+        enc_speed = -500;
+    }
+
+    *enc_speed_avg_p = 0.1*enc_speed + 0.9* *enc_speed_avg_p; // averaging to smooth encoder speed
+
+    uint32_t enc_speed_avg_abs = abs(*enc_speed_avg_p);
+
+    uint32_t enc_multiplier = 1; //set standard speed
+
+    if (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)   // check if dynamic tuning has been activated by touchscreen
+    {
+        enc_multiplier = UiDriver_FindEncoderSpeedMult(
+                ts.expflags1 & EXPFLAGS1_SMOOTH_DYNAMIC_TUNE ? encoder_mult_smooth : encoder_mult_dyn,
+                        enc_speed_avg_abs);
+
+
+        if ((df.tuning_step == 10000) && (enc_multiplier > 10))
+        {
+            enc_multiplier = 10;    //limit speed to 100 000kHz/step
+        }
+        if ((df.tuning_step == 100000) && (enc_multiplier > 1))
+        {
+            enc_multiplier = 1;    //limit speed to 100000kHz/step
+        }
+    }
+
+    return enc_multiplier;
+
+}
 
 /**
  * @brief Read out the changes in the frequency encoder and initiate frequency change by setting a global variable.
@@ -3273,7 +3344,7 @@ static bool UiDriver_CheckFrequencyEncoder()
 	bool		retval = false;
 	int		enc_multiplier;
 	static float 	enc_speed_avg = 0.0;  //keeps the averaged encoder speed
-	int		delta_t, enc_speed;
+	int		delta_t;
 
 	pot_diff = UiDriverEncoderRead(ENCFREQ);
 
@@ -3286,103 +3357,16 @@ static bool UiDriver_CheckFrequencyEncoder()
 		UiDriver_LcdBlankingStartTimer();	// calculate/process LCD blanking timing
 
 	}
+
 	if (pot_diff != 0 &&
 			ts.txrx_mode == TRX_MODE_RX
 			&& ks.button_just_pressed == false
 			&& ts.frequency_lock == false)
 	{
-		// allow tuning only if in rx mode, no freq lock,
-		if (delta_t > 300)
-		{
-			enc_speed_avg = 0;    //when leaving speedy turning set avg_speed to 0
-		}
 
-		enc_speed = div(4000,delta_t).quot*pot_diff;  // app. 4000 tics per second -> calc. enc. speed.
+	    enc_multiplier = UiDriver_EncoderDynMult(delta_t, pot_diff, &enc_speed_avg);
 
-		if (enc_speed > 500)
-		{
-			enc_speed = 500;    //limit calculated enc. speed
-		}
-		if (enc_speed < -500)
-		{
-			enc_speed = -500;
-		}
-
-		enc_speed_avg = 0.1*enc_speed + 0.9*enc_speed_avg; // averaging to smooth encoder speed
-
-		enc_multiplier = 1; //set standard speed
-
-		if (ts.flags1 & FLAGS1_DYN_TUNE_ENABLE)   // check if dynamic tuning has been activated by touchscreen
-		{
-		    if (!(ts.expflags1 & EXPFLAGS1_SMOOTH_DYNAMIC_TUNE))        // Smooth dynamic tune is OFF
-			{
-				if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
-				{
-					enc_multiplier = 10;    // turning medium speed -> increase speed by 10
-				}
-
-				if ((enc_speed_avg > 160) || (enc_speed_avg < (-160)))
-				{
-					enc_multiplier = 40;    //turning fast speed -> increase speed by 100
-				}
-
-				if ((enc_speed_avg > 300) || (enc_speed_avg < (-300)))
-				{
-					enc_multiplier = 100;    //turning fast speed -> increase speed by 100
-				}
-			}
-            else
-            {
-                if      ((enc_speed_avg > 350) || (enc_speed_avg < (-350)))
-                {
-                    enc_multiplier = 100;    // turning medium speed -> increase speed by 100
-                }
-                else if ((enc_speed_avg > 250) || (enc_speed_avg < (-250)))
-                {
-                    enc_multiplier =  50;    //turning fast speed -> increase speed by 50
-                }
-                else if ((enc_speed_avg > 180) || (enc_speed_avg < (-180)))
-                {
-                    enc_multiplier =  12;    //turning fast speed -> increase speed by 12
-                }
-                else if ((enc_speed_avg >  90) || (enc_speed_avg < (- 90)))
-                {
-                    enc_multiplier =   6;    //turning fast speed -> increase speed by 6
-                }
-                else if ((enc_speed_avg >  45) || (enc_speed_avg < (- 45)))
-                {
-                    enc_multiplier =   3;    //turning fast speed -> increase speed by 3
-                }
-                else if ((enc_speed_avg >  30) || (enc_speed_avg < (- 30)))
-                {
-                    enc_multiplier =   2;    //turning fast speed -> increase speed by 2
-                }
-			}
-
-			if ((df.tuning_step == 10000) && (enc_multiplier > 10))
-			{
-				enc_multiplier = 10;    //limit speed to 100000kHz/step
-			}
-			if ((df.tuning_step == 100000) && (enc_multiplier > 1))
-			{
-				enc_multiplier = 1;    //limit speed to 100000kHz/step
-			}
-		}
-
-
-		// Finally convert to frequency incr/decr
-
-		if(pot_diff>0)
-		{
-			df.tune_new += (df.tuning_step * enc_multiplier);
-			//itoa(enc_speed,num,6);
-			//UiSpectrumClearDisplay();			// clear display under spectrum scope
-			//UiLcdHy28_PrintText(110,156,num,Cyan,Black,0);
-		}
-		else
-		{
-			df.tune_new -= (df.tuning_step * enc_multiplier);
-		}
+		df.tune_new +=  (pot_diff>0? 1: -1) * df.tuning_step * enc_multiplier;
 
 		if (enc_multiplier != 1)
 		{
@@ -3394,15 +3378,6 @@ static bool UiDriver_CheckFrequencyEncoder()
 	return retval;
 }
 
-
-
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCheckEncoderOne
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void UiDriver_CheckEncoderOne()
 {
 	int32_t pot_diff = UiDriverEncoderRead(ENC1);
@@ -3448,14 +3423,7 @@ static void UiDriver_CheckEncoderOne()
 		}
 	}
 }
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCheckEncoderTwo
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
+
 static void UiDriver_CheckEncoderTwo()
 {
 	int32_t pot_diff = UiDriverEncoderRead(ENC2);
@@ -3477,75 +3445,14 @@ static void UiDriver_CheckEncoderTwo()
 			{
 
 				// dynamic encoder speed , used for notch and peak
-				static float    enc_speed_avg = 0.0;  //keeps the averaged encoder speed
-				int     delta_t, enc_speed;
-				float32_t   enc_multiplier;
+			    static float    enc_speed_avg = 0.0;  //keeps the averaged encoder speed
+			    int   delta_t;
+			    int   enc_multiplier;
 
 				delta_t = ts.audio_int_counter;  // get ticker difference since last enc. change
 				ts.audio_int_counter = 0;        //reset tick counter
 
-				if (delta_t > 300)
-				{
-					enc_speed_avg = 0;    //when leaving speedy turning set avg_speed to 0
-				}
-
-				enc_speed = div(4000,delta_t).quot*pot_diff;  // app. 4000 tics per second -> calc. enc. speed.
-
-				if (enc_speed > 500)
-				{
-					enc_speed = 500;    //limit calculated enc. speed
-				}
-				if (enc_speed < -500)
-				{
-					enc_speed = -500;
-				}
-
-				enc_speed_avg = 0.1*enc_speed + 0.9*enc_speed_avg; // averaging to smooth encoder speed
-
-				enc_multiplier = 1; //set standard speed
-
-				if (!(ts.expflags1 & EXPFLAGS1_SMOOTH_DYNAMIC_TUNE))        // Smooth dynamic tune is OFF
-				{
-					if ((enc_speed_avg > 80) || (enc_speed_avg < (-80)))
-					{
-						enc_multiplier = 10;    // turning medium speed -> increase speed by 10
-					}
-					if ((enc_speed_avg > 150) || (enc_speed_avg < (-150)))
-					{
-						enc_multiplier = 30;    //turning fast speed -> increase speed by 100
-					}
-					if ((enc_speed_avg > 300) || (enc_speed_avg < (-300)))
-					{
-						enc_multiplier = 100;    //turning fast speed -> increase speed by 100
-					}
-				}
-                else
-                {
-                    if      ((enc_speed_avg > 350) || (enc_speed_avg < (-350)))
-                    {
-                        enc_multiplier = 100;    // turning medium speed -> increase speed by 100
-                    }
-                    else if ((enc_speed_avg > 250) || (enc_speed_avg < (-250)))
-                    {
-                        enc_multiplier =  50;    //turning fast speed -> increase speed by 50
-                    }
-                    else if ((enc_speed_avg > 180) || (enc_speed_avg < (-180)))
-                    {
-                        enc_multiplier =  12;    //turning fast speed -> increase speed by 12
-                    }
-                    else if ((enc_speed_avg >  90) || (enc_speed_avg < (- 90)))
-                    {
-                        enc_multiplier =   6;    //turning fast speed -> increase speed by 6
-                    }
-                    else if ((enc_speed_avg >  45) || (enc_speed_avg < (- 45)))
-                    {
-                        enc_multiplier =   3;    //turning fast speed -> increase speed by 3
-                    }
-                    else if ((enc_speed_avg >  30) || (enc_speed_avg < (- 30)))
-                    {
-                        enc_multiplier =   2;    //turning fast speed -> increase speed by 2
-                    }
-				}
+				enc_multiplier = UiDriver_EncoderDynMult(delta_t, pot_diff, &enc_speed_avg);
 
 				// used for notch and peak
 				float32_t MAX_FREQ = 5000.0;
@@ -3558,8 +3465,6 @@ static void UiDriver_CheckEncoderTwo()
 				{
 					MAX_FREQ = 5000.0;
 				}
-
-
 
 				switch(ts.enc_two_mode)
 				{
@@ -3723,14 +3628,6 @@ static void UiDriver_CheckEncoderTwo()
 	}
 }
 
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverCheckEncoderThree
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void UiDriver_CheckEncoderThree()
 {
 	int 	pot_diff;
@@ -4374,16 +4271,8 @@ static void UiDriver_DisplayTone(bool encoder_active)
 	// use 2,2 for placement below existing boxes
 	UiDriver_EncoderDisplay(1,1,"TRB", enable && encoder_active, temp, White);
 
-} // end void UiDriverDisplayBass
+}
 
-//
-//*----------------------------------------------------------------------------
-//* Function Name       : UiDriverChangeRit
-//* Object              :
-//* Input Parameters    :
-//* Output Parameters   :
-//* Functions called    :
-//*----------------------------------------------------------------------------
 static void UiDriver_DisplayRit(bool encoder_active)
 {
 	char	temp[5];
@@ -4400,13 +4289,7 @@ static void UiDriver_DisplayModulationType()
 
 	ushort bgclr = ts.dvmode?Orange:Blue;
 	ushort color = digimodes[ts.digital_mode].enabled?(ts.dvmode?Black:White):Grey2;
-	char txt_empty[]="       ";
-	char txt_SSB[]="SSB";
-	char txt_CW[]="CW";
-#ifdef USE_WFM
-	char txt_WFM[]="WFM";
-#endif
-	//const char* txt = digimodes[ts.digital_mode].label;
+
 	const char* txt;
 	switch(ts.dmod_mode)
 	{
@@ -4424,18 +4307,18 @@ static void UiDriver_DisplayModulationType()
 		break;
 	case DEMOD_LSB:
 	case DEMOD_USB:
-		txt = txt_SSB;
+		txt = "SSB";
 		break;
 	case DEMOD_CW:
-		txt = txt_CW;
+		txt = "CW";
 		break;
 #ifdef USE_WFM
 	case DEMOD_WFM:
-	    txt = txt_WFM;
+	    txt = "WFM";
 	    break;
 #endif
 	default:
-		txt = txt_empty;
+		txt = "       ";
 	}
 
 	// Draw line for box
@@ -4970,47 +4853,46 @@ static void UiDriverUpdateLoMeter(uchar val,uchar active)
  * @param enabled set to true in order to enable actual display of temperature
  */
 #define TEMP_DATA 43
+
 void UiDriver_CreateTemperatureDisplay()
 {
-    if(ts.DisableTCXOdisplay)
+    if(ts.DisableTCXOdisplay == false)
     {
-        return;                 //permanent disable unused temp sensor
+        const char *label, *txt;
+        uint32_t label_color, txt_color;
+
+        bool enabled = lo.sensor_present == true && RadioManagement_TcxoIsEnabled();
+
+        label = "TCXO";
+        label_color = Black;
+
+        // Top part - name and temperature display
+        UiLcdDraw_EmptyRect(ts.Layout->TEMP_IND.x, ts.Layout->TEMP_IND.y,13,109,Grey);
+
+        if (enabled)
+        {
+            txt = RadioManagement_TcxoIsFahrenheit()?"*---.-F":"*---.-C";
+            txt_color = Grey;
+        }
+        else
+        {
+            if (lo.sensor_present == false)
+            {
+                txt = "SENSOR!";
+                txt_color = Red;
+            }
+            else
+            {
+                txt = "*  OFF ";
+                txt_color = Grey;
+            }
+        }
+
+        // Label
+        UiLcdDraw_PrintText((ts.Layout->TEMP_IND.x + 1), (ts.Layout->TEMP_IND.y + 1),label,label_color,Grey,0);
+        // Lock Indicator
+        UiLcdDraw_PrintText(ts.Layout->TEMP_IND.x + TEMP_DATA,(ts.Layout->TEMP_IND.y + 1), txt,txt_color,Black,0);	// show base string
     }
-
-	const char *label, *txt;
-	uint32_t label_color, txt_color;
-
-	bool enabled = lo.sensor_present == true && RadioManagement_TcxoIsEnabled();
-
-	label = "TCXO";
-	label_color = Black;
-
-	// Top part - name and temperature display
-	UiLcdDraw_EmptyRect(ts.Layout->TEMP_IND.x, ts.Layout->TEMP_IND.y,13,109,Grey);
-
-	if (enabled)
-	{
-		txt = RadioManagement_TcxoIsFahrenheit()?"*---.-F":"*---.-C";
-		txt_color = Grey;
-	}
-	else
-	{
-		if (lo.sensor_present == false)
-		{
-			txt = "SENSOR!";
-			txt_color = Red;
-		}
-		else
-		{
-			txt = "*  OFF ";
-			txt_color = Grey;
-		}
-	}
-
-	// Label
-	UiLcdDraw_PrintText((ts.Layout->TEMP_IND.x + 1), (ts.Layout->TEMP_IND.y + 1),label,label_color,Grey,0);
-	// Lock Indicator
-	UiLcdDraw_PrintText(ts.Layout->TEMP_IND.x + TEMP_DATA,(ts.Layout->TEMP_IND.y + 1), txt,txt_color,Black,0);	// show base string
 }
 
 /**
@@ -5056,15 +4938,10 @@ static void UiDriver_DisplayTemperature(int temp)
 //*----------------------------------------------------------------------------
 static void UiDriver_HandleLoTemperature()
 {
-    if(ts.DisableTCXOdisplay)
+    if (ts.DisableTCXOdisplay == false && SoftTcxo_HandleLoTemperatureDrift())
     {
-        return;                 //permanent disable unused temp sensor
+        UiDriver_DisplayTemperature(lo.temp/1000); // precision is 0.1 represent by lowest digit
     }
-
-	if (SoftTcxo_HandleLoTemperatureDrift())
-	{
-		UiDriver_DisplayTemperature(lo.temp/1000); // precision is 0.1 represent by lowest digit
-	}
 }
 
 
@@ -5947,7 +5824,7 @@ void UiDriver_StartUpScreenInit()
 	// show important error status
 	startUpScreen_nextLineY = nextY + 8; // reset y coord to first line of error messages
 
-	UiLcdHy28_BacklightEnable(true);
+	UiLcd_BacklightEnable(true);
 
 }
 
@@ -7092,6 +6969,8 @@ extern USBH_HandleTypeDef hUsbHostHS;
  * In a nutshell, unless there is a very, very good reason, do not add or change anything here.
  *
  */
+#include "osc_ducddc_df8oe.h"
+bool now_cw = false;
 void UiDriver_TaskHandler_HighPrioTasks()
 {
     // READ THE LENGTHY COMMENT ABOVE BEFORE CHANGING ANYTHING BELOW!!!
@@ -7114,6 +6993,30 @@ void UiDriver_TaskHandler_HighPrioTasks()
         }
 #endif
     }
+
+    // TODO Generalize as interface to RFBoard in case
+    // RFBoard has a CW generator
+#ifdef USE_OSC_DUCDDC
+    if (osc->readyForIrqCall)
+    {
+        static bool last_cw = false;
+        if (now_cw != last_cw)
+        {
+            last_cw = now_cw;
+            if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE)
+            {
+                DucDdc_Df8oe_TxCWOnOff(now_cw);
+            }
+            // TODO: ATM we are still generating the CW signal, even if the
+            // external generator is active
+            // TODO: the frequency display does not match the CW frequency
+            // We just need to offset the TX  frequency properly, for that
+            // we need to know that we are working with an external CW generation
+            // when setting up tx
+        }
+    }
+#endif
+
 #ifdef USE_HIGH_PRIO_PTT
     if (RadioManagement_SwitchTxRx_Possible())
     {
@@ -7139,7 +7042,7 @@ void UiDriver_Callback_AudioISR()
     static uint32_t tcount = 0;
 
     // Perform LCD backlight PWM brightness function
-    UiDriver_BacklightDimHandler();
+    UiLcd_BacklightDimHandler();
 
     tcount+= SAMPLES_PER_DMA_CYCLE;        // add the number of samples that have passed in DMA cycle
     if(tcount >= SAMPLES_PER_CENTISECOND)  // enough samples for 0.01 second passed?
@@ -7562,49 +7465,3 @@ void UiDriver_TaskHandler_MainTasks()
 		}
 	}
 }
-
-/*
- * This handler creates a software pwm for the LCD backlight. It needs to be called
- * very regular to work properly. Right now it is activated from the audio interrupt
- * at a rate of 1.5khz The rate itself is not too critical,
- * just needs to be high and very regular.
- */
-
-#define LCD_DIMMING_PWM_COUNTS 16
-
-void UiDriver_BacklightDimHandler()
-{
-	static uchar lcd_dim = 0;
-	static const uint16_t dimming_pattern_map[1 + LCD_DIMMING_LEVEL_MAX - LCD_DIMMING_LEVEL_MIN] =
-	{
-	        0xffff, // 16/16
-	        0x3f3f, // 12/16
-	        0x0f0f, // 8/16
-	        0x0303, // 4/16
-	        0x0101, // 2/16
-	        0x0001, // 1/1
-	};
-    // most of the patterns generate a 1500/8 =  187.5 Hz noise, lowest 1500/16 = 93.75 Hz.
-
-	static uint16_t dim_pattern = 0xffff; // gives us the maximum brightness
-
-	if(!ts.lcd_blanking_flag)       // is LCD *NOT* blanked?
-	{
-	    if (lcd_dim == 0 )
-	    {
-	        dim_pattern = dimming_pattern_map[ts.lcd_backlight_brightness - LCD_DIMMING_LEVEL_MIN];
-	    }
-
-	    // UiLcdHy28_BacklightEnable(lcd_dim >= dimming_map[ts.lcd_backlight_brightness - LCD_DIMMING_LEVEL_MIN]);   // LCD backlight off or on
-	    UiLcdHy28_BacklightEnable((dim_pattern & 0x001) == 1);   // LCD backlight off or on
-
-	    dim_pattern >>=1;
-	    lcd_dim++;
-	    lcd_dim %= LCD_DIMMING_PWM_COUNTS;   // limit brightness PWM count to 0-3
-	}
-	else if(!ts.menu_mode)
-	{ // LCD is to be blanked - if NOT in menu mode
-		UiLcdHy28_BacklightEnable(false);
-	}
-}
-

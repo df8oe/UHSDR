@@ -23,11 +23,17 @@
 
 #ifdef USE_GFX_RA8875
 
+
 #define RA8875_MRWC                   0x02//memory read write control
 #define RA8875_HOFS0                  0x24//Horizontal Scroll Offset Register 0
 #define RA8875_HOFS1                  0x25//Horizontal Scroll Offset Register 1
 #define RA8875_VOFS0                  0x26//Vertical Scroll Offset Register 0
 #define RA8875_VOFS1                  0x27//Vertical Scroll Offset Register 1
+
+#define RA8875_HSAW0                  0x30//Horizontal Start Point 0 of Active Window
+#define RA8875_HSAW1                  0x31//Horizontal Start Point 1 of Active Window
+#define RA8875_VSAW0                  0x32//Vertical Start Point 0 of Active Window
+#define RA8875_VSAW1                  0x33//Vertical Start Point 1 of Active Window
 
 #define RA8875_HSSW0                  0x38//Horizontal Start Point 0 of Scroll Window
 #define RA8875_HSSW1                  0x39//Horizontal Start Point 1 of Scroll Window
@@ -39,7 +45,21 @@
 #define RA8875_VESW1                  0x3F//Vertical     End   Point 1 of Scroll Window
 
 
+#define RA8875_CURH0                  0x46//horizontal cursor x pos 0
+#define RA8875_CURH1                  0x46//horizontal cursor x pos 1
+#define RA8875_CURV0                  0x47//vertical cursor y pos 0
+#define RA8875_CURV1                  0x48//vertical cursor y pos 1
+
+#define RA8875_BECR0                  0x50// bte control register
+#define RA8875_BECR1                  0x51// bte control register
 #define RA8875_LTPR0                  0x52//Layer Transparency Register 0
+
+#define RA8875_HSBE0                  0x54// bte horizontal source point 0
+#define RA8875_VSBE0                  0x56// bte vertical source point 0
+#define RA8875_HDBE0                  0x58// bte horizontal destination point 0
+#define RA8875_VDBE0                  0x5A// bte vertical destination point 0
+#define RA8875_BERW0                  0x5C// bte width 0
+#define RA8875_BERH0                  0x5E// bte height 0
 
 
     /* Drawing Control Registers */
@@ -105,6 +125,9 @@ static const RegisterValue_t ra8875[] =
         { 0x60, 0x00}, /* ra8875_red */
         { 0x61, 0x00}, /* ra8875_green */
         { 0x62, 0x00}, /* ra8875_blue */
+        { 0x63, 0x00}, /* ra8875_red */
+        { 0x64, 0x00}, /* ra8875_green */
+        { 0x65, 0x00}, /* ra8875_blue */
 
         { 0x8E, 0x80},
 };
@@ -114,47 +137,43 @@ const RegisterValueSetInfo_t ra8875_regs =
     ra8875, sizeof(ra8875)/sizeof(RegisterValue_t)
 };
 
-
-#endif
-
-
-
-
-
-static inline bool UiLcdHy28_SpiDisplayUsed()
-{
-    bool retval = false;
-#ifdef USE_SPI_DISPLAY
-    retval = mchf_display.use_spi;
-#endif
-    return retval;
-}
-
-#ifdef  USE_GFX_RA8875
-static void UiLcdRa8875_WaitReady();
-static void UiLcdRa8875_SetForegroundColor(uint16_t Color);
-static void UiLcdRa8875_WriteReg_8bit(uint16_t LCD_Reg, uint8_t LCD_RegValue);
-static void UiLcdRa8875_WriteReg_16bit(uint16_t LCD_Reg, uint16_t LCD_RegValue);
-
-
 void UiLcdRa8875_WriteDataSpiStart_Prepare()
 {
-    UiLcdHy28_SpiSendByte(RA8875_DATAWRITE);
+    UiLcd_SpiSendByte(RA8875_DATAWRITE);
 }
 void UiLcdRa8875_WriteIndexSpi_Prepare()
 {
-    UiLcdHy28_SpiSendByte(RA8875_CMDWRITE);
+    UiLcd_SpiSendByte(RA8875_CMDWRITE);
 }
+
+static void UiLcdRa8875_WaitReady(uint8_t pattern)
+{
+    if(UiLcd_LcdSpiUsed())
+    {
+        while( ( UiLcd_LcdSpiWrite8Read8(RA8875_CMDREAD) & pattern) == pattern);
+    }
+    else
+    {
+        while ((LCD_REG & pattern) == pattern);
+    }
+}
+
+
+uint8_t ra8875_reg_cache[256];
+
 
 void UiLcdRa8875_WriteReg(uint16_t LCD_Reg, uint16_t LCD_RegValue)
 {
-    UiLcdRa8875_WaitReady();
-    if(UiLcdHy28_SpiDisplayUsed())
+    UiLcdRa8875_WaitReady(0x80);
+    if(UiLcd_LcdSpiUsed())
     {
+        ra8875_reg_cache[LCD_Reg & 0xff] = LCD_RegValue;
+
         // write command
-        UiLcdHy28_LcdSpiWrite16((RA8875_CMDWRITE << 8)| LCD_Reg );
+        UiLcd_LcdSpiWrite16((RA8875_CMDWRITE << 8)| LCD_Reg );
         // write data
-        UiLcdHy28_LcdSpiWrite16((RA8875_DATAWRITE << 8)| LCD_RegValue );
+        UiLcd_LcdSpiWrite16((RA8875_DATAWRITE << 8)| LCD_RegValue );
+
     }
     else
     {
@@ -163,21 +182,35 @@ void UiLcdRa8875_WriteReg(uint16_t LCD_Reg, uint16_t LCD_RegValue)
     }
 }
 
-static void UiLcdRa8875_WriteReg_Seq(uint16_t LCD_Reg, uint16_t size, uint16_t* LCD_RegValues)
+static void UiLcdRa8875_WriteReg_8bit(uint16_t LCD_Reg, uint8_t LCD_RegValue)
 {
-    UiLcdRa8875_WaitReady();
-    if(UiLcdHy28_SpiDisplayUsed())
+    UiLcdRa8875_WriteReg(LCD_Reg, LCD_RegValue);
+}
+
+#if 0 // currently unsused
+static void UiLcdRa8875_WriteReg_16bit(uint16_t LCD_Reg, uint16_t LCD_RegValue)
+{
+
+    UiLcdRa8875_WriteReg(LCD_Reg,LCD_RegValue & 0xff);
+    UiLcdRa8875_WriteReg(LCD_Reg+1,(LCD_RegValue >> 8) & 0xff);
+}
+#endif
+
+static void UiLcdRa8875_WriteReg_16bit_Seq(uint16_t LCD_Reg, uint16_t size, uint16_t* LCD_RegValues)
+{
+    UiLcdRa8875_WaitReady(0x80);
+    if(UiLcd_LcdSpiUsed())
     {
         for (uint16_t idx = 0; idx < size; idx++)
         {
             // write command
-            UiLcdHy28_LcdSpiWrite16((RA8875_CMDWRITE << 8)| (LCD_Reg+2*idx) );
+            UiLcd_LcdSpiWrite16((RA8875_CMDWRITE << 8)| (LCD_Reg+2*idx) );
             // write data
-            UiLcdHy28_LcdSpiWrite16((RA8875_DATAWRITE << 8)| (LCD_RegValues[idx] & 0xff) );
+            UiLcd_LcdSpiWrite16((RA8875_DATAWRITE << 8)| (LCD_RegValues[idx] & 0xff) );
             // write command
-            UiLcdHy28_LcdSpiWrite16((RA8875_CMDWRITE << 8)| (LCD_Reg+2*idx+1) );
+            UiLcd_LcdSpiWrite16((RA8875_CMDWRITE << 8)| (LCD_Reg+2*idx+1) );
             // write data
-            UiLcdHy28_LcdSpiWrite16((RA8875_DATAWRITE << 8)| (LCD_RegValues[idx] >> 8) );
+            UiLcd_LcdSpiWrite16((RA8875_DATAWRITE << 8)| (LCD_RegValues[idx] >> 8) );
 
         }
     }
@@ -199,13 +232,12 @@ uint16_t UiLcdRa8875_ReadReg(uint16_t LCD_Reg)
 {
 	uint16_t retval;
     // Write 16-bit Index (then Read Reg)
-    if(UiLcdHy28_SpiDisplayUsed())
+    if(UiLcd_LcdSpiUsed())
     {
-        UiLcdHy28_LcdSpiWrite16((RA8875_CMDWRITE << 8)| LCD_Reg );
-        retval = UiLcdHy28_LcdSpiWrite8Read8( RA8875_DATAREAD );    }
+        UiLcd_LcdSpiWrite16((RA8875_CMDWRITE << 8)| LCD_Reg );
+        retval = UiLcd_LcdSpiWrite8Read8( RA8875_DATAREAD );    }
     else
     {
-
         LCD_REG = LCD_Reg;
         // Read 16-bit Reg
         retval = LCD_RAM;
@@ -214,179 +246,13 @@ uint16_t UiLcdRa8875_ReadReg(uint16_t LCD_Reg)
     return retval;
 }
 
-void UiLcdRa8875_DrawFullRect(uint16_t Xpos, uint16_t Ypos, uint16_t Height, uint16_t Width ,uint16_t color)
-{
-    UiLcdRa8875_SetForegroundColor(color);
-    UiLcdRa8875_WriteReg_16bit(0x91, Xpos);				//Horizontal start
-    UiLcdRa8875_WriteReg_16bit(0x95, Xpos + Width-1);	//Horizontal end
-    UiLcdRa8875_WriteReg_16bit(0x93, Ypos);				//Vertical start
-    UiLcdRa8875_WriteReg_16bit(0x97, Ypos + Height-1);	//Vertical end
-    UiLcdRa8875_WriteReg(0x90, 0xB0);				// Fill rectangle
-}
-
-
-static void UiLcdRa8875_WaitReady()
-{
-    if(UiLcdHy28_SpiDisplayUsed())
-    {
-        while( ( UiLcdHy28_LcdSpiWrite8Read8(RA8875_CMDREAD) & 0x80) == 0x80);
-    }
-    else
-    {
-        while ((LCD_REG & 0x80) == 0x80);
-    }
-}
-
-static void UiLcdRa8875_WriteReg_8bit(uint16_t LCD_Reg, uint8_t LCD_RegValue)
-{
-	UiLcdRa8875_WriteReg(LCD_Reg, LCD_RegValue);
-}
-
-static void UiLcdRa8875_WriteReg_16bit(uint16_t LCD_Reg, uint16_t LCD_RegValue)
-{
-
-	UiLcdRa8875_WriteReg(LCD_Reg,LCD_RegValue & 0xff);
-	UiLcdRa8875_WriteReg(LCD_Reg+1,(LCD_RegValue >> 8) & 0xff);
-}
-
-
-/*
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-+                               SCROLL STUFF                                             +
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-*/
-/**************************************************************************/
-/*!
-        Sets the scroll mode. This is controlled by bits 6 and 7 of
-        REG[52h] Layer Transparency Register0 (LTPR0)
-        Author: The Experimentalist
-*/
-/**************************************************************************/
-void UiLcdRA8875_setScrollMode(uint8_t mode)
-{
-    uint8_t temp = UiLcdRa8875_ReadReg(RA8875_LTPR0);
-    temp &= 0x3F;            // Clear bits 6 and 7 to zero
-    switch(mode){           // bit 7,6 of LTPR0
-        case 0:  // 00b : Layer 1/2 scroll simultaneously.
-            // Do nothing
-        break;
-        case 1:        // 01b : Only Layer 1 scroll.
-            temp |= 0x40;
-        break;
-        case 2:        // 10b : Only Layer 2 scroll.
-            temp |= 0x80;
-        break;
-        case 3:          // 11b: Buffer scroll (using Layer 2 as scroll buffer)
-            temp |= 0xC0;
-        break;
-        default:
-            return;             //do nothing
-    }
-    LCD_RAM=temp;
-
-}
-
-/**************************************************************************/
-/*!
-        Define a window for perform scroll
-        Parameters:
-        XL: x window start left
-        XR: x window end right
-        YT: y window start top
-        YB: y window end bottom
-*/
-/**************************************************************************/
-void UiLcdRA8875_setScrollWindow(int16_t XL,int16_t XR ,int16_t YT ,int16_t YB)
-{
-    UiLcdRa8875_WriteReg_16bit(RA8875_HSSW0,XL);
-    UiLcdRa8875_WriteReg_16bit(RA8875_HESW0,XR);
-    UiLcdRa8875_WriteReg_16bit(RA8875_VSSW0,YT);
-    UiLcdRa8875_WriteReg_16bit(RA8875_VESW0,YB);
-}
-
-/**************************************************************************/
-/*!
-        Perform the scroll
-*/
-/**************************************************************************/
-void UiLcdRA8875_scroll(int16_t x,int16_t y)
-{
-    UiLcdRa8875_WriteReg_16bit(RA8875_HOFS0,x);
-    UiLcdRa8875_WriteReg_16bit(RA8875_VOFS0,y);
-}
-
-void UiLcdRa8875_SetCursorA( unsigned short Xpos, unsigned short Ypos )
-{
-    UiLcdRa8875_WriteReg_16bit(0x46, Xpos);
-    UiLcdRa8875_WriteReg_16bit(0x48, Ypos);
-}
-
-void UiLcdRa8875_DrawColorPoint(uint16_t Xpos,uint16_t Ypos,uint16_t point)
-{
-    uint16_t MAX_X=mchf_display.MAX_X; uint16_t MAX_Y=mchf_display.MAX_Y;
-    if( Xpos < MAX_X && Ypos < MAX_Y )
-    {
-        UiLcdRa8875_SetCursorA(Xpos, Ypos);
-        UiLcdRa8875_WriteReg(RA8875_MRWC, point);
-    }
-}
-
-void UiLcdRa8875_DrawStraightLine(uint16_t x, uint16_t y, uint16_t Length, uint8_t Direction,uint16_t color)
-{
-	if(Length>0)
-	{
-		UiLcdRa8875_SetForegroundColor(color);
-
-		uint16_t x_end, y_end;
-
-		if (Direction == LCD_DIR_VERTICAL)
-		{
-			x_end = x;
-			y_end = y + Length-1;
-		}
-		else
-		{
-			x_end = x + Length-1;
-			y_end = y;
-		}
-
-		if(x_end==x && y_end==y)
-			UiLcdRa8875_DrawColorPoint(x,y,color);
-		else
-		{
-			/* Horizontal + vertical start */
-		    uint16_t vals[] = { x, y, x_end, y_end };
-			UiLcdRa8875_WriteReg_Seq( RA8875_DLHSR0, 4, vals);
-
-			UiLcdRa8875_WriteReg(RA8875_DCR, 0x80);
-		}
-	}
-}
 
 
 void UiLcdRa8875_WriteRAM_Prepare()
 {
-    UiLcdHy28_WriteRAM_Prepare_Index(RA8875_MRWC);
+    UiLcd_WriteRAM_Prepare_Index(RA8875_MRWC);
 }
 
-static void UiLcdRa8875_SetForegroundColor(uint16_t Color)
-{
-    UiLcdRa8875_WriteReg_8bit(0x63, (uint16_t) (Color >> 11)); /* ra8875_red */
-    UiLcdRa8875_WriteReg_8bit(0x64, (uint16_t) (Color >> 5)); /* ra8875_green */
-    UiLcdRa8875_WriteReg_8bit(0x65, (uint16_t) (Color)); /* ra8875_blue */
-}
-
-void UiLcdRa8875_SetActiveWindow(uint16_t XLeft, uint16_t XRight, uint16_t YTop,
-        uint16_t YBottom)
-{
-    /* setting active window X */
-    UiLcdRa8875_WriteReg_16bit(0x30, XLeft);
-    UiLcdRa8875_WriteReg_16bit(0x34, XRight);
-
-    /* setting active window Y */
-    UiLcdRa8875_WriteReg_16bit(0x32, YTop);
-    UiLcdRa8875_WriteReg_16bit(0x36, YBottom);
-}
 
 uint16_t UiLcdRa8875_ReadDisplayId(void)
 {
@@ -408,5 +274,163 @@ uint16_t UiLcdRa8875_ReadDisplayId(void)
 	}
 
 	return retval;
+}
+
+// Driver Graphic Operations
+static void UiLcdRa8875_SetForegroundColor(uint16_t Color)
+{
+    static uint16_t last_color;
+
+    if (Color != last_color)
+    {
+        last_color = Color;
+
+        UiLcdRa8875_WriteReg_8bit(0x63, (uint16_t) (Color >> 11)); /* ra8875_red */
+        UiLcdRa8875_WriteReg_8bit(0x64, (uint16_t) (Color >> 5)); /* ra8875_green */
+        UiLcdRa8875_WriteReg_8bit(0x65, (uint16_t) (Color)); /* ra8875_blue */
+    }
+}
+static void UiLcdRa8875_DrawOp(uint16_t X0, uint16_t Y0, uint16_t X1, uint16_t Y1 ,uint16_t color, uint8_t op)
+{
+    UiLcdRa8875_SetForegroundColor(color);
+
+    uint16_t vals[] = { X0, Y0, X1, Y1 };
+    UiLcdRa8875_WriteReg_16bit_Seq( RA8875_DLHSR0, 4, vals);
+
+    UiLcdRa8875_WriteReg(RA8875_DCR, op);               // Fill rectangle
+}
+
+
+
+void UiLcdRa8875_SetActiveWindow(uint16_t XLeft, uint16_t XRight, uint16_t YTop,
+        uint16_t YBottom)
+{
+    uint16_t vals[] = { XLeft, YTop, XRight, YBottom};
+    UiLcdRa8875_WriteReg_16bit_Seq( RA8875_HSAW0, 4, vals);
+}
+
+void UiLcdRa8875_SetCursorA( unsigned short Xpos, unsigned short Ypos )
+{
+    uint16_t vals[] = { Xpos, Ypos};
+    UiLcdRa8875_WriteReg_16bit_Seq( RA8875_CURH0, 2, vals);
+}
+
+void UiLcdRa8875_DrawColorPoint(uint16_t Xpos,uint16_t Ypos,uint16_t color)
+{
+    uint16_t MAX_X=mchf_display.MAX_X; uint16_t MAX_Y=mchf_display.MAX_Y;
+    if( Xpos < MAX_X && Ypos < MAX_Y )
+    {
+        UiLcdRa8875_SetCursorA(Xpos, Ypos);
+        UiLcdRa8875_WriteReg(RA8875_MRWC, color);
+    }
+}
+
+void UiLcdRa8875_DrawStraightLine(uint16_t x, uint16_t y, uint16_t Length, uint8_t Direction,uint16_t color)
+{
+    if(Length == 1)
+    {
+        UiLcdRa8875_DrawColorPoint(x,y,color);
+    }
+    else if(Length>1)
+    {
+        uint16_t x_end, y_end;
+
+        if (Direction == LCD_DIR_VERTICAL)
+        {
+            x_end = x;
+            y_end = y + Length-1;
+        }
+        else
+        {
+            x_end = x + Length-1;
+            y_end = y;
+        }
+
+        // use draw line op of controller
+        UiLcdRa8875_DrawOp(x, y, x_end, y_end, color, 0x80);
+    }
+}
+
+void UiLcdRa8875_DrawFullRect(uint16_t Xpos, uint16_t Ypos, uint16_t Height, uint16_t Width ,uint16_t color)
+{
+    // draw filled rectangle
+    UiLcdRa8875_DrawOp( Xpos, Ypos, Xpos + Width-1, Ypos + Height-1, color, 0xB0);
+}
+
+/*
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++                               SCROLL STUFF                                             +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*/
+/**************************************************************************/
+/*!
+        Sets the scroll mode. This is controlled by bits 6 and 7 of
+        REG[52h] Layer Transparency Register0 (LTPR0)
+        Author: The Experimentalist
+*/
+/**************************************************************************/
+void UiLcdRa8875_setScrollMode(uint8_t mode)
+{
+    uint8_t temp = UiLcdRa8875_ReadReg(RA8875_LTPR0);
+    temp &= 0x3F;            // Clear bits 6 and 7 to zero
+    switch(mode){           // bit 7,6 of LTPR0
+        case 0:  // 00b : Layer 1/2 scroll simultaneously.
+            // Do nothing
+        break;
+        case 1:        // 01b : Only Layer 1 scroll.
+            temp |= 0x40;
+        break;
+        case 2:        // 10b : Only Layer 2 scroll.
+            temp |= 0x80;
+        break;
+        case 3:          // 11b: Buffer scroll (using Layer 2 as scroll buffer)
+            temp |= 0xC0;
+        break;
+        default:
+            return;             //do nothing
+    }
+
+    UiLcdRa8875_WriteReg(RA8875_LTPR0, temp);
+
+}
+
+/**
+ * Define a window for perform scroll
+ *
+ * @param XL x window start left
+ * @param XR x window end right
+ * @param YT y window start top
+ * @param YB y window end bottom
+ */
+void UiLcdRa8875_setScrollWindow(int16_t XL,int16_t XR ,int16_t YT ,int16_t YB)
+{
+    uint16_t vals[] = { XL, YT, XR, YB };
+    UiLcdRa8875_WriteReg_16bit_Seq( RA8875_HSSW0, 4, vals);
+}
+
+/**
+ * set scroll viewpoint (does not move the data!)
+ * @param x shift original by x pixels left
+ * @param y shift original by y pixel up
+ */
+void UiLcdRa8875_scroll(int16_t x,int16_t y)
+{
+    uint16_t vals[] = { x, y};
+    UiLcdRa8875_WriteReg_16bit_Seq( RA8875_HOFS0, 2, vals);
+}
+
+void UiLcdRa8875_MoveAreaDown(uint16_t xs, uint16_t ys, uint16_t w, uint16_t h, uint16_t down)
+{
+    uint16_t vals[] = { xs+w-1, ys+h-1, xs+w-1, ys + h - 1 + down, w, h };
+    UiLcdRa8875_WriteReg_16bit_Seq( RA8875_HSBE0, 6, vals);
+
+    // dest = source, reverse (backwards fill),
+    UiLcdRa8875_WriteReg(RA8875_BECR1, 0xc0 | 0x03);
+
+    UiLcdRa8875_WriteReg(RA8875_BECR0, 0x80);
+    UiLcdRa8875_WaitReady(0x40);
+
+    // while (UiLcdRa8875_ReadReg(RA8875_BECR0) & 0x01);
+
 }
 #endif

@@ -36,7 +36,9 @@ drivers/ui/menu/ui_menu_structure.c \
 drivers/ui/lcd/ui_lcd_draw.c \
 drivers/ui/lcd/ui_lcd_hy28.c \
 drivers/ui/lcd/ui_lcd_hy28_fonts.c \
+drivers/ui/lcd/ui_lcd_ra8875.c \
 drivers/ui/lcd/ui_spectrum.c \
+drivers/ui/lcd/ui_touchscreen.c \
 drivers/ui/encoder/ui_rotary.c \
 drivers/ui/radio_management.c \
 drivers/ui/ui_configuration.c \

@@ -207,8 +207,6 @@ void UiDriver_SetSplitMode(bool mode_active);
 
 void UiDriver_StartupScreen_LogIfProblem(bool isError, const char* txt);
 
-void UiDriver_BacklightDimHandler(void);
-
 void UiDriver_TextMsgPutChar(char ch);
 void UiDriver_TextMsgPutSign(const char *s);
 void UiDriver_TextMsgDisplay(void);

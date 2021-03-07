@@ -75,7 +75,7 @@ static void Bootloader_DisplayInit()
 
     GPIO_SetBits(TP_CS_PIO, TP_CS);
 
-    UiLcdHy28_Init();
+    UiLcd_Init();
     UiLcdDraw_LcdClear(Black);
     mchfBl_PinOn(BACKLIGHT);
 

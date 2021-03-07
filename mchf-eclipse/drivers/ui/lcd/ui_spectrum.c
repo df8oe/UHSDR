@@ -14,7 +14,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <ui_lcd_hy28.h>
+#include "ui_lcd_hy28.h"
+#include "ui_lcd_ra8875.h"
 #include "ui_spectrum.h"
 #include "ui_lcd_draw.h"
 // For spectrum display struct
@@ -1157,14 +1158,21 @@ static void UiSpectrum_DrawWaterfall()
         // the location of any of the display data - as long as we "blindly" write precisely the correct number of pixels per
         // line and the number of lines.
 
-        UiLcdHy28_BulkPixel_OpenWrite(slayout.wfall.x, slayout.wfall.w, slayout.wfall.y, slayout.wfall.h);
+
+        uint16_t do_lines = slayout.wfall.h;
+        if (mchf_display.display_type == DISPLAY_RA8875_SPI || mchf_display.display_type == DISPLAY_RA8875_SPI)
+        {
+            do_lines  = ts.waterfall.vert_step_size;
+            UiLcdRa8875_MoveAreaDown(slayout.wfall.x, slayout.wfall.y, slayout.wfall.w, slayout.wfall.h - ts.waterfall.vert_step_size, ts.waterfall.vert_step_size);
+        }
+
+        UiLcd_BulkPixel_OpenWrite(slayout.wfall.x, slayout.wfall.w, slayout.wfall.y, do_lines);
 
         uint16_t spectrum_pixel_buf[slayout.wfall.w];
 
         const int32_t cur_center_hz = sd.FFT_frequency;
 
         uint8_t doubleLine=doubleLineStart;
-
         // we update the display unless there is a ptt request, in this case we skip to the end.
         for(uint16_t lcnt = 0; ts.ptt_req == false && lcnt < slayout.wfall.h;)                 // set up counter for number of lines defining height of waterfall
         {
@@ -1216,6 +1224,7 @@ static void UiSpectrum_DrawWaterfall()
             for(uint16_t idx = pixel_start, i = 0; i < pixel_count; i++,idx++)
             {
                 *pixel_buf_ptr++ = sd.waterfall_colours[waterfallline_ptr[idx]];    // write to memory using waterfall color from palette
+
             }
 
             // fill to the right border with black pixels
@@ -1235,9 +1244,12 @@ static void UiSpectrum_DrawWaterfall()
 
 
 
-            for(;doubleLine<sd.repeatWaterfallLine+1;doubleLine++)
+            for( ; doubleLine<sd.repeatWaterfallLine+1; doubleLine++)
             {
-                UiLcdHy28_BulkPixel_PutBuffer(spectrum_pixel_buf, slayout.wfall.w);
+                if (lcnt < do_lines)
+                {
+                    UiLcd_BulkPixel_PutBuffer(spectrum_pixel_buf, slayout.wfall.w);
+                }
                 lcnt++;
                 if(lcnt==slayout.wfall.h)	//preventing the window overlap if doubling oversize the display window
                 {
@@ -1251,7 +1263,7 @@ static void UiSpectrum_DrawWaterfall()
         }
 
 
-        UiLcdHy28_BulkPixel_CloseWrite();                   // we are done updating the display - return to normal full-screen mode
+        UiLcd_BulkPixel_CloseWrite();                   // we are done updating the display - return to normal full-screen mode
     }
 
 }

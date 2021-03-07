@@ -131,7 +131,7 @@ void MchfRfBoard_SelectLpfBpf(uint8_t group)
  */
 static void MchfRfBoard_DisablePaBias()
 {
-    Mchf_Rf_Board_SetPaBiasValue(0);
+    Mchf_RfBoard_SetPaBiasValue(0);
 }
 
 
@@ -161,7 +161,7 @@ bool Mchf_EnableTx(void)
 }
 
 
-bool Mchf_Rf_Board_Init(void)
+bool Mchf_RfBoard_Init(void)
 {
     MchfRfBoard_BandCntr_Init();
     return true;
@@ -171,7 +171,7 @@ bool Mchf_Rf_Board_Init(void)
 /**
  * @brief set PA bias at the LM2931CDG (U18) using DAC Channel 2
  */
-bool Mchf_Rf_Board_SetPaBiasValue(uint32_t bias)
+bool Mchf_RfBoard_SetPaBiasValue(uint32_t bias)
 {
     // Set DAC Channel 1 DHR12L register
     // DAC_SetChannel2Data(DAC_Align_8b_R,bias);

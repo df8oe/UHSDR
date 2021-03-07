@@ -74,9 +74,10 @@ void    UiLcdDraw_StraightLineTriple(uint16_t Xpos, uint16_t Ypos, uint16_t Leng
 void 	UiLcdDraw_HorizLineWithGrad(uint16_t Xpos, uint16_t Ypos, uint16_t Length,uint16_t gradient_start);
 
 void 	UiLcdDraw_EmptyRect(uint16_t Xpos, uint16_t Ypos, uint16_t Height, uint16_t Width, uint16_t color);
-void 	UiLcdDraw_BottomButton(uint16_t Xpos, uint16_t Ypos, uint16_t Height, uint16_t Width,uint16_t color);
 void 	UiLcdDraw_FullRect (uint16_t Xpos, uint16_t Ypos, uint16_t Height, uint16_t Width, uint16_t color);
 
 void 	UiLcdDraw_ColorPoint(uint16_t x, uint16_t y, uint16_t color);
 
+
+void    UiLcdDraw_BottomButton(uint16_t Xpos, uint16_t Ypos, uint16_t Height, uint16_t Width,uint16_t color);
 #endif

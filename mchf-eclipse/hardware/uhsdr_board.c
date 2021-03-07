@@ -205,7 +205,7 @@ void Board_InitMinimal()
     Board_Touchscreen_Init();
 
     // LCD Init
-    UiLcdHy28_Init();
+    UiLcd_Init();
 }
 
 /**
@@ -341,7 +341,7 @@ void Board_Powerdown()
     }
 
     Board_GreenLed(LED_STATE_OFF);
-    UiLcdHy28_BacklightEnable(false);
+    UiLcd_BacklightEnable(false);
 
     for(;;) { asm("nop"); }
     // there is no coming back from here...

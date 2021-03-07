@@ -21,6 +21,9 @@
 #include "math.h"
 #include "audio_driver.h"
 
+#if defined(STM32F4) && defined(USE_LMS_AUTONOTCH)
+#include "ui_lcd_hy28.h"
+#endif
 
 
 enum

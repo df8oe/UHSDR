@@ -18,6 +18,7 @@
 #include "uhsdr_types.h"
 
 #ifdef USE_GFX_RA8875
+
 extern const RegisterValueSetInfo_t ra8875_regs;
 
 uint16_t UiLcdRa8875_ReadDisplayId(void);
@@ -33,9 +34,9 @@ void UiLcdRa8875_DrawFullRect(uint16_t Xpos, uint16_t Ypos, uint16_t Height, uin
 void UiLcdRa8875_WriteReg(uint16_t LCD_Reg, uint16_t LCD_RegValue);
 uint16_t UiLcdRa8875_ReadReg(uint16_t LCD_Reg);
 
-void UiLcdRA8875_setScrollWindow(int16_t XL,int16_t XR ,int16_t YT ,int16_t YB);
-void UiLcdRA8875_setScrollMode(uint8_t mode);
-void UiLcdRA8875_scroll(int16_t x,int16_t y);
-
+void UiLcdRa8875_setScrollWindow(int16_t XL,int16_t XR ,int16_t YT ,int16_t YB);
+void UiLcdRa8875_setScrollMode(uint8_t mode);
+void UiLcdRa8875_scroll(int16_t x,int16_t y);
+void UiLcdRa8875_MoveAreaDown(uint16_t xs, uint16_t ys, uint16_t w, uint16_t h, uint16_t down);
 #endif
 #endif

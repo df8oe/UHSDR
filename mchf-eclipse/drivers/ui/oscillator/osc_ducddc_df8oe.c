@@ -186,5 +186,10 @@ bool DucDdc_Df8oe_PrepareRx(void)
     return true;
 }
 
+bool DucDdc_Df8oe_Config(void)
+{
+    ts.DisableTCXOdisplay = false;
+    return true;
+}
 
 #endif

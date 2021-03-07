@@ -105,10 +105,10 @@ void UiLcdDraw_HorizLineWithGrad(ushort x, ushort y, ushort Length,ushort gradie
     ushort     k = gradient_start;
 
 
-    UiLcdHy28_BulkPixel_OpenWrite(x,Length,y,1);
+    UiLcd_BulkPixel_OpenWrite(x,Length,y,1);
     for(i = 0; i < Length; i++)
     {
-        UiLcdHy28_BulkPixel_Put(RGB(k,k,k));
+        UiLcd_BulkPixel_Put(RGB(k,k,k));
         j++;
         if(j == GRADIENT_STEP)
         {
@@ -120,7 +120,7 @@ void UiLcdDraw_HorizLineWithGrad(ushort x, ushort y, ushort Length,ushort gradie
             j = 0;
         }
     }
-    UiLcdHy28_BulkPixel_CloseWrite();
+    UiLcd_BulkPixel_CloseWrite();
 }
 
 void UiLcdDraw_EmptyRect(ushort Xpos, ushort Ypos, ushort Height, ushort Width,ushort color)
@@ -154,7 +154,7 @@ static void UiLcdHy28_DrawChar_8bit(ushort x, ushort y, char symb,ushort Color, 
 
     const uint16_t charSpacing = cf->Spacing;
 
-    UiLcdHy28_BulkPixel_OpenWrite(x, Font_W+charSpacing, y, Font_H);
+    UiLcd_BulkPixel_OpenWrite(x, Font_W+charSpacing, y, Font_H);
 
     if(sym_ptr == NULL) // NON EXISTING SYMBOL
     {
@@ -162,11 +162,11 @@ static void UiLcdHy28_DrawChar_8bit(ushort x, ushort y, char symb,ushort Color, 
         {
             for(int cntrX=0; cntrX < Font_W; cntrX++)
             {
-                UiLcdHy28_BulkPixel_Put(Color);
+                UiLcd_BulkPixel_Put(Color);
             }
             for(int cntrX=0; cntrX < charSpacing; cntrX++)
             {
-                UiLcdHy28_BulkPixel_Put(bkColor);
+                UiLcd_BulkPixel_Put(bkColor);
             }
         }
     }
@@ -215,18 +215,18 @@ static void UiLcdHy28_DrawChar_8bit(ushort x, ushort y, char symb,ushort Color, 
 
                     pixel=(ColFG_Ro<<11)|(ColFG_Go<<5)|ColFG_Bo;    //assembly of destination colour
                 }
-                UiLcdHy28_BulkPixel_Put(pixel);
+                UiLcd_BulkPixel_Put(pixel);
             }
 
             // add spacing behind the character data
             for(int n=Font_W; n < Font_W + charSpacing ; n++)
             {
-                UiLcdHy28_BulkPixel_Put(bkColor);
+                UiLcd_BulkPixel_Put(bkColor);
             }
         }
     }
 
-    UiLcdHy28_BulkPixel_CloseWrite();
+    UiLcd_BulkPixel_CloseWrite();
 }
 #endif
 
@@ -239,7 +239,7 @@ static void UiLcdHy28_DrawChar_1bit(ushort x, ushort y, char symb,ushort Color, 
     // anything wider than 8 pixels uses two bytes
     ch+=(symb - 32) * cf->Height* ((cf->Width>8) ? 2 : 1 );
 
-    UiLcdHy28_BulkPixel_OpenWrite(x,cf->Width,y,cf->Height);
+    UiLcd_BulkPixel_OpenWrite(x,cf->Width,y,cf->Height);
 
     // we now get the pixel information line by line
     for(uint32_t i = 0; i < cf->Height; i++)
@@ -279,12 +279,12 @@ static void UiLcdHy28_DrawChar_1bit(ushort x, ushort y, char symb,ushort Color, 
 
         for(uint32_t j = 0; j < cf->Width; mask>>=1, j++)
         {
-            UiLcdHy28_BulkPixel_Put((line_data & mask) != 0 ? Color : bkColor);
+            UiLcd_BulkPixel_Put((line_data & mask) != 0 ? Color : bkColor);
             // we shift the mask in the for loop to the right one by one
         }
     }
 
-    UiLcdHy28_BulkPixel_CloseWrite();
+    UiLcd_BulkPixel_CloseWrite();
 }
 
 void UiLcdHy28_DrawChar(ushort x, ushort y, char symb,ushort Color, ushort bkColor,const sFONT *cf)
@@ -563,3 +563,10 @@ uint16_t UiLcdDraw_PrintTextCentered(const uint16_t XposStart,const uint16_t Ypo
     }
     return YposCurrent;
 }
+
+void UiLcdDraw_LcdClear(uint16_t Color)
+{
+    uint32_t MAX_X=mchf_display.MAX_X; uint32_t MAX_Y=mchf_display.MAX_Y;
+    mchf_display.DrawFullRect(0,0,MAX_Y, MAX_X, Color);
+}
+

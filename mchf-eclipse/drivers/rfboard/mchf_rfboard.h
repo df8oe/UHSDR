@@ -15,7 +15,7 @@ bool Mchf_PrepareTx(void);
 bool Mchf_PrepareRx(void);
 bool Mchf_EnableRx(void);
 bool Mchf_EnableTx(void);
-bool Mchf_Rf_Board_Init(void);
-bool Mchf_Rf_Board_SetPaBiasValue(uint32_t bias);
+bool Mchf_RfBoard_Init(void);
+bool Mchf_RfBoard_SetPaBiasValue(uint32_t bias);
 
 #endif /* RFBOARD_MCHF_RFBOARD_H_ */

@@ -18,6 +18,7 @@
 //#include "uhsdr_rtc.h"
 
 #include "ui_configuration.h"
+#include "ui_touchscreen.h"
 #include "config_storage.h"
 
 // serial EEPROM driver

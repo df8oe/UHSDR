@@ -29,7 +29,7 @@
 #include "uhsdr_hw_i2c.h"
 #include "uhsdr_rtc.h"
 #include "osc_SParkle.h"
-#include "ui_lcd_hy28.h" // for touchscreen
+#include "ui_touchscreen.h"
 
 
 #if (MAX_VAR_ADDR > NB_OF_VAR)

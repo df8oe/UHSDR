@@ -192,7 +192,11 @@ const hardware_ident_t ddcduc_df8oe_desc =
 };
 
 /**
- * This has to be called after rf board hardware detection and before using any other RFboard related functions
+ *
+ * Runs detection and first initialization of the connected RFBoard
+ * This has to be called before using any other RFboard related functions
+ * To have the board fully operational, RFBoard_Config_Board() has to be called, too.
+ *
  */
 bool RFBoard_Init_Board(void)
 {
@@ -203,11 +207,11 @@ bool RFBoard_Init_Board(void)
     // we determine and set the correct RF board here
     switch(osc->type)
     {
-        case OSC_SI5351A: ts.rf_board = RF_BOARD_RS928; break;
-        case OSC_DUCDDC_DF8OE  : ts.rf_board = RF_BOARD_DDCDUC_DF8OE; break;
-        case OSC_SI570: ts.rf_board = RF_BOARD_MCHF; break;
-        case OSC_SPARKLE: ts.rf_board = RF_BOARD_SPARKLE; break;
-        default: ts.rf_board = RF_BOARD_UNKNOWN;
+        case OSC_SI5351A:           ts.rf_board = RF_BOARD_RS928; break;
+        case OSC_DUCDDC_DF8OE:      ts.rf_board = RF_BOARD_DDCDUC_DF8OE; break;
+        case OSC_SI570:             ts.rf_board = RF_BOARD_MCHF; break;
+        case OSC_SPARKLE:           ts.rf_board = RF_BOARD_SPARKLE; break;
+        default:                    ts.rf_board = RF_BOARD_UNKNOWN;
     }
 
 
@@ -242,7 +246,7 @@ bool RFBoard_Init_Board(void)
             RFboard.PrepareRx = DucDdc_Df8oe_PrepareRx;
             RFboard.ChangeFrequency = RFBoard_Dummy_ChangeFrequency;
             RFboard.InitBoard = RFBoard_Dummy_InitBoard;
-            RFboard.ConfigBoard = RFBoard_Dummy_ConfigBoard;
+            RFboard.ConfigBoard = DucDdc_Df8oe_Config;
             RFboard.SetPABias = RFBoard_Dummy_SetPaBias;
             RFboard.description = &ddcduc_df8oe_desc;
             RFboard.iq_balance_required = false;
@@ -258,9 +262,9 @@ bool RFBoard_Init_Board(void)
             RFboard.PrepareTx  = Mchf_PrepareTx;
             RFboard.PrepareRx = Mchf_PrepareRx;
             RFboard.ChangeFrequency = Mchf_SetHWFiltersForFrequency;
-            RFboard.InitBoard = Mchf_Rf_Board_Init;
+            RFboard.InitBoard = Mchf_RfBoard_Init;
             RFboard.ConfigBoard = RFBoard_Dummy_ConfigBoard;
-            RFboard.SetPABias = Mchf_Rf_Board_SetPaBiasValue;
+            RFboard.SetPABias = Mchf_RfBoard_SetPaBiasValue;
             RFboard.description = &generic_desc;
             RFboard.iq_balance_required = true;
     }
