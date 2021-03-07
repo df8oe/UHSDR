@@ -13,8 +13,8 @@
  ************************************************************************************/
 
 #define 	UHSDR_VER_MAJOR			"2"
-#define 	UHSDR_VER_MINOR			"11"
-#define 	UHSDR_VER_RELEASE		"95"
+#define 	UHSDR_VER_MINOR			"13"
+#define 	UHSDR_VER_RELEASE		"1"
 
 #define		UHSDR_BOOT_VERS			"5.0.4"
 
