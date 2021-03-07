@@ -59,7 +59,13 @@
 #define CW_DIT_PROC         0x04
 #define CW_END_PROC         0x10
 
-#define CW_SMOOTH_LEN       2	// with sm_table size of 128 -> 2 => ~5.3ms for edges, ~ 9 steps of 0.66 ms,
+/**
+ * define CW_SMOOTH_LEN controls how many samples are multiplied with one table entry
+ * define CW_SMOOTH_TBL_SIZE how many steps to full signal
+ * Thus the length of a single ramp up is (1/IQ_SAMPLE_RATE)* (CW_SMOOTH_TBL_SIZE*CW_SMOOTH_LEN)
+ */
+#define CW_SMOOTH_LEN       (2 * IQ_AUDIO_RATIO)
+// with sm_table size of 128 -> 2 at 48khz => ~5.3ms for edges, ~ 9 steps of 0.66 ms,
 // 1 => 2.7ms , 5 steps of 0.66ms required.
 // 3 => 8ms, 13 steps
 #define CW_SMOOTH_STEPS		9	// 1 step = 0.6ms; 13 for 8ms, 9 for 5.4 ms, for internal keyer
@@ -444,6 +450,9 @@ void CwGen_Init(void)
 }
 
 /**
+ * define CW_SMOOTH_LEN controls how many samples are multiplied with one table entry
+ * define CW_SMOOTH_TBL_SIZE how many steps to full signal
+ * Thus the length of a single ramp up is (1/TX_IQ_SAMPLE_RATE)* (CW_SMOOTH_TBL_SIZE*CW_SMOOTH_LEN)
  * @brief remove clicks at start of tone
  */
 static void CwGen_RemoveClickOnRisingEdge( float32_t* i_buffer, float32_t* q_buffer, uint32_t size )
@@ -658,6 +667,35 @@ bool CwGen_Process( float32_t *i_buffer, float32_t *q_buffer, uint32_t blockSize
 	return retval;
 }
 
+enum {
+    CW_SKEY_SIG_RISING = 3,
+    CW_SKEY_SIG_CONSTANT = 2,
+    CW_SKEY_SIG_FALLING = 1,
+    CW_SKEY_SIG_OFF = 0
+};
+
+/**
+ *
+ *      Generate CW signal for straight keying
+ *      with smooth start of element
+ *       key_timer is used to track signal phases for Straight Key mode
+ *       CW_SIG_RISING/3: rising edge,
+ *       CW_SIG_CONSTANT/2: constant signal,
+ *       CW_SIG_FALLING/1: falling edge,
+ *       CW_SIG_OFF/0: signal off
+ *
+ *       key_timer set to CW_SIG_RISING/3 (rising edge) in Paddle DAH IRQ
+ *       on every audio driver sample request shape the form
+ *       then stop at key_timer = 2 (constant signal)
+ *
+ * @param i_buffer
+ * @param q_buffer
+ * @param blockSize
+ * @return
+ */
+
+extern bool now_cw;
+
 static bool CwGen_ProcessStraightKey( float32_t *i_buffer, float32_t *q_buffer, uint32_t blockSize )
 {
 	uint32_t retval;
@@ -665,16 +703,17 @@ static bool CwGen_ProcessStraightKey( float32_t *i_buffer, float32_t *q_buffer, 
 	// simulate paddle interrupt if we do virtual keying via CAT / RS232
 	if (( CatDriver_CatPttActive( ) && CatDriver_CWKeyPressed( )) || Board_PttDahLinePressed( ))
 	{
-       if( ps.key_timer == 0 )
+       if( ps.key_timer == CW_SKEY_SIG_OFF )
        {
           ps.sm_tbl_ptr  = 0;			// smooth table start
-          ps.key_timer   = 3;			// rising edge
+          ps.key_timer   = CW_SKEY_SIG_CONSTANT;			// rising edge
           CwGen_SetBreakTime();
+          now_cw = true;
        }
 	}
 
 	// Exit to RX if key_timer is zero and break_timer is zero as well
-	if(ps.key_timer == 0)
+	if(ps.key_timer == CW_SKEY_SIG_OFF)
 	{
 		if(ps.break_timer > 0)
 		{
@@ -688,21 +727,12 @@ static bool CwGen_ProcessStraightKey( float32_t *i_buffer, float32_t *q_buffer, 
 	else
 	{
 		softdds_runIQ(i_buffer,q_buffer,blockSize);
-		// ----------------------------------------------------------------
-		// Raising slope
-		//
-		// Smooth start of element
-		// key_timer is used to track signal phases for Straight Key mode
-		// 	3: rising edge, 2: constant signal, 1: falling edge, 0: signal off
-		// key_timer set to 3 (rising edge) in Paddle DAH IRQ
-		// on every audio driver sample request shape the form
-		// then stop at key_timer = 2 (constant signal)
-		if(ps.key_timer > 2)
+		if(ps.key_timer == CW_SKEY_SIG_RISING)
 		{
 			CwGen_RemoveClickOnRisingEdge(i_buffer,q_buffer,blockSize);
 			if( ps.sm_tbl_ptr >= CW_SMOOTH_TBL_SIZE ) // end of rising edge when pointer at end of table
 			{
-				ps.key_timer = 2;	// at end of rising edge change to constant signal phase
+				ps.key_timer = CW_SKEY_SIG_CONSTANT;	// at end of rising edge change to constant signal phase
 			}
 		}
 		// -----------------------------------------------------------------
@@ -715,20 +745,21 @@ static bool CwGen_ProcessStraightKey( float32_t *i_buffer, float32_t *q_buffer, 
 		// Do smooth the falling edge
 		// key was released, so key_timer goes from 2 to zero
 		// then finally switch to RX is performed (here, but on next request)
-		if(ps.key_timer < 2)
+		if(ps.key_timer <= CW_SKEY_SIG_FALLING)
 		{
 			CwGen_RemoveClickOnFallingEdge(i_buffer,q_buffer,blockSize);
 			if(ps.sm_tbl_ptr == 0) // end of falling edge when pointer at end of table
 			{
 				CwGen_SetBreakTime();
-				ps.key_timer = 0;
+				ps.key_timer = CW_SKEY_SIG_OFF;
+				now_cw = false;
 			}
 		}
 
 		// Key released ?, then shape falling edge until the end of the smooth table is reached
 		if
 		(
-				( ps.key_timer == 2 )
+				( ps.key_timer == CW_SKEY_SIG_CONSTANT )
 				&&
 				(
 						( Board_PttDahLinePressed() == false )
@@ -737,7 +768,7 @@ static bool CwGen_ProcessStraightKey( float32_t *i_buffer, float32_t *q_buffer, 
 				)
 		)
 		{
-			ps.key_timer = 1;	// begin of falling edge
+			ps.key_timer = CW_SKEY_SIG_FALLING;	// begin of falling edge
 		}
 		retval = true;
 	}
@@ -942,6 +973,7 @@ static bool CwGen_ProcessIambic( float32_t* i_buffer, float32_t* q_buffer, uint3
 			ps.key_timer--;
 
 			// Smooth start of element - initial
+	        now_cw = true;
 			ps.sm_tbl_ptr = 0;
 			CwGen_RemoveClickOnRisingEdge( i_buffer, q_buffer, blockSize );
 
@@ -954,6 +986,7 @@ static bool CwGen_ProcessIambic( float32_t* i_buffer, float32_t* q_buffer, uint3
 		{
 			if(ps.key_timer == 0)
 			{
+		        now_cw = false;
 				ps.key_timer = ps.pause_time;
 				ps.cw_state  = CW_PAUSE;
 			}
@@ -1049,7 +1082,7 @@ static void CwGen_TestFirstPaddle()
 	}
 }
 
-void CwGen_ResetBufferSending()
+static void CwGen_ResetBufferSending()
 {
 	if (!ts.cw_text_entry && ts.dmod_mode == DEMOD_CW)
 	{
@@ -1059,9 +1092,10 @@ void CwGen_ResetBufferSending()
 }
 
 /**
- * @brief request switch to TX and sets timers, only does something if not in straight key mode
+ * @brief stops automatic sending from buffers and does something if not in straight
+ * key mode for ultimatic mode processing
  */
-void CwGen_DitIRQ(void)
+void CwGen_IRQ(void)
 {
     CwGen_ResetBufferSending();
 
@@ -1070,12 +1104,4 @@ void CwGen_DitIRQ(void)
     {
         CwGen_TestFirstPaddle();
     }
-}
-
-/**
- * @brief request switch to TX and sets timers
- */
-void CwGen_DahIRQ(void)
-{
-    CwGen_DitIRQ();
 }
