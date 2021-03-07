@@ -1158,13 +1158,14 @@ static void UiSpectrum_DrawWaterfall()
         // the location of any of the display data - as long as we "blindly" write precisely the correct number of pixels per
         // line and the number of lines.
 
-
+#ifdef USE_GFX_RA8875
         uint16_t do_lines = slayout.wfall.h;
-        if (mchf_display.display_type == DISPLAY_RA8875_SPI || mchf_display.display_type == DISPLAY_RA8875_SPI)
+        if (mchf_display.display_type == DISPLAY_RA8875_PARALLEL || mchf_display.display_type == DISPLAY_RA8875_SPI)
         {
             do_lines  = ts.waterfall.vert_step_size;
             UiLcdRa8875_MoveAreaDown(slayout.wfall.x, slayout.wfall.y, slayout.wfall.w, slayout.wfall.h - ts.waterfall.vert_step_size, ts.waterfall.vert_step_size);
         }
+#endif
 
         UiLcd_BulkPixel_OpenWrite(slayout.wfall.x, slayout.wfall.w, slayout.wfall.y, do_lines);
 
