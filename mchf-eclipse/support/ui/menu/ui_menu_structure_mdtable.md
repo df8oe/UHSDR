@@ -2,7 +2,7 @@
 [//]: # (                                                                              )
 [//]: # ( WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !                         )
 [//]: # (                                                                              )
-[//]: # ( generated at  2021-02-06T14:42:03  by "/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_mdtable.py" )
+[//]: # ( generated at  2021-03-07T15:01:10  by "/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_mdtable.py" )
 [//]: # (                                                                              )
 [//]: # ( mcHF SDR TRX v.. - Menu Structure Diagram as MarkDown-Table )
 [//]: # (                                                                              )
@@ -11,7 +11,7 @@
 
 # uhsdr firmware v.. - UI Menu Overview
 
-generated at  2021-02-06T14:42:03  by "/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_mdtable.py"
+generated at  2021-03-07T15:01:10  by "/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_mdtable.py"
 
 
 
@@ -214,29 +214,30 @@ generated at  2021-02-06T14:42:03  by "/home/andreas/git/uhsdr/mchf-eclipse/supp
 | LABEL                         (                                         NR) | DESCRIPTION                                    | 
 | --------------------------------------------------------------------------- | ---------------------------------------------- | 
 | **Tune Power Level**          (                    CONFIG_TUNE_POWER_LEVEL) | Select the power level for TUNE operation. May be set using the selected power level or have a fixed power level. | 
+| **Reference Power REF PWR**   (                           CONFIG_REF_POWER) | Displays the power level which is used as reference power during PA calibration. This value depends on the actual rf hardware, it is 5W for the mcHF | 
 | **Tune Tone (SSB)**           (                      CONFIG_TUNE_TONE_MODE) | Select if single tone or two tone is generated during TUNE operation. Not persistent. | 
 | **CW PA Bias (If >0 )**       (                          CONFIG_CW_PA_BIAS) | If set to a value above 0, this BIAS is used during CW transmission; otherwise normal BIAS is used during CW | 
 | **Reduce Power on Low Bands** (           CONFIG_REDUCE_POWER_ON_LOW_BANDS) | If set (recommended!)  frequencies below 8Mhz (40m or lower) require higher power adjust values (four times). This permits better control of generated power on these frequencies. | 
 | **Reduce Power on High Bands** (          CONFIG_REDUCE_POWER_ON_HIGH_BANDS) | If set frequencies above 8Mhz (30m or higher) require higher power adjust values (four times). This permits better control of generated power on these frequencies. | 
 | **VSWR Protect.threshold**    (           CONFIG_VSWR_PROTECTION_THRESHOLD) | If not OFF, on TX/tune the bias of PA will be down to 0 etc when exceeding the specified value of VSWR | 
 | **PA Bias**                   (                             CONFIG_PA_BIAS) | Defines the BIAS value of the PA. See Adjustment and Calibration for more information. | 
-| **2200m 5W PWR Adjust**       (                     CONFIG_2200M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **630m  5W PWR Adjust**       (                      CONFIG_630M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **160m  5W PWR Adjust**       (                      CONFIG_160M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **80m   5W PWR Adjust**       (                       CONFIG_80M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **60m   5W PWR Adjust**       (                       CONFIG_60M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **40m   5W PWR Adjust**       (                       CONFIG_40M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **30m   5W PWR Adjust**       (                       CONFIG_30M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **20m   5W PWR Adjust**       (                       CONFIG_20M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **17m   5W PWR Adjust**       (                       CONFIG_17M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **15m   5W PWR Adjust**       (                       CONFIG_15M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **12m   5W PWR Adjust**       (                       CONFIG_12M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **10m   5W PWR Adjust**       (                       CONFIG_10M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **6m    5W PWR Adjust**       (                        CONFIG_6M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **4m    5W PWR Adjust**       (                        CONFIG_4M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **2m    5W PWR Adjust**       (                        CONFIG_2M_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **70cm  5W PWR Adjust**       (                      CONFIG_70CM_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
-| **23cm  5W PWR Adjust**       (                      CONFIG_23CM_5W_ADJUST) | Defines the internal power adjustment factor to achieve 5W power on this band. See Adjustment and Calibration for more information. | 
+| **2200m REF PWR Adjust**      (                 CONFIG_2200M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **630m  REF PWR Adjust**      (                  CONFIG_630M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **160m  REF PWR Adjust**      (                  CONFIG_160M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **80m   REF PWR Adjust**      (                   CONFIG_80M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **60m   REF PWR Adjust**      (                   CONFIG_60M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **40m   REF PWR Adjust**      (                   CONFIG_40M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **30m   REF PWR Adjust**      (                   CONFIG_30M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **20m   REF PWR Adjust**      (                   CONFIG_20M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **17m   REF PWR Adjust**      (                   CONFIG_17M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **15m   REF PWR Adjust**      (                   CONFIG_15M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **12m   REF PWR Adjust**      (                   CONFIG_12M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **10m   REF PWR Adjust**      (                   CONFIG_10M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **6m    REF PWR Adjust**      (                    CONFIG_6M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **4m    REF PWR Adjust**      (                    CONFIG_4M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **2m    REF PWR Adjust**      (                    CONFIG_2M_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **70cm  REF PWR Adjust**      (                  CONFIG_70CM_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
+| **23cm  REF PWR Adjust**      (                  CONFIG_23CM_REFPWR_ADJUST) | Defines the internal power adjustment factor to achieve reference power on this band. See Adjustment and Calibration for more information. | 
 | **2200m Full PWR Adjust**     (             CONFIG_2200M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
 | **630m  Full PWR Adjust**     (              CONFIG_630M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
 | **160m  Full PWR Adjust**     (              CONFIG_160M_FULL_POWER_ADJUST) | Defines the internal power adjustment factor to achieve full power on this band. Check the output signal when adjusting for full power! See Adjustment and Calibration for more information. | 
@@ -301,7 +302,8 @@ generated at  2021-02-06T14:42:03  by "/home/andreas/git/uhsdr/mchf-eclipse/supp
 | **Backup RAM Battery**        (                                  INFO_VBAT) | Battery Support for Backup RAM present?        | 
 | **Real Time Clock**           (                                   INFO_RTC) | Battery Supported Real Time Clock present?     | 
 | **FW license**                (                               INFO_LICENCE) | Display license of firmware                    | 
-| **HW license**                (                             INFO_HWLICENCE) | Display license of hardware                    | 
+| **UI HW license**             (                             INFO_HWLICENCE) | Display license of UI hardware                 | 
+| **RF HW license**             (                             INFO_HWLICENCE) | Display license of RF hardware                 | 
 
 
 ## Debug/Exper. Settings (`MENU_DEBUG`)
