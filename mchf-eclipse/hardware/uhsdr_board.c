@@ -227,7 +227,7 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
                 RadioManagement_Request_TxOn();     // yes - ONLY then do we activate PTT!  (e.g. prevent hardware bug from keying PTT!)
                 if(ts.dmod_mode == DEMOD_CW || is_demod_rtty() || is_demod_psk() || ts.cw_text_entry)
                 {
-                    CwGen_DahIRQ();     // Yes - go to CW state machine
+                    CwGen_IRQ();     // Yes - go to CW state machine
                 }
             }
             break;
@@ -238,7 +238,7 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
                 {
                     RadioManagement_Request_TxOn();
                 }
-                CwGen_DitIRQ();
+                CwGen_IRQ();
             }
             break;
         }

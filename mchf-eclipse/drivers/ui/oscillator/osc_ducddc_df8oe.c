@@ -128,12 +128,12 @@ static bool DucDdc_Df8oe_Init()
     ducddc_state.corr_mult = 1.0;
 	ducddc_state.current.rx_frequency = 0;
 	ducddc_state.current.tx_frequency = 0;
-	ducddc_state.current.txp = 0;
+	ducddc_state.current.txp = 0xff;
 	ducddc_state.current.sr = IQ_SAMPLE_RATE == 192000? 2 : (IQ_SAMPLE_RATE ==  96000 ? 1 : 0);
 
 	ducddc_state.next.rx_frequency = 0;
 	ducddc_state.next.tx_frequency = 0;
-    ducddc_state.next.txp = 0;
+    ducddc_state.next.txp = 0xff;
     ducddc_state.next.sr = IQ_SAMPLE_RATE == 192000? 2 : (IQ_SAMPLE_RATE ==  96000 ? 1 : 0);
 
 
@@ -157,15 +157,24 @@ const OscillatorInterface_t osc_ducddc =
         .getMaxFrequency = DucDdc_Df8oe_getMaxFrequency,
 };
 
+
+bool DucDdc_Df8oe_TxCWOnOff(bool on)
+{
+    ducddc_state.next.sr = (ducddc_state.next.sr & 0x7f) | (on?0x80:0x00);
+    return DucDdc_Df8oe_ChangeToNextFrequency() == OSC_OK;
+}
+
 bool DucDdc_Df8oe_EnableTx(void)
 {
-    ducddc_state.next.txp = 0xff;
-    return DucDdc_Df8oe_ChangeToNextFrequency() == OSC_OK;
+    // ducddc_state.next.txp = 0xff;
+    // return DucDdc_Df8oe_ChangeToNextFrequency() == OSC_OK;
+    return true;
 }
 bool DucDdc_Df8oe_EnableRx(void)
 {
-    ducddc_state.next.txp = 0xff;
-    return DucDdc_Df8oe_ChangeToNextFrequency() == OSC_OK;
+    return true;
+    // ducddc_state.next.txp = 0xff;
+    // return DucDdc_Df8oe_ChangeToNextFrequency() == OSC_OK;
 }
 
 bool DucDdc_Df8oe_PrepareTx(void)

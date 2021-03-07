@@ -22,5 +22,7 @@ bool DucDdc_Df8oe_EnableRx(void);
 bool DucDdc_Df8oe_EnableTx(void);
 bool DucDdc_Df8oe_PrepareTx(void);
 bool DucDdc_Df8oe_PrepareRx(void);
+bool DucDdc_Df8oe_TxCWOnOff(bool on);
+bool DucDdc_Df8oe_Config(void);
 
 #endif
