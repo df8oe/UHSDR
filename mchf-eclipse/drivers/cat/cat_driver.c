@@ -1286,10 +1286,11 @@ static void CatDriver_HandleCommands()
         {
             uint8_t tx_state = limit_4bits(roundf(swrm.fwd_pwr));
             tx_state |= is_splitmode() ? 0x20 : 0x00;
-            tx_state |= ts.txrx_mode == TRX_MODE_TX ? 0x00 : 0x80;
             tx_state |= swrm.vswr_dampened > 3.0 ? 0x40 : 0x00;
 
-            resp[0]= ts.txrx_mode == TRX_MODE_TX ? tx_state : 0x80;
+            // the only correct response when in rx mode is 0xff, confirmed
+            // with a real FT-817
+            resp[0]= ts.txrx_mode == TRX_MODE_TX ? tx_state : 0xff;
             if(RadioManagement_IsTxDisabled())
             {
                 resp[0] = 0xFF;
