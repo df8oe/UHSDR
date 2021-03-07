@@ -1158,8 +1158,8 @@ static void UiSpectrum_DrawWaterfall()
         // the location of any of the display data - as long as we "blindly" write precisely the correct number of pixels per
         // line and the number of lines.
 
-#ifdef USE_GFX_RA8875
         uint16_t do_lines = slayout.wfall.h;
+#ifdef USE_GFX_RA8875
         if (mchf_display.display_type == DISPLAY_RA8875_PARALLEL || mchf_display.display_type == DISPLAY_RA8875_SPI)
         {
             do_lines  = ts.waterfall.vert_step_size;
