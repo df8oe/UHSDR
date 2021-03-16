@@ -82,21 +82,21 @@ For the firmware-upgrade you must plug the USB-key into the TRX big USB-A plug.
 
 2.  Turn off the TRX and connect the USB drive.
 
-3.  Press BAND- button and hold it.
+3.  Press BAND- button and keep holding it until step 5.
 
 4.  Then press the power button and release it after a second once you see the
     LCD screen light up.
 
-5.  Release BAND- button once you see the green LED light up. Now the dumping of
+5.  Release BAND- button once you see the green LED light up steadily or if your display works, wait until you see "USB Drive Detected". Now the dumping of
     the whole firmware flash into MCHFOLD.BIN starts. The resulting file will
     have a size of up to 1984kByte, depending on the actual flash size of the
     MCU (2M = 1984, 1M = 960, 512k = 448).
 
-6.  Then the red LED lights up too, indicating the write process has started.
+6.  Then the red LED lights up too, indicating the write process has started. If the display works, you will see a message indicating writing new firmware has started.
 
 7.  When the update has finished, the backlight goes dark, both red and green
     LEDs remain steadily on. If not, and the red LED starts flashing, see the
-    error codes section below.
+    error codes section below. If your display is working, you will see instructions how to proceed on screen.
 
 8.  Remove the USB drive and press BAND- to reboot into the new firmware, press
     Power to power off.
