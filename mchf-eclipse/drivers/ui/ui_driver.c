@@ -5857,7 +5857,7 @@ void UiDriver_StartUpScreenFinish()
 	UiDriver_StartupScreen_LogIfProblem(osc_present_problem, "Local Oscillator NOT Detected!");
     UiDriver_StartupScreen_LogIfProblem(ts.rf_board == RF_BOARD_UNKNOWN, "RF Board Type UNKNOWN!");
 
-	if(osc->type == OSC_SI570 && RadioManagement_TcxoIsEnabled())
+	if(osc->type() == OSC_SI570 && RadioManagement_TcxoIsEnabled())
 	{
 		UiDriver_StartupScreen_LogIfProblem(lo.sensor_present == false, "MCP9801 Temp Sensor NOT Detected!");
 	}
@@ -7001,9 +7001,13 @@ void UiDriver_TaskHandler_HighPrioTasks()
         if (now_cw != last_cw)
         {
             last_cw = now_cw;
+            // TODO: see how to generalize this
             if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE)
             {
                 DucDdc_Df8oe_TxCWOnOff(now_cw);
+#ifdef BLUE_LED
+                Board_BlueLed(last_cw?LED_STATE_ON:LED_STATE_OFF);
+#endif
             }
             // TODO: ATM we are still generating the CW signal, even if the
             // external generator is active
@@ -7642,7 +7646,9 @@ static void UiDriver_UsbDriveHostApplication()
         switch(Appli_state)
         {
         case APPLICATION_READY:
+#ifdef BLUE_LED
             Board_BlueLed(LED_STATE_ON);
+#endif
             if (writeDone == false)
             {
                 uhsdr_config_read();
@@ -7650,7 +7656,9 @@ static void UiDriver_UsbDriveHostApplication()
             }
             break;
         case APPLICATION_DISCONNECT:
+#ifdef BLUE_LED
             Board_BlueLed(LED_STATE_OFF);
+#endif
             // f_mount(NULL, (TCHAR const*)"", 0);
             Appli_state = APPLICATION_IDLE;
             break;
