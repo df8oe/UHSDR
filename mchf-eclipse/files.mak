@@ -2,6 +2,7 @@ SRC := \
 src/uhsdr_main.c \
 misc/v_eprom/uhsdr_flash.c \
 misc/config_storage.c \
+misc/ini.c \
 misc/TestCPlusPlusBuild.cpp \
 misc/profiling.c \
 misc/serial_eeprom.c \
