@@ -370,7 +370,7 @@ int32_t FreeDV_SetMode(uint8_t fdv_mode, int32_t firstTime)
         retval = f_FREEDV != NULL;
         if (retval)
         {
-            sprintf(my_cb_state.tx_str, ts.special_functions_enabled == 1 ? FREEDV_TX_DF8OE_MESSAGE : FREEDV_TX_MESSAGE);
+            sprintf(my_cb_state.tx_str, ts.freedv_msg != NULL? ts.freedv_msg  : FREEDV_TX_MESSAGE);
 
             my_cb_state.ptx_str = my_cb_state.tx_str;
             freedv_set_callback_txt(f_FREEDV, &my_put_next_rx_char, &my_get_next_tx_char, &my_cb_state);

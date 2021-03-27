@@ -7214,6 +7214,8 @@ static void UiDriver_HandleUSB_Keyboard()
 #endif // USE_USBKEYBOARD
 }
 
+static void UiDriver_UsbDriveHostApplication();
+
 void UiDriver_TaskHandler_MainTasks()
 {
 
@@ -7238,6 +7240,8 @@ void UiDriver_TaskHandler_MainTasks()
 
 #ifdef USE_USBHOST
     MX_USB_HOST_Process();
+    UiDriver_UsbDriveHostApplication();
+
 #endif // USE_USBHOST
 
 	// BELOW ALL CALLING IS BASED ON SYSCLOCK 10ms clock
@@ -7462,4 +7466,198 @@ void UiDriver_TaskHandler_MainTasks()
 			drv_state = 0;
 		}
 	}
+}
+
+// EXPERMINENTAL CODE WITHOUT ANY PRACTICAL USE
+#include "fatfs.h"
+FATFS USBDISKFatFs;           /* File system object for USB disk logical drive */
+FIL MyFile;                   /* File object */
+char USBDISKPath[4];          /* USB Host logical drive path */
+
+char callsign[10];
+
+void test_file_access()
+{
+#define DOWNLOAD_FILENAME "callsign.txt"
+    static FIL fileR;
+    uint bytesRead;
+
+    if(f_mount(&USBDISKFatFs, (TCHAR const*)USBDISKPath, 0) == FR_OK)
+    {
+        if (f_open(&fileR, DOWNLOAD_FILENAME, FA_READ) == FR_OK)
+        {
+            uint btr = f_size(&fileR);
+
+            if (btr < sizeof(callsign))
+            {
+                if (f_read(&fileR, &callsign, btr, &bytesRead) != FR_OK)
+                {
+                    Board_GreenLed(LED_STATE_OFF);
+                }
+            }
+
+            /* Close file and filesystem */
+            f_close (&fileR);
+            f_mount(NULL, (TCHAR const*)"", 0);
+            ///f_mount(0, NULL);
+        }
+        else
+        {
+            Board_GreenLed(LED_STATE_OFF);
+        }
+    }
+    else
+    {
+        Board_GreenLed(LED_STATE_OFF);
+    }
+
+}
+
+
+#include "ini.h"
+
+volatile uint16_t ini_var_counter;
+volatile uint16_t ini_id;
+volatile int ini_val;
+
+typedef struct {
+    const char* label;
+    char** string_ptr;
+} string_ptr_map_t;
+
+string_ptr_map_t string_ptr_map[] =
+{
+        { "FREEDV_MSG", &ts.freedv_msg },
+        { "CALLSIGN",   &ts.callsign },
+        { NULL, NULL } // must be last
+};
+
+int my_ini_handler(void* user, const char* section,
+        const char* name, const char* value)
+{
+    if (strcmp("CONFIG",section) == 0)
+    {
+        if (strncmp("VAR_",name,4) == 0)
+        {
+            ini_id = strtol(&name[4],NULL,10);
+            ini_val = strtol(value,NULL,0);
+            ini_var_counter++;
+        }
+    }
+    if (strcmp("STRINGS",section) == 0)
+    {
+        for (int idx=0; string_ptr_map[idx].label != NULL; idx++)
+        {
+            if (strcmp(string_ptr_map[idx].label,name) == 0)
+            {
+               if (*(string_ptr_map[idx].string_ptr) != NULL)
+               {
+                   free(*(string_ptr_map[idx].string_ptr));
+               }
+
+                   *(string_ptr_map[idx].string_ptr) = strdup(value);
+            }
+        }
+    }
+    return 1;
+}
+
+/* See documentation in header file. */
+int my_ini_parse_file(FIL* file, ini_handler handler, void* user)
+{
+    return ini_parse_stream((ini_reader)f_gets, file, handler, user);
+}
+
+
+bool uhsdr_config_read()
+{
+    const char* backup_filename = "backup.ini";
+    static FIL fileR;
+    bool retval = false;
+
+    if(f_mount(&USBDISKFatFs, (TCHAR const*)USBDISKPath, 0) == FR_OK)
+    {
+        if (f_open(&fileR, backup_filename, FA_READ) == FR_OK)
+        {
+            retval = my_ini_parse_file(&fileR, my_ini_handler, NULL);
+            /* Close file and filesystem */
+            f_close (&fileR);
+            f_mount(NULL, (TCHAR const*)"", 0);
+            ///f_mount(0, NULL);
+        }
+    }
+    return retval;
+}
+
+bool uhsdr_config_write()
+{
+    const char* backup_filename = "backup.ini";
+    static FIL file;
+    char fileBuffer[512];
+    uint bytesWritten;
+    uint32_t f_res;
+
+    if((f_res = f_mount(&USBDISKFatFs, (TCHAR const*)USBDISKPath, 0)) == FR_OK)
+    {
+        if ((f_res = f_open(&file, backup_filename, FA_CREATE_ALWAYS | FA_WRITE)) == FR_OK)
+        {
+            const char* header = "[CONFIG]\n";
+            f_res = f_write(&file, header,strlen(header), &bytesWritten);
+            for (int varIdx = 0; varIdx < EEPROM_FIRST_UNUSED && f_res == FR_OK; varIdx++)
+            {
+                uint16_t varValue;
+                ConfigStorage_ReadVariable(varIdx, &varValue);
+                snprintf(fileBuffer,sizeof(fileBuffer),"VAR_%d=0x%x\n",varIdx, varValue);
+                uint32_t bytesToWrite = strlen(fileBuffer);
+                f_res = f_write(&file, &fileBuffer,bytesToWrite, &bytesWritten);
+            }
+
+            header = "[STRINGS]\n";
+            f_res = f_write(&file, header,strlen(header), &bytesWritten);
+            for (int idx=0; string_ptr_map[idx].label != NULL; idx++)
+            {
+                if (*(string_ptr_map[idx].string_ptr) != NULL)
+                {
+                    snprintf(fileBuffer,sizeof(fileBuffer),"%s=%s\n",string_ptr_map[idx].label,*(string_ptr_map[idx].string_ptr));
+                    uint32_t bytesToWrite = strlen(fileBuffer);
+                    f_res = f_write(&file, &fileBuffer,bytesToWrite, &bytesWritten);
+                }
+            }
+
+            /* Close file and filesystem */
+            f_close (&file);
+            f_mount(NULL, (TCHAR const*)"", 0);
+        }
+    }
+    return f_res == FR_OK;
+}
+
+bool writeDone = false;
+extern ApplicationTypeDef Appli_state;
+#include "fatfs.h"
+static void UiDriver_UsbDriveHostApplication()
+{
+    if (USBH_GetActiveClass(&hUsbHostHS) == USB_MSC_CLASS)
+    {
+        switch(Appli_state)
+        {
+        case APPLICATION_READY:
+            Board_BlueLed(LED_STATE_ON);
+            if (writeDone == false)
+            {
+                uhsdr_config_read();
+                writeDone = true;
+            }
+            break;
+        case APPLICATION_DISCONNECT:
+            Board_BlueLed(LED_STATE_OFF);
+            // f_mount(NULL, (TCHAR const*)"", 0);
+            Appli_state = APPLICATION_IDLE;
+            break;
+        case APPLICATION_IDLE:
+        default:
+            break;
+
+        }
+    }
 }
