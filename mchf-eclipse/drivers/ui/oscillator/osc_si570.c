@@ -761,6 +761,11 @@ static Oscillator_ResultCodes_t Si570_PrepareNextFrequency(ulong freq, int temp_
     return retval;
 }
 
+static Oscillator_Type_t Si570_Type(void)
+{
+    return OSC_SI570;
+}
+
 const OscillatorInterface_t osc_si570 =
 {
         .init = Si570_Init,
@@ -771,7 +776,7 @@ const OscillatorInterface_t osc_si570 =
         .isNextStepLarge = Si570_IsNextStepLarge,
         .readyForIrqCall = Si570_ReadyForIrqCall,
         .name = "Si570",
-        .type = OSC_SI570,
+        .type = Si570_Type,
         .getMinFrequency = Si570_getMinFrequency,
         .getMaxFrequency = Si570_getMaxFrequency,
 };

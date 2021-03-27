@@ -522,7 +522,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
 #ifdef USE_OSC_SI570
     case INFO_SI570:
     {
-        if (osc->type == OSC_SI570) {
+        if (osc->type() == OSC_SI570) {
             float suf = Si570_GetStartupFrequency();
             int vorkomma = (int)(suf);
             int nachkomma = (int) roundf((suf-vorkomma)*10000);
@@ -555,21 +555,7 @@ const char* UiMenu_GetSystemInfo(uint32_t* m_clr_ptr, int info_item)
         outs = (ts.tp->present == 0)?"n/a":"XPT2046";
         break;
     case INFO_RFBOARD:
-        switch(ts.rf_board)
-        {
-        case RF_BOARD_DDCDUC_DF8OE:
-            outs = "DDCDUC DF8OE RF";
-            break;
-        case RF_BOARD_RS928:
-            outs = "RS9xx RF";
-            break;
-        case RF_BOARD_SPARKLE:
-            outs = "SParkle RF Board";
-            break;
-        default:
-            outs = "mcHF RF";
-            break;
-        }
+        outs = RFboard.name;
         break;
     case INFO_FLASH:
             snprintf(out,32,"%d",(STM32_GetFlashSize()));

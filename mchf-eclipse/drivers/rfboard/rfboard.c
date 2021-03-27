@@ -205,10 +205,11 @@ bool RFBoard_Init_Board(void)
     Osc_Init();
 
     // we determine and set the correct RF board here
-    switch(osc->type)
+    switch(osc->type())
     {
         case OSC_SI5351A:           ts.rf_board = RF_BOARD_RS928; break;
         case OSC_DUCDDC_DF8OE:      ts.rf_board = RF_BOARD_DDCDUC_DF8OE; break;
+        case OSC_DUCDDC_DDC2MODULE: ts.rf_board = RF_BOARD_DDCDUC_MCHF; break;
         case OSC_SI570:             ts.rf_board = RF_BOARD_MCHF; break;
         case OSC_SPARKLE:           ts.rf_board = RF_BOARD_SPARKLE; break;
         default:                    ts.rf_board = RF_BOARD_UNKNOWN;
@@ -232,6 +233,8 @@ bool RFBoard_Init_Board(void)
             RFboard.SetPowerFactor = SParkle_SetTXpower;
             RFboard.description = &sparkle_desc;
             RFboard.iq_balance_required = false;
+            RFboard.name = "SParkle RF";
+            RFboard.is_ddcduc = true;
 #endif
 
             break;
@@ -250,8 +253,11 @@ bool RFBoard_Init_Board(void)
             RFboard.SetPABias = RFBoard_Dummy_SetPaBias;
             RFboard.description = &ddcduc_df8oe_desc;
             RFboard.iq_balance_required = false;
+            RFboard.name = "DDCDUC DF8OE RF";
+            RFboard.is_ddcduc = true;
 #endif
             break;
+        case RF_BOARD_DDCDUC_MCHF:
         case RF_BOARD_MCHF:
         case RF_BOARD_RS928:
         default: // HACK: in case we don't detect a board, we still initialize to mcHF RF for now.
@@ -267,13 +273,16 @@ bool RFBoard_Init_Board(void)
             RFboard.SetPABias = Mchf_RfBoard_SetPaBiasValue;
             RFboard.description = &generic_desc;
             RFboard.iq_balance_required = true;
+            RFboard.name = (ts.rf_board == RF_BOARD_RS928) ? "RS9xx RF" :
+                    ( (ts.rf_board == RF_BOARD_DDCDUC_MCHF) ? "Mod. mcHF RF" : "mcHF RF");
+            RFboard.is_ddcduc = ts.rf_board == RF_BOARD_DDCDUC_MCHF? true:false;
     }
 
     return RFboard.InitBoard();
 }
 
 /**
- * This will configure the rf board based on the configuration data
+ * This will configure the rf board b4N_1472ased on the configuration data
  * to be called after RFBoard_Init_Board and after configuration data
  * has been restored from persistent storage
  *

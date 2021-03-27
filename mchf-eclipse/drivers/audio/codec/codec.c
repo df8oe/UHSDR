@@ -14,6 +14,7 @@
 
 // Common
 #include "uhsdr_board.h"
+#include "rfboard_interface.h"
 #include "audio_driver.h"
 #include "radio_management.h"
 
@@ -296,14 +297,15 @@ static bool Codec_Reset(uint32_t IqFreq)
     mchf_codecs[1].init = Codec_ResetCodec(CODEC_ANA_I2C, AUDIO_SAMPLE_RATE, AUDIO_WORD_SIZE);
     mchf_codecs[1].active = true;
 
-    // HACK
-    if (ts.rf_board != RF_BOARD_SPARKLE && ts.rf_board != RF_BOARD_DDCDUC_DF8OE)
+
+    if (RFboard.is_ddcduc == false)
     {
         mchf_codecs[0].init = Codec_ResetCodec(CODEC_IQ_I2C, IqFreq, IQ_WORD_SIZE);
         mchf_codecs[0].active = true;
     }
     else
     {
+        // if DDC/DUC we don't need the IQ codec and we power it down if available on I2C
         Codec_WriteRegister(CODEC_IQ_I2C, W8731_POWER_DOWN_CNTR,W8731_POWER_DOWN_CNTR_MCHF_ALL_OFF);
     }
 #endif

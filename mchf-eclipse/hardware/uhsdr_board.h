@@ -82,8 +82,9 @@ typedef enum {
     RF_BOARD_UNKNOWN        = 0,
     RF_BOARD_MCHF           = 1,  // Standard mcHF RF Board using Si570
     RF_BOARD_RS928          = 2,  // RS928 MCHF Clone using Si5351a
-    RF_BOARD_DDCDUC_DF8OE   = 3,  // FPGA Board (experimental)
-    RF_BOARD_SPARKLE        = 4,
+    RF_BOARD_DDCDUC_DF8OE   = 4,  // FPGA Board (experimental)
+    RF_BOARD_SPARKLE        = 8,
+    RF_BOARD_DDCDUC_MCHF   = 16,   // FPGA Board coupled with modified MCHF RF_Board(experimental)
 } RfBoard_t;
 
 #define CW_KEYER_MODE_IAM_B				0
@@ -721,9 +722,14 @@ typedef struct TransceiverState
     bool debug_i2s_iq;
 
 
+    char* freedv_msg;     // set to a non-NULL value to have this message used by FreeDV
+    char* callsign;       // set to a non-NULL value
+
 } TransceiverState;
 
-extern __IO TransceiverState ts;
+
+
+extern TransceiverState ts;
 
 #define	POWERDOWN_DELAY_COUNT	30	// Delay in main service loop for the "last second" before power-down - to allow EEPROM write to complete
 

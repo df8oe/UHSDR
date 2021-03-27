@@ -15,6 +15,7 @@
 // Common
 #include "uhsdr_board_config.h"
 #include "uhsdr_board.h"
+#include "rfboard_interface.h"
 #include "profiling.h"
 #include "uhsdr_hw_i2s.h"
 
@@ -247,7 +248,7 @@ static void UhsdrHwI2s_Codec_EnableExternalMasterClock(void)
 void UhsdrHwI2s_Codec_IqAsSlave(bool is_slave)
 {
 
-    if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE)
+    if (RFboard.is_ddcduc)
     {
         uint32_t target_mode = is_slave? SAI_MODESLAVE_TX: SAI_MODEMASTER_TX;
         if (target_mode != hsai_BlockB2.Init.AudioMode)
@@ -280,7 +281,7 @@ static void UhsdrHwI2s_ApplyConfig()
 
 #if defined(UI_BRD_OVI40)
 
-    UhsdrHwI2s_Codec_IqAsSlave(ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE);
+    UhsdrHwI2s_Codec_IqAsSlave(RFboard.is_ddcduc);
 
     UhsdrHWI2s_SaiConfig(&hsai_BlockA2, IQ_SAMPLE_BITS, IQ_SAMPLE_RATE);
     UhsdrHWI2s_SaiConfig(&hsai_BlockB2, IQ_SAMPLE_BITS, IQ_SAMPLE_RATE);

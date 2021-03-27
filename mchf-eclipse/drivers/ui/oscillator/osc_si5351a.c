@@ -454,6 +454,11 @@ static bool Si5351a_Init()
 	return Si5351a_IsPresent();
 }
 
+static Oscillator_Type_t Si5351a_Type(void)
+{
+    return OSC_SI5351A;
+}
+
 const OscillatorInterface_t osc_si5351a =
 {
         .init = Si5351a_Init,
@@ -464,7 +469,7 @@ const OscillatorInterface_t osc_si5351a =
         .isNextStepLarge = Si5351a_IsNextStepLarge,
         .readyForIrqCall = Si5351a_ReadyForIrqCall,
         .name = "Si5351a",
-        .type = OSC_SI5351A,
+        .type = Si5351a_Type,
         .getMinFrequency = Si5351a_getMinFrequency,
         .getMaxFrequency = Si5351a_getMaxFrequency,
 };

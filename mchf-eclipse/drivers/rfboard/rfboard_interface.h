@@ -83,6 +83,8 @@ typedef struct {
     bool    (*SetPABias)(uint32_t bias); // a bias of 0 must disable transmission without disabling the PA signal path
     bool    (*SetPowerFactor)(float pf);
     const hardware_ident_t* description;
+    const char* name;
+    bool is_ddcduc;
     bool iq_balance_required; // tells us if the rfboard requires iq balance adjustments
     // if set, external power factor control is assumed, pa_info->power_factor is used in signal procssing
     // and this function is called with the calculated power factor;

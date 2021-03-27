@@ -42,7 +42,7 @@
 // #include "osc_interface.h"
 
 // Transceiver state public structure
-__IO __MCHF_SPECIALMEM TransceiverState ts;
+__MCHF_SPECIALMEM TransceiverState ts;
 
 static void Board_Led_Init(void)
 {

@@ -36,6 +36,7 @@ typedef enum
     OSC_SI5351A,
     OSC_DUCDDC_DF8OE,
     OSC_SPARKLE,
+    OSC_DUCDDC_DDC2MODULE,
 } Oscillator_Type_t;
 
 typedef struct
@@ -58,7 +59,7 @@ typedef struct
 	uint32_t    (*getMinFrequency)(void);
 	uint32_t    (*getMaxFrequency)(void);
     const char*  name;
-    const Oscillator_Type_t  type;
+    Oscillator_Type_t  (*type)(void);
 
 } OscillatorInterface_t;
 

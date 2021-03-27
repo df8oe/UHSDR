@@ -44,7 +44,9 @@ typedef struct
 	DucDdc_Df8oe_Config_t next;
 } DucDdc_Df8oe_State_t;
 
+
 DucDdc_Df8oe_State_t ducddc_state;
+
 
 
 static uint32_t DucDdc_Df8oe_getMinFrequency()
@@ -57,10 +59,25 @@ static uint32_t DucDdc_Df8oe_getMaxFrequency()
     return DUCDDC_MAX_FREQ;
 }
 
+
+typedef struct
+{
+    uint16_t format;
+    uint16_t len;
+    uint16_t hwtype;
+    uint16_t hwver;
+    uint8_t name[8];
+    uint8_t unused[16];
+} __attribute__ ((packed)) DucDdc_Df8oe_Rom_t;
+
+static DucDdc_Df8oe_Rom_t osc_rom;
+uint16_t hal_res;
+
 static bool DucDdc_Df8oe_ApplyConfig(DucDdc_Df8oe_Config_t* config)
 {
     // write 10 bytes to I2C
     return HAL_I2C_Master_Transmit(DUCDDC_I2C, DUCDDC_I2C_WRITE, (uint8_t*)config, sizeof(*config), 100) == HAL_OK;
+
 }
 
 
@@ -133,13 +150,30 @@ static bool DucDdc_Df8oe_Init()
 
 	ducddc_state.next.rx_frequency = 0;
 	ducddc_state.next.tx_frequency = 0;
-    ducddc_state.next.txp = 0xff;
-    ducddc_state.next.sr = IQ_SAMPLE_RATE == 192000? 2 : (IQ_SAMPLE_RATE ==  96000 ? 1 : 0);
+	ducddc_state.next.txp = 0xff;
+	ducddc_state.next.sr = IQ_SAMPLE_RATE == 192000? 2 : (IQ_SAMPLE_RATE ==  96000 ? 1 : 0);
 
 
-	ducddc_state.is_present = UhsdrHw_I2C_DeviceReady(DUCDDC_I2C,DUCDDC_I2C_WRITE) == HAL_OK;
+	if (UhsdrHw_I2C_DeviceReady(DUCDDC_I2C, DUCDDC_I2C_WRITE) == HAL_OK)
+	{
+	    ducddc_state.is_present = true;
+	    uint16_t hal_res = HAL_I2C_Master_Receive(DUCDDC_I2C, DUCDDC_I2C_WRITE, (uint8_t*)&osc_rom, sizeof(osc_rom), 100);
+
+	    // older gateware does not implement I2C read access
+	    if (hal_res != HAL_OK)
+	    {
+	        osc_rom.hwtype = 0xff; // indicates unidentifiable board, defaults to DDCDUC
+	        memcpy(osc_rom.name, "UNKNOWN",sizeof(osc_rom.name));
+	    }
+	}
+
 
 	return DucDdc_Df8oe_IsPresent();
+}
+
+Oscillator_Type_t DucDdc_Df80e_Type(void)
+{
+    return osc_rom.hwtype != 0x00? OSC_DUCDDC_DF8OE: OSC_DUCDDC_DDC2MODULE;
 }
 
 const OscillatorInterface_t osc_ducddc =
@@ -152,7 +186,7 @@ const OscillatorInterface_t osc_ducddc =
         .isNextStepLarge = DucDdc_Df8oe_IsNextStepLarge,
         .readyForIrqCall = DucDdc_Df8oe_ReadyForIrqCall,
         .name = "DUCDDC_DF8OE",
-        .type = OSC_DUCDDC_DF8OE,
+        .type = DucDdc_Df80e_Type,
         .getMinFrequency = DucDdc_Df8oe_getMinFrequency,
         .getMaxFrequency = DucDdc_Df8oe_getMaxFrequency,
 };

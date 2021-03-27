@@ -1408,7 +1408,7 @@ void RadioManagement_HandlePttOnOff()
  */
 bool RadioManagement_CleanZeroIF()
 {
-    return (ts.rf_board == RF_BOARD_DDCDUC_DF8OE || ts.rf_board == RF_BOARD_SPARKLE);
+    return RFboard.is_ddcduc;
 }
 
 /**

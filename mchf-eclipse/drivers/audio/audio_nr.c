@@ -88,7 +88,6 @@ void NR_Init()
     nr_params.first_time = 1;
     nr_params.NR_decimation_enable = true;
     nr_params.fft_256_enable = true;
-    ts.special_functions_enabled = 0;
     NR2.width = 4;
     NR2.power_threshold = 0.40;
     NR2.asnr = 30;

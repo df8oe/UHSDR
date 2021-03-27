@@ -869,6 +869,11 @@ bool osc_SParkle_Init(void)
 
 }
 
+static Oscillator_Type_t OscSparkle_Type(void)
+{
+    return OSC_SPARKLE;
+}
+
 const OscillatorInterface_t osc_SParkle_DDC =
 {
         .init = osc_SParkle_Init,
@@ -881,7 +886,7 @@ const OscillatorInterface_t osc_SParkle_DDC =
         .getMinFrequency = SParkle_DDCboard_getMinFrequency,
         .getMaxFrequency = SParkle_DDCboard_getMaxFrequency,
         .name = "SParkle DDC",
-        .type = OSC_SPARKLE,
+        .type = OscSparkle_Type,
 };
 
 #endif

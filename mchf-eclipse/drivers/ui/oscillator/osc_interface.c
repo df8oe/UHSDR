@@ -107,6 +107,11 @@ void Osc_Init()
 	SoftTcxo_Init();
 }
 
+static Oscillator_Type_t OscDummy_Type(void)
+{
+    return OSC_DUMMY;
+}
+
 static const OscillatorInterface_t osc_dummy =
 {
         .init = OscDummy_Init,
@@ -117,7 +122,7 @@ static const OscillatorInterface_t osc_dummy =
         .isNextStepLarge = OscDummy_IsNextStepLarge,
         .readyForIrqCall = OscDummy_ReadyForIrqCall,
         .name = "Dummy",
-        .type = OSC_DUMMY,
+        .type = OscDummy_Type,
         .getMinFrequency = OscDummy_getMinFrequency,
         .getMaxFrequency = OscDummy_getMaxFrequency,
 };
