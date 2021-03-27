@@ -109,12 +109,14 @@ int main(void)
   /* Enable I-Cache-------------------------------------------------------------*/
   SCB_EnableICache();
 
+#ifndef BOOTLOADER_BUILD
   if ((SCB->CCR & (uint32_t)SCB_CCR_DC_Msk) == 0)  /* enable D-Cache if not active */
   {
       // Reenabling an already enabled DCache is a very bad idea it turns out, as it may cause data corruption
       /* Enable D-Cache-------------------------------------------------------------*/
-      SCB_EnableDCache();
+     SCB_EnableDCache();
   }
+#endif
 
   /* MCU Configuration----------------------------------------------------------*/
 

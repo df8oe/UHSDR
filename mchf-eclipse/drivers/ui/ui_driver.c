@@ -14,6 +14,7 @@
 
 // Common
 #include "uhsdr_board.h"
+#include "rfboard_interface.h"
 #include "profiling.h"
 #include <assert.h>
 
@@ -3305,7 +3306,7 @@ static int UiDriver_EncoderDynMult(int delta_t, int pot_diff, float* enc_speed_a
 
     *enc_speed_avg_p = 0.1*enc_speed + 0.9* *enc_speed_avg_p; // averaging to smooth encoder speed
 
-    uint32_t enc_speed_avg_abs = abs(*enc_speed_avg_p);
+    uint32_t enc_speed_avg_abs = fabs(*enc_speed_avg_p);
 
     uint32_t enc_multiplier = 1; //set standard speed
 

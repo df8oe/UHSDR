@@ -23,7 +23,7 @@
 // Two Tone Dds
 soft_dds_t dbldds[2];
 
-uint32_t softdds_stepForSampleRate(float32_t freq, uint32_t samp_rate)
+static uint32_t softdds_stepForSampleRate(float32_t freq, uint32_t samp_rate)
 {
     uint64_t freq64_shifted = freq * DDS_TBL_SIZE;
     freq64_shifted <<= SOFTDDS_ACC_SHIFT;

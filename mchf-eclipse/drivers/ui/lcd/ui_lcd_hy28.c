@@ -759,11 +759,11 @@ static inline void UiLcdHy28_SpiSendByteFast(uint8_t byte)
 }*/
 
 
-static volatile uint8_t spi_dr_dummy; // used to make sure that DR is being read
 void UiLcd_SpiFinishTransfer()
 {
 #ifdef STM32H7
     #ifndef USE_SPI_HAL
+    static volatile uint8_t spi_dr_dummy; // used to make sure that DR is being read
     // we cannot use this with HAL, the "normal" HAL Transmit does check the flags AND resets them (ARGH)
     while (__HAL_SPI_GET_FLAG(&hspiDisplay, SPI_SR_EOT) == 0 || __HAL_SPI_GET_FLAG(&hspiDisplay, SPI_SR_EOT) == 0 ) { asm("nop"); }
     while (__HAL_SPI_GET_FLAG(&hspiDisplay, SPI_FLAG_RXWNE) != 0 || __HAL_SPI_GET_FLAG(&hspiDisplay, SPI_SR_RXPLVL) != 0 )
@@ -772,6 +772,7 @@ void UiLcd_SpiFinishTransfer()
     }
     #endif
 #else
+    static volatile uint8_t spi_dr_dummy; // used to make sure that DR is being read
     while ((SPI_DISPLAY->SR & (SPI_FLAG_TXE)) == (uint16_t)RESET) {}
     while (SPI_DISPLAY->SR & SPI_FLAG_BSY) {}
     if (SPI_DISPLAY->SR & SPI_FLAG_RXNE)
