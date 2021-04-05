@@ -222,7 +222,7 @@ bool DucDdc_Df8oe_PrepareRx(void)
 
 bool DucDdc_Df8oe_Config(void)
 {
-    ts.DisableTCXOdisplay = false;
+    ts.DisableTCXOdisplay = true;
     return true;
 }
 

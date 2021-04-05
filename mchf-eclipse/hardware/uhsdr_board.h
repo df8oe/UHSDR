@@ -716,7 +716,7 @@ typedef struct TransceiverState
     int16_t  nr_gain_display; // 0 = do not display gains, 1 = display bin gain in spectrum display, 2 = display long_tone_gain
     //                                           3 = display bin gain multiplied with long_tone_gain
 
-    uint8_t DisableTCXOdisplay; //permanent disable of TCXO display (some trx do not use it anyway)
+    bool DisableTCXOdisplay; //permanent disable of TCXO display (some trx do not use it anyway)
     int8_t ATT_Gain;            //value of amplification (positive) or attenuation (negative) of receiver path. This is setting for available hardware.
     bool TX_at_zeroIF;          //permanent disable frequency shift for TX
     bool debug_i2s_iq;

@@ -856,11 +856,10 @@ bool osc_SParkle_Init(void)
             SParkle_WriteBBRegister1(PCA_9554_RegConfig,0);    //expander#1 setup all to outputs
         }
 
-        ts.DisableTCXOdisplay=1;    //disable the tcxo field in layout
+        ts.DisableTCXOdisplay=true;    //disable the tcxo field in layout
         SParkleState.RX_amp_idx=att_off;
         ts.ATT_Gain=att_table[SParkleState.RX_amp_idx];  //enable display of attenuation/amplification control
         ts.TX_at_zeroIF=1;      //DUC input interpolating FIR filter has roll off around 12kHz causing -12kHz USB and +12kHz LSB not being transmitted, so there is a must for transmit at zero if
-                                //TODO: proof that FM/SAM transmit works as expected
 
         SParkle_UpdateConfig(DDCboard_REG_CTRL_SAIen,ENABLE);   //enable I2S stream from FPGA
     }
