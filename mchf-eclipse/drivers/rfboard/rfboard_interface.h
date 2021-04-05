@@ -77,11 +77,12 @@ typedef struct {
     bool    (*PrepareTx)(void);
     bool    (*PrepareRx)(void);
     bool    (*ChangeFrequency)(uint32_t frequency);
-    void (*CodecRestart)(void);
+    void    (*CodecRestart)(void);
     bool    (*InitBoard)(void);
     bool    (*ConfigBoard)(void);
     bool    (*SetPABias)(uint32_t bias); // a bias of 0 must disable transmission without disabling the PA signal path
     bool    (*SetPowerFactor)(float pf);
+    bool    (*EnableCWCarrier)(bool enable); // if set to non-zero value, board can generate CW carrier on its own at TX frequency
     const hardware_ident_t* description;
     const char* name;
     bool is_ddcduc;

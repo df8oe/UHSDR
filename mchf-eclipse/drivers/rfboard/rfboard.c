@@ -251,6 +251,7 @@ bool RFBoard_Init_Board(void)
             RFboard.InitBoard = RFBoard_Dummy_InitBoard;
             RFboard.ConfigBoard = DucDdc_Df8oe_Config;
             RFboard.SetPABias = RFBoard_Dummy_SetPaBias;
+            RFboard.EnableCWCarrier = DucDdc_Df8oe_TxCWOnOff;
             RFboard.description = &ddcduc_df8oe_desc;
             RFboard.iq_balance_required = false;
             RFboard.name = "DDCDUC DF8OE RF";
@@ -273,9 +274,13 @@ bool RFBoard_Init_Board(void)
             RFboard.SetPABias = Mchf_RfBoard_SetPaBiasValue;
             RFboard.description = &generic_desc;
             RFboard.iq_balance_required = true;
+
+            // the settings below handle some variations between different hardware setups
             RFboard.name = (ts.rf_board == RF_BOARD_RS928) ? "RS9xx RF" :
                     ( (ts.rf_board == RF_BOARD_DDCDUC_MCHF) ? "Mod. mcHF RF" : "mcHF RF");
-            RFboard.is_ddcduc = ts.rf_board == RF_BOARD_DDCDUC_MCHF? true:false;
+            RFboard.is_ddcduc = ts.rf_board == RF_BOARD_DDCDUC_MCHF;
+            RFboard.EnableCWCarrier = ts.rf_board == RF_BOARD_DDCDUC_MCHF? DucDdc_Df8oe_TxCWOnOff : NULL;
+
     }
 
     return RFboard.InitBoard();

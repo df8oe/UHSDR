@@ -588,6 +588,12 @@ uint32_t RadioManagement_Dial2TuneFrequency(const uint32_t dial_freq, uint8_t tx
     if(ts.dmod_mode == DEMOD_CW)            // In CW mode?
     {
         tune_freq += RadioManagement_GetCWDialOffset();
+        // if we are transmitting in CW on a board which provides its own CW carrier TX,
+        // we have to adjust the TX frequency by the side tone offset from the normal TX frequency
+        if (txrx_mode == TRX_MODE_TX && RFboard.EnableCWCarrier != NULL)
+        {
+            tune_freq += ts.cw_lsb ? -ts.cw_sidetone_freq : ts.cw_sidetone_freq;
+        }
     }
 
 

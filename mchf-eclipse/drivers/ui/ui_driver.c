@@ -4538,7 +4538,7 @@ static void UiDriver_HandleTXMeters()
 			const char* txp = NULL;
 			if (swrm.pwr_meter_disp)
 			{
-				snprintf(txt,16, "%5d,%5d", (int)(swrm.fwd_pwr_avg*1000), (int)(swrm.rev_pwr_avg*1000));		// scale to display power in milliwatts
+				snprintf(txt,sizeof(txt), "%5d,%5d", (int)(swrm.fwd_pwr_avg*1000), (int)(swrm.rev_pwr_avg*1000));		// scale to display power in milliwatts
 				txp = txt;
 				swrm.pwr_meter_was_disp = 1;	// indicate the power meter WAS displayed
 			}
@@ -6967,8 +6967,7 @@ extern USBH_HandleTypeDef hUsbHostHS;
  * In a nutshell, unless there is a very, very good reason, do not add or change anything here.
  *
  */
-#include "osc_ducddc_df8oe.h"
-bool now_cw = false;
+bool now_cw = false; // HACK / TODO We share this global variable with cw_gen.c for now
 void UiDriver_TaskHandler_HighPrioTasks()
 {
     // READ THE LENGTHY COMMENT ABOVE BEFORE CHANGING ANYTHING BELOW!!!
@@ -6992,23 +6991,17 @@ void UiDriver_TaskHandler_HighPrioTasks()
 #endif
     }
 
-    // TODO Generalize as interface to RFBoard in case
-    // RFBoard has a CW generator
-#ifdef USE_OSC_DUCDDC
-    if (osc->readyForIrqCall)
+    // Handle CW generation if RFBoard has a CW generator
+    if (RFboard.EnableCWCarrier != NULL && osc->readyForIrqCall)
     {
         static bool last_cw = false;
         if (now_cw != last_cw)
         {
             last_cw = now_cw;
-            // TODO: see how to generalize this
-            if (ts.rf_board == RF_BOARD_DDCDUC_DF8OE)
-            {
-                DucDdc_Df8oe_TxCWOnOff(now_cw);
+            RFboard.EnableCWCarrier(now_cw);
 #ifdef BLUE_LED
-                Board_BlueLed(last_cw?LED_STATE_ON:LED_STATE_OFF);
+            Board_BlueLed(last_cw?LED_STATE_ON:LED_STATE_OFF);
 #endif
-            }
             // TODO: ATM we are still generating the CW signal, even if the
             // external generator is active
             // TODO: the frequency display does not match the CW frequency
@@ -7017,7 +7010,6 @@ void UiDriver_TaskHandler_HighPrioTasks()
             // when setting up tx
         }
     }
-#endif
 
 #ifdef USE_HIGH_PRIO_PTT
     if (RadioManagement_SwitchTxRx_Possible())
