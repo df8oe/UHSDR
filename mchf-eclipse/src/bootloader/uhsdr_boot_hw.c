@@ -80,12 +80,12 @@ void mchfBl_LEDInit(Led_TypeDef Led)
 
 void mchfBl_PinOn(Led_TypeDef Led)
 {
-    GPIO_SetBits(GPIO_PORT[Led],GPIO_PIN[Led])
+    GPIO_SetBits(GPIO_PORT[Led],GPIO_PIN[Led]);
 }
 
 void mchfBl_PinOff(Led_TypeDef Led)
 {
-    GPIO_ResetBits(GPIO_PORT[Led],GPIO_PIN[Led])
+    GPIO_ResetBits(GPIO_PORT[Led],GPIO_PIN[Led]);
 }
 
 void mchfBl_PinToggle(Led_TypeDef Led)
