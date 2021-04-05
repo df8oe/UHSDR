@@ -1,0 +1,3 @@
+CONFIGFLAGS=-DUI_BRD_MCHF -DRF_BRD_MCHF
+
+include ${ROOTLOC}/Makefile
