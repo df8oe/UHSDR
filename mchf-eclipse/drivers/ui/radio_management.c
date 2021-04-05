@@ -405,6 +405,9 @@ static bool RadioManagement_SetBandPowerFactor(const BandInfo* band, int32_t pow
         ts.tx_power_factor =
                 (power_factor > TX_POWER_FACTOR_MAX_INTERNAL) ?
                         TX_POWER_FACTOR_MAX_INTERNAL : power_factor;
+
+        // now we adjust the scaling per rfboard as they may have different gain requirements
+        ts.tx_power_factor = power_factor* RFboard.power_levelsInfo->power_factor;
     }
 
     ts.power_modified |=  (power_factor == 0 || ts.tx_power_factor != power_factor);

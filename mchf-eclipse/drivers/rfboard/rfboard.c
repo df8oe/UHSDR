@@ -45,6 +45,14 @@ const pa_power_levels_info_t mchf_power_levelsInfo =
 {
         .levels = mchf_rf_power_levels,
         .count = sizeof(mchf_rf_power_levels)/sizeof(*mchf_rf_power_levels),
+        .power_factor = 1.0f,
+};
+
+const pa_power_levels_info_t mchf_ddcduc_power_levelsInfo =
+{
+        .levels = mchf_rf_power_levels,
+        .count = sizeof(mchf_rf_power_levels)/sizeof(*mchf_rf_power_levels),
+        .power_factor = 2.0f,
 };
 
 #ifdef RF_BRD_LAPWING
@@ -113,6 +121,7 @@ const pa_power_levels_info_t Df8oe_DdcDuc_power_levelsInfo =
 {
         .levels = Df8oe_DdcDuc_rf_power_levels,
         .count = sizeof(Df8oe_DdcDuc_rf_power_levels)/sizeof(*Df8oe_DdcDuc_rf_power_levels),
+        .power_factor = 2.0f,
 };
 
 const pa_info_t Df8oe_DdcDuc_pa =
@@ -263,7 +272,6 @@ bool RFBoard_Init_Board(void)
         case RF_BOARD_RS928:
         default: // HACK: in case we don't detect a board, we still initialize to mcHF RF for now.
             RFboard.pa_info=&mchf_pa;
-            RFboard.power_levelsInfo=&mchf_power_levelsInfo;
             RFboard.EnableTx  = Mchf_EnableTx;
             RFboard.EnableRx = Mchf_EnableRx;
             RFboard.PrepareTx  = Mchf_PrepareTx;
@@ -280,7 +288,7 @@ bool RFBoard_Init_Board(void)
                     ( (ts.rf_board == RF_BOARD_DDCDUC_MCHF) ? "Mod. mcHF RF" : "mcHF RF");
             RFboard.is_ddcduc = ts.rf_board == RF_BOARD_DDCDUC_MCHF;
             RFboard.EnableCWCarrier = ts.rf_board == RF_BOARD_DDCDUC_MCHF? DucDdc_Df8oe_TxCWOnOff : NULL;
-
+            RFboard.power_levelsInfo= ts.rf_board == RF_BOARD_DDCDUC_MCHF? &mchf_ddcduc_power_levelsInfo : &mchf_power_levelsInfo;
     }
 
     return RFboard.InitBoard();

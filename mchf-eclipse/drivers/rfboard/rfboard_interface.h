@@ -46,8 +46,7 @@ typedef struct {
 typedef struct {
     const power_level_desc_t* levels;
     const uint32_t count;
-    //const rf_power_scaling_t power_scaling_mode;
-    const float power_factor; // POWERSCALING_INTERNAL -> not used, POWERSCALING_EXTERNAL -> used in signal processing instead of calculated power factor
+    const float power_factor; // POWERSCALING_INTERNAL -> used as constant multiplier for internal power factor (which is limited to TX_POWER_FACTOR_MAX_INTERNAL = 0.55), POWERSCALING_EXTERNAL -> used in signal processing instead of calculated power factor
 } pa_power_levels_info_t;
 
 typedef struct
