@@ -19,7 +19,7 @@ cache:
 install:
     - export GCC_DIR=$HOME/$GCC_BASE
     - export GCC_ARCHIVE=$HOME/$GCC_BASE-linux.tar.bz2
-    - export GCC_URL=https://developer.arm.com/-/media/Files/downloads/gnu-rm/$GCC_SHORT/$GCC_BASE-linux.tar.bz2
+    - export GCC_URL=https://developer.arm.com/-/media/Files/downloads/gnu-rm/$GCC_SHORT/$GCC_BASE-x86_64-linux.tar.bz2
     - if [ ! -e $GCC_DIR/bin/arm-none-eabi-g++ ]; then wget $GCC_URL -O $GCC_ARCHIVE; tar xfj $GCC_ARCHIVE -C $HOME; fi
     - ROOTLOC="../.."
     - BUILDLOC=mchf-eclipse/build
