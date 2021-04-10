@@ -163,6 +163,7 @@ bool Mchf_EnableTx(void)
 
 bool Mchf_RfBoard_Init(void)
 {
+    ts.enable_tcxo = ts.rf_board == RF_BOARD_MCHF || ts.rf_board == RF_BOARD_RS928;
     MchfRfBoard_BandCntr_Init();
     return true;
 }
