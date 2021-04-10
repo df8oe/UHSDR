@@ -1,7 +1,7 @@
 env:
    global:
-   - GCC_BASE=gcc-arm-none-eabi-8-2018-q4-major
-   - GCC_SHORT=8-2018q4
+   - GCC_BASE=gcc-arm-none-eabi-10-2020-q4-major
+   - GCC_SHORT=10-2020q4
 
 sudo: required
 language: generic
