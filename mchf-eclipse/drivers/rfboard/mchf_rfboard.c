@@ -114,8 +114,8 @@ void MchfRfBoard_SelectLpfBpf(uint8_t group)
                 MchfRfBoard_BandFilterPulseRelays();
             }
             // now change pin config to next in sequence
-            if ((relay_sequence[group][idx] & 0xf0) != 0) GPIO_SetBits(BAND0_PIO, BAND0) else GPIO_ResetBits(BAND0_PIO, BAND0);
-            if ((relay_sequence[group][idx] & 0x0f) != 0) GPIO_SetBits(BAND1_PIO, BAND1) else GPIO_ResetBits(BAND1_PIO, BAND1);
+            if ((relay_sequence[group][idx] & 0xf0) != 0) { GPIO_SetBits(BAND0_PIO, BAND0);  } else { GPIO_ResetBits(BAND0_PIO, BAND0); }
+            if ((relay_sequence[group][idx] & 0x0f) != 0) { GPIO_SetBits(BAND1_PIO, BAND1); } else { GPIO_ResetBits(BAND1_PIO, BAND1); }
         }
     }
 }

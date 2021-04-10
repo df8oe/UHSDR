@@ -725,7 +725,7 @@ void UiLcd_SpiDeInit()
     }
 }
 
-inline void UiLcd_SpiLcdCsDisable()
+static inline void UiLcd_SpiLcdCsDisable()
 {
     GPIO_SetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
