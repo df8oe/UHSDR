@@ -762,11 +762,12 @@ void UiLcdHy28_SpiDeInit()
     }
 }
 
-inline void UiLcdHy28_SpiLcdCsDisable()
+inline static void UiLcdHy28_SpiLcdCsDisable()
 {
     GPIO_SetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
-static inline void UiLcdHy28_SpiLcdCsEnable()
+
+inline static void UiLcdHy28_SpiLcdCsEnable()
 {
     GPIO_ResetBits(mchf_display.lcd_cs_pio, mchf_display.lcd_cs);
 }
