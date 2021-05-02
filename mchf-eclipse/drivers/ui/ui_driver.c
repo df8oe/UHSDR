@@ -2627,7 +2627,7 @@ static void UiDriver_ShowTxErrorMessages()
     // or effective bias is 0 (== no or very distorted output)
     // inform operator
 	const bool no_tx_power = ts.tx_power_factor == 0.0;
-	const bool no_bias = (ts.dmod_mode != DEMOD_CW && ts.pa_bias == 0) || (ts.dmod_mode == DEMOD_CW && ts.pa_cw_bias == 0 && ts.pa_bias == 0);
+	const bool no_bias = ts.pa_bias == 0;
 	
 
     if (RadioManagement_IsTxDisabled() == false && (no_tx_power || no_bias))
