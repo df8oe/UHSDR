@@ -281,9 +281,9 @@ bool RFBoard_Init_Board(void)
             RFboard.ConfigBoard = RFBoard_Dummy_ConfigBoard;
             RFboard.SetPABias = Mchf_RfBoard_SetPaBiasValue;
             RFboard.description = &generic_desc;
-            RFboard.iq_balance_required = true;
 
             // the settings below handle some variations between different hardware setups
+            RFboard.iq_balance_required = ts.rf_board == RF_BOARD_DDCDUC_MCHF;
             RFboard.name = (ts.rf_board == RF_BOARD_RS928) ? "RS9xx RF" :
                     ( (ts.rf_board == RF_BOARD_DDCDUC_MCHF) ? "Mod. mcHF RF" : "mcHF RF");
             RFboard.is_ddcduc = ts.rf_board == RF_BOARD_DDCDUC_MCHF;
