@@ -101,7 +101,10 @@ typedef struct OscillatorState
 } OscillatorState;
 
 
-#define SMOOTH_DELTA (0.0035)
+#define SMOOTH_DELTA (3500.0)
+// Using the PPM figure directly reduces conversion errors generated when expressed as a decimal fraction
+// 0.0035 is actually saved as 0.003500000000000000073 (yes that is 15  "0") so a very small error.
+//
 // Datasheet says 0.0035  == 3500PPM but there have been issues if we get close to that value.
 // to play it safe, we make the delta range a little smaller.
 // if you want to play with it, tune to the end of the 10m band, set 100 khz step width and dial around
@@ -278,7 +281,8 @@ static float64_t Si570_GetFDCOForFreq(float64_t new_freq, uint8_t n1, uint8_t hs
 static bool Si570_FindSmoothRFreqForFreq(const Si570_FreqConfig* cur_config, Si570_FreqConfig* new_config) {
     float64_t fdco = Si570_GetFDCOForFreq(new_config->freq, cur_config->n1, cur_config->hsdiv);
     bool retval = false;
-    float64_t fdiff = (fdco - cur_config->fdco)/cur_config->fdco;
+    float64_t fdiff = ((fdco - cur_config->fdco)*1000000.0)/cur_config->fdco;
+    // Scaling the difference part of the calculation scales the small, but relatively accurate part of the calculation before dividing by a large number thereby reducing the generated arrors at this stage.
 
     if (fdiff < 0.0)
     {
