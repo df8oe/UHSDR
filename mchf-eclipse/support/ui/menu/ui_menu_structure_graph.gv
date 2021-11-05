@@ -2,7 +2,7 @@
 #  
 #  WARNING: generated data!  DO NOT EDIT MANUALLY ! ! !
 #  
-#  generated at  2021-03-08T06:16:21  by "/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_graph.py"
+#  generated at  2021-11-05T08:16:43  by "/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_graph.py"
 #  
 #  mcHF SDR TRX v.. - Menu Structure Diagram in DOT-language
 #  
@@ -12,7 +12,7 @@
     digraph mcHF_menus {
        
         graph [ fontsize = 14,
-                label = "\nmcHF v.. - Menus Overview\ngenerated at  2021-03-08T06:16:21  by \"/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_graph.py\"",
+                label = "\nmcHF v.. - Menus Overview\ngenerated at  2021-11-05T08:16:43  by \"/home/andreas/git/uhsdr/mchf-eclipse/support/ui/menu/./ui_menu_structure_graph.py\"",
               ];
        
         rankdir=LR
@@ -1601,6 +1601,178 @@
     
         #  -  -  -  -
 
+        subgraph "MENU_DISPLAY" {
+            label = "MENU_DISPLAY beef.0f.dead.e5e1"
+
+    
+            MENU_DISPLAY -> CONFIG_LCD_AUTO_OFF_MODE
+            
+            MENU_DISPLAY -> CONFIG_FREQ_STEP_MARKER_LINE
+            
+            MENU_DISPLAY -> CONFIG_DISP_FILTER_BANDWIDTH
+            
+            MENU_DISPLAY -> MENU_SPECTRUM_SIZE
+            
+            MENU_DISPLAY -> MENU_SPECTRUM_FILTER_STRENGTH
+            
+            MENU_DISPLAY -> MENU_SPECTRUM_FREQSCALE_COLOUR
+            
+            MENU_DISPLAY -> MENU_SPECTRUM_CENTER_LINE_COLOUR
+            
+            MENU_DISPLAY -> MENU_SCOPE_LIGHT_ENABLE
+            
+            MENU_DISPLAY -> MENU_SCOPE_SPEED
+            
+            MENU_DISPLAY -> MENU_SCOPE_AGC_ADJUST
+            
+            MENU_DISPLAY -> MENU_SCOPE_TRACE_COLOUR
+            
+            MENU_DISPLAY -> MENU_SCOPE_TRACE_HL_COLOUR
+            
+            MENU_DISPLAY -> MENU_SCOPE_BACKGROUND_HL_COLOUR
+            
+            MENU_DISPLAY -> MENU_SCOPE_GRID_COLOUR
+            
+            MENU_DISPLAY -> MENU_SCOPE_DB_DIVISION
+            
+            MENU_DISPLAY -> MENU_WFALL_SPEED
+            
+            MENU_DISPLAY -> MENU_WFALL_COLOR_SCHEME
+            
+            MENU_DISPLAY -> MENU_WFALL_STEP_SIZE
+            
+            MENU_DISPLAY -> MENU_WFALL_CONTRAST
+            
+            MENU_DISPLAY -> MENU_METER_COLOUR_UP
+            
+            MENU_DISPLAY -> MENU_METER_COLOUR_DOWN
+            
+            MENU_DISPLAY -> MENU_DBM_DISPLAY
+            
+            MENU_DISPLAY -> MENU_DBM_CALIBRATE
+            
+            MENU_DISPLAY -> CONFIG_SMETER_ATTACK
+            
+            MENU_DISPLAY -> CONFIG_SMETER_DECAY
+            
+            MENU_DISPLAY -> MENU_FREQ_FONT
+            
+            MENU_DISPLAY -> MENU_UI_INVERSE_SCROLLING
+            
+        }  ## END subgraph MENU_HALL_OF_FAME
+    
+        #  -  -  -  -
+
+        subgraph "MENU_SYSINFO" {
+            label = "MENU_SYSINFO beef.0f.dead.e5e1"
+
+    
+            MENU_SYSINFO -> INFO_DISPLAY
+            
+            MENU_SYSINFO -> INFO_DISPLAY_CTRL
+            
+            MENU_SYSINFO -> INFO_OSC_NAME
+            
+            MENU_SYSINFO -> INFO_SI570
+            
+            MENU_SYSINFO -> INFO_EEPROM
+            
+            MENU_SYSINFO -> INFO_TP
+            
+            MENU_SYSINFO -> INFO_CPU
+            
+            MENU_SYSINFO -> INFO_FLASH
+            
+            MENU_SYSINFO -> INFO_RAM
+            
+            MENU_SYSINFO -> INFO_FW_VERSION
+            
+            MENU_SYSINFO -> INFO_BUILD
+            
+            MENU_SYSINFO -> INFO_BL_VERSION
+            
+            MENU_SYSINFO -> INFO_RFBOARD
+            
+            MENU_SYSINFO -> INFO_CODEC
+            
+            MENU_SYSINFO -> INFO_CODEC_TWINPEAKS
+            
+            MENU_SYSINFO -> INFO_VBAT
+            
+            MENU_SYSINFO -> INFO_RTC
+            
+            MENU_SYSINFO -> INFO_LICENCE
+            
+            MENU_SYSINFO -> INFO_HWLICENCE
+            
+        }  ## END subgraph MENU_HALL_OF_FAME
+    
+        #  -  -  -  -
+
+        subgraph "MENU_DEBUG" {
+            label = "MENU_DEBUG beef.0f.dead.e5e1"
+
+    
+            MENU_DEBUG -> MENU_DEBUG_ENABLE_INFO
+            
+            MENU_DEBUG -> MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL
+            
+            MENU_DEBUG -> MENU_DEBUG_TX_AUDIO
+            
+            MENU_DEBUG -> MENU_DEBUG_CLONEOUT
+            
+            MENU_DEBUG -> MENU_DEBUG_CLONEIN
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SHOW
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_BETA
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_ASNR
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SMOOTH_WIDTH
+            
+            MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SMOOTH_THRESHOLD
+            
+            MENU_DEBUG -> MENU_DEBUG_ENABLE_STEREO
+            
+            MENU_DEBUG -> MENU_DEBUG_LEAKY_LMS
+            
+            MENU_DEBUG -> MENU_DEBUG_ANR_TAPS
+            
+            MENU_DEBUG -> MENU_DEBUG_ANR_DELAY
+            
+            MENU_DEBUG -> MENU_DEBUG_ANR_GAIN
+            
+            MENU_DEBUG -> MENU_DEBUG_ANR_LEAK
+            
+            MENU_DEBUG -> MENU_DEBUG_OSC_SI5351_PLLRESET
+            
+            MENU_DEBUG -> MENU_DEBUG_HMC1023_COARSE
+            
+            MENU_DEBUG -> MENU_DEBUG_HMC1023_FINE
+            
+            MENU_DEBUG -> MENU_DEBUG_HMC1023_GAIN
+            
+            MENU_DEBUG -> MENU_DEBUG_HMC1023_BYPASS
+            
+            MENU_DEBUG -> MENU_DEBUG_HMC1023_OPAMP
+            
+            MENU_DEBUG -> MENU_DEBUG_HMC1023_DRVR
+            
+            MENU_DEBUG -> MENU_DEBUG_TWINPEAKS_CORR_RUN
+            
+            MENU_DEBUG -> CONFIG_RESET_SER_EEPROM_SIGNATURE
+            
+            MENU_DEBUG -> MENU_DEBUG_FREEDV_MODE
+            
+            MENU_DEBUG -> MENU_DEBUG_FREEDV_SQL_THRESHOLD
+            
+            MENU_DEBUG -> MENU_DEBUG_SMOOTH_DYN_TUNE
+            
+        }  ## END subgraph MENU_HALL_OF_FAME
+    
+        #  -  -  -  -
+
         subgraph "MENU_POW" {
             label = "MENU_POW beef.0f.dead.e5e1"
 
@@ -1736,288 +1908,6 @@
             MENU_TOP -> MENU_DEBUG
             
             MENU_TOP -> MENU_HALL_OF_FAME
-            
-        }  ## END subgraph MENU_HALL_OF_FAME
-    
-        #  -  -  -  -
-
-        subgraph "MENU_DISPLAY" {
-            label = "MENU_DISPLAY beef.0f.dead.e5e1"
-
-    
-            MENU_DISPLAY -> CONFIG_LCD_AUTO_OFF_MODE
-            
-            MENU_DISPLAY -> CONFIG_FREQ_STEP_MARKER_LINE
-            
-            MENU_DISPLAY -> CONFIG_DISP_FILTER_BANDWIDTH
-            
-            MENU_DISPLAY -> MENU_SPECTRUM_SIZE
-            
-            MENU_DISPLAY -> MENU_SPECTRUM_FILTER_STRENGTH
-            
-            MENU_DISPLAY -> MENU_SPECTRUM_FREQSCALE_COLOUR
-            
-            MENU_DISPLAY -> MENU_SPECTRUM_CENTER_LINE_COLOUR
-            
-            MENU_DISPLAY -> MENU_SCOPE_LIGHT_ENABLE
-            
-            MENU_DISPLAY -> MENU_SCOPE_SPEED
-            
-            MENU_DISPLAY -> MENU_SCOPE_AGC_ADJUST
-            
-            MENU_DISPLAY -> MENU_SCOPE_TRACE_COLOUR
-            
-            MENU_DISPLAY -> MENU_SCOPE_TRACE_HL_COLOUR
-            
-            MENU_DISPLAY -> MENU_SCOPE_BACKGROUND_HL_COLOUR
-            
-            MENU_DISPLAY -> MENU_SCOPE_GRID_COLOUR
-            
-            MENU_DISPLAY -> MENU_SCOPE_DB_DIVISION
-            
-            MENU_DISPLAY -> MENU_WFALL_SPEED
-            
-            MENU_DISPLAY -> MENU_WFALL_COLOR_SCHEME
-            
-            MENU_DISPLAY -> MENU_WFALL_STEP_SIZE
-            
-            MENU_DISPLAY -> MENU_WFALL_CONTRAST
-            
-            MENU_DISPLAY -> MENU_METER_COLOUR_UP
-            
-            MENU_DISPLAY -> MENU_METER_COLOUR_DOWN
-            
-            MENU_DISPLAY -> MENU_DBM_DISPLAY
-            
-            MENU_DISPLAY -> MENU_DBM_CALIBRATE
-            
-            MENU_DISPLAY -> CONFIG_SMETER_ATTACK
-            
-            MENU_DISPLAY -> CONFIG_SMETER_DECAY
-            
-            MENU_DISPLAY -> MENU_FREQ_FONT
-            
-            MENU_DISPLAY -> MENU_UI_INVERSE_SCROLLING
-            
-        }  ## END subgraph MENU_HALL_OF_FAME
-    
-        #  -  -  -  -
-
-        subgraph "MENU_CW" {
-            label = "MENU_CW beef.0f.dead.e5e1"
-
-    
-            MENU_CW -> MENU_KEYER_MODE
-            
-            MENU_CW -> MENU_KEYER_SPEED
-            
-            MENU_CW -> MENU_KEYER_WEIGHT
-            
-            MENU_CW -> MENU_SIDETONE_GAIN
-            
-            MENU_CW -> MENU_SIDETONE_FREQUENCY
-            
-            MENU_CW -> MENU_PADDLE_REVERSE
-            
-            MENU_CW -> MENU_CW_TX_RX_DELAY
-            
-            MENU_CW -> MENU_CW_OFFSET_MODE
-            
-            MENU_CW -> MENU_CW_AUTO_MODE_SELECT
-            
-            MENU_CW -> MENU_CW_DECODER
-            
-            MENU_CW -> MENU_CW_DECODER_THRESH
-            
-            MENU_CW -> MENU_CW_DECODER_SNAP_ENABLE
-            
-            MENU_CW -> MENU_CW_DECODER_BLOCKSIZE
-            
-            MENU_CW -> MENU_CW_DECODER_NOISECANCEL
-            
-            MENU_CW -> MENU_CW_DECODER_SPIKECANCEL
-            
-            MENU_CW -> MENU_CW_DECODER_USE_3_GOERTZEL
-            
-            MENU_CW -> MENU_CW_DECODER_SHOW_CW_LED
-            
-        }  ## END subgraph MENU_HALL_OF_FAME
-    
-        #  -  -  -  -
-
-        subgraph "MENU_DEBUG" {
-            label = "MENU_DEBUG beef.0f.dead.e5e1"
-
-    
-            MENU_DEBUG -> MENU_DEBUG_ENABLE_INFO
-            
-            MENU_DEBUG -> MENU_DEBUG_CW_OFFSET_SHIFT_KEEP_SIGNAL
-            
-            MENU_DEBUG -> MENU_DEBUG_TX_AUDIO
-            
-            MENU_DEBUG -> MENU_DEBUG_CLONEOUT
-            
-            MENU_DEBUG -> MENU_DEBUG_CLONEIN
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SHOW
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_BETA
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_ASNR
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SMOOTH_WIDTH
-            
-            MENU_DEBUG -> MENU_DEBUG_NR_GAIN_SMOOTH_THRESHOLD
-            
-            MENU_DEBUG -> MENU_DEBUG_ENABLE_STEREO
-            
-            MENU_DEBUG -> MENU_DEBUG_LEAKY_LMS
-            
-            MENU_DEBUG -> MENU_DEBUG_ANR_TAPS
-            
-            MENU_DEBUG -> MENU_DEBUG_ANR_DELAY
-            
-            MENU_DEBUG -> MENU_DEBUG_ANR_GAIN
-            
-            MENU_DEBUG -> MENU_DEBUG_ANR_LEAK
-            
-            MENU_DEBUG -> MENU_DEBUG_OSC_SI5351_PLLRESET
-            
-            MENU_DEBUG -> MENU_DEBUG_HMC1023_COARSE
-            
-            MENU_DEBUG -> MENU_DEBUG_HMC1023_FINE
-            
-            MENU_DEBUG -> MENU_DEBUG_HMC1023_GAIN
-            
-            MENU_DEBUG -> MENU_DEBUG_HMC1023_BYPASS
-            
-            MENU_DEBUG -> MENU_DEBUG_HMC1023_OPAMP
-            
-            MENU_DEBUG -> MENU_DEBUG_HMC1023_DRVR
-            
-            MENU_DEBUG -> MENU_DEBUG_TWINPEAKS_CORR_RUN
-            
-            MENU_DEBUG -> CONFIG_RESET_SER_EEPROM_SIGNATURE
-            
-            MENU_DEBUG -> MENU_DEBUG_FREEDV_MODE
-            
-            MENU_DEBUG -> MENU_DEBUG_FREEDV_SQL_THRESHOLD
-            
-            MENU_DEBUG -> MENU_DEBUG_SMOOTH_DYN_TUNE
-            
-        }  ## END subgraph MENU_HALL_OF_FAME
-    
-        #  -  -  -  -
-
-        subgraph "MENU_HALL_OF_FAME" {
-            label = "MENU_HALL_OF_FAME beef.0f.dead.e5e1"
-
-    
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-            MENU_HALL_OF_FAME -> 0
-            
-        }  ## END subgraph MENU_HALL_OF_FAME
-    
-        #  -  -  -  -
-
-        subgraph "MENU_SYSINFO" {
-            label = "MENU_SYSINFO beef.0f.dead.e5e1"
-
-    
-            MENU_SYSINFO -> INFO_DISPLAY
-            
-            MENU_SYSINFO -> INFO_DISPLAY_CTRL
-            
-            MENU_SYSINFO -> INFO_OSC_NAME
-            
-            MENU_SYSINFO -> INFO_SI570
-            
-            MENU_SYSINFO -> INFO_EEPROM
-            
-            MENU_SYSINFO -> INFO_TP
-            
-            MENU_SYSINFO -> INFO_CPU
-            
-            MENU_SYSINFO -> INFO_FLASH
-            
-            MENU_SYSINFO -> INFO_RAM
-            
-            MENU_SYSINFO -> INFO_FW_VERSION
-            
-            MENU_SYSINFO -> INFO_BUILD
-            
-            MENU_SYSINFO -> INFO_BL_VERSION
-            
-            MENU_SYSINFO -> INFO_RFBOARD
-            
-            MENU_SYSINFO -> INFO_CODEC
-            
-            MENU_SYSINFO -> INFO_CODEC_TWINPEAKS
-            
-            MENU_SYSINFO -> INFO_VBAT
-            
-            MENU_SYSINFO -> INFO_RTC
-            
-            MENU_SYSINFO -> INFO_LICENCE
-            
-            MENU_SYSINFO -> INFO_HWLICENCE
-            
-        }  ## END subgraph MENU_HALL_OF_FAME
-    
-        #  -  -  -  -
-
-        subgraph "MENU_MEN2TOUCH" {
-            label = "MENU_MEN2TOUCH beef.0f.dead.e5e1"
-
-    
-            MENU_MEN2TOUCH -> MENU_DYNAMICTUNE
-            
-            MENU_MEN2TOUCH -> MENU_MIC_LINE_MODE
-            
-            MENU_MEN2TOUCH -> MENU_SPECTRUM_MODE
-            
-            MENU_MEN2TOUCH -> MENU_SPECTRUM_MAGNIFY
-            
-            MENU_MEN2TOUCH -> MENU_RESTART_CODEC
-            
-            MENU_MEN2TOUCH -> MENU_DIGITAL_MODE_SELECT
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
@@ -2167,6 +2057,26 @@
     
         #  -  -  -  -
 
+        subgraph "MENU_MEN2TOUCH" {
+            label = "MENU_MEN2TOUCH beef.0f.dead.e5e1"
+
+    
+            MENU_MEN2TOUCH -> MENU_DYNAMICTUNE
+            
+            MENU_MEN2TOUCH -> MENU_MIC_LINE_MODE
+            
+            MENU_MEN2TOUCH -> MENU_SPECTRUM_MODE
+            
+            MENU_MEN2TOUCH -> MENU_SPECTRUM_MAGNIFY
+            
+            MENU_MEN2TOUCH -> MENU_RESTART_CODEC
+            
+            MENU_MEN2TOUCH -> MENU_DIGITAL_MODE_SELECT
+            
+        }  ## END subgraph MENU_HALL_OF_FAME
+    
+        #  -  -  -  -
+
         subgraph "MENU_FILTER" {
             label = "MENU_FILTER beef.0f.dead.e5e1"
 
@@ -2198,6 +2108,96 @@
             MENU_FILTER -> CONFIG_AM_TX_FILTER_DISABLE
             
             MENU_FILTER -> CONFIG_SSB_TX_FILTER
+            
+        }  ## END subgraph MENU_HALL_OF_FAME
+    
+        #  -  -  -  -
+
+        subgraph "MENU_CW" {
+            label = "MENU_CW beef.0f.dead.e5e1"
+
+    
+            MENU_CW -> MENU_KEYER_MODE
+            
+            MENU_CW -> MENU_KEYER_SPEED
+            
+            MENU_CW -> MENU_KEYER_WEIGHT
+            
+            MENU_CW -> MENU_SIDETONE_GAIN
+            
+            MENU_CW -> MENU_SIDETONE_FREQUENCY
+            
+            MENU_CW -> MENU_PADDLE_REVERSE
+            
+            MENU_CW -> MENU_CW_TX_RX_DELAY
+            
+            MENU_CW -> MENU_CW_OFFSET_MODE
+            
+            MENU_CW -> MENU_CW_AUTO_MODE_SELECT
+            
+            MENU_CW -> MENU_CW_DECODER
+            
+            MENU_CW -> MENU_CW_DECODER_THRESH
+            
+            MENU_CW -> MENU_CW_DECODER_SNAP_ENABLE
+            
+            MENU_CW -> MENU_CW_DECODER_BLOCKSIZE
+            
+            MENU_CW -> MENU_CW_DECODER_NOISECANCEL
+            
+            MENU_CW -> MENU_CW_DECODER_SPIKECANCEL
+            
+            MENU_CW -> MENU_CW_DECODER_USE_3_GOERTZEL
+            
+            MENU_CW -> MENU_CW_DECODER_SHOW_CW_LED
+            
+        }  ## END subgraph MENU_HALL_OF_FAME
+    
+        #  -  -  -  -
+
+        subgraph "MENU_HALL_OF_FAME" {
+            label = "MENU_HALL_OF_FAME beef.0f.dead.e5e1"
+
+    
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
+            
+            MENU_HALL_OF_FAME -> 0
             
         }  ## END subgraph MENU_HALL_OF_FAME
     
