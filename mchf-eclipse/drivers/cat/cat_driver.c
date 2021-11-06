@@ -653,7 +653,7 @@ static const ft817_eeprom_emul_t ft817_eeprom[] =
         { .type = FT817EE_DATA,     .start = 0,     .end = 3,       .content.value = 0      }, // checksum
         { .type = FT817EE_DATA,     .start = 4,     .end = 4,       .content.value = 0xD8   }, // radio config
         { .type = FT817EE_DATA,     .start = 5,     .end = 5,       .content.value = 0xBF   }, // radio config
-        { .type = FT817EE_FUNC,     .start = 0x54,  .end = 0x54,    .content.value = 0xFF }, // this is just to make HAMLIB happy when reading 0x55 by requesting 0x54
+        { .type = FT817EE_DATA,     .start = 0x54,  .end = 0x54,    .content.value = 0xFF }, // this is just to make HAMLIB happy when reading 0x55 by requesting 0x54
 		// (and ignoring this value). This might break things if an application really wants to read a useful value from 0x54 
 	
         { .type = FT817EE_FUNC,     .start = 0x55,  .end = 0x55,    .content.funcPtr = CatDriver_Ft817_EEPROM_RW_Func }, // VOX Delay and other stuff, fixed value, required by WSJT-X
