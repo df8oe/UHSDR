@@ -102,8 +102,7 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 //
 
 #define XVERTER_MULT_MAX        10      // maximum LO multipler in xverter mode
-#define XVERTER_OFFSET_MAX_HZ    999999000   //  transverter offset is in Hz (999,999,999 Hz), above khz
-#define XVERTER_OFFSET_MAX      1019999999   // Maximum transverter offset (19,999,999,999 kHz ~ 20 Ghz)
+#define XVERTER_OFFSET_MAX      99999999999ULL   // Maximum transverter offset in Hz (99 GHz)
 //
 #define AUTO_LSB_USB_OFF        0
 #define AUTO_LSB_USB_ON         1
@@ -613,7 +612,9 @@ uint16_t    UiConfiguration_SaveEepromValues(void);
 #define EEPROM_CW_DECODER_FLAGS                     430     // Various flags controlling operation of CW decoder
 #define EEPROM_BAND_REGION                          431     // store which region the TRX is being used in
 #define EEPROM_SParkleFLAGS                         432     // some flags holding SParkle specyfic setup
-#define EEPROM_FIRST_UNUSED                         433		// change this if new value ids are introduced, must be correct at any time
+#define EEPROM_XVERTER_OFFSET_EXT_LOW               433     // lower 16 bits of upper 32 half of xverter 48bit frequency (48bit value in three 16bit eeprom entries)
+#define EEPROM_XVERTER_OFFSET_TX_EXT_LOW            434     // lower 16 bits of upper 32 half of xverter 48bit tx frequency (48bit value in three 16bit eeprom entries)
+#define EEPROM_FIRST_UNUSED                         435     // change this if new value ids are introduced, must be correct at any time
 
 #define MAX_VAR_ADDR (EEPROM_FIRST_UNUSED - 1)
 
