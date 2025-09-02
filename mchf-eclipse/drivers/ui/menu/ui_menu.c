@@ -49,6 +49,29 @@
 
 #define CLR_OR_SET_BITMASK(cond,value,mask) ((value) = (((cond))? ((value) | (mask)): ((value) & ~(mask))))
 
+// mimics UiDriver_UpdateFreqDisplay() a bit. Space every 3 digits as a separator.
+// buffer must be >= MAX_DIGITS + MAX_DIGITS/MAX_DIGITS_SEP_EVERY + 1
+#define MAX_DIGITS_SEP_EVERY 3
+#define MAX_DIGITS_U64 (MAX_DIGITS + MAX_DIGITS/MAX_DIGITS_SEP_EVERY)
+static char *u64_to_dec(uint64_t v, char buf[MAX_DIGITS_U64+1])
+{
+    char *p = buf + MAX_DIGITS_U64;  // safe end
+    *p = 0;                          // NUL-terminate
+
+    uint8_t count = 0;
+    do {
+        if (count == MAX_DIGITS_SEP_EVERY) {
+            *--p = ' ';
+            count = 0;
+        }
+        *--p = '0' + (v % 10);
+        v /= 10;
+        count++;
+    } while (v);
+
+    return p;  // pointer to first char of the string
+}
+
 void float2fixedstr(char* buf, int maxchar, float32_t f, uint16_t digitsBefore, uint16_t digitsAfter)
 {
     char formatstr[16],numberstr[32];
@@ -90,6 +113,10 @@ void float2fixedstr(char* buf, int maxchar, float32_t f, uint16_t digitsBefore, 
     buf[idx] = '\0';
 }
 
+#define ONE_MHZ 1000000ULL
+static inline unsigned long speedup_step(unsigned long step) {
+    return step >= ONE_MHZ ? step * 100ULL : step;
+}
 
 // LCD
 #include "ui_lcd_draw.h" // for colors!
@@ -762,7 +789,8 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 
     const char* txt_ptr = NULL;
     uint32_t clr = *clr_ptr;
-	uint8_t nr_step;
+    uint8_t nr_step;
+    ulong tstep; // temporary step speedup for transverter
 
     // case statement local variables defined for convenience here
     bool var_change = false;
@@ -2959,18 +2987,19 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
         }
         break;
     case CONFIG_XVTR_FREQUENCY_OFFSET:      // Adjust transverter Frequency offset
+	tstep = speedup_step(df.tuning_step);
         if(var >= 1)        // setting increase?
         {
             ts.menu_var_changed = 1;    // indicate that a change has occurred
-            ts.xverter_offset += df.tuning_step;
+            ts.xverter_offset += tstep;
             var_change = 1;
         }
         else if(var <= -1)      // setting decrease?
         {
             ts.menu_var_changed = 1;    // indicate that a change has occurred
-            if(ts.xverter_offset >= df.tuning_step) // subtract only if we have room to do so
+            if(ts.xverter_offset >= tstep) // subtract only if we have room to do so
             {
-                ts.xverter_offset -= df.tuning_step;
+                ts.xverter_offset -= tstep;
             }
             else
             {
@@ -2999,22 +3028,26 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
             clr = Orange;      // make number red to alert user of this!
         }
 
-        uint32_t offset_offset = ts.xverter_offset > XVERTER_OFFSET_MAX_HZ? ((XVERTER_OFFSET_MAX_HZ)-(XVERTER_OFFSET_MAX_HZ)/1000):0;
-        snprintf(options,32, ts.xverter_offset > XVERTER_OFFSET_MAX_HZ? " %9ukHz" : "   %9uHz", (uint)(ts.xverter_offset-offset_offset));    // print with nine digits
+        {
+            char tmp[MAX_DIGITS_U64+1];
+            char *digits = u64_to_dec(ts.xverter_offset, tmp);
+            snprintf(options, 32, " %15sHz", digits);
+        }
         break;
     case CONFIG_XVTR_FREQUENCY_OFFSET_TX:      // Adjust transverter tx Frequency offset
+        tstep = speedup_step(df.tuning_step);
         if(var >= 1)        // setting increase?
         {
             ts.menu_var_changed = 1;    // indicate that a change has occurred
-            ts.xverter_offset_tx += df.tuning_step;
+            ts.xverter_offset_tx += tstep;
             var_change = 1;
         }
         else if(var <= -1)      // setting decrease?
         {
             ts.menu_var_changed = 1;    // indicate that a change has occurred
-            if(ts.xverter_offset_tx >= df.tuning_step) // subtract only if we have room to do so
+            if(ts.xverter_offset_tx >= tstep) // subtract only if we have room to do so
             {
-                ts.xverter_offset_tx -= df.tuning_step;
+                ts.xverter_offset_tx -= tstep;
             }
             else
             {
@@ -3045,8 +3078,9 @@ void UiMenu_UpdateItem(uint16_t select, MenuProcessingMode_t mode, int pos, int 
 
         if (ts.xverter_offset_tx != 0)
         {
-            uint32_t offset_offset = ts.xverter_offset_tx > XVERTER_OFFSET_MAX_HZ? ((XVERTER_OFFSET_MAX_HZ)-(XVERTER_OFFSET_MAX_HZ)/1000):0;
-            snprintf(options,32, ts.xverter_offset_tx > XVERTER_OFFSET_MAX_HZ? " %9ukHz" : "   %9uHz", (uint)(ts.xverter_offset_tx-offset_offset));    // print with nine digits
+            char tmp[MAX_DIGITS_U64+1];
+            char *digits = u64_to_dec(ts.xverter_offset_tx, tmp);
+            snprintf(options, 32, " %15sHz", digits);
         }
         else
         {

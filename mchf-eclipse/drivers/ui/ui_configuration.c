@@ -477,6 +477,65 @@ static void UiReadSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, volatile 
     }
 }
 
+// Reads a 48-bit value split across three 16-bit EEPROM words:
+//   - low32 is kept for backward compatibility: addr32_H (bits 31..16), addr32_L (bits 15..0)
+//   - ext16 is the new optional upper 16 bits: addrExt16 (bits 47..32)
+// The assembled value is returned as uint64_t (with upper 16 bits zeroed).
+//
+// Behavior:
+// - If low32 cannot be read, assigns default_val (like the 32-bit helper).
+// - If ext16 is missing, it is treated as 0 (older EEPROMs).
+// - Applies min/max clamp semantics via default on out-of-range or when load_default is true.
+static void UiReadSettingEEPROM_UInt48(uint16_t addrExt16,
+        uint16_t addr32_H,
+        uint16_t addr32_L,
+        volatile uint64_t* val_ptr,
+        uint64_t default_val, uint64_t min_val, uint64_t max_val,
+        bool load_default)
+{
+    uint16_t lH, lL;
+    uint16_t ext16_word;
+    uint32_t low32  = 0;
+    uint32_t hi16   = 0;
+
+    // Read legacy low 32 bits first; if that fails, fall back to default (like the 32-bit helper).
+    if (ConfigStorage_ReadVariable(addr32_H, &lH) == 0 &&
+            ConfigStorage_ReadVariable(addr32_L, &lL) == 0)
+    {
+        low32 = ((uint32_t)lH << 16) | (uint32_t)lL;
+
+        // Try to read the optional upper 16 bits (bits 47..32). If missing, default to 0.
+        if (ConfigStorage_ReadVariable(addrExt16, &ext16_word) == 0)
+        {
+            hi16 = (uint32_t)ext16_word;
+        }
+        else
+        {
+            hi16 = 0u; // old EEPROMs: no extended word => hi16 = 0
+        }
+
+        // Assemble 48-bit value into 64-bit container (upper 16 bits are zero).
+        uint64_t value = (((uint64_t)hi16) << 32) | (uint64_t)low32;
+
+        // (Optional) Mask to 48 bits to be extra safe against stray bits.
+        value &= 0x0000FFFFFFFFFFFFULL;
+
+        // Range/default handling.
+        if (load_default || value < min_val || value > max_val)
+        {
+            *val_ptr = default_val;
+        }
+        else
+        {
+            *val_ptr = value;
+        }
+    }
+    else
+    {
+        *val_ptr = default_val;
+    }
+}
+
 static uint16_t UiWriteSettingEEPROM_UInt16(uint16_t addr, uint16_t set_val)
 {
     return ConfigStorage_WriteVariable(addr, set_val);
@@ -502,6 +561,29 @@ static uint16_t UiWriteSettingEEPROM_UInt32(uint16_t addrH, uint16_t addrL, uint
         retval = ConfigStorage_WriteVariable(addrL, (uint16_t)(set_val));
     }
     return retval;
+}
+
+// Writes a 48-bit value split across three 16-bit EEPROM words:
+//   - low32 -> legacy locations: addr32_H (bits 31..16), addr32_L (bits 15..0)
+//   - hi16  -> new extension location: addrExt16 (bits 47..32)
+// The value is passed as a uint64_t but masked to 48 bits before storage.
+static uint16_t UiWriteSettingEEPROM_UInt48(uint16_t addrExt16,   // single 16-bit word for bits 47..32
+                                            uint16_t addr32_H,
+                                            uint16_t addr32_L,
+                                            uint64_t set_val)
+{
+    // Mask to 48 bits to avoid stray upper bits
+    uint64_t v48   = set_val & 0x0000FFFFFFFFFFFFULL;
+    uint32_t low32 = (uint32_t)(v48 & 0xFFFFFFFFULL);
+    uint16_t hi16  = (uint16_t)(v48 >> 32);
+
+    // 1) Write legacy low 32 bits (backward compatible).
+    uint16_t retval = UiWriteSettingEEPROM_UInt32(addr32_H, addr32_L, low32);
+    if (retval != HAL_OK)
+        return retval;
+
+    // 2) Write the upper 16 bits (always present in EEPROM).
+    return ConfigStorage_WriteVariable(addrExt16, hi16);
 }
 
 static uint32_t UiConfiguration_LimitFrequency(BandInfo_c* bandInfo, const uint32_t freq, bool set_to_default)
@@ -928,8 +1010,10 @@ void UiConfiguration_LoadEepromValues(bool load_freq_mode_defaults, bool load_ee
     }
 
 
-    UiReadSettingEEPROM_UInt32( EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,&ts.xverter_offset,0,0,XVERTER_OFFSET_MAX, load_eeprom_defaults);
-    UiReadSettingEEPROM_UInt32( EEPROM_XVERTER_OFFSET_TX_HIGH,EEPROM_XVERTER_OFFSET_TX_LOW,&ts.xverter_offset_tx,0,0,XVERTER_OFFSET_MAX, load_eeprom_defaults);
+    UiReadSettingEEPROM_UInt48(EEPROM_XVERTER_OFFSET_EXT_LOW, EEPROM_XVERTER_OFFSET_HIGH, EEPROM_XVERTER_OFFSET_LOW,
+            &ts.xverter_offset, 0ULL, 0ULL, XVERTER_OFFSET_MAX, load_eeprom_defaults);
+    UiReadSettingEEPROM_UInt48(EEPROM_XVERTER_OFFSET_TX_EXT_LOW, EEPROM_XVERTER_OFFSET_TX_HIGH, EEPROM_XVERTER_OFFSET_TX_LOW,
+            &ts.xverter_offset_tx, 0ULL, 0ULL, XVERTER_OFFSET_MAX, load_eeprom_defaults);
 
     UiReadSettingEEPROM_Filter(load_eeprom_defaults);
 
@@ -1023,11 +1107,15 @@ uint16_t UiConfiguration_SaveEepromValues(void)
 
         if (retval == HAL_OK)
         {
-            retval = UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_HIGH,EEPROM_XVERTER_OFFSET_LOW,ts.xverter_offset);
+            retval = UiWriteSettingEEPROM_UInt48(EEPROM_XVERTER_OFFSET_EXT_LOW,   // hi32  (new)
+                    EEPROM_XVERTER_OFFSET_HIGH, EEPROM_XVERTER_OFFSET_LOW,       // low32 (legacy)
+                    ts.xverter_offset);
         }
         if (retval == HAL_OK)
         {
-            retval = UiWriteSettingEEPROM_UInt32(EEPROM_XVERTER_OFFSET_TX_HIGH,EEPROM_XVERTER_OFFSET_TX_LOW,ts.xverter_offset_tx);
+            retval = UiWriteSettingEEPROM_UInt48(EEPROM_XVERTER_OFFSET_TX_EXT_LOW,// hi32  (new)
+                    EEPROM_XVERTER_OFFSET_TX_HIGH, EEPROM_XVERTER_OFFSET_TX_LOW,    // low32 (legacy)
+                    ts.xverter_offset_tx);
         }
 
         if (retval == HAL_OK)

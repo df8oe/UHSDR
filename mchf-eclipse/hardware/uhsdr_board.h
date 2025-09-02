@@ -429,8 +429,8 @@ typedef struct TransceiverState
     struct mchf_waterfall waterfall;
 
     uint32_t	xverter_mode;		// TRUE if transverter mode active
-    uint32_t	xverter_offset;		// frequency offset for transverter (added to frequency display)
-    uint32_t    xverter_offset_tx;  // used for tx if set, frequency offset for transverter (added to frequency display)
+    uint64_t	xverter_offset;		// frequency offset for transverter (added to frequency display)
+    uint64_t	xverter_offset_tx;	// used for tx if set, frequency offset for transverter (added to frequency display)
     //
     // Calibration factors for output power, in percent (100 = 1.00)
     //
