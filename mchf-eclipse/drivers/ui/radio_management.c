@@ -2012,7 +2012,6 @@ void RadioManagement_InitTuningInfo()
     df.tune_old     = 0;
     df.temp_factor  = 0;
     df.temp_factor_changed = false;
-    df.temp_enabled = 0;        // startup state of TCXO
     df.tune_new = vfo[get_active_vfo()].band[ts.band->band_mode].dial_value;        // init "tuning dial" frequency based on restored settings
     ts.cw_lsb = RadioManagement_CalculateCWSidebandMode();          // determine CW sideband mode from the restored frequency
 }
