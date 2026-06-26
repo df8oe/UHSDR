@@ -72,6 +72,9 @@
 	CODESECT
 	THUMB
 
+.type arm_bitreversal_32, STT_FUNC
+.type arm_bitreversal_16, STT_FUNC
+
 ;/*
 ;* @brief  In-place bit reversal function.
 ;* @param[in, out] *pSrc        points to the in-place buffer of unknown 32-bit data type.
